@@ -127,4 +127,6 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 
 - PHP corre local; solo Postgres corre en Docker: `docker compose up -d pgsql` (puerto 5433).
 - El correo local va a `log`: ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
-- Nunca leas ni edites `.env`. Configuración nueva → `config/*.php` + `.env.example`.
+- Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
+- Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `composer test` al terminar si hay cambios.
+- Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
