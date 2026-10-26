@@ -25,7 +25,8 @@
       "Bash(git log:*)",
       "Bash(git show:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh api -X PUT repos/vicbravodev/humetria/branches/main/protection:*)"
     ],
     "ask": [
       "Bash(git push:*)"
