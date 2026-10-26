@@ -156,3 +156,14 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
 - Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `composer test` al terminar si hay cambios.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
+
+## Flujo de trabajo: PRs atómicos
+
+- Nada se commitea directo a `main`: todo entra por PR desde una rama propia, con el CI en verde.
+- **Un PR = un comportamiento** (p. ej. "crear empresa", "importar empleados por CSV"), nunca un módulo
+  completo de golpe. Si un cambio necesita "y además…", son dos PRs.
+- Cada PR deja el sistema funcionando y es seguro de revertir solo: trae sus migraciones, tests y reglas,
+  y no deja código a medias detrás de él.
+- Refactors, cambios de dependencias y cambios de harness (CI, hooks, reglas) van en su propio PR,
+  separados de la lógica de negocio.
+- Si un PR crece, se parte antes de abrirlo. Ante la duda, más chico.
