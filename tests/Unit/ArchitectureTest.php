@@ -73,6 +73,20 @@ foreach (['App\Models', 'App\Http', 'App\Actions', 'App\Concerns', 'App\Provider
 }
 
 foreach (modules() as $module) {
+    arch("{$module} contracts are interfaces")
+        ->expect("App\\Modules\\{$module}\\Contracts")
+        ->toBeInterfaces();
+
+    arch("{$module} data objects are readonly")
+        ->expect("App\\Modules\\{$module}\\Data")
+        ->classes()
+        ->toBeReadonly();
+
+    arch("{$module} actions expose handle()")
+        ->expect("App\\Modules\\{$module}\\Actions")
+        ->classes()
+        ->toHaveMethod('handle');
+
     foreach (internalNamespacesOf($module) as $internalNamespace) {
         arch("{$internalNamespace} is internal to the {$module} module")
             ->expect($internalNamespace)
