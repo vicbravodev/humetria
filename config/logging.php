@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Logging\StructuredLogging;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -62,6 +63,7 @@ return [
 
         'single' => [
             'driver' => 'single',
+            'tap' => [StructuredLogging::class],
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
@@ -69,6 +71,7 @@ return [
 
         'daily' => [
             'driver' => 'daily',
+            'tap' => [StructuredLogging::class],
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'max_files' => env('LOG_DAILY_DAYS', 14),
@@ -111,7 +114,7 @@ return [
             'handler_with' => [
                 'stream' => 'php://stderr',
             ],
-            'formatter' => env('LOG_STDERR_FORMATTER'),
+            'tap' => [StructuredLogging::class],
             'processors' => [PsrLogMessageProcessor::class],
         ],
 

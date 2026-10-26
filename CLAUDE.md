@@ -24,9 +24,12 @@ Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo mand
 Nada está terminado hasta que esto pasa en verde:
 
 ```bash
-composer test   # pint --test + phpstan (max) + toda la suite de Pest
+composer test          # pint --test + phpstan (max) + toda la suite de Pest con cobertura ≥ 90%
+composer test:mutate   # mutación sobre las clases declaradas con mutates(), score ≥ 85%
 npm run types:check
 ```
+
+El CI corre los tres. Si la cobertura o el score bajan, faltan tests: no se baja el umbral.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo.
 
@@ -81,6 +84,29 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 - Toda página que ve RH tiene un test que afirma que sus props de Inertia no contienen respuestas individuales.
 - El modelo de amenaza es RH y la aplicación, no el operador con acceso a la base de datos.
 
+## Logging y auditoría
+
+- Logs en JSON, una línea por evento (tap `App\Logging\StructuredLogging` en single, daily y stderr).
+- `AssignRequestContext` pone `request_id` y `user_id` en `Context`: aparecen en cada línea de log, en la
+  bitácora y en los jobs en cola. Al crear el módulo Tenancy, agregar ahí `tenant_id` con `Context::add`.
+- El mensaje del log es un nombre de evento fijo `modulo.accion` en pasado (`campaign.launched`,
+  `invitation.sent`); los datos van en el arreglo de contexto, nunca interpolados en el texto.
+- Toda acción que cambia estado escribe un log. Las acciones sensibles (lanzar o cerrar campaña, ver o exportar
+  resultados, consultar la lista de canalización de Guía I, cambiar roles) además van a la bitácora con
+  `App\Actions\RecordAudit`.
+- `audit_entries` es de solo inserción: un trigger de Postgres rechaza UPDATE, DELETE y TRUNCATE.
+- **Nunca** se escriben respuestas de encuesta, ni nada que ligue a un empleado con una respuesta de Guía II/III,
+  en logs ni en la bitácora. `RedactSensitiveData` borra llaves conocidas (`answers`, `password`, `token`…);
+  una llave sensible nueva se agrega ahí con su test. El módulo Responses tendrá un test que envía una
+  respuesta y afirma que ninguna línea de log contiene sus valores.
+
+## Idioma y tiempo
+
+- Locale `es` (validación y auth en `lang/es/`). Atributo nuevo en un FormRequest → su nombre en
+  `lang/es/validation.php` → `attributes`.
+- Se guarda siempre en UTC (`app.timezone` y la sesión de Postgres). Solo al mostrar se convierte a
+  `config('app.display_timezone')` (America/Mexico_City). Columnas de fecha y hora: `timestampTz`.
+
 ## Base de datos y rendimiento
 
 - `Model::shouldBeStrict()` fuera de producción: lazy loading, atributos no seleccionados y mass assignment
@@ -99,7 +125,7 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 | Feature | Pest + `assertInertia` | HTTP, validación, autorización, aislamiento de tenant, props que recibe cada página |
 | Browser | Pest Browser (Playwright) | Solo flujos críticos: el empleado contesta desde el celular, enlace de un solo uso, flujo de Guía I |
 | Arquitectura | Pest `arch()` | Aislamiento de módulos, tipos estrictos, clases final, presets php y security |
-| Mutación | `pest --mutate` | Lógica de calificación y privacidad: los tests deben detectar el error |
+| Mutación | `composer test:mutate` | Lógica de calificación y privacidad: su test declara `mutates(Clase::class)` |
 
 - Cada comportamiento: camino feliz + bordes + fallos. Bordes obligatorios a pensar: límites exactos
   (15/16, 50/51 trabajadores), vacíos, duplicados, otro tenant, usuario sin permiso, enlace ya usado,
@@ -130,3 +156,14 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
 - Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `composer test` al terminar si hay cambios.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
+
+## Flujo de trabajo: PRs atómicos
+
+- Nada se commitea directo a `main`: todo entra por PR desde una rama propia, con el CI en verde.
+- **Un PR = un comportamiento** (p. ej. "crear empresa", "importar empleados por CSV"), nunca un módulo
+  completo de golpe. Si un cambio necesita "y además…", son dos PRs.
+- Cada PR deja el sistema funcionando y es seguro de revertir solo: trae sus migraciones, tests y reglas,
+  y no deja código a medias detrás de él.
+- Refactors, cambios de dependencias y cambios de harness (CI, hooks, reglas) van en su propio PR,
+  separados de la lógica de negocio.
+- Si un PR crece, se parte antes de abrirlo. Ante la duda, más chico.
