@@ -27,6 +27,14 @@ it('records who did what, on which subject, within which request', function (): 
         ->created_at->not->toBeNull();
 });
 
+it('returns the entry with the subject key as a string, as it is stored', function (): void {
+    $user = User::factory()->create();
+
+    $entry = app(RecordAudit::class)->handle('role.changed', $user);
+
+    expect($entry->subject_id)->toBe((string) $user->id);
+});
+
 it('records system events without an actor or subject', function (): void {
     $entry = app(RecordAudit::class)->handle('retention.purged');
 

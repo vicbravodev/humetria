@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 use App\Logging\RedactSensitiveData;
 use App\Logging\StructuredLogging;
+use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Monolog\Handler\NullHandler;
+use Monolog\Logger as Monolog;
+use Psr\Log\NullLogger;
 
 mutates(RedactSensitiveData::class, StructuredLogging::class);
 
@@ -80,4 +84,21 @@ it('keeps lists with numeric keys intact', function (): void {
     Log::channel('single')->info('employees.imported', ['rows' => [10, 20]]);
 
     expect(lastLogLine($this->logPath)['context']['rows'])->toBe([10, 20]);
+});
+
+it('leaves loggers that are not Monolog untouched', function (): void {
+    $logger = new Logger(new NullLogger);
+
+    (new StructuredLogging)($logger);
+
+    expect($logger->getLogger())->toBeInstanceOf(NullLogger::class);
+});
+
+it('skips handlers without a formatter but still redacts their records', function (): void {
+    $monolog = new Monolog('test', [new NullHandler]);
+
+    (new StructuredLogging)(new Logger($monolog));
+
+    expect($monolog->getProcessors())->toHaveCount(1)
+        ->and($monolog->getProcessors()[0])->toBeInstanceOf(RedactSensitiveData::class);
 });
