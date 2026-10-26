@@ -66,7 +66,8 @@
             "Composer\\Config::disableProcessTimeout",
             "npm run check",
             "npm run types:check",
-            "@test"
+            "@test",
+            "@test:mutate"
         ],
         "types:check": [
             "phpstan analyse"
@@ -75,7 +76,11 @@
             "@php artisan config:clear --ansi",
             "@lint:check",
             "@types:check",
-            "@php artisan test"
+            "@php artisan test --coverage --min=90"
+        ],
+        "test:mutate": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --mutate --parallel --exclude-testsuite=Browser --min=85"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
