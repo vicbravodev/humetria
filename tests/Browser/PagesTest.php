@@ -8,7 +8,7 @@ use Pest\Browser\Api\AwaitableWebpage;
 
 /*
  * Every Inertia page, opened the way a user reaches it, in each look: see visitPage() in tests/Pest.php.
- * Login, register and dashboard live in DesignSystemTest, which also checks the logo.
+ * Login and dashboard live in DesignSystemTest, which also checks the logo.
  */
 
 dataset('looks', [

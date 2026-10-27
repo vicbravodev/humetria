@@ -25,10 +25,6 @@ it('renders the login page accessibly', function (bool $dark, bool $mobile): voi
     assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile));
 })->with($looks);
 
-it('renders the register page accessibly', function (bool $dark, bool $mobile): void {
-    assertLogoInsideItsBox(visitPage('auth/register', '/admin/register', $dark, $mobile));
-})->with($looks);
-
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
     $this->actingAs(User::factory()->create());
 

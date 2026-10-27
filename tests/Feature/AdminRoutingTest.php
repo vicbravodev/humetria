@@ -42,6 +42,13 @@ test('the passkey endpoints and health check stay at the root', function () {
     $this->get('/up')->assertOk();
 });
 
+test('public self-registration does not exist', function () {
+    $this->get('/register')->assertNotFound();
+    $this->post('/register', ['name' => 'X', 'email' => 'x@example.com', 'password' => 'password', 'password_confirmation' => 'password'])
+        ->assertStatus(404);
+    $this->get('/admin/register')->assertNotFound();
+});
+
 test('users land on /admin after login', function () {
     $user = User::factory()->create();
 
