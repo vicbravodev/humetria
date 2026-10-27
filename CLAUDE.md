@@ -201,7 +201,8 @@ layouts/  hooks/  lib/  types/
 - PHP corre local; solo Postgres corre en Docker: `docker compose up -d pgsql` (puerto 5433).
 - El correo local va a `log`: ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
-- Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `composer test` al terminar si hay cambios.
+- Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado;
+  al terminar, `composer test` si hay cambios y además `npm run check` + `npm run types:check` si cambió frontend.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
 
 ## Flujo de trabajo: PRs atómicos
