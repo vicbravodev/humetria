@@ -41,6 +41,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'token',
             'two_factor_recovery_codes',
             'two_factor_secret',
+            // A phone number reaches a person directly: never log one, whatever event carries it.
+            'whatsapp',
         ];
 
         foreach ($data as $key => $value) {
