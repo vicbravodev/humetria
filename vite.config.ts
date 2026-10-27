@@ -66,6 +66,7 @@ export default defineConfig({
         ignorePatterns: [
             '.github/**',
             '.claude/**',
+            'docs/**',
             'AGENTS.md',
             'CLAUDE.md',
             'composer.json',
