@@ -98,6 +98,13 @@ layouts/  hooks/  lib/  types/
   tanto por consulta directa como por URL (route model binding debe dar 404, no 403 que delate existencia).
 - Nunca se confía en un `tenant_id` que venga del request.
 
+## Seguridad
+
+- Toda respuesta web lleva los encabezados de `App\Http\Middleware\SecurityHeaders`, con una CSP basada en nonce.
+- Todo `<script>` o `<style>` inline lleva `nonce="{{ Vite::cspNonce() }}"`; en el front, las librerías que inyectan
+  estilos reciben `cspNonce` (`@/lib/csp-nonce`). Los tests de navegador afirman `->assertScript(cspViolations(), '[]')`.
+- Aflojar la CSP (un origen, `'unsafe-inline'`, un hash) exige explicar el motivo en el PR.
+
 ## Privacidad (invariante)
 
 - Las respuestas de Guía II/III viven en tablas **sin ninguna llave** hacia empleado, invitación ni token.

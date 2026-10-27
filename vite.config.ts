@@ -31,6 +31,9 @@ export default defineConfig({
         }),
     ]),
     server: {
+        // Same address as Vite's default, but written to public/hot by name: the CSP
+        // (SecurityHeaders) must allow the dev server, and CSP rejects IPv6 literals like [::1].
+        host: 'localhost',
         watch: {
             ignored: [
                 '**/.agents/**',

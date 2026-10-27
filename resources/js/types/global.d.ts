@@ -16,3 +16,8 @@ declare module '@inertiajs/core' {
         };
     }
 }
+
+declare global {
+    // Read by get-nonce (Radix scroll lock) to sign the <style> tags it injects.
+    var __webpack_nonce__: string | undefined;
+}

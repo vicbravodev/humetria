@@ -11,5 +11,6 @@ it('shows a solid outline on the control focused by keyboard', function (string 
         ->keys('#remember', 'Tab')
         ->assertScript($focused, 'button:solid')
         ->keys('button[type="submit"]', 'Shift+Tab')
-        ->assertScript($focused, 'checkbox:solid');
+        ->assertScript($focused, 'checkbox:solid')
+        ->assertScript(cspViolations(), '[]');
 })->with(['inLightMode', 'inDarkMode']);

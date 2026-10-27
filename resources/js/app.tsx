@@ -2,9 +2,13 @@ import { createInertiaApp } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { cspNonce } from '@/lib/csp-nonce';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+
+// Radix dialogs inject their scroll-lock <style> with the nonce they find here (get-nonce).
+globalThis.__webpack_nonce__ = cspNonce;
 
 const appName = import.meta.env.VITE_APP_NAME || 'Humetría';
 
@@ -23,6 +27,7 @@ void createInertiaApp({
         }
     },
     strictMode: true,
+    nonce: cspNonce,
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
