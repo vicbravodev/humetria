@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-Route::get('/', fn (): Response => Inertia::render('welcome'))->name('home');
+Route::get('/', fn (): Response => Inertia::render('landing'))->name('home');
 
 Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {

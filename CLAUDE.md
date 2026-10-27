@@ -91,8 +91,7 @@ layouts/  hooks/  lib/  types/
   profundidad 4, 3 parámetros. Un componente por archivo, archivos en kebab-case, sin dependencias circulares.
 - Lo hace cumplir `vp lint` (`frontend-architecture.ts`, conectado en `vite.config.ts`) y
   `tests/Unit/FrontendArchitectureTest.php` lo fija. Si una regla estorba, se parte el componente: no se sube el
-  límite ni se agrega una excepción. La única lista de excepciones (`PENDING_REFACTOR`) es del starter kit y solo
-  se vacía.
+  límite ni se agrega una excepción.
 - La lógica que no es de presentación (cálculos, formato, llamadas) va en `hooks/` o `lib/`, no dentro del
   componente.
 
@@ -152,7 +151,7 @@ layouts/  hooks/  lib/  types/
 - Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
   entra ahí con su par.
 - El color va solo por tokens del design system; los colores crudos de la paleta de Tailwind o en hex los rechaza
-  `tests/Unit/DesignTokensOnlyTest.php` (excepto `components/ui` y la `welcome` temporal).
+  `tests/Unit/DesignTokensOnlyTest.php` (excepto `components/ui`).
 - Los 5 ajustes a shadcn se aplican después de cada `npx shadcn add`, y `tests/Unit/ShadcnAdjustmentsTest.php`
   los hace cumplir.
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.

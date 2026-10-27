@@ -103,7 +103,7 @@ function englishWords(): string
 /**
  * Opens a page in the browser and checks it is healthy: the rendered Inertia component is exactly
  * `$component`, with no JavaScript errors, no CSP violations, no accessibility issues (axe, level 1)
- * and no English left in what it shows (see ENGLISH_STOPLIST; `welcome` is exempt until the landing replaces it).
+ * and no English left in what it shows (see ENGLISH_STOPLIST).
  * `$reach` runs the steps that lead from `$url` to the page under check (fill a form, open a menu…).
  * Every Inertia page needs one of these tests: tests/Unit/BrowserCoverageTest.php enforces it.
  *
@@ -124,9 +124,7 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
     // Inertia keeps the current page object in the history state; before it boots, only in the initial <script data-page>.
     $page->assertScript('() => (window.history.state?.page ?? JSON.parse(document.querySelector("script[data-page]").textContent)).component', $component);
 
-    if ($component !== 'welcome') {
-        $page->assertScript(englishWords(), '[]');
-    }
+    $page->assertScript(englishWords(), '[]');
 
     return $page->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
