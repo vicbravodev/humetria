@@ -211,14 +211,14 @@ layouts/  hooks/  lib/  types/
   al terminar, `composer test` si hay cambios y además `npm run check` + `npm run types:check` si cambió frontend.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
 
-## Flujo de trabajo: PRs atómicos
+## Flujo de trabajo: un PR por feature, commits atómicos
 
-- Todo PR llena `.github/pull_request_template.md`: qué comportamiento, por qué, cómo se probó (RED/GREEN) y su checklist.
+- Todo PR llena `.github/pull_request_template.md`: qué feature, por qué, cómo se probó (RED/GREEN) y su checklist.
 - Nada se commitea directo a `main`: todo entra por PR desde una rama propia, con el CI en verde.
-- **Un PR = un comportamiento** (p. ej. "crear empresa", "importar empleados por CSV"), nunca un módulo
-  completo de golpe. Si un cambio necesita "y además…", son dos PRs.
-- Cada PR deja el sistema funcionando y es seguro de revertir solo: trae sus migraciones, tests y reglas,
-  y no deja código a medias detrás de él.
-- Refactors, cambios de dependencias y cambios de harness (CI, hooks, reglas) van en su propio PR,
-  separados de la lógica de negocio.
-- Si un PR crece, se parte antes de abrirlo. Ante la duda, más chico.
+- **Un PR = una feature usable de punta a punta** (p. ej. "consola de solicitudes de demo",
+  "importar empleados por CSV"): trae su migración, backend, UI, tests y los refactors chicos que necesita.
+  Nunca un módulo completo de golpe ni dos features sin relación.
+- **Un commit = un comportamiento** dentro del PR (test + código que lo pasa). Cada commit deja los tests en verde,
+  para poder revertir o hacer bisect commit por commit.
+- Cada PR deja el sistema funcionando y es seguro de revertir solo: no deja código a medias detrás de él.
+- Cambios de dependencias y de harness (CI, hooks, reglas) que la feature no necesita van en su propio PR.

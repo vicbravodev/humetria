@@ -1,6 +1,6 @@
-## Qué comportamiento cambia
+## Qué feature agrega
 
-<!-- Un PR = un comportamiento. Si la descripción necesita "y además…", son dos PRs. -->
+<!-- Un PR = una feature usable de punta a punta. Lista los comportamientos que trae; cada uno es un commit. -->
 
 ## Por qué
 
@@ -10,7 +10,8 @@
 
 ## Checklist
 
-- [ ] Un solo comportamiento; el PR se puede revertir solo, sin dejar código a medias.
+- [ ] Una sola feature; el PR se puede revertir solo, sin dejar código a medias.
+- [ ] Un commit por comportamiento, cada uno con los tests en verde.
 - [ ] Test primero (RED → GREEN). Ningún test se aflojó, se saltó ni se borró.
 - [ ] `composer ci:check` en verde (incluye cobertura ≥ 90 % y mutación ≥ 85 %) y `tests/Browser` en verde.
 - [ ] Sin dependencias nuevas, o aprobadas explícitamente.
