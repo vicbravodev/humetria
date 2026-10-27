@@ -11,7 +11,7 @@ import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
-    breadcrumbs?: BreadcrumbItem[];
+    breadcrumbs?: BreadcrumbItem[] | undefined;
 };
 
 export function AppHeader({ breadcrumbs = [] }: Props) {

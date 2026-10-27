@@ -10,7 +10,7 @@ import SettingsLayout from '@/layouts/settings/layout';
 // Radix dialogs inject their scroll-lock <style> with the nonce they find here (get-nonce).
 globalThis.__webpack_nonce__ = cspNonce;
 
-const appName = import.meta.env.VITE_APP_NAME || 'Humetría';
+const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
