@@ -146,6 +146,8 @@ layouts/  hooks/  lib/  types/
 - Un solo acento (`primary`); `brand-soft` y `brand-deep` solo dentro del logo.
 - Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
   entra ahí con su par.
+- El color va solo por tokens del design system; los colores crudos de la paleta de Tailwind o en hex los rechaza
+  `tests/Unit/DesignTokensOnlyTest.php` (excepto `components/ui` y la `welcome` temporal).
 - Los 5 ajustes a shadcn se aplican después de cada `npx shadcn add`, y `tests/Unit/ShadcnAdjustmentsTest.php`
   los hace cumplir.
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
