@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, FolderGit2, Inbox, LayoutGrid } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as demoRequests } from '@/routes/demo-requests';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -21,6 +22,15 @@ const mainNavItems: NavItem[] = [
         title: 'Panel',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+];
+
+// Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
+const superadminNavItems: NavItem[] = [
+    {
+        title: 'Solicitudes de demo',
+        href: demoRequests(),
+        icon: Inbox,
     },
 ];
 
@@ -38,6 +48,8 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { isSuperadmin } = usePage().props.auth;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -58,7 +70,13 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain
+                    items={
+                        isSuperadmin
+                            ? [...mainNavItems, ...superadminNavItems]
+                            : mainNavItems
+                    }
+                />
             </SidebarContent>
 
             <SidebarFooter>
