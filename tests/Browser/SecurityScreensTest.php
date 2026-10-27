@@ -14,11 +14,11 @@ function visitSecuritySettings(User $user): AwaitableWebpage
 {
     test()->actingAs($user);
 
-    return visitPage('settings/security', '/settings/security', reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
+    return visitPage('settings/security', '/admin/settings/security', reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
         ->assertSee('Confirma tu contraseña para continuar')
         ->fill('password', 'password')
         ->press('@confirm-password-button')
-        ->assertPathIs('/settings/security'));
+        ->assertPathIs('/admin/settings/security'));
 }
 
 it('renders the password, two-factor and passkeys sections', function (): void {
@@ -69,11 +69,11 @@ it('reveals the recovery codes of a user with two-factor enabled', function (): 
 it('switches the two-factor challenge between code and recovery code', function (): void {
     $user = User::factory()->withTwoFactor()->create();
 
-    visitPage('auth/two-factor-challenge', '/login', reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
+    visitPage('auth/two-factor-challenge', '/admin/login', reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
         ->fill('email', $user->email)
         ->fill('password', 'password')
         ->press('@login-button')
-        ->assertPathIs('/two-factor-challenge'))
+        ->assertPathIs('/admin/two-factor-challenge'))
         ->assertSee('Código de verificación')
         ->assertPresent('input[name="code"]')
         ->assertMissing('input[name="recovery_code"]')

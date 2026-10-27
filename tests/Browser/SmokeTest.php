@@ -6,4 +6,4 @@ it('renders public pages without javascript errors on desktop and mobile', funct
     visit($path)->assertNoJavaScriptErrors()->assertNoConsoleLogs()->assertScript(cspViolations(), '[]');
 
     visit($path)->on()->mobile()->assertNoJavaScriptErrors()->assertNoConsoleLogs()->assertScript(cspViolations(), '[]');
-})->with(['/', '/login', '/register', '/forgot-password']);
+})->with(['/', '/admin/login', '/admin/register', '/admin/forgot-password']);

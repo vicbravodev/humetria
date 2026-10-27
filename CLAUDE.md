@@ -38,6 +38,8 @@ Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre`
 
 ## Arquitectura: monolito modular
 
+La aplicación vive bajo `/admin` (login incluido); `/` y sus páginas públicas son marketing.
+
 Cada parte del negocio es un módulo en `app/Modules/{Module}`:
 
 ```
