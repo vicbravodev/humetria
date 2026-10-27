@@ -32,7 +32,9 @@ export function AppHeaderMobileMenu() {
                     side="left"
                     className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar"
                 >
-                    <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+                    <SheetTitle className="sr-only">
+                        Menú de navegación
+                    </SheetTitle>
                     <SheetHeader className="flex justify-start text-left">
                         <Logo kind="symbol" className="size-6" />
                     </SheetHeader>
