@@ -19,6 +19,7 @@ it('renders guest pages accessibly', function (string $path, bool $dark, bool $m
     $page = $dark ? $page->inDarkMode() : $page->inLightMode();
 
     $page->assertVisible($logo)
+        ->assertScript('() => [...document.querySelectorAll(\'img[alt="Humetría"]\')].filter((img) => img.offsetParent !== null).every((img) => { const logo = img.getBoundingClientRect(); const box = img.parentElement.getBoundingClientRect(); return logo.left >= box.left && logo.right <= box.right && logo.top >= box.top && logo.bottom <= box.bottom; })')
         ->assertNoJavaScriptErrors()
         ->assertNoAccessibilityIssues(1);
 })->with(['/login', '/register'])->with($looks);
