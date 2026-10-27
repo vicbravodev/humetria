@@ -59,7 +59,7 @@ export default function Welcome() {
                                         <a
                                             href="https://laravel.com/docs"
                                             target="_blank"
-                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
+                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#e02b00] underline underline-offset-4 dark:text-[#FF4433]"
                                         >
                                             <span>Documentation</span>
                                             <svg
@@ -90,7 +90,7 @@ export default function Welcome() {
                                         <a
                                             href="https://laracasts.com"
                                             target="_blank"
-                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
+                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#e02b00] underline underline-offset-4 dark:text-[#FF4433]"
                                         >
                                             <span>Laracasts</span>
                                             <svg

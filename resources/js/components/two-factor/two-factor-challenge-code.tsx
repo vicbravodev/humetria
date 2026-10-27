@@ -22,6 +22,7 @@ export default function TwoFactorChallengeCode({
             <div className="flex w-full items-center justify-center">
                 <InputOTP
                     name="code"
+                    aria-label="Authentication code"
                     maxLength={OTP_MAX_LENGTH}
                     value={code}
                     onChange={(value) => onChange(value)}

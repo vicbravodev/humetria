@@ -177,6 +177,8 @@ layouts/  hooks/  lib/  types/
 - Las peticiones HTTP externas están bloqueadas en tests (`Http::preventStrayRequests()`); usa `Http::fake()`.
 - Proveedores externos (SMS, WhatsApp, correo) detrás de un contrato con un fake para tests.
 - Tests de navegador: `php artisan test --compact tests/Browser` (requieren `npm run build`).
+- Toda página Inertia tiene un test de navegador con `visitPage()` (componente exacto + sin errores de JS + sin violaciones
+  de CSP + axe); `tests/Unit/BrowserCoverageTest.php` lo hace cumplir.
 
 ## Reglas de dominio NOM-035 (fuente: DOF 23/10/2018)
 

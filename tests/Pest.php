@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
 
 /*
@@ -67,4 +68,34 @@ function cspViolations(): string
             resolve(JSON.stringify(reports.map(({ body }) => [body.effectiveDirective, body.blockedURL, body.sample])));
         }, 100);
     })';
+}
+
+/**
+ * Opens a page in the browser and checks it is healthy: the rendered Inertia component is exactly
+ * `$component`, with no JavaScript errors, no CSP violations and no accessibility issues (axe, level 1).
+ * `$reach` runs the steps that lead from `$url` to the page under check (fill a form, open a menu…).
+ * Every Inertia page needs one of these tests: tests/Unit/BrowserCoverageTest.php enforces it.
+ *
+ * @param  (Closure(AwaitableWebpage): mixed)|null  $reach
+ */
+function visitPage(string $component, string $url, bool $dark = false, bool $mobile = false, ?Closure $reach = null): AwaitableWebpage
+{
+    $pending = $mobile ? visit($url)->on()->mobile() : visit($url);
+    $pending = $dark ? $pending->inDarkMode() : $pending->inLightMode();
+
+    // Touching the pending page opens it; a plain assertion returns the real page to keep chaining on.
+    $page = $pending->assertNoJavaScriptErrors();
+
+    if ($reach !== null) {
+        $reach($page);
+    }
+
+    // Inertia keeps the current page object in the history state; before it boots, only in the initial <script data-page>.
+    return $page->assertScript('() => (window.history.state?.page ?? JSON.parse(document.querySelector("script[data-page]").textContent)).component', $component)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
+        // (endless ones, like the OTP caret blink, never finish and are left alone).
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)')
+        ->assertNoAccessibilityIssues(1);
 }
