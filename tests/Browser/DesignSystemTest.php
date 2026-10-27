@@ -43,3 +43,22 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
     visitPage('dashboard', '/admin', $dark, true)
         ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
 })->with(['light' => false, 'dark' => true]);
+
+it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', function (bool $dark): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('dashboard', '/admin', $dark)
+        // A full-height sidebar beside the page: no inset card, no breadcrumb bar, no starter-kit links.
+        ->assertScript('() => document.querySelector(\'[data-variant="inset"]\') === null')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent === null')
+        ->assertDontSee('Repositorio')
+        ->assertDontSee('Documentación')
+        // Group label in caption style; items of 44 px in body-strong with 20 px icons.
+        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "uppercase" && label.fontSize === "13px"; }')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => button.getBoundingClientRect().height >= 44 && getComputedStyle(button).fontSize === "16px")')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] svg\')].every((icon) => icon.getBoundingClientRect().width === 20)')
+        // Active item: 600 and its icon in sidebar-primary.
+        ->assertScript('() => { const active = document.querySelector(\'[data-sidebar="menu-button"][data-active="true"]\'); const probe = document.createElement("span"); probe.style.color = "var(--sidebar-primary)"; document.body.append(probe); const primary = getComputedStyle(probe).color; probe.remove(); return getComputedStyle(active).fontWeight === "600" && getComputedStyle(active.querySelector("svg")).color === primary; }')
+        // Page title in h1 (30/38).
+        ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px');
+})->with(['light' => false, 'dark' => true]);

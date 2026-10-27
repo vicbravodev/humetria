@@ -1,4 +1,5 @@
 import { CalendarCheck } from 'lucide-react';
+import DemoRequestForm from '@/components/landing/demo-request-form';
 
 export default function DemoSection() {
     return (
@@ -7,7 +8,7 @@ export default function DemoSection() {
             aria-labelledby="agenda-una-demo-title"
             className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24"
         >
-            <div className="rounded-xl bg-accent px-6 py-12 text-center sm:px-12 lg:py-16">
+            <div className="rounded-xl bg-accent px-4 py-12 text-center sm:px-12 lg:py-16">
                 <CalendarCheck
                     aria-hidden
                     className="mx-auto size-8 text-primary"
@@ -25,6 +26,9 @@ export default function DemoSection() {
                     gratis también se agenda: la platicamos en la misma llamada
                     para que empieces con tu gente sin perder tiempo.
                 </p>
+                <div className="mx-auto mt-10 max-w-3xl">
+                    <DemoRequestForm />
+                </div>
             </div>
         </section>
     );
