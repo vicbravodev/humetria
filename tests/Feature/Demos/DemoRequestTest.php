@@ -38,7 +38,7 @@ function demoRequest(array $overrides = []): array
         'profile' => 'company',
         'workforce' => '51_100',
         'message' => 'Queremos aplicar la Guía III este año.',
-        'website' => '',
+        'form_extra' => '',
         ...$overrides,
     ];
 }
@@ -154,7 +154,51 @@ it('rejects a field that is too long', function (string $field, string $value, s
 it('rejects an email that is not valid', function (string $email): void {
     $this->post(route('demo-requests.store'), demoRequest(['email' => $email]))
         ->assertSessionHasErrors(['email' => 'El campo correo electrónico debe ser un correo electrónico válido.']);
+
+    expect(DemoRequest::query()->count())->toBe(0);
 })->with(['no at' => 'ana.empresa.mx', 'no domain' => 'ana@', 'two ats' => 'ana@@empresa.mx']);
+
+it('rejects invalid UTF-8 and control characters before they reach the database', function (string $field, string $value): void {
+    $this->post(route('demo-requests.store'), demoRequest(['name' => 'Ana Lopez Prueba', 'company' => 'Empresa Prueba Uno', $field => $value]))
+        ->assertSessionHasErrors([$field]);
+
+    expect(DemoRequest::query()->count())->toBe(0);
+
+    // Exception handling stays on: nothing may be reported with the submitted values in it.
+    $log = File::exists($this->logPath) ? File::get($this->logPath) : '';
+
+    foreach (['Ana Lopez Prueba', 'Empresa Prueba Uno', 'ana@empresa.mx', '5512345678'] as $personal) {
+        expect($log)->not->toContain($personal);
+    }
+})->with([
+    'name, invalid UTF-8' => ['name', "Ana\xff"],
+    'name, NUL' => ['name', "Ana\0x"],
+    'name, control' => ['name', "Ana\x1bx"],
+    'name, new line' => ['name', "Ana\nx"],
+    'company, invalid UTF-8' => ['company', "Empresa\xff"],
+    'company, NUL' => ['company', "Empresa\0x"],
+    'email, invalid UTF-8' => ['email', "ana\xff@empresa.mx"],
+    'email, NUL' => ['email', "ana\0@empresa.mx"],
+    'message, invalid UTF-8' => ['message', "Hola\xff"],
+    'message, NUL' => ['message', "Hola\0x"],
+    'message, DEL' => ['message', "Hola\x7f"],
+    'whatsapp, invalid UTF-8' => ['whatsapp', "55\xff12345678"],
+    'whatsapp, NUL' => ['whatsapp', "55\x0012345678"],
+]);
+
+it('keeps line breaks and tabs in the message', function (): void {
+    $this->post(route('demo-requests.store'), demoRequest(['message' => "Hola,\r\n\tqueremos una demo."]))
+        ->assertSessionHasNoErrors();
+
+    expect(DemoRequest::query()->sole()->message)->toBe("Hola,\r\n\tqueremos una demo.");
+});
+
+it('ignores a website field, so browser autofill never drops a real request', function (): void {
+    $this->post(route('demo-requests.store'), demoRequest(['website' => 'https://empresa.mx']))
+        ->assertSessionHasNoErrors();
+
+    expect(DemoRequest::query()->count())->toBe(1);
+});
 
 it('rejects a value outside the options', function (string $field, mixed $value, string $error): void {
     $this->post(route('demo-requests.store'), demoRequest([$field => $value]))
@@ -213,7 +257,7 @@ it('logs the submission without any personal data', function (): void {
 });
 
 it('answers a filled honeypot like a success but stores nothing', function (): void {
-    $this->post(route('demo-requests.store'), demoRequest(['name' => 'Ana Lopez Prueba', 'website' => 'https://spam.example']))
+    $this->post(route('demo-requests.store'), demoRequest(['name' => 'Ana Lopez Prueba', 'form_extra' => 'https://spam.example']))
         ->assertRedirect(route('home').'#agenda-una-demo')
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => [
             'type' => 'success',
@@ -235,8 +279,8 @@ it('answers a filled honeypot like a success but stores nothing', function (): v
 it('does not log a submission it could not store', function (): void {
     DB::statement('ALTER TABLE demo_requests ADD CONSTRAINT reject_all CHECK (false) NOT VALID');
 
-    expect(fn () => $this->withoutExceptionHandling()->post(route('demo-requests.store'), demoRequest()))
-        ->toThrow(Illuminate\Database\QueryException::class);
+    // The failed insert aborts the test's wrapping transaction, so only the response and the log can be checked.
+    $this->post(route('demo-requests.store'), demoRequest())->assertServerError();
 
     expect(collect(demoLogLines($this->logPath))->where('message', 'demo_request.submitted'))->toHaveCount(0);
 });
