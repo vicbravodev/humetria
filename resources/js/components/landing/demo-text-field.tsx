@@ -23,7 +23,7 @@ export default function DemoTextField({ name, label, error, ...input }: Props) {
                 aria-invalid={error === undefined ? undefined : true}
                 aria-describedby={error === undefined ? undefined : errorId}
             />
-            <InputError id={errorId} message={error} />
+            <InputError id={errorId} role="alert" message={error} />
         </div>
     );
 }

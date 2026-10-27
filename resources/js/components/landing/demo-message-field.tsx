@@ -26,7 +26,7 @@ export default function DemoMessageField({ error }: Props) {
                 }
                 className="min-h-28 w-full rounded-md border border-input bg-card px-4 py-3 text-base transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive"
             />
-            <InputError id="demo-message-error" message={error} />
+            <InputError id="demo-message-error" role="alert" message={error} />
         </div>
     );
 }

@@ -53,7 +53,7 @@ export default function DemoChoiceField({
                     </label>
                 ))}
             </div>
-            <InputError id={errorId} message={error} />
+            <InputError id={errorId} role="alert" message={error} />
         </fieldset>
     );
 }

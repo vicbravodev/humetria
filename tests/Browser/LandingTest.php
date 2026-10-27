@@ -82,10 +82,31 @@ it('shows what to fix next to each field when the form is sent empty', function 
             ->assertScript("() => document.getElementById(document.querySelector('[data-test=\"{$group}-group\"]').getAttribute('aria-describedby')).textContent", $error);
     }
 
-    $page->assertAttributeMissing('[name="message"]', 'aria-invalid');
+    $page->assertAttributeMissing('[name="message"]', 'aria-invalid')
+        ->assertScript('() => document.activeElement.name', 'name')
+        ->assertScript('() => [...document.querySelectorAll("#agenda-una-demo [id$=\'-error\']")].every((error) => error.getAttribute("role") === "alert")');
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with(['desktop' => false, 'mobile' => true]);
+
+it('hides the honeypot from people, keyboards and autofill', function (): void {
+    visitPage('landing', '/')
+        ->assertMissing('[name="website"]')
+        ->assertAttribute('[name="form_extra"]', 'autocomplete', 'off')
+        ->assertAttribute('[name="form_extra"]', 'tabindex', '-1')
+        ->assertScript('() => document.querySelector("[name=form_extra]").closest("[aria-hidden=true]") !== null')
+        ->assertScript('() => document.querySelector("[name=form_extra]").getBoundingClientRect().right < 0');
+});
+
+it('moves focus to the first field left to fix', function (): void {
+    $page = visitPage('landing', '/');
+
+    fillDemoForm($page);
+    $page->fill('email', 'ana@')
+        ->press('@demo-request-submit')
+        ->waitForText('El campo correo electrónico debe ser un correo electrónico válido.')
+        ->assertScript('() => document.activeElement.name', 'email');
+});
 
 it('tells the visitor to wait when there were too many requests', function (): void {
     $page = visitPage('landing', '/');

@@ -8,11 +8,11 @@ export default function DemoHoneypot() {
             aria-hidden
             className="absolute -left-[9999px] size-px overflow-hidden"
         >
-            <label htmlFor="demo-website">Sitio web</label>
+            <label htmlFor="demo-form-extra">No llenes este campo</label>
             <input
-                id="demo-website"
+                id="demo-form-extra"
                 type="text"
-                name="website"
+                name="form_extra"
                 tabIndex={-1}
                 autoComplete="off"
                 defaultValue=""

@@ -7,7 +7,8 @@ import DemoMessageField from '@/components/landing/demo-message-field';
 import DemoTextField from '@/components/landing/demo-text-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { tooManyRequestsMessage } from '@/lib/too-many-requests';
+import { firstInvalidField } from '@/lib/first-invalid-field';
+import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
 
 const PROFILES: readonly DemoChoice[] = [
@@ -29,8 +30,16 @@ export default function DemoRequestForm() {
             {...store.form()}
             noValidate
             resetOnSuccess
+            id="demo-request-form"
+            onError={(errors) => {
+                const fields = document
+                    .getElementById('demo-request-form')
+                    ?.querySelectorAll<HTMLInputElement>('[name]');
+
+                firstInvalidField(fields ?? [], errors)?.focus();
+            }}
             onHttpException={(response) => {
-                const message = tooManyRequestsMessage(response);
+                const message = httpErrorMessage(response);
 
                 if (message !== null) {
                     toast.error(message);
