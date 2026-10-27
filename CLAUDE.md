@@ -26,7 +26,7 @@ Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo mand
 Nada está terminado hasta que esto pasa en verde:
 
 ```bash
-composer test          # pint --test + phpstan (max) + toda la suite de Pest con cobertura ≥ 90%
+composer test          # pint --test + phpstan (max) + Pest Unit/Feature con cobertura ≥ 90% + Browser en paralelo
 composer test:mutate   # mutación sobre las clases declaradas con mutates(), score ≥ 85%
 npm run types:check
 npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
@@ -182,7 +182,8 @@ layouts/  hooks/  lib/  types/
 - Usa factories y sus estados; no armes modelos a mano.
 - Las peticiones HTTP externas están bloqueadas en tests (`Http::preventStrayRequests()`); usa `Http::fake()`.
 - Proveedores externos (SMS, WhatsApp, correo) detrás de un contrato con un fake para tests.
-- Tests de navegador: `php artisan test --compact tests/Browser` (requieren `npm run build`).
+- Tests de navegador: `composer test:browser` (en paralelo; requieren `npm run build`). La cobertura se mide sin ellos:
+  en paralelo `--min` no se aplica, y los tests de navegador no aportan cobertura de PHP.
 - Toda página Inertia tiene un test de navegador con `visitPage()` (componente exacto + sin errores de JS + sin violaciones
   de CSP + axe); `tests/Unit/BrowserCoverageTest.php` lo hace cumplir.
 
