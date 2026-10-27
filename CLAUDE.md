@@ -56,6 +56,7 @@ app/Modules/{Module}/
 - Kernel compartido (`App\Models\User`, `App\Http`, `App\Concerns`) no depende de internos de módulos.
 - Las clases concretas son `final`; se depende de contratos, no de implementaciones (SOLID: D).
 - Rutas por módulo en `routes/{module}.php`, incluidas desde `routes/web.php`. Siempre con nombre.
+- Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`; agregar ahí una ruta exige una razón.
 - Factories en `database/factories/{Module}/` enlazadas con el atributo `#[UseFactory]`.
 - `tests/Unit/ArchitectureTest.php` hace cumplir todo esto. Si falla, se corrige el diseño, no la regla.
   Ojo: en Pest, una expectativa `arch()` con varios destinos pasa en silencio si alguno no existe;
