@@ -90,7 +90,8 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'es_MX'),
+    // Faker has no es_MX (it falls back to English); es_ES is the closest locale it ships.
+    'faker_locale' => env('APP_FAKER_LOCALE', 'es_ES'),
 
     /*
     |--------------------------------------------------------------------------

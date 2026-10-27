@@ -69,3 +69,10 @@ it('translates every message the passkeys package shows', function (string $engl
     ['Unable to register passkey. Please try again.', 'No pudimos registrar la llave de acceso. Inténtalo de nuevo.'],
     ['Unable to register this passkey.', 'No pudimos registrar esta llave de acceso. Prueba con otro dispositivo.'],
 ]);
+
+it('generates test data in Spanish, so no page shows a Faker name like "Will"', function (): void {
+    // Faker has no es_MX: that locale silently falls back to English names.
+    $providers = array_map(get_class(...), fake()->getProviders());
+
+    expect($providers)->toContain(Faker\Provider\es_ES\Person::class);
+});
