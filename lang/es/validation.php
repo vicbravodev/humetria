@@ -159,15 +159,24 @@ return [
     'ulid' => 'El campo :attribute debe ser un ULID válido.',
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
-    'custom' => [],
+    'custom' => [
+        'whatsapp' => [
+            'regex' => 'Escribe un WhatsApp de 10 dígitos, por ejemplo 55 1234 5678.',
+        ],
+    ],
 
     'attributes' => [
         'code' => 'código',
+        'company' => 'empresa',
         'current_password' => 'contraseña actual',
         'email' => 'correo electrónico',
+        'message' => 'mensaje',
         'name' => 'nombre',
         'password' => 'contraseña',
         'password_confirmation' => 'confirmación de contraseña',
+        'profile' => 'perfil',
         'recovery_code' => 'código de recuperación',
+        'whatsapp' => 'WhatsApp',
+        'workforce' => 'número de trabajadores',
     ],
 ];

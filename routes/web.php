@@ -8,6 +8,8 @@ use Inertia\Response;
 
 Route::get('/', fn (): Response => Inertia::render('landing'))->name('home');
 
+require __DIR__.'/demos.php';
+
 Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', fn (): Response => Inertia::render('dashboard'))->name('dashboard');

@@ -16,6 +16,7 @@ function publicRouteNames(): array
 {
     return [
         'home', // landing page
+        'demo-requests.store', // landing demo form; throttled + honeypot
         'login', // guest: sign-in form
         'login.store', // guest: sign-in submit
         'password.request', // guest: forgot-password form
