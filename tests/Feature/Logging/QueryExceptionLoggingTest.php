@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     $this->logPath = storage_path('logs/query-exception-test.log');
@@ -36,13 +37,11 @@ it('never writes the bindings of a failed query to the log', function (): void {
 it('still reports the failed query, with its SQL and error code but no values', function (): void {
     $this->get('/__failing-query')->assertServerError();
 
-    $lines = array_values(array_filter(explode("\n", File::get($this->logPath))));
+    $lastLine = Str::afterLast(trim(File::get($this->logPath)), "\n");
 
-    /** @var array{message: string, context: array{sql: string, code: string, connection: string}} $entry */
-    $entry = json_decode((string) end($lines), true, flags: JSON_THROW_ON_ERROR);
-
-    expect($entry['message'])->toBe('database.query_failed')
-        ->and($entry['context']['sql'])->toBe('select * from table_that_does_not_exist where email = ? and phone = ?')
-        ->and($entry['context']['code'])->toBe('42P01')
-        ->and($entry['context']['connection'])->toBe('pgsql');
+    expect(json_decode($lastLine, true, flags: JSON_THROW_ON_ERROR))
+        ->toHaveKey('message', 'database.query_failed')
+        ->toHaveKey('context.sql', 'select * from table_that_does_not_exist where email = ? and phone = ?')
+        ->toHaveKey('context.code', '42P01')
+        ->toHaveKey('context.connection', 'pgsql');
 });
