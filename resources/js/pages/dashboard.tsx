@@ -1,36 +1,21 @@
 import { Head } from '@inertiajs/react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import { dashboard } from '@/routes';
+import PageHeader from '@/components/page-header';
 
 export default function Dashboard() {
     return (
         <>
             <Head title="Panel" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-foreground/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-foreground/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-foreground/20" />
-                    </div>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-foreground/20" />
-                </div>
+            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+                <PageHeader title="Panel" />
+                <section className="rounded-lg border bg-card p-6">
+                    <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
+                        Aún no hay campañas
+                    </h2>
+                    <p className="mt-1 text-muted-foreground">
+                        Cuando lances la primera campaña, aquí verás su avance.
+                    </p>
+                </section>
             </div>
         </>
     );
 }
-
-Dashboard.layout = {
-    breadcrumbs: [
-        {
-            title: 'Panel',
-            href: dashboard(),
-        },
-    ],
-};

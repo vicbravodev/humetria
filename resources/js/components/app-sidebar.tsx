@@ -1,7 +1,6 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { House, Inbox } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -9,60 +8,51 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as demoRequests } from '@/routes/demo-requests';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Panel',
         href: dashboard(),
-        icon: LayoutGrid,
+        icon: House,
     },
 ];
 
-const footerNavItems: NavItem[] = [
+// Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
+const superadminNavItems: NavItem[] = [
     {
-        title: 'Repositorio',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentación',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Solicitudes de demo',
+        href: demoRequests(),
+        icon: Inbox,
     },
 ];
 
 export function AppSidebar() {
+    const { isSuperadmin } = usePage().props.auth;
+
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <div className="group-data-[collapsible=icon]:hidden">
-                                    <Logo className="h-7" />
-                                </div>
-                                <div className="hidden group-data-[collapsible=icon]:block">
-                                    <Logo kind="symbol" className="size-8" />
-                                </div>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+        <Sidebar collapsible="offcanvas">
+            <SidebarHeader className="px-3 pt-4 pb-4">
+                <Link
+                    href={dashboard()}
+                    prefetch
+                    className="flex h-11 w-fit items-center rounded-md px-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                    <Logo className="h-7" />
+                </Link>
             </SidebarHeader>
 
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
+            <SidebarContent className="gap-4 px-1">
+                <NavMain label="NOM-035" items={mainNavItems} />
+                {isSuperadmin && (
+                    <NavMain label="Plataforma" items={superadminNavItems} />
+                )}
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+            <SidebarFooter className="mx-3 border-t border-sidebar-border px-0 py-4">
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
