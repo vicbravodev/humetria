@@ -27,9 +27,10 @@ Nada está terminado hasta que esto pasa en verde:
 composer test          # pint --test + phpstan (max) + toda la suite de Pest con cobertura ≥ 90%
 composer test:mutate   # mutación sobre las clases declaradas con mutates(), score ≥ 85%
 npm run types:check
+npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
-El CI corre los tres. Si la cobertura o el score bajan, faltan tests: no se baja el umbral.
+El CI corre los tres (`composer ci:check` incluye `npm run test:js`). Si la cobertura o el score bajan, faltan tests: no se baja el umbral.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo.
 
@@ -167,6 +168,7 @@ layouts/  hooks/  lib/  types/
 | Capa | Herramienta | Qué cubre |
 |------|-------------|-----------|
 | Unit | Pest | Lógica pura: calificación de guías, tamaño de muestra, umbrales |
+| Unit (frontend) | Vitest (`vp test`) | Lógica de `resources/js/lib` en `tests/js` (espejo de `resources/js`), cobertura ≥ 90%; hooks y componentes los cubre Browser |
 | Feature | Pest + `assertInertia` | HTTP, validación, autorización, aislamiento de tenant, props que recibe cada página |
 | Browser | Pest Browser (Playwright) | Solo flujos críticos: el empleado contesta desde el celular, enlace de un solo uso, flujo de Guía I |
 | Arquitectura | Pest `arch()` | Aislamiento de módulos, tipos estrictos, clases final, presets php y security |

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stop: when the working tree has changes, run the full quality suite before Claude finishes.
-# composer test always runs; when frontend files changed, npm run check and npm run types:check run too.
+# composer test always runs; when frontend files changed, npm run check, npm run types:check and npm run test:js run too.
 # A failure blocks the stop once so Claude keeps fixing; a second consecutive failure
 # lets it stop and warns the user, to avoid an endless loop.
 
@@ -19,7 +19,7 @@ if ! output=$(composer test 2>&1); then
 fi
 
 if echo "$changes" | grep -qE '\.(ts|tsx|css)$|(^| )(package(-lock)?\.json|vite\.config\.ts|frontend-architecture\.ts|tsconfig\.json)$'; then
-    for check in "npm run check" "npm run types:check"; do
+    for check in "npm run check" "npm run types:check" "npm run test:js"; do
         if ! output=$($check 2>&1); then
             failed="${failed:+$failed, }$check"
             report="$report"$'\n'$(echo "$output" | tail -40)
