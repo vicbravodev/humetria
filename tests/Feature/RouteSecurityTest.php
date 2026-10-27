@@ -18,8 +18,6 @@ function publicRouteNames(): array
         'home', // landing page
         'login', // guest: sign-in form
         'login.store', // guest: sign-in submit
-        'register', // guest: sign-up form
-        'register.store', // guest: sign-up submit
         'password.request', // guest: forgot-password form
         'password.email', // guest: sends the reset link
         'password.reset', // guest: reset form reached from the emailed link

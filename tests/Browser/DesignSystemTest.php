@@ -22,17 +22,13 @@ function assertLogoInsideItsBox(AwaitableWebpage $page): void
 }
 
 it('renders the login page accessibly', function (bool $dark, bool $mobile): void {
-    assertLogoInsideItsBox(visitPage('auth/login', '/login', $dark, $mobile));
-})->with($looks);
-
-it('renders the register page accessibly', function (bool $dark, bool $mobile): void {
-    assertLogoInsideItsBox(visitPage('auth/register', '/register', $dark, $mobile));
+    assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile));
 })->with($looks);
 
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
     $this->actingAs(User::factory()->create());
 
-    visitPage('dashboard', '/dashboard', $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
+    visitPage('dashboard', '/admin', $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
         if ($mobile) {
             // On mobile the sidebar is an off-canvas sheet: open it and let it finish sliding in.
             $page->click('[data-sidebar="trigger"]')
@@ -44,6 +40,6 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
 it('gives the mobile menu button a 44 px touch target', function (bool $dark): void {
     $this->actingAs(User::factory()->create());
 
-    visitPage('dashboard', '/dashboard', $dark, true)
+    visitPage('dashboard', '/admin', $dark, true)
         ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
 })->with(['light' => false, 'dark' => true]);

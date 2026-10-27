@@ -10,7 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', '/settings/profile')->name('settings');
+    Route::redirect('settings', '/admin/settings/profile')->name('settings');
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -29,10 +29,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('settings/appearance', fn (): Response => Inertia::render('settings/appearance'))->name('appearance.edit');
 });
-
-Route::get('.well-known/passkey-endpoints', function () {
-    return response()->json([
-        'enroll' => route('security.edit'),
-        'manage' => route('security.edit'),
-    ]);
-})->name('well-known.passkeys');
