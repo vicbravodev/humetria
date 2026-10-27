@@ -70,9 +70,40 @@ function cspViolations(): string
     })';
 }
 
+// English words the starter kit showed and that never appear in Spanish UI text: any of them on a page means untranslated text.
+const ENGLISH_STOPLIST = [
+    'the', 'your', 'you', 'and', 'with', 'please', 'password', 'account', 'settings', 'profile', 'appearance',
+    'dashboard', 'log', 'login', 'sign', 'forgot', 'remember', 'save', 'cancel', 'delete', 'confirm', 'enable',
+    'disable', 'code', 'codes', 'recovery', 'continue', 'back', 'email', 'name', 'close', 'light', 'dark', 'system',
+    'platform', 'repository', 'documentation', 'security', 'toggle', 'sidebar', 'loading', 'show', 'hide', 'more',
+    'passkey', 'passkeys', 'verify', 'verification', 'update', 'reset', 'register', 'create', 'already', 'have',
+    'enter', 'address', 'warning', 'navigation', 'menu', 'two', 'authentication', 'add', 'remove', 'manage',
+    'search', 'this', 'are', 'will', 'here', 'click', 'link', 'new', 'current', 'full',
+];
+
+/**
+ * A browser script that lists, as JSON, the stoplisted English words the page shows: its visible text,
+ * the accessible names it gives through aria-label, title, placeholder and alt, and the document title.
+ * Words match whole and case-insensitive; letters with accents count as letters, so "código" is not "code".
+ */
+function englishWords(): string
+{
+    $words = json_encode(ENGLISH_STOPLIST, JSON_THROW_ON_ERROR);
+
+    return '() => {
+        const attributes = [...document.querySelectorAll("[aria-label], [title], [placeholder], [alt]")]
+            .flatMap((element) => ["aria-label", "title", "placeholder", "alt"].map((name) => element.getAttribute(name) ?? ""));
+        const text = [document.title, document.body.innerText, ...attributes].join("\n");
+        const pattern = new RegExp("(?<![\\\\p{L}\\\\p{N}])(" + '.$words.'.join("|") + ")(?![\\\\p{L}\\\\p{N}])", "giu");
+
+        return JSON.stringify([...new Set([...text.matchAll(pattern)].map((match) => match[0].toLowerCase()))].sort());
+    }';
+}
+
 /**
  * Opens a page in the browser and checks it is healthy: the rendered Inertia component is exactly
- * `$component`, with no JavaScript errors, no CSP violations and no accessibility issues (axe, level 1).
+ * `$component`, with no JavaScript errors, no CSP violations, no accessibility issues (axe, level 1)
+ * and no English left in what it shows (see ENGLISH_STOPLIST; `welcome` is exempt until the landing replaces it).
  * `$reach` runs the steps that lead from `$url` to the page under check (fill a form, open a menu…).
  * Every Inertia page needs one of these tests: tests/Unit/BrowserCoverageTest.php enforces it.
  *
@@ -91,8 +122,13 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
     }
 
     // Inertia keeps the current page object in the history state; before it boots, only in the initial <script data-page>.
-    return $page->assertScript('() => (window.history.state?.page ?? JSON.parse(document.querySelector("script[data-page]").textContent)).component', $component)
-        ->assertNoJavaScriptErrors()
+    $page->assertScript('() => (window.history.state?.page ?? JSON.parse(document.querySelector("script[data-page]").textContent)).component', $component);
+
+    if ($component !== 'welcome') {
+        $page->assertScript(englishWords(), '[]');
+    }
+
+    return $page->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
         // (endless ones, like the OTP caret blink, never finish and are left alone).
