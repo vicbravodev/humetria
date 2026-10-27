@@ -26,7 +26,7 @@ export default function CreateTenantDialog() {
                 <DialogTitle>Dar de alta empresa</DialogTitle>
                 <DialogDescription>
                     La empresa queda sin iniciar: su prueba de 14 días empieza
-                    cuando tú la actives.
+                    cuando su responsable entre por primera vez.
                 </DialogDescription>
                 <Form
                     {...store.form()}

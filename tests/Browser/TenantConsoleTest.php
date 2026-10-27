@@ -53,6 +53,7 @@ it('creates a company from the dialog, suggesting its address from the trade nam
 
     visit('/admin/companies')
         ->click('Dar de alta empresa')
+        ->assertSee('La empresa queda sin iniciar: su prueba de 14 días empieza cuando su responsable entre por primera vez.')
         ->type('trade_name', 'Grupo Ejemplo')
         ->assertValue('slug', 'grupo-ejemplo')
         ->type('rfc', 'gej0101011a1')
