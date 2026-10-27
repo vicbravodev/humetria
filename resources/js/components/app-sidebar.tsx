@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { House, Inbox } from 'lucide-react';
+import { Building2, House, Inbox } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -10,6 +10,7 @@ import {
     SidebarHeader,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
 import type { NavItem } from '@/types';
 
@@ -23,6 +24,11 @@ const mainNavItems: NavItem[] = [
 
 // Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
 const superadminNavItems: NavItem[] = [
+    {
+        title: 'Empresas',
+        href: companies(),
+        icon: Building2,
+    },
     {
         title: 'Solicitudes de demo',
         href: demoRequests(),

@@ -15,13 +15,6 @@ $looks = [
     'dark mobile' => [true, true],
 ];
 
-function signInAsSuperadmin(): void
-{
-    $user = User::factory()->create();
-    $user->assignRole(User::SUPERADMIN);
-    test()->actingAs($user);
-}
-
 it('shows the superadmin every demo request with its contact links', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     DemoRequest::factory()->create([

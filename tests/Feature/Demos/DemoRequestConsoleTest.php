@@ -12,14 +12,6 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(DemoRequestConsoleController::class, DemoProfile::class, Workforce::class);
 
-function superadmin(): User
-{
-    $user = User::factory()->create();
-    $user->assignRole(User::SUPERADMIN);
-
-    return $user;
-}
-
 it('lives at /admin/demo-requests', function (): void {
     expect(route('demo-requests.index', absolute: false))->toBe('/admin/demo-requests');
 });

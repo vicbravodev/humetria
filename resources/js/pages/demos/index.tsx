@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
+import ConsolePagination from '@/components/console-pagination';
 import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
-import DemoRequestsPagination from '@/components/demos/demo-requests-pagination';
 import DemoRequestsTable from '@/components/demos/demo-requests-table';
 import PageHeader from '@/components/page-header';
 import type { DemoRequestRow, Paginated } from '@/types';
@@ -26,7 +26,10 @@ export default function DemoRequests({
                 ) : (
                     <DemoRequestsTable requests={demoRequests.data} />
                 )}
-                <DemoRequestsPagination page={demoRequests} />
+                <ConsolePagination
+                    page={demoRequests}
+                    label="Páginas de solicitudes"
+                />
             </div>
         </>
     );
