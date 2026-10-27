@@ -40,3 +40,10 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
         }
     })->assertVisible(VISIBLE_LOGO);
 })->with($looks);
+
+it('gives the mobile menu button a 44 px touch target', function (bool $dark): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('dashboard', '/dashboard', $dark, true)
+        ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
+})->with(['light' => false, 'dark' => true]);
