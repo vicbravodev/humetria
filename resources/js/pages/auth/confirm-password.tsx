@@ -9,7 +9,7 @@ import {
     index as confirmOptions,
     store as confirmStore,
 } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyConfirmationController';
-import PasskeyVerify from '@/components/passkey-verify';
+import PasskeyVerify from '@/components/passkeys/passkey-verify';
 
 export default function ConfirmPassword() {
     return (
