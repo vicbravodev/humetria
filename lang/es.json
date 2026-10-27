@@ -1,0 +1,15 @@
+{
+    "Profile updated.": "Perfil actualizado.",
+    "Password updated.": "Contraseña actualizada.",
+    "The provided password was incorrect.": "La contraseña no es correcta. Revísala e inténtalo de nuevo.",
+    "The provided two factor authentication code was invalid.": "El código no es válido. Escribe el código que muestra ahora tu app de autenticación.",
+    "The provided two factor recovery code was invalid.": "El código de recuperación no es válido. Revisa que lo hayas copiado completo.",
+    "Invalid credential format.": "No pudimos leer la llave de acceso. Inténtalo de nuevo.",
+    "Passkey verification session expired. Please try again.": "La verificación con llave de acceso expiró. Inténtalo de nuevo.",
+    "Passkey registration session expired. Please try again.": "El registro de la llave de acceso expiró. Inténtalo de nuevo.",
+    "Unable to sign in with this account.": "No pudimos iniciar sesión con esta llave de acceso. Entra con tu correo y contraseña.",
+    "Unable to verify passkey. Please try again.": "No pudimos verificar la llave de acceso. Inténtalo de nuevo.",
+    "Passkey not recognized. It may have been removed from your account.": "No reconocemos esta llave de acceso; es posible que se haya quitado de tu cuenta. Entra con tu correo y contraseña.",
+    "Unable to register passkey. Please try again.": "No pudimos registrar la llave de acceso. Inténtalo de nuevo.",
+    "Unable to register this passkey.": "No pudimos registrar esta llave de acceso. Prueba con otro dispositivo."
+}

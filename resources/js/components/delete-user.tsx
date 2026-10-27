@@ -23,15 +23,13 @@ export default function DeleteUser() {
         <div className="space-y-6">
             <Heading
                 variant="small"
-                title="Delete account"
-                description="Delete your account and all of its resources"
+                title="Eliminar cuenta"
+                description="Elimina tu cuenta y todos sus datos"
             />
             <div className="space-y-4 rounded-lg border border-destructive bg-destructive/10 p-4">
                 <div className="relative space-y-0.5 text-destructive">
-                    <p className="font-medium">Warning</p>
-                    <p className="text-sm">
-                        Please proceed with caution, this cannot be undone.
-                    </p>
+                    <p className="font-medium">Atención</p>
+                    <p className="text-sm">Esta acción no se puede deshacer.</p>
                 </div>
 
                 <Dialog>
@@ -40,18 +38,14 @@ export default function DeleteUser() {
                             variant="destructive"
                             data-test="delete-user-button"
                         >
-                            Delete account
+                            Eliminar cuenta
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
-                        <DialogTitle>
-                            Are you sure you want to delete your account?
-                        </DialogTitle>
+                        <DialogTitle>¿Eliminar tu cuenta?</DialogTitle>
                         <DialogDescription>
-                            Once your account is deleted, all of its resources
-                            and data will also be permanently deleted. Please
-                            enter your password to confirm you would like to
-                            permanently delete your account.
+                            Tu cuenta y todos sus datos se eliminarán de forma
+                            permanente. Escribe tu contraseña para confirmar.
                         </DialogDescription>
 
                         <Form
@@ -70,14 +64,14 @@ export default function DeleteUser() {
                                             htmlFor="password"
                                             className="sr-only"
                                         >
-                                            Password
+                                            Contraseña
                                         </Label>
 
                                         <PasswordInput
                                             id="password"
                                             name="password"
                                             ref={passwordInput}
-                                            placeholder="Password"
+                                            placeholder="Contraseña"
                                             autoComplete="current-password"
                                         />
 
@@ -94,7 +88,7 @@ export default function DeleteUser() {
                                                     resetAndClearErrors()
                                                 }
                                             >
-                                                Cancel
+                                                Cancelar
                                             </Button>
                                         </DialogClose>
 
@@ -107,7 +101,7 @@ export default function DeleteUser() {
                                                 type="submit"
                                                 data-test="confirm-delete-user-button"
                                             >
-                                                Delete account
+                                                Eliminar cuenta
                                             </button>
                                         </Button>
                                     </DialogFooter>

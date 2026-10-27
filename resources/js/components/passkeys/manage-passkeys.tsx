@@ -33,8 +33,8 @@ export default function ManagePasskeys(props: Props) {
         <div className="space-y-6">
             <Heading
                 variant="small"
-                title="Passkeys"
-                description="Manage your passkeys for passwordless sign-in"
+                title="Llaves de acceso"
+                description="Administra tus llaves de acceso para iniciar sesión sin contraseña"
             />
 
             <div className="overflow-hidden rounded-lg border border-border">
