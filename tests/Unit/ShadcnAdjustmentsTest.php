@@ -24,7 +24,7 @@ it('leaves no shadcn default that breaks the design system', function (string $f
 
 it('keeps shadows only on floating surfaces', function (string $component): void {
     expect(uiComponent($component))->not->toContain('shadow-sm');
-})->with(['button', 'input', 'card', 'select', 'checkbox', 'badge', 'toggle']);
+})->with(['button', 'input', 'card', 'select', 'checkbox', 'badge', 'toggle', 'sidebar']);
 
 it('sizes controls to 44 px and focuses with a solid outline', function (string $component): void {
     expect(uiComponent($component))
