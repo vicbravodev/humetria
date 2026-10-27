@@ -20,6 +20,9 @@ export default function TenantsTable({ tenants }: { tenants: TenantRow[] }) {
                     <TableHead>Empresa</TableHead>
                     <TableHead>RFC</TableHead>
                     <TableHead>Estado</TableHead>
+                    <TableHead>
+                        <span className="sr-only">Acciones</span>
+                    </TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>

@@ -96,3 +96,41 @@ it('passes the accessibility and CSP checks with the dialog open', function (boo
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Dar de alta empresa')->assertSee('Razón social'));
 })->with($looks);
+
+it('edits the legal name from the dialog and shows it in the row', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo', 'legal_name' => 'Grupo Ejemplo S.A. de C.V.', 'slug' => 'grupo-ejemplo']);
+
+    visit('/admin/companies')
+        ->click('Editar')
+        ->assertSee('Editar empresa')
+        ->assertValue('trade_name', 'Grupo Ejemplo')
+        ->assertValue('slug', 'grupo-ejemplo')
+        ->type('legal_name', 'Grupo Ejemplo Corregido S.A.')
+        ->type('trade_name', 'Grupo Nuevo')
+        ->assertValue('slug', 'grupo-ejemplo')
+        ->assertDontSee('Las direcciones anteriores')
+        ->press('Guardar')
+        ->assertSee('Empresa actualizada.')
+        ->assertSee('Grupo Ejemplo Corregido S.A.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Tenant::query()->sole()->slug)->toBe('grupo-ejemplo');
+});
+
+it('warns that the old addresses stop working when the address is edited', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['slug' => 'grupo-ejemplo']);
+
+    visit('/admin/companies')
+        ->click('Editar')
+        ->type('slug', 'otra-direccion')
+        ->assertSee('Las direcciones anteriores de esta empresa dejarán de funcionar.');
+});
+
+it('passes the accessibility and CSP checks with the edit dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Editar')->assertSee('Editar empresa'));
+})->with($looks);

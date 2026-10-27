@@ -7,8 +7,10 @@ namespace App\Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\CreateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
+use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
+use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +49,15 @@ final class TenantConsoleController extends Controller
         $createTenant->handle($request->toData());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa dada de alta.']);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function update(UpdateTenantRequest $request, Tenant $tenant, UpdateTenant $updateTenant): RedirectResponse
+    {
+        $updateTenant->handle($tenant, $request->toData());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa actualizada.']);
 
         return redirect()->route('companies.index');
     }

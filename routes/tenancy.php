@@ -12,3 +12,7 @@ Route::get('admin/companies', [TenantConsoleController::class, 'index'])
 Route::post('admin/companies', [TenantConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('companies.store');
+
+Route::put('admin/companies/{tenant}', [TenantConsoleController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.update');

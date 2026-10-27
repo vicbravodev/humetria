@@ -1,3 +1,4 @@
+import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { tenantStatusVariant } from '@/lib/tenant-status';
@@ -22,6 +23,9 @@ export default function TenantRowView({ tenant }: { tenant: Tenant }) {
                         {tenant.status_date}
                     </p>
                 )}
+            </TableCell>
+            <TableCell className="text-right">
+                <EditTenantDialog tenant={tenant} />
             </TableCell>
         </TableRow>
     );
