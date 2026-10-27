@@ -65,6 +65,31 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 `Instruments` (Guías I/II/III y calificación), `Campaigns` (campañas, invitaciones),
 `Responses` (respuestas anónimas), `Results` (agregados y reportes), `Notifications` (correo/SMS/WhatsApp).
 
+## Arquitectura del frontend
+
+`resources/js` sigue el mismo monolito modular:
+
+```
+pages/{module}/        una página por ruta, delgada: arma layout + componentes, sin lógica
+components/{module}/   componentes de una funcionalidad; espejo del módulo del backend
+components/humetria/   componentes del design system (solo usan ui, hooks y lib)
+components/ui/         primitivas de shadcn (generadas; solo los ajustes del design system)
+components/*.tsx       el marco compartido de la app (header, sidebar, navegación)
+layouts/  hooks/  lib/  types/
+```
+
+- Un módulo nunca importa componentes de otro. Las páginas no se importan desde ningún lado.
+  `hooks`, `lib` y `types` no importan componentes ni layouts. Imports siempre con `@/`, nunca `../`.
+- Límites (estándar de ESLint salvo los dos marcados): 300 líneas por archivo, 100 por función o componente
+  (ESLint usa 50; un componente lleva JSX), complejidad ciclomática 10 (McCabe; ESLint usa 20),
+  profundidad 4, 3 parámetros. Un componente por archivo, archivos en kebab-case, sin dependencias circulares.
+- Lo hace cumplir `vp lint` (`frontend-architecture.ts`, conectado en `vite.config.ts`) y
+  `tests/Unit/FrontendArchitectureTest.php` lo fija. Si una regla estorba, se parte el componente: no se sube el
+  límite ni se agrega una excepción. La única lista de excepciones (`PENDING_REFACTOR`) es del starter kit y solo
+  se vacía.
+- La lógica que no es de presentación (cálculos, formato, llamadas) va en `hooks/` o `lib/`, no dentro del
+  componente.
+
 ## Multi-tenancy
 
 - Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo aplica un global scope por tenant.
