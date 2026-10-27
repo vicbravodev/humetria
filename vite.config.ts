@@ -7,6 +7,8 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 
+import { frontendArchitecture } from './frontend-architecture';
+
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
@@ -40,6 +42,7 @@ export default defineConfig({
         },
     },
     lint: {
+        ...frontendArchitecture,
         ignorePatterns: [
             'vendor/**',
             'node_modules/**',
