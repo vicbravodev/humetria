@@ -44,7 +44,7 @@ export default function TenantFormFields({
                 name="rfc"
                 label="RFC"
                 required
-                maxLength={14}
+                maxLength={20}
                 defaultValue={tenant?.rfc}
                 autoCapitalize="characters"
                 error={errors['rfc']}

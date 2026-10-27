@@ -67,6 +67,21 @@ it('creates a company from the dialog, suggesting its address from the trade nam
     expect(Tenant::query()->sole()->slug)->toBe('grupo-ejemplo');
 });
 
+it('accepts an RFC typed with spaces', function (): void {
+    signInAsSuperadmin();
+
+    visit('/admin/companies')
+        ->click('Dar de alta empresa')
+        ->type('trade_name', 'Grupo Ejemplo')
+        ->type('rfc', 'GOMA 840229 AB3')
+        ->type('legal_name', 'Grupo Ejemplo S.A. de C.V.')
+        ->press('Dar de alta')
+        ->assertSee('Empresa dada de alta.')
+        ->assertSee('GOMA840229AB3');
+
+    expect(Tenant::query()->sole()->rfc)->toBe('GOMA840229AB3');
+});
+
 it('stops following the trade name once the address has been edited', function (): void {
     signInAsSuperadmin();
 
