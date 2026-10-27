@@ -44,6 +44,22 @@ export default defineConfig({
             ],
         },
     },
+    test: {
+        environment: 'node',
+        include: ['tests/js/**/*.test.ts'],
+        coverage: {
+            provider: 'v8',
+            // Only pure logic is gated. Hooks and components need a DOM
+            // environment; the browser tests cover them for now.
+            include: ['resources/js/lib/**'],
+            thresholds: {
+                lines: 90,
+                functions: 90,
+                branches: 90,
+                statements: 90,
+            },
+        },
+    },
     lint: {
         ...frontendArchitecture,
         ignorePatterns: [
