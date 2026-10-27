@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
+use App\Modules\Tenancy\Actions\DeactivateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
@@ -71,6 +72,18 @@ final class TenantConsoleController extends Controller
         $activateTenant->handle($tenant, $until);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa activa hasta '.$this->day($until).'.']);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function deactivate(Tenant $tenant, DeactivateTenant $deactivateTenant): RedirectResponse
+    {
+        Gate::authorize('manage-tenants');
+        abort_if($tenant->status()->isBlocked(), 409);
+
+        $deactivateTenant->handle($tenant);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa desactivada.']);
 
         return redirect()->route('companies.index');
     }

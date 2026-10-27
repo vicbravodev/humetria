@@ -20,3 +20,7 @@ Route::put('admin/companies/{tenant}', [TenantConsoleController::class, 'update'
 Route::post('admin/companies/{tenant}/activate', [TenantConsoleController::class, 'activate'])
     ->middleware(['auth', 'verified'])
     ->name('companies.activate');
+
+Route::post('admin/companies/{tenant}/deactivate', [TenantConsoleController::class, 'deactivate'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.deactivate');

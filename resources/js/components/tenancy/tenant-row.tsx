@@ -1,4 +1,5 @@
 import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
+import DeactivateTenantDialog from '@/components/tenancy/deactivate-tenant-dialog';
 import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -38,6 +39,9 @@ export default function TenantRowView({
                         minDate={activationMinDate}
                     />
                     <EditTenantDialog tenant={tenant} />
+                    {!tenant.blocked && (
+                        <DeactivateTenantDialog tenant={tenant} />
+                    )}
                 </div>
             </TableCell>
         </TableRow>

@@ -169,3 +169,46 @@ it('passes the accessibility and CSP checks with the activation dialog open', fu
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Activar')->assertSee('Activar empresa'));
 })->with($looks);
+
+it('deactivates an active company after confirming, and hides the button afterwards', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->activeUntil(now()->addMonths(2))->create(['trade_name' => 'Grupo Ejemplo']);
+
+    visit('/admin/companies')
+        ->assertSee('Activa hasta')
+        ->click('Desactivar')
+        ->assertSee('¿Desactivar Grupo Ejemplo?')
+        ->assertSee('Sus datos se conservan.')
+        ->assertDontSee('La prueba no se puede reanudar.')
+        // The row's own "Desactivar" button shares the text, so the dialog's submit is picked by its place.
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Empresa desactivada.')
+        ->assertSee('Desactivada el')
+        ->assertDontSee('Desactivar')
+        ->assertNoJavaScriptErrors();
+
+    expect(Tenant::query()->sole()->status()->value)->toBe('deactivated');
+});
+
+it('warns that a trial cannot be resumed once the company is deactivated', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->inTrial(now())->create();
+
+    visit('/admin/companies')
+        ->click('Desactivar')
+        ->assertSee('La prueba no se puede reanudar.');
+});
+
+it('does not offer to deactivate a blocked company', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->deactivated()->create();
+
+    visit('/admin/companies')->assertDontSee('Desactivar');
+});
+
+it('passes the accessibility and CSP checks with the deactivation dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Desactivar')->assertSee('Sus datos se conservan.'));
+})->with($looks);
