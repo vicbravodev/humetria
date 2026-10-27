@@ -27,7 +27,7 @@ void createInertiaApp({
         }
     },
     strictMode: true,
-    nonce: cspNonce,
+    ...(cspNonce === undefined ? {} : { nonce: cspNonce }),
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
