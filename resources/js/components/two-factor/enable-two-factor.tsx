@@ -12,22 +12,22 @@ export default function EnableTwoFactor({ hasSetupData, onShowSetup }: Props) {
     return (
         <div className="flex flex-col items-start justify-start space-y-4">
             <p className="text-sm text-muted-foreground">
-                When you enable two-factor authentication, you will be prompted
-                for a secure pin during login. This pin can be retrieved from a
-                TOTP-supported application on your phone.
+                Al activar la verificación en dos pasos, te pediremos un código
+                de seguridad al iniciar sesión. Puedes obtenerlo en una
+                aplicación de autenticación (TOTP) en tu celular.
             </p>
 
             <div>
                 {hasSetupData ? (
                     <Button onClick={onShowSetup}>
                         <ShieldCheck />
-                        Continue setup
+                        Continuar configuración
                     </Button>
                 ) : (
                     <Form {...enable.form()} onSuccess={onShowSetup}>
                         {({ processing }) => (
                             <Button type="submit" disabled={processing}>
-                                Enable 2FA
+                                Activar verificación en dos pasos
                             </Button>
                         )}
                     </Form>

@@ -58,11 +58,12 @@ export default function TwoFactorRecoveryCodes({
             <CardHeader>
                 <CardTitle className="flex gap-3">
                     <LockKeyhole className="size-4" aria-hidden="true" />
-                    2FA recovery codes
+                    Códigos de recuperación
                 </CardTitle>
                 <CardDescription>
-                    Recovery codes let you regain access if you lose your 2FA
-                    device. Store them in a secure password manager.
+                    Los códigos de recuperación te devuelven el acceso si
+                    pierdes el dispositivo de verificación. Guárdalos en un
+                    administrador de contraseñas seguro.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -77,7 +78,8 @@ export default function TwoFactorRecoveryCodes({
                             className="size-4"
                             aria-hidden="true"
                         />
-                        {codesAreVisible ? 'Hide' : 'View'} recovery codes
+                        {codesAreVisible ? 'Ocultar' : 'Ver'} códigos de
+                        recuperación
                     </Button>
 
                     {canRegenerateCodes && (
@@ -93,7 +95,7 @@ export default function TwoFactorRecoveryCodes({
                                     disabled={processing}
                                     aria-describedby="regenerate-warning"
                                 >
-                                    <RefreshCw /> Regenerate codes
+                                    <RefreshCw /> Generar códigos nuevos
                                 </Button>
                             )}
                         </Form>

@@ -48,15 +48,15 @@ export default function ManageTwoFactor(props: Props) {
         <div className="space-y-6">
             <Heading
                 variant="small"
-                title="Two-factor authentication"
-                description="Manage your two-factor authentication settings"
+                title="Verificación en dos pasos"
+                description="Administra tu verificación en dos pasos"
             />
             {twoFactorEnabled ? (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        You will be prompted for a secure, random pin during
-                        login, which you can retrieve from the TOTP-supported
-                        application on your phone.
+                        Al iniciar sesión te pediremos un código de seguridad
+                        aleatorio, que puedes obtener en una aplicación de
+                        autenticación (TOTP) en tu celular.
                     </p>
 
                     <div className="relative inline">
@@ -67,7 +67,7 @@ export default function ManageTwoFactor(props: Props) {
                                     type="submit"
                                     disabled={processing}
                                 >
-                                    Disable 2FA
+                                    Desactivar verificación en dos pasos
                                 </Button>
                             )}
                         </Form>

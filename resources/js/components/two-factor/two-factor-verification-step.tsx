@@ -69,7 +69,7 @@ export default function TwoFactorVerificationStep({ onClose, onBack }: Props) {
                                 onClick={onBack}
                                 disabled={processing}
                             >
-                                Back
+                                Atrás
                             </Button>
                             <Button
                                 type="submit"
@@ -78,7 +78,7 @@ export default function TwoFactorVerificationStep({ onClose, onBack }: Props) {
                                     processing || code.length < OTP_MAX_LENGTH
                                 }
                             >
-                                Confirm
+                                Confirmar
                             </Button>
                         </div>
                     </div>

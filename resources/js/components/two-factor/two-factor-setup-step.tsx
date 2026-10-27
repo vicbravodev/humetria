@@ -62,7 +62,7 @@ export default function TwoFactorSetupStep({
                     <div className="relative flex w-full items-center justify-center">
                         <div className="absolute inset-0 top-1/2 h-px w-full bg-border" />
                         <span className="relative bg-card px-2 py-1">
-                            or, enter the code manually
+                            o escribe la clave manualmente
                         </span>
                     </div>
 
@@ -81,6 +81,7 @@ export default function TwoFactorSetupStep({
                                         className="h-full w-full bg-background p-3 text-foreground outline-none"
                                     />
                                     <button
+                                        aria-label="Copiar clave"
                                         onClick={() => copy(manualSetupKey)}
                                         className="border-l border-border px-3 hover:bg-muted"
                                     >
