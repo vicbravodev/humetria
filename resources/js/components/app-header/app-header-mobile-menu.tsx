@@ -23,7 +23,7 @@ export function AppHeaderMobileMenu() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="mr-2 h-[34px] w-[34px]"
+                        className="mr-2 size-11"
                     >
                         <Menu className="h-5 w-5" />
                     </Button>
