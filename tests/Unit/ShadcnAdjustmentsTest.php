@@ -19,7 +19,7 @@ it('leaves no shadcn default that breaks the design system', function (string $f
     expect($offenders)->toBe([]);
 })->with([
     'ring-[3px]', 'ring-ring/50', 'shadow-xs', 'md:text-sm', 'dark:bg-input/30',
-    'destructive-foreground', 'dark:bg-destructive/60',
+    'destructive-foreground', 'dark:bg-destructive/60', 'ring-ring/', 'outline-ring/',
 ]);
 
 it('keeps shadows only on floating surfaces', function (string $component): void {
