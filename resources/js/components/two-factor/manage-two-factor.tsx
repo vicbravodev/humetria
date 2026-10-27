@@ -1,12 +1,12 @@
 import { Form } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Heading from '@/components/heading';
-import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
-import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
+import EnableTwoFactor from '@/components/two-factor/enable-two-factor';
+import TwoFactorRecoveryCodes from '@/components/two-factor/two-factor-recovery-codes';
+import TwoFactorSetupModal from '@/components/two-factor/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import { disable, enable } from '@/routes/two-factor';
+import { disable } from '@/routes/two-factor';
 
 export type Props = {
     canManageTwoFactor?: boolean;
@@ -80,34 +80,10 @@ export default function ManageTwoFactor(props: Props) {
                     />
                 </div>
             ) : (
-                <div className="flex flex-col items-start justify-start space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                        When you enable two-factor authentication, you will be
-                        prompted for a secure pin during login. This pin can be
-                        retrieved from a TOTP-supported application on your
-                        phone.
-                    </p>
-
-                    <div>
-                        {hasSetupData ? (
-                            <Button onClick={() => setShowSetupModal(true)}>
-                                <ShieldCheck />
-                                Continue setup
-                            </Button>
-                        ) : (
-                            <Form
-                                {...enable.form()}
-                                onSuccess={() => setShowSetupModal(true)}
-                            >
-                                {({ processing }) => (
-                                    <Button type="submit" disabled={processing}>
-                                        Enable 2FA
-                                    </Button>
-                                )}
-                            </Form>
-                        )}
-                    </div>
-                </div>
+                <EnableTwoFactor
+                    hasSetupData={hasSetupData}
+                    onShowSetup={() => setShowSetupModal(true)}
+                />
             )}
 
             <TwoFactorSetupModal

@@ -60,19 +60,10 @@ function moduleBoundaries() {
 }
 
 /*
- * Starter-kit files written before these rules. The refactor PR splits them
- * and deletes this list; never add a file to it.
+ * Starter-kit files written before these rules. Only the welcome page is left:
+ * the landing page replaces it and then deletes this list; never add a file to it.
  */
-const PENDING_REFACTOR = [
-    'resources/js/components/app-header.tsx',
-    'resources/js/components/manage-passkeys.tsx',
-    'resources/js/components/manage-two-factor.tsx',
-    'resources/js/components/two-factor-recovery-codes.tsx',
-    'resources/js/components/two-factor-setup-modal.tsx',
-    'resources/js/pages/auth/two-factor-challenge.tsx',
-    'resources/js/pages/settings/security.tsx',
-    'resources/js/pages/welcome.tsx',
-];
+const PENDING_REFACTOR = ['resources/js/pages/welcome.tsx'];
 
 export const frontendArchitecture = {
     plugins: ['typescript', 'unicorn', 'oxc', 'import', 'react'],

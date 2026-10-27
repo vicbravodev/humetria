@@ -74,7 +74,7 @@ pages/{module}/        una página por ruta, delgada: arma layout + componentes,
 components/{module}/   componentes de una funcionalidad; espejo del módulo del backend
 components/humetria/   componentes del design system (solo usan ui, hooks y lib)
 components/ui/         primitivas de shadcn (generadas; solo los ajustes del design system)
-components/*.tsx       el marco compartido de la app (header, sidebar, navegación)
+components/*.tsx       el marco compartido de la app (sidebar, navegación); el header vive en components/app-header/
 layouts/  hooks/  lib/  types/
 ```
 

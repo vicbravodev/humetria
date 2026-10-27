@@ -1,5 +1,5 @@
 import { AppContent } from '@/components/app-content';
-import { AppHeader } from '@/components/app-header';
+import { AppHeader } from '@/components/app-header/app-header';
 import { AppShell } from '@/components/app-shell';
 import type { AppLayoutProps } from '@/types';
 
