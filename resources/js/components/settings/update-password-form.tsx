@@ -35,11 +35,11 @@ export default function UpdatePasswordForm({ passwordRules }: Props) {
                 ]}
                 resetOnSuccess
                 onError={(errors) => {
-                    if (errors.password) {
+                    if (errors['password']) {
                         passwordInput.current?.focus();
                     }
 
-                    if (errors.current_password) {
+                    if (errors['current_password']) {
                         currentPasswordInput.current?.focus();
                     }
                 }}
@@ -61,7 +61,7 @@ export default function UpdatePasswordForm({ passwordRules }: Props) {
                                 placeholder="Current password"
                             />
 
-                            <InputError message={errors.current_password} />
+                            <InputError message={errors['current_password']} />
                         </div>
 
                         <div className="grid gap-2">
@@ -77,7 +77,7 @@ export default function UpdatePasswordForm({ passwordRules }: Props) {
                                 passwordrules={passwordRules}
                             />
 
-                            <InputError message={errors.password} />
+                            <InputError message={errors['password']} />
                         </div>
 
                         <div className="grid gap-2">
@@ -95,7 +95,7 @@ export default function UpdatePasswordForm({ passwordRules }: Props) {
                             />
 
                             <InputError
-                                message={errors.password_confirmation}
+                                message={errors['password_confirmation']}
                             />
                         </div>
 

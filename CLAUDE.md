@@ -15,6 +15,8 @@ Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo mand
    borrar tests, o envolver en `try/catch` para que pase.
 3. **Cero supresiones en el análisis estático.** Larastan corre en `level: max`. Prohibido `@phpstan-ignore`,
    baseline, `assert()` o `@var` inline para forzar tipos, y casts solo para callarlo. Se arregla la causa.
+   Lo mismo aplica a TypeScript: `tsconfig.json` en modo strictest; prohibido `as`, `!`, `@ts-ignore`,
+   `@ts-expect-error` y `any` para forzar tipos. Se arregla la causa.
 4. **El anonimato de las respuestas es un invariante** (ver "Privacidad"). Romperlo es un bug crítico.
 5. **Dependencias nuevas solo con aprobación del usuario.**
 6. Código, rutas, tablas, columnas, enums e identificadores siempre en **inglés**. Textos de UI en español (es-MX).

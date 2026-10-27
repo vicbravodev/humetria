@@ -66,7 +66,7 @@ export default function TwoFactorChallenge() {
                                         required
                                     />
                                     <InputError
-                                        message={errors.recovery_code}
+                                        message={errors['recovery_code']}
                                     />
                                 </>
                             ) : (
@@ -74,7 +74,7 @@ export default function TwoFactorChallenge() {
                                     code={code}
                                     onChange={setCode}
                                     disabled={processing}
-                                    error={errors.code}
+                                    error={errors['code']}
                                 />
                             )}
 

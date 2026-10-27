@@ -8,7 +8,7 @@ type Props = {
     code: string;
     onChange: (value: string) => void;
     disabled: boolean;
-    error?: string;
+    error?: string | undefined;
 };
 
 export default function TwoFactorChallengeCode({
