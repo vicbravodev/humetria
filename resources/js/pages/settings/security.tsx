@@ -15,9 +15,9 @@ type Props = {
 export default function Security(props: Props) {
     return (
         <>
-            <Head title="Security settings" />
+            <Head title="Seguridad" />
 
-            <h1 className="sr-only">Security settings</h1>
+            <h1 className="sr-only">Seguridad</h1>
 
             <UpdatePasswordForm passwordRules={props.passwordRules} />
 
@@ -38,7 +38,7 @@ export default function Security(props: Props) {
 Security.layout = {
     breadcrumbs: [
         {
-            title: 'Security settings',
+            title: 'Seguridad',
             href: edit(),
         },
     ],

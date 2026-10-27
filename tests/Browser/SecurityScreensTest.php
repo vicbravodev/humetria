@@ -23,9 +23,9 @@ function visitSecuritySettings(User $user): AwaitableWebpage
 
 it('renders the password, two-factor and passkeys sections', function (): void {
     visitSecuritySettings(User::factory()->create())
-        ->assertSee('Update password')
-        ->assertSee('Current password')
-        ->assertSee('New password')
+        ->assertSee('Cambiar contraseña')
+        ->assertSee('Contraseña actual')
+        ->assertSee('Nueva contraseña')
         ->assertSee('Two-factor authentication')
         ->assertSee('Enable 2FA')
         ->assertSee('Passkeys')
