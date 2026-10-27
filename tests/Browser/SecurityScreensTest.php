@@ -15,7 +15,7 @@ function visitSecuritySettings(User $user): AwaitableWebpage
     test()->actingAs($user);
 
     return visitPage('settings/security', '/settings/security', reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
-        ->assertSee('Confirm your password')
+        ->assertSee('Confirma tu contraseña para continuar')
         ->fill('password', 'password')
         ->press('@confirm-password-button')
         ->assertPathIs('/settings/security'));
