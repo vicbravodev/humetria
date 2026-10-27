@@ -8,8 +8,10 @@ import type { Paginated, TenantRow } from '@/types';
 
 export default function Tenants({
     tenants,
+    activationMinDate,
 }: {
     tenants: Paginated<TenantRow>;
+    activationMinDate: string;
 }) {
     return (
         <>
@@ -28,7 +30,10 @@ export default function Tenants({
                 {tenants.data.length === 0 ? (
                     <TenantsEmpty />
                 ) : (
-                    <TenantsTable tenants={tenants.data} />
+                    <TenantsTable
+                        tenants={tenants.data}
+                        activationMinDate={activationMinDate}
+                    />
                 )}
                 <ConsolePagination page={tenants} label="Páginas de empresas" />
             </div>

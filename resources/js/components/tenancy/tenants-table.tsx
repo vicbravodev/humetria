@@ -9,7 +9,13 @@ import {
 } from '@/components/ui/table';
 import type { TenantRow } from '@/types';
 
-export default function TenantsTable({ tenants }: { tenants: TenantRow[] }) {
+export default function TenantsTable({
+    tenants,
+    activationMinDate,
+}: {
+    tenants: TenantRow[];
+    activationMinDate: string;
+}) {
     return (
         <Table>
             <TableCaption className="sr-only">
@@ -27,7 +33,11 @@ export default function TenantsTable({ tenants }: { tenants: TenantRow[] }) {
             </TableHeader>
             <TableBody>
                 {tenants.map((tenant) => (
-                    <TenantRowView key={tenant.id} tenant={tenant} />
+                    <TenantRowView
+                        key={tenant.id}
+                        tenant={tenant}
+                        activationMinDate={activationMinDate}
+                    />
                 ))}
             </TableBody>
         </Table>

@@ -173,6 +173,7 @@ return [
     ],
 
     'attributes' => [
+        'active_until' => 'fecha de vigencia',
         'code' => 'código',
         'company' => 'empresa',
         'current_password' => 'contraseña actual',

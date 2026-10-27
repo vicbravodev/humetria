@@ -134,3 +134,38 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Editar')->assertSee('Editar empresa'));
 })->with($looks);
+
+it('activates a company that has not started, choosing the date', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    $until = now('America/Mexico_City')->addMonths(2);
+
+    visit('/admin/companies')
+        ->assertSee('Sin iniciar')
+        ->click('Activar')
+        ->assertSee('Activar empresa')
+        ->type('active_until', $until->format('Y-m-d'))
+        // The row's own "Activar" button shares the text, so the dialog's submit is picked by its place.
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Empresa activa hasta')
+        ->assertSee('Activa hasta '.str_replace('.', '', $until->isoFormat('D MMM YYYY')))
+        ->assertNoJavaScriptErrors();
+
+    expect(Tenant::query()->sole()->status()->value)->toBe('active');
+});
+
+it('offers to reactivate a blocked company', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->deactivated()->create();
+
+    visit('/admin/companies')
+        ->click('Reactivar')
+        ->assertSee('Reactivar empresa');
+});
+
+it('passes the accessibility and CSP checks with the activation dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Activar')->assertSee('Activar empresa'));
+})->with($looks);

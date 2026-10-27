@@ -1,10 +1,17 @@
+import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
 import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import type { TenantRow as Tenant } from '@/types';
 
-export default function TenantRowView({ tenant }: { tenant: Tenant }) {
+export default function TenantRowView({
+    tenant,
+    activationMinDate,
+}: {
+    tenant: Tenant;
+    activationMinDate: string;
+}) {
     return (
         <TableRow>
             <TableCell className="whitespace-normal">
@@ -25,7 +32,13 @@ export default function TenantRowView({ tenant }: { tenant: Tenant }) {
                 )}
             </TableCell>
             <TableCell className="text-right">
-                <EditTenantDialog tenant={tenant} />
+                <div className="flex justify-end gap-2">
+                    <ActivateTenantDialog
+                        tenant={tenant}
+                        minDate={activationMinDate}
+                    />
+                    <EditTenantDialog tenant={tenant} />
+                </div>
             </TableCell>
         </TableRow>
     );

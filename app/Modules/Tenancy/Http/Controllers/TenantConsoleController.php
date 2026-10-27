@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -25,6 +27,7 @@ final class TenantConsoleController extends Controller
         Gate::authorize('manage-tenants');
 
         return Inertia::render('tenancy/index', [
+            'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
             'tenants' => $listTenants->handle()->through(function (Tenant $tenant): array {
                 $status = $tenant->status();
 
@@ -58,6 +61,16 @@ final class TenantConsoleController extends Controller
         $updateTenant->handle($tenant, $request->toData());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa actualizada.']);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function activate(ActivateTenantRequest $request, Tenant $tenant, ActivateTenant $activateTenant): RedirectResponse
+    {
+        $until = $request->activeUntil();
+        $activateTenant->handle($tenant, $until);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa activa hasta '.$this->day($until).'.']);
 
         return redirect()->route('companies.index');
     }
