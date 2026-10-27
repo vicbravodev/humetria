@@ -62,7 +62,7 @@ return new class extends Migration
             $table->primary(['permission_id', 'role_id'], 'role_has_permissions_permission_id_role_id_primary');
         });
 
-        // The platform role exists from the start; `php artisan humetria:grant-superadmin` assigns it.
+        // The platform role exists from the start; `php artisan humetria:create-superadmin` creates the first one.
         DB::table('roles')->insert(['name' => 'superadmin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()]);
     }
 
