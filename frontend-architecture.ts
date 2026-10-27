@@ -59,12 +59,6 @@ function moduleBoundaries() {
     }));
 }
 
-/*
- * Starter-kit files written before these rules. Only the welcome page is left:
- * the landing page replaces it and then deletes this list; never add a file to it.
- */
-const PENDING_REFACTOR = ['resources/js/pages/welcome.tsx'];
-
 export const frontendArchitecture = {
     plugins: ['typescript', 'unicorn', 'oxc', 'import', 'react'],
     rules: {
@@ -111,13 +105,5 @@ export const frontendArchitecture = {
             },
         },
         ...moduleBoundaries(),
-        {
-            files: PENDING_REFACTOR,
-            rules: {
-                'max-lines': 'off',
-                'max-lines-per-function': 'off',
-                'react/no-multi-comp': 'off',
-            },
-        },
     ],
 };

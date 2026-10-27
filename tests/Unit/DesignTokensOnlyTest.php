@@ -6,8 +6,8 @@ declare(strict_types=1);
  * Color goes only through the design-system tokens (docs/design-system/): they switch with the dark theme and their
  * contrast is pinned by DesignSystemTest. Raw palette colors, white/black, hex and rgb/hsl/oklch literals bypass all that.
  *
- * Not scanned: generated code (actions, routes, wayfinder), components/ui (shadcn primitives, adjusted separately and
- * lint-exempt) and pages/welcome.tsx (the landing replaces it; delete the exception then).
+ * Not scanned: generated code (actions, routes, wayfinder) and components/ui (shadcn primitives, adjusted separately
+ * and lint-exempt).
  *
  * Arbitrary values only count when the value itself starts with a color function or hex, so the design system's float
  * shadow (`shadow-[0_8px_24px_rgb(...)]`, a shadow geometry that merely contains a color) stays allowed.
@@ -18,7 +18,6 @@ const DESIGN_TOKENS_EXCLUDED = [
     'actions/',
     'routes/',
     'wayfinder/',
-    'pages/welcome.tsx',
 ];
 
 const COLOR_PREFIXES = 'bg|text|border(?:-[xytrbles])?|ring(?:-offset)?|outline|fill|stroke|from|via|to|divide|placeholder|decoration|shadow|accent|caret';

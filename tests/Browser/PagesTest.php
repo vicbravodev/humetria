@@ -18,8 +18,8 @@ dataset('looks', [
     'dark mobile' => [true, true],
 ]);
 
-it('renders the welcome page', function (bool $dark, bool $mobile): void {
-    visitPage('welcome', '/', $dark, $mobile);
+it('renders the landing page', function (bool $dark, bool $mobile): void {
+    visitPage('landing', '/', $dark, $mobile);
 })->with('looks');
 
 it('renders the forgot password page', function (bool $dark, bool $mobile): void {
