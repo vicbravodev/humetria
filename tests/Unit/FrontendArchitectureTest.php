@@ -193,7 +193,7 @@ it('keeps design-system components free of modules and layouts', function (strin
     ]);
 
     expect($result['output'])->toContain('no-restricted-imports');
-})->with(['@/components/app-header', '@/layouts/app-layout']);
+})->with(['@/components/app-sidebar', '@/components/app-header/app-header', '@/layouts/app-layout']);
 
 it('keeps hooks, lib and types free of components and layouts', function (string $layer): void {
     $result = lintFrontendProbe([
