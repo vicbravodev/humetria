@@ -62,7 +62,7 @@ it('refuses to deactivate a company that is already blocked', function (Closure 
     expect($tenant->refresh()->deactivated_at?->toIso8601String())->toBe($before?->toIso8601String())
         ->and(AuditEntry::query()->count())->toBe(0);
 
-    Log::shouldNotHaveReceived('info', ['tenant.deactivated']);
+    Log::shouldNotHaveReceived('info');
 })->with([
     'deactivated' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-01', 'UTC'))->deactivated()],
     'expired' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-09-30', 'UTC'))],
