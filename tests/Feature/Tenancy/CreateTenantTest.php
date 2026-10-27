@@ -19,7 +19,7 @@ mutates(CreateTenant::class, StoreTenantRequest::class, TenantRules::class);
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
-function company(array $overrides = []): array
+function newCompanyInput(array $overrides = []): array
 {
     return [
         'legal_name' => 'Grupo Ejemplo S.A. de C.V.',
@@ -35,14 +35,14 @@ it('lives at /admin/companies', function (): void {
 });
 
 it('sends guests to the login', function (): void {
-    $this->post(route('companies.store'), company())->assertRedirect(route('login'));
+    $this->post(route('companies.store'), newCompanyInput())->assertRedirect(route('login'));
 
     expect(Tenant::query()->count())->toBe(0);
 });
 
 it('creates a company that has not started its trial', function (): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company())
+        ->post(route('companies.store'), newCompanyInput())
         ->assertRedirect(route('companies.index'))
         ->assertSessionHasNoErrors()
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Empresa dada de alta.']]);
@@ -59,7 +59,7 @@ it('creates a company that has not started its trial', function (): void {
 
 it('normalizes the RFC, the slug and the names before checking them', function (): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company([
+        ->post(route('companies.store'), newCompanyInput([
             'legal_name' => '  Grupo Ejemplo S.A. de C.V.  ',
             'trade_name' => "\tGrupo Ejemplo ",
             'rfc' => ' gej010101 1a1 ',
@@ -93,7 +93,7 @@ it('normalizes every field and leaves what is not text for the validation to rej
 
 it('accepts the RFC of a company and of a person', function (string $rfc): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company(['rfc' => $rfc]))
+        ->post(route('companies.store'), newCompanyInput(['rfc' => $rfc]))
         ->assertSessionHasNoErrors();
 
     expect(Tenant::query()->sole()->rfc)->toBe($rfc);
@@ -107,7 +107,7 @@ it('accepts the RFC of a company and of a person', function (string $rfc): void 
 
 it('rejects a malformed RFC', function (string $rfc): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company(['rfc' => $rfc]))
+        ->post(route('companies.store'), newCompanyInput(['rfc' => $rfc]))
         ->assertSessionHasErrors('rfc');
 
     expect(Tenant::query()->count())->toBe(0);
@@ -123,7 +123,7 @@ it('rejects a malformed RFC', function (string $rfc): void {
 
 it('says which date does not exist in the RFC', function (): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company(['rfc' => 'GEJ0113011A1']))
+        ->post(route('companies.store'), newCompanyInput(['rfc' => 'GEJ0113011A1']))
         ->assertSessionHasErrors(['rfc' => 'El RFC tiene una fecha que no existe.']);
 });
 
@@ -131,7 +131,7 @@ it('rejects an RFC another company already has, whatever its case', function ():
     Tenant::factory()->create(['rfc' => 'GEJ0101011A1', 'slug' => 'otra-empresa']);
 
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company(['rfc' => 'gej0101011a1']))
+        ->post(route('companies.store'), newCompanyInput(['rfc' => 'gej0101011a1']))
         ->assertSessionHasErrors(['rfc' => 'Ya hay una empresa con este RFC.']);
 
     expect(Tenant::query()->count())->toBe(1);
@@ -141,7 +141,7 @@ it('rejects a duplicated, reserved or malformed slug', function (string $slug, s
     Tenant::factory()->create(['rfc' => 'AAA010101AAA', 'slug' => 'grupo-ejemplo']);
 
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company(['slug' => $slug]))
+        ->post(route('companies.store'), newCompanyInput(['slug' => $slug]))
         ->assertSessionHasErrors(['slug' => $error]);
 
     expect(Tenant::query()->count())->toBe(1);
@@ -159,7 +159,7 @@ it('rejects a duplicated, reserved or malformed slug', function (string $slug, s
 
 it('accepts a slug of exactly 3 and 50 characters', function (string $slug): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company(['slug' => $slug]))
+        ->post(route('companies.store'), newCompanyInput(['slug' => $slug]))
         ->assertSessionHasNoErrors();
 
     expect(Tenant::query()->sole()->slug)->toBe($slug);
@@ -167,7 +167,7 @@ it('accepts a slug of exactly 3 and 50 characters', function (string $slug): voi
 
 it('requires every field', function (string $field, string $error): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company([$field => '']))
+        ->post(route('companies.store'), newCompanyInput([$field => '']))
         ->assertSessionHasErrors([$field => $error]);
 
     expect(Tenant::query()->count())->toBe(0);
@@ -180,23 +180,23 @@ it('requires every field', function (string $field, string $error): void {
 
 it('limits the names', function (string $field, int $max): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company([$field => str_repeat('a', $max)]))
+        ->post(route('companies.store'), newCompanyInput([$field => str_repeat('a', $max)]))
         ->assertSessionHasNoErrors();
 
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company([$field => str_repeat('a', $max + 1), 'rfc' => 'AAA010101AAA', 'slug' => 'otra']))
+        ->post(route('companies.store'), newCompanyInput([$field => str_repeat('a', $max + 1), 'rfc' => 'AAA010101AAA', 'slug' => 'otra']))
         ->assertSessionHasErrors($field);
 })->with([['legal_name', 200], ['trade_name', 120]]);
 
 it('rejects a name with a line break', function (string $field): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company([$field => "Grupo\nEjemplo"]))
+        ->post(route('companies.store'), newCompanyInput([$field => "Grupo\nEjemplo"]))
         ->assertSessionHasErrors($field);
 })->with(['legal_name', 'trade_name']);
 
 it('rejects a field that is not text', function (string $field): void {
     $this->actingAs(superadmin())
-        ->post(route('companies.store'), company([$field => ['x']]))
+        ->post(route('companies.store'), newCompanyInput([$field => ['x']]))
         ->assertSessionHasErrors($field);
 
     expect(Tenant::query()->count())->toBe(0);
@@ -205,7 +205,7 @@ it('rejects a field that is not text', function (string $field): void {
 it('logs and audits the creation without the company data', function (): void {
     Log::spy();
 
-    $this->actingAs(superadmin())->post(route('companies.store'), company());
+    $this->actingAs(superadmin())->post(route('companies.store'), newCompanyInput());
 
     $id = Tenant::query()->sole()->id;
 
@@ -226,7 +226,7 @@ it('answers 404 to anyone who is not a superadmin, even with an invalid body', f
 
     expect(Tenant::query()->count())->toBe(0)
         ->and(AuditEntry::query()->count())->toBe(0);
-})->with(['valid' => [company()], 'invalid' => [[]]]);
+})->with(['valid' => [newCompanyInput()], 'invalid' => [[]]]);
 
 it('writes the same slug as Laravel for the same name', function (string $name, string $slug): void {
     expect(Str::slug($name))->toBe($slug);
