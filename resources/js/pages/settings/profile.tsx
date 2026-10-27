@@ -91,15 +91,13 @@ export default function Profile({
                                 auth.user.email_verified_at === null && (
                                     <div>
                                         <p className="-mt-4 text-sm text-muted-foreground">
-                                            Tu correo todavía no está
-                                            verificado.{' '}
+                                            Tu correo no está verificado.{' '}
                                             <Link
                                                 href={send()}
                                                 as="button"
                                                 className="text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
                                             >
-                                                Reenviar el correo de
-                                                verificación.
+                                                Reenviar verificación.
                                             </Link>
                                         </p>
 
@@ -107,7 +105,7 @@ export default function Profile({
                                             'verification-link-sent' && (
                                             <div className="mt-2 text-sm font-medium text-primary">
                                                 Te enviamos un nuevo enlace de
-                                                verificación a tu correo.
+                                                verificación.
                                             </div>
                                         )}
                                     </div>
