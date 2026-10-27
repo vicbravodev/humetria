@@ -30,7 +30,8 @@ it('renders the password, two-factor and passkeys sections', function (): void {
         ->assertSee('Enable 2FA')
         ->assertSee('Passkeys')
         ->assertSee('No passkeys yet')
-        ->assertNoJavaScriptErrors();
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
 });
 
 it('opens the setup modal with the QR code and the manual key', function (): void {
@@ -46,7 +47,8 @@ it('opens the setup modal with the QR code and the manual key', function (): voi
         ->assertButtonDisabled('Confirm')
         ->press('Back')
         ->assertSee('Enable two-factor authentication')
-        ->assertNoJavaScriptErrors();
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
 });
 
 it('reveals the recovery codes of a user with two-factor enabled', function (): void {
@@ -60,7 +62,8 @@ it('reveals the recovery codes of a user with two-factor enabled', function (): 
         ->assertSee('recovery-code-1')
         ->assertPresent('button[aria-describedby="regenerate-warning"]')
         ->assertSee('Hide recovery codes')
-        ->assertNoJavaScriptErrors();
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
 });
 
 it('switches the two-factor challenge between code and recovery code', function (): void {
@@ -81,5 +84,6 @@ it('switches the two-factor challenge between code and recovery code', function 
         ->click('login using an authentication code')
         ->assertSee('Authentication code')
         ->assertPresent('input[name="code"]')
-        ->assertNoJavaScriptErrors();
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
 });

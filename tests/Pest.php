@@ -50,3 +50,21 @@ function something()
 {
     // ..
 }
+
+/**
+ * A browser script that lists every Content-Security-Policy violation of the page so far, as JSON.
+ * Use it as `->assertScript(cspViolations(), '[]')`. The Reporting API buffers the reports raised
+ * before the observer existed, so violations during page load are caught too.
+ */
+function cspViolations(): string
+{
+    return '() => new Promise((resolve) => {
+        const reports = [];
+        const observer = new ReportingObserver((found) => reports.push(...found), { types: ["csp-violation"], buffered: true });
+        observer.observe();
+        setTimeout(() => {
+            reports.push(...observer.takeRecords());
+            resolve(JSON.stringify(reports.map(({ body }) => [body.effectiveDirective, body.blockedURL, body.sample])));
+        }, 100);
+    })';
+}

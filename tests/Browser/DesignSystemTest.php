@@ -21,6 +21,7 @@ it('renders guest pages accessibly', function (string $path, bool $dark, bool $m
     $page->assertVisible($logo)
         ->assertScript('() => [...document.querySelectorAll(\'img[alt="Humetría"]\')].filter((img) => img.offsetParent !== null).every((img) => { const logo = img.getBoundingClientRect(); const box = img.parentElement.getBoundingClientRect(); return logo.left >= box.left && logo.right <= box.right && logo.top >= box.top && logo.bottom <= box.bottom; })')
         ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
         ->assertNoAccessibilityIssues(1);
 })->with(['/login', '/register'])->with($looks);
 
@@ -40,5 +41,6 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
 
     $page->assertVisible($logo)
         ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
         ->assertNoAccessibilityIssues(1);
 })->with($looks);
