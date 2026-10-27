@@ -134,7 +134,8 @@ layouts/  hooks/  lib/  types/
 - `audit_entries` es de solo inserción: un trigger de Postgres rechaza UPDATE, DELETE y TRUNCATE.
 - **Nunca** se escriben respuestas de encuesta, ni nada que ligue a un empleado con una respuesta de Guía II/III,
   en logs ni en la bitácora. `RedactSensitiveData` borra llaves conocidas (`answers`, `password`, `token`…);
-  una llave sensible nueva se agrega ahí con su test. El módulo Responses tendrá un test que envía una
+  una llave sensible nueva se agrega ahí con su test. Un `QueryException` se reporta como `database.query_failed` con el
+  SQL, el código y la conexión, nunca con sus valores (`bootstrap/app.php`). El módulo Responses tendrá un test que envía una
   respuesta y afirma que ninguna línea de log contiene sus valores.
 
 ## Idioma y tiempo
