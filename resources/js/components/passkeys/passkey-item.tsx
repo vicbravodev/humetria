@@ -76,7 +76,7 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
                     </DialogDescription>
                     <DialogFooter className="gap-2">
                         <DialogClose asChild>
-                            <Button variant="secondary">Cancel</Button>
+                            <Button variant="outline">Cancel</Button>
                         </DialogClose>
                         <Button
                             variant="destructive"

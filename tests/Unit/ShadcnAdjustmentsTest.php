@@ -59,3 +59,18 @@ it('sizes buttons as Button.md requires', function (string $size, string $classe
     'lg 52 px' => ['lg', 'h-13'],
     'icon 44x44' => ['icon', 'size-11'],
 ]);
+
+it('styles the dialog as Dialog.md requires', function (): void {
+    expect(uiComponent('dialog'))
+        ->toContain('bg-black/48')
+        ->toContain('bg-popover')
+        ->toContain('rounded-xl')
+        ->not->toContain('bg-black/80')
+        ->not->toContain('focus:ring-2');
+});
+
+it('puts the safe action of a confirmation dialog in an outline button', function (string $component): void {
+    $source = (string) file_get_contents(__DIR__."/../../resources/js/components/{$component}.tsx");
+
+    expect($source)->toMatch('/<DialogClose asChild>\s*<Button\s+variant="outline"/');
+})->with(['delete-user', 'passkeys/passkey-item']);
