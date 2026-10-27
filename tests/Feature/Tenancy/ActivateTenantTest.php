@@ -74,11 +74,17 @@ it('rejects today, past dates and malformed dates', function (?string $value, st
         ->and(AuditEntry::query()->count())->toBe(0);
 })->with([
     'missing' => [null, 'El campo fecha de vigencia es obligatorio.'],
-    'today' => ['2026-10-27', 'El campo fecha de vigencia debe ser una fecha posterior a 2026-10-27.'],
-    'past' => ['2026-10-01', 'El campo fecha de vigencia debe ser una fecha posterior a 2026-10-27.'],
+    'today' => ['2026-10-27', 'Elige una fecha a partir de mañana.'],
+    'past' => ['2026-10-01', 'Elige una fecha a partir de mañana.'],
     'malformed' => ['31/12/2026', 'El campo fecha de vigencia debe tener el formato Y-m-d.'],
     'not a date' => ['mañana', 'El campo fecha de vigencia debe tener el formato Y-m-d.'],
 ]);
+
+it('asks for a date from tomorrow on in plain words, without the raw date', function (): void {
+    $this->actingAs(superadmin())
+        ->post(route('companies.activate', Tenant::factory()->create()), ['active_until' => '2026-10-27'])
+        ->assertSessionHasErrors(['active_until' => 'Elige una fecha a partir de mañana.']);
+});
 
 it('names one problem at a time for a malformed date', function (): void {
     $this->actingAs(superadmin())

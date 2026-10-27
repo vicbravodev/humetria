@@ -29,6 +29,14 @@ final class ActivateTenantRequest extends FormRequest
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return ['active_until.after' => 'Elige una fecha a partir de mañana.'];
+    }
+
+    /**
      * The end of the chosen day in Mexico City time, as the UTC instant that gets stored.
      */
     public function activeUntil(): CarbonImmutable
