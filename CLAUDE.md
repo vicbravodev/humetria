@@ -211,6 +211,7 @@ layouts/  hooks/  lib/  types/
 
 ## Flujo de trabajo: PRs atómicos
 
+- Todo PR llena `.github/pull_request_template.md`: qué comportamiento, por qué, cómo se probó (RED/GREEN) y su checklist.
 - Nada se commitea directo a `main`: todo entra por PR desde una rama propia, con el CI en verde.
 - **Un PR = un comportamiento** (p. ej. "crear empresa", "importar empleados por CSV"), nunca un módulo
   completo de golpe. Si un cambio necesita "y además…", son dos PRs.
