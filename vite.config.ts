@@ -13,7 +13,7 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
+                bunny('Figtree', {
                     weights: [400, 500, 600],
                 }),
             ],
@@ -66,6 +66,7 @@ export default defineConfig({
         ignorePatterns: [
             '.github/**',
             '.claude/**',
+            'docs/**',
             'AGENTS.md',
             'CLAUDE.md',
             'composer.json',

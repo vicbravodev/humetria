@@ -107,6 +107,16 @@ Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (á
 - Se guarda siempre en UTC (`app.timezone` y la sesión de Postgres). Solo al mostrar se convierte a
   `config('app.display_timezone')` (America/Mexico_City). Columnas de fecha y hora: `timestampTz`.
 
+## Design system
+
+- La fuente de verdad es `docs/design-system/`; toda pantalla se compara con `capturas/` en claro y oscuro.
+- Un solo acento (`primary`); `brand-soft` y `brand-deep` solo dentro del logo.
+- Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
+  entra ahí con su par.
+- Los 5 ajustes a shadcn se aplican después de cada `npx shadcn add`, y `tests/Unit/ShadcnAdjustmentsTest.php`
+  los hace cumplir.
+- El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
+
 ## Base de datos y rendimiento
 
 - `Model::shouldBeStrict()` fuera de producción: lazy loading, atributos no seleccionados y mass assignment
