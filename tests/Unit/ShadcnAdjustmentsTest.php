@@ -47,3 +47,15 @@ it('never lets outline-none cancel the focus-visible outline', function (): void
 
     expect($offenders)->toBe([]);
 });
+
+it('sizes buttons as Button.md requires', function (string $size, string $classes): void {
+    $sizes = explode('size: {', uiComponent('button'), 2)[1] ?? '';
+    preg_match('/\b'.$size.':\s*"([^"]*)"/', $sizes, $match);
+
+    expect(explode(' ', $match[1] ?? ''))->toContain(...explode(' ', $classes));
+})->with([
+    'default 44 px' => ['default', 'h-11'],
+    'sm 36 px visible with a 44 px touch area' => ['sm', "h-9 relative before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']"],
+    'lg 52 px' => ['lg', 'h-13'],
+    'icon 44x44' => ['icon', 'size-11'],
+]);
