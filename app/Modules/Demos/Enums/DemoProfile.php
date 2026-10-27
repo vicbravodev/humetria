@@ -11,4 +11,12 @@ enum DemoProfile: string
 {
     case Company = 'company';
     case Consultant = 'consultant';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Company => 'Empresa',
+            self::Consultant => 'Consultor',
+        };
+    }
 }
