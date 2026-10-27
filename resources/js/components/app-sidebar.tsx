@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
+import Logo from '@/components/humetria/logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -45,7 +45,12 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href={dashboard()} prefetch>
-                                <AppLogo />
+                                <div className="group-data-[collapsible=icon]:hidden">
+                                    <Logo className="h-7" />
+                                </div>
+                                <div className="hidden group-data-[collapsible=icon]:block">
+                                    <Logo kind="symbol" className="size-8" />
+                                </div>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
