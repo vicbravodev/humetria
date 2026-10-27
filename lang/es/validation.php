@@ -160,6 +160,13 @@ return [
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
     'custom' => [
+        'rfc' => [
+            'unique' => 'Ya hay una empresa con este RFC.',
+        ],
+        'slug' => [
+            'not_in' => 'Esa dirección está reservada. Elige otra.',
+            'unique' => 'Esa dirección ya la usa otra empresa.',
+        ],
         'whatsapp' => [
             'regex' => 'Escribe un WhatsApp de 10 dígitos, por ejemplo 55 1234 5678.',
         ],
@@ -170,12 +177,16 @@ return [
         'company' => 'empresa',
         'current_password' => 'contraseña actual',
         'email' => 'correo electrónico',
+        'legal_name' => 'razón social',
         'message' => 'mensaje',
         'name' => 'nombre',
         'password' => 'contraseña',
         'password_confirmation' => 'confirmación de contraseña',
         'profile' => 'perfil',
         'recovery_code' => 'código de recuperación',
+        'rfc' => 'RFC',
+        'slug' => 'dirección',
+        'trade_name' => 'nombre comercial',
         'whatsapp' => 'WhatsApp',
         'workforce' => 'número de trabajadores',
     ],

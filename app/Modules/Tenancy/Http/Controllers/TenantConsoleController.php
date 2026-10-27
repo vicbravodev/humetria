@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Tenancy\Actions\CreateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonInterface;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,6 +40,15 @@ final class TenantConsoleController extends Controller
                 ];
             }),
         ]);
+    }
+
+    public function store(StoreTenantRequest $request, CreateTenant $createTenant): RedirectResponse
+    {
+        $createTenant->handle($request->toData());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa dada de alta.']);
+
+        return redirect()->route('companies.index');
     }
 
     private function statusDate(Tenant $tenant, TenantStatus $status): ?string

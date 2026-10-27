@@ -77,7 +77,7 @@ it('redacts each sensitive key', function (string $key): void {
 })->with([
     'answers', 'authorization', 'cookie', 'current_password', 'password',
     'password_confirmation', 'recovery_codes', 'remember_token', 'secret',
-    'token', 'two_factor_recovery_codes', 'two_factor_secret', 'whatsapp',
+    'rfc', 'token', 'two_factor_recovery_codes', 'two_factor_secret', 'whatsapp',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {

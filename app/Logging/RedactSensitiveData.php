@@ -37,6 +37,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'password_confirmation',
             'recovery_codes',
             'remember_token',
+            // A sole proprietor's RFC is a person's tax ID: personal data, whatever event carries it.
+            'rfc',
             'secret',
             'token',
             'two_factor_recovery_codes',
