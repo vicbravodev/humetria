@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Tenancy\Actions\AcceptInvitation;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
@@ -17,6 +18,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(AcceptInvitation::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-10-28 18:00 UTC');
