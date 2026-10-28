@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,6 +41,7 @@ final class AcceptInvitationController extends Controller
             'email' => $invitation?->email,
             'name' => $invitation?->name,
             'token' => $token,
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]);
     }
 

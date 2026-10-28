@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
+use Illuminate\Validation\Rules\Password;
 
 $looks = [
     'light desktop' => [false, false],
@@ -22,7 +23,8 @@ it('shows the form to create the owner account', function (bool $dark, bool $mob
         ->assertSee('Acepta tu invitación')
         ->assertSee('Te invitaron como owner de Grupo Ejemplo')
         ->assertValue('#email', 'ana@acme.mx')
-        ->assertValue('name', 'Ana Pérez');
+        ->assertValue('name', 'Ana Pérez')
+        ->assertAttribute('#password', 'passwordrules', Password::defaults()->toPasswordRulesString());
 })->with($looks);
 
 it('says the link is no longer valid', function (bool $dark, bool $mobile): void {

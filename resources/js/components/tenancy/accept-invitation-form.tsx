@@ -7,10 +7,20 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { accept } from '@/routes/invitations';
 
-type Props = { token: string; email: string; name: string };
+type Props = {
+    token: string;
+    email: string;
+    name: string;
+    passwordRules: string;
+};
 
 /** Creates the invited owner's account: the email is the invitation's and cannot change. */
-export default function AcceptInvitationForm({ token, email, name }: Props) {
+export default function AcceptInvitationForm({
+    token,
+    email,
+    name,
+    passwordRules,
+}: Props) {
     return (
         <Form
             {...accept.form(token)}
@@ -51,6 +61,7 @@ export default function AcceptInvitationForm({ token, email, name }: Props) {
                             required
                             autoFocus
                             autoComplete="new-password"
+                            passwordrules={passwordRules}
                         />
                         <InputError message={errors['password']} />
                     </div>
@@ -64,6 +75,7 @@ export default function AcceptInvitationForm({ token, email, name }: Props) {
                             name="password_confirmation"
                             required
                             autoComplete="new-password"
+                            passwordrules={passwordRules}
                         />
                         <InputError message={errors['password_confirmation']} />
                     </div>

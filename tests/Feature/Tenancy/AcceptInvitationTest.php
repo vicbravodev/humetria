@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -62,7 +63,8 @@ it('shows the form for a valid link', function (): void {
             ->where('trade_name', 'Acme')
             ->where('email', 'ana@acme.mx')
             ->where('name', 'Ana Pérez')
-            ->where('token', $this->token));
+            ->where('token', $this->token)
+            ->where('passwordRules', Password::defaults()->toPasswordRulesString()));
 });
 
 it('shows the link as invalid when it is unknown, used, cancelled or expired', function (string $kind): void {

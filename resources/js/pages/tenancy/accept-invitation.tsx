@@ -12,6 +12,7 @@ export default function AcceptInvitation(props: InvitationPage) {
                     token={props.token}
                     email={props.email}
                     name={props.name}
+                    passwordRules={props.passwordRules}
                 />
             ) : (
                 <InvitationNotice {...props} />
