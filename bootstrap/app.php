@@ -10,9 +10,14 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Support\Header;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,6 +48,28 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
 
             return false;
+        });
+
+        // A mail server's refusal usually quotes the recipient's address. Report it by class and code only.
+        $exceptions->report(function (TransportExceptionInterface $exception): false {
+            Log::error('mail.send_failed', [
+                'exception' => class_basename($exception),
+                'code' => (string) $exception->getCode(),
+            ]);
+
+            return false;
+        });
+
+        // Inertia would show the bare 429 of a submit in a modal: send it back with a toast. A visit (GET) gets
+        // errors/429 instead: sent back, a page over its own limit would redirect to itself forever.
+        $exceptions->render(function (ThrottleRequestsException $exception, Request $request): ?RedirectResponse {
+            if (! $request->hasHeader(Header::INERTIA) || $request->isMethodSafe()) {
+                return null;
+            }
+
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
+
+            return back();
         });
 
         $exceptions->shouldRenderJsonWhen(

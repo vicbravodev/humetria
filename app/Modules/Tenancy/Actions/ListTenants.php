@@ -14,6 +14,6 @@ final class ListTenants
      */
     public function handle(): LengthAwarePaginator
     {
-        return Tenant::query()->latest()->paginate(25);
+        return Tenant::query()->with(['ownerMembership.user', 'openInvitation'])->latest()->paginate(25);
     }
 }

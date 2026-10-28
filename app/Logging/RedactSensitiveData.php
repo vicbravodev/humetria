@@ -33,6 +33,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'authorization',
             'cookie',
             'current_password',
+            // An email address identifies a person: never log one, whatever event carries it.
+            'email',
             'password',
             'password_confirmation',
             'recovery_codes',

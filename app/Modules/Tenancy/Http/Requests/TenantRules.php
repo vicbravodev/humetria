@@ -29,6 +29,8 @@ final class TenantRules
         'demo-requests',
         'email',
         'forgot-password',
+        'invitation',
+        'invitations',
         'login',
         'logout',
         'passkeys',
@@ -49,6 +51,7 @@ final class TenantRules
 
     /**
      * What a person types is not what is stored: the RFC is uppercase without spaces, the address lowercase.
+     * The names need nothing more than the TrimStrings middleware already does.
      *
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>
@@ -57,7 +60,7 @@ final class TenantRules
     {
         $normalized = $input;
 
-        foreach (['legal_name', 'trade_name', 'rfc', 'slug'] as $field) {
+        foreach (['rfc', 'slug'] as $field) {
             $value = $input[$field] ?? null;
 
             if (! is_string($value)) {
@@ -67,7 +70,6 @@ final class TenantRules
             $normalized[$field] = match ($field) {
                 'rfc' => Str::of($value)->upper()->replaceMatches('/\s+/u', '')->toString(),
                 'slug' => Str::of($value)->trim()->lower()->toString(),
-                default => trim($value),
             };
         }
 
@@ -89,7 +91,8 @@ final class TenantRules
                 if (is_string($value) && preg_match('/\A[A-ZÑ&]{3,4}([0-9]{2})([0-9]{2})([0-9]{2})/u', $value, $date) === 1) {
                     [, $year, $month, $day] = array_map(intval(...), $date);
 
-                    if (! checkdate($month, $day, 2000 + $year)) {
+                    // $year + 2000, not 2000 + $year: a flipped sign then gives an invalid year instead of an equivalent mutant.
+                    if (! checkdate($month, $day, $year + 2000)) {
                         $fail('El RFC tiene una fecha que no existe.');
                     }
                 }

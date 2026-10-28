@@ -28,6 +28,8 @@ function publicRouteNames(): array
         'passkey.login', // guest: passkey sign-in submit
         'passkey.login-options', // guest: passkey sign-in challenge
         'well-known.passkeys', // spec-mandated discovery document for password managers
+        'invitations.show', // guest: invitation link from the email; the token is the credential
+        'invitations.accept', // guest: accepts the invitation; throttled, single-use token
     ];
 }
 

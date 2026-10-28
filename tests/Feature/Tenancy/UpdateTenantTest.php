@@ -126,6 +126,21 @@ it('logs and audits the names of the changed fields, never their values', functi
         ->and(json_encode($entry->toArray()))->not->toContain('NUE0303033C3');
 });
 
+it('lists the changed fields in alphabetical order, as a list, without the update time', function (): void {
+    $tenant = existingCompany();
+    $this->travel(1)->minutes();
+    Log::spy();
+
+    // The table stores trade_name before rfc: the list comes out sorted, not in column order.
+    $this->actingAs(superadmin())
+        ->put(route('companies.update', $tenant), editedCompany(['trade_name' => 'Nombre Nuevo', 'rfc' => 'NUE0303033C3']))
+        ->assertSessionHasNoErrors();
+
+    Log::shouldHaveReceived('info')->once()->with('tenant.updated', ['tenant_id' => $tenant->id, 'changed' => ['rfc', 'trade_name']]);
+
+    expect(AuditEntry::query()->sole()->metadata)->toBe(['changed' => ['rfc', 'trade_name']]);
+});
+
 it('records nothing when nothing changed', function (): void {
     $tenant = existingCompany();
     Log::spy();

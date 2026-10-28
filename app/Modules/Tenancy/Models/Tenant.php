@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Models;
 
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\TenantFactory;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A company that uses the platform. Its status follows its trial and paid dates.
@@ -58,6 +61,30 @@ final class Tenant extends Model
     public function trialEndsAt(): ?CarbonImmutable
     {
         return $this->trial_started_at?->addDays(self::TRIAL_DAYS);
+    }
+
+    /**
+     * @return HasOne<TenantMembership, $this>
+     */
+    public function ownerMembership(): HasOne
+    {
+        return $this->hasOne(TenantMembership::class)->where('role', TenantRole::Owner);
+    }
+
+    /**
+     * @return HasOne<TenantInvitation, $this>
+     */
+    public function openInvitation(): HasOne
+    {
+        return $this->hasOne(TenantInvitation::class)->open();
+    }
+
+    /**
+     * @return HasMany<TenantInvitation, $this>
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(TenantInvitation::class);
     }
 
     /**

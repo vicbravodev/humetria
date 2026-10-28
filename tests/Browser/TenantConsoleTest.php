@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Models\TenantMembership;
 
 $looks = [
     'light desktop' => [false, false],
@@ -19,10 +21,29 @@ it('shows the superadmin every company with its status', function (bool $dark, b
         'legal_name' => 'Grupo Ejemplo S.A. de C.V.',
         'rfc' => 'GEJ0101011A1',
     ]);
+    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Con owner']))
+        ->for(User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']))->create();
+    TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Con invitación']))
+        ->create(['name' => 'Beto Ruiz', 'email' => 'beto@acme.mx']);
+    TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Con vencida']))
+        ->expired()->create(['name' => 'Carla Soto', 'email' => 'carla@acme.mx']);
+    $both = Tenant::factory()->create(['trade_name' => 'Con las dos']);
+    TenantMembership::factory()->for($both)->for(User::factory()->create(['name' => 'Dora Luna', 'email' => 'dora@acme.mx']))->create();
+    TenantInvitation::factory()->for($both)->create(['name' => 'Eva Mora', 'email' => 'eva@acme.mx']);
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile)
         ->assertSee('Empresas')
-        ->assertSee('1 empresa')
+        ->assertSee('5 empresas')
+        ->assertSee('Sin invitar')
+        ->assertSee('Ana Pérez · ana@acme.mx')
+        ->assertSee('Activo')
+        ->assertSee('Invitación enviada')
+        ->assertSee('Vence el')
+        ->assertSee('Vencida')
+        ->assertSee('Carla Soto · carla@acme.mx')
+        ->assertSee('Dora Luna · dora@acme.mx')
+        ->assertSee('Eva Mora · eva@acme.mx')
+        ->assertSee('Cambiar owner')
         ->assertSee('Grupo Ejemplo')
         ->assertSee('Grupo Ejemplo S.A. de C.V.')
         ->assertSee('GEJ0101011A1')
@@ -227,4 +248,81 @@ it('passes the accessibility and CSP checks with the deactivation dialog open', 
     Tenant::factory()->create();
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Desactivar')->assertSee('Sus datos se conservan.'));
+})->with($looks);
+
+it('invites the owner from the console', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    visit('/admin/companies')
+        ->assertSee('Sin invitar')
+        ->click('Invitar owner')
+        ->assertSee('Le enviamos un correo con un enlace, válido por 7 días')
+        ->type('name', 'Ana Pérez')
+        ->type('email', 'ana@acme.mx')
+        ->press('Enviar invitación')
+        ->assertSee('Invitación enviada.')
+        ->assertSee('Ana Pérez · ana@acme.mx')
+        ->assertDontSee('Sin invitar')
+        ->assertNoJavaScriptErrors();
+
+    expect(TenantInvitation::query()->sole()->email)->toBe('ana@acme.mx');
+});
+
+it('cancels an invitation from the console', function (): void {
+    signInAsSuperadmin();
+    $invitation = TenantInvitation::factory()->for(Tenant::factory()->create())->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+
+    visit('/admin/companies')
+        ->assertSee('Ana Pérez · ana@acme.mx')
+        ->click('Cancelar')
+        ->assertSee('El enlace dejará de funcionar.')
+        ->press('Cancelar invitación')
+        ->assertSee('Invitación cancelada.')
+        ->assertDontSee('Ana Pérez · ana@acme.mx')
+        ->assertSee('Sin invitar')
+        ->assertNoJavaScriptErrors();
+
+    expect($invitation->refresh()->cancelled_at)->not->toBeNull();
+});
+
+it('resends an invitation from the console', function (): void {
+    signInAsSuperadmin();
+    $invitation = TenantInvitation::factory()->for(Tenant::factory()->create())->create();
+    $before = $invitation->token_hash;
+
+    visit('/admin/companies')
+        ->click('Reenviar')
+        ->assertSee('Invitación reenviada.')
+        ->assertNoJavaScriptErrors();
+
+    expect($invitation->refresh()->token_hash)->not->toBe($before);
+});
+
+it('passes the accessibility and CSP checks with the cancel invitation dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    TenantInvitation::factory()->for(Tenant::factory()->create())->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Cancelar')->assertSee('El enlace dejará de funcionar.'));
+})->with($looks);
+
+it('shows what is wrong in the invitation dialog and keeps it open', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visit('/admin/companies')
+        ->click('Invitar owner')
+        ->type('name', 'Ana Pérez')
+        ->type('email', 'no-es-correo')
+        ->press('Enviar invitación')
+        ->assertSee('El campo correo electrónico debe ser un correo electrónico válido.');
+
+    expect(TenantInvitation::query()->count())->toBe(0);
+});
+
+it('passes the accessibility and CSP checks with the invitation dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Invitar owner')->assertSee('Enviar invitación'));
 })->with($looks);

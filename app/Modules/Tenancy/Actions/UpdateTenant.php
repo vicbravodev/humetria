@@ -24,8 +24,8 @@ final readonly class UpdateTenant
                 'slug' => $data->slug,
             ]);
 
-            $changed = array_keys($tenant->getChanges());
-            $changed = array_values(array_diff($changed, ['updated_at']));
+            // sort() also renumbers the keys, so the list stays a list once updated_at is taken out.
+            $changed = array_diff(array_keys($tenant->getChanges()), ['updated_at']);
             sort($changed);
 
             if ($changed !== []) {

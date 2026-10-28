@@ -75,7 +75,7 @@ it('normalizes the RFC, the slug and the names before checking them', function (
         ->and($tenant->trade_name)->toBe('Grupo Ejemplo');
 });
 
-it('normalizes every field and leaves what is not text for the validation to reject', function (): void {
+it('normalizes the RFC and the slug, leaving the names to TrimStrings and what is not text to the validation', function (): void {
     expect(TenantRules::normalize([
         'legal_name' => ['x'],
         'trade_name' => "\t Grupo ",
@@ -84,11 +84,16 @@ it('normalizes every field and leaves what is not text for the validation to rej
         'other' => ' Kept ',
     ]))->toBe([
         'legal_name' => ['x'],
-        'trade_name' => 'Grupo',
+        'trade_name' => "\t Grupo ",
         'rfc' => 'GEJ0101011A1',
         'slug' => 'grupo-ejemplo',
         'other' => ' Kept ',
     ]);
+});
+
+it('still normalizes the slug when the RFC is not text', function (): void {
+    expect(TenantRules::normalize(['rfc' => ['x'], 'slug' => ' Grupo-Ejemplo ']))
+        ->toBe(['rfc' => ['x'], 'slug' => 'grupo-ejemplo']);
 });
 
 it('accepts the RFC of a company and of a person', function (string $rfc): void {
@@ -201,6 +206,17 @@ it('rejects a field that is not text', function (string $field): void {
 
     expect(Tenant::query()->count())->toBe(0);
 })->with(['legal_name', 'trade_name', 'rfc', 'slug']);
+
+it('says that a field must be text', function (string $field, string $name): void {
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput([$field => ['x']]))
+        ->assertSessionHasErrors([$field => "El campo {$name} debe ser una cadena de texto."]);
+})->with([
+    ['legal_name', 'razón social'],
+    ['trade_name', 'nombre comercial'],
+    ['rfc', 'RFC'],
+    ['slug', 'dirección'],
+]);
 
 it('logs and audits the creation without the company data', function (): void {
     Log::spy();

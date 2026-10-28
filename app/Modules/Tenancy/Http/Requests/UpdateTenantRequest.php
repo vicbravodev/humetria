@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Http\Requests;
 
 use App\Modules\Tenancy\Data\TenantData;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Container\Attributes\RouteParameter;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
@@ -25,15 +26,13 @@ final class UpdateTenantRequest extends FormRequest
     /**
      * @return array<string, FieldRules>
      */
-    public function rules(): array
+    public function rules(#[RouteParameter('tenant')] Tenant $tenant): array
     {
-        $tenant = $this->route('tenant');
-        $own = $tenant instanceof Tenant ? $tenant : null;
-
+        // The company being edited keeps its own RFC and slug.
         return [
             ...TenantRules::names(),
-            'rfc' => TenantRules::rfc($own),
-            'slug' => TenantRules::slug($own),
+            'rfc' => TenantRules::rfc($tenant),
+            'slug' => TenantRules::slug($tenant),
         ];
     }
 

@@ -76,3 +76,26 @@ it('generates test data in Spanish, so no page shows a Faker name like "Will"', 
 
     expect($providers)->toContain(Faker\Provider\es_ES\Person::class);
 });
+
+it('shows the page of an unknown address in Spanish', function (): void {
+    config(['app.debug' => false]);
+
+    $this->get('/no-such-page')
+        ->assertNotFound()
+        ->assertSee('<html lang="es">', escape: false)
+        ->assertSee('<title>No encontrado</title>', escape: false)
+        ->assertDontSee('Not Found');
+});
+
+it('translates every title the framework error pages show', function (string $english, string $spanish): void {
+    expect(__($english))->toBe($spanish);
+})->with([
+    ['Unauthorized', 'No autorizado'],
+    ['Payment Required', 'Pago requerido'],
+    ['Forbidden', 'Acceso prohibido'],
+    ['Not Found', 'No encontrado'],
+    ['Page Expired', 'La página expiró'],
+    ['Too Many Requests', 'Demasiadas solicitudes'],
+    ['Server Error', 'Error del servidor'],
+    ['Service Unavailable', 'Servicio no disponible'],
+]);

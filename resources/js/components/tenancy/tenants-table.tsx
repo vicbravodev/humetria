@@ -26,6 +26,7 @@ export default function TenantsTable({
                     <TableHead>Empresa</TableHead>
                     <TableHead>RFC</TableHead>
                     <TableHead>Estado</TableHead>
+                    <TableHead>Owner</TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>
