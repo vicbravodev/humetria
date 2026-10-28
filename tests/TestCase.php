@@ -6,6 +6,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Vite;
 use Laravel\Fortify\Features;
 
 abstract class TestCase extends BaseTestCase
@@ -15,6 +16,9 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         Http::preventStrayRequests();
+
+        // Sail's Vite service keeps public/hot in this checkout; tests render the build, never the live dev server.
+        Vite::useHotFile(storage_path('framework/testing/vite-never-hot'));
     }
 
     protected function skipUnlessFortifyHas(string $feature, ?string $message = null): void
