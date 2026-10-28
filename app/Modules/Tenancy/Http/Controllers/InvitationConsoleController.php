@@ -31,12 +31,11 @@ final class InvitationConsoleController extends Controller
     public function resend(Tenant $tenant, TenantInvitation $invitation, ResendInvitation $resendInvitation): RedirectResponse
     {
         Gate::authorize('manage-tenants');
-        abort_unless($this->isOpen($invitation), 409);
 
         try {
             $resendInvitation->handle($invitation, $this->admin());
         } catch (InvitationNoLongerValid) {
-            abort(409);
+            return $this->noLongerOpen();
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invitación reenviada.']);
@@ -47,12 +46,11 @@ final class InvitationConsoleController extends Controller
     public function cancel(Tenant $tenant, TenantInvitation $invitation, CancelInvitation $cancelInvitation): RedirectResponse
     {
         Gate::authorize('manage-tenants');
-        abort_unless($this->isOpen($invitation), 409);
 
         try {
             $cancelInvitation->handle($invitation, $this->admin());
         } catch (InvitationNoLongerValid) {
-            abort(409);
+            return $this->noLongerOpen();
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invitación cancelada.']);
@@ -60,10 +58,12 @@ final class InvitationConsoleController extends Controller
         return redirect()->route('companies.index');
     }
 
-    /** Pending or expired: it was neither accepted nor cancelled, like {@see TenantInvitation::scopeOpen()}. */
-    private function isOpen(TenantInvitation $invitation): bool
+    /** A console that showed the invitation before it was accepted or cancelled: say so where the list is. */
+    private function noLongerOpen(): RedirectResponse
     {
-        return $invitation->accepted_at === null && $invitation->cancelled_at === null;
+        Inertia::flash('toast', ['type' => 'error', 'message' => 'Esta invitación ya no está abierta.']);
+
+        return redirect()->route('companies.index');
     }
 
     private function admin(): User

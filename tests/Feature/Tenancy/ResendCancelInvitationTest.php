@@ -17,6 +17,8 @@ use Inertia\Support\SessionKey;
 
 mutates(ResendInvitation::class, CancelInvitation::class);
 
+const NO_LONGER_OPEN_TOAST = ['toast' => ['type' => 'error', 'message' => 'Esta invitación ya no está abierta.']];
+
 beforeEach(function (): void {
     $this->travelTo('2026-10-28 18:00 UTC');
     Notification::fake();
@@ -89,17 +91,19 @@ it('cancels an open invitation so its link stops working', function (bool $expir
     'expired' => [true],
 ]);
 
-it('answers 409 for an accepted or cancelled invitation', function (string $state): void {
+it('sends the console back with an error for an accepted or cancelled invitation', function (string $state): void {
     $tenant = Tenant::factory()->create();
     $invitation = TenantInvitation::factory()->for($tenant)->{$state}()->create();
     $before = $invitation->only(['token_hash', 'expires_at', 'accepted_at', 'cancelled_at']);
 
     $this->actingAs(superadmin())
         ->post(route('companies.invitations.resend', [$tenant, $invitation]))
-        ->assertStatus(409);
+        ->assertRedirect(route('companies.index'))
+        ->assertSessionHas(SessionKey::FLASH_DATA, NO_LONGER_OPEN_TOAST);
     $this->actingAs(superadmin())
         ->delete(route('companies.invitations.cancel', [$tenant, $invitation]))
-        ->assertStatus(409);
+        ->assertRedirect(route('companies.index'))
+        ->assertSessionHas(SessionKey::FLASH_DATA, NO_LONGER_OPEN_TOAST);
 
     expect($invitation->refresh()->only(['token_hash', 'expires_at', 'accepted_at', 'cancelled_at']))->toEqual($before);
     Notification::assertNothingSent();
@@ -209,7 +213,7 @@ it('answers 409 and changes nothing when the invitation stops being open after i
     'cancel then cancel' => ['cancelled_at', 'cancel'],
 ]);
 
-it('answers 409 over HTTP when an acceptance commits after the route binding', function (string $verb, string $route): void {
+it('sends the console back with an error when an acceptance commits after the route binding', function (string $verb, string $route): void {
     $tenant = Tenant::factory()->create();
     $invitation = TenantInvitation::factory()->for($tenant)->create();
     $before = $invitation->only(['token_hash', 'expires_at', 'invited_by']);
@@ -225,7 +229,8 @@ it('answers 409 over HTTP when an acceptance commits after the route binding', f
 
     $this->actingAs(superadmin())
         ->{$verb}(route($route, [$tenant, $invitation]))
-        ->assertStatus(409);
+        ->assertRedirect(route('companies.index'))
+        ->assertSessionHas(SessionKey::FLASH_DATA, NO_LONGER_OPEN_TOAST);
 
     expect($invitation->refresh()->only(['token_hash', 'expires_at', 'invited_by']))->toEqual($before)
         ->and($invitation->cancelled_at)->toBeNull()
