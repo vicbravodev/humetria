@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
 it('dresses every email in the Humetría design system', function (MailMessage $mail): void {
@@ -34,6 +35,26 @@ it('dresses every email in the Humetría design system', function (MailMessage $
 it('ships the PNG of the logo the emails load, since mail clients do not show SVG', function (): void {
     expect(public_path('brand/humetria-horizontal-color.png'))->toBeFile();
 });
+
+it('writes the Fortify emails in Spanish', function (MailMessage $mail, string $subject, string $action): void {
+    expect($mail->subject)->toBe($subject)
+        ->and($mail->actionText)->toBe($action)
+        ->and((string) $mail->render())
+        ->not->toContain('You are receiving')
+        ->not->toContain('no further action')
+        ->not->toContain('Please click');
+})->with([
+    'password reset' => [
+        fn (): MailMessage => (new ResetPassword('token'))->toMail(User::factory()->make()),
+        'Restablece tu contraseña de Humetría',
+        'Restablecer contraseña',
+    ],
+    'email verification' => [
+        fn (): MailMessage => (new VerifyEmail)->toMail(User::factory()->create()),
+        'Verifica tu correo en Humetría',
+        'Verificar correo',
+    ],
+]);
 
 it('titles every email with its subject and keeps the greeting as the line above it', function (): void {
     $html = (string) (new MailMessage)->subject('Restablece tu contraseña')->greeting('Hola, Ana')->render();
