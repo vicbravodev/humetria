@@ -48,23 +48,32 @@ final readonly class AcceptInvitation
             $tenant = Tenant::query()->lockForUpdate()->findOrFail($invitation->tenant_id);
             $user = $accepter instanceof User ? $accepter : $this->createUser($invitation->email, $accepter);
 
+            // The company has one owner: the new one takes the membership over, so the previous one loses access to it.
+            $previousOwnerId = $tenant->ownerMembership()->value('user_id');
             $tenant->ownerMembership()->updateOrCreate(['role' => TenantRole::Owner], ['user_id' => $user->id]);
             $invitation->update(['accepted_at' => now()]);
 
             $startsTrial = $tenant->status() === TenantStatus::NotStarted;
+            $changesOwner = is_int($previousOwnerId) && $previousOwnerId !== $user->id;
 
             if ($startsTrial) {
                 $tenant->update(['trial_started_at' => now()]);
             }
 
             // The accepter is the actor and the company is the tenant of what follows. Ids only, never the email or name.
-            Context::scope(function () use ($invitation, $tenant, $user, $startsTrial): void {
+            Context::scope(function () use ($invitation, $tenant, $user, $startsTrial, $changesOwner, $previousOwnerId): void {
                 Log::info('tenant_invitation.accepted', [
                     'tenant_id' => $tenant->id,
                     'invitation_id' => $invitation->id,
                     'user_id' => $user->id,
                 ]);
                 $this->recordAudit->handle('tenant_invitation.accepted', $invitation);
+
+                if ($changesOwner) {
+                    $change = ['previous_user_id' => $previousOwnerId, 'user_id' => $user->id];
+                    Log::info('tenant.owner_changed', ['tenant_id' => $tenant->id, ...$change]);
+                    $this->recordAudit->handle('tenant.owner_changed', $tenant, $change);
+                }
 
                 if ($startsTrial) {
                     Log::info('tenant.trial_started', ['tenant_id' => $tenant->id]);
