@@ -269,6 +269,43 @@ it('invites the owner from the console', function (): void {
     expect(TenantInvitation::query()->sole()->email)->toBe('ana@acme.mx');
 });
 
+it('cancels an invitation from the console', function (): void {
+    signInAsSuperadmin();
+    $invitation = TenantInvitation::factory()->for(Tenant::factory()->create())->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+
+    visit('/admin/companies')
+        ->assertSee('Ana Pérez · ana@acme.mx')
+        ->click('Cancelar')
+        ->assertSee('El enlace dejará de funcionar.')
+        ->press('Cancelar invitación')
+        ->assertSee('Invitación cancelada.')
+        ->assertDontSee('Ana Pérez · ana@acme.mx')
+        ->assertSee('Sin invitar')
+        ->assertNoJavaScriptErrors();
+
+    expect($invitation->refresh()->cancelled_at)->not->toBeNull();
+});
+
+it('resends an invitation from the console', function (): void {
+    signInAsSuperadmin();
+    $invitation = TenantInvitation::factory()->for(Tenant::factory()->create())->create();
+    $before = $invitation->token_hash;
+
+    visit('/admin/companies')
+        ->click('Reenviar')
+        ->assertSee('Invitación reenviada.')
+        ->assertNoJavaScriptErrors();
+
+    expect($invitation->refresh()->token_hash)->not->toBe($before);
+});
+
+it('passes the accessibility and CSP checks with the cancel invitation dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    TenantInvitation::factory()->for(Tenant::factory()->create())->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Cancelar')->assertSee('El enlace dejará de funcionar.'));
+})->with($looks);
+
 it('shows what is wrong in the invitation dialog and keeps it open', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create();

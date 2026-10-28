@@ -10,15 +10,13 @@ use App\Modules\Tenancy\Data\OwnerInvitationData;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
-use App\Modules\Tenancy\Notifications\OwnerInvitation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 final readonly class InviteOwner
 {
-    public function __construct(private RecordAudit $recordAudit) {}
+    public function __construct(private RecordAudit $recordAudit, private SendOwnerInvitationEmail $sendEmail) {}
 
     /**
      * Invites someone to own the company, replacing the invitation that was open, and emails them the one-time link.
@@ -46,9 +44,7 @@ final readonly class InviteOwner
             ]);
             $this->recordAudit->handle('tenant_invitation.sent', $invitation, ['tenant_id' => $tenant->id]);
 
-            DB::afterCommit(fn () => Notification::route('mail', $data->email)->notify(
-                new OwnerInvitation($tenant->trade_name, $data->name, $token, $invitation->expires_at),
-            ));
+            $this->sendEmail->handle($invitation, $tenant->trade_name, $token);
 
             return $invitation;
         });

@@ -31,6 +31,16 @@ Route::post('admin/companies/{tenant}/invitations', [InvitationConsoleController
     ->middleware(['auth', 'verified'])
     ->name('companies.invitations.store');
 
+Route::scopeBindings()->group(function (): void {
+    Route::post('admin/companies/{tenant}/invitations/{invitation}/resend', [InvitationConsoleController::class, 'resend'])
+        ->middleware(['auth', 'verified'])
+        ->name('companies.invitations.resend');
+
+    Route::delete('admin/companies/{tenant}/invitations/{invitation}', [InvitationConsoleController::class, 'cancel'])
+        ->middleware(['auth', 'verified'])
+        ->name('companies.invitations.cancel');
+});
+
 // Public: whoever was invited has no session yet; the single-use token in the URL is the credential.
 Route::get('admin/invitations/{token}', [AcceptInvitationController::class, 'show'])
     ->middleware('throttle:10,1')
