@@ -91,6 +91,11 @@ it('normalizes the RFC and the slug, leaving the names to TrimStrings and what i
     ]);
 });
 
+it('still normalizes the slug when the RFC is not text', function (): void {
+    expect(TenantRules::normalize(['rfc' => ['x'], 'slug' => ' Grupo-Ejemplo ']))
+        ->toBe(['rfc' => ['x'], 'slug' => 'grupo-ejemplo']);
+});
+
 it('accepts the RFC of a company and of a person', function (string $rfc): void {
     $this->actingAs(superadmin())
         ->post(route('companies.store'), newCompanyInput(['rfc' => $rfc]))
