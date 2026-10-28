@@ -94,7 +94,7 @@ final class SecurityHeaders
     }
 
     /**
-     * The origin of the Vite dev server while `composer dev` runs it. Only in local: a stray public/hot
+     * The origin of the Vite dev server while it runs (the `vite` service in Sail). Only in local: a stray public/hot
      * must never widen the policy in production, and tests must not depend on a running dev server.
      */
     private function devServer(): string

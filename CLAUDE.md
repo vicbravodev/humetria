@@ -205,7 +205,14 @@ layouts/  hooks/  lib/  types/
 
 ## Entorno local
 
-- PHP corre local; solo Postgres corre en Docker: `docker compose up -d pgsql` (puerto 5433).
+- La app corre siempre en Docker con Sail: `./vendor/bin/sail up -d` levanta la app en `http://localhost` (puerto 80),
+  Postgres, Vite y los demás servicios. Vite arranca solo y Docker lo reinicia si se cae (`restart: unless-stopped`);
+  su `node_modules` de Linux vive en un volumen, aparte del de tu máquina. Todo comando de la app va por el
+  contenedor: `sail artisan …`, `sail composer …`, `sail npm …`. No se corre `php artisan serve` ni `npm run dev` local.
+- Los tests son la excepción: corren en local (`composer test`, Vitest, navegador) contra el Postgres de Docker en el
+  puerto 5433 (`FORWARD_DB_PORT`); `phpunit.xml` fija ese host y puerto, así que el `.env` puede apuntar a `pgsql`.
+- Primera vez: `composer install`, `cp .env.example .env`, `sail up -d`, `sail artisan key:generate`, `sail artisan migrate`.
+  El primer superadmin: `sail artisan humetria:create-superadmin`.
 - El correo local va a `log`: ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
 - Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado;
