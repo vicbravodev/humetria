@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
@@ -50,6 +51,19 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function superadmin(): User
+{
+    $user = User::factory()->create();
+    $user->assignRole(User::SUPERADMIN);
+
+    return $user;
+}
+
+function signInAsSuperadmin(): void
+{
+    test()->actingAs(superadmin());
 }
 
 /**

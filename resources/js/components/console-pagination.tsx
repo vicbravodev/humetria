@@ -1,11 +1,13 @@
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import type { DemoRequestRow, Paginated } from '@/types';
+import type { Paginated } from '@/types';
 
-export default function DemoRequestsPagination({
+export default function ConsolePagination({
     page,
+    label,
 }: {
-    page: Paginated<DemoRequestRow>;
+    page: Paginated<unknown>;
+    label: string;
 }) {
     if (page.last_page <= 1) {
         return null;
@@ -13,7 +15,7 @@ export default function DemoRequestsPagination({
 
     return (
         <nav
-            aria-label="Páginas de solicitudes"
+            aria-label={label}
             className="flex flex-wrap items-center justify-between gap-4"
         >
             <p className="text-sm text-muted-foreground">

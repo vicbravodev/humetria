@@ -9,6 +9,7 @@ use Inertia\Response;
 Route::get('/', fn (): Response => Inertia::render('landing'))->name('home');
 
 require __DIR__.'/demos.php';
+require __DIR__.'/tenancy.php';
 
 Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
