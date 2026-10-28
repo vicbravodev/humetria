@@ -57,9 +57,10 @@ final class AcceptInvitationController extends Controller
         // Never accepts for another account, nor replaces its session with the invited one.
         abort_if($state === 'other_account', 403);
 
-        // An existing account joins after signing in; a new password must never replace its own.
+        // An existing account joins after signing in; a new password must never replace its own. The link asks it to
+        // sign in and brings it back afterwards.
         if ($state === 'sign_in') {
-            return redirect()->route('login');
+            return redirect()->route('invitations.show', $token);
         }
 
         try {

@@ -150,10 +150,22 @@ it('never offers the password form for an email that already has an account', fu
         ->assertInertia(fn (Assert $page) => $page->where('state', 'sign_in'));
 
     $this->post(route('invitations.accept', $this->token), ['name' => 'Intruso', 'password' => 'otro-secreto-456', 'password_confirmation' => 'otro-secreto-456'])
-        ->assertRedirect(route('login'));
+        ->assertRedirect(route('invitations.show', $this->token));
 
     expect(User::query()->sole()->only(['id', 'name', 'password']))->toBe($ana->only(['id', 'name', 'password']))
         ->and(TenantMembership::query()->count())->toBe(0)
         ->and($invitation->fresh()?->accepted_at)->toBeNull();
     $this->assertGuest();
+});
+
+it('returns an existing account to the link after it signs in, even when it first submitted the form', function (): void {
+    User::factory()->create(['email' => 'ana@acme.mx']);
+    TenantInvitation::factory()->withToken($this->token)->create(['email' => 'ana@acme.mx']);
+
+    $this->followingRedirects()
+        ->post(route('invitations.accept', $this->token), ['name' => 'Ana', 'password' => 'otro-secreto-456', 'password_confirmation' => 'otro-secreto-456'])
+        ->assertInertia(fn (Assert $page) => $page->where('state', 'sign_in'));
+
+    $this->post(route('login.store'), ['email' => 'ana@acme.mx', 'password' => 'password'])
+        ->assertRedirect(route('invitations.show', $this->token));
 });

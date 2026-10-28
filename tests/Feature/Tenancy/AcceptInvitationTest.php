@@ -163,12 +163,12 @@ it('accepts nothing when another request accepts the link between the check and 
     $this->assertGuest();
 });
 
-it('sends an email that already has an account to the login, without touching that account', function (): void {
+it('sends an email that already has an account back to the link to sign in, without touching that account', function (): void {
     $existing = User::factory()->create(['email' => 'ana@acme.mx', 'name' => 'Ana Original']);
     $invitation = TenantInvitation::factory()->withToken($this->token)->create(['email' => 'ana@acme.mx']);
 
     $this->post(route('invitations.accept', $this->token), newAccount())
-        ->assertRedirect(route('login'));
+        ->assertRedirect(route('invitations.show', $this->token));
 
     expect(User::query()->sole()->only(['id', 'name', 'password']))->toBe($existing->only(['id', 'name', 'password']))
         ->and(TenantMembership::query()->count())->toBe(0)
