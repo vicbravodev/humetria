@@ -51,6 +51,7 @@ final class TenantRules
 
     /**
      * What a person types is not what is stored: the RFC is uppercase without spaces, the address lowercase.
+     * The names need nothing more than the TrimStrings middleware already does.
      *
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>
@@ -59,7 +60,7 @@ final class TenantRules
     {
         $normalized = $input;
 
-        foreach (['legal_name', 'trade_name', 'rfc', 'slug'] as $field) {
+        foreach (['rfc', 'slug'] as $field) {
             $value = $input[$field] ?? null;
 
             if (! is_string($value)) {
@@ -69,7 +70,6 @@ final class TenantRules
             $normalized[$field] = match ($field) {
                 'rfc' => Str::of($value)->upper()->replaceMatches('/\s+/u', '')->toString(),
                 'slug' => Str::of($value)->trim()->lower()->toString(),
-                default => trim($value),
             };
         }
 

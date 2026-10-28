@@ -75,7 +75,7 @@ it('normalizes the RFC, the slug and the names before checking them', function (
         ->and($tenant->trade_name)->toBe('Grupo Ejemplo');
 });
 
-it('normalizes every field and leaves what is not text for the validation to reject', function (): void {
+it('normalizes the RFC and the slug, leaving the names to TrimStrings and what is not text to the validation', function (): void {
     expect(TenantRules::normalize([
         'legal_name' => ['x'],
         'trade_name' => "\t Grupo ",
@@ -84,7 +84,7 @@ it('normalizes every field and leaves what is not text for the validation to rej
         'other' => ' Kept ',
     ]))->toBe([
         'legal_name' => ['x'],
-        'trade_name' => 'Grupo',
+        'trade_name' => "\t Grupo ",
         'rfc' => 'GEJ0101011A1',
         'slug' => 'grupo-ejemplo',
         'other' => ' Kept ',
