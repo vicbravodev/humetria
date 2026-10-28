@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { tenantStatusVariant } from '@/lib/tenant-status';
+import { activationCopy, tenantStatusVariant } from '@/lib/tenant-status';
 import type { TenantRow } from '@/types';
 
 const variants: [
@@ -19,4 +19,22 @@ describe('tenantStatusVariant', () => {
     it.each(variants)('shows %s as %s', (status, variant) => {
         expect(tenantStatusVariant(status)).toBe(variant);
     });
+});
+
+const activations: [TenantRow['status'], string, string, string][] = [
+    ['not_started', 'Activar', 'Activar empresa', 'Activar'],
+    ['trial', 'Activar', 'Activar empresa', 'Activar'],
+    ['active', 'Cambiar vigencia', 'Cambiar vigencia', 'Guardar'],
+    ['trial_ended', 'Reactivar', 'Reactivar empresa', 'Reactivar'],
+    ['expired', 'Reactivar', 'Reactivar empresa', 'Reactivar'],
+    ['deactivated', 'Reactivar', 'Reactivar empresa', 'Reactivar'],
+];
+
+describe('activationCopy', () => {
+    it.each(activations)(
+        'offers %s companies "%s"',
+        (status, action, title, submit) => {
+            expect(activationCopy(status)).toEqual({ action, title, submit });
+        },
+    );
 });
