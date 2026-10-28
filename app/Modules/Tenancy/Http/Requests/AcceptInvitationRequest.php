@@ -19,6 +19,11 @@ final class AcceptInvitationRequest extends FormRequest
      */
     public function rules(): array
     {
+        // A signed-in account accepts as itself: it never sends, nor gets, a name or a password here.
+        if ($this->user() !== null) {
+            return [];
+        }
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'password' => $this->passwordRules(),

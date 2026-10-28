@@ -39,3 +39,8 @@ Route::get('admin/invitations/{token}', [AcceptInvitationController::class, 'sho
 Route::post('admin/invitations/{token}', [AcceptInvitationController::class, 'accept'])
     ->middleware('throttle:10,1')
     ->name('invitations.accept');
+
+// Signed in as someone else: Fortify's logout would lose the link, so this one comes back to it.
+Route::post('admin/invitations/{token}/switch-account', [AcceptInvitationController::class, 'switchAccount'])
+    ->middleware('auth')
+    ->name('invitations.switch-account');

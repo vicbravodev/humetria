@@ -34,3 +34,12 @@ export type TenantRow = {
     owner: TenantOwner | null;
     invitation: TenantInvitation | null;
 };
+
+type PendingInvitation = { trade_name: string; email: string; name: string };
+
+/** What the invitation link page receives: the state says what the person reaching it can do. */
+export type InvitationPage = { token: string } & (
+    | { state: 'invalid'; trade_name: null; email: null; name: null }
+    | ({ state: 'new_account' } & PendingInvitation)
+    | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
+);
