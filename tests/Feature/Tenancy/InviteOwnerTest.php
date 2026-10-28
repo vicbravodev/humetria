@@ -189,6 +189,27 @@ it('logs and audits the invitation without the email, the name or the token', fu
         ->not->toContain($token);
 });
 
+it('logs and audits which open invitation the new one replaced', function (): void {
+    $tenant = Tenant::factory()->create();
+    $old = TenantInvitation::factory()->for($tenant)->create();
+    $admin = superadmin();
+    Log::spy();
+
+    $this->actingAs($admin)
+        ->post(route('companies.invitations.store', $tenant), ['name' => 'Beto', 'email' => 'beto@acme.mx']);
+
+    $invitation = TenantInvitation::query()->open()->sole();
+
+    Log::shouldHaveReceived('info')->once()->with('tenant_invitation.sent', [
+        'tenant_id' => $tenant->id,
+        'invitation_id' => $invitation->id,
+        'user_id' => $admin->id,
+        'replaced_invitation_id' => $old->id,
+    ]);
+
+    expect(AuditEntry::query()->sole()->metadata)->toBe(['tenant_id' => $tenant->id, 'replaced_invitation_id' => $old->id]);
+});
+
 it('answers 404 to anyone who is not the superadmin', function (): void {
     $tenant = Tenant::factory()->create();
 

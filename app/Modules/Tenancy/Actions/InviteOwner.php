@@ -24,7 +24,10 @@ final readonly class InviteOwner
     public function handle(Tenant $tenant, OwnerInvitationData $data, User $invitedBy): TenantInvitation
     {
         return DB::transaction(function () use ($tenant, $data, $invitedBy): TenantInvitation {
+            // At most one is open (a unique index): its id stays on record so the replacement leaves a trace.
+            $replacedId = $tenant->invitations()->open()->value('id');
             $tenant->invitations()->open()->update(['cancelled_at' => now()]);
+            $replaced = is_string($replacedId) ? ['replaced_invitation_id' => $replacedId] : [];
 
             $token = Str::random(64);
             $invitation = $tenant->invitations()->create([
@@ -41,8 +44,9 @@ final readonly class InviteOwner
                 'tenant_id' => $tenant->id,
                 'invitation_id' => $invitation->id,
                 'user_id' => $invitedBy->id,
+                ...$replaced,
             ]);
-            $this->recordAudit->handle('tenant_invitation.sent', $invitation, ['tenant_id' => $tenant->id]);
+            $this->recordAudit->handle('tenant_invitation.sent', $invitation, ['tenant_id' => $tenant->id, ...$replaced]);
 
             $this->sendEmail->handle($invitation, $tenant->trade_name, $token);
 
