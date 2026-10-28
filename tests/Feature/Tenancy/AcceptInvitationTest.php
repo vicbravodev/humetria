@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -292,4 +293,16 @@ it('shows a plain visit over the limit a page in Spanish, and a JSON request the
     $this->getJson(route('invitations.show', Str::random(64)))
         ->assertTooManyRequests()
         ->assertJsonPath('message', 'Too Many Attempts.');
+});
+
+it('answers an Inertia visit to the page over the limit with the 429 page instead of sending it back to itself', function (): void {
+    foreach (range(1, 60) as $attempt) {
+        $this->get(route('invitations.show', Str::random(64)))->assertOk();
+    }
+
+    // A failed submit redirects to the page; were this visit sent back, it would land on itself again and loop.
+    $this->from(route('invitations.show', $this->token))
+        ->get(route('invitations.show', $this->token), ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion()])
+        ->assertTooManyRequests()
+        ->assertSee('Espera un minuto y vuelve a intentarlo.');
 });

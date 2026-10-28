@@ -60,9 +60,10 @@ return Application::configure(basePath: dirname(__DIR__))
             return false;
         });
 
-        // Inertia would show the bare 429 in a modal: send the visit back with a toast. A plain visit gets errors/429.
+        // Inertia would show the bare 429 of a submit in a modal: send it back with a toast. A visit (GET) gets
+        // errors/429 instead: sent back, a page over its own limit would redirect to itself forever.
         $exceptions->render(function (ThrottleRequestsException $exception, Request $request): ?RedirectResponse {
-            if (! $request->hasHeader(Header::INERTIA)) {
+            if (! $request->hasHeader(Header::INERTIA) || $request->isMethodSafe()) {
                 return null;
             }
 
