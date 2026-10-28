@@ -39,14 +39,13 @@ final class StoreInvitationRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
-            $tenant = $this->route('tenant');
-
-            if ($validator->errors()->has('email') || ! $tenant instanceof Tenant) {
+            if ($validator->errors()->has('email')) {
                 return;
             }
 
-            $isOwner = $tenant->ownerMembership()
-                ->whereHas('user', fn (Builder $user) => $user->whereRaw('lower(email) = ?', [$this->string('email')->toString()]))
+            // The route always binds the company; whereKey takes the bound model.
+            $isOwner = Tenant::query()->whereKey($this->route('tenant'))
+                ->whereHas('ownerMembership.user', fn (Builder $user) => $user->whereRaw('lower(email) = ?', [$this->string('email')->toString()]))
                 ->exists();
 
             if ($isOwner) {

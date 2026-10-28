@@ -133,6 +133,8 @@ it('rejects an invalid email, an empty name and the current owner', function (ar
     'long name' => [['name' => str_repeat('a', 256), 'email' => 'ana@acme.mx'], 'name', 'El campo nombre no debe tener más de 255 caracteres.'],
     'array name' => [['name' => ['Ana'], 'email' => 'ana@acme.mx'], 'name', 'El campo nombre debe ser una cadena de texto.'],
     'array email' => [['name' => 'Ana', 'email' => ['ana@acme.mx']], 'email', 'El campo correo electrónico debe ser una cadena de texto.'],
+    // A well-formed address of 311 characters: only the length rule can refuse it.
+    'email too long' => [['name' => 'Ana', 'email' => str_repeat('a', 64).'@'.implode('.', array_fill(0, 4, str_repeat('b', 60))).'.mx'], 'email', 'El campo correo electrónico no debe tener más de 255 caracteres.'],
     'current owner' => [['name' => 'Otro', 'email' => ' OWNER@acme.mx '], 'email', 'Esta persona ya es el owner.'],
 ]);
 
