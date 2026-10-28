@@ -13,6 +13,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -40,6 +41,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 'sql' => $exception->getSql(),
                 'code' => (string) $exception->getCode(),
                 'connection' => $exception->getConnectionName(),
+            ]);
+
+            return false;
+        });
+
+        // A mail server's refusal usually quotes the recipient's address. Report it by class and code only.
+        $exceptions->report(function (TransportExceptionInterface $exception): false {
+            Log::error('mail.send_failed', [
+                'exception' => class_basename($exception),
+                'code' => (string) $exception->getCode(),
             ]);
 
             return false;
