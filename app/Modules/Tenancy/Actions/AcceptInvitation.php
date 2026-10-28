@@ -31,7 +31,14 @@ final readonly class AcceptInvitation
     {
         return DB::transaction(function () use ($invitation, $accepter): User {
             // Locked so two acceptances of the same link cannot both pass the check.
-            $invitation = TenantInvitation::query()->lockForUpdate()->findOrFail($invitation->id);
+            $locked = TenantInvitation::query()->lockForUpdate()->findOrFail($invitation->id);
+
+            // A resend that committed since the link was looked up replaced its token: that link no longer works.
+            if ($locked->token_hash !== $invitation->token_hash) {
+                throw new InvitationNoLongerValid;
+            }
+
+            $invitation = $locked;
 
             if ($invitation->status() !== InvitationStatus::Pending) {
                 throw new InvitationNoLongerValid;

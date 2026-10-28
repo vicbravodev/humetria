@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\Tenancy\Actions\CancelInvitation;
 use App\Modules\Tenancy\Actions\InviteOwner;
 use App\Modules\Tenancy\Actions\ResendInvitation;
+use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Http\Requests\StoreInvitationRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
@@ -32,7 +33,11 @@ final class InvitationConsoleController extends Controller
         Gate::authorize('manage-tenants');
         abort_unless($this->isOpen($invitation), 409);
 
-        $resendInvitation->handle($invitation, $this->admin());
+        try {
+            $resendInvitation->handle($invitation, $this->admin());
+        } catch (InvitationNoLongerValid) {
+            abort(409);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invitación reenviada.']);
 
@@ -44,7 +49,11 @@ final class InvitationConsoleController extends Controller
         Gate::authorize('manage-tenants');
         abort_unless($this->isOpen($invitation), 409);
 
-        $cancelInvitation->handle($invitation, $this->admin());
+        try {
+            $cancelInvitation->handle($invitation, $this->admin());
+        } catch (InvitationNoLongerValid) {
+            abort(409);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invitación cancelada.']);
 

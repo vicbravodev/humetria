@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\CancelInvitation;
 use App\Modules\Tenancy\Actions\ResendInvitation;
+use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Notifications\OwnerInvitation;
@@ -180,4 +181,57 @@ it('logs and audits resend and cancel without the email, the name or the token',
 })->with([
     'resend' => ['resend', 'tenant_invitation.resent'],
     'cancel' => ['cancel', 'tenant_invitation.cancelled'],
+]);
+
+it('answers 409 and changes nothing when the invitation stops being open after it was read', function (string $change, string $route): void {
+    $tenant = Tenant::factory()->create();
+    $invitation = TenantInvitation::factory()->for($tenant)->create();
+    $before = $invitation->only(['token_hash', 'expires_at', 'invited_by']);
+
+    // Same shape as an acceptance committing between the route binding and the action's transaction.
+    $stale = TenantInvitation::query()->findOrFail($invitation->id);
+    TenantInvitation::query()->whereKey($invitation->id)->update([$change => now()]);
+
+    $admin = superadmin();
+    $action = $route === 'resend' ? ResendInvitation::class : CancelInvitation::class;
+
+    expect(fn () => app($action)->handle($stale, $admin))->toThrow(InvitationNoLongerValid::class);
+
+    $fresh = $invitation->refresh();
+
+    expect($fresh->only(['token_hash', 'expires_at', 'invited_by']))->toEqual($before)
+        ->and(AuditEntry::query()->count())->toBe(0);
+    Notification::assertNothingSent();
+})->with([
+    'accept then resend' => ['accepted_at', 'resend'],
+    'accept then cancel' => ['accepted_at', 'cancel'],
+    'cancel then resend' => ['cancelled_at', 'resend'],
+    'cancel then cancel' => ['cancelled_at', 'cancel'],
+]);
+
+it('answers 409 over HTTP when an acceptance commits after the route binding', function (string $verb, string $route): void {
+    $tenant = Tenant::factory()->create();
+    $invitation = TenantInvitation::factory()->for($tenant)->create();
+    $before = $invitation->only(['token_hash', 'expires_at', 'invited_by']);
+
+    // The row is read as open by the route binding; the acceptance lands right after.
+    $accepted = false;
+    TenantInvitation::retrieved(function (TenantInvitation $retrieved) use (&$accepted): void {
+        if (! $accepted) {
+            $accepted = true;
+            TenantInvitation::query()->whereKey($retrieved->id)->update(['accepted_at' => now()]);
+        }
+    });
+
+    $this->actingAs(superadmin())
+        ->{$verb}(route($route, [$tenant, $invitation]))
+        ->assertStatus(409);
+
+    expect($invitation->refresh()->only(['token_hash', 'expires_at', 'invited_by']))->toEqual($before)
+        ->and($invitation->cancelled_at)->toBeNull()
+        ->and(AuditEntry::query()->count())->toBe(0);
+    Notification::assertNothingSent();
+})->with([
+    'resend' => ['post', 'companies.invitations.resend'],
+    'cancel' => ['delete', 'companies.invitations.cancel'],
 ]);

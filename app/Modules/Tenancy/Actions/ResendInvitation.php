@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
 use App\Models\User;
+use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,10 +18,13 @@ final readonly class ResendInvitation
 
     /**
      * Replaces the link of an open invitation with a new one, valid for another {@see TenantInvitation::VALID_DAYS} days.
+     *
+     * @throws InvitationNoLongerValid when it was accepted or cancelled before it could be locked.
      */
     public function handle(TenantInvitation $invitation, User $by): TenantInvitation
     {
         return DB::transaction(function () use ($invitation, $by): TenantInvitation {
+            $invitation = TenantInvitation::lockOpen($invitation);
             $token = Str::random(64);
             $invitation->update([
                 'token_hash' => TenantInvitation::hashToken($token),

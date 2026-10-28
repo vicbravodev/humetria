@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Models;
 
 use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\TenantInvitationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -44,6 +45,23 @@ final class TenantInvitation extends Model
     public static function hashToken(string $token): string
     {
         return hash('sha256', $token);
+    }
+
+    /**
+     * Re-reads the invitation under lock, inside the caller's transaction, so what was checked on a copy read earlier
+     * cannot have been changed by an acceptance, a cancellation or a resend that committed in between.
+     *
+     * @throws InvitationNoLongerValid when it was accepted or cancelled meanwhile.
+     */
+    public static function lockOpen(self $invitation): self
+    {
+        $locked = self::query()->lockForUpdate()->findOrFail($invitation->id);
+
+        if ($locked->accepted_at !== null || $locked->cancelled_at !== null) {
+            throw new InvitationNoLongerValid;
+        }
+
+        return $locked;
     }
 
     public function status(): InvitationStatus

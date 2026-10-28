@@ -72,3 +72,17 @@ it('refuses an invitation that stopped being pending after it was read', functio
         ->and(TenantMembership::query()->count())->toBe(0)
         ->and(AuditEntry::query()->count())->toBe(0);
 })->with(['accepted_at', 'cancelled_at']);
+
+it('refuses a link that was replaced by a resend after it was read', function (): void {
+    $invitation = TenantInvitation::factory()->withToken('old-token')->create();
+    $replacement = TenantInvitation::hashToken('new-token');
+    TenantInvitation::query()->whereKey($invitation->id)->update(['token_hash' => $replacement]);
+
+    expect(fn () => app(AcceptInvitation::class)->handle($invitation, new NewAccountData('Ana Pérez', 'secreto-largo-123')))
+        ->toThrow(InvitationNoLongerValid::class);
+
+    expect(User::query()->count())->toBe(0)
+        ->and(TenantMembership::query()->count())->toBe(0)
+        ->and(AuditEntry::query()->count())->toBe(0)
+        ->and($invitation->refresh()->accepted_at)->toBeNull();
+});
