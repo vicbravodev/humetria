@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\AcceptInvitation;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -35,7 +36,7 @@ it('removes the previous owner from the company when the new one accepts', funct
     TenantMembership::factory()->for($other)->for($previous)->create();
     $next = User::factory()->create();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(), $next);
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email]), $next);
 
     $owner = $tenant->ownerMembership()->sole();
 
@@ -51,7 +52,9 @@ it('does not restart the trial when the owner changes', function (): void {
     TenantMembership::factory()->for($tenant)->create();
     Log::spy();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(), User::factory()->create());
+    $next = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email]), $next);
 
     expect($tenant->fresh()?->trial_started_at?->toIso8601String())->toBe($started->toIso8601String())
         ->and(AuditEntry::query()->where('event', 'tenant.trial_started')->exists())->toBeFalse();
@@ -66,7 +69,7 @@ it('records the owner change with the previous and new user ids only', function 
     TenantMembership::factory()->for($tenant)->for($previous)->create();
     Log::spy();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(), $next);
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email]), $next);
 
     $entry = AuditEntry::query()->where('event', 'tenant.owner_changed')->sole();
 
@@ -88,7 +91,7 @@ it('neither removes nor logs a change when the accepter already is the owner', f
     TenantMembership::factory()->for($tenant)->for($owner)->create();
     Log::spy();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(), $owner);
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $owner->email]), $owner);
 
     expect(TenantMembership::query()->sole()->user_id)->toBe($owner->id)
         ->and(AuditEntry::query()->where('event', 'tenant.owner_changed')->exists())->toBeFalse();
@@ -99,7 +102,33 @@ it('neither removes nor logs a change when the accepter already is the owner', f
 it('records no owner change for the first owner of a company', function (): void {
     $tenant = Tenant::factory()->create();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(), User::factory()->create());
+    $next = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email]), $next);
 
     expect(AuditEntry::query()->where('event', 'tenant.owner_changed')->exists())->toBeFalse();
+});
+
+it('refuses an existing account whose email is not the invited one', function (): void {
+    $previous = User::factory()->create();
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    TenantMembership::factory()->for($tenant)->for($previous)->create();
+    $invitation = TenantInvitation::factory()->for($tenant)->create(['email' => 'ana@acme.mx']);
+    $intruder = User::factory()->create(['email' => 'beto@otra.mx']);
+
+    expect(fn () => app(AcceptInvitation::class)->handle($invitation, $intruder))
+        ->toThrow(InvitationForAnotherAccount::class);
+
+    expect(TenantMembership::query()->sole()->user_id)->toBe($previous->id)
+        ->and($invitation->fresh()?->accepted_at)->toBeNull()
+        ->and(AuditEntry::query()->count())->toBe(0);
+});
+
+it('accepts an existing account whatever the case of its email', function (): void {
+    $tenant = Tenant::factory()->create();
+    $ana = User::factory()->create(['email' => 'Ana@Acme.MX']);
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => 'ana@acme.mx']), $ana);
+
+    expect($tenant->ownerMembership()->sole()->user_id)->toBe($ana->id);
 });

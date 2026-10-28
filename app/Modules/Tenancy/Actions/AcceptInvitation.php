@@ -10,12 +10,14 @@ use App\Modules\Tenancy\Data\NewAccountData;
 use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 final readonly class AcceptInvitation
 {
@@ -26,9 +28,15 @@ final readonly class AcceptInvitation
      * The first owner of a company that has not started starts its trial. Signing in is the caller's job.
      *
      * @throws InvitationNoLongerValid when the invitation stopped being pending before it could be locked.
+     * @throws InvitationForAnotherAccount when an existing account is not the one the invitation was sent to.
      */
     public function handle(TenantInvitation $invitation, User|NewAccountData $accepter): User
     {
+        // Only the invited email joins: whoever holds the link can never hand the company to another account.
+        if ($accepter instanceof User && Str::lower($accepter->email) !== $invitation->email) {
+            throw new InvitationForAnotherAccount;
+        }
+
         return DB::transaction(function () use ($invitation, $accepter): User {
             // Locked so two acceptances of the same link cannot both pass the check.
             $locked = TenantInvitation::query()->lockForUpdate()->findOrFail($invitation->id);
