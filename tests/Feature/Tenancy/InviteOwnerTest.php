@@ -136,6 +136,14 @@ it('rejects an invalid email, an empty name and the current owner', function (ar
     'current owner' => [['name' => 'Otro', 'email' => ' OWNER@acme.mx '], 'email', 'Esta persona ya es el owner.'],
 ]);
 
+it('fits a name of 255 characters, the longest an account name can be', function (): void {
+    $this->actingAs(superadmin())
+        ->post(route('companies.invitations.store', Tenant::factory()->create()), ['name' => str_repeat('a', 255), 'email' => 'ana@acme.mx'])
+        ->assertSessionHasNoErrors();
+
+    expect(TenantInvitation::query()->sole()->name)->toBe(str_repeat('a', 255));
+});
+
 it('lets another company invite the person who owns this one', function (): void {
     $owner = User::factory()->create(['email' => 'owner@acme.mx']);
     TenantMembership::factory()->for($owner)->create();

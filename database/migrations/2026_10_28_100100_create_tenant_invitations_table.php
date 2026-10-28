@@ -19,7 +19,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('role', 20);
-            $table->string('name', 120);
+            $table->string('name', 255);
             $table->string('email', 255);
             $table->string('token_hash', 64)->unique('tenant_invitations_token_hash_unique');
             $table->timestampTz('expires_at', precision: 0);
