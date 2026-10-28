@@ -91,7 +91,7 @@ final class TenantRules
                 if (is_string($value) && preg_match('/\A[A-ZÑ&]{3,4}([0-9]{2})([0-9]{2})([0-9]{2})/u', $value, $date) === 1) {
                     [, $year, $month, $day] = array_map(intval(...), $date);
 
-                    if (! checkdate($month, $day, 2000 + $year)) {
+                    if (! checkdate($month, $day, $year + 2000)) {
                         $fail('El RFC tiene una fecha que no existe.');
                     }
                 }

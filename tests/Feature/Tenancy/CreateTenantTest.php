@@ -202,6 +202,17 @@ it('rejects a field that is not text', function (string $field): void {
     expect(Tenant::query()->count())->toBe(0);
 })->with(['legal_name', 'trade_name', 'rfc', 'slug']);
 
+it('says that a field must be text', function (string $field, string $name): void {
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput([$field => ['x']]))
+        ->assertSessionHasErrors([$field => "El campo {$name} debe ser una cadena de texto."]);
+})->with([
+    ['legal_name', 'razón social'],
+    ['trade_name', 'nombre comercial'],
+    ['rfc', 'RFC'],
+    ['slug', 'dirección'],
+]);
+
 it('logs and audits the creation without the company data', function (): void {
     Log::spy();
 
