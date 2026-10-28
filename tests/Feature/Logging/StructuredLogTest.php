@@ -75,7 +75,7 @@ it('redacts each sensitive key', function (string $key): void {
 
     expect(lastLogLine($this->logPath)['context'][$key])->toBe('[REDACTED]');
 })->with([
-    'answers', 'authorization', 'cookie', 'current_password', 'password',
+    'answers', 'authorization', 'cookie', 'current_password', 'email', 'password',
     'password_confirmation', 'recovery_codes', 'remember_token', 'secret',
     'rfc', 'token', 'two_factor_recovery_codes', 'two_factor_secret', 'whatsapp',
 ]);

@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Models\TenantMembership;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -53,6 +55,8 @@ it('lists each company with its status for the superadmin', function (): void {
                 'status_date' => 'Prueba hasta 3 nov 2026',
                 'active_until' => null,
                 'blocked' => false,
+                'owner' => null,
+                'invitation' => null,
             ]]));
 });
 
@@ -114,11 +118,53 @@ it('renders the empty console when there are no companies yet', function (): voi
             ->where('tenants.total', 0));
 });
 
-it('reads the page in four queries: the user roles, the permission cache, the count and the page', function (): void {
+it('reads the page in six queries: the user roles, the permission cache, the count, the page, the owners and the open invitations', function (): void {
     Tenant::factory()->count(30)->create();
     // A fresh instance, as a real request gets: its roles are not loaded yet.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(4);
+    $this->expectsDatabaseQueryCount(6);
+    $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
+});
+
+it('shows each company owner and open invitation', function (): void {
+    $this->travelTo('2026-10-28 18:00 UTC');
+    $withOwner = Tenant::factory()->create(['trade_name' => 'Con owner']);
+    TenantMembership::factory()->for($withOwner)->for(User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']))->create();
+    $withInvitation = Tenant::factory()->create(['trade_name' => 'Con invitación']);
+    $pending = TenantInvitation::factory()->for($withInvitation)->create(['name' => 'Beto', 'email' => 'beto@acme.mx', 'expires_at' => '2026-11-04 18:00 UTC']);
+    $expired = Tenant::factory()->create(['trade_name' => 'Vencida']);
+    $old = TenantInvitation::factory()->for($expired)->expired()->create(['name' => 'Carla', 'email' => 'carla@acme.mx']);
+    $closed = Tenant::factory()->create(['trade_name' => 'Cerradas']);
+    TenantInvitation::factory()->for($closed)->accepted()->create();
+    TenantInvitation::factory()->for($closed)->cancelled()->create();
+
+    $rows = collect($this->actingAs(superadmin())->get(route('companies.index'))->viewData('page')['props']['tenants']['data'])
+        ->keyBy('trade_name');
+
+    expect($rows['Con owner']['owner'])->toBe(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx'])
+        ->and($rows['Con owner']['invitation'])->toBeNull()
+        ->and($rows['Con invitación']['owner'])->toBeNull()
+        ->and($rows['Con invitación']['invitation'])->toBe([
+            'id' => $pending->id,
+            'name' => 'Beto',
+            'email' => 'beto@acme.mx',
+            'status' => 'pending',
+            'status_label' => 'Invitación enviada',
+            'expires_on' => '4 nov 2026',
+        ])
+        ->and($rows['Vencida']['invitation'])->toMatchArray(['id' => $old->id, 'status' => 'expired', 'status_label' => 'Vencida'])
+        ->and($rows['Cerradas']['invitation'])->toBeNull();
+});
+
+it('lists companies with a fixed number of queries', function (): void {
+    $withOwner = Tenant::factory()->create();
+    TenantMembership::factory()->for($withOwner)->create();
+    TenantInvitation::factory()->for(Tenant::factory()->create())->create();
+    Tenant::factory()->create();
+    $superadmin = superadmin()->fresh();
+
+    // The user roles, the permission cache, the count, the page, the owners, their users and the open invitations.
+    $this->expectsDatabaseQueryCount(7);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });

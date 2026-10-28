@@ -15,6 +15,7 @@ use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\DisplayDate;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -43,6 +44,8 @@ final class TenantConsoleController extends Controller
                     'status_date' => $this->statusDate($tenant, $status),
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
+                    'owner' => $this->owner($tenant),
+                    'invitation' => $this->invitation($tenant),
                 ];
             }),
         ]);
@@ -100,9 +103,41 @@ final class TenantConsoleController extends Controller
         };
     }
 
+    /**
+     * @return array{name: string, email: string}|null
+     */
+    private function owner(Tenant $tenant): ?array
+    {
+        $user = $tenant->ownerMembership?->user;
+
+        return $user === null ? null : ['name' => $user->name, 'email' => $user->email];
+    }
+
+    /**
+     * @return array{id: string, name: string, email: string, status: string, status_label: string, expires_on: string}|null
+     */
+    private function invitation(Tenant $tenant): ?array
+    {
+        $invitation = $tenant->openInvitation;
+
+        if ($invitation === null) {
+            return null;
+        }
+
+        $status = $invitation->status();
+
+        return [
+            'id' => $invitation->id,
+            'name' => $invitation->name,
+            'email' => $invitation->email,
+            'status' => $status->value,
+            'status_label' => $status->label(),
+            'expires_on' => DisplayDate::day($invitation->expires_at),
+        ];
+    }
+
     private function day(?CarbonInterface $moment): ?string
     {
-        // Carbon's Spanish months end in a dot ("oct."); the design system writes "27 oct 2026".
-        return $moment === null ? null : str_replace('.', '', $moment->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'));
+        return $moment === null ? null : DisplayDate::day($moment);
     }
 }

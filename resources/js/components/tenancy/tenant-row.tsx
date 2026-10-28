@@ -1,6 +1,8 @@
 import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
 import DeactivateTenantDialog from '@/components/tenancy/deactivate-tenant-dialog';
 import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
+import InviteOwnerDialog from '@/components/tenancy/invite-owner-dialog';
+import TenantOwnerCell from '@/components/tenancy/tenant-owner-cell';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { tenantStatusVariant } from '@/lib/tenant-status';
@@ -32,12 +34,16 @@ export default function TenantRowView({
                     </p>
                 )}
             </TableCell>
+            <TableCell className="whitespace-normal">
+                <TenantOwnerCell tenant={tenant} />
+            </TableCell>
             <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                     <ActivateTenantDialog
                         tenant={tenant}
                         minDate={activationMinDate}
                     />
+                    <InviteOwnerDialog tenant={tenant} />
                     <EditTenantDialog tenant={tenant} />
                     {!tenant.blocked && (
                         <DeactivateTenantDialog tenant={tenant} />

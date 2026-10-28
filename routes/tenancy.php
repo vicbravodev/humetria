@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,3 +25,7 @@ Route::post('admin/companies/{tenant}/activate', [TenantConsoleController::class
 Route::post('admin/companies/{tenant}/deactivate', [TenantConsoleController::class, 'deactivate'])
     ->middleware(['auth', 'verified'])
     ->name('companies.deactivate');
+
+Route::post('admin/companies/{tenant}/invitations', [InvitationConsoleController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.invitations.store');
