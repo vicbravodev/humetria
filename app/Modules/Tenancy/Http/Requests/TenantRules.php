@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Requests;
 
+use App\Modules\Tenancy\Models\Tenant;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Str;
@@ -76,10 +77,9 @@ final class TenantRules
     }
 
     /**
-     * @param  mixed  $ignore  the company that may keep its own value, as the route binds it
      * @return FieldRules
      */
-    public static function rfc(mixed $ignore = null): array
+    public static function rfc(?Tenant $ignore = null): array
     {
         return [
             'required',
@@ -101,10 +101,9 @@ final class TenantRules
     }
 
     /**
-     * @param  mixed  $ignore  the company that may keep its own value, as the route binds it
      * @return FieldRules
      */
-    public static function slug(mixed $ignore = null): array
+    public static function slug(?Tenant $ignore = null): array
     {
         return [
             'required',

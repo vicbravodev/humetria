@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Http\Requests;
 
 use App\Modules\Tenancy\Data\OwnerInvitationData;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Container\Attributes\RouteParameter;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,16 +37,15 @@ final class StoreInvitationRequest extends FormRequest
     /**
      * @return list<callable(Validator): void>
      */
-    public function after(): array
+    public function after(#[RouteParameter('tenant')] Tenant $tenant): array
     {
-        return [function (Validator $validator): void {
+        return [function (Validator $validator) use ($tenant): void {
             if ($validator->errors()->has('email')) {
                 return;
             }
 
-            // The route always binds the company; whereKey takes the bound model.
-            $isOwner = Tenant::query()->whereKey($this->route('tenant'))
-                ->whereHas('ownerMembership.user', fn (Builder $user) => $user->whereRaw('lower(email) = ?', [$this->string('email')->toString()]))
+            $isOwner = $tenant->ownerMembership()
+                ->whereHas('user', fn (Builder $user) => $user->whereRaw('lower(email) = ?', [$this->string('email')->toString()]))
                 ->exists();
 
             if ($isOwner) {
