@@ -259,3 +259,37 @@ it('caps the views and the attempts one address makes across links', function ()
 
     $this->get(route('invitations.show', $this->token))->assertOk();
 });
+
+it('sends an Inertia submit over the limit back to the form with a toast', function (): void {
+    TenantInvitation::factory()->withToken($this->token)->create();
+    $link = route('invitations.show', $this->token);
+    $weak = newAccount(['password' => 'corta', 'password_confirmation' => 'corta']);
+
+    foreach (range(1, 10) as $attempt) {
+        $this->from($link)->post(route('invitations.accept', $this->token), $weak, ['X-Inertia' => 'true'])->assertRedirect($link);
+    }
+
+    $this->from($link)->post(route('invitations.accept', $this->token), newAccount(), ['X-Inertia' => 'true'])
+        ->assertRedirect($link)
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']]);
+
+    expect(User::query()->count())->toBe(0);
+    $this->assertGuest();
+});
+
+it('shows a plain visit over the limit a page in Spanish, and a JSON request the usual answer', function (): void {
+    foreach (range(1, 60) as $attempt) {
+        $this->get(route('invitations.show', Str::random(64)))->assertOk();
+    }
+
+    $this->get(route('invitations.show', Str::random(64)))
+        ->assertTooManyRequests()
+        ->assertHeader('Retry-After', '60')
+        ->assertSee('<html lang="es">', escape: false)
+        ->assertSee('<title>Demasiados intentos</title>', escape: false)
+        ->assertSee('Espera un minuto y vuelve a intentarlo.');
+
+    $this->getJson(route('invitations.show', Str::random(64)))
+        ->assertTooManyRequests()
+        ->assertJsonPath('message', 'Too Many Attempts.');
+});

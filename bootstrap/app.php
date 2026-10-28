@@ -10,9 +10,13 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Support\Header;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -54,6 +58,17 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
 
             return false;
+        });
+
+        // Inertia would show the bare 429 in a modal: send the visit back with a toast. A plain visit gets errors/429.
+        $exceptions->render(function (ThrottleRequestsException $exception, Request $request): ?RedirectResponse {
+            if (! $request->hasHeader(Header::INERTIA)) {
+                return null;
+            }
+
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
+
+            return back();
         });
 
         $exceptions->shouldRenderJsonWhen(
