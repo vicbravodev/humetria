@@ -79,9 +79,9 @@ it('renders the email with no English left in the default template', function ()
 
     $html = (string) $notification->toMail(new AnonymousNotifiable)->render();
 
-    expect($html)->toContain('Saludos,')
-        ->toContain('Si tienes problemas para hacer clic en el botón')
-        ->toContain('Todos los derechos reservados.')
+    expect($html)->toContain('Hola, Ana Pérez')
+        ->toContain('Te invitaron a Humetría como owner de Acme')
+        ->toContain('¿El botón no abre? Copia este enlace en tu navegador:')
         ->not->toContain('Regards')
         ->not->toContain('trouble clicking')
         ->not->toContain('All rights reserved');
