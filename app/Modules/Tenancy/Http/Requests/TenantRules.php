@@ -29,6 +29,8 @@ final class TenantRules
         'demo-requests',
         'email',
         'forgot-password',
+        'invitation',
+        'invitations',
         'login',
         'logout',
         'passkeys',

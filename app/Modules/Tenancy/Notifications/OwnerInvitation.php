@@ -34,8 +34,7 @@ final class OwnerInvitation extends Notification
         return (new MailMessage)
             ->subject("Te invitaron a Humetría como owner de {$this->tradeName}")
             ->greeting("Hola, {$this->name}")
-            // The route invitations.show does not exist yet; the task that builds the acceptance page swaps this for route().
-            ->action('Aceptar invitación', url('admin/invitations/'.$this->token))
+            ->action('Aceptar invitación', route('invitations.show', $this->token))
             ->line('El enlace vence el '.DisplayDate::day($this->expiresAt).'.')
             ->line('Si no esperabas este correo, ignóralo.');
     }
