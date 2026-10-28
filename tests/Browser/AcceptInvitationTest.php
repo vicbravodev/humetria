@@ -82,7 +82,7 @@ it('signs out another account, signs in the invited one and accepts', function (
         ->assertPathIs('/admin/invitations/'.$token)
         ->press('Aceptar invitación')
         ->assertPathIs('/admin')
-        ->assertSee('Bienvenido a Humetría.')
+        ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();
 
     expect(TenantMembership::query()->sole()->user_id)->toBe($ana->id);
@@ -97,7 +97,7 @@ it('accepts an invitation and lands on the dashboard', function (): void {
         ->type('password_confirmation', 'secreto-largo-123')
         ->press('Aceptar invitación')
         ->assertPathIs('/admin')
-        ->assertSee('Bienvenido a Humetría.')
+        ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();
 
     expect(User::query()->sole()->email)->toBe('ana@acme.mx');

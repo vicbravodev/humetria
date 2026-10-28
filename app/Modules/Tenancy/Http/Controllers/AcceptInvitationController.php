@@ -71,7 +71,7 @@ final class AcceptInvitationController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Bienvenido a Humetría.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Te damos la bienvenida a Humetría.']);
 
         return redirect()->route('dashboard');
     }

@@ -92,7 +92,7 @@ it('creates the owner account, signs it in and lands on the dashboard', function
     $this->post(route('invitations.accept', $this->token), newAccount())
         ->assertSessionHasNoErrors()
         ->assertRedirect('/admin')
-        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Bienvenido a Humetría.']]);
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Te damos la bienvenida a Humetría.']]);
 
     $user = User::query()->sole();
     $membership = TenantMembership::query()->sole();
