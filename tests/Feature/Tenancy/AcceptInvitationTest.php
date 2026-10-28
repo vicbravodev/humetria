@@ -207,13 +207,48 @@ it('records the acceptance with the new owner as actor', function (): void {
         ->not->toContain('secreto-largo-123');
 });
 
-it('rate limits the link', function (): void {
+it('rate limits the attempts on a link, per address, without blocking its page', function (): void {
+    TenantInvitation::factory()->withToken($this->token)->create();
+    $weak = newAccount(['password' => 'corta', 'password_confirmation' => 'corta']);
+
     foreach (range(1, 10) as $attempt) {
-        $this->post(route('invitations.accept', Str::random(64)), newAccount())->assertRedirect();
+        $this->post(route('invitations.accept', $this->token), $weak)->assertSessionHasErrors('password');
     }
 
     $this->post(route('invitations.accept', $this->token), newAccount())->assertTooManyRequests();
-    $this->get(route('invitations.show', $this->token))->assertTooManyRequests();
+    $this->get(route('invitations.show', $this->token))->assertOk();
+    $this->post(route('invitations.accept', Str::random(64)), newAccount())->assertRedirect();
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.2'])
+        ->post(route('invitations.accept', $this->token), $weak)->assertSessionHasErrors('password');
+
+    $this->travel(61)->seconds();
+
+    $this->post(route('invitations.accept', $this->token), newAccount())->assertRedirect('/admin');
+});
+
+it('lets a person who mistypes the password five times still accept', function (): void {
+    TenantInvitation::factory()->withToken($this->token)->create();
+    $link = route('invitations.show', $this->token);
+
+    $this->get($link)->assertOk();
+
+    foreach (range(1, 5) as $attempt) {
+        $this->from($link)->post(route('invitations.accept', $this->token), newAccount(['password_confirmation' => 'otro-secreto-456']))
+            ->assertRedirect($link);
+        $this->get($link)->assertOk();
+    }
+
+    $this->post(route('invitations.accept', $this->token), newAccount())->assertRedirect('/admin');
+});
+
+it('caps the views and the attempts one address makes across links', function (): void {
+    foreach (range(1, 60) as $attempt) {
+        $this->get(route('invitations.show', Str::random(64)))->assertOk();
+        $this->post(route('invitations.accept', Str::random(64)), newAccount())->assertRedirect();
+    }
+
+    $this->get(route('invitations.show', Str::random(64)))->assertTooManyRequests();
+    $this->post(route('invitations.accept', Str::random(64)), newAccount())->assertTooManyRequests();
 
     $this->travel(61)->seconds();
 

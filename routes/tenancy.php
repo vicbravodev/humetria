@@ -43,11 +43,11 @@ Route::scopeBindings()->group(function (): void {
 
 // Public: whoever was invited has no session yet; the single-use token in the URL is the credential.
 Route::get('admin/invitations/{token}', [AcceptInvitationController::class, 'show'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:invitation-views')
     ->name('invitations.show');
 
 Route::post('admin/invitations/{token}', [AcceptInvitationController::class, 'accept'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:invitation-attempts')
     ->name('invitations.accept');
 
 // Signed in as someone else: Fortify's logout would lose the link, so this one comes back to it.
