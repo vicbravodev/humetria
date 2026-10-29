@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
@@ -74,6 +75,14 @@ function ownerOf(Tenant $tenant): User
     TenantMembership::factory()->for($tenant)->for($user)->create();
 
     return $user;
+}
+
+/**
+ * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
+ */
+function workIn(Tenant $tenant): void
+{
+    resolve(TenantContext::class)->set($tenant);
 }
 
 /**
