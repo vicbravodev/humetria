@@ -125,3 +125,54 @@ it('folds the plain-text switcher without losing the name or overflowing', funct
         ->assertScript('() => getComputedStyle('.SWITCHER.').display !== "none" && '.SWITCHER.'.textContent.includes("Acme Industrial")')
         ->assertNoAccessibilityIssues(1);
 });
+
+it('tells a person with one suspended company so, with no way to switch', function (bool $dark, bool $mobile): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    $this->actingAs($user);
+
+    visitPage('tenancy/blocked', '/admin/acme', $dark, $mobile)
+        ->assertSee('El acceso a Acme Industrial está en pausa')
+        ->assertSee('Para reactivarlo, contacta al administrador de Humetría.')
+        ->assertSee('Cerrar sesión')
+        ->assertDontSee('Cambiar de empresa')
+        // Nothing to close it with: it is not a notice but a lock.
+        ->assertMissing('[data-test="tenant-blocked-dialog"] > button');
+})->with($looks);
+
+it('offers a person with several companies to move to another', function (bool $dark, bool $mobile): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
+    $this->actingAs($user);
+
+    visitPage('tenancy/blocked', '/admin/acme', $dark, $mobile)
+        ->assertSee('El acceso a Acme Industrial está en pausa')
+        ->assertSee('Cambiar de empresa')
+        ->assertSee('Cerrar sesión');
+})->with($looks);
+
+it('does not let Escape close the blocked modal', function (): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    $this->actingAs($user);
+
+    visit('/admin/acme')
+        ->assertSee('El acceso a Acme Industrial está en pausa')
+        ->keys('[data-test="tenant-blocked-dialog"]', 'Escape')
+        // Let a closing animation, if there were one, finish before looking.
+        ->assertScript('() => Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)).then(() => true)')
+        ->assertPresent('[data-test="tenant-blocked-dialog"]')
+        ->assertSee('El acceso a Acme Industrial está en pausa');
+});
+
+it('takes a person with several companies from the blocked one to the list', function (): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->create(['slug' => 'beta']))->for($user)->create();
+    $this->actingAs($user);
+
+    visit('/admin/acme')
+        ->click('Cambiar de empresa')
+        ->assertPathIs('/admin');
+});
