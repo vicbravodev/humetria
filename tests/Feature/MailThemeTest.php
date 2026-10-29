@@ -16,9 +16,9 @@ it('dresses every email in the Humetría design system', function (MailMessage $
         // One reading line: the action sits on the left with the text, not centered like Laravel's.
         ->toContain('class="action" align="left"')
         // The action is the one accent, primary, with white text on it.
-        ->toContain('background-color: #0B7A6F')
+        ->toContain('background-color: #0b7a6f')
         // Secondary text in muted-foreground, which passes 4.5:1 on the page and the card.
-        ->toContain('color: #56635F')
+        ->toContain('color: #56635f')
         ->toContain('Enviado por Humetría, la plataforma para aplicar la NOM-035.')
         ->toContain('¿El botón no abre? Copia este enlace en tu navegador:')
         // No filler: no salutation and no copyright line.
