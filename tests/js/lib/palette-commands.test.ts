@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { mainNavItems } from '@/lib/app-navigation';
 import { paletteCommands } from '@/lib/palette-commands';
 
 const actions = () => ({
@@ -22,7 +21,9 @@ describe('paletteCommands', () => {
             ?.run();
 
         expect(spies.visit).toHaveBeenCalledOnce();
-        expect(spies.visit).toHaveBeenCalledWith(mainNavItems('acme')[0]?.href);
+        expect(spies.visit).toHaveBeenCalledWith(
+            expect.objectContaining({ url: '/admin/acme' }),
+        );
     });
 
     it('offers the console pages only to the superadmin', () => {

@@ -22,7 +22,7 @@ export function TenantSwitcher() {
         return (
             <div
                 data-test="tenant-switcher"
-                className="flex min-h-11 items-center px-3 group-data-[collapsible=icon]:hidden"
+                className="flex min-h-11 items-center px-3 group-data-[collapsible=icon]:sr-only group-data-[collapsible=icon]:min-h-0"
             >
                 <TenantName tenant={tenant} />
             </div>
@@ -36,7 +36,6 @@ export function TenantSwitcher() {
                     size="lg"
                     className="h-14 font-normal data-[state=open]:bg-sidebar-accent"
                     data-test="tenant-switcher"
-                    aria-label={tenant.trade_name}
                     tooltip={tenant.trade_name}
                 >
                     <Building2 />

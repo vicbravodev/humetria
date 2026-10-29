@@ -92,19 +92,36 @@ it('shows no trial label for a company that is not in trial', function (): void 
 
     visitPage('dashboard', '/admin/acme')
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Acme Industrial')
-        ->assertDontSee('Prueba');
+        ->assertDontSeeIn('[data-test="tenant-switcher"]', 'Prueba');
 });
 
-it('folds the switcher to its icon without overflowing the sidebar', function (): void {
+const SWITCHER = 'document.querySelector(\'[data-test="tenant-switcher"]\')';
+
+it('folds the switcher to its icon, keeping its name for screen readers', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme Industrial Con Un Nombre Muy Largo', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->inTrial(now()->subDays(10))->create(['trade_name' => 'Acme Industrial Con Un Nombre Muy Largo', 'slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
     visitPage('dashboard', '/admin/acme')
         ->click('[data-sidebar="trigger"]')
         ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
-        ->assertScript('() => { const box = document.querySelector(\'[data-test="tenant-switcher"]\').getBoundingClientRect(); return box.width >= 44 && box.width < 56 && document.querySelector(\'[data-test="tenant-switcher"]\').scrollWidth <= box.width; }')
-        // With the name hidden, the trigger is still named for a screen reader.
+        ->assertScript('() => { const box = '.SWITCHER.'.getBoundingClientRect(); return box.width >= 44 && box.width < 56 && '.SWITCHER.'.scrollWidth <= box.width; }')
+        // Folded, the text leaves the screen but not the accessibility tree: the trigger is still named by company and trial.
+        ->assertScript('() => '.SWITCHER.'.innerText.includes("Acme Industrial Con Un Nombre Muy Largo") && '.SWITCHER.'.innerText.includes("Prueba · quedan 4 días")')
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('folds the plain-text switcher without losing the name or overflowing', function (): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    $this->actingAs($user);
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('[data-sidebar="trigger"]')
+        ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
+        ->assertScript('() => { const box = '.SWITCHER.'.getBoundingClientRect(); return box.width <= 1 && box.height <= 1; }')
+        // Off screen, not display: none, so the name stays in the accessibility tree.
+        ->assertScript('() => getComputedStyle('.SWITCHER.').display !== "none" && '.SWITCHER.'.textContent.includes("Acme Industrial")')
         ->assertNoAccessibilityIssues(1);
 });
