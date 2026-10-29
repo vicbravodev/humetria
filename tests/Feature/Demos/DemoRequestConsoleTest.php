@@ -127,7 +127,7 @@ it('reads the page in four queries: the user roles, the permission cache, the co
 
 it('tells the frontend whether the user is a superadmin, to show the console link', function (): void {
     $this->actingAs(superadmin())
-        ->get(route('dashboard'))
+        ->get(route('companies.index'))
         ->assertInertia(fn (Assert $page) => $page->where('auth.isSuperadmin', true));
 
     $this->actingAs(User::factory()->create())

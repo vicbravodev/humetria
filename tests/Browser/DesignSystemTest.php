@@ -29,9 +29,9 @@ it('renders the login page accessibly', function (bool $dark, bool $mobile): voi
 })->with($looks);
 
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
-    $this->actingAs(User::factory()->create());
+    $panel = signInToPanel();
 
-    visitPage('dashboard', '/admin', $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
+    visitPage('dashboard', $panel, $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
         if ($mobile) {
             // On mobile the sidebar is an off-canvas sheet: open it and let it finish sliding in.
             $page->click('[data-sidebar="trigger"]')
@@ -41,9 +41,9 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
 })->with($looks);
 
 it('gives the mobile menu button a 44 px touch target', function (bool $dark): void {
-    $this->actingAs(User::factory()->create());
+    $panel = signInToPanel();
 
-    visitPage('dashboard', '/admin', $dark, true)
+    visitPage('dashboard', $panel, $dark, true)
         ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
 })->with(['light' => false, 'dark' => true]);
 
@@ -51,9 +51,10 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
 const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
 
 it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', function (bool $dark): void {
-    $this->actingAs(superadmin());
+    // On the company list: until the sidebar links to the company's own panel, no item of the dashboard is active.
+    signInToPanel(superadmin());
 
-    visitPage('dashboard', '/admin', $dark)
+    visitPage('tenancy/index', '/admin/companies', $dark)
         // The page sits in a raised panel beside the sidebar, with the button that folds the sidebar at its top.
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"][data-variant="inset"]\') !== null')
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="sidebar-inset"]\')).boxShadow !== "none"')
@@ -71,9 +72,9 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
 })->with(['light' => false, 'dark' => true]);
 
 it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
-    $this->actingAs(superadmin());
+    $panel = signInToPanel(superadmin());
 
-    $page = visitPage('dashboard', '/admin', $dark)
+    $page = visitPage('dashboard', $panel, $dark)
         ->click('[data-sidebar="trigger"]')
         ->assertScript(SETTLED)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.collapsible', 'icon')
@@ -109,9 +110,9 @@ it('keeps the top bar in view while the page scrolls', function (bool $mobile): 
 const OPEN_PALETTE = '() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }';
 
 it('jumps to a page or switches the theme from the ⌘K palette', function (): void {
-    $this->actingAs(superadmin());
+    $panel = signInToPanel(superadmin());
 
-    visitPage('dashboard', '/admin', reach: fn (AwaitableWebpage $page) => $page
+    visitPage('dashboard', $panel, reach: fn (AwaitableWebpage $page) => $page
         ->assertScript(OPEN_PALETTE)
         ->assertVisible('#command-search'))
         ->type('#command-search', 'empr')
@@ -145,10 +146,17 @@ it('greets an empty list with an icon and what comes next', function (string $ur
         ->assertSeeIn('[data-slot="empty-state"] h2', $title)
         ->assertPresent('[data-slot="empty-state"] svg');
 })->with([
-    ['/admin', 'dashboard', 'Aún no hay campañas'],
     ['/admin/companies', 'tenancy/index', 'Aún no hay empresas'],
     ['/admin/demo-requests', 'demos/index', 'Aún no hay solicitudes'],
 ]);
+
+it('greets a company without campaigns with an icon and what comes next', function (): void {
+    $panel = signInToPanel(superadmin());
+
+    visitPage('dashboard', $panel)
+        ->assertSeeIn('[data-slot="empty-state"] h2', 'Aún no hay campañas')
+        ->assertPresent('[data-slot="empty-state"] svg');
+});
 
 it('titles the settings like every other page and marks where you are', function (bool $dark): void {
     $this->actingAs(User::factory()->create());
@@ -161,9 +169,9 @@ it('titles the settings like every other page and marks where you are', function
 })->with(['light' => false, 'dark' => true]);
 
 it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
-    $this->actingAs(User::factory()->create());
+    $panel = signInToPanel();
 
-    visitPage('dashboard', '/admin', mobile: $mobile)
+    visitPage('dashboard', $panel, mobile: $mobile)
         ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent !== null')
         ->click('[role="radio"][aria-label="Oscuro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")')
@@ -175,9 +183,9 @@ it('switches the theme from the app frame and keeps it', function (bool $mobile)
 })->with(['desktop' => false, 'mobile' => true]);
 
 it('moves with the design system motion', function (): void {
-    $this->actingAs(superadmin());
+    $panel = signInToPanel(superadmin());
 
-    visitPage('dashboard', '/admin')
+    visitPage('dashboard', $panel)
         // Pressables answer with the strong ease-out curve.
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).transitionTimingFunction.includes("cubic-bezier(0.23, 1, 0.32, 1)")')
         // Moving to another page cross-fades it through the View Transitions API.

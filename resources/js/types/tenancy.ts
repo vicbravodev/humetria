@@ -51,3 +51,7 @@ export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
         trial_days_left: number | null;
     };
+
+/** One row of the list /admin shows a person who belongs to zero or several companies. */
+export type CompanyLink = TenantSummary &
+    Pick<TenantRow, 'status' | 'status_label' | 'blocked'>;

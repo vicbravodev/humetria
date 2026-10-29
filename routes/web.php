@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +14,7 @@ require __DIR__.'/tenancy.php';
 
 Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
-        Route::get('/', fn (): Response => Inertia::render('dashboard'))->name('dashboard');
+        Route::get('/', HomeController::class)->name('dashboard');
     });
 
     require __DIR__.'/settings.php';

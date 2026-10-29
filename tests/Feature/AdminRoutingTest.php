@@ -13,11 +13,11 @@ test('guests are redirected from /admin to /admin/login', function () {
     $this->get('/admin')->assertRedirect('/admin/login');
 });
 
-test('verified users see the dashboard at /admin', function () {
+test('a user without companies sees tenancy/companies at /admin', function () {
     $this->actingAs(User::factory()->create())
         ->get('/admin')
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
+        ->assertInertia(fn (Assert $page) => $page->component('tenancy/companies'));
 });
 
 test('named routes resolve under /admin', function (string $name, string $path) {

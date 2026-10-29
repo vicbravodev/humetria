@@ -71,7 +71,7 @@ it('signs out another account, signs in the invited one and accepts', function (
     $token = str_repeat('c', 64);
     $this->actingAs(User::factory()->create(['email' => 'beto@otra.mx']));
     $ana = User::factory()->create(['email' => 'ana@acme.mx']);
-    TenantInvitation::factory()->withToken($token)->create(['email' => 'ana@acme.mx']);
+    $invitation = TenantInvitation::factory()->withToken($token)->create(['email' => 'ana@acme.mx']);
 
     visit('/admin/invitations/'.$token)
         ->press('Cerrar sesión y continuar')
@@ -83,7 +83,7 @@ it('signs out another account, signs in the invited one and accepts', function (
         ->press('Iniciar sesión')
         ->assertPathIs('/admin/invitations/'.$token)
         ->press('Aceptar invitación')
-        ->assertPathIs('/admin')
+        ->assertPathIs('/admin/'.$invitation->tenant->slug)
         ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();
 
@@ -92,13 +92,13 @@ it('signs out another account, signs in the invited one and accepts', function (
 
 it('accepts an invitation and lands on the dashboard', function (): void {
     $token = str_repeat('b', 64);
-    TenantInvitation::factory()->withToken($token)->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+    $invitation = TenantInvitation::factory()->withToken($token)->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
 
     visit('/admin/invitations/'.$token)
         ->type('password', 'secreto-largo-123')
         ->type('password_confirmation', 'secreto-largo-123')
         ->press('Aceptar invitación')
-        ->assertPathIs('/admin')
+        ->assertPathIs('/admin/'.$invitation->tenant->slug)
         ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();
 

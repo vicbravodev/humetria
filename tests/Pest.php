@@ -77,6 +77,19 @@ function ownerOf(Tenant $tenant): User
 }
 
 /**
+ * Signs in a user (a new one by default) who belongs to the company at /admin/acme and returns that URL:
+ * /admin itself sends a person to their company, so the pages inside a company are reached from there.
+ */
+function signInToPanel(?User $user = null): string
+{
+    $user ??= User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->create(['slug' => 'acme']))->for($user)->create();
+    test()->actingAs($user);
+
+    return '/admin/acme';
+}
+
+/**
  * A browser script that lists every Content-Security-Policy violation of the page so far, as JSON.
  * Use it as `->assertScript(cspViolations(), '[]')`. The Reporting API buffers the reports raised
  * before the observer existed, so violations during page load are caught too.
