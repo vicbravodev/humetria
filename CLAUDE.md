@@ -1,7 +1,8 @@
-# Humetria — Plataforma SaaS NOM-035
+# Humetria — Plataforma SaaS de herramientas de RH
 
-SaaS multi-tenant para aplicar la NOM-035-STPS-2018: las empresas cargan a su gente, la plataforma invita y
-recolecta de forma confidencial, y RH recibe un diagnóstico listo para actuar y para presentar ante la STPS.
+SaaS multi-tenant de herramientas de RH. El MVP arranca con NOM-035, NOM-037 (teletrabajo) y Ley Silla, y vendrán
+más: las empresas cargan a su gente, la plataforma invita y recolecta de forma confidencial, y RH recibe un
+diagnóstico listo para actuar y para presentar ante la STPS.
 
 Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo manda sobre ellas cuando choquen.
 
