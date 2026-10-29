@@ -1,5 +1,4 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
 import TenantFormFields from '@/components/tenancy/tenant-form-fields';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,25 +8,23 @@ import {
     DialogDescription,
     DialogFooter,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { update } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
-export default function EditTenantDialog({ tenant }: { tenant: TenantRow }) {
-    const [open, setOpen] = useState(false);
-
+/** Corrects a company's data; opened from its row's menu. */
+export default function EditTenantDialog({
+    tenant,
+    open,
+    onOpenChange,
+}: {
+    tenant: TenantRow;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}) {
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    aria-label={`Editar ${tenant.trade_name}`}
-                >
-                    Editar
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogTitle>Editar empresa</DialogTitle>
                 <DialogDescription>
@@ -36,7 +33,7 @@ export default function EditTenantDialog({ tenant }: { tenant: TenantRow }) {
                 <Form
                     {...update.form(tenant.id)}
                     noValidate
-                    onSuccess={() => setOpen(false)}
+                    onSuccess={() => onOpenChange(false)}
                     className="grid gap-6"
                 >
                     {({ processing, errors }) => (

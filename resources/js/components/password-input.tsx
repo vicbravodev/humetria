@@ -1,9 +1,9 @@
 import { Eye, EyeOff } from 'lucide-react';
 import type { ComponentProps, Ref } from 'react';
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 
+/** A password field with its show/hide button inside the same box. */
 export default function PasswordInput({
     className,
     ref,
@@ -12,28 +12,27 @@ export default function PasswordInput({
     const [showPassword, setShowPassword] = useState(false);
 
     return (
-        <div className="relative">
-            <Input
+        <InputGroup className={className}>
+            <InputGroupInput
                 type={showPassword ? 'text' : 'password'}
-                className={cn('pr-10', className)}
                 ref={ref}
                 {...props}
             />
             <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-3 text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none"
+                className="flex h-full shrink-0 items-center rounded-r-md px-3 text-muted-foreground transition-colors duration-150 ease-out hover:text-foreground"
                 aria-label={
                     showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
                 }
                 tabIndex={-1}
             >
                 {showPassword ? (
-                    <EyeOff className="size-4" />
+                    <EyeOff className="size-5" />
                 ) : (
-                    <Eye className="size-4" />
+                    <Eye className="size-5" />
                 )}
             </button>
-        </div>
+        </InputGroup>
     );
 }

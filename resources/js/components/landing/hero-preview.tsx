@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { EyeOff, LockKeyhole } from 'lucide-react';
 
 const groups = [
@@ -11,7 +12,7 @@ const MINIMUM = 5;
 /** A still picture of a campaign in progress: what RH sees, with the minimum per group at work. */
 export default function HeroPreview() {
     return (
-        <figure className="rounded-xl border bg-card p-6 sm:p-8">
+        <figure className="rounded-xl border bg-card p-6 shadow-raised sm:p-8">
             <figcaption className="sr-only">
                 Ejemplo del avance de una campaña en Humetría
             </figcaption>
@@ -22,9 +23,7 @@ export default function HeroPreview() {
                         120 trabajadores · Guías I y III
                     </p>
                 </div>
-                <span className="rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-foreground">
-                    En curso
-                </span>
+                <Badge>En curso</Badge>
             </div>
 
             <div className="mt-6">

@@ -1,6 +1,11 @@
 import type { ComponentProps } from 'react';
 import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
+import {
+    InputGroup,
+    InputGroupInput,
+    InputGroupText,
+} from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
 
 type Props = Omit<ComponentProps<'input'>, 'id' | 'name'> & {
@@ -20,22 +25,26 @@ export default function TenantField({
 }: Props) {
     const id = `tenant-${name}`;
     const errorId = `${id}-error`;
+    const control = {
+        ...input,
+        id,
+        name,
+        'aria-invalid': error === undefined ? undefined : true,
+        'aria-describedby': error === undefined ? undefined : errorId,
+    };
 
     return (
         <div className="grid gap-2">
             <Label htmlFor={id}>{label}</Label>
-            <div className="flex items-center gap-2">
-                {prefix !== undefined && (
-                    <span className="text-muted-foreground">{prefix}</span>
-                )}
-                <Input
-                    {...input}
-                    id={id}
-                    name={name}
-                    aria-invalid={error === undefined ? undefined : true}
-                    aria-describedby={error === undefined ? undefined : errorId}
-                />
-            </div>
+            {prefix === undefined ? (
+                <Input {...control} />
+            ) : (
+                // The prefix sits inside the box, as part of the address being typed.
+                <InputGroup>
+                    <InputGroupText>{prefix}</InputGroupText>
+                    <InputGroupInput {...control} />
+                </InputGroup>
+            )}
             <InputError id={errorId} role="alert" message={error} />
         </div>
     );

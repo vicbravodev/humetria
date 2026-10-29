@@ -1,5 +1,4 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
 import TenantField from '@/components/tenancy/tenant-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,27 +8,26 @@ import {
     DialogDescription,
     DialogFooter,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { ownerAction } from '@/lib/tenant-status';
 import { store } from '@/routes/companies/invitations';
 import type { TenantRow } from '@/types';
 
 /** Invites the person who will own the company, or replaces the owner it has. */
-export default function InviteOwnerDialog({ tenant }: { tenant: TenantRow }) {
-    const [open, setOpen] = useState(false);
-    const label = tenant.owner === null ? 'Invitar owner' : 'Cambiar owner';
+export default function InviteOwnerDialog({
+    tenant,
+    open,
+    onOpenChange,
+}: {
+    tenant: TenantRow;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}) {
+    const label = ownerAction(tenant.owner);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    aria-label={`${label} de ${tenant.trade_name}`}
-                >
-                    {label}
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogTitle>{label}</DialogTitle>
                 <DialogDescription>
@@ -39,7 +37,7 @@ export default function InviteOwnerDialog({ tenant }: { tenant: TenantRow }) {
                 <Form
                     {...store.form(tenant.id)}
                     noValidate
-                    onSuccess={() => setOpen(false)}
+                    onSuccess={() => onOpenChange(false)}
                     className="grid gap-6"
                 >
                     {({ processing, errors }) => (

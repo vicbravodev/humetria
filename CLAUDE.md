@@ -219,13 +219,14 @@ layouts/  hooks/  lib/  types/
   al terminar, `composer test` si hay cambios y además `npm run check` + `npm run types:check` si cambió frontend.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
 
-## Flujo de trabajo: un PR por feature, commits atómicos
+## Flujo de trabajo: un PR por trabajo, commits atómicos
 
 - Todo PR llena `.github/pull_request_template.md`: qué feature, por qué, cómo se probó (RED/GREEN) y su checklist.
 - Nada se commitea directo a `main`: todo entra por PR desde una rama propia, con el CI en verde.
-- **Un PR = una feature usable de punta a punta** (p. ej. "consola de solicitudes de demo",
-  "importar empleados por CSV"): trae su migración, backend, UI, tests y los refactors chicos que necesita.
-  Nunca un módulo completo de golpe ni dos features sin relación.
+- **Un PR = el trabajo que se pidió, completo** (p. ej. "consola de solicitudes de demo", "importar empleados por CSV",
+  "subir el nivel del design system"): trae su migración, backend, UI, tests y los refactors que necesita.
+  El proyecto lo trabaja una sola persona: no se parte un trabajo en varios PRs ni se apilan PRs; la granularidad
+  vive en los commits. Nunca dos trabajos sin relación en el mismo PR.
 - **Un commit = un comportamiento** dentro del PR (test + código que lo pasa). Cada commit deja los tests en verde,
   para poder revertir o hacer bisect commit por commit.
 - Cada PR deja el sistema funcionando y es seguro de revertir solo: no deja código a medias detrás de él.

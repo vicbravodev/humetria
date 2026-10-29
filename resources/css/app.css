@@ -56,6 +56,13 @@
     --risk-muy-alto: #9a3b26;
     --risk-muy-alto-bg: #f3d8cf;
     --risk-muy-alto-fg: #8a2e1c;
+    /* Raised: the page panel. Float: what hovers over the page (menus, dialogs, toasts). */
+    --elevation-raised:
+        0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+        0 4px 16px -6px color-mix(in oklab, var(--foreground) 8%, transparent);
+    --elevation-float:
+        0 2px 4px color-mix(in oklab, var(--foreground) 4%, transparent),
+        0 12px 32px -8px color-mix(in oklab, var(--foreground) 16%, transparent);
 }
 
 .dark {
@@ -82,7 +89,7 @@
     --chart-3: #9eddd2;
     --chart-4: #c2ae94;
     --chart-5: #8a7e70;
-    --sidebar: #121b1a;
+    --sidebar: #0b1211;
     --sidebar-foreground: #f1faf8;
     --sidebar-primary: #3ccfbd;
     --sidebar-primary-foreground: #0f1716;
@@ -108,6 +115,20 @@
     --risk-muy-alto: #f07a62;
     --risk-muy-alto-bg: #4a1f18;
     --risk-muy-alto-fg: #f7a08c;
+    /* A shadow disappears on dark: depth comes from a lit top edge and a shade of the frame. */
+    --elevation-raised: inset 0 1px 0
+        color-mix(in oklab, var(--foreground) 5%, transparent);
+    --elevation-float:
+        inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent),
+        0 12px 32px -8px color-mix(in oklab, var(--sidebar) 90%, transparent);
+}
+
+/* Motion and depth: see docs/design-system/design-system.md, "Movimiento" and "Profundidad". */
+@theme {
+    /* Strong curves: Tailwind's ease-out / ease-in-out read as these everywhere. */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
@@ -165,6 +186,8 @@
     --color-risk-muy-alto: var(--risk-muy-alto);
     --color-risk-muy-alto-bg: var(--risk-muy-alto-bg);
     --color-risk-muy-alto-fg: var(--risk-muy-alto-fg);
+    --shadow-raised: var(--elevation-raised);
+    --shadow-float: var(--elevation-float);
 }
 
 @layer base {
@@ -175,5 +198,128 @@
         @apply bg-background text-foreground;
         font-size: 16px;
         line-height: 24px;
+    }
+}
+
+/*
+ * Page changes (lib/page-transition.ts): the sidebar stays put and only the panel's content cross-fades,
+ * the new page rising 4 px. Fast exit, slightly longer entry.
+ */
+::view-transition-old(page) {
+    animation: 120ms var(--ease-out) both page-out;
+}
+
+::view-transition-new(page) {
+    animation: 220ms var(--ease-out) both page-in;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}
+
+@keyframes page-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-new(page) {
+        animation-name: page-out;
+        animation-direction: reverse;
+    }
+
+    *,
+    ::before,
+    ::after {
+        scroll-behavior: auto !important;
+    }
+}
+
+/*
+ * Calendar (components/ui/calendar.tsx): moving to the next month slides the weeks in from the right and the old
+ * ones out to the left (the other way going back), 12 px and fading. With reduced motion they only fade.
+ */
+.calendar-weeks-after-enter {
+    animation: 200ms var(--ease-out) both calendar-from-right;
+}
+
+.calendar-weeks-before-enter {
+    animation: 200ms var(--ease-out) both calendar-from-left;
+}
+
+.calendar-weeks-before-exit {
+    animation: 150ms var(--ease-out) both calendar-to-left;
+}
+
+.calendar-weeks-after-exit {
+    animation: 150ms var(--ease-out) both calendar-to-right;
+}
+
+.calendar-caption-enter {
+    animation: 200ms var(--ease-out) both calendar-fade-in;
+}
+
+.calendar-caption-exit {
+    animation: 150ms var(--ease-out) both calendar-fade-out;
+}
+
+@keyframes calendar-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+}
+
+@keyframes calendar-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+}
+
+@keyframes calendar-to-left {
+    to {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+}
+
+@keyframes calendar-to-right {
+    to {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+}
+
+@keyframes calendar-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes calendar-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calendar-weeks-after-enter,
+    .calendar-weeks-before-enter {
+        animation-name: calendar-fade-in;
+    }
+
+    .calendar-weeks-before-exit,
+    .calendar-weeks-after-exit {
+        animation-name: calendar-fade-out;
     }
 }

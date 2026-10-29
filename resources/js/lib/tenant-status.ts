@@ -45,3 +45,8 @@ const ACTIVATION: Record<TenantRow['status'], ActivationCopy> = {
 export function activationCopy(status: TenantRow['status']): ActivationCopy {
     return ACTIVATION[status];
 }
+
+/** What the console offers about the company's owner: invite the first one, or replace the one it has. */
+export function ownerAction(owner: TenantRow['owner']): string {
+    return owner === null ? 'Invitar owner' : 'Cambiar owner';
+}

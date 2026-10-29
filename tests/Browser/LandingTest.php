@@ -125,3 +125,8 @@ it('tells the visitor to wait when there were too many requests', function (): v
 
     expect(DemoRequest::query()->count())->toBe(5);
 });
+
+it('marks the preview campaign with the design system badge', function (): void {
+    visit('/')
+        ->assertSeeIn('figure [data-slot="badge"]', 'En curso');
+});

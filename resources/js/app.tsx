@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { cspNonce } from '@/lib/csp-nonce';
+import { pageTransition } from '@/lib/page-transition';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -28,6 +29,10 @@ void createInertiaApp({
         }
     },
     strictMode: true,
+    defaults: {
+        visitOptions: (href, options) =>
+            pageTransition(href, options, window.location.href),
+    },
     ...(cspNonce === undefined ? {} : { nonce: cspNonce }),
     withApp(app) {
         return (

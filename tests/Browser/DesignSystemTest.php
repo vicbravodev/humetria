@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Models\Tenant;
 use Pest\Browser\Api\AwaitableWebpage;
 
 $looks = [
@@ -22,7 +23,9 @@ function assertLogoInsideItsBox(AwaitableWebpage $page): void
 }
 
 it('renders the login page accessibly', function (bool $dark, bool $mobile): void {
-    assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile));
+    assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile)
+        // The title reads as one: 24/32 in 600.
+        ->assertScript('() => { const title = getComputedStyle(document.querySelector("h1")); return title.fontSize === "24px" && title.fontWeight === "600"; }'));
 })->with($looks);
 
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
@@ -44,13 +47,17 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
         ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
 })->with(['light' => false, 'dark' => true]);
 
+// Lets every running transition settle, so what the next assertion reads is the resting state.
+const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
+
 it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', function (bool $dark): void {
     $this->actingAs(User::factory()->create());
 
     visitPage('dashboard', '/admin', $dark)
-        // A full-height sidebar beside the page: no inset card, no breadcrumb bar, no starter-kit links.
-        ->assertScript('() => document.querySelector(\'[data-variant="inset"]\') === null')
-        ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent === null')
+        // The page sits in a raised panel beside the sidebar, with the button that folds the sidebar at its top.
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"][data-variant="inset"]\') !== null')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="sidebar-inset"]\')).boxShadow !== "none"')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
         // Group label in caption style; items of 44 px in body-strong with 20 px icons.
@@ -62,3 +69,120 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         // Page title in h1 (30/38).
         ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px');
 })->with(['light' => false, 'dark' => true]);
+
+it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
+    $this->actingAs(superadmin());
+
+    $page = visitPage('dashboard', '/admin', $dark)
+        ->click('[data-sidebar="trigger"]')
+        ->assertScript(SETTLED)
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.collapsible', 'icon')
+        // Each item keeps a 44 px square target and only its icon shows.
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => { const box = button.getBoundingClientRect(); return box.width >= 44 && box.width < 56 && box.height >= 44; })')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="group-label"]\').getBoundingClientRect().height === 0 || getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')).opacity === "0"')
+        // Its name comes back as a tooltip.
+        ->hover('[data-sidebar="menu-button"][href$="/admin/companies"]')
+        ->assertScript('() => document.querySelector(\'[role="tooltip"]\')?.textContent', 'Empresas')
+        // axe reads colors as painted: let the tooltip finish fading in before it judges the contrast.
+        ->assertScript(SETTLED)
+        ->assertNoAccessibilityIssues(1);
+
+    $page->refresh()
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'collapsed')
+        // ⌘B (Ctrl+B) unfolds it again.
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })); return true; }')
+        ->assertScript(SETTLED)
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'expanded');
+})->with(['light' => false, 'dark' => true]);
+
+it('keeps the top bar in view while the page scrolls', function (bool $mobile): void {
+    $this->actingAs(superadmin());
+    Tenant::factory()->count(15)->create();
+
+    visitPage('tenancy/index', '/admin/companies', mobile: $mobile)
+        ->assertScript('() => { window.scrollTo(0, 600); return new Promise((resolve) => requestAnimationFrame(() => resolve(window.scrollY > 0))); }')
+        ->assertScript('() => { const bar = document.querySelector(\'[data-slot="app-topbar"]\').getBoundingClientRect(); return bar.top === 0 && bar.height > 0; }')
+        ->assertScript('() => document.elementFromPoint(window.innerWidth - 30, 20)?.closest(\'[data-slot="app-topbar"]\') !== null');
+})->with(['desktop' => false, 'mobile' => true]);
+
+// Opens the command palette the way the keyboard does.
+const OPEN_PALETTE = '() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }';
+
+it('jumps to a page or switches the theme from the ⌘K palette', function (): void {
+    $this->actingAs(superadmin());
+
+    visitPage('dashboard', '/admin', reach: fn (AwaitableWebpage $page) => $page
+        ->assertScript(OPEN_PALETTE)
+        ->assertVisible('#command-search'))
+        ->type('#command-search', 'empr')
+        ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Empresas')
+        ->keys('#command-search', 'Enter')
+        ->assertPathIs('/admin/companies')
+        ->assertMissing('#command-search')
+        // The same palette opens from the button in the top bar.
+        ->click('@command-palette')
+        ->type('#command-search', 'oscuro')
+        ->keys('#command-search', 'Enter')
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->click('@command-palette')
+        ->type('#command-search', 'xyz')
+        ->assertSee('Sin resultados');
+});
+
+it('offers the console pages in the palette only to the superadmin', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    visit('/admin')
+        ->assertScript(OPEN_PALETTE)
+        ->type('#command-search', 'empresas')
+        ->assertSee('Sin resultados');
+});
+
+it('greets an empty list with an icon and what comes next', function (string $url, string $component, string $title): void {
+    $this->actingAs(superadmin());
+
+    visitPage($component, $url)
+        ->assertSeeIn('[data-slot="empty-state"] h2', $title)
+        ->assertPresent('[data-slot="empty-state"] svg');
+})->with([
+    ['/admin', 'dashboard', 'Aún no hay campañas'],
+    ['/admin/companies', 'tenancy/index', 'Aún no hay empresas'],
+    ['/admin/demo-requests', 'demos/index', 'Aún no hay solicitudes'],
+]);
+
+it('titles the settings like every other page and marks where you are', function (bool $dark): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('settings/profile', '/admin/settings/profile', $dark)
+        ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px')
+        ->assertScript('() => document.querySelector(\'nav[aria-label="Configuración"] [aria-current="page"]\')?.textContent', 'Perfil')
+        // Deleting the account sits in an outlined zone, not on a red block.
+        ->assertScript('() => { const zone = getComputedStyle(document.querySelector(\'[data-slot="danger-zone"]\')); const probe = document.createElement("span"); probe.style.color = "var(--card)"; document.body.append(probe); const card = getComputedStyle(probe).color; probe.remove(); return zone.backgroundColor === card; }');
+})->with(['light' => false, 'dark' => true]);
+
+it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('dashboard', '/admin', mobile: $mobile)
+        ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent !== null')
+        ->click('[role="radio"][aria-label="Oscuro"]')
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->assertScript('() => document.querySelector(\'[role="radio"][aria-label="Oscuro"]\').getAttribute("aria-checked")', 'true')
+        ->refresh()
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->click('[role="radio"][aria-label="Claro"]')
+        ->assertScript('() => document.documentElement.classList.contains("dark")', false);
+})->with(['desktop' => false, 'mobile' => true]);
+
+it('moves with the design system motion', function (): void {
+    $this->actingAs(superadmin());
+
+    visitPage('dashboard', '/admin')
+        // Pressables answer with the strong ease-out curve.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).transitionTimingFunction.includes("cubic-bezier(0.23, 1, 0.32, 1)")')
+        // Moving to another page cross-fades it through the View Transitions API.
+        ->assertScript('() => { window.transitions = 0; const start = document.startViewTransition.bind(document); document.startViewTransition = (update) => { window.transitions++; return start(update); }; return true; }')
+        ->click('Empresas')
+        ->assertPathIs('/admin/companies')
+        ->assertScript('() => window.transitions', 1);
+});

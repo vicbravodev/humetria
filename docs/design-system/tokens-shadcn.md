@@ -29,14 +29,14 @@ Los nombres coinciden 1:1 con las variables CSS de shadcn/ui (Tailwind v4). Cada
 | `chart-3` | `#1D5C55` | `#9EDDD2` | marca sobre `card` | 7.74 / 11.14 ✓ | ≥ 3 |
 | `chart-4` | `#A08A70` | `#C2AE94` | marca sobre `card` | 3.30 / 7.93 ✓ | ≥ 3 |
 | `chart-5` | `#5C5248` | `#8A7E70` | marca sobre `card` | 7.62 / 4.30 ✓ | ≥ 3 |
-| `sidebar` | `#F5F8F7` | `#121B1A` | texto | 15.51 / 16.51 ✓ | ≥ 4.5 |
-| `sidebar-foreground` | `#14211F` | `#F1FAF8` | sobre `sidebar` | 15.51 / 16.51 ✓ | ≥ 4.5 |
-| `sidebar-primary` | `#0B7A6F` | `#3CCFBD` | sobre `sidebar` | 4.88 / 9.06 ✓ | ≥ 3 |
+| `sidebar` | `#F5F8F7` | `#0B1211` | texto | 15.51 / 17.83 ✓ | ≥ 4.5 |
+| `sidebar-foreground` | `#14211F` | `#F1FAF8` | sobre `sidebar` | 15.51 / 17.83 ✓ | ≥ 4.5 |
+| `sidebar-primary` | `#0B7A6F` | `#3CCFBD` | sobre `sidebar` | 4.88 / 9.79 ✓ | ≥ 3 |
 | `sidebar-primary-foreground` | `#FFFFFF` | `#0F1716` | sobre `sidebar-primary` | 5.21 / 9.40 ✓ | ≥ 4.5 |
 | `sidebar-accent` | `#E5F1EE` | `#213330` | texto | 14.32 / 12.51 ✓ | ≥ 4.5 |
 | `sidebar-accent-foreground` | `#14211F` | `#F1FAF8` | sobre `sidebar-accent` | 14.32 / 12.51 ✓ | ≥ 4.5 |
-| `sidebar-border` | `#DCE5E2` | `#26332F` | decorativo | 1.20 / 1.33 | — |
-| `sidebar-ring` | `#0B7A6F` | `#3CCFBD` | foco sobre `sidebar` | 4.88 / 9.06 ✓ | ≥ 3 |
+| `sidebar-border` | `#DCE5E2` | `#26332F` | decorativo | 1.20 / 1.44 | — |
+| `sidebar-ring` | `#0B7A6F` | `#3CCFBD` | foco sobre `sidebar` | 4.88 / 9.79 ✓ | ≥ 3 |
 | `brand-soft` | `#7FD3C6` | `#1E8C7F` | solo en el símbolo | — | — |
 | `brand-deep` | `#064A43` | `#B8F5EC` | solo en el símbolo | — | — |
 
@@ -173,7 +173,7 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --chart-3: #9EDDD2;
   --chart-4: #C2AE94;
   --chart-5: #8A7E70;
-  --sidebar: #121B1A;
+  --sidebar: #0B1211;
   --sidebar-foreground: #F1FAF8;
   --sidebar-primary: #3CCFBD;
   --sidebar-primary-foreground: #0F1716;
@@ -272,4 +272,4 @@ Cinco cambios en el código que genera `npx shadcn add`. Sin ellos, los tokens n
 2. **Botón `destructive`:** `bg-destructive text-on-destructive` en los dos modos; elimina `dark:bg-destructive/60`.
 3. **Bordes de controles:** `Input`, `SelectTrigger`, `Checkbox`, `RadioGroupItem` y el botón `outline` usan `border-input`, no `border-border`. Quita `dark:bg-input/30` (el fondo es `bg-card`).
 4. **Tamaño:** controles en `h-11` (44 px), `px-4`, y `text-base` también en `md:`. Elimina `md:text-sm`.
-5. **Sombras:** elimina `shadow-xs`/`shadow-sm` de botones, inputs y tarjetas. Solo `Popover`, `Select` abierto, `Dialog` y `Sonner` usan `shadow-[0_8px_24px_rgb(20_33_31/0.08)]`.
+5. **Sombras y movimiento:** elimina `shadow-xs`/`shadow-sm` de botones, inputs y tarjetas. Lo que flota (`Popover`, `Select` abierto, `Dialog`, `Tooltip`, `Sonner`) usa `shadow-float`; el panel de la página, `shadow-raised`. Las transiciones usan `ease-out` (que el tema redefine como curva fuerte), nunca `ease-linear`; el `Button` lleva `active:scale-[0.97]`, y `Select`, `DropdownMenu` y `Popover` crecen desde su disparador. `Calendar` (react-day-picker) no se genera con shadcn: vive en `components/ui/calendar.tsx` con los tokens del design system.

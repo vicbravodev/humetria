@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
-import TenantField from '@/components/tenancy/tenant-field';
+import DatePicker from '@/components/humetria/date-picker';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -9,8 +9,8 @@ import {
     DialogDescription,
     DialogFooter,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { activationCopy } from '@/lib/tenant-status';
 import { activate } from '@/routes/companies';
@@ -23,11 +23,14 @@ import type { TenantRow } from '@/types';
 export default function ActivateTenantDialog({
     tenant,
     minDate,
+    open,
+    onOpenChange,
 }: {
     tenant: TenantRow;
     minDate: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
-    const [open, setOpen] = useState(false);
     const copy = activationCopy(tenant.status);
     const current =
         tenant.active_until !== null && tenant.active_until >= minDate
@@ -35,15 +38,7 @@ export default function ActivateTenantDialog({
             : undefined;
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    aria-label={`${copy.action} ${tenant.trade_name}`}
-                >
-                    {copy.action}
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogTitle>{copy.title}</DialogTitle>
                 <DialogDescription>
@@ -52,20 +47,31 @@ export default function ActivateTenantDialog({
                 <Form
                     {...activate.form(tenant.id)}
                     noValidate
-                    onSuccess={() => setOpen(false)}
+                    onSuccess={() => onOpenChange(false)}
                     className="grid gap-6"
                 >
                     {({ processing, errors }) => (
                         <>
-                            <TenantField
-                                type="date"
-                                name="active_until"
-                                label="Activa hasta"
-                                required
-                                min={minDate}
-                                defaultValue={current}
-                                error={errors['active_until']}
-                            />
+                            <div className="grid gap-2">
+                                <Label htmlFor="tenant-active_until">
+                                    Activa hasta
+                                </Label>
+                                <DatePicker
+                                    id="tenant-active_until"
+                                    name="active_until"
+                                    min={minDate}
+                                    defaultValue={current}
+                                    invalid={
+                                        errors['active_until'] !== undefined
+                                    }
+                                    describedBy="tenant-active_until-error"
+                                />
+                                <InputError
+                                    id="tenant-active_until-error"
+                                    role="alert"
+                                    message={errors['active_until']}
+                                />
+                            </div>
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
                                     <Button variant="outline">Cancelar</Button>
