@@ -135,7 +135,7 @@ layouts/  hooks/  lib/  types/
 
 - Logs en JSON, una línea por evento (tap `App\Logging\StructuredLogging` en single, daily y stderr).
 - `AssignRequestContext` pone `request_id` y `user_id` en `Context`: aparecen en cada línea de log, en la
-  bitácora y en los jobs en cola. Al crear el módulo Tenancy, agregar ahí `tenant_id` con `Context::add`.
+  bitácora y en los jobs en cola. `tenant_id` lo agrega `ResolveTenant` (Tenancy) en las rutas de una empresa; `impersonator_id` lo agrega `AssignRequestContext` mientras se impersona.
 - El mensaje del log es un nombre de evento fijo `modulo.accion` en pasado (`campaign.launched`,
   `invitation.sent`); los datos van en el arreglo de contexto, nunca interpolados en el texto.
 - Toda acción que cambia estado escribe un log. Las acciones sensibles (lanzar o cerrar campaña, ver o exportar
