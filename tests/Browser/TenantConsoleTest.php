@@ -80,13 +80,16 @@ it('says so when there are no companies yet', function (bool $dark): void {
 it('links the console from the sidebar only for the superadmin', function (): void {
     signInAsSuperadmin();
 
-    visit('/admin')
+    // /admin itself leads the superadmin to the console, so the link is checked from another page.
+    visit('/admin/settings/appearance')
+        ->assertPresent('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->click('Empresas')
         ->assertPathIs('/admin/companies');
 
-    $this->actingAs(User::factory()->create());
+    $panel = signInToPanel();
 
-    visit('/admin')->assertDontSee('Empresas');
+    visit($panel)
+        ->assertMissing('a[href$="/admin/companies"]');
 });
 
 it('creates a company from the dialog, suggesting its address from the trade name', function (): void {

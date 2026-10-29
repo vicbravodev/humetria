@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Http\Controllers\HomeController;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(HomeController::class);
+mutates(HomeController::class, ListUserTenants::class);
 
 it('sends a guest to the login', function (): void {
     $this->get(route('dashboard'))->assertRedirect(route('login'));
@@ -40,10 +41,11 @@ it('sends a person with one company to its panel', function (): void {
 
 it('lists the companies of a person with two, the blocked one flagged', function (): void {
     $user = User::factory()->create();
-    $open = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    // Created out of name order, so the ordering by trade name is what puts Acme first.
     $blocked = Tenant::factory()->deactivated()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']);
-    TenantMembership::factory()->for($open)->for($user)->create();
+    $open = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($blocked)->for($user)->create();
+    TenantMembership::factory()->for($open)->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Ajena']))->create();
 
     $this->actingAs($user)

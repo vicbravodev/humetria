@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Middleware;
 
+use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Closure;
@@ -19,13 +20,15 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ResolveTenant
 {
+    public function __construct(private readonly ListUserTenants $listUserTenants) {}
+
     /**
      * @param  Closure(Request): Response  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $slug = $request->route('tenant');
-        $userId = $request->user()?->getAuthIdentifier();
+        $userId = $request->user()?->id;
 
         // Implicit route binding only runs when the action type-hints the model; this middleware must not depend on that.
         $tenant = is_string($slug) ? Tenant::query()->where('slug', $slug)->first() : $slug;
@@ -49,10 +52,7 @@ final class ResolveTenant
             'blocked' => $status->isBlocked(),
             'trial_days_left' => null,
         ]);
-        Inertia::share('tenants', fn (): array => Tenant::query()
-            ->whereIn('id', TenantMembership::query()->where('user_id', $userId)->select('tenant_id'))
-            ->orderBy('trade_name')
-            ->get(['slug', 'trade_name'])
+        Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($userId)
             ->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])
             ->all());
 

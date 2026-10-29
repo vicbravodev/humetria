@@ -18,6 +18,8 @@ it('tells a person without companies to contact the administrator, and lets them
 
     visitPage('tenancy/companies', '/admin', $dark, $mobile)
         ->assertSee('Aún no tienes acceso a ninguna empresa. Contacta al administrador de Humetría.')
+        // With nothing to choose, the page does not promise a choice.
+        ->assertDontSee('Elige una empresa')
         ->assertSee('Cerrar sesión');
 })->with($looks);
 
