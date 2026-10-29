@@ -21,20 +21,55 @@ describe('tenantStatusVariant', () => {
     });
 });
 
-const activations: [TenantRow['status'], string, string, string][] = [
-    ['not_started', 'Activar', 'Activar empresa', 'Activar'],
-    ['trial', 'Activar', 'Activar empresa', 'Activar'],
-    ['active', 'Cambiar vigencia', 'Cambiar vigencia', 'Guardar'],
-    ['trial_ended', 'Reactivar', 'Reactivar empresa', 'Reactivar'],
-    ['expired', 'Reactivar', 'Reactivar empresa', 'Reactivar'],
-    ['deactivated', 'Reactivar', 'Reactivar empresa', 'Reactivar'],
+const activations: {
+    status: TenantRow['status'];
+    action: string;
+    title: string;
+    submit: string;
+}[] = [
+    {
+        status: 'not_started',
+        action: 'Activar',
+        title: 'Activar empresa',
+        submit: 'Activar',
+    },
+    {
+        status: 'trial',
+        action: 'Activar',
+        title: 'Activar empresa',
+        submit: 'Activar',
+    },
+    {
+        status: 'active',
+        action: 'Cambiar vigencia',
+        title: 'Cambiar vigencia',
+        submit: 'Guardar',
+    },
+    {
+        status: 'trial_ended',
+        action: 'Reactivar',
+        title: 'Reactivar empresa',
+        submit: 'Reactivar',
+    },
+    {
+        status: 'expired',
+        action: 'Reactivar',
+        title: 'Reactivar empresa',
+        submit: 'Reactivar',
+    },
+    {
+        status: 'deactivated',
+        action: 'Reactivar',
+        title: 'Reactivar empresa',
+        submit: 'Reactivar',
+    },
 ];
 
 describe('activationCopy', () => {
     it.each(activations)(
-        'offers %s companies "%s"',
-        (status, action, title, submit) => {
-            expect(activationCopy(status)).toEqual({ action, title, submit });
+        'offers $status companies "$action"',
+        ({ status, ...copy }) => {
+            expect(activationCopy(status)).toEqual(copy);
         },
     );
 });
