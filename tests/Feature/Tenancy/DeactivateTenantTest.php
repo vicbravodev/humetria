@@ -6,13 +6,12 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\DeactivateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
-use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 
-mutates(DeactivateTenant::class, TenantConsoleController::class);
+mutates(DeactivateTenant::class);
 
 beforeEach(fn () => $this->travelTo('2026-10-27 18:00 UTC'));
 

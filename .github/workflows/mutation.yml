@@ -1,0 +1,53 @@
+name: mutation
+
+# Every night, and on demand, the whole mutation run on main held to the current score (composer mutate:full).
+# tests.yml keeps the gate at 85 for pull requests and pushes; this one catches a score that slips below today's.
+on:
+  schedule:
+    - cron: '0 9 * * *' # 03:00 in Mexico City
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DB_CONNECTION: pgsql
+  DB_HOST: 127.0.0.1
+  DB_PORT: 5433
+  DB_DATABASE: testing
+  DB_USERNAME: sail
+  DB_PASSWORD: password
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: sail
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testing
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Cache vendor
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor
+          key: vendor-php8.5-${{ hashFiles('composer.lock') }}
+
+      # PCOV is the coverage driver the setup installs.
+      - uses: ./.github/actions/setup
+
+      - name: Mutation testing
+        run: composer mutate:full
