@@ -78,6 +78,15 @@ it('guards every account route Fortify registers under admin/user', function ():
         ->and($names->diff(ForbidWhileImpersonating::protectedRoutes())->values()->all())->toBe([]);
 });
 
+it('guards every route under admin/settings except settings and appearance', function (): void {
+    $names = collect(Route::getRoutes()->getRoutes())
+        ->filter(fn ($route) => str_starts_with($route->uri(), 'admin/settings'))
+        ->map(fn ($route) => $route->getName());
+
+    expect($names)->not->toBeEmpty()
+        ->and($names->diff(ForbidWhileImpersonating::protectedRoutes())->diff(['settings', 'appearance.edit'])->values()->all())->toBe([]);
+});
+
 it('sends settings to profile, or to appearance while impersonating', function (): void {
     $tenant = Tenant::factory()->create();
     $owner = ownerOf($tenant);

@@ -9,6 +9,8 @@ use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -85,6 +87,26 @@ it('records the company on audit entries written inside it', function (): void {
     $this->actingAs(ownerOf($tenant))->get(route('tenant.audit-probe', $tenant))->assertOk();
 
     expect(AuditEntry::query()->where('event', 'probe.visited')->sole()->tenant_id)->toBe($tenant->id);
+});
+
+it('carries the company on log lines written inside it', function (): void {
+    $tenant = Tenant::factory()->create();
+    Route::middleware(['web', 'auth', ResolveTenant::class])
+        ->get('admin/{tenant:slug}/log-probe', function (): string {
+            Log::info('probe.visited');
+
+            return 'ok';
+        })->name('tenant.log-probe');
+    Route::getRoutes()->refreshNameLookups();
+    $seen = [];
+    Log::shouldReceive('info')->once()->with('probe.visited')
+        ->andReturnUsing(function () use (&$seen): void {
+            $seen = Context::all();
+        });
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.log-probe', $tenant))->assertOk();
+
+    expect($seen)->toHaveKey('tenant_id', $tenant->id);
 });
 
 it('shares the companies of the user ordered by name, and never somebody else\'s', function (): void {
