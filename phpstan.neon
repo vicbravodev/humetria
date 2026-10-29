@@ -9,6 +9,7 @@ parameters:
         - config/
         - database/
         - routes/
+        - scripts/
 
     level: max
 
