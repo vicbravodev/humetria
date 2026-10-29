@@ -18,9 +18,8 @@ final class TenancyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // One per request: ResolveTenant fills it in, everyone else reads it through the contract.
-        $this->app->scoped(TenantContext::class);
-        $this->app->alias(TenantContext::class, CurrentTenant::class);
+        // ResolveTenant fills it in, everyone else reads it through the contract.
+        $this->app->bind(CurrentTenant::class, TenantContext::class);
     }
 
     public function boot(): void

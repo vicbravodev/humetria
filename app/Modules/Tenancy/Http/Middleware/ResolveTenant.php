@@ -10,7 +10,6 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Context;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -45,7 +44,7 @@ final class ResolveTenant
         );
 
         $request->route()?->setParameter('tenant', $tenant);
-        Context::add('tenant_id', $tenant->id);
+        // Also tags every log line, audit entry and queued job of the request with the company.
         $this->tenantContext->set($tenant);
 
         $status = $tenant->status();
