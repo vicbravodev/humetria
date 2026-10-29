@@ -117,4 +117,22 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Markdown Mail Settings
+    |--------------------------------------------------------------------------
+    |
+    | Every email, ours and Fortify's, uses the Humetría theme and header in
+    | resources/views/vendor/mail: the design system tokens and the logo.
+    |
+    */
+
+    'markdown' => [
+        'theme' => 'humetria',
+
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
+    ],
+
 ];
