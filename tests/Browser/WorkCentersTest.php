@@ -144,3 +144,12 @@ it('archives a work center after confirming, and restores it from the archive', 
         ->assertDontSee('Archivados')
         ->assertNoJavaScriptErrors();
 });
+
+it('points a company without work centers from its panel to them', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('dashboard', $url, $dark, $mobile)
+        ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tus centros de trabajo')
+        ->click('Ir a centros de trabajo')
+        ->assertPathIs('/admin/acme/work-centers');
+})->with($looks);

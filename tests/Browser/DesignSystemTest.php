@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Pest\Browser\Api\AwaitableWebpage;
 
 $looks = [
@@ -151,6 +152,8 @@ it('greets an empty list with an icon and what comes next', function (string $ur
 
 it('greets a company without campaigns with an icon and what comes next', function (): void {
     $panel = signInToPanel(superadmin());
+    // With a work center already: without one, the panel points there first (see WorkCentersTest).
+    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->sole())->create();
 
     visitPage('dashboard', $panel)
         ->assertSeeIn('[data-slot="empty-state"] h2', 'Aún no hay campañas')
