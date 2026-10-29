@@ -127,7 +127,7 @@ it('requires every field but the message', function (string $field, string $erro
     ['email', 'El campo correo electrónico es obligatorio.'],
     ['whatsapp', 'El campo WhatsApp es obligatorio.'],
     ['company', 'El campo empresa es obligatorio.'],
-    ['profile', 'El campo perfil es obligatorio.'],
+    ['profile', 'Elige para quién es Humetría.'],
     ['workforce', 'El campo número de trabajadores es obligatorio.'],
 ]);
 
@@ -220,8 +220,8 @@ it('rejects tools that are missing, empty, unknown, repeated or not a list', fun
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with([
-    'missing' => [null, 'tools', 'El campo herramientas es obligatorio.'],
-    'empty' => [[], 'tools', 'El campo herramientas es obligatorio.'],
+    'missing' => [null, 'tools', 'Elige al menos una herramienta.'],
+    'empty' => [[], 'tools', 'Elige al menos una herramienta.'],
     'string' => ['nom_035', 'tools', 'El campo herramientas debe ser un arreglo.'],
     'unknown' => [['nom_036'], 'tools.0', null],
     'repeated' => [['nom_035', 'nom_035'], 'tools.1', null],

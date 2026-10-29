@@ -79,8 +79,8 @@ it('shows what to fix next to each field when the form is sent empty', function 
     }
 
     foreach ([
-        'profile' => 'El campo perfil es obligatorio.',
-        'tools' => 'El campo herramientas es obligatorio.',
+        'profile' => 'Elige para quién es Humetría.',
+        'tools' => 'Elige al menos una herramienta.',
         'workforce' => 'El campo número de trabajadores es obligatorio.',
     ] as $group => $error) {
         $page->assertAttribute("[data-test=\"{$group}-group\"]", 'aria-invalid', 'true')

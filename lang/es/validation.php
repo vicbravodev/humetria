@@ -160,12 +160,18 @@ return [
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
     'custom' => [
+        'profile' => [
+            'required' => 'Elige para quién es Humetría.',
+        ],
         'rfc' => [
             'unique' => 'Ya hay una empresa con este RFC.',
         ],
         'slug' => [
             'not_in' => 'Esa dirección está reservada. Elige otra.',
             'unique' => 'Esa dirección ya la usa otra empresa.',
+        ],
+        'tools' => [
+            'required' => 'Elige al menos una herramienta.',
         ],
         'whatsapp' => [
             'regex' => 'Escribe un WhatsApp de 10 dígitos, por ejemplo 55 1234 5678.',
