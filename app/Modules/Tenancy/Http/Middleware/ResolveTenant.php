@@ -50,7 +50,7 @@ final class ResolveTenant
             'trade_name' => $tenant->trade_name,
             'status' => $status->value,
             'blocked' => $status->isBlocked(),
-            'trial_days_left' => null,
+            'trial_days_left' => $tenant->trialDaysLeft(),
         ]);
         Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($userId)
             ->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])

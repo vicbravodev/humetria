@@ -63,6 +63,18 @@ final class Tenant extends Model
         return $this->trial_started_at?->addDays(self::TRIAL_DAYS);
     }
 
+    /** Whole days left in the trial, a started day counting as a day; null outside the trial. */
+    public function trialDaysLeft(): ?int
+    {
+        $trialEndsAt = $this->trialEndsAt();
+
+        if ($trialEndsAt === null || $this->status() !== TenantStatus::Trial) {
+            return null;
+        }
+
+        return (int) ceil(now()->diffInSeconds($trialEndsAt) / 86400);
+    }
+
     /**
      * @return HasOne<TenantMembership, $this>
      */
