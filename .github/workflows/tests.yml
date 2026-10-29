@@ -17,7 +17,8 @@ env:
   DB_USERNAME: sail
   DB_PASSWORD: password
 
-# The three jobs run side by side: the run takes as long as the slowest one, not their sum.
+# The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
+# requires only the ci job, which waits for all of them: a job can be added or renamed without touching the settings.
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -78,7 +79,7 @@ jobs:
 
   # Mutation is the slowest check, so it splits into shards that mutate side by side. Every shard runs all the mutation
   # tests, as one full run would, and mutates only its share of the classes (scripts/mutation-classes.php); then
-  # mutation-score holds their total to --min, as one run would. A new shard goes in the matrix, the job name, SHARD
+  # ci holds their total to --min, as one run would. A new shard goes in the matrix, the job name, SHARD
   # and the outputs.
   mutation:
     name: mutation (${{ matrix.shard }}/4)
@@ -128,9 +129,9 @@ jobs:
           mutations=$(grep -m1 -E '^ *Mutations:' mutation.log) || { echo "Pest printed no Mutations: line."; exit 1; }
           echo "mutations_$SHARD=$mutations" >> "$GITHUB_OUTPUT"
 
-  mutation-score:
-    needs: mutation
-    # Runs even when a shard fails, so this check never shows as skipped: a failed shard fails it.
+  ci:
+    needs: [checks, browser, mutation]
+    # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -143,14 +144,18 @@ jobs:
           php-version: '8.5'
           coverage: none
 
-      - name: Total mutation score
+      - name: Every job passed
         env:
-          RESULT: ${{ needs.mutation.result }}
-          MUTATIONS: ${{ toJSON(needs.mutation.outputs) }}
+          NEEDS: ${{ toJSON(needs) }}
         run: |
-          if [ "$RESULT" != success ]; then
-            echo "A mutation shard failed: $RESULT."
+          failed=$(printf '%s' "$NEEDS" | jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"')
+          if [ -n "$failed" ]; then
+            echo "Failed jobs:"
+            echo "$failed"
             exit 1
           fi
 
-          printf '%s' "$MUTATIONS" | jq -r '.[]' | php scripts/mutation-score.php 85
+      - name: Total mutation score
+        env:
+          MUTATIONS: ${{ toJSON(needs.mutation.outputs) }}
+        run: printf '%s' "$MUTATIONS" | jq -r '.[]' | php scripts/mutation-score.php 85
