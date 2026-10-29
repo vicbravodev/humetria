@@ -191,6 +191,16 @@ it('activates a company that has not started, choosing the date', function (): v
     expect(Tenant::query()->sole()->status()->value)->toBe('active');
 });
 
+it('keeps the address prefix inside its field and outlines the whole field on focus', function (): void {
+    signInAsSuperadmin();
+
+    visit('/admin/companies')
+        ->click('Dar de alta empresa')
+        ->assertScript('() => document.querySelector("#tenant-slug").closest(\'[data-slot="input-group"]\')?.textContent', '/admin/')
+        ->keys('#tenant-slug', 'a')
+        ->assertScript('() => getComputedStyle(document.querySelector("#tenant-slug").closest(\'[data-slot="input-group"]\')).outlineStyle', 'solid');
+});
+
 it('offers to reactivate a blocked company', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->deactivated()->create();
