@@ -33,7 +33,8 @@ superadmin crea superadmins.
    > **El acceso a {nombre comercial} está en pausa**
    > Puede deberse a un pago pendiente o a que terminó tu periodo de prueba o de servicio. Para reactivarlo, contacta
    > al administrador de Humetría.
-7. **El superadmin impersonando sí ve el modal, pero lo puede cerrar** y seguir trabajando.
+7. **El superadmin impersonando sí ve el modal, pero lo puede cerrar** y seguir trabajando. En lugar de "Cerrar sesión"
+   le ofrece "Salir", que termina la impersonación (decidido al probar el PR).
 8. **Días de prueba:** junto al nombre de la empresa, "Prueba · quedan N días", solo mientras la empresa está en prueba.
 9. **Un solo PR** con todo esto, impersonación incluida.
 

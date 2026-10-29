@@ -12,7 +12,7 @@ export default function Blocked() {
                 <TenantBlockedDialog
                     tradeName={tenant.trade_name}
                     canSwitch={tenants.length > 1}
-                    dismissible={false}
+                    impersonating={false}
                 />
             )}
         </>

@@ -206,6 +206,21 @@ it('lets an impersonating superadmin close the block modal and use the panel', f
         ->assertNoJavaScriptErrors();
 })->with($looks);
 
+it('offers an impersonating superadmin the way out of the impersonation, not the owner\'s sign-out', function (): void {
+    $this->actingAs(superadmin());
+    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertSee('El acceso a Acme Industrial está en pausa')
+        ->assertDontSeeIn('[data-test="tenant-blocked-dialog"]', 'Cerrar sesión')
+        ->click('[data-test="tenant-blocked-dialog"] [data-test="stop-impersonation"]')
+        ->assertPathIs('/admin/companies')
+        ->assertDontSee('Estás viendo Humetría como Ana Pérez')
+        ->assertNoJavaScriptErrors();
+});
+
 it('lets the closed block modal stay closed while moving through the panel', function (): void {
     $this->actingAs(superadmin());
     $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
