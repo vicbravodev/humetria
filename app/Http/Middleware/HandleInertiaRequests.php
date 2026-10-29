@@ -45,6 +45,9 @@ final class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'isSuperadmin' => $request->user()?->hasRole(User::SUPERADMIN) ?? false,
             ],
+            // The company routes override these (Tenancy's ResolveTenant); the kernel only gives the defaults.
+            'tenant' => null,
+            'tenants' => [],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

@@ -43,3 +43,11 @@ export type InvitationPage = { token: string; passwordRules: string } & (
     | ({ state: 'new_account' } & PendingInvitation)
     | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
 );
+
+export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
+
+/** The company a request is working in, shared on every page under /admin/{slug}. */
+export type CurrentTenant = TenantSummary &
+    Pick<TenantRow, 'status' | 'blocked'> & {
+        trial_days_left: number | null;
+    };

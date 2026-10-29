@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
@@ -64,6 +66,14 @@ function superadmin(): User
 function signInAsSuperadmin(): void
 {
     test()->actingAs(superadmin());
+}
+
+function ownerOf(Tenant $tenant): User
+{
+    $user = User::factory()->create();
+    TenantMembership::factory()->for($tenant)->for($user)->create();
+
+    return $user;
 }
 
 /**
