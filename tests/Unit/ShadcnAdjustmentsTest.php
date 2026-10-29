@@ -74,3 +74,20 @@ it('puts the safe action of a confirmation dialog in an outline button', functio
 
     expect($source)->toMatch('/<DialogClose asChild>\s*<Button\s+variant="outline"/');
 })->with(['delete-user', 'passkeys/passkey-item']);
+
+it('sizes the checkbox box at 20 px', function (): void {
+    expect(uiComponent('checkbox'))->toContain('size-5')->not->toContain('size-4 shrink-0');
+});
+
+it('lists select options in body text with a 40 px row', function (): void {
+    expect(uiComponent('select'))->toContain('min-h-10')->toContain('text-base')->not->toContain('py-1.5 pr-8 pl-2 text-sm');
+});
+
+it('animates what opens and closes with the strong ease-out, from its trigger', function (string $component, string $origin): void {
+    expect(uiComponent($component))
+        ->toContain('ease-out')
+        ->toContain("origin-(--radix-{$origin}-content-transform-origin)");
+})->with([
+    ['select', 'select'],
+    ['dropdown-menu', 'dropdown-menu'],
+]);
