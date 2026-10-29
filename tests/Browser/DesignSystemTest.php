@@ -90,6 +90,20 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'expanded');
 })->with(['light' => false, 'dark' => true]);
 
+it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('dashboard', '/admin', mobile: $mobile)
+        ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent !== null')
+        ->click('[role="radio"][aria-label="Oscuro"]')
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->assertScript('() => document.querySelector(\'[role="radio"][aria-label="Oscuro"]\').getAttribute("aria-checked")', 'true')
+        ->refresh()
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->click('[role="radio"][aria-label="Claro"]')
+        ->assertScript('() => document.documentElement.classList.contains("dark")', false);
+})->with(['desktop' => false, 'mobile' => true]);
+
 it('moves with the design system motion', function (): void {
     $this->actingAs(superadmin());
 

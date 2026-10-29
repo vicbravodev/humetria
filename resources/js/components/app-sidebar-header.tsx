@@ -1,3 +1,4 @@
+import { ThemeSwitch } from '@/components/theme-switch';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import {
     Tooltip,
@@ -5,7 +6,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-// The top of the page panel: fold or open the sidebar (⌘B). Each page names itself below, in its PageHeader.
+// The top of the page panel: fold or open the sidebar (⌘B), and the theme. Each page names itself below, in its PageHeader.
 export function AppSidebarHeader() {
     const { state, isMobile } = useSidebar();
     const hint = state === 'expanded' ? 'Contraer menú' : 'Expandir menú';
@@ -24,6 +25,7 @@ export function AppSidebarHeader() {
                     <kbd className="ml-2 font-sans text-background/70">⌘B</kbd>
                 </TooltipContent>
             </Tooltip>
+            <ThemeSwitch />
         </header>
     );
 }
