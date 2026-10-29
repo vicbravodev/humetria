@@ -6,6 +6,7 @@ import HowItWorksSection from '@/components/landing/how-it-works-section';
 import LandingFooter from '@/components/landing/landing-footer';
 import LandingHeader from '@/components/landing/landing-header';
 import LandingHero from '@/components/landing/landing-hero';
+import ToolsSection from '@/components/landing/tools-section';
 
 export default function Landing() {
     return (
@@ -19,6 +20,7 @@ export default function Landing() {
             <LandingHeader />
             <main>
                 <LandingHero />
+                <ToolsSection />
                 <AudienceSection />
                 <HowItWorksSection />
                 <ComplianceSection />

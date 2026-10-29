@@ -153,3 +153,28 @@ it('previews a work center with the state of the three tools', function (): void
         ->assertSeeIn('@hero-preview', 'Ley Silla')
         ->assertSeeIn('figure [data-test="preview-nom_035"] [data-slot="badge"]', 'En curso');
 });
+
+it('takes the header tools link to the tools section', function (): void {
+    // The link shows from the sm breakpoint up: on a phone the header only fits the logo and the two calls to action.
+    visitPage('landing', '/')
+        ->click('@header-tools')
+        ->assertScript('() => window.location.hash', '#herramientas')
+        ->assertScript('() => new Promise((resolve) => setTimeout(() => { const box = document.getElementById("herramientas").getBoundingClientRect(); resolve(box.top < window.innerHeight && box.bottom > 0); }, 1000))');
+});
+
+it('details each of the three tools', function (): void {
+    $page = visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]").length', 3);
+
+    foreach ([
+        'NOM-035-STPS-2018 · Factores de riesgo psicosocial',
+        'NOM-037-STPS-2023 · Teletrabajo',
+        'Ley Federal del Trabajo, arts. 132 y 133 · Asientos y descansos',
+    ] as $index => $official) {
+        $page->assertScript("() => document.querySelectorAll('#herramientas [data-test=tool-card]')[{$index}].querySelector('[data-test=tool-official]').textContent", $official);
+    }
+
+    $page->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]")[1].textContent.toLowerCase().includes("lista de verificación")')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]")[2].textContent.includes("reglamento interior")')
+        ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
+});
