@@ -227,6 +227,8 @@ layouts/  hooks/  lib/  types/
   "subir el nivel del design system"): trae su migración, backend, UI, tests y los refactors que necesita.
   El proyecto lo trabaja una sola persona: no se parte un trabajo en varios PRs ni se apilan PRs; la granularidad
   vive en los commits. Nunca dos trabajos sin relación en el mismo PR.
+- **El PR se abre solo cuando el usuario dice "crea el PR".** Mientras tanto se trabaja y se commitea en la rama,
+  corriendo los tests y el harness como siempre; esperar un pipeline por cada pedazo solo hace perder tiempo.
 - **Un commit = un comportamiento** dentro del PR (test + código que lo pasa). Cada commit deja los tests en verde,
   para poder revertir o hacer bisect commit por commit.
 - Cada PR deja el sistema funcionando y es seguro de revertir solo: no deja código a medias detrás de él.
