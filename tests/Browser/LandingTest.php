@@ -199,3 +199,11 @@ it('never promises anonymity for identified records', function (): void {
         ->assertSeeIn('[data-test="compliance-privacy"]', 'roles autorizados')
         ->assertScript('() => document.querySelector("meta[name=description]").content.includes("de forma confidencial")', false);
 });
+
+it('states its legal and privacy claims exactly', function (): void {
+    visitPage('landing', '/')
+        ->assertSee('datos del centro, objetivo, actividades, método')
+        ->assertSee('con la confidencialidad que requiere cada herramienta')
+        ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
+        ->assertDontSee('confidencialidad que pide cada norma');
+});

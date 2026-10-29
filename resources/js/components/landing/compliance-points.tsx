@@ -34,7 +34,7 @@ const groups = {
             {
                 icon: FileText,
                 title: 'NOM-035 · numeral 7.7',
-                text: 'El informe lleva lo que pide el numeral: datos del centro, objetivo, método, resultados, conclusiones, acciones de intervención y responsable con cédula profesional.',
+                text: 'El informe lleva lo que pide el numeral: datos del centro, objetivo, actividades, método, resultados, conclusiones, acciones de intervención y responsable con cédula profesional.',
             },
             {
                 icon: ClipboardList,

@@ -11,7 +11,7 @@ const steps = [
     },
     {
         title: 'Humetría recolecta y ordena',
-        text: 'Las respuestas llegan solas, con la confidencialidad que pide cada norma, y ves el avance de cada centro.',
+        text: 'Las respuestas llegan solas, con la confidencialidad que requiere cada herramienta, y ves el avance de cada centro.',
     },
     {
         title: 'Recibes el diagnóstico, el plan y la evidencia',
