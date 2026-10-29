@@ -12,11 +12,12 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { activationCopy } from '@/lib/tenant-status';
 import { activate } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
 /**
- * Activates a company, or reactivates it when it is blocked, until the day the person picks.
+ * Activates a company, reactivates it when it is blocked, or moves the end date of an active one, until the day the person picks.
  * `minDate` (tomorrow in Mexico City time) comes from the server, so the browser does no timezone math.
  */
 export default function ActivateTenantDialog({
@@ -27,7 +28,7 @@ export default function ActivateTenantDialog({
     minDate: string;
 }) {
     const [open, setOpen] = useState(false);
-    const verb = tenant.blocked ? 'Reactivar' : 'Activar';
+    const copy = activationCopy(tenant.status);
     const current =
         tenant.active_until !== null && tenant.active_until >= minDate
             ? tenant.active_until
@@ -38,13 +39,13 @@ export default function ActivateTenantDialog({
             <DialogTrigger asChild>
                 <Button
                     variant="outline"
-                    aria-label={`${verb} ${tenant.trade_name}`}
+                    aria-label={`${copy.action} ${tenant.trade_name}`}
                 >
-                    {verb}
+                    {copy.action}
                 </Button>
             </DialogTrigger>
             <DialogContent>
-                <DialogTitle>{verb} empresa</DialogTitle>
+                <DialogTitle>{copy.title}</DialogTitle>
                 <DialogDescription>
                     Elige el último día que {tenant.trade_name} tendrá acceso.
                 </DialogDescription>
@@ -71,7 +72,7 @@ export default function ActivateTenantDialog({
                                 </DialogClose>
                                 <Button type="submit" disabled={processing}>
                                     {processing && <Spinner />}
-                                    {verb}
+                                    {copy.submit}
                                 </Button>
                             </DialogFooter>
                         </>

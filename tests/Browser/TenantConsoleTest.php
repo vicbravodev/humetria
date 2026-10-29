@@ -200,6 +200,17 @@ it('offers to reactivate a blocked company', function (): void {
         ->assertSee('Reactivar empresa');
 });
 
+it('offers to change the end date of an active company instead of activating it again', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->activeUntil(now()->addMonths(2))->create();
+
+    visit('/admin/companies')
+        ->assertMissing('button[aria-label^="Activar "]')
+        ->click('Cambiar vigencia')
+        ->assertSee('Elige el último día')
+        ->assertSeeIn('[role=dialog] button[type=submit]', 'Guardar');
+});
+
 it('passes the accessibility and CSP checks with the activation dialog open', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     Tenant::factory()->create();
