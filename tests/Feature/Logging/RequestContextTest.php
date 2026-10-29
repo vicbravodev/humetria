@@ -38,9 +38,10 @@ it('does not add a user id for guests', function (): void {
 
 it('puts the impersonator id on the log context while impersonating', function (): void {
     $superadmin = superadmin();
+    $owner = User::factory()->create();
 
-    $this->actingAs(User::factory()->create())
-        ->withSession([Impersonation::SESSION_KEY => $superadmin->id])
+    $this->actingAs($owner)
+        ->withSession([Impersonation::SESSION_KEY => $superadmin->id, Impersonation::IMPERSONATED_KEY => $owner->id])
         ->get(route('dashboard'));
 
     expect(Context::get('impersonator_id'))->toBe($superadmin->id);

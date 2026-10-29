@@ -169,7 +169,7 @@ it('signs out instead of coming back when the impersonator is no longer a supera
     $superadmin = superadmin();
     $owner = User::factory()->create();
     $this->actingAs($owner);
-    session()->put(Impersonation::SESSION_KEY, $superadmin->id);
+    session()->put([Impersonation::SESSION_KEY => $superadmin->id, Impersonation::IMPERSONATED_KEY => $owner->id]);
     $superadmin->removeRole(User::SUPERADMIN);
 
     $token = session()->token();
@@ -289,4 +289,54 @@ it('does not carry the owner password confirmation back to the superadmin', func
 
     expect(session()->has('auth.password_confirmed_at'))->toBeFalse();
     $this->get(route('security.edit'))->assertRedirect(route('password.confirm'));
+});
+
+it('ends a leftover impersonation once nobody is signed in, so the next sign-in does not inherit it', function (): void {
+    [$superadmin, , $owner] = enterAsOwner();
+    $owner->delete();
+    // The next request finds the owner gone: a guest session that still carries the mark.
+    auth()->forgetGuards();
+    Log::spy();
+
+    $this->get(route('login'))->assertRedirect(route('login'));
+
+    $this->assertGuest();
+    expect(session()->has(Impersonation::SESSION_KEY))->toBeFalse()
+        ->and(session()->has(Impersonation::IMPERSONATED_KEY))->toBeFalse();
+    Log::shouldHaveReceived('warning')->once()->with('impersonation.revoked', [
+        'user_id' => null,
+        'impersonator_id' => $superadmin->id,
+    ]);
+});
+
+it('ends an impersonation whose mark belongs to another user', function (): void {
+    [$superadmin] = enterAsOwner();
+    $someoneElse = User::factory()->create();
+    Log::spy();
+
+    expect(app(Impersonation::class)->isActive())->toBeTrue();
+
+    $this->actingAs($someoneElse);
+
+    expect(app(Impersonation::class)->isActive())->toBeFalse()
+        ->and(app(Impersonation::class)->impersonatorId())->toBeNull();
+
+    $this->get(route('dashboard'))->assertRedirect(route('login'));
+
+    $this->assertGuest();
+    expect(session()->has(Impersonation::SESSION_KEY))->toBeFalse();
+    Log::shouldHaveReceived('warning')->once()->with('impersonation.revoked', [
+        'user_id' => $someoneElse->id,
+        'impersonator_id' => $superadmin->id,
+    ]);
+});
+
+it('ties the mark to the impersonated user and drops both on stop', function (): void {
+    [, , $owner] = enterAsOwner();
+
+    expect(session(Impersonation::IMPERSONATED_KEY))->toBe($owner->id);
+
+    $this->post(route('impersonation.stop'));
+
+    expect(session()->has(Impersonation::IMPERSONATED_KEY))->toBeFalse();
 });

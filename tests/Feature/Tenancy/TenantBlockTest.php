@@ -99,7 +99,7 @@ it('lets an impersonated session through to a blocked company', function (): voi
     $user = ownerOf($tenant);
 
     $this->actingAs($user)
-        ->withSession([Impersonation::SESSION_KEY => superadmin()->id])
+        ->withSession([Impersonation::SESSION_KEY => superadmin()->id, Impersonation::IMPERSONATED_KEY => $user->id])
         ->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
     $this->post(route('tenant.block-probe', $tenant))->assertOk();

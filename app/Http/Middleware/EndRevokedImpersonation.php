@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Checked on every request while impersonating: once the superadmin behind it is gone or no
- * longer a superadmin, the session ends right there, not when they press "Salir".
+ * Checked on every request that carries the impersonation mark: once the superadmin behind it is
+ * gone or no longer a superadmin, or the mark is not the signed-in user's, the session ends right
+ * there, not when someone presses "Salir".
  */
 final class EndRevokedImpersonation
 {
@@ -25,15 +26,22 @@ final class EndRevokedImpersonation
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $mark = $request->session()->get(Impersonation::SESSION_KEY);
+
+        if ($mark === null) {
+            return $next($request);
+        }
+
+        // Null too when the mark is not this user's: a guest, or someone who signed in over a leftover mark.
         $impersonatorId = $this->impersonation->impersonatorId();
 
-        if ($impersonatorId === null || User::query()->find($impersonatorId)?->hasRole(User::SUPERADMIN) === true) {
+        if ($impersonatorId !== null && User::query()->find($impersonatorId)?->hasRole(User::SUPERADMIN) === true) {
             return $next($request);
         }
 
         Log::warning('impersonation.revoked', [
-            'user_id' => Auth::id(),
-            'impersonator_id' => $impersonatorId,
+            'user_id' => $request->user()?->getAuthIdentifier(),
+            'impersonator_id' => $mark,
         ]);
 
         Auth::logout();

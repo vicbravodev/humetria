@@ -20,6 +20,9 @@ final readonly class Impersonation
 {
     public const string SESSION_KEY = 'impersonator_id';
 
+    /** Whom the mark was set for: a mark left in a session that is now someone else's (or nobody's) counts for nothing. */
+    public const string IMPERSONATED_KEY = 'impersonated_id';
+
     /** Laravel's mark of a recently confirmed password: it belongs to whoever typed it, never to the other side. */
     private const string PASSWORD_CONFIRMED_KEY = 'auth.password_confirmed_at';
 
@@ -33,7 +36,8 @@ final readonly class Impersonation
     {
         $id = $this->session->get(self::SESSION_KEY);
 
-        return is_int($id) ? $id : null;
+        // The resolved user, not guard->id(): that one falls back to the session's id of a user who may be gone.
+        return is_int($id) && $this->session->get(self::IMPERSONATED_KEY) === $this->guard->user()?->getAuthIdentifier() ? $id : null;
     }
 
     public function isActive(): bool
@@ -54,7 +58,7 @@ final readonly class Impersonation
 
         $this->guard->login($target);
         $this->session->forget(self::PASSWORD_CONFIRMED_KEY);
-        $this->session->put(self::SESSION_KEY, $impersonator->id);
+        $this->session->put([self::SESSION_KEY => $impersonator->id, self::IMPERSONATED_KEY => $target->id]);
     }
 
     /**
@@ -71,7 +75,7 @@ final readonly class Impersonation
             Log::info('impersonation.stopped', ['subject_id' => $ownerId]);
         }, ['user_id' => $ownerId, 'impersonator_id' => $impersonatorId]);
 
-        $this->session->forget([self::SESSION_KEY, self::PASSWORD_CONFIRMED_KEY]);
+        $this->session->forget([self::SESSION_KEY, self::IMPERSONATED_KEY, self::PASSWORD_CONFIRMED_KEY]);
         $impersonator = User::query()->find($impersonatorId);
 
         if ($impersonator === null || ! $impersonator->hasRole(User::SUPERADMIN)) {

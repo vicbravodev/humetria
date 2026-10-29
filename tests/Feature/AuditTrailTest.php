@@ -64,7 +64,7 @@ it('records the impersonator on every audit entry while impersonating', function
     $owner = User::factory()->create();
 
     $this->actingAs($owner)
-        ->withSession([Impersonation::SESSION_KEY => $superadmin->id])
+        ->withSession([Impersonation::SESSION_KEY => $superadmin->id, Impersonation::IMPERSONATED_KEY => $owner->id])
         ->post('/_test/audit');
 
     expect(AuditEntry::query()->where('event', 'test.event')->sole())
