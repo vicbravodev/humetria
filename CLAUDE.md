@@ -111,12 +111,12 @@ layouts/  hooks/  lib/  types/
 
 ## Privacidad (invariante)
 
-- Las respuestas de Guía II/III viven en tablas **sin ninguna llave** hacia empleado, invitación ni token.
+- Las respuestas de Guía II/III y de la encuesta de Ley Silla viven en tablas **sin ninguna llave** hacia empleado, invitación ni token.
   La invitación solo registra "ya contestó". El enlace es de un solo uso.
 - IDs de respuestas: UUID v4 aleatorio (nunca ordenable por tiempo). RH nunca ve la hora exacta de cada respuesta.
 - Todo resultado agregado pasa por un único servicio que aplica el **mínimo de respondentes por grupo**
   (default 5, configurable). Debajo del mínimo el grupo no se muestra. Cada filtro adicional reduce el grupo:
-  el mínimo se aplica después de filtrar.
+  el mínimo se aplica después de filtrar. Aplica también a la encuesta de Ley Silla.
 - La Guía I sí es identificada (obligación de canalizar, numeral 5.5) y solo la ven roles autorizados.
 - Toda página que ve RH tiene un test que afirma que sus props de Inertia no contienen respuestas individuales.
 - El modelo de amenaza es RH y la aplicación, no el operador con acceso a la base de datos.
