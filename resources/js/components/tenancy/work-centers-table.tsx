@@ -36,6 +36,7 @@ export default function WorkCentersTable({
                 <TableRow>
                     <TableHead>Centro de trabajo</TableHead>
                     <TableHead>Domicilio</TableHead>
+                    <TableHead>Personal</TableHead>
                     {view === 'archived' && <TableHead>Archivado</TableHead>}
                     {states !== null && (
                         <TableHead>

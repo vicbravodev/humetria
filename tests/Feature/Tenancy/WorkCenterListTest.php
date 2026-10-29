@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Actions\ListWorkCenters;
 use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
@@ -49,6 +50,8 @@ it('lists the active work centers of the company by name, with their address in 
                 'main_activity' => 'Manufactura de autopartes',
                 'address' => 'Av. 5 de Febrero 1200 int. Nave 3, col. Zona Industrial, C.P. 76120, Querétaro, Querétaro',
                 'archived_on' => null,
+                'employees' => 0,
+                'guides' => [],
             ]));
 });
 
@@ -124,4 +127,24 @@ it('shows the blocked page for a suspended company', function (): void {
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.work-centers.index', $tenant))
         ->assertInertia(fn (Assert $page) => $page->component('tenancy/blocked'));
+});
+
+it('counts each work center\'s active employees and says which NOM-035 guides apply', function (): void {
+    $tenant = Tenant::factory()->create();
+    $small = WorkCenter::factory()->for($tenant)->create(['name' => 'A Chico']);
+    $medium = WorkCenter::factory()->for($tenant)->create(['name' => 'B Mediano']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'C Vacío']);
+    Employee::factory()->count(15)->create(['tenant_id' => $tenant->id, 'work_center_id' => $small->id]);
+    Employee::factory()->count(16)->create(['tenant_id' => $tenant->id, 'work_center_id' => $medium->id]);
+    Employee::factory()->deactivated()->count(3)->create(['tenant_id' => $tenant->id, 'work_center_id' => $small->id]);
+    Employee::factory()->count(2)->create();
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.work-centers.index', $tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('workCenters', fn ($rows): bool => collect($rows)->map(fn ($row): array => [$row['name'], $row['employees'], $row['guides']])->all() === [
+                ['A Chico', 15, ['I']],
+                ['B Mediano', 16, ['I', 'II']],
+                ['C Vacío', 0, []],
+            ]));
 });

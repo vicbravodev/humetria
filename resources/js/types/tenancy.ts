@@ -91,6 +91,10 @@ export type WorkCenterRow = {
     address: string;
     /** The day it was archived, written for display; null while active. */
     archived_on: string | null;
+    /** Its active employees. */
+    employees: number;
+    /** The NOM-035 guides that apply by that number: none with nobody, I up to 15, I and II up to 50, I and III above. */
+    guides: ('I' | 'II' | 'III')[];
 };
 
 export type MexicanStateOption = { value: string; label: string };

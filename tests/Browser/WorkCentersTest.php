@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -194,4 +195,17 @@ it('shows a viewer the work centers with nothing to change', function (bool $dar
         ->assertSee('Planta Querétaro')
         ->assertDontSee('Dar de alta centro')
         ->assertMissing('@work-center-actions');
+})->with($looks);
+
+it('shows how many people each work center has and which NOM-035 guides apply', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = acme();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Bodega Sur']);
+    Employee::factory()->count(16)->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile)
+        ->assertSee('16 personas')
+        ->assertSee('NOM-035: Guías I y II')
+        ->assertSee('Sin personal');
 })->with($looks);

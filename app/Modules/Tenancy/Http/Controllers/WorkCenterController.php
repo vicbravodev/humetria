@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Instruments\Contracts\Nom035Guides;
+use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Tenancy\Actions\ArchiveWorkCenter;
 use App\Modules\Tenancy\Actions\CreateWorkCenter;
 use App\Modules\Tenancy\Actions\ListWorkCenters;
@@ -26,8 +28,12 @@ use Inertia\Response;
  */
 final class WorkCenterController extends Controller
 {
+    public function __construct(private readonly Headcount $headcount, private readonly Nom035Guides $guides) {}
+
     public function index(Request $request, ListWorkCenters $listWorkCenters): Response
     {
+        $headcount = $this->headcount->byWorkCenter();
+
         $workCenters = $listWorkCenters->handle();
         $active = $workCenters->whereNull('archived_at');
         $archived = $workCenters->whereNotNull('archived_at');
@@ -36,7 +42,8 @@ final class WorkCenterController extends Controller
         return Inertia::render('tenancy/work-centers', [
             'view' => $showArchived ? 'archived' : 'active',
             'counts' => ['active' => $active->count(), 'archived' => $archived->count()],
-            'workCenters' => ($showArchived ? $archived : $active)->values()->map($this->row(...))->all(),
+            'workCenters' => ($showArchived ? $archived : $active)->values()
+                ->map(fn (WorkCenter $workCenter): array => $this->row($workCenter, $headcount[$workCenter->id] ?? 0))->all(),
             'states' => collect(MexicanState::cases())
                 ->map(fn (MexicanState $state): array => ['value' => $state->value, 'label' => $state->label()])
                 ->sortBy('label')
@@ -110,9 +117,9 @@ final class WorkCenterController extends Controller
     }
 
     /**
-     * @return array<string, string|null>
+     * @return array<string, string|int|list<string>|null>
      */
-    private function row(WorkCenter $workCenter): array
+    private function row(WorkCenter $workCenter, int $employees): array
     {
         return [
             'id' => $workCenter->id,
@@ -127,6 +134,8 @@ final class WorkCenterController extends Controller
             'main_activity' => $workCenter->main_activity,
             'address' => $workCenter->address(),
             'archived_on' => $workCenter->archived_at === null ? null : DisplayDate::day($workCenter->archived_at),
+            'employees' => $employees,
+            'guides' => $this->guides->for($employees),
         ];
     }
 }
