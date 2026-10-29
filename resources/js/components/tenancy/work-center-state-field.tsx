@@ -1,15 +1,9 @@
+import Combobox from '@/components/humetria/combobox';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import type { MexicanStateOption } from '@/types';
 
-/** The state, chosen from the 32; typing a letter jumps to it. Its value goes in the form as `state`. */
+/** The state, searched among the 32 by typing (accents optional). Its value goes in the form as `state`. */
 export default function WorkCenterStateField({
     states,
     defaultValue,
@@ -22,27 +16,19 @@ export default function WorkCenterStateField({
     return (
         <div className="grid gap-2">
             <Label htmlFor="work-center-state">Estado</Label>
-            <Select name="state" defaultValue={defaultValue}>
-                <SelectTrigger
-                    id="work-center-state"
-                    className="w-full"
-                    aria-invalid={error === undefined ? undefined : true}
-                    aria-describedby={
-                        error === undefined
-                            ? undefined
-                            : 'work-center-state-error'
-                    }
-                >
-                    <SelectValue placeholder="Elige un estado" />
-                </SelectTrigger>
-                <SelectContent>
-                    {states.map((state) => (
-                        <SelectItem key={state.value} value={state.value}>
-                            {state.label}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+            <Combobox
+                id="work-center-state"
+                name="state"
+                source={{ options: states }}
+                defaultValue={states.find(
+                    ({ value }) => value === defaultValue,
+                )}
+                placeholder="Elige un estado"
+                invalid={error !== undefined}
+                describedBy={
+                    error === undefined ? undefined : 'work-center-state-error'
+                }
+            />
             <InputError
                 id="work-center-state-error"
                 role="alert"

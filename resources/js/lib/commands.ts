@@ -5,7 +5,8 @@ export type Command = {
     keywords?: string[];
 };
 
-const fold = (text: string): string =>
+/** Text as a search compares it: without accents, in lowercase and trimmed. */
+export const fold = (text: string): string =>
     text
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')

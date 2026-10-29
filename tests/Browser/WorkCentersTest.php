@@ -54,7 +54,9 @@ function acme(): Tenant
     return Tenant::query()->where('slug', 'acme')->sole();
 }
 
-it('adds a work center from the dialog, choosing its state from the list', function (): void {
+const STATE_SEARCH = '[role="combobox"][aria-controls="work-center-state-options"]';
+
+it('adds a work center from the dialog, finding its state by typing it without accents', function (): void {
     $url = signInToPanel();
 
     visit("{$url}/work-centers")
@@ -66,7 +68,10 @@ it('adds a work center from the dialog, choosing its state from the list', funct
         ->type('postal_code', '76120')
         ->type('municipality', 'Querétaro')
         ->click('#work-center-state')
-        ->click('[role="option"]:has-text("Querétaro")')
+        ->type(STATE_SEARCH, 'queretaro')
+        ->assertCount('#work-center-state-options [role="option"]', 1)
+        ->keys(STATE_SEARCH, 'Enter')
+        ->assertSeeIn('#work-center-state', 'Querétaro')
         ->type('main_activity', 'Manufactura de autopartes')
         ->press('Dar de alta')
         ->assertSee('Centro de trabajo dado de alta.')
@@ -99,6 +104,31 @@ it('passes the accessibility and CSP checks with the dialog open', function (boo
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('Dar de alta centro')
         ->assertSee('Actividad principal'));
+})->with($looks);
+
+it('moves through the states with the arrows and says when none matches', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/work-centers")
+        ->click('Dar de alta centro')
+        ->click('#work-center-state')
+        ->assertCount('#work-center-state-options [role="option"]', 32)
+        ->type(STATE_SEARCH, 'baja')
+        ->keys(STATE_SEARCH, ['ArrowDown', 'Enter'])
+        ->assertSeeIn('#work-center-state', 'Baja California Sur')
+        ->click('#work-center-state')
+        ->type(STATE_SEARCH, 'zzz')
+        ->assertSee('Sin resultados')
+        ->assertNoJavaScriptErrors();
+});
+
+it('passes the accessibility and CSP checks with the state search open', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
+        ->click('Dar de alta centro')
+        ->click('#work-center-state')
+        ->type(STATE_SEARCH, 'mex'));
 })->with($looks);
 
 it('edits a work center from its row', function (): void {
