@@ -6,7 +6,8 @@ export function firstInvalidField<T extends { name: string }>(
     errors: Partial<Record<string, string>>,
 ): T | null {
     for (const field of fields) {
-        if (errors[field.name] !== undefined) {
+        // A list input (`tools[]`) reports its error under the bare key (`tools`).
+        if (errors[field.name.replace(/\[\]$/, '')] !== undefined) {
             return field;
         }
     }

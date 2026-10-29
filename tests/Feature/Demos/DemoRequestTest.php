@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Demos\Actions\SubmitDemoRequest;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Http\Requests\StoreDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +38,7 @@ function demoRequest(array $overrides = []): array
         'company' => 'Empresa Ejemplo',
         'profile' => 'company',
         'workforce' => '51_100',
+        'tools' => ['nom_035', 'ley_silla'],
         'message' => 'Queremos aplicar la Guía III este año.',
         'form_extra' => '',
         ...$overrides,
@@ -72,6 +74,7 @@ it('stores a demo request and confirms it on the demo section', function (): voi
         ->and($demoRequest->company)->toBe('Empresa Ejemplo')
         ->and($demoRequest->profile->value)->toBe('company')
         ->and($demoRequest->workforce->value)->toBe('51_100')
+        ->and($demoRequest->tools->all())->toBe([Tool::Nom035, Tool::LeySilla])
         ->and($demoRequest->message)->toBe('Queremos aplicar la Guía III este año.')
         ->and(Str::isUuid($demoRequest->id, 4))->toBeTrue()
         ->and($demoRequest->created_at)->not->toBeNull();
@@ -211,6 +214,19 @@ it('rejects a value outside the options', function (string $field, mixed $value,
     ['workforce', ['51_100'], 'El número de trabajadores seleccionado no es válido.'],
 ]);
 
+it('rejects tools that are missing, empty, unknown, repeated or not a list', function (mixed $tools, string $key, ?string $error): void {
+    $this->post(route('demo-requests.store'), demoRequest(['tools' => $tools]))
+        ->assertSessionHasErrors($error === null ? [$key] : [$key => $error]);
+
+    expect(DemoRequest::query()->count())->toBe(0);
+})->with([
+    'missing' => [null, 'tools', 'El campo herramientas es obligatorio.'],
+    'empty' => [[], 'tools', 'El campo herramientas es obligatorio.'],
+    'string' => ['nom_035', 'tools', 'El campo herramientas debe ser un arreglo.'],
+    'unknown' => [['nom_036'], 'tools.0', null],
+    'repeated' => [['nom_035', 'nom_035'], 'tools.1', null],
+]);
+
 it('rejects text fields sent as arrays', function (string $field): void {
     $this->post(route('demo-requests.store'), demoRequest([$field => ['x']]))
         ->assertSessionHasErrors([$field]);
@@ -246,6 +262,7 @@ it('logs the submission without any personal data', function (): void {
             'demo_request_id' => $demoRequest->id,
             'profile' => 'company',
             'workforce' => '51_100',
+            'tools' => ['nom_035', 'ley_silla'],
         ]);
 
     $log = File::get($this->logPath);

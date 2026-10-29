@@ -187,6 +187,7 @@ return [
         'recovery_code' => 'código de recuperación',
         'rfc' => 'RFC',
         'slug' => 'dirección',
+        'tools' => 'herramientas',
         'trade_name' => 'nombre comercial',
         'whatsapp' => 'WhatsApp',
         'workforce' => 'número de trabajadores',

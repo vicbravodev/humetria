@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -18,13 +19,13 @@ it('stores a demo request built by its factory', function (): void {
 });
 
 it('accepts a valid row inserted directly', function (): void {
-    DB::table('demo_requests')->insert([...DemoRequest::factory()->raw(), 'id' => (string) Str::uuid(), 'message' => str_repeat('a', 2000)]);
+    DB::table('demo_requests')->insert([...DemoRequest::factory()->raw(), 'tools' => '["nom_035"]', 'id' => (string) Str::uuid(), 'message' => str_repeat('a', 2000)]);
 
     expect(DemoRequest::query()->count())->toBe(1);
 });
 
 it('rejects a row the form would reject', function (string $column, mixed $value): void {
-    $row = [...DemoRequest::factory()->raw(), 'id' => (string) Str::uuid(), $column => $value];
+    $row = [...DemoRequest::factory()->raw(), 'tools' => '["nom_035"]', 'id' => (string) Str::uuid(), $column => $value];
 
     expect(fn () => DB::table('demo_requests')->insert($row))->toThrow(QueryException::class);
 })->with([
@@ -40,4 +41,14 @@ it('rejects a row the form would reject', function (string $column, mixed $value
     'unknown profile' => ['profile', 'employee'],
     'unknown workforce' => ['workforce', '1_50'],
     'message too long' => ['message', str_repeat('a', 2001)],
+    'no tools' => ['tools', '[]'],
+    'unknown tool' => ['tools', '["nom_036"]'],
+    'tools not a list' => ['tools', '{"a":"nom_035"}'],
+    'missing tools' => ['tools', null],
 ]);
+
+it('keeps the tools a request asked about, in order', function (): void {
+    $demoRequest = DemoRequest::factory()->create(['tools' => [Tool::LeySilla, Tool::Nom035]])->fresh();
+
+    expect($demoRequest->tools->all())->toBe([Tool::LeySilla, Tool::Nom035]);
+});

@@ -6,6 +6,7 @@ namespace App\Modules\Demos\Http\Requests;
 
 use App\Modules\Demos\Data\DemoRequestData;
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,8 @@ final class StoreDemoRequestRequest extends FormRequest
             'company' => ['required', self::SINGLE_LINE, 'max:160'],
             'profile' => ['required', Rule::enum(DemoProfile::class)],
             'workforce' => ['required', Rule::enum(Workforce::class)],
+            'tools' => ['required', 'array', 'min:1', 'max:3'],
+            'tools.*' => ['required', 'distinct', Rule::enum(Tool::class)],
             'message' => ['nullable', self::MULTI_LINE, 'max:2000'],
         ];
     }
@@ -58,6 +61,7 @@ final class StoreDemoRequestRequest extends FormRequest
             company: $this->string('company')->toString(),
             profile: DemoProfile::from($this->string('profile')->toString()),
             workforce: Workforce::from($this->string('workforce')->toString()),
+            tools: array_values($this->enums('tools', Tool::class)),
             message: $this->filled('message') ? $this->string('message')->toString() : null,
         );
     }

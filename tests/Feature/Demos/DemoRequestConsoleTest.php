@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Http\Controllers\DemoRequestConsoleController;
 use App\Modules\Demos\Models\DemoRequest;
@@ -59,7 +60,7 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
             ]]));
 });
 
-it('labels every profile and headcount range', function (DemoProfile|Workforce $case, string $label): void {
+it('labels every profile and headcount range', function (DemoProfile|Workforce|Tool $case, string $label): void {
     expect($case->label())->toBe($label);
 })->with([
     [DemoProfile::Company, 'Empresa'],
@@ -69,6 +70,9 @@ it('labels every profile and headcount range', function (DemoProfile|Workforce $
     [Workforce::From51To100, '51–100'],
     [Workforce::From101To500, '101–500'],
     [Workforce::MoreThan500, 'Más de 500'],
+    [Tool::Nom035, 'NOM-035'],
+    [Tool::Nom037, 'NOM-037'],
+    [Tool::LeySilla, 'Ley Silla'],
 ]);
 
 it('shows the newest requests first', function (): void {

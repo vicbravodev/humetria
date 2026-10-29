@@ -36,6 +36,8 @@ function fillDemoForm(mixed $page): void
         ->fill('whatsapp', '55 1234 5678')
         ->fill('company', 'Empresa Ejemplo')
         ->radio('profile', 'consultant')
+        ->check('tools[]', 'nom_035')
+        ->check('tools[]', 'nom_037')
         ->radio('workforce', '51_100')
         ->fill('message', 'Aplicamos la Guía III a tres clientes.');
 }
@@ -50,13 +52,15 @@ it('stores a demo request and confirms it', function (bool $mobile): void {
     $page->assertScript('() => window.location.hash', '#agenda-una-demo')
         ->assertValue('name', '')
         ->assertValue('message', '')
-        ->assertRadioNotSelected('profile');
+        ->assertRadioNotSelected('profile')
+        ->assertScript('() => [...document.querySelectorAll(\'[name="tools[]"]\')].every((box) => !box.checked)');
 
     $demoRequest = DemoRequest::query()->sole();
 
     expect($demoRequest->whatsapp)->toBe('+525512345678')
         ->and($demoRequest->profile->value)->toBe('consultant')
-        ->and($demoRequest->workforce->value)->toBe('51_100');
+        ->and($demoRequest->workforce->value)->toBe('51_100')
+        ->and($demoRequest->tools->map->value->all())->toBe(['nom_035', 'nom_037']);
 })->with(['desktop' => false, 'mobile' => true]);
 
 it('shows what to fix next to each field when the form is sent empty', function (bool $mobile): void {
@@ -76,6 +80,7 @@ it('shows what to fix next to each field when the form is sent empty', function 
 
     foreach ([
         'profile' => 'El campo perfil es obligatorio.',
+        'tools' => 'El campo herramientas es obligatorio.',
         'workforce' => 'El campo número de trabajadores es obligatorio.',
     ] as $group => $error) {
         $page->assertAttribute("[data-test=\"{$group}-group\"]", 'aria-invalid', 'true')
@@ -88,6 +93,13 @@ it('shows what to fix next to each field when the form is sent empty', function 
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with(['desktop' => false, 'mobile' => true]);
+
+it('asks who Humetría is for', function (): void {
+    visit('/')
+        ->assertSee('¿Para quién es Humetría?')
+        ->assertSee('Para mi empresa o grupo de empresas')
+        ->assertSee('Soy consultor y atiendo a varias empresas');
+});
 
 it('hides the honeypot from people, keyboards and autofill', function (): void {
     visitPage('landing', '/')

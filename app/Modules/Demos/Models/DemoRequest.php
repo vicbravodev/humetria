@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Models;
 
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use Database\Factories\Demos\DemoRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * A request for a demo from the landing. Platform data: it belongs to no tenant.
@@ -24,10 +27,11 @@ use Illuminate\Support\Carbon;
  * @property string $company
  * @property DemoProfile $profile
  * @property Workforce $workforce
+ * @property Collection<int, Tool> $tools
  * @property string|null $message
  * @property Carbon $created_at
  */
-#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'message'])]
+#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message'])]
 #[UseFactory(DemoRequestFactory::class)]
 final class DemoRequest extends Model
 {
@@ -44,6 +48,7 @@ final class DemoRequest extends Model
         return [
             'profile' => DemoProfile::class,
             'workforce' => Workforce::class,
+            'tools' => AsEnumCollection::of(Tool::class),
             'created_at' => 'datetime',
         ];
     }
