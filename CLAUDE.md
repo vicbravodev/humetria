@@ -33,7 +33,16 @@ npm run types:check
 npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
-El CI corre los tres (`composer ci:check` incluye `npm run test:js`). Si la cobertura o el score bajan, faltan tests: no se baja el umbral.
+En local, `composer ci:check` corre todo en orden. El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
+(chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
+tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
+(`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
+(`scripts/mutation-score.php`). Así cada clase saca el mismo resultado que en una corrida completa. Si la mutación se vuelve
+el job más lento, se agrega un shard en el workflow; no se baja el umbral. En un PR se mutan solo las clases de los tests
+cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca lo que comparten (`database/`, `routes/`,
+`config/`, `bootstrap/`, dependencias). En `main`, la mutación es completa.
+Si la cobertura o el score bajan, faltan tests: no se baja el umbral. No corras la mutación al mismo tiempo que `composer test`:
+comparten la base `testing` y los dos dan resultados falsos.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo.
 
