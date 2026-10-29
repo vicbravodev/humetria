@@ -138,7 +138,18 @@ it('tells the visitor to wait when there were too many requests', function (): v
     expect(DemoRequest::query()->count())->toBe(5);
 });
 
-it('marks the preview campaign with the design system badge', function (): void {
-    visit('/')
-        ->assertSeeIn('figure [data-slot="badge"]', 'En curso');
+it('presents Humetría as an HR platform with its three tools', function (): void {
+    visitPage('landing', '/')
+        ->assertTitleContains('Herramientas de RH')
+        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
+        ->assertScript('() => document.querySelector("[data-test=hero-eyebrow]").textContent', 'NOM-035 · NOM-037 · Ley Silla')
+        ->assertDontSeeIn('#hero-title', 'NOM-035');
+});
+
+it('previews a work center with the state of the three tools', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('@hero-preview', 'NOM-035')
+        ->assertSeeIn('@hero-preview', 'NOM-037')
+        ->assertSeeIn('@hero-preview', 'Ley Silla')
+        ->assertSeeIn('figure [data-test="preview-nom_035"] [data-slot="badge"]', 'En curso');
 });
