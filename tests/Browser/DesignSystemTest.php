@@ -51,7 +51,7 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
 const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
 
 it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', function (bool $dark): void {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(superadmin());
 
     visitPage('dashboard', '/admin', $dark)
         // The page sits in a raised panel beside the sidebar, with the button that folds the sidebar at its top.
@@ -60,7 +60,7 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
-        // Group label in caption style; items of 44 px in body-strong with 20 px icons.
+        // Group label (Plataforma, the only one left to a superadmin) in caption style; items of 44 px in body-strong with 20 px icons.
         ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "uppercase" && label.fontSize === "13px"; }')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => button.getBoundingClientRect().height >= 44 && getComputedStyle(button).fontSize === "16px")')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] svg\')].every((icon) => icon.getBoundingClientRect().width === 20)')
@@ -185,4 +185,12 @@ it('moves with the design system motion', function (): void {
         ->click('Empresas')
         ->assertPathIs('/admin/companies')
         ->assertScript('() => window.transitions', 1);
+});
+
+it('labels no sidebar group after a single tool', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    visit('/admin')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].every((label) => !label.textContent.includes("NOM-035"))')
+        ->assertDontSeeIn('[data-sidebar="sidebar"]', 'Cumplimiento');
 });

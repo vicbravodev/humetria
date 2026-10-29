@@ -9,12 +9,11 @@ export default function ComplianceSection() {
         >
             <SectionHeading
                 id="confidencialidad"
-                title="Confidencialidad y apego a la norma"
+                title="Privacidad y apego a la norma"
             >
-                La gente contesta con honestidad cuando sabe que nadie va a ver
-                sus respuestas. Y tú presentas ante la STPS con la tranquilidad
-                de haber seguido la{' '}
-                <span className="whitespace-nowrap">NOM-035-STPS-2018</span>.
+                La gente contesta con honestidad cuando sabe quién puede ver lo
+                que contesta. Y tú presentas ante la STPS con la tranquilidad de
+                haber seguido la norma y la ley.
             </SectionHeading>
 
             <div className="mt-10 grid gap-6 lg:grid-cols-2">

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Actions;
 
 use App\Modules\Demos\Data\DemoRequestData;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Facades\Log;
 
@@ -19,6 +20,7 @@ final class SubmitDemoRequest
             'company' => $data->company,
             'profile' => $data->profile,
             'workforce' => $data->workforce,
+            'tools' => $data->tools,
             'message' => $data->message,
         ]);
 
@@ -27,6 +29,7 @@ final class SubmitDemoRequest
             'demo_request_id' => $demoRequest->id,
             'profile' => $data->profile->value,
             'workforce' => $data->workforce->value,
+            'tools' => array_map(fn (Tool $tool): string => $tool->value, $data->tools),
         ]);
     }
 }

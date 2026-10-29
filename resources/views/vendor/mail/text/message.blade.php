@@ -17,7 +17,7 @@
 
 <x-slot:footer>
 <x-mail::footer>
-Enviado por Humetría, la plataforma para aplicar la NOM-035.
+Enviado por Humetría, herramientas para Recursos Humanos.
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>

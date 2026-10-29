@@ -1,68 +1,48 @@
-import { Badge } from '@/components/ui/badge';
-import { EyeOff, LockKeyhole } from 'lucide-react';
+import type { PreviewState } from '@/components/landing/hero-preview-tool';
+import HeroPreviewTool from '@/components/landing/hero-preview-tool';
+import type { ToolKey } from '@/components/landing/landing-tools';
+import { TOOLS } from '@/components/landing/landing-tools';
 
-const groups = [
-    { name: 'Producción', answers: 46 },
-    { name: 'Almacén', answers: 18 },
-    { name: 'Administración', answers: 4 },
-] as const;
+const states: Readonly<Record<ToolKey, PreviewState>> = {
+    nom_035: {
+        status: 'En curso',
+        detail: 'Guía III · 68 de 92',
+        progress: 'w-[74%]',
+    },
+    nom_037: { status: 'Por revisar', detail: '2 verificaciones por validar' },
+    ley_silla: {
+        status: 'En curso',
+        detail: 'Plan de acción · 3 de 5',
+        progress: 'w-3/5',
+    },
+};
 
-const MINIMUM = 5;
-
-/** A still picture of a campaign in progress: what RH sees, with the minimum per group at work. */
+/** A still picture of a work center's board: where each tool stands, never an individual answer. */
 export default function HeroPreview() {
     return (
-        <figure className="rounded-xl border bg-card p-6 shadow-raised sm:p-8">
+        <figure
+            data-test="hero-preview"
+            className="rounded-xl border bg-card p-6 shadow-raised sm:p-8"
+        >
             <figcaption className="sr-only">
-                Ejemplo del avance de una campaña en Humetría
+                Ejemplo del tablero de un centro de trabajo en Humetría
             </figcaption>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                    <p className="font-medium">Planta Querétaro</p>
-                    <p className="text-sm text-muted-foreground">
-                        120 trabajadores · Guías I y III
-                    </p>
-                </div>
-                <Badge>En curso</Badge>
+            <div>
+                <p className="font-medium">Planta Querétaro</p>
+                <p className="text-sm text-muted-foreground">
+                    120 trabajadores
+                </p>
             </div>
 
-            <div className="mt-6">
-                <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-muted-foreground">
-                        Respuestas de la muestra
-                    </span>
-                    <span className="font-medium tabular-nums">68 de 92</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-muted">
-                    <div className="h-2 w-[74%] rounded-full bg-primary" />
-                </div>
-            </div>
-
-            <ul className="mt-6 divide-y border-y text-sm">
-                {groups.map((group) => (
-                    <li
-                        key={group.name}
-                        className="flex items-center justify-between gap-4 py-3"
-                    >
-                        <span>{group.name}</span>
-                        {group.answers >= MINIMUM ? (
-                            <span className="text-muted-foreground tabular-nums">
-                                {group.answers} respuestas
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
-                                <EyeOff aria-hidden className="size-4" />
-                                Se muestra con {MINIMUM} o más
-                            </span>
-                        )}
-                    </li>
+            <ul className="mt-4 divide-y border-y">
+                {TOOLS.map((tool) => (
+                    <HeroPreviewTool
+                        key={tool.key}
+                        tool={tool}
+                        state={states[tool.key]}
+                    />
                 ))}
             </ul>
-
-            <p className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
-                <LockKeyhole aria-hidden className="size-4 text-primary" />
-                Nadie puede ver quién contestó qué.
-            </p>
         </figure>
     );
 }

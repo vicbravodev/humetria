@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Http\Controllers\DemoRequestConsoleController;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DemoRequestConsoleController::class, DemoProfile::class, Workforce::class);
+mutates(DemoRequestConsoleController::class, DemoProfile::class, Workforce::class, Tool::class);
 
 it('lives at /admin/demo-requests', function (): void {
     expect(route('demo-requests.index', absolute: false))->toBe('/admin/demo-requests');
@@ -36,6 +37,7 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
         'company' => 'Empresa Ejemplo',
         'profile' => DemoProfile::Consultant,
         'workforce' => Workforce::From51To100,
+        'tools' => [Tool::Nom035, Tool::LeySilla],
         'message' => 'Queremos aplicar la Guía III este año.',
         'created_at' => Carbon::parse('2026-10-27 16:05:00', 'UTC'),
     ]);
@@ -54,12 +56,13 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
                 'company' => 'Empresa Ejemplo',
                 'profile' => 'Consultor',
                 'workforce' => '51–100',
+                'tools' => ['NOM-035', 'Ley Silla'],
                 'message' => 'Queremos aplicar la Guía III este año.',
                 'received_at' => '27 oct 2026, 10:05',
             ]]));
 });
 
-it('labels every profile and headcount range', function (DemoProfile|Workforce $case, string $label): void {
+it('labels every profile and headcount range', function (DemoProfile|Workforce|Tool $case, string $label): void {
     expect($case->label())->toBe($label);
 })->with([
     [DemoProfile::Company, 'Empresa'],
@@ -69,6 +72,9 @@ it('labels every profile and headcount range', function (DemoProfile|Workforce $
     [Workforce::From51To100, '51–100'],
     [Workforce::From101To500, '101–500'],
     [Workforce::MoreThan500, 'Más de 500'],
+    [Tool::Nom035, 'NOM-035'],
+    [Tool::Nom037, 'NOM-037'],
+    [Tool::LeySilla, 'Ley Silla'],
 ]);
 
 it('shows the newest requests first', function (): void {

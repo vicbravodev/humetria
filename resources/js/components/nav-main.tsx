@@ -9,12 +9,18 @@ import {
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavItem } from '@/types';
 
-export function NavMain({ label, items }: { label: string; items: NavItem[] }) {
+export function NavMain({
+    label,
+    items,
+}: {
+    label?: string;
+    items: NavItem[];
+}) {
     const { isCurrentUrl } = useCurrentUrl();
 
     return (
         <SidebarGroup className="py-0">
-            <SidebarGroupLabel>{label}</SidebarGroupLabel>
+            {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
             <SidebarMenu className="gap-0.5">
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>

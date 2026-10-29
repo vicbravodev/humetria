@@ -18,6 +18,16 @@ export default function LandingHeader() {
                         <Logo className="h-7" />
                     </span>
                 </Link>
+                {/* A phone's header only fits the logo and the two calls to action. */}
+                <Button
+                    asChild
+                    variant="ghost"
+                    className="hidden sm:inline-flex"
+                >
+                    <a href="#herramientas" data-test="header-tools">
+                        Herramientas
+                    </a>
+                </Button>
                 <Button asChild variant="ghost">
                     <Link href={dashboard()} data-test="sign-in">
                         Iniciar sesión

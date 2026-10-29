@@ -6,6 +6,7 @@ export type DemoRequestRow = {
     company: string;
     profile: string;
     workforce: string;
+    tools: string[];
     message: string | null;
     received_at: string;
 };

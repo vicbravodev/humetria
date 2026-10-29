@@ -5,6 +5,7 @@ import DemoChoiceField from '@/components/landing/demo-choice-field';
 import DemoHoneypot from '@/components/landing/demo-honeypot';
 import DemoMessageField from '@/components/landing/demo-message-field';
 import DemoTextField from '@/components/landing/demo-text-field';
+import DemoToolsField from '@/components/landing/demo-tools-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { firstInvalidField } from '@/lib/first-invalid-field';
@@ -12,8 +13,8 @@ import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
 
 const PROFILES: readonly DemoChoice[] = [
-    { value: 'company', label: 'Aplico la NOM-035 en mi empresa' },
-    { value: 'consultant', label: 'Soy consultor' },
+    { value: 'company', label: 'Para mi empresa o grupo de empresas' },
+    { value: 'consultant', label: 'Soy consultor y atiendo a varias empresas' },
 ];
 
 const WORKFORCE: readonly DemoChoice[] = [
@@ -91,11 +92,12 @@ export default function DemoRequestForm() {
                     </div>
                     <DemoChoiceField
                         name="profile"
-                        legend="¿Cómo aplicas la NOM-035?"
+                        legend="¿Para quién es Humetría?"
                         options={PROFILES}
                         error={errors['profile']}
                         className="sm:grid-cols-2"
                     />
+                    <DemoToolsField error={errors['tools']} />
                     <DemoChoiceField
                         name="workforce"
                         legend="¿Cuántas personas trabajan en la empresa?"

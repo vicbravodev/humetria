@@ -36,6 +36,8 @@ function fillDemoForm(mixed $page): void
         ->fill('whatsapp', '55 1234 5678')
         ->fill('company', 'Empresa Ejemplo')
         ->radio('profile', 'consultant')
+        ->check('tools[]', 'nom_035')
+        ->check('tools[]', 'nom_037')
         ->radio('workforce', '51_100')
         ->fill('message', 'Aplicamos la Guía III a tres clientes.');
 }
@@ -50,13 +52,15 @@ it('stores a demo request and confirms it', function (bool $mobile): void {
     $page->assertScript('() => window.location.hash', '#agenda-una-demo')
         ->assertValue('name', '')
         ->assertValue('message', '')
-        ->assertRadioNotSelected('profile');
+        ->assertRadioNotSelected('profile')
+        ->assertScript('() => [...document.querySelectorAll(\'[name="tools[]"]\')].every((box) => !box.checked)');
 
     $demoRequest = DemoRequest::query()->sole();
 
     expect($demoRequest->whatsapp)->toBe('+525512345678')
         ->and($demoRequest->profile->value)->toBe('consultant')
-        ->and($demoRequest->workforce->value)->toBe('51_100');
+        ->and($demoRequest->workforce->value)->toBe('51_100')
+        ->and($demoRequest->tools->map->value->all())->toBe(['nom_035', 'nom_037']);
 })->with(['desktop' => false, 'mobile' => true]);
 
 it('shows what to fix next to each field when the form is sent empty', function (bool $mobile): void {
@@ -75,7 +79,8 @@ it('shows what to fix next to each field when the form is sent empty', function 
     }
 
     foreach ([
-        'profile' => 'El campo perfil es obligatorio.',
+        'profile' => 'Elige para quién es Humetría.',
+        'tools' => 'Elige al menos una herramienta.',
         'workforce' => 'El campo número de trabajadores es obligatorio.',
     ] as $group => $error) {
         $page->assertAttribute("[data-test=\"{$group}-group\"]", 'aria-invalid', 'true')
@@ -88,6 +93,13 @@ it('shows what to fix next to each field when the form is sent empty', function 
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with(['desktop' => false, 'mobile' => true]);
+
+it('asks who Humetría is for', function (): void {
+    visit('/')
+        ->assertSee('¿Para quién es Humetría?')
+        ->assertSee('Para mi empresa o grupo de empresas')
+        ->assertSee('Soy consultor y atiendo a varias empresas');
+});
 
 it('hides the honeypot from people, keyboards and autofill', function (): void {
     visitPage('landing', '/')
@@ -126,7 +138,84 @@ it('tells the visitor to wait when there were too many requests', function (): v
     expect(DemoRequest::query()->count())->toBe(5);
 });
 
-it('marks the preview campaign with the design system badge', function (): void {
-    visit('/')
-        ->assertSeeIn('figure [data-slot="badge"]', 'En curso');
+it('presents Humetría as an HR platform with its three tools', function (): void {
+    visitPage('landing', '/')
+        ->assertTitleContains('Herramientas de RH')
+        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
+        ->assertScript('() => document.querySelector("[data-test=hero-eyebrow]").textContent', 'NOM-035 · NOM-037 · Ley Silla')
+        ->assertDontSeeIn('#hero-title', 'NOM-035');
+});
+
+it('previews a work center with the state of the three tools', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('@hero-preview', 'NOM-035')
+        ->assertSeeIn('@hero-preview', 'NOM-037')
+        ->assertSeeIn('@hero-preview', 'Ley Silla')
+        ->assertSeeIn('figure [data-test="preview-nom_035"] [data-slot="badge"]', 'En curso')
+        ->assertScript('() => new Set([...document.querySelectorAll("figure [data-slot=badge]")].filter((badge) => badge.textContent === "En curso").map((badge) => badge.className)).size', 1);
+});
+
+it('takes the header tools link to the tools section', function (): void {
+    // The link shows from the sm breakpoint up: on a phone the header only fits the logo and the two calls to action.
+    // The section lands right under the 64 px sticky header (`scroll-mt-16`); the jump is instant, there is no smooth scroll.
+    $sectionTop = '() => Math.abs(document.getElementById("herramientas").getBoundingClientRect().top - 64) < 2';
+
+    visitPage('landing', '/')
+        ->assertScript($sectionTop, false)
+        ->click('@header-tools')
+        ->assertScript('() => window.location.hash', '#herramientas')
+        ->assertScript($sectionTop);
+});
+
+it('details each of the three tools', function (): void {
+    $page = visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]").length', 3);
+
+    foreach ([
+        'NOM-035-STPS-2018 · Factores de riesgo psicosocial',
+        'NOM-037-STPS-2023 · Teletrabajo',
+        'Ley Federal del Trabajo, arts. 132, 133 y 423 · Asientos y descansos',
+    ] as $index => $official) {
+        $page->assertScript("() => document.querySelectorAll('#herramientas [data-test=tool-card]')[{$index}].querySelector('[data-test=tool-official]').textContent", $official);
+    }
+
+    $page->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]")[1].textContent.toLowerCase().includes("lista de verificación")')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]")[2].textContent.includes("reglamento interior")')
+        ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
+});
+
+it('speaks to consultants, multi-site companies and corporate groups', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varios centros de trabajo')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias razones sociales')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'Humetría le asigna a cada uno lo que le toca según su tamaño y su gente.')
+        ->assertDontSeeIn('section[aria-labelledby="para-quien"]', 'la norma');
+});
+
+it('lists the audiences plainly, so only the tools read as cards', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article).backgroundColor + "|" + getComputedStyle(article).borderBottomWidth + "|" + article.querySelectorAll("span svg").length).join()', 'rgba(0, 0, 0, 0)|0px|0,rgba(0, 0, 0, 0)|0px|0,rgba(0, 0, 0, 0)|0px|0');
+});
+
+it('only names NOM-035 next to the other two tools', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => [...document.querySelectorAll("main section")].every((section) => !section.textContent.includes("NOM-035") || section.textContent.includes("NOM-037"))')
+        ->assertScript('() => document.getElementById("agenda-una-demo-title").nextElementSibling.textContent.includes("NOM-035")', false);
+});
+
+it('never promises anonymity for identified records', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('[data-test="compliance-privacy"]', 'Guía I')
+        ->assertSeeIn('[data-test="compliance-privacy"]', 'NOM-037')
+        ->assertSeeIn('[data-test="compliance-privacy"]', 'roles autorizados')
+        ->assertScript('() => document.querySelector("meta[name=description]").content.includes("de forma confidencial")', false);
+});
+
+it('states its legal and privacy claims exactly', function (): void {
+    visitPage('landing', '/')
+        ->assertSee('datos del centro, objetivo, actividades, método')
+        ->assertSee('con la confidencialidad que requiere cada herramienta')
+        ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
+        ->assertDontSee('confidencialidad que pide cada norma');
 });

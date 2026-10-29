@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories\Demos;
 
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,6 +27,7 @@ final class DemoRequestFactory extends Factory
             'company' => fake()->company(),
             'profile' => fake()->randomElement(DemoProfile::cases()),
             'workforce' => fake()->randomElement(Workforce::cases()),
+            'tools' => fake()->randomElements(Tool::cases(), fake()->numberBetween(1, count(Tool::cases()))),
             'message' => null,
         ];
     }

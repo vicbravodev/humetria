@@ -7,6 +7,8 @@ const fields = [
     { name: 'company' },
     { name: 'profile' },
     { name: 'profile' },
+    { name: 'tools[]' },
+    { name: 'tools[]' },
     { name: 'message' },
 ];
 
@@ -19,6 +21,10 @@ describe('firstInvalidField', () => {
 
     it('is the first option of an invalid group', () => {
         expect(firstInvalidField(fields, { profile: 'x' })).toBe(fields[2]);
+    });
+
+    it('is the first checkbox of a list whose error is keyed without the brackets', () => {
+        expect(firstInvalidField(fields, { tools: 'x' })).toBe(fields[4]);
     });
 
     it('is null when no field has an error', () => {

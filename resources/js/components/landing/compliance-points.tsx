@@ -1,20 +1,20 @@
 import {
+    Armchair,
     ClipboardList,
     FileText,
     LockKeyhole,
-    Scale,
     ShieldCheck,
     UsersRound,
 } from 'lucide-react';
 
 const groups = {
     privacy: {
-        title: 'Lo que contesta tu gente está protegido',
+        title: 'Cada quien sabe quién ve lo que contesta',
         points: [
             {
                 icon: LockKeyhole,
                 title: 'Respuestas sin nombre',
-                text: 'Las respuestas de las Guías II y III se guardan sin ninguna liga con la persona, su invitación ni su enlace.',
+                text: 'Las respuestas de las Guías II y III de la NOM-035 y la encuesta de Ley Silla se guardan sin ninguna liga con la persona, su invitación ni su enlace.',
             },
             {
                 icon: UsersRound,
@@ -23,28 +23,28 @@ const groups = {
             },
             {
                 icon: ShieldCheck,
-                title: 'La Guía I, solo para quien debe verla',
-                text: 'Es la única que identifica a la persona, porque la norma pide canalizar a quien lo necesite. Solo la consultan los roles autorizados.',
+                title: 'Lo identificado, solo para quien debe verlo',
+                text: 'La Guía I de la NOM-035 y las listas de verificación de la NOM-037 sí identifican a la persona, porque la norma lo pide. Solo las consultan los roles autorizados.',
             },
         ],
     },
     norm: {
-        title: 'Lo que pide la NOM-035, en su lugar',
+        title: 'Hecho con la norma en la mano',
         points: [
             {
-                icon: ClipboardList,
-                title: 'Las guías que corresponden',
-                text: 'Guía I para todos; Guía II de 16 a 50 trabajadores y Guía III con más de 50, según cada centro de trabajo.',
-            },
-            {
-                icon: Scale,
-                title: 'Muestra representativa',
-                text: 'Con más de 50 trabajadores, el tamaño de la muestra sale de la fórmula de la norma y se elige al azar, en proporción por género.',
-            },
-            {
                 icon: FileText,
-                title: 'El informe del numeral 7.7',
-                text: 'Datos del centro, objetivo, método, resultados, conclusiones y acciones de intervención, listos para la STPS.',
+                title: 'NOM-035 · numeral 7.7',
+                text: 'El informe lleva lo que pide el numeral: datos del centro, objetivo, actividades, método, resultados, conclusiones, acciones de intervención y responsable con cédula profesional.',
+            },
+            {
+                icon: ClipboardList,
+                title: 'NOM-037 · lista de verificación y política',
+                text: 'El patrón valida la lista de verificación de cada lugar de teletrabajo y entrega por escrito la política, con descansos, desconexión y aviso de cambio de domicilio.',
+            },
+            {
+                icon: Armchair,
+                title: 'LFT · arts. 132, 133 y 423',
+                text: 'Asientos con respaldo para trabajar y para descansar, nadie obligado a estar de pie toda la jornada, y los periodos de reposo en el reglamento interior.',
             },
         ],
     },
@@ -58,7 +58,10 @@ export default function CompliancePoints({
     const { title, points } = groups[group];
 
     return (
-        <div className="rounded-lg border bg-card p-6 sm:p-8">
+        <div
+            data-test={`compliance-${group}`}
+            className="rounded-lg border bg-card p-6 sm:p-8"
+        >
             <h3 className="text-xl leading-7 font-semibold">{title}</h3>
             <ul className="mt-6 space-y-6">
                 {points.map(({ icon: Icon, title: point, text }) => (
