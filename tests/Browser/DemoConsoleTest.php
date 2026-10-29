@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
@@ -24,6 +25,7 @@ it('shows the superadmin every demo request with its contact links', function (b
         'company' => 'Empresa Ejemplo',
         'profile' => DemoProfile::Consultant,
         'workforce' => Workforce::From51To100,
+        'tools' => [Tool::Nom035, Tool::LeySilla],
         'message' => 'Queremos aplicar la Guía III este año.',
         'created_at' => Carbon::parse('2026-10-27 16:05:00', 'UTC'),
     ]);
@@ -35,6 +37,7 @@ it('shows the superadmin every demo request with its contact links', function (b
         ->assertSee('Empresa Ejemplo')
         ->assertSee('Consultor')
         ->assertSee('51–100 trabajadores')
+        ->assertSee('Ley Silla')
         ->assertSee('Queremos aplicar la Guía III este año.')
         ->assertSee('27 oct 2026, 10:05')
         ->assertAttribute('a[href="mailto:ana@empresa.mx"]', 'href', 'mailto:ana@empresa.mx')

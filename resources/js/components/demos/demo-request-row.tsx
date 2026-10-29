@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { whatsappUrl } from '@/lib/whatsapp-url';
 import type { DemoRequestRow as DemoRequest } from '@/types';
@@ -36,6 +37,13 @@ export default function DemoRequestRow({ request }: { request: DemoRequest }) {
                 <p className="text-sm text-muted-foreground">
                     {request.workforce} trabajadores
                 </p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                    {request.tools.map((tool) => (
+                        <Badge key={tool} variant="secondary">
+                            {tool}
+                        </Badge>
+                    ))}
+                </div>
             </TableCell>
             <TableCell className="max-w-md min-w-64 whitespace-normal">
                 {request.message ?? (

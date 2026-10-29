@@ -11,7 +11,7 @@ use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DemoRequestConsoleController::class, DemoProfile::class, Workforce::class);
+mutates(DemoRequestConsoleController::class, DemoProfile::class, Workforce::class, Tool::class);
 
 it('lives at /admin/demo-requests', function (): void {
     expect(route('demo-requests.index', absolute: false))->toBe('/admin/demo-requests');
@@ -37,6 +37,7 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
         'company' => 'Empresa Ejemplo',
         'profile' => DemoProfile::Consultant,
         'workforce' => Workforce::From51To100,
+        'tools' => [Tool::Nom035, Tool::LeySilla],
         'message' => 'Queremos aplicar la Guía III este año.',
         'created_at' => Carbon::parse('2026-10-27 16:05:00', 'UTC'),
     ]);
@@ -55,6 +56,7 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
                 'company' => 'Empresa Ejemplo',
                 'profile' => 'Consultor',
                 'workforce' => '51–100',
+                'tools' => ['NOM-035', 'Ley Silla'],
                 'message' => 'Queremos aplicar la Guía III este año.',
                 'received_at' => '27 oct 2026, 10:05',
             ]]));
