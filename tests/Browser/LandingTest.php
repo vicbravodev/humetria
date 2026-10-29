@@ -151,7 +151,8 @@ it('previews a work center with the state of the three tools', function (): void
         ->assertSeeIn('@hero-preview', 'NOM-035')
         ->assertSeeIn('@hero-preview', 'NOM-037')
         ->assertSeeIn('@hero-preview', 'Ley Silla')
-        ->assertSeeIn('figure [data-test="preview-nom_035"] [data-slot="badge"]', 'En curso');
+        ->assertSeeIn('figure [data-test="preview-nom_035"] [data-slot="badge"]', 'En curso')
+        ->assertScript('() => new Set([...document.querySelectorAll("figure [data-slot=badge]")].filter((badge) => badge.textContent === "En curso").map((badge) => badge.className)).size', 1);
 });
 
 it('takes the header tools link to the tools section', function (): void {
@@ -169,7 +170,7 @@ it('details each of the three tools', function (): void {
     foreach ([
         'NOM-035-STPS-2018 · Factores de riesgo psicosocial',
         'NOM-037-STPS-2023 · Teletrabajo',
-        'Ley Federal del Trabajo, arts. 132 y 133 · Asientos y descansos',
+        'Ley Federal del Trabajo, arts. 132, 133 y 423 · Asientos y descansos',
     ] as $index => $official) {
         $page->assertScript("() => document.querySelectorAll('#herramientas [data-test=tool-card]')[{$index}].querySelector('[data-test=tool-official]').textContent", $official);
     }
@@ -183,7 +184,14 @@ it('speaks to consultants, multi-site companies and corporate groups', function 
     visitPage('landing', '/')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varios centros de trabajo')
-        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias razones sociales');
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias razones sociales')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'Humetría le asigna a cada uno lo que le toca según su tamaño y su gente.')
+        ->assertDontSeeIn('section[aria-labelledby="para-quien"]', 'la norma');
+});
+
+it('lists the audiences plainly, so only the tools read as cards', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article).backgroundColor + "|" + getComputedStyle(article).borderBottomWidth + "|" + article.querySelectorAll("span svg").length).join()', 'rgba(0, 0, 0, 0)|0px|0,rgba(0, 0, 0, 0)|0px|0,rgba(0, 0, 0, 0)|0px|0');
 });
 
 it('only names NOM-035 next to the other two tools', function (): void {

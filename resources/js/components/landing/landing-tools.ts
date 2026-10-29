@@ -4,6 +4,8 @@ import { Armchair, BrainCircuit, House } from 'lucide-react';
 export type LandingTool = {
     key: 'nom_035' | 'nom_037' | 'ley_silla';
     name: string;
+    /** What the tool is about, in two or three words. */
+    hint: string;
     official: string;
     appliesTo: string;
     points: readonly string[];
@@ -11,10 +13,13 @@ export type LandingTool = {
 };
 
 /** What Humetría does for each tool, as the positioning spec words it (docs/superpowers/specs/2026-10-28-hr-tools-positioning-design.md). */
+export type ToolKey = LandingTool['key'];
+
 export const TOOLS: readonly LandingTool[] = [
     {
         key: 'nom_035',
         name: 'NOM-035',
+        hint: 'Riesgo psicosocial',
         official: 'NOM-035-STPS-2018 · Factores de riesgo psicosocial',
         appliesTo: 'Todo centro de trabajo',
         icon: BrainCircuit,
@@ -29,6 +34,7 @@ export const TOOLS: readonly LandingTool[] = [
     {
         key: 'nom_037',
         name: 'NOM-037',
+        hint: 'Teletrabajo',
         official: 'NOM-037-STPS-2023 · Teletrabajo',
         appliesTo:
             'Quien tenga personas teletrabajando más del 40 % de su jornada',
@@ -44,8 +50,9 @@ export const TOOLS: readonly LandingTool[] = [
     {
         key: 'ley_silla',
         name: 'Ley Silla',
+        hint: 'Asientos y descansos',
         official:
-            'Ley Federal del Trabajo, arts. 132 y 133 · Asientos y descansos',
+            'Ley Federal del Trabajo, arts. 132, 133 y 423 · Asientos y descansos',
         appliesTo: 'Todo patrón, en todo centro de trabajo',
         icon: Armchair,
         points: [
