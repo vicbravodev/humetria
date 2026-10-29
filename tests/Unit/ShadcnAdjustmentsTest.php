@@ -89,5 +89,6 @@ it('animates what opens and closes with the strong ease-out, from its trigger', 
         ->toContain("origin-(--radix-{$origin}-content-transform-origin)");
 })->with([
     ['select', 'select'],
+    ['popover', 'popover'],
     ['dropdown-menu', 'dropdown-menu'],
 ]);

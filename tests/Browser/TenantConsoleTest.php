@@ -175,13 +175,22 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
 it('activates a company that has not started, choosing the date', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
-    $until = now('America/Mexico_City')->addMonths(2);
+    // Mid-month, two months ahead: always reachable with two clicks on the next-month arrow.
+    $until = now('America/Mexico_City')->startOfMonth()->addMonths(2)->addDays(14);
 
     visit('/admin/companies')
         ->assertSee('Sin iniciar')
         ->click('Activar')
         ->assertSee('Activar empresa')
-        ->type('active_until', $until->format('Y-m-d'))
+        // The date is picked in a calendar in Spanish, not typed.
+        ->assertSeeIn('#tenant-active_until', 'Elige una fecha')
+        ->click('#tenant-active_until')
+        ->assertVisible('[data-slot="calendar"]')
+        ->click('[aria-label="Ir al mes siguiente"]')
+        ->click('[aria-label="Ir al mes siguiente"]')
+        ->click('[data-day="'.$until->format('Y-m-d').'"] button')
+        ->assertMissing('[data-slot="calendar"]')
+        ->assertSeeIn('#tenant-active_until', $until->locale('es')->isoFormat('D [de] MMMM [de] YYYY'))
         // The row's own "Activar" button shares the text, so the dialog's submit is picked by its place.
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Empresa activa hasta')
@@ -190,6 +199,29 @@ it('activates a company that has not started, choosing the date', function (): v
 
     expect(Tenant::query()->sole()->status()->value)->toBe('active');
 });
+
+it('lets no day before tomorrow be picked', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+    $today = now('America/Mexico_City');
+
+    visit('/admin/companies')
+        ->click('Activar')
+        ->click('#tenant-active_until')
+        // It opens on the first day it allows, with today greyed out and out of reach.
+        ->assertScript('() => document.activeElement.closest("[data-day]")?.dataset.day', $today->copy()->addDay()->format('Y-m-d'))
+        ->assertScript('() => document.querySelector(\'[data-day="'.$today->format('Y-m-d').'"] button\')?.disabled ?? true');
+});
+
+it('passes the accessibility and CSP checks with the calendar open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page
+        ->click('Activar')
+        ->click('#tenant-active_until')
+        ->assertVisible('[data-slot="calendar"]'));
+})->with($looks);
 
 it('keeps the address prefix inside its field and outlines the whole field on focus', function (): void {
     signInAsSuperadmin();

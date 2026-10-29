@@ -243,3 +243,83 @@
         scroll-behavior: auto !important;
     }
 }
+
+/*
+ * Calendar (components/ui/calendar.tsx): moving to the next month slides the weeks in from the right and the old
+ * ones out to the left (the other way going back), 12 px and fading. With reduced motion they only fade.
+ */
+.calendar-weeks-after-enter {
+    animation: 200ms var(--ease-out) both calendar-from-right;
+}
+
+.calendar-weeks-before-enter {
+    animation: 200ms var(--ease-out) both calendar-from-left;
+}
+
+.calendar-weeks-before-exit {
+    animation: 150ms var(--ease-out) both calendar-to-left;
+}
+
+.calendar-weeks-after-exit {
+    animation: 150ms var(--ease-out) both calendar-to-right;
+}
+
+.calendar-caption-enter {
+    animation: 200ms var(--ease-out) both calendar-fade-in;
+}
+
+.calendar-caption-exit {
+    animation: 150ms var(--ease-out) both calendar-fade-out;
+}
+
+@keyframes calendar-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+}
+
+@keyframes calendar-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+}
+
+@keyframes calendar-to-left {
+    to {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+}
+
+@keyframes calendar-to-right {
+    to {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+}
+
+@keyframes calendar-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes calendar-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calendar-weeks-after-enter,
+    .calendar-weeks-before-enter {
+        animation-name: calendar-fade-in;
+    }
+
+    .calendar-weeks-before-exit,
+    .calendar-weeks-after-exit {
+        animation-name: calendar-fade-out;
+    }
+}
