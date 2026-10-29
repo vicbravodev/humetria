@@ -56,6 +56,13 @@
     --risk-muy-alto: #9a3b26;
     --risk-muy-alto-bg: #f3d8cf;
     --risk-muy-alto-fg: #8a2e1c;
+    /* Raised: the page panel. Float: what hovers over the page (menus, dialogs, toasts). */
+    --elevation-raised:
+        0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+        0 4px 16px -6px color-mix(in oklab, var(--foreground) 8%, transparent);
+    --elevation-float:
+        0 2px 4px color-mix(in oklab, var(--foreground) 4%, transparent),
+        0 12px 32px -8px color-mix(in oklab, var(--foreground) 16%, transparent);
 }
 
 .dark {
@@ -82,7 +89,7 @@
     --chart-3: #9eddd2;
     --chart-4: #c2ae94;
     --chart-5: #8a7e70;
-    --sidebar: #121b1a;
+    --sidebar: #0b1211;
     --sidebar-foreground: #f1faf8;
     --sidebar-primary: #3ccfbd;
     --sidebar-primary-foreground: #0f1716;
@@ -108,9 +115,15 @@
     --risk-muy-alto: #f07a62;
     --risk-muy-alto-bg: #4a1f18;
     --risk-muy-alto-fg: #f7a08c;
+    /* A shadow disappears on dark: depth comes from a lit top edge and a shade of the frame. */
+    --elevation-raised: inset 0 1px 0
+        color-mix(in oklab, var(--foreground) 5%, transparent);
+    --elevation-float:
+        inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent),
+        0 12px 32px -8px color-mix(in oklab, var(--sidebar) 90%, transparent);
 }
 
-/* Motion: see docs/design-system/design-system.md, "Movimiento". */
+/* Motion and depth: see docs/design-system/design-system.md, "Movimiento" and "Profundidad". */
 @theme {
     /* Strong curves: Tailwind's ease-out / ease-in-out read as these everywhere. */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -173,6 +186,8 @@
     --color-risk-muy-alto: var(--risk-muy-alto);
     --color-risk-muy-alto-bg: var(--risk-muy-alto-bg);
     --color-risk-muy-alto-fg: var(--risk-muy-alto-fg);
+    --shadow-raised: var(--elevation-raised);
+    --shadow-float: var(--elevation-float);
 }
 
 @layer base {

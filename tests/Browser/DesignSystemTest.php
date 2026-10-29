@@ -44,13 +44,17 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
         ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
 })->with(['light' => false, 'dark' => true]);
 
+// Lets every running transition settle, so what the next assertion reads is the resting state.
+const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
+
 it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', function (bool $dark): void {
     $this->actingAs(User::factory()->create());
 
     visitPage('dashboard', '/admin', $dark)
-        // A full-height sidebar beside the page: no inset card, no breadcrumb bar, no starter-kit links.
-        ->assertScript('() => document.querySelector(\'[data-variant="inset"]\') === null')
-        ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent === null')
+        // The page sits in a raised panel beside the sidebar, with the button that folds the sidebar at its top.
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"][data-variant="inset"]\') !== null')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="sidebar-inset"]\')).boxShadow !== "none"')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
         // Group label in caption style; items of 44 px in body-strong with 20 px icons.
@@ -61,6 +65,29 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         ->assertScript('() => { const active = document.querySelector(\'[data-sidebar="menu-button"][data-active="true"]\'); const probe = document.createElement("span"); probe.style.color = "var(--sidebar-primary)"; document.body.append(probe); const primary = getComputedStyle(probe).color; probe.remove(); return getComputedStyle(active).fontWeight === "600" && getComputedStyle(active.querySelector("svg")).color === primary; }')
         // Page title in h1 (30/38).
         ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px');
+})->with(['light' => false, 'dark' => true]);
+
+it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
+    $this->actingAs(superadmin());
+
+    $page = visitPage('dashboard', '/admin', $dark)
+        ->click('[data-sidebar="trigger"]')
+        ->assertScript(SETTLED)
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.collapsible', 'icon')
+        // Each item keeps a 44 px square target and only its icon shows.
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => { const box = button.getBoundingClientRect(); return box.width >= 44 && box.width < 56 && box.height >= 44; })')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="group-label"]\').getBoundingClientRect().height === 0 || getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')).opacity === "0"')
+        // Its name comes back as a tooltip.
+        ->hover('[data-sidebar="menu-button"][href$="/admin/companies"]')
+        ->assertScript('() => document.querySelector(\'[role="tooltip"]\')?.textContent', 'Empresas')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->refresh()
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'collapsed')
+        // ⌘B (Ctrl+B) unfolds it again.
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })); return true; }')
+        ->assertScript(SETTLED)
+        ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'expanded');
 })->with(['light' => false, 'dark' => true]);
 
 it('moves with the design system motion', function (): void {

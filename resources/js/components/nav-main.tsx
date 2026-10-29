@@ -21,6 +21,7 @@ export function NavMain({ label, items }: { label: string; items: NavItem[] }) {
                         <SidebarMenuButton
                             asChild
                             isActive={isCurrentUrl(item.href)}
+                            tooltip={item.title}
                         >
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}
