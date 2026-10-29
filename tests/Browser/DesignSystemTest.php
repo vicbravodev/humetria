@@ -23,7 +23,9 @@ function assertLogoInsideItsBox(AwaitableWebpage $page): void
 }
 
 it('renders the login page accessibly', function (bool $dark, bool $mobile): void {
-    assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile));
+    assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile)
+        // The title reads as one: 24/32 in 600.
+        ->assertScript('() => { const title = getComputedStyle(document.querySelector("h1")); return title.fontSize === "24px" && title.fontWeight === "600"; }'));
 })->with($looks);
 
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
@@ -147,6 +149,16 @@ it('greets an empty list with an icon and what comes next', function (string $ur
     ['/admin/companies', 'tenancy/index', 'Aún no hay empresas'],
     ['/admin/demo-requests', 'demos/index', 'Aún no hay solicitudes'],
 ]);
+
+it('titles the settings like every other page and marks where you are', function (bool $dark): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('settings/profile', '/admin/settings/profile', $dark)
+        ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px')
+        ->assertScript('() => document.querySelector(\'nav[aria-label="Configuración"] [aria-current="page"]\')?.textContent', 'Perfil')
+        // Deleting the account sits in an outlined zone, not on a red block.
+        ->assertScript('() => { const zone = getComputedStyle(document.querySelector(\'[data-slot="danger-zone"]\')); const probe = document.createElement("span"); probe.style.color = "var(--card)"; document.body.append(probe); const card = getComputedStyle(probe).color; probe.remove(); return zone.backgroundColor === card; }');
+})->with(['light' => false, 'dark' => true]);
 
 it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
     $this->actingAs(User::factory()->create());
