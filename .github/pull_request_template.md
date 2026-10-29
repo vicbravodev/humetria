@@ -13,7 +13,7 @@
 - [ ] Un solo trabajo, completo; el PR se puede revertir solo, sin dejar código a medias.
 - [ ] Un commit por comportamiento, cada uno con los tests en verde.
 - [ ] Test primero (RED → GREEN). Ningún test se aflojó, se saltó ni se borró.
-- [ ] `composer ci:check` en verde (incluye cobertura ≥ 90 % y mutación ≥ 85 %) y `tests/Browser` en verde.
+- [ ] `composer ci:check` en verde (incluye cobertura ≥ 90 % y `tests/Browser`); la mutación ≥ 85 % la corre el CI.
 - [ ] Sin dependencias nuevas, o aprobadas explícitamente.
 - [ ] Migraciones con `down()` y seguras sobre datos existentes (o no aplica).
 - [ ] Tenancy: los modelos nuevos con `tenant_id` tienen su test de aislamiento A/B, por consulta y por URL (404) (o no aplica).
