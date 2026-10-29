@@ -176,3 +176,33 @@ it('takes a person with several companies from the blocked one to the list', fun
         ->click('Cambiar de empresa')
         ->assertPathIs('/admin');
 });
+
+it('lets an impersonating superadmin close the block modal and use the panel', function (bool $dark, bool $mobile): void {
+    $this->actingAs(superadmin());
+    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+
+    visitPage('dashboard', '/admin/companies', $dark, $mobile, fn (AwaitableWebpage $page) => $page
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertPathIs('/admin/acme')
+        ->assertSee('El acceso a Acme Industrial está en pausa'))
+        // Not a lock for them: it has its close button, and closing it leaves the panel to work in.
+        ->click('[data-test="tenant-blocked-dialog"] > button')
+        ->assertScript('() => Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)).then(() => true)')
+        ->assertMissing('[data-test="tenant-blocked-dialog"]')
+        ->assertSee('Estás viendo Humetría como Ana Pérez')
+        ->assertNoJavaScriptErrors();
+})->with($looks);
+
+it('lets the closed block modal stay closed while moving through the panel', function (): void {
+    $this->actingAs(superadmin());
+    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create())->create();
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('[data-test="tenant-blocked-dialog"] > button')
+        ->click('[data-sidebar="menu-button"][data-active="true"]')
+        ->assertPathIs('/admin/acme')
+        ->assertMissing('[data-test="tenant-blocked-dialog"]');
+});

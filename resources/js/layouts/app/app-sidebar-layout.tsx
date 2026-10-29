@@ -3,6 +3,7 @@ import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { CommandPalette } from '@/components/command-palette';
+import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
 import type { AppLayoutProps } from '@/types';
 
@@ -22,6 +23,7 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                 </div>
             </AppContent>
             <CommandPalette />
+            <ImpersonatedBlockNotice />
         </AppShell>
     );
 }

@@ -1,6 +1,7 @@
 import { AppContent } from '@/components/app-content';
 import { AppHeader } from '@/components/app-header/app-header';
 import { AppShell } from '@/components/app-shell';
+import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
 import type { AppLayoutProps } from '@/types';
 
@@ -13,6 +14,7 @@ export default function AppHeaderLayout({
             <ImpersonationBanner />
             <AppHeader breadcrumbs={breadcrumbs} />
             <AppContent variant="header">{children}</AppContent>
+            <ImpersonatedBlockNotice />
         </AppShell>
     );
 }
