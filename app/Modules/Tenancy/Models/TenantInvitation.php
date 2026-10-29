@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'role', 'name', 'email', 'token_hash', 'expires_at', 'accepted_at', 'cancelled_at', 'invited_by'])]
+#[Fillable(['tenant_id', 'role', 'name', 'email', 'token_hash', 'expires_at', 'accepted_at', 'cancelled_at', 'invited_by'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantInvitationFactory::class)]
 final class TenantInvitation extends Model
 {
