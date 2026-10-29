@@ -103,6 +103,39 @@ it('keeps the top bar in view while the page scrolls', function (bool $mobile): 
         ->assertScript('() => document.elementFromPoint(window.innerWidth - 30, 20)?.closest(\'[data-slot="app-topbar"]\') !== null');
 })->with(['desktop' => false, 'mobile' => true]);
 
+// Opens the command palette the way the keyboard does.
+const OPEN_PALETTE = '() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }';
+
+it('jumps to a page or switches the theme from the ⌘K palette', function (): void {
+    $this->actingAs(superadmin());
+
+    visitPage('dashboard', '/admin', reach: fn (AwaitableWebpage $page) => $page
+        ->assertScript(OPEN_PALETTE)
+        ->assertVisible('#command-search'))
+        ->type('#command-search', 'empr')
+        ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Empresas')
+        ->keys('#command-search', 'Enter')
+        ->assertPathIs('/admin/companies')
+        ->assertMissing('#command-search')
+        // The same palette opens from the button in the top bar.
+        ->click('@command-palette')
+        ->type('#command-search', 'oscuro')
+        ->keys('#command-search', 'Enter')
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->click('@command-palette')
+        ->type('#command-search', 'xyz')
+        ->assertSee('Sin resultados');
+});
+
+it('offers the console pages in the palette only to the superadmin', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    visit('/admin')
+        ->assertScript(OPEN_PALETTE)
+        ->type('#command-search', 'empresas')
+        ->assertSee('Sin resultados');
+});
+
 it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
     $this->actingAs(User::factory()->create());
 
