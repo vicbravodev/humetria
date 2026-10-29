@@ -85,6 +85,18 @@ it('says how many days of trial a company has left next to its name', function (
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Prueba · quedan 4 días');
 });
 
+it('shows the whole trial label in the switcher, not cut short', function (): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->inTrial(now())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Servicios', 'slug' => 'beta']))->for($user)->create();
+    $this->actingAs($user);
+
+    // The longest label ("quedan 14 días"), in the switcher with a menu: the one that leaves the least room.
+    visitPage('dashboard', '/admin/acme')
+        ->assertSeeIn('[data-test="tenant-switcher"]', 'Prueba · quedan 14 días')
+        ->assertScript('() => { const labels = [...'.SWITCHER.'.querySelectorAll("span")].filter((span) => span.textContent === "Prueba · quedan 14 días"); return labels.length === 1 && labels[0].scrollWidth <= labels[0].clientWidth; }');
+});
+
 it('shows no trial label for a company that is not in trial', function (): void {
     $user = User::factory()->create();
     TenantMembership::factory()->for(Tenant::factory()->activeUntil(now()->addMonth())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
