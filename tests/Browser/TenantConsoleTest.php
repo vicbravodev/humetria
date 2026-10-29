@@ -425,6 +425,19 @@ it('enters as the owner from the console, shows the banner on every page, and co
         ->assertScript(cspViolations(), '[]');
 });
 
+it('leaves only the appearance settings while impersonating', function (): void {
+    signInAsSuperadmin();
+    TenantMembership::factory()->for(Tenant::factory()->create())->create();
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->navigate('/admin/settings/appearance')
+        ->assertSee('Apariencia')
+        ->assertDontSee('Perfil')
+        ->assertDontSee('Seguridad')
+        ->assertNoJavaScriptErrors();
+});
+
 it('offers to enter as the owner only when the company has one', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create();

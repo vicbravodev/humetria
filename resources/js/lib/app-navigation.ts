@@ -2,6 +2,9 @@ import { Building2, House, Inbox } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
+import { edit as editProfile } from '@/routes/profile';
+import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import type { NavItem } from '@/types';
 
@@ -22,3 +25,23 @@ export const superadminNavItems: NavItem[] = [
     { title: 'Empresas', href: companies(), icon: Building2 },
     { title: 'Solicitudes de demo', href: demoRequests(), icon: Inbox },
 ];
+
+const appearanceItem: NavItem = {
+    title: 'Apariencia',
+    href: editAppearance(),
+    icon: null,
+};
+
+/** The settings pages; while impersonating only Apariencia, since the owner's own account is off limits. */
+export const settingsNavItems = (impersonating: boolean): NavItem[] =>
+    impersonating
+        ? [appearanceItem]
+        : [
+              { title: 'Perfil', href: editProfile(), icon: null },
+              { title: 'Seguridad', href: editSecurity(), icon: null },
+              appearanceItem,
+          ];
+
+/** Where "Configuración" in the user menu lands. */
+export const settingsEntryHref = (impersonating: boolean): NavItem['href'] =>
+    impersonating ? editAppearance() : editProfile();

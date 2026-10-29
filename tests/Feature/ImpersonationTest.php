@@ -279,9 +279,8 @@ it('does not carry the superadmin password confirmation over to the owner', func
         ->withSession(['auth.password_confirmed_at' => time()])
         ->post(route('companies.impersonate', $tenant));
 
+    // Those routes now answer 404 while impersonating (ImpersonationSettingsTest); the mark itself must be gone.
     expect(session()->has('auth.password_confirmed_at'))->toBeFalse();
-    $this->get(route('security.edit'))->assertRedirect(route('password.confirm'));
-    $this->post(route('two-factor.enable'))->assertRedirect(route('password.confirm'));
 });
 
 it('does not carry the owner password confirmation back to the superadmin', function (): void {
