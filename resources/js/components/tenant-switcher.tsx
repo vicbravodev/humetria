@@ -36,6 +36,7 @@ export function TenantSwitcher() {
                     size="lg"
                     className="h-14 font-normal data-[state=open]:bg-sidebar-accent"
                     data-test="tenant-switcher"
+                    aria-label={tenant.trade_name}
                     tooltip={tenant.trade_name}
                 >
                     <Building2 />

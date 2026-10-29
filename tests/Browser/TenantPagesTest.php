@@ -77,12 +77,22 @@ it('shows the only company as plain text, with no menu', function (): void {
 
 it('says how many days of trial a company has left next to its name', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->inTrial(now())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->inTrial(now()->subDays(10))->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visitPage('dashboard', '/admin/acme')
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Acme Industrial')
-        ->assertSeeIn('[data-test="tenant-switcher"]', 'Prueba');
+        ->assertSeeIn('[data-test="tenant-switcher"]', 'Prueba · quedan 4 días');
+});
+
+it('shows no trial label for a company that is not in trial', function (): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->activeUntil(now()->addMonth())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    $this->actingAs($user);
+
+    visitPage('dashboard', '/admin/acme')
+        ->assertSeeIn('[data-test="tenant-switcher"]', 'Acme Industrial')
+        ->assertDontSee('Prueba');
 });
 
 it('folds the switcher to its icon without overflowing the sidebar', function (): void {
@@ -94,5 +104,7 @@ it('folds the switcher to its icon without overflowing the sidebar', function ()
     visitPage('dashboard', '/admin/acme')
         ->click('[data-sidebar="trigger"]')
         ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
-        ->assertScript('() => { const box = document.querySelector(\'[data-test="tenant-switcher"]\').getBoundingClientRect(); return box.width >= 44 && box.width < 56 && document.querySelector(\'[data-test="tenant-switcher"]\').scrollWidth <= box.width; }');
+        ->assertScript('() => { const box = document.querySelector(\'[data-test="tenant-switcher"]\').getBoundingClientRect(); return box.width >= 44 && box.width < 56 && document.querySelector(\'[data-test="tenant-switcher"]\').scrollWidth <= box.width; }')
+        // With the name hidden, the trigger is still named for a screen reader.
+        ->assertNoAccessibilityIssues(1);
 });
