@@ -1,6 +1,6 @@
 ## Qué feature agrega
 
-<!-- Un PR = una feature usable de punta a punta. Lista los comportamientos que trae; cada uno es un commit. -->
+<!-- Un PR = el trabajo que se pidió, completo. Lista los comportamientos que trae; cada uno es un commit. -->
 
 ## Por qué
 
@@ -10,7 +10,7 @@
 
 ## Checklist
 
-- [ ] Una sola feature; el PR se puede revertir solo, sin dejar código a medias.
+- [ ] Un solo trabajo, completo; el PR se puede revertir solo, sin dejar código a medias.
 - [ ] Un commit por comportamiento, cada uno con los tests en verde.
 - [ ] Test primero (RED → GREEN). Ningún test se aflojó, se saltó ni se borró.
 - [ ] `composer ci:check` en verde (incluye cobertura ≥ 90 % y mutación ≥ 85 %) y `tests/Browser` en verde.
