@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Models;
 
-use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Concerns\BelongsToCurrentTenant;
 use App\Modules\Tenancy\Enums\MexicanState;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\WorkCenterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +39,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class WorkCenter extends Model
 {
     /** @use HasFactory<WorkCenterFactory> */
-    use HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
 
     /**
      * The address in one line, as it is written in Mexico: "Reforma 222 int. 4, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México".
@@ -58,13 +57,6 @@ final class WorkCenter extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
-    }
-
-    protected static function booted(): void
-    {
-        self::addGlobalScope('tenant', function (Builder $query): void {
-            $query->where($query->qualifyColumn('tenant_id'), resolve(CurrentTenant::class)->id());
-        });
     }
 
     /**

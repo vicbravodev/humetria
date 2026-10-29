@@ -14,6 +14,9 @@ use Illuminate\Support\Str;
  */
 final class TenantFactory extends Factory
 {
+    /** Named here so the factory also works when used on its own, as other modules' factories do. */
+    protected $model = Tenant::class;
+
     /**
      * @return array<model-property<Tenant>, mixed>
      */
