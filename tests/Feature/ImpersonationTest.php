@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -156,6 +157,23 @@ it('ends the impersonation on the next request once the superadmin is no longer 
     'role taken away' => fn (User $superadmin) => $superadmin->removeRole(User::SUPERADMIN),
     'account deleted' => fn (User $superadmin) => $superadmin->delete(),
 ]);
+
+it('logs the revoked impersonation under the request id, but never as the owner\'s', function (): void {
+    [$superadmin] = enterAsOwner();
+    $superadmin->removeRole(User::SUPERADMIN);
+    Context::flush();
+    $seen = [];
+    Log::shouldReceive('warning')->once()->with('impersonation.revoked', Mockery::any())
+        ->andReturnUsing(function () use (&$seen): void {
+            $seen = Context::all();
+        });
+
+    $response = $this->get(route('dashboard'));
+
+    expect($seen)->toHaveKey('request_id', $response->headers->get('X-Request-Id'))
+        ->and($seen)->not->toHaveKey('user_id')
+        ->and($seen)->not->toHaveKey('impersonator_id');
+});
 
 it('lets the request through while the superadmin still is one', function (): void {
     [, $tenant, $owner] = enterAsOwner();

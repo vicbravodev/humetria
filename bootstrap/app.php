@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\AssignRequestContext;
+use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EndRevokedImpersonation;
 use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Http\Middleware\HandleAppearance;
@@ -34,7 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
-            // Before the context: a revoked impersonation must not be tagged as the owner's request.
+            // The id first, so even a revoked request's log line has one.
+            AssignRequestId::class,
+            // Before the user's context: a revoked impersonation must not be tagged as the owner's request.
             EndRevokedImpersonation::class,
             AssignRequestContext::class,
             ForbidWhileImpersonating::class,
