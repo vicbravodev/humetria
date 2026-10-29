@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import type { Option } from '@/lib/option-search';
-import { filterOptions, indexOptions, searchNote } from '@/lib/option-search';
+import {
+    filterOptions,
+    indexOptions,
+    optionText,
+    searchNote,
+    withNewOption,
+} from '@/lib/option-search';
 
 const option = (label: string): Option => ({ value: label, label });
 const labels = (options: Option[]) => options.map(({ label }) => label);
@@ -105,5 +111,33 @@ describe('searchNote', () => {
         expect(note({ status: 'error', found: 0 })).toBe(
             'No se pudo buscar. Intenta de nuevo.',
         );
+    });
+});
+
+describe('withNewOption', () => {
+    const areas = [option('Producción'), option('Ventas')];
+
+    it('offers to add what was typed when no option has that label', () => {
+        expect(withNewOption(areas, '  Almacén ')).toEqual([
+            { value: 'Almacén', label: 'Almacén', isNew: true },
+            ...areas,
+        ]);
+    });
+
+    it('does not offer an option that already exists, ignoring case and accents', () => {
+        expect(withNewOption(areas, 'produccion')).toEqual(areas);
+    });
+
+    it('offers nothing new for nothing typed', () => {
+        expect(withNewOption(areas, '   ')).toEqual(areas);
+    });
+});
+
+describe('optionText', () => {
+    it('reads the label, or offers to add it when it is new', () => {
+        expect(optionText(option('Ventas'))).toBe('Ventas');
+        expect(
+            optionText({ value: 'Almacén', label: 'Almacén', isNew: true }),
+        ).toBe('Agregar «Almacén»');
     });
 });

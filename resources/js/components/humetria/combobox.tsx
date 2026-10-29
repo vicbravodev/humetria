@@ -8,6 +8,7 @@ import {
 import { useCombobox } from '@/hooks/use-combobox';
 import type { OptionSource } from '@/hooks/use-option-search';
 import type { Option } from '@/lib/option-search';
+import { optionText } from '@/lib/option-search';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
     placeholder: string;
     invalid?: boolean;
     describedBy?: string | undefined;
+    /** Called with each choice, for a Combobox that acts at once (a filter) rather than in a form. */
+    onChange?: (option: Option) => void;
 };
 
 const TRIGGER =
@@ -35,6 +38,7 @@ export default function Combobox(props: Props) {
     const search = useCombobox(id, source, (option) => {
         setSelected(option);
         setOpen(false);
+        props.onChange?.(option);
     });
 
     return (
@@ -107,7 +111,7 @@ export default function Combobox(props: Props) {
                             )}
                         >
                             <span className="flex-1 truncate">
-                                {option.label}
+                                {optionText(option)}
                             </span>
                             {option.value === selected?.value && (
                                 <Check

@@ -1,6 +1,11 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Option, SearchState } from '@/lib/option-search';
-import { filterOptions, indexOptions, searchNote } from '@/lib/option-search';
+import {
+    filterOptions,
+    indexOptions,
+    searchNote,
+    withNewOption,
+} from '@/lib/option-search';
 import { createRemoteSearch } from '@/lib/remote-search';
 
 /** At most this many options on screen: a long list is narrowed by typing, not by scrolling. */
@@ -12,7 +17,11 @@ const LIMIT = 50;
  * server is asked after `delay` ms of quiet typing.
  */
 export type OptionSource =
-    | { options: Option[] }
+    | {
+          options: Option[];
+          /** Offer to add what was typed when no option has that label. */
+          allowNew?: boolean;
+      }
     | {
           initial: Option[];
           load: (query: string, signal: AbortSignal) => Promise<Option[]>;
@@ -60,19 +69,21 @@ function useRemoteSearch(source: OptionSource, query: string): SearchState {
 }
 
 /**
- * The options to show for what was typed, with the note under them. Local options are filtered off the
- * keystroke's critical path (useDeferredValue); server ones are debounced, cancelled when stale and cached.
+ * The options to show for what was typed, with the note under them. Local options are filtered at once, from labels
+ * folded ahead, so Enter always picks from what is on screen; server ones are debounced, cancelled when stale and
+ * cached.
  */
 export function useOptionSearch(source: OptionSource, query: string) {
-    const deferred = useDeferredValue(query);
     const listed = 'options' in source ? source.options : source.initial;
     const index = useMemo(() => indexOptions(listed), [listed]);
     const remote = useRemoteSearch(source, query);
     const minLength = 'load' in source ? (source.minLength ?? 2) : 0;
-    const local = filterOptions(index, deferred, LIMIT);
+    const local = filterOptions(index, query, LIMIT);
     const fromServer = 'load' in source && remote.status !== 'idle';
     const status = 'load' in source ? remote.status : 'done';
-    const options = fromServer ? remote.options : local.options;
+    const allowNew = 'options' in source && source.allowNew === true;
+    const found = fromServer ? remote.options : local.options;
+    const options = allowNew ? withNewOption(found, query) : found;
     const more = !fromServer && local.more;
 
     return {

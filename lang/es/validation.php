@@ -160,6 +160,16 @@ return [
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
     'custom' => [
+        'email' => [
+            'required_without' => 'Escribe un correo o un celular.',
+        ],
+        'gender' => [
+            'in' => 'Elige una opción de la lista.',
+            'required' => 'Elige una opción de la lista.',
+        ],
+        'mobile' => [
+            'regex' => 'Escribe un celular de 10 dígitos, por ejemplo 55 1234 5678.',
+        ],
         'postal_code' => [
             'regex' => 'Escribe un código postal de 5 dígitos.',
         ],
@@ -190,15 +200,20 @@ return [
 
     'attributes' => [
         'active_until' => 'fecha de vigencia',
+        'area' => 'área',
         'code' => 'código',
         'company' => 'empresa',
         'current_password' => 'contraseña actual',
         'email' => 'correo electrónico',
+        'employee_number' => 'número de empleado',
         'exterior_number' => 'número exterior',
+        'gender' => 'género',
         'interior_number' => 'número interior',
+        'job_title' => 'puesto',
         'legal_name' => 'razón social',
         'main_activity' => 'actividad principal',
         'message' => 'mensaje',
+        'mobile' => 'celular',
         'municipality' => 'municipio o alcaldía',
         'name' => 'nombre',
         'neighborhood' => 'colonia',
@@ -214,6 +229,7 @@ return [
         'tools' => 'herramientas',
         'trade_name' => 'nombre comercial',
         'whatsapp' => 'WhatsApp',
+        'work_center_id' => 'centro de trabajo',
         'workforce' => 'número de trabajadores',
     ],
 ];

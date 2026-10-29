@@ -35,11 +35,13 @@ describe('mainNavItems', () => {
         expect(titles(acme())).toEqual([
             'Panel',
             'Centros de trabajo',
+            'Empleados',
             'Usuarios',
         ]);
         expect(titles(acme(true, false))).toEqual([
             'Panel',
             'Centros de trabajo',
+            'Empleados',
         ]);
         expect(titles(acme(false, false))).toEqual([
             'Panel',
@@ -51,6 +53,7 @@ describe('mainNavItems', () => {
         expect(mainNavItems(acme()).map((item) => toUrl(item.href))).toEqual([
             '/admin/acme',
             '/admin/acme/work-centers',
+            '/admin/acme/employees',
             '/admin/acme/members',
         ]);
     });

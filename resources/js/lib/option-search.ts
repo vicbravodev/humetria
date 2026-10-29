@@ -1,7 +1,10 @@
 import { fold } from '@/lib/commands';
 
-/** One choice of a Combobox: what the form sends and what the person reads. */
-export type Option = { value: string; label: string };
+/**
+ * One choice of a Combobox: what the form sends and what the person reads. `isNew` marks the choice of adding
+ * what was typed, in a Combobox that allows it.
+ */
+export type Option = { value: string; label: string; isNew?: boolean };
 
 /** Options with their label already folded, so typing does not fold every label again on each key. */
 export type OptionIndex = { option: Option; text: string }[];
@@ -84,4 +87,22 @@ export function searchNote({
     }
 
     return more ? 'Escribe para encontrar más.' : null;
+}
+
+/**
+ * The options with, first, one that adds what was typed, unless an option already has that label (ignoring case and
+ * accents) or nothing was typed.
+ */
+export function withNewOption(options: Option[], query: string): Option[] {
+    const typed = query.trim();
+    const exists = options.some(({ label }) => fold(label) === fold(typed));
+
+    return typed === '' || exists
+        ? options
+        : [{ value: typed, label: typed, isNew: true }, ...options];
+}
+
+/** How an option reads in the list. */
+export function optionText(option: Option): string {
+    return option.isNew === true ? `Agregar «${option.label}»` : option.label;
 }

@@ -9,8 +9,9 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-background text-foreground",
+        // Design system: border, icon and title in destructive; the body stays in foreground, readable and calm.
         destructive:
-          "text-destructive [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/80",
+          "border-destructive text-foreground [&>svg]:text-destructive *:data-[slot=alert-title]:text-destructive *:data-[slot=alert-description]:text-foreground",
       },
     },
     defaultVariants: {

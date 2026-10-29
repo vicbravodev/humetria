@@ -29,11 +29,11 @@ export function useCombobox(
         }
     }, [activeId]);
 
-    // Picking starts the next search from scratch.
+    // Picking starts the next search from scratch; an added option is from then on just its label.
     const pick = (option: Option) => {
         setQuery('');
         setActive(0);
-        onPick(option);
+        onPick({ value: option.value, label: option.label });
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
