@@ -136,6 +136,18 @@ it('offers the console pages in the palette only to the superadmin', function ()
         ->assertSee('Sin resultados');
 });
 
+it('greets an empty list with an icon and what comes next', function (string $url, string $component, string $title): void {
+    $this->actingAs(superadmin());
+
+    visitPage($component, $url)
+        ->assertSeeIn('[data-slot="empty-state"] h2', $title)
+        ->assertPresent('[data-slot="empty-state"] svg');
+})->with([
+    ['/admin', 'dashboard', 'Aún no hay campañas'],
+    ['/admin/companies', 'tenancy/index', 'Aún no hay empresas'],
+    ['/admin/demo-requests', 'demos/index', 'Aún no hay solicitudes'],
+]);
+
 it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
     $this->actingAs(User::factory()->create());
 
