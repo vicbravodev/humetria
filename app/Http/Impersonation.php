@@ -35,9 +35,11 @@ final readonly class Impersonation
     public function impersonatorId(): ?int
     {
         $id = $this->session->get(self::SESSION_KEY);
+        $impersonated = $this->session->get(self::IMPERSONATED_KEY);
 
         // The resolved user, not guard->id(): that one falls back to the session's id of a user who may be gone.
-        return is_int($id) && $this->session->get(self::IMPERSONATED_KEY) === $this->guard->user()?->getAuthIdentifier() ? $id : null;
+        // An int on both sides: a missing mark must not equal a missing user.
+        return is_int($id) && is_int($impersonated) && $impersonated === $this->guard->user()?->getAuthIdentifier() ? $id : null;
     }
 
     public function isActive(): bool

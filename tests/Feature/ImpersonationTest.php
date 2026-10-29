@@ -183,6 +183,13 @@ it('lets the request through while the superadmin still is one', function (): vo
     $this->assertAuthenticatedAs($owner);
 });
 
+it('does not count a mark that was never set for anyone as an impersonation', function (): void {
+    session()->put(Impersonation::SESSION_KEY, superadmin()->id);
+
+    $this->assertGuest();
+    expect(app(Impersonation::class)->impersonatorId())->toBeNull();
+});
+
 it('signs out instead of coming back when the impersonator is no longer a superadmin', function (): void {
     $superadmin = superadmin();
     $owner = User::factory()->create();
