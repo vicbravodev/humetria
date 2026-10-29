@@ -21,8 +21,7 @@ export default function AcceptInvitation(props: InvitationPage) {
     );
 }
 
-AcceptInvitation.layout = ({ trade_name }: InvitationPage) => ({
+AcceptInvitation.layout = ({ invited_as }: InvitationPage) => ({
     title: 'Acepta tu invitación',
-    description:
-        trade_name === null ? '' : `Te invitaron como owner de ${trade_name}`,
+    description: invited_as ?? '',
 });

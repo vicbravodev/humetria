@@ -10,7 +10,6 @@ use App\Modules\Tenancy\Actions\CreateWorkCenter;
 use App\Modules\Tenancy\Actions\ListWorkCenters;
 use App\Modules\Tenancy\Actions\RestoreWorkCenter;
 use App\Modules\Tenancy\Actions\UpdateWorkCenter;
-use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Http\Requests\WorkCenterRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -18,6 +17,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\DisplayDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,8 +26,6 @@ use Inertia\Response;
  */
 final class WorkCenterController extends Controller
 {
-    public function __construct(private readonly CurrentTenant $currentTenant) {}
-
     public function index(Request $request, ListWorkCenters $listWorkCenters): Response
     {
         $workCenters = $listWorkCenters->handle();
@@ -94,7 +92,7 @@ final class WorkCenterController extends Controller
     /** Every role sees the work centers; only those who manage the organization change them. */
     private function authorizeChanges(): void
     {
-        abort_unless($this->currentTenant->canManageOrganization(), 403);
+        Gate::authorize('manage-organization');
     }
 
     /**

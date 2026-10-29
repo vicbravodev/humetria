@@ -1,4 +1,4 @@
-import { Building2, Factory, House, Inbox } from 'lucide-react';
+import { Building2, Factory, House, Inbox, UserCog } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
@@ -6,28 +6,38 @@ import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
+import { index as members } from '@/routes/tenant/members';
 import { index as workCenters } from '@/routes/tenant/work-centers';
-import type { NavItem } from '@/types';
+import type { CurrentTenant, NavItem } from '@/types';
+
+/** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
+export type NavTenant = Pick<CurrentTenant, 'slug' | 'can'>;
 
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
- * without one; the company's own pages appear only inside a company.
+ * without one; the company's own pages appear only inside a company, and only those its role may open.
  */
-export const mainNavItems = (tenantSlug: string | null): NavItem[] =>
-    tenantSlug === null
-        ? [{ title: 'Panel', href: dashboard(), icon: House }]
-        : [
-              {
-                  title: 'Panel',
-                  href: tenantDashboard(tenantSlug),
-                  icon: House,
-              },
-              {
-                  title: 'Centros de trabajo',
-                  href: workCenters(tenantSlug),
-                  icon: Factory,
-              },
-          ];
+export const mainNavItems = (tenant: NavTenant | null): NavItem[] => {
+    if (tenant === null) {
+        return [{ title: 'Panel', href: dashboard(), icon: House }];
+    }
+
+    const items: NavItem[] = [
+        { title: 'Panel', href: tenantDashboard(tenant.slug), icon: House },
+        {
+            title: 'Centros de trabajo',
+            href: workCenters(tenant.slug),
+            icon: Factory,
+        },
+    ];
+
+    return tenant.can.manage_members
+        ? [
+              ...items,
+              { title: 'Usuarios', href: members(tenant.slug), icon: UserCog },
+          ]
+        : items;
+};
 
 // NOM-035, NOM-037 and Ley Silla enter here when each gets its first page.
 export const complianceNavItems: NavItem[] = [];

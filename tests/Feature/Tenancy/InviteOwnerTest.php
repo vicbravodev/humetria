@@ -5,20 +5,20 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\InviteOwner;
-use App\Modules\Tenancy\Actions\SendOwnerInvitationEmail;
+use App\Modules\Tenancy\Actions\SendInvitationEmail;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Requests\StoreInvitationRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
-use App\Modules\Tenancy\Notifications\OwnerInvitation;
+use App\Modules\Tenancy\Notifications\InvitationEmail;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Support\SessionKey;
 
-mutates(InviteOwner::class, StoreInvitationRequest::class, SendOwnerInvitationEmail::class);
+mutates(InviteOwner::class, StoreInvitationRequest::class, SendInvitationEmail::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-10-28 18:00 UTC');
@@ -49,7 +49,7 @@ it('lets the superadmin invite the owner of a company', function (): void {
         ->and($invitation->token_hash)->toMatch('/\A[0-9a-f]{64}\z/')
         ->and($invitation->expires_at->toIso8601String())->toBe('2026-11-04T18:00:00+00:00');
 
-    Notification::assertSentOnDemand(OwnerInvitation::class, function (OwnerInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use ($invitation): bool {
+    Notification::assertSentOnDemand(InvitationEmail::class, function (InvitationEmail $notification, array $channels, AnonymousNotifiable $notifiable) use ($invitation): bool {
         $mail = $notification->toMail($notifiable);
         $url = $mail->actionUrl ?? '';
         $token = basename($url);
@@ -63,7 +63,7 @@ it('lets the superadmin invite the owner of a company', function (): void {
 });
 
 it('writes the email in Spanish, with the company, the person and the expiry', function (): void {
-    $notification = new OwnerInvitation('Acme', 'Ana Pérez', 'tok', now()->addDays(7)->toImmutable());
+    $notification = new InvitationEmail('Acme', 'Ana Pérez', 'tok', now()->addDays(7)->toImmutable());
 
     $mail = $notification->toMail(new AnonymousNotifiable);
 
@@ -77,7 +77,7 @@ it('writes the email in Spanish, with the company, the person and the expiry', f
 });
 
 it('renders the email with no English left in the default template', function (): void {
-    $notification = new OwnerInvitation('Acme', 'Ana Pérez', 'tok', now()->addDays(7)->toImmutable());
+    $notification = new InvitationEmail('Acme', 'Ana Pérez', 'tok', now()->addDays(7)->toImmutable());
 
     $html = (string) $notification->toMail(new AnonymousNotifiable)->render();
 
@@ -177,7 +177,7 @@ it('logs and audits the invitation without the email, the name or the token', fu
 
     $entry = AuditEntry::query()->sole();
     $token = '';
-    Notification::assertSentOnDemand(OwnerInvitation::class, function (OwnerInvitation $notification) use (&$token): bool {
+    Notification::assertSentOnDemand(InvitationEmail::class, function (InvitationEmail $notification) use (&$token): bool {
         $token = basename($notification->toMail(new AnonymousNotifiable)->actionUrl ?? '');
 
         return true;

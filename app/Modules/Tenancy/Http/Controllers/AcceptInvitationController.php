@@ -38,6 +38,7 @@ final class AcceptInvitationController extends Controller
         return Inertia::render('tenancy/accept-invitation', [
             'state' => $state,
             'trade_name' => $invitation?->tenant?->trade_name,
+            'invited_as' => $invitation?->tenant === null ? null : $invitation->role->invitedAs($invitation->tenant->trade_name),
             'email' => $invitation?->email,
             'name' => $invitation?->name,
             'token' => $token,

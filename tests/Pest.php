@@ -61,6 +61,8 @@ function something()
 function superadmin(): User
 {
     $user = User::factory()->create();
+    // The platform role belongs to no company: assigned outside any team.
+    setPermissionsTeamId(null);
     $user->assignRole(User::SUPERADMIN);
 
     return $user;
@@ -80,18 +82,18 @@ function ownerOf(Tenant $tenant): User
 }
 
 /**
- * Makes `$tenant` the company the code under test works in, with `$role`, as ResolveTenant does for a request inside it.
+ * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
  */
-function workIn(Tenant $tenant, TenantRole $role = TenantRole::Owner): void
+function workIn(Tenant $tenant): void
 {
-    resolve(TenantContext::class)->set($tenant, $role);
+    resolve(TenantContext::class)->set($tenant);
 }
 
 /** A new user who belongs to `$tenant` with `$role`. */
 function memberOf(Tenant $tenant, TenantRole $role): User
 {
     $user = User::factory()->create();
-    TenantMembership::factory()->for($tenant)->for($user)->create(['role' => $role]);
+    TenantMembership::factory()->for($tenant)->for($user)->role($role)->create();
 
     return $user;
 }

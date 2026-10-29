@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 
 final readonly class InviteOwner
 {
-    public function __construct(private RecordAudit $recordAudit, private SendOwnerInvitationEmail $sendEmail) {}
+    public function __construct(private RecordAudit $recordAudit, private SendInvitationEmail $sendEmail) {}
 
     /**
      * Invites someone to own the company, replacing the invitation that was open, and emails them the one-time link.

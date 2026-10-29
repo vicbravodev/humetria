@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Actions;
 
 use App\Modules\Tenancy\Models\TenantInvitation;
-use App\Modules\Tenancy\Notifications\OwnerInvitation;
+use App\Modules\Tenancy\Notifications\InvitationEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-final readonly class SendOwnerInvitationEmail
+final readonly class SendInvitationEmail
 {
     /**
      * Emails the one-time link once the surrounding transaction commits: the notification is not queued, so it must
@@ -18,7 +18,7 @@ final readonly class SendOwnerInvitationEmail
     public function handle(TenantInvitation $invitation, string $tradeName, string $token): void
     {
         DB::afterCommit(fn () => Notification::route('mail', $invitation->email)->notify(
-            new OwnerInvitation($tradeName, $invitation->name, $token, $invitation->expires_at),
+            new InvitationEmail($tradeName, $invitation->name, $token, $invitation->expires_at, $invitation->role),
         ));
     }
 }

@@ -8,7 +8,8 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
-use App\Modules\Tenancy\Notifications\OwnerInvitation;
+use App\Modules\Tenancy\Notifications\InvitationEmail;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -64,7 +65,7 @@ it('adds a signed-in existing account as owner without touching its password or 
     expect(User::query()->sole()->only(['name', 'password', 'email_verified_at']))->toEqual($before)
         ->and($membership->tenant_id)->toBe($tenant->id)
         ->and($membership->user_id)->toBe($ana->id)
-        ->and($membership->role)->toBe(TenantRole::Owner)
+        ->and(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole()))->toBe(TenantRole::Owner)
         ->and($invitation->fresh()?->accepted_at?->toIso8601String())->toBe('2026-10-28T18:00:00+00:00');
 
     $this->assertAuthenticatedAs($ana);
@@ -80,7 +81,7 @@ it('finds the existing account whatever the case of the invited email', function
     auth()->logout();
 
     $token = '';
-    Notification::assertSentOnDemand(OwnerInvitation::class, function (OwnerInvitation $notification) use (&$token): bool {
+    Notification::assertSentOnDemand(InvitationEmail::class, function (InvitationEmail $notification) use (&$token): bool {
         $token = basename($notification->toMail(new AnonymousNotifiable)->actionUrl ?? '');
 
         return true;

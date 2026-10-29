@@ -32,7 +32,7 @@ final class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         // Spatie's super-admin pattern: null lets every other user fall through to the real ability.
-        Gate::before(fn (User $user): ?bool => $user->hasRole(User::SUPERADMIN) ? true : null);
+        Gate::before(fn (User $user): ?bool => $user->isSuperadmin() ? true : null);
     }
 
     /**

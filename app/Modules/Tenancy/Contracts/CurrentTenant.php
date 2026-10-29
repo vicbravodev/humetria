@@ -7,8 +7,8 @@ namespace App\Modules\Tenancy\Contracts;
 use App\Modules\Tenancy\Exceptions\NoCurrentTenant;
 
 /**
- * The company the current request works in, resolved from its URL, and what the person in it may do.
- * Other modules read it to scope their data and to authorize.
+ * The company the current request works in, resolved from its URL. Other modules read it to scope their data;
+ * what the person may do there is asked to the Gate (Spatie permissions such as manage-organization).
  */
 interface CurrentTenant
 {
@@ -16,10 +16,4 @@ interface CurrentTenant
      * @throws NoCurrentTenant outside a company's routes.
      */
     public function id(): string;
-
-    /** Work centers and employees: add, correct, archive, and see employees' contact data. */
-    public function canManageOrganization(): bool;
-
-    /** Invite people, change their role and remove their access. */
-    public function canManageMembers(): bool;
 }

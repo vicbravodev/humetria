@@ -5,27 +5,27 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Contracts\CurrentTenant;
-use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\NoCurrentTenant;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Context;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
- * The company of the current request and the person's role in it. ResolveTenant sets them; the rest of the app reads
- * them as CurrentTenant. They live in Laravel's Context, which is per request and travels inside every job the
- * request queues, so a job works in the company that dispatched it. The company also tags each log line; the role
- * stays hidden from logs.
+ * The company of the current request. ResolveTenant sets it; the rest of the app reads it as CurrentTenant.
+ * It lives in Laravel's Context, which is per request and travels inside every job the request queues, so a job works
+ * in the company that dispatched it; the same key tags each log line. It is also Spatie's team, so roles and
+ * permissions are read inside the company.
  */
-final class TenantContext implements CurrentTenant
+final readonly class TenantContext implements CurrentTenant
 {
     private const string KEY = 'tenant_id';
 
-    private const string ROLE = 'tenant_role';
+    public function __construct(private PermissionRegistrar $registrar) {}
 
-    public function set(Tenant $tenant, TenantRole $role): void
+    public function set(Tenant $tenant): void
     {
         Context::add(self::KEY, $tenant->id);
-        Context::addHidden(self::ROLE, $role->value);
+        $this->registrar->setPermissionsTeamId($tenant->id);
     }
 
     public function id(): string
@@ -33,22 +33,5 @@ final class TenantContext implements CurrentTenant
         $id = Context::get(self::KEY);
 
         return is_string($id) ? $id : throw new NoCurrentTenant;
-    }
-
-    public function role(): TenantRole
-    {
-        $role = Context::getHidden(self::ROLE);
-
-        return is_string($role) ? TenantRole::from($role) : throw new NoCurrentTenant;
-    }
-
-    public function canManageOrganization(): bool
-    {
-        return $this->role()->canManageOrganization();
-    }
-
-    public function canManageMembers(): bool
-    {
-        return $this->role()->canManageMembers();
     }
 }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Enums;
 
 /**
- * What a user is inside a company. The owner runs it and manages its people's access; hr works its work centers
- * and employees; a viewer only looks at work centers (and, later, aggregated results).
+ * The Spatie roles a user can have inside a company (its team). What each allows lives in Spatie's permissions:
+ * manage-organization (owner, hr) and manage-members (owner); a viewer only looks.
  */
 enum TenantRole: string
 {
@@ -23,15 +23,13 @@ enum TenantRole: string
         };
     }
 
-    /** Work centers and employees: add, correct, archive, and see employees' contact data. */
-    public function canManageOrganization(): bool
+    /** How the invitation link page says what the person is joining as. */
+    public function invitedAs(string $tradeName): string
     {
-        return $this !== self::Viewer;
-    }
-
-    /** Invite people, change their role and remove their access. */
-    public function canManageMembers(): bool
-    {
-        return $this === self::Owner;
+        return match ($this) {
+            self::Owner => "Te invitaron como owner de {$tradeName}",
+            self::Hr => "Te invitaron como RH de {$tradeName}",
+            self::Viewer => "Te invitaron a consultar {$tradeName}",
+        };
     }
 }

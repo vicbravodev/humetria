@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 final readonly class ResendInvitation
 {
-    public function __construct(private RecordAudit $recordAudit, private SendOwnerInvitationEmail $sendEmail) {}
+    public function __construct(private RecordAudit $recordAudit, private SendInvitationEmail $sendEmail) {}
 
     /**
      * Replaces the link of an open invitation with a new one, valid for another {@see TenantInvitation::VALID_DAYS} days.

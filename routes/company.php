@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
 use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
@@ -21,4 +22,11 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::put('admin/{tenant:slug}/work-centers/{workCenter}', [WorkCenterController::class, 'update'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.update');
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/archive', [WorkCenterController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.archive');
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/restore', [WorkCenterController::class, 'restore'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.restore');
+
+    Route::get('admin/{tenant:slug}/members', [MemberController::class, 'index'])->where('tenant', $notReserved)->name('tenant.members.index');
+    Route::post('admin/{tenant:slug}/members/invitations', [MemberController::class, 'invite'])->where('tenant', $notReserved)->name('tenant.members.invitations.store');
+    Route::post('admin/{tenant:slug}/members/invitations/{invitation}/resend', [MemberController::class, 'resend'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.resend');
+    Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');
+    Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
+    Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
 });

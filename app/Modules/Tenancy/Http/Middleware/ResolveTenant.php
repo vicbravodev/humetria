@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Modules\Tenancy\Actions\ListUserTenants;
-use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -24,6 +24,7 @@ final class ResolveTenant
     public function __construct(
         private readonly ListUserTenants $listUserTenants,
         private readonly TenantContext $tenantContext,
+        private readonly CompanyRoles $companyRoles,
     ) {}
 
     /**
@@ -32,20 +33,28 @@ final class ResolveTenant
     public function handle(Request $request, Closure $next): Response
     {
         $slug = $request->route('tenant');
-        $userId = $request->user()?->id;
 
         // Implicit route binding only runs when the action type-hints the model; this middleware must not depend on that.
         $tenant = is_string($slug) ? Tenant::query()->where('slug', $slug)->first() : $slug;
 
-        $role = $tenant instanceof Tenant && $userId !== null
-            ? TenantMembership::query()->where('tenant_id', $tenant->id)->where('user_id', $userId)->first()?->role
-            : null;
+        $user = $request->user();
 
-        abort_unless($tenant instanceof Tenant && $role instanceof TenantRole, 404);
+        abort_unless(
+            $tenant instanceof Tenant
+            && $user !== null
+            && TenantMembership::query()->where('tenant_id', $tenant->id)->where('user_id', $user->id)->exists(),
+            404,
+        );
 
         $request->route()?->setParameter('tenant', $tenant);
-        // Also tags every log line, audit entry and queued job of the request with the company.
-        $this->tenantContext->set($tenant, $role);
+        // Also tags every log line, audit entry and queued job with the company, and makes it Spatie's team.
+        $this->tenantContext->set($tenant);
+        // Roles read before (as the superadmin's, with no team) must be read again inside the company.
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+        $role = $this->companyRoles->of($user, $tenant);
+
+        // A membership without a role is broken data: nothing is shown rather than guessing.
+        abort_if($role === null, 404);
 
         $status = $tenant->status();
 
@@ -58,11 +67,11 @@ final class ResolveTenant
             'role' => $role->value,
             'role_label' => $role->label(),
             'can' => [
-                'manage_organization' => $role->canManageOrganization(),
-                'manage_members' => $role->canManageMembers(),
+                'manage_organization' => $user->can('manage-organization'),
+                'manage_members' => $user->can('manage-members'),
             ],
         ]);
-        Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($userId)
+        Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($user->id)
             ->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])
             ->all());
 

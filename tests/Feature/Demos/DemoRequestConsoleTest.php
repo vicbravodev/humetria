@@ -112,13 +112,13 @@ it('renders the empty console when nobody has asked for a demo yet', function ()
             ->where('demoRequests.total', 0));
 });
 
-it('reads the page in four queries: the user roles, the permission cache, the count and the page', function (): void {
+it('reads the page in five queries: the superadmin role, the permission cache (permissions and their roles), the count and the page', function (): void {
     DemoRequest::factory()->count(30)->create();
     // A fresh instance, as a real request gets: its roles are not loaded yet. Spatie keeps the permissions
     // in the cache store, so production skips that query between requests; tests use the array store.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(4);
+    $this->expectsDatabaseQueryCount(5);
     $this->actingAs($superadmin)->get(route('demo-requests.index'))->assertOk();
 });
 

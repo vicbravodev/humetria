@@ -166,6 +166,10 @@ return [
         'profile' => [
             'required' => 'Elige para quién es Humetría.',
         ],
+        'role' => [
+            'in' => 'Elige RH o Consulta.',
+            'required' => 'Elige RH o Consulta.',
+        ],
         'rfc' => [
             'unique' => 'Ya hay una empresa con este RFC.',
         ],

@@ -49,7 +49,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="gap-4 px-1">
-                <NavMain items={mainNavItems(tenant?.slug ?? null)} />
+                <NavMain items={mainNavItems(tenant)} />
                 {complianceNavItems.length > 0 && (
                     <NavMain label="Cumplimiento" items={complianceNavItems} />
                 )}

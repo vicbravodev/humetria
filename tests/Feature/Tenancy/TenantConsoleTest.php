@@ -117,12 +117,12 @@ it('renders the empty console when there are no companies yet', function (): voi
             ->where('tenants.total', 0));
 });
 
-it('reads the page in six queries: the user roles, the permission cache, the count, the page, the owners and the open invitations', function (): void {
+it('reads the page in seven queries: the superadmin role, the permission cache (permissions and their roles), the count, the page, the owners and the open invitations', function (): void {
     Tenant::factory()->count(30)->create();
     // A fresh instance, as a real request gets: its roles are not loaded yet.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(6);
+    $this->expectsDatabaseQueryCount(7);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -163,7 +163,8 @@ it('lists companies with a fixed number of queries', function (): void {
     Tenant::factory()->create();
     $superadmin = superadmin()->fresh();
 
-    // The user roles, the permission cache, the count, the page, the owners, their users and the open invitations.
-    $this->expectsDatabaseQueryCount(7);
+    // The superadmin role, the permission cache (permissions and their roles), the count, the page, the owners, their
+    // users and the open invitations.
+    $this->expectsDatabaseQueryCount(8);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Models;
 
+use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use Carbon\CarbonImmutable;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Query\Builder;
 
 /**
  * A company that uses the platform. Its status follows its trial and paid dates.
@@ -80,7 +82,22 @@ final class Tenant extends Model
      */
     public function ownerMembership(): HasOne
     {
-        return $this->hasOne(TenantMembership::class)->where('role', TenantRole::Owner);
+        // The membership whose person holds the owner role in this company, in Spatie's tables.
+        return $this->hasOne(TenantMembership::class)->whereExists(fn (Builder $roles) => $roles
+            ->from('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', TenantRole::Owner->value)
+            ->whereColumn('model_has_roles.tenant_id', 'tenant_memberships.tenant_id')
+            ->whereColumn('model_has_roles.model_id', 'tenant_memberships.user_id')
+            ->where('model_has_roles.model_type', (new User)->getMorphClass()));
+    }
+
+    /**
+     * @return HasMany<TenantMembership, $this>
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(TenantMembership::class);
     }
 
     /**
@@ -88,7 +105,8 @@ final class Tenant extends Model
      */
     public function openInvitation(): HasOne
     {
-        return $this->hasOne(TenantInvitation::class)->open();
+        // The owner's: member invitations are the owner's to handle, from the company.
+        return $this->hasOne(TenantInvitation::class)->open()->where('role', TenantRole::Owner);
     }
 
     /**

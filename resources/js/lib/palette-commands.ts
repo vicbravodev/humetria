@@ -12,6 +12,7 @@ import type { Appearance } from '@/hooks/use-appearance';
 import {
     complianceNavItems,
     mainNavItems,
+    type NavTenant,
     settingsEntryHref,
     superadminNavItems,
 } from '@/lib/app-navigation';
@@ -26,7 +27,7 @@ export type PaletteCommand = Command & {
 
 type Options = {
     isSuperadmin: boolean;
-    tenantSlug: string | null;
+    tenant: NavTenant | null;
     sidebarExpanded: boolean;
     impersonating: boolean;
     actions: {
@@ -45,18 +46,18 @@ const THEMES: { id: Appearance; label: string; icon: LucideIcon }[] = [
 /** What the ⌘K palette offers: the pages this person can open, the theme and the sidebar. */
 export function paletteCommands({
     isSuperadmin,
-    tenantSlug,
+    tenant,
     sidebarExpanded,
     impersonating,
     actions,
 }: Options): PaletteCommand[] {
     const pages = isSuperadmin
         ? [
-              ...mainNavItems(tenantSlug),
+              ...mainNavItems(tenant),
               ...complianceNavItems,
               ...superadminNavItems,
           ]
-        : [...mainNavItems(tenantSlug), ...complianceNavItems];
+        : [...mainNavItems(tenant), ...complianceNavItems];
 
     return [
         ...pages.map(({ title, href, icon }) => ({

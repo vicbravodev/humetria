@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(WorkCenterController::class, ResolveTenant::class, TenantContext::class, TenantRole::class);
+mutates(WorkCenterController::class, ResolveTenant::class, TenantContext::class);
 
 it('shares the role and what it allows with every page of the company', function (TenantRole $role, bool $organization, bool $members): void {
     $tenant = Tenant::factory()->create();
@@ -28,11 +28,13 @@ it('shares the role and what it allows with every page of the company', function
     'viewer' => [TenantRole::Viewer, false, false],
 ]);
 
-it('tells the rest of the app what the current person may do', function (TenantRole $role, bool $organization, bool $members): void {
-    workIn(Tenant::factory()->create(), $role);
+it('asks Spatie what the current person may do in the company', function (TenantRole $role, bool $organization, bool $members): void {
+    $tenant = Tenant::factory()->create();
+    $this->actingAs(memberOf($tenant, $role));
+    workIn($tenant);
 
-    expect(resolve(CurrentTenant::class)->canManageOrganization())->toBe($organization)
-        ->and(resolve(CurrentTenant::class)->canManageMembers())->toBe($members);
+    expect(Gate::allows('manage-organization'))->toBe($organization)
+        ->and(Gate::allows('manage-members'))->toBe($members);
 })->with([
     'owner' => [TenantRole::Owner, true, true],
     'hr' => [TenantRole::Hr, true, false],

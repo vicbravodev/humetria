@@ -35,11 +35,23 @@ export type TenantRow = {
     invitation: TenantInvitation | null;
 };
 
-type PendingInvitation = { trade_name: string; email: string; name: string };
+type PendingInvitation = {
+    trade_name: string;
+    /** What the person joins as, written for display ("Te invitaron como RH de Acme"). */
+    invited_as: string;
+    email: string;
+    name: string;
+};
 
 /** What the invitation link page receives: the state says what the person reaching it can do. */
 export type InvitationPage = { token: string; passwordRules: string } & (
-    | { state: 'invalid'; trade_name: null; email: null; name: null }
+    | {
+          state: 'invalid';
+          trade_name: null;
+          invited_as: null;
+          email: null;
+          name: null;
+      }
     | ({ state: 'new_account' } & PendingInvitation)
     | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
 );
@@ -84,3 +96,29 @@ export type WorkCenterRow = {
 export type MexicanStateOption = { value: string; label: string };
 
 export type WorkCentersView = 'active' | 'archived';
+
+/** A person with access to the company, as «Usuarios» lists them. */
+export type MemberRow = {
+    id: number;
+    name: string;
+    email: string;
+    role: TenantRole;
+    role_label: string;
+    is_you: boolean;
+    /** The day they got access, written for display. */
+    since: string;
+};
+
+/** An invitation to join the company that has not been accepted nor cancelled. */
+export type MemberInvitationRow = {
+    id: string;
+    name: string;
+    email: string;
+    role: TenantRole;
+    role_label: string;
+    status: 'pending' | 'expired';
+    status_label: string;
+    expires_on: string;
+};
+
+export type RoleOption = { value: TenantRole; label: string };

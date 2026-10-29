@@ -23,7 +23,7 @@ final class ImpersonateOwnerController extends Controller
         $owner = $tenant->ownerMembership?->user;
 
         // Never another superadmin: that would hand over the console under someone else's name.
-        abort_if($owner === null || $owner->hasRole(User::SUPERADMIN), 404);
+        abort_if($owner === null || $owner->isSuperadmin(), 404);
 
         Context::scope(fn () => $impersonation->start($user, $owner), ['tenant_id' => $tenant->id]);
 
