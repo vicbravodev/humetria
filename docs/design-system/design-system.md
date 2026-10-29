@@ -9,7 +9,7 @@ Se implementa con **Tailwind CSS v4 + shadcn/ui (Radix)**. Los nombres de los to
 1. **Una cosa a la vez.** Cada pantalla responde una pregunta: ¿cómo va mi campaña?, ¿qué contesto aquí? Máximo 3 KPIs por pantalla y una acción primaria por vista.
 2. **Confidencialidad visible.** La encuesta dice que es confidencial antes de la primera pregunta, en la cabecera y al pie. Nunca muestres nombres junto a respuestas.
 3. **Calma, no alarma.** Ni los riesgos altos usan rojo saturado: el nivel se comunica con texto, posición y un terracota sobrio.
-4. **El espacio ordena.** La jerarquía sale del espacio y los bordes, no de sombras ni colores.
+4. **El espacio ordena.** La jerarquía sale del espacio, los bordes y dos niveles de profundidad, no del color.
 5. **Para todos los dedos.** Toda área táctil mide 44 px o más, y el texto nunca baja de 16 px en la encuesta.
 
 ## Voz y texto
@@ -57,9 +57,19 @@ Cinco niveles: **Nulo, Bajo, Medio, Alto y Muy alto**. Usa siempre `RiskLevel`. 
 - Escala de espacio de 4 px: `space-2` dentro de un grupo, `space-4` margen lateral móvil, `space-6` padding de tarjeta, `space-12` entre secciones (activas / cerradas).
 - `touch-min` (44 px) es el alto mínimo de botones, inputs, filas de checkbox, elementos del sidebar y pestañas. El botón `sm` mide 36 px a la vista, pero su área táctil se extiende a 44.
 - Radio base 10 px (`radius`): `radius-md` 8 px para botones e inputs, `radius-lg` 10 px para tarjetas y opciones, `radius-xl` 14 px para diálogos y `radius-full` para radios y barras. Es un eco de los remates redondos del logo, sin llegar a lo infantil.
-- Sombras casi nulas: `shadow-none` en todo, salvo `shadow-float` en lo que flota (popover, select abierto, diálogo, toast).
+- Profundidad en dos niveles. `shadow-raised`: el panel de la página, que se levanta sobre el marco del sidebar. `shadow-float`: lo que flota sobre la página (popover, select abierto, diálogo, tooltip, toast). Botones, inputs y tarjetas no llevan sombra: su borde basta. En oscuro la sombra no se ve, así que la profundidad sale de un filo superior iluminado y de un marco más oscuro que el panel.
 - Foco: contorno sólido de 2 px en `ring` con 2 px de separación, ≥ 3:1 sobre cualquier superficie.
-- Movimiento: transiciones de 150 ms en color y fondo. Nada que rebote ni que se mueva solo.
+
+## Movimiento
+
+El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca decora ni se mueve solo.
+
+- **Curvas:** el tema redefine `ease-out` como `cubic-bezier(0.23, 1, 0.32, 1)` e `ease-in-out` como `cubic-bezier(0.77, 0, 0.175, 1)`; `ease-drawer` (`cubic-bezier(0.32, 0.72, 0, 1)`) es para lo que se despliega, como el sidebar. Nada de `ease-in`, `ease-linear` ni rebotes.
+- **Duraciones:** 100–150 ms para presionar y cambios de color; 150–200 ms para tooltips, menús y el chip del tema; 300 ms para el sidebar; 120 ms de salida y 220 ms de entrada entre páginas. Ninguna interfaz pasa de 300 ms.
+- **Presionar:** todo `Button` baja a `scale(0.97)` mientras se presiona.
+- **Entre páginas:** solo el contenido del panel cambia (View Transitions API): la página vieja se desvanece y la nueva sube 4 px. Envíos de formulario, recargas parciales y cambios dentro de la misma ruta no se animan (`lib/page-transition.ts`).
+- **Tooltips:** crecen desde su disparador (`origin-(--radix-tooltip-content-transform-origin)`); una vez abierto uno, los siguientes aparecen sin animación.
+- Con `prefers-reduced-motion` desaparecen los desplazamientos y escalas; quedan los desvanecidos.
 
 ## Iconografía
 

@@ -23,7 +23,10 @@ Una línea por decisión importante, con el porqué frente a la personalidad: c�
 - **Solo Figtree 400/500/600.** La misma letra del logotipo: geometría amable y moderna, sin pesos pesados que suenen a anuncio.
 - **Cuerpo de 16 px y encuesta en 18–20 px.** Legible para personas de planta con poca práctica digital, en cualquier celular.
 - **Radio base de 10 px.** Eco de los remates redondos del símbolo: amable sin llegar a lo burbujeante e infantil.
-- **Sombras casi nulas y jerarquía por espacio y bordes.** Se ve limpio y actual, y evita el aspecto pesado de las suites corporativas.
+- **Profundidad en dos niveles (`shadow-raised` y `shadow-float`).** Sin capas todo se leía al mismo nivel y se veía plano; el panel levantado sobre el marco ordena la vista como en las herramientas modernas, sin volver a las sombras pesadas.
+- **Movimiento corto con curvas fuertes.** Responder al toque en menos de 300 ms se siente rápido y vivo; las curvas débiles o el rebote se sienten lentos o infantiles.
+- **Sidebar plegable a íconos.** RH gana espacio para tablas y reportes sin perder la navegación; el nombre vuelve como tooltip.
+- **Tema siempre visible.** Quien trabaja de noche o comparte pantalla cambia de modo sin buscarlo en ajustes.
 - **Foco sólido de 2 px con separación.** Visible en ambos modos para quien navega con teclado, y discreto porque usa el mismo jade.
 
 ## Panel de RH
