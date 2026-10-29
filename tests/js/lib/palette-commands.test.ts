@@ -44,6 +44,8 @@ describe('paletteCommands', () => {
         expect(labels(true)).toContain('Empresas');
         expect(labels(false)).not.toContain('Empresas');
         expect(labels(false)).toContain('Panel');
+        // Outside a company the superadmin has no panel: /admin takes them to Empresas.
+        expect(labels(true)).not.toContain('Panel');
     });
 
     it('names the sidebar command after what it will do', () => {

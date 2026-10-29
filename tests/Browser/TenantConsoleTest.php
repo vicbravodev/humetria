@@ -92,6 +92,14 @@ it('links the console from the sidebar only for the superadmin', function (): vo
         ->assertMissing('a[href$="/admin/companies"]');
 });
 
+it('gives the superadmin no Panel outside a company: Empresas is where they start', function (): void {
+    signInAsSuperadmin();
+
+    visit('/admin/companies')
+        ->assertPresent('[data-sidebar="menu-button"][href$="/admin/companies"]')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((link) => link.textContent.trim() !== "Panel")');
+});
+
 it('creates a company from the dialog, suggesting its address from the trade name', function (): void {
     signInAsSuperadmin();
 

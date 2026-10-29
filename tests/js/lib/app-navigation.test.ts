@@ -16,19 +16,34 @@ const acme = (manageOrganization = true, manageMembers = true) => ({
     can: can(manageOrganization, manageMembers),
 });
 const titles = (tenant: ReturnType<typeof acme> | null) =>
-    mainNavItems(tenant).map((item) => item.title);
+    mainNavItems(tenant, false).map((item) => item.title);
 
 describe('mainNavItems', () => {
     it("points Panel at the current company's panel", () => {
-        const [panel] = mainNavItems(acme());
+        const [panel] = mainNavItems(acme(), false);
 
         expect(panel?.title).toBe('Panel');
         expect(toUrl(panel?.href ?? '')).toBe('/admin/acme');
     });
 
     it('points Panel at /admin when there is no company, with nothing else', () => {
-        expect(toUrl(mainNavItems(null)[0]?.href ?? '')).toBe('/admin');
+        expect(toUrl(mainNavItems(null, false)[0]?.href ?? '')).toBe('/admin');
         expect(titles(null)).toEqual(['Panel']);
+    });
+
+    it('leaves Panel out for a superadmin outside a company: /admin sends them to Empresas', () => {
+        expect(mainNavItems(null, true)).toEqual([]);
+    });
+
+    it('keeps the company pages for a superadmin inside a company they belong to', () => {
+        expect(
+            mainNavItems(acme(), true).map((item) => toUrl(item.href)),
+        ).toEqual([
+            '/admin/acme',
+            '/admin/acme/work-centers',
+            '/admin/acme/employees',
+            '/admin/acme/members',
+        ]);
     });
 
     it("lists the company's pages the role may open", () => {
@@ -50,7 +65,9 @@ describe('mainNavItems', () => {
     });
 
     it('points each page at the current company', () => {
-        expect(mainNavItems(acme()).map((item) => toUrl(item.href))).toEqual([
+        expect(
+            mainNavItems(acme(), false).map((item) => toUrl(item.href)),
+        ).toEqual([
             '/admin/acme',
             '/admin/acme/work-centers',
             '/admin/acme/employees',

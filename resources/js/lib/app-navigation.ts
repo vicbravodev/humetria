@@ -16,11 +16,17 @@ export type NavTenant = Pick<CurrentTenant, 'slug' | 'can'>;
 
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
- * without one; the company's own pages appear only inside a company, and only those its role may open.
+ * without one; the company's own pages appear only inside a company, and only those its role may open. A superadmin
+ * outside a company gets none: /admin sends them to Empresas, which is their start.
  */
-export const mainNavItems = (tenant: NavTenant | null): NavItem[] => {
+export const mainNavItems = (
+    tenant: NavTenant | null,
+    isSuperadmin: boolean,
+): NavItem[] => {
     if (tenant === null) {
-        return [{ title: 'Panel', href: dashboard(), icon: House }];
+        return isSuperadmin
+            ? []
+            : [{ title: 'Panel', href: dashboard(), icon: House }];
     }
 
     const items: NavItem[] = [
