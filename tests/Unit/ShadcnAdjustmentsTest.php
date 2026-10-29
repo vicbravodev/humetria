@@ -92,3 +92,19 @@ it('animates what opens and closes with the strong ease-out, from its trigger', 
     ['popover', 'popover'],
     ['dropdown-menu', 'dropdown-menu'],
 ]);
+
+it('marks a badge with a dot on a soft fill, never a solid block of color', function (): void {
+    expect(uiComponent('badge'))
+        ->toContain('before:rounded-full')
+        ->toContain('text-[13px]')
+        ->not->toContain('bg-primary text-primary-foreground')
+        ->not->toContain('bg-destructive text-on-destructive');
+});
+
+it('opens a dialog with a short scale-in and closes it faster', function (): void {
+    expect(uiComponent('dialog'))
+        ->toContain('data-[state=open]:zoom-in-96')
+        ->toContain('data-[state=open]:duration-200')
+        ->toContain('data-[state=closed]:duration-150')
+        ->toContain('ease-out');
+});
