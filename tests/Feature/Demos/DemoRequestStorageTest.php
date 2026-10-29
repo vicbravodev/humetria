@@ -43,9 +43,19 @@ it('rejects a row the form would reject', function (string $column, mixed $value
     'message too long' => ['message', str_repeat('a', 2001)],
     'no tools' => ['tools', '[]'],
     'unknown tool' => ['tools', '["nom_036"]'],
-    'tools not a list' => ['tools', '{"a":"nom_035"}'],
     'missing tools' => ['tools', null],
 ]);
+
+it('rejects a tools value that is not a list as a check violation', function (): void {
+    $row = [...DemoRequest::factory()->raw(), 'tools' => '{"a":"nom_035"}', 'id' => (string) Str::uuid()];
+
+    try {
+        DB::table('demo_requests')->insert($row);
+        $this->fail('The insert should have been rejected.');
+    } catch (QueryException $e) {
+        expect($e->getCode())->toBe('23514');
+    }
+});
 
 it('keeps the tools a request asked about, in order', function (): void {
     $demoRequest = DemoRequest::factory()->create(['tools' => [Tool::LeySilla, Tool::Nom035]])->fresh();

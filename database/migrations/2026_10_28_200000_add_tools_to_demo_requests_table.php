@@ -26,9 +26,10 @@ return new class extends Migration
             ALTER TABLE demo_requests
                 ALTER COLUMN tools SET NOT NULL,
                 ADD CONSTRAINT demo_requests_tools_valid CHECK (
-                    jsonb_typeof(tools) = 'array'
-                    AND jsonb_array_length(tools) > 0
-                    AND tools <@ '["nom_035","nom_037","ley_silla"]'::jsonb
+                    CASE WHEN jsonb_typeof(tools) = 'array'
+                        THEN jsonb_array_length(tools) > 0 AND tools <@ '["nom_035","nom_037","ley_silla"]'::jsonb
+                        ELSE false
+                    END
                 )
         SQL);
     }
