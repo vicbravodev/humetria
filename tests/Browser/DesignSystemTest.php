@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Models\Tenant;
 use Pest\Browser\Api\AwaitableWebpage;
 
 $looks = [
@@ -89,6 +90,16 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         ->assertScript(SETTLED)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'expanded');
 })->with(['light' => false, 'dark' => true]);
+
+it('keeps the top bar in view while the page scrolls', function (bool $mobile): void {
+    $this->actingAs(superadmin());
+    Tenant::factory()->count(15)->create();
+
+    visitPage('tenancy/index', '/admin/companies', mobile: $mobile)
+        ->assertScript('() => { window.scrollTo(0, 600); return new Promise((resolve) => requestAnimationFrame(() => resolve(window.scrollY > 0))); }')
+        ->assertScript('() => { const bar = document.querySelector(\'[data-slot="app-topbar"]\').getBoundingClientRect(); return bar.top === 0 && bar.height > 0; }')
+        ->assertScript('() => document.elementFromPoint(window.innerWidth - 30, 20)?.closest(\'[data-slot="app-topbar"]\') !== null');
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
     $this->actingAs(User::factory()->create());
