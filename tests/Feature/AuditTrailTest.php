@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use App\Actions\RecordAudit;
+use App\Http\Impersonation;
 use App\Models\AuditEntry;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Route;
 
 mutates(RecordAudit::class);
 
@@ -55,3 +57,25 @@ it('rejects deletes at the database level', function (): void {
 
     AuditEntry::query()->whereKey($entry->id)->delete();
 })->throws(QueryException::class, 'audit_entries is append-only');
+
+it('records the impersonator on every audit entry while impersonating', function (): void {
+    Route::post('/_test/audit', fn () => app(RecordAudit::class)->handle('test.event'))->middleware('web');
+    $superadmin = User::factory()->create();
+    $owner = User::factory()->create();
+
+    $this->actingAs($owner)
+        ->withSession([Impersonation::SESSION_KEY => $superadmin->id])
+        ->post('/_test/audit');
+
+    expect(AuditEntry::query()->where('event', 'test.event')->sole())
+        ->actor_id->toBe($owner->id)
+        ->impersonator_id->toBe($superadmin->id);
+});
+
+it('leaves impersonator_id null outside an impersonation', function (): void {
+    Route::post('/_test/audit', fn () => app(RecordAudit::class)->handle('test.event'))->middleware('web');
+
+    $this->actingAs(User::factory()->create())->post('/_test/audit');
+
+    expect(AuditEntry::query()->where('event', 'test.event')->sole()->impersonator_id)->toBeNull();
+});

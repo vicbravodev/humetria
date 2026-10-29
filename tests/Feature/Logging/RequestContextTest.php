@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Impersonation;
 use App\Models\User;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
@@ -33,4 +34,20 @@ it('does not add a user id for guests', function (): void {
     $this->get(route('home'));
 
     expect(Context::has('user_id'))->toBeFalse();
+});
+
+it('puts the impersonator id on the log context while impersonating', function (): void {
+    $superadmin = User::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->withSession([Impersonation::SESSION_KEY => $superadmin->id])
+        ->get(route('dashboard'));
+
+    expect(Context::get('impersonator_id'))->toBe($superadmin->id);
+});
+
+it('does not add an impersonator id outside an impersonation', function (): void {
+    $this->actingAs(User::factory()->create())->get(route('dashboard'));
+
+    expect(Context::has('impersonator_id'))->toBeFalse();
 });

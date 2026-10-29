@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Impersonation;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
@@ -28,6 +29,12 @@ final class AssignRequestContext
 
         if ($request->user() !== null) {
             Context::add('user_id', $request->user()->getAuthIdentifier());
+        }
+
+        $impersonatorId = app(Impersonation::class)->impersonatorId();
+
+        if ($impersonatorId !== null) {
+            Context::add('impersonator_id', $impersonatorId);
         }
 
         $response = $next($request);
