@@ -69,7 +69,7 @@ it('writes the email in Spanish, with the company, the person and the expiry', f
     expect($mail)->toBeInstanceOf(MailMessage::class)
         ->and($mail->subject)->toBe('Te invitaron a Humetría como owner de Acme')
         ->and($mail->greeting)->toBe('Hola, Ana Pérez')
-        ->and($mail->introLines)->toBe(['Vas a administrar su cuenta, desde donde se aplica la NOM-035 a su personal.'])
+        ->and($mail->introLines)->toBe(['Vas a administrar su cuenta, desde donde RH lleva la NOM-035, la NOM-037 y la Ley Silla de su personal.'])
         ->and($mail->actionText)->toBe('Aceptar invitación')
         ->and($mail->actionUrl)->toBe(url('admin/invitations/tok'))
         ->and($mail->outroLines)->toBe(['El enlace vence el 4 nov 2026.', 'Si no esperabas este correo, ignóralo.']);

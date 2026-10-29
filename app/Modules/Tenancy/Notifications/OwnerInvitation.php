@@ -34,7 +34,7 @@ final class OwnerInvitation extends Notification
         return (new MailMessage)
             ->subject("Te invitaron a Humetría como owner de {$this->tradeName}")
             ->greeting("Hola, {$this->name}")
-            ->line('Vas a administrar su cuenta, desde donde se aplica la NOM-035 a su personal.')
+            ->line('Vas a administrar su cuenta, desde donde RH lleva la NOM-035, la NOM-037 y la Ley Silla de su personal.')
             ->action('Aceptar invitación', route('invitations.show', $this->token))
             ->line('El enlace vence el '.DisplayDate::day($this->expiresAt).'.')
             ->line('Si no esperabas este correo, ignóralo.');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Mail\Markdown;
 use Illuminate\Notifications\Messages\MailMessage;
 
 it('dresses every email in the Humetría design system', function (MailMessage $mail): void {
@@ -19,7 +20,8 @@ it('dresses every email in the Humetría design system', function (MailMessage $
         ->toContain('background-color: #0b7a6f')
         // Secondary text in muted-foreground, which passes 4.5:1 on the page and the card.
         ->toContain('color: #56635f')
-        ->toContain('Enviado por Humetría, la plataforma para aplicar la NOM-035.')
+        ->toContain('Enviado por Humetría, herramientas para Recursos Humanos.')
+        ->not->toContain('NOM-035')
         ->toContain('¿El botón no abre? Copia este enlace en tu navegador:')
         // No filler: no salutation and no copyright line.
         ->not->toContain('Saludos,')
@@ -61,4 +63,12 @@ it('titles every email with its subject and keeps the greeting as the line above
 
     expect($html)->toMatch('#<h1[^>]*>Restablece tu contraseña</h1>#')
         ->toMatch('#<p class="greeting"[^>]*>Hola, Ana</p>#');
+});
+
+it('signs the plain-text emails as Humetría, HR tools', function (): void {
+    $mail = (new MailMessage)->greeting('Hola')->action('Aceptar', 'https://humetria.test');
+
+    expect((string) app(Markdown::class)->renderText($mail->markdown, $mail->data()))
+        ->toContain('Enviado por Humetría, herramientas para Recursos Humanos.')
+        ->not->toContain('NOM-035');
 });
