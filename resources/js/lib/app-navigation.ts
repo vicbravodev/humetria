@@ -9,6 +9,9 @@ export const mainNavItems: NavItem[] = [
     { title: 'Panel', href: dashboard(), icon: House },
 ];
 
+// NOM-035, NOM-037 and Ley Silla enter here when each gets its first page.
+export const complianceNavItems: NavItem[] = [];
+
 // Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
 export const superadminNavItems: NavItem[] = [
     { title: 'Empresas', href: companies(), icon: Building2 },

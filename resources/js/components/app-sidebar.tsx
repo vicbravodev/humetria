@@ -8,7 +8,11 @@ import {
     SidebarFooter,
     SidebarHeader,
 } from '@/components/ui/sidebar';
-import { mainNavItems, superadminNavItems } from '@/lib/app-navigation';
+import {
+    complianceNavItems,
+    mainNavItems,
+    superadminNavItems,
+} from '@/lib/app-navigation';
 import { dashboard } from '@/routes';
 
 export function AppSidebar() {
@@ -32,7 +36,10 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="gap-4 px-1">
-                <NavMain label="NOM-035" items={mainNavItems} />
+                <NavMain items={mainNavItems} />
+                {complianceNavItems.length > 0 && (
+                    <NavMain label="Cumplimiento" items={complianceNavItems} />
+                )}
                 {isSuperadmin && (
                     <NavMain label="Plataforma" items={superadminNavItems} />
                 )}

@@ -9,7 +9,11 @@ import {
     Sun,
 } from 'lucide-react';
 import type { Appearance } from '@/hooks/use-appearance';
-import { mainNavItems, superadminNavItems } from '@/lib/app-navigation';
+import {
+    complianceNavItems,
+    mainNavItems,
+    superadminNavItems,
+} from '@/lib/app-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
@@ -43,8 +47,8 @@ export function paletteCommands({
     actions,
 }: Options): PaletteCommand[] {
     const pages = isSuperadmin
-        ? [...mainNavItems, ...superadminNavItems]
-        : mainNavItems;
+        ? [...mainNavItems, ...complianceNavItems, ...superadminNavItems]
+        : [...mainNavItems, ...complianceNavItems];
 
     return [
         ...pages.map(({ title, href, icon }) => ({
