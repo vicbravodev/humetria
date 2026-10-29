@@ -405,3 +405,40 @@ it('passes the accessibility and CSP checks with the invitation dialog open', fu
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Invitar owner')->assertSee('Enviar invitación'));
 })->with($looks);
+
+it('enters as the owner from the console, shows the banner on every page, and comes back with "Salir"', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo', 'slug' => 'grupo-ejemplo']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertPathIs('/admin/grupo-ejemplo')
+        ->assertSee('Estás viendo Humetría como Ana Pérez · Salir')
+        // Settings has its own layout inside the frame: the banner is there too.
+        ->navigate('/admin/settings/appearance')
+        ->assertSee('Estás viendo Humetría como Ana Pérez')
+        ->click('@stop-impersonation')
+        ->assertPathIs('/admin/companies')
+        ->assertDontSee('Estás viendo Humetría')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('offers to enter as the owner only when the company has one', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')
+        ->assertDontSee('Entrar como owner');
+});
+
+it('passes the accessibility and CSP checks with the impersonation banner', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    TenantMembership::factory()->for(Tenant::factory()->create())->create();
+
+    visitPage('dashboard', '/admin/companies', $dark, $mobile, fn ($page) => $page
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertSee('Estás viendo Humetría como'));
+})->with($looks);

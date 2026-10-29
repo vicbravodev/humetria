@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\AssignRequestContext;
+use App\Http\Middleware\EndRevokedImpersonation;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
@@ -32,6 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
+            // Before the context: a revoked impersonation must not be tagged as the owner's request.
+            EndRevokedImpersonation::class,
             AssignRequestContext::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,

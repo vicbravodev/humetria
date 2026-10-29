@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Impersonation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -45,10 +46,19 @@ final class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'isSuperadmin' => $request->user()?->hasRole(User::SUPERADMIN) ?? false,
             ],
+            // The superadmin working as auth.user, for the banner that lets them out; null otherwise.
+            'impersonator' => $this->impersonatorName(),
             // The company routes override these (Tenancy's ResolveTenant); the kernel only gives the defaults.
             'tenant' => null,
             'tenants' => [],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    private function impersonatorName(): ?string
+    {
+        $id = app(Impersonation::class)->impersonatorId();
+
+        return $id === null ? null : User::query()->find($id)?->name;
     }
 }

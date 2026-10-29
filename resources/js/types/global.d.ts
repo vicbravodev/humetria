@@ -12,6 +12,8 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            /** The superadmin working as auth.user; null outside an impersonation. */
+            impersonator: string | null;
             tenant: CurrentTenant | null;
             tenants: TenantSummary[];
             sidebarOpen: boolean;

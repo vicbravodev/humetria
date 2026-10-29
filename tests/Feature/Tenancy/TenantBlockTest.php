@@ -60,7 +60,7 @@ it('carries nothing but the shared props to the blocked page', function (): void
         ->get(route('tenant.dashboard', $tenant))
         ->viewData('page')['props'];
 
-    expect(array_keys($props))->toEqualCanonicalizing(['name', 'auth', 'tenant', 'tenants', 'sidebarOpen', 'errors']);
+    expect(array_keys($props))->toEqualCanonicalizing(['name', 'auth', 'impersonator', 'tenant', 'tenants', 'sidebarOpen', 'errors']);
 });
 
 it('answers HEAD with the blocked page too', function (): void {
@@ -99,7 +99,7 @@ it('lets an impersonated session through to a blocked company', function (): voi
     $user = ownerOf($tenant);
 
     $this->actingAs($user)
-        ->withSession([Impersonation::SESSION_KEY => 999])
+        ->withSession([Impersonation::SESSION_KEY => superadmin()->id])
         ->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
     $this->post(route('tenant.block-probe', $tenant))->assertOk();

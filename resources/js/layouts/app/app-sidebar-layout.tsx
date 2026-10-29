@@ -3,6 +3,7 @@ import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { CommandPalette } from '@/components/command-palette';
+import { ImpersonationBanner } from '@/components/impersonation-banner';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({ children }: AppLayoutProps) {
@@ -10,7 +11,11 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
         <AppShell variant="sidebar">
             <AppSidebar />
             <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
-                <AppSidebarHeader />
+                {/* One sticky block, so the top bar stays under the banner instead of sliding beneath it. */}
+                <div className="sticky top-0 z-20 md:overflow-clip md:rounded-t-xl">
+                    <ImpersonationBanner />
+                    <AppSidebarHeader />
+                </div>
                 {/* The part that cross-fades between pages (app.css, ::view-transition-*(page)). */}
                 <div className="flex flex-1 flex-col [view-transition-name:page]">
                     {children}

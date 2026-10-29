@@ -37,7 +37,7 @@ it('does not add a user id for guests', function (): void {
 });
 
 it('puts the impersonator id on the log context while impersonating', function (): void {
-    $superadmin = User::factory()->create();
+    $superadmin = superadmin();
 
     $this->actingAs(User::factory()->create())
         ->withSession([Impersonation::SESSION_KEY => $superadmin->id])

@@ -60,7 +60,7 @@ it('rejects deletes at the database level', function (): void {
 
 it('records the impersonator on every audit entry while impersonating', function (): void {
     Route::post('/_test/audit', fn () => app(RecordAudit::class)->handle('test.event'))->middleware('web');
-    $superadmin = User::factory()->create();
+    $superadmin = superadmin();
     $owner = User::factory()->create();
 
     $this->actingAs($owner)
