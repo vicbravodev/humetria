@@ -2,20 +2,20 @@ import SectionHeading from '@/components/landing/section-heading';
 
 const steps = [
     {
-        title: 'Cargas a tu gente',
-        text: 'Subes la lista de trabajadores de cada centro de trabajo y Humetría te dice qué guías le tocan.',
+        title: 'Cargas a tu gente y tus centros',
+        text: 'Subes a las personas de cada centro de trabajo y Humetría te dice qué le toca a cada uno.',
     },
     {
         title: 'Humetría invita a cada persona',
-        text: 'Cada trabajador recibe su propia invitación, con un enlace que sirve una sola vez.',
+        text: 'Cada quien recibe su propia invitación, con un enlace que sirve una sola vez, y contesta desde su celular o su computadora.',
     },
     {
-        title: 'Cada quien contesta con confianza',
-        text: 'Desde su celular o su computadora, de forma confidencial y sin que nadie de su empresa vea lo que contesta.',
+        title: 'Humetría recolecta y ordena',
+        text: 'Las respuestas llegan solas, con la confidencialidad que pide cada norma, y ves el avance de cada centro.',
     },
     {
-        title: 'Recibes el diagnóstico',
-        text: 'Resultados por grupo con su nivel de riesgo y el informe listo para presentar ante la STPS.',
+        title: 'Recibes el diagnóstico, el plan y la evidencia',
+        text: 'Resultados por grupo, las acciones que siguen y todo listo para presentar ante la STPS.',
     },
 ] as const;
 
@@ -24,7 +24,8 @@ export default function HowItWorksSection() {
         <section aria-labelledby="como-funciona" className="border-y bg-muted">
             <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
                 <SectionHeading id="como-funciona" title="Cómo funciona">
-                    Cuatro pasos, de la lista de tu gente al informe.
+                    El mismo camino para cada herramienta: de la lista de tu
+                    gente a la evidencia.
                 </SectionHeading>
 
                 <ol className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">

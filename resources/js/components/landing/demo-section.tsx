@@ -20,11 +20,10 @@ export default function DemoSection() {
                     Agenda una demo
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-lg leading-7 text-pretty text-accent-foreground">
-                    Cuéntanos cómo aplicas hoy la{' '}
-                    <span className="whitespace-nowrap">NOM-035</span> y te
-                    mostramos Humetría con un caso parecido al tuyo. La prueba
-                    gratis también se agenda: la platicamos en la misma llamada
-                    para que empieces con tu gente sin perder tiempo.
+                    Cuéntanos qué herramientas te interesan y te mostramos
+                    Humetría con un caso parecido al tuyo. La prueba gratis
+                    también se agenda: la platicamos en la misma llamada para
+                    que empieces con tu gente sin perder tiempo.
                 </p>
                 <div className="mx-auto mt-10 max-w-3xl">
                     <DemoRequestForm />

@@ -178,3 +178,24 @@ it('details each of the three tools', function (): void {
         ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]")[2].textContent.includes("reglamento interior")')
         ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
 });
+
+it('speaks to consultants, multi-site companies and corporate groups', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varios centros de trabajo')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias razones sociales');
+});
+
+it('only names NOM-035 next to the other two tools', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => [...document.querySelectorAll("main section")].every((section) => !section.textContent.includes("NOM-035") || section.textContent.includes("NOM-037"))')
+        ->assertScript('() => document.getElementById("agenda-una-demo-title").nextElementSibling.textContent.includes("NOM-035")', false);
+});
+
+it('never promises anonymity for identified records', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('[data-test="compliance-privacy"]', 'Guía I')
+        ->assertSeeIn('[data-test="compliance-privacy"]', 'NOM-037')
+        ->assertSeeIn('[data-test="compliance-privacy"]', 'roles autorizados')
+        ->assertScript('() => document.querySelector("meta[name=description]").content.includes("de forma confidencial")', false);
+});
