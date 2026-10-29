@@ -12,11 +12,11 @@ import type { Appearance } from '@/hooks/use-appearance';
 import {
     complianceNavItems,
     mainNavItems,
+    settingsEntryHref,
     superadminNavItems,
 } from '@/lib/app-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
-import { edit as editProfile } from '@/routes/profile';
 
 export type PaletteCommand = Command & {
     group: string;
@@ -28,6 +28,7 @@ type Options = {
     isSuperadmin: boolean;
     tenantSlug: string | null;
     sidebarExpanded: boolean;
+    impersonating: boolean;
     actions: {
         visit: (href: NonNullable<InertiaLinkProps['href']>) => void;
         setTheme: (appearance: Appearance) => void;
@@ -46,6 +47,7 @@ export function paletteCommands({
     isSuperadmin,
     tenantSlug,
     sidebarExpanded,
+    impersonating,
     actions,
 }: Options): PaletteCommand[] {
     const pages = isSuperadmin
@@ -70,7 +72,7 @@ export function paletteCommands({
             keywords: ['perfil', 'cuenta', 'contraseña'],
             group: 'Ir a',
             icon: Settings,
-            run: () => actions.visit(editProfile()),
+            run: () => actions.visit(settingsEntryHref(impersonating)),
         },
         ...THEMES.map(({ id, label, icon }) => ({
             id,

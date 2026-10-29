@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { paletteCommands } from '@/lib/palette-commands';
+import { toUrl } from '@/lib/utils';
 
 const actions = () => ({
     visit: vi.fn(),
@@ -15,6 +16,7 @@ describe('paletteCommands', () => {
             isSuperadmin: false,
             tenantSlug: 'acme',
             sidebarExpanded: true,
+            impersonating: false,
             actions: spies,
         })
             .find(({ id }) => id === '/admin/acme')
@@ -32,6 +34,7 @@ describe('paletteCommands', () => {
                 isSuperadmin,
                 tenantSlug: null,
                 sidebarExpanded: true,
+                impersonating: false,
                 actions: actions(),
             }).map(({ label }) => label);
 
@@ -46,6 +49,7 @@ describe('paletteCommands', () => {
                 isSuperadmin: false,
                 tenantSlug: null,
                 sidebarExpanded,
+                impersonating: false,
                 actions: actions(),
             }).find(({ id }) => id === 'sidebar')?.label;
 
@@ -59,6 +63,7 @@ describe('paletteCommands', () => {
             isSuperadmin: true,
             tenantSlug: null,
             sidebarExpanded: true,
+            impersonating: false,
             actions: spies,
         });
         const run = (id: string) =>
@@ -78,5 +83,25 @@ describe('paletteCommands', () => {
             ['system'],
         ]);
         expect(spies.toggleSidebar).toHaveBeenCalledOnce();
+    });
+
+    it("opens Configuración at appearance while impersonating, since the owner's account is off limits", () => {
+        const settingsUrl = (impersonating: boolean) => {
+            const spies = actions();
+            paletteCommands({
+                isSuperadmin: true,
+                tenantSlug: null,
+                sidebarExpanded: true,
+                impersonating,
+                actions: spies,
+            })
+                .find(({ id }) => id === 'settings')
+                ?.run();
+
+            return toUrl(spies.visit.mock.calls[0]?.[0] ?? '');
+        };
+
+        expect(settingsUrl(false)).toBe('/admin/settings/profile');
+        expect(settingsUrl(true)).toBe('/admin/settings/appearance');
     });
 });

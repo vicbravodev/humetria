@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Impersonation;
 use Illuminate\Auth\Middleware\RequirePassword;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', '/admin/settings/profile')->name('settings');
+    // Profile is the owner's own account: off limits to a superadmin working as them.
+    Route::get('settings', fn (Impersonation $impersonation): RedirectResponse => to_route($impersonation->isActive() ? 'appearance.edit' : 'profile.edit'))->name('settings');
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -19,18 +19,28 @@ final class ForbidWhileImpersonating
     public function __construct(private readonly Impersonation $impersonation) {}
 
     /**
-     * @param  Closure(Request): Response  $next
+     * Names of the owner's account routes. Every route under admin/user/ must be here: a test enumerates them.
+     *
+     * @return list<string>
      */
-    public function handle(Request $request, Closure $next): Response
+    public static function protectedRoutes(): array
     {
-        abort_if($this->impersonation->isActive() && $request->routeIs(
+        return [
             'profile.edit', 'profile.update', 'profile.destroy',
             'security.edit', 'user-password.update',
             'password.confirm', 'password.confirm.store', 'password.confirmation',
             'two-factor.confirm', 'two-factor.enable', 'two-factor.disable', 'two-factor.qr-code',
             'two-factor.recovery-codes', 'two-factor.regenerate-recovery-codes', 'two-factor.secret-key',
             'passkey.store', 'passkey.registration-options', 'passkey.destroy',
-        ), 404);
+        ];
+    }
+
+    /**
+     * @param  Closure(Request): Response  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        abort_if($this->impersonation->isActive() && $request->routeIs(...self::protectedRoutes()), 404);
 
         return $next($request);
     }

@@ -6,6 +6,7 @@ use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 mutates(ForbidWhileImpersonating::class);
 
@@ -66,4 +67,23 @@ it('keeps the appearance settings while impersonating', function (): void {
     $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
 
     $this->get(route('appearance.edit'))->assertOk();
+});
+
+it('guards every account route Fortify registers under admin/user', function (): void {
+    $names = collect(Route::getRoutes()->getRoutes())
+        ->filter(fn ($route) => str_starts_with($route->uri(), 'admin/user/'))
+        ->map(fn ($route) => $route->getName());
+
+    expect($names)->not->toBeEmpty()
+        ->and($names->diff(ForbidWhileImpersonating::protectedRoutes())->values()->all())->toBe([]);
+});
+
+it('sends settings to profile, or to appearance while impersonating', function (): void {
+    $tenant = Tenant::factory()->create();
+    $owner = ownerOf($tenant);
+
+    $this->actingAs($owner)->get(route('settings'))->assertRedirect(route('profile.edit'));
+
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    $this->get(route('settings'))->assertRedirect(route('appearance.edit'));
 });
