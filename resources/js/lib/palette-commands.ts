@@ -50,13 +50,11 @@ export function paletteCommands({
     impersonating,
     actions,
 }: Options): PaletteCommand[] {
-    const pages = isSuperadmin
-        ? [
-              ...mainNavItems(tenantSlug),
-              ...complianceNavItems,
-              ...superadminNavItems,
-          ]
-        : [...mainNavItems(tenantSlug), ...complianceNavItems];
+    const pages = [
+        ...mainNavItems(tenantSlug, isSuperadmin),
+        ...complianceNavItems,
+        ...(isSuperadmin ? superadminNavItems : []),
+    ];
 
     return [
         ...pages.map(({ title, href, icon }) => ({
