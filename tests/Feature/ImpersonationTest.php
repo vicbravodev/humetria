@@ -266,3 +266,27 @@ it('shares the name of the superadmin behind the owner, and null otherwise', fun
     $this->get(route('companies.index'))
         ->assertInertia(fn (Assert $page) => $page->where('impersonator', null));
 });
+
+it('does not carry the superadmin password confirmation over to the owner', function (): void {
+    $superadmin = superadmin();
+    $tenant = Tenant::factory()->create();
+    ownerOf($tenant);
+
+    $this->actingAs($superadmin)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->post(route('companies.impersonate', $tenant));
+
+    expect(session()->has('auth.password_confirmed_at'))->toBeFalse();
+    $this->get(route('security.edit'))->assertRedirect(route('password.confirm'));
+    $this->post(route('two-factor.enable'))->assertRedirect(route('password.confirm'));
+});
+
+it('does not carry the owner password confirmation back to the superadmin', function (): void {
+    enterAsOwner();
+    session()->put('auth.password_confirmed_at', time());
+
+    $this->post(route('impersonation.stop'));
+
+    expect(session()->has('auth.password_confirmed_at'))->toBeFalse();
+    $this->get(route('security.edit'))->assertRedirect(route('password.confirm'));
+});

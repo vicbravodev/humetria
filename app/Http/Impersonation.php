@@ -20,6 +20,9 @@ final readonly class Impersonation
 {
     public const string SESSION_KEY = 'impersonator_id';
 
+    /** Laravel's mark of a recently confirmed password: it belongs to whoever typed it, never to the other side. */
+    private const string PASSWORD_CONFIRMED_KEY = 'auth.password_confirmed_at';
+
     public function __construct(
         private Session $session,
         private StatefulGuard $guard,
@@ -50,6 +53,7 @@ final readonly class Impersonation
         }, ['user_id' => $impersonator->id, 'impersonator_id' => $impersonator->id]);
 
         $this->guard->login($target);
+        $this->session->forget(self::PASSWORD_CONFIRMED_KEY);
         $this->session->put(self::SESSION_KEY, $impersonator->id);
     }
 
@@ -67,7 +71,7 @@ final readonly class Impersonation
             Log::info('impersonation.stopped', ['subject_id' => $ownerId]);
         }, ['user_id' => $ownerId, 'impersonator_id' => $impersonatorId]);
 
-        $this->session->forget(self::SESSION_KEY);
+        $this->session->forget([self::SESSION_KEY, self::PASSWORD_CONFIRMED_KEY]);
         $impersonator = User::query()->find($impersonatorId);
 
         if ($impersonator === null || ! $impersonator->hasRole(User::SUPERADMIN)) {
