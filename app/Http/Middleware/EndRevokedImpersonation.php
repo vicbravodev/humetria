@@ -48,6 +48,7 @@ final class EndRevokedImpersonation
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        // 303: this runs outside HandleInertiaRequests, and a 302 after a PUT/PATCH/DELETE is followed with the same method.
+        return redirect()->route('login', status: 303);
     }
 }

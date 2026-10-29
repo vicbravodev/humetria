@@ -206,14 +206,17 @@ it('gives the session a new id on start and on stop', function (): void {
     session()->start();
     $impersonation = app(Impersonation::class);
 
-    $before = session()->getId();
+    $before = [session()->getId(), session()->token()];
     $impersonation->start($superadmin, $owner);
-    $during = session()->getId();
+    $during = [session()->getId(), session()->token()];
     $back = $impersonation->stop();
+    $after = [session()->getId(), session()->token()];
 
     expect($back?->is($superadmin))->toBeTrue()
-        ->and($during)->not->toBe($before)
-        ->and(session()->getId())->not->toBe($during);
+        ->and($during[0])->not->toBe($before[0])
+        ->and($during[1])->not->toBe($before[1])
+        ->and($after[0])->not->toBe($during[0])
+        ->and($after[1])->not->toBe($during[1]);
 });
 
 it('ends everything when signing out while impersonating', function (): void {
@@ -339,4 +342,16 @@ it('ties the mark to the impersonated user and drops both on stop', function ():
     $this->post(route('impersonation.stop'));
 
     expect(session()->has(Impersonation::IMPERSONATED_KEY))->toBeFalse();
+});
+
+it('sends a revoked change back to login with 303, so Inertia follows it with a GET', function (): void {
+    Route::delete('/_test/impersonated-delete', fn (): string => 'deleted')->middleware('web');
+    [$superadmin] = enterAsOwner();
+    $superadmin->removeRole(User::SUPERADMIN);
+
+    $this->delete('/_test/impersonated-delete')
+        ->assertStatus(303)
+        ->assertRedirect(route('login'));
+
+    $this->assertGuest();
 });
