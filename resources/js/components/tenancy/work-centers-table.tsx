@@ -22,7 +22,8 @@ export default function WorkCentersTable({
     tenantSlug: string;
     view: WorkCentersView;
     workCenters: WorkCenterRow[];
-    states: MexicanStateOption[];
+    /** The states the edit form offers; null when the person may not change work centers, so no actions show. */
+    states: MexicanStateOption[] | null;
 }) {
     return (
         <Table>
@@ -36,9 +37,11 @@ export default function WorkCentersTable({
                     <TableHead>Centro de trabajo</TableHead>
                     <TableHead>Domicilio</TableHead>
                     {view === 'archived' && <TableHead>Archivado</TableHead>}
-                    <TableHead>
-                        <span className="sr-only">Acciones</span>
-                    </TableHead>
+                    {states !== null && (
+                        <TableHead>
+                            <span className="sr-only">Acciones</span>
+                        </TableHead>
+                    )}
                 </TableRow>
             </TableHeader>
             <TableBody>

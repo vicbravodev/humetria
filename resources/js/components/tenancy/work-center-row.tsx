@@ -9,7 +9,7 @@ export default function WorkCenterRowView({
 }: {
     tenantSlug: string;
     workCenter: WorkCenterRow;
-    states: MexicanStateOption[];
+    states: MexicanStateOption[] | null;
 }) {
     return (
         <TableRow>
@@ -27,13 +27,15 @@ export default function WorkCenterRowView({
                     {workCenter.archived_on}
                 </TableCell>
             )}
-            <TableCell className="w-px text-right">
-                <WorkCenterRowActions
-                    tenantSlug={tenantSlug}
-                    workCenter={workCenter}
-                    states={states}
-                />
-            </TableCell>
+            {states !== null && (
+                <TableCell className="w-px text-right">
+                    <WorkCenterRowActions
+                        tenantSlug={tenantSlug}
+                        workCenter={workCenter}
+                        states={states}
+                    />
+                </TableCell>
+            )}
         </TableRow>
     );
 }

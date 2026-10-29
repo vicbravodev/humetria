@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Enums\MexicanState;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Pest\Browser\Api\AwaitableWebpage;
@@ -182,4 +183,15 @@ it('points a company without work centers from its panel to them', function (boo
         ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tus centros de trabajo')
         ->click('Ir a centros de trabajo')
         ->assertPathIs('/admin/acme/work-centers');
+})->with($looks);
+
+it('shows a viewer the work centers with nothing to change', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    $this->actingAs(memberOf($tenant, TenantRole::Viewer));
+
+    visitPage('tenancy/work-centers', '/admin/acme/work-centers', $dark, $mobile)
+        ->assertSee('Planta Querétaro')
+        ->assertDontSee('Dar de alta centro')
+        ->assertMissing('@work-center-actions');
 })->with($looks);

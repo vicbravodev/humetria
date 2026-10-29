@@ -22,17 +22,21 @@ export default function WorkCenters({
     states: MexicanStateOption[];
 }) {
     // Always set here: this page only exists inside a company.
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const { tenant } = usePage().props;
+    const tenantSlug = tenant?.slug ?? '';
+    const canManage = tenant?.can.manage_organization ?? false;
 
     return (
         <>
             <Head title="Centros de trabajo" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader title="Centros de trabajo">
-                    <CreateWorkCenterDialog
-                        tenantSlug={tenantSlug}
-                        states={states}
-                    />
+                    {canManage && (
+                        <CreateWorkCenterDialog
+                            tenantSlug={tenantSlug}
+                            states={states}
+                        />
+                    )}
                 </PageHeader>
                 {/* Only once there is something archived, or while looking at the archive. */}
                 {(counts.archived > 0 || view === 'archived') && (
@@ -49,7 +53,7 @@ export default function WorkCenters({
                         tenantSlug={tenantSlug}
                         view={view}
                         workCenters={workCenters}
-                        states={states}
+                        states={canManage ? states : null}
                     />
                 )}
             </div>

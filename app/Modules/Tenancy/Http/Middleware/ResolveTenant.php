@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Modules\Tenancy\Actions\ListUserTenants;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\TenantContext;
@@ -36,16 +37,15 @@ final class ResolveTenant
         // Implicit route binding only runs when the action type-hints the model; this middleware must not depend on that.
         $tenant = is_string($slug) ? Tenant::query()->where('slug', $slug)->first() : $slug;
 
-        abort_unless(
-            $tenant instanceof Tenant
-            && $userId !== null
-            && TenantMembership::query()->where('tenant_id', $tenant->id)->where('user_id', $userId)->exists(),
-            404,
-        );
+        $role = $tenant instanceof Tenant && $userId !== null
+            ? TenantMembership::query()->where('tenant_id', $tenant->id)->where('user_id', $userId)->first()?->role
+            : null;
+
+        abort_unless($tenant instanceof Tenant && $role instanceof TenantRole, 404);
 
         $request->route()?->setParameter('tenant', $tenant);
         // Also tags every log line, audit entry and queued job of the request with the company.
-        $this->tenantContext->set($tenant);
+        $this->tenantContext->set($tenant, $role);
 
         $status = $tenant->status();
 
@@ -55,6 +55,12 @@ final class ResolveTenant
             'status' => $status->value,
             'blocked' => $status->isBlocked(),
             'trial_days_left' => $tenant->trialDaysLeft(),
+            'role' => $role->value,
+            'role_label' => $role->label(),
+            'can' => [
+                'manage_organization' => $role->canManageOrganization(),
+                'manage_members' => $role->canManageMembers(),
+            ],
         ]);
         Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($userId)
             ->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])

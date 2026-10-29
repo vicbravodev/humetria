@@ -26,4 +26,14 @@ final class TenantMembershipFactory extends Factory
             'role' => TenantRole::Owner,
         ];
     }
+
+    public function hr(): self
+    {
+        return $this->state(['role' => TenantRole::Hr]);
+    }
+
+    public function viewer(): self
+    {
+        return $this->state(['role' => TenantRole::Viewer]);
+    }
 }

@@ -35,6 +35,11 @@ final class TenantInvitationFactory extends Factory
         return $this->state(['token_hash' => TenantInvitation::hashToken($token)]);
     }
 
+    public function role(TenantRole $role): self
+    {
+        return $this->state(['role' => $role]);
+    }
+
     public function expired(): self
     {
         return $this->state(['expires_at' => now()->subSecond()]);

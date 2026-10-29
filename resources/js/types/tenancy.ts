@@ -50,7 +50,13 @@ export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
         trial_days_left: number | null;
+        role: TenantRole;
+        role_label: string;
+        /** What the person's role allows, so the page hides what the server would refuse. */
+        can: { manage_organization: boolean; manage_members: boolean };
     };
+
+export type TenantRole = 'owner' | 'hr' | 'viewer';
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &

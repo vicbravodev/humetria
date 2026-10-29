@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Actions\CreateWorkCenter;
 use App\Modules\Tenancy\Actions\ListWorkCenters;
 use App\Modules\Tenancy\Actions\RestoreWorkCenter;
 use App\Modules\Tenancy\Actions\UpdateWorkCenter;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Http\Requests\WorkCenterRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -25,6 +26,8 @@ use Inertia\Response;
  */
 final class WorkCenterController extends Controller
 {
+    public function __construct(private readonly CurrentTenant $currentTenant) {}
+
     public function index(Request $request, ListWorkCenters $listWorkCenters): Response
     {
         $workCenters = $listWorkCenters->handle();
@@ -46,6 +49,8 @@ final class WorkCenterController extends Controller
 
     public function store(WorkCenterRequest $request, Tenant $tenant, CreateWorkCenter $createWorkCenter): RedirectResponse
     {
+        $this->authorizeChanges();
+
         $createWorkCenter->handle($request->toData());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Centro de trabajo dado de alta.']);
@@ -55,6 +60,8 @@ final class WorkCenterController extends Controller
 
     public function update(WorkCenterRequest $request, Tenant $tenant, string $workCenter, UpdateWorkCenter $updateWorkCenter): RedirectResponse
     {
+        $this->authorizeChanges();
+
         $updateWorkCenter->handle($this->find($workCenter, archived: false), $request->toData());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Centro de trabajo actualizado.']);
@@ -64,6 +71,8 @@ final class WorkCenterController extends Controller
 
     public function archive(Tenant $tenant, string $workCenter, ArchiveWorkCenter $archiveWorkCenter): RedirectResponse
     {
+        $this->authorizeChanges();
+
         $archiveWorkCenter->handle($this->find($workCenter, archived: false));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Centro de trabajo archivado.']);
@@ -73,11 +82,19 @@ final class WorkCenterController extends Controller
 
     public function restore(Tenant $tenant, string $workCenter, RestoreWorkCenter $restoreWorkCenter): RedirectResponse
     {
+        $this->authorizeChanges();
+
         $restoreWorkCenter->handle($this->find($workCenter, archived: true));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Centro de trabajo restaurado.']);
 
         return redirect()->route('tenant.work-centers.index', $tenant);
+    }
+
+    /** Every role sees the work centers; only those who manage the organization change them. */
+    private function authorizeChanges(): void
+    {
+        abort_unless($this->currentTenant->canManageOrganization(), 403);
     }
 
     /**

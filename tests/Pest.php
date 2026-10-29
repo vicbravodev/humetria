@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -79,11 +80,20 @@ function ownerOf(Tenant $tenant): User
 }
 
 /**
- * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
+ * Makes `$tenant` the company the code under test works in, with `$role`, as ResolveTenant does for a request inside it.
  */
-function workIn(Tenant $tenant): void
+function workIn(Tenant $tenant, TenantRole $role = TenantRole::Owner): void
 {
-    resolve(TenantContext::class)->set($tenant);
+    resolve(TenantContext::class)->set($tenant, $role);
+}
+
+/** A new user who belongs to `$tenant` with `$role`. */
+function memberOf(Tenant $tenant, TenantRole $role): User
+{
+    $user = User::factory()->create();
+    TenantMembership::factory()->for($tenant)->for($user)->create(['role' => $role]);
+
+    return $user;
 }
 
 /**
