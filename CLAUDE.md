@@ -118,6 +118,8 @@ layouts/  hooks/  lib/  types/
 - Todo `<script>` o `<style>` inline lleva `nonce="{{ Vite::cspNonce() }}"`; en el front, las librerías que inyectan
   estilos reciben `cspNonce` (`@/lib/csp-nonce`). Los tests de navegador afirman `->assertScript(cspViolations(), '[]')`.
 - Aflojar la CSP (un origen, `'unsafe-inline'`, un hash) exige explicar el motivo en el PR.
+- Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`;
+  un test lo exige.
 
 ## Privacidad (invariante)
 
@@ -134,8 +136,9 @@ layouts/  hooks/  lib/  types/
 ## Logging y auditoría
 
 - Logs en JSON, una línea por evento (tap `App\Logging\StructuredLogging` en single, daily y stderr).
-- `AssignRequestContext` pone `request_id` y `user_id` en `Context`: aparecen en cada línea de log, en la
-  bitácora y en los jobs en cola. `tenant_id` lo agrega `ResolveTenant` (Tenancy) en las rutas de una empresa; `impersonator_id` lo agrega `AssignRequestContext` mientras se impersona.
+- `AssignRequestId` pone `request_id` y `AssignRequestContext` pone `user_id` en `Context`: aparecen en cada línea
+  de log, en la bitácora y en los jobs en cola. `tenant_id` lo agrega `ResolveTenant` (Tenancy) en las rutas de una
+  empresa; `impersonator_id` lo agrega `AssignRequestContext` mientras se impersona.
 - El mensaje del log es un nombre de evento fijo `modulo.accion` en pasado (`campaign.launched`,
   `invitation.sent`); los datos van en el arreglo de contexto, nunca interpolados en el texto.
 - Toda acción que cambia estado escribe un log. Las acciones sensibles (lanzar o cerrar campaña, ver o exportar
