@@ -51,10 +51,9 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
 const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
 
 it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', function (bool $dark): void {
-    // On the company list: until the sidebar links to the company's own panel, no item of the dashboard is active.
-    signInToPanel(superadmin());
+    $panel = signInToPanel(superadmin());
 
-    visitPage('tenancy/index', '/admin/companies', $dark)
+    visitPage('dashboard', $panel, $dark)
         // The page sits in a raised panel beside the sidebar, with the button that folds the sidebar at its top.
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"][data-variant="inset"]\') !== null')
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="sidebar-inset"]\')).boxShadow !== "none"')

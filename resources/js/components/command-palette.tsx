@@ -22,14 +22,15 @@ const RESULTS = 'command-results';
 export function CommandPalette() {
     useCommandPaletteShortcut();
     const open = useCommandPaletteOpen();
-    const { isSuperadmin } = usePage().props.auth;
+    const { auth, tenant } = usePage().props;
     const { state, toggleSidebar } = useSidebar();
     const { updateAppearance } = useAppearance();
     const [query, setQuery] = useState('');
     const [active, setActive] = useState(0);
     const results = matchCommands(
         paletteCommands({
-            isSuperadmin,
+            isSuperadmin: auth.isSuperadmin,
+            tenantSlug: tenant?.slug ?? null,
             sidebarExpanded: state === 'expanded',
             actions: {
                 visit: (href) => router.visit(href),

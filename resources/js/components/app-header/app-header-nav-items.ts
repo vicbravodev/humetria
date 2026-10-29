@@ -1,14 +1,5 @@
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
-import { dashboard } from '@/routes';
+import { BookOpen, Folder } from 'lucide-react';
 import type { NavItem } from '@/types';
-
-export const mainNavItems: NavItem[] = [
-    {
-        title: 'Panel',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
 
 export const rightNavItems: NavItem[] = [
     {

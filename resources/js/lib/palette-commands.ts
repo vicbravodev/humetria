@@ -26,6 +26,7 @@ export type PaletteCommand = Command & {
 
 type Options = {
     isSuperadmin: boolean;
+    tenantSlug: string | null;
     sidebarExpanded: boolean;
     actions: {
         visit: (href: NonNullable<InertiaLinkProps['href']>) => void;
@@ -43,12 +44,17 @@ const THEMES: { id: Appearance; label: string; icon: LucideIcon }[] = [
 /** What the ⌘K palette offers: the pages this person can open, the theme and the sidebar. */
 export function paletteCommands({
     isSuperadmin,
+    tenantSlug,
     sidebarExpanded,
     actions,
 }: Options): PaletteCommand[] {
     const pages = isSuperadmin
-        ? [...mainNavItems, ...complianceNavItems, ...superadminNavItems]
-        : [...mainNavItems, ...complianceNavItems];
+        ? [
+              ...mainNavItems(tenantSlug),
+              ...complianceNavItems,
+              ...superadminNavItems,
+          ]
+        : [...mainNavItems(tenantSlug), ...complianceNavItems];
 
     return [
         ...pages.map(({ title, href, icon }) => ({

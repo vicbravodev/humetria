@@ -9,10 +9,25 @@ const actions = () => ({
 });
 
 describe('paletteCommands', () => {
+    it("opens the current company's panel from Panel", () => {
+        const spies = actions();
+        paletteCommands({
+            isSuperadmin: false,
+            tenantSlug: 'acme',
+            sidebarExpanded: true,
+            actions: spies,
+        })
+            .find(({ id }) => id === '/admin/acme')
+            ?.run();
+
+        expect(spies.visit).toHaveBeenCalledOnce();
+    });
+
     it('offers the console pages only to the superadmin', () => {
         const labels = (isSuperadmin: boolean) =>
             paletteCommands({
                 isSuperadmin,
+                tenantSlug: null,
                 sidebarExpanded: true,
                 actions: actions(),
             }).map(({ label }) => label);
@@ -26,6 +41,7 @@ describe('paletteCommands', () => {
         const label = (sidebarExpanded: boolean) =>
             paletteCommands({
                 isSuperadmin: false,
+                tenantSlug: null,
                 sidebarExpanded,
                 actions: actions(),
             }).find(({ id }) => id === 'sidebar')?.label;
@@ -38,6 +54,7 @@ describe('paletteCommands', () => {
         const spies = actions();
         const commands = paletteCommands({
             isSuperadmin: true,
+            tenantSlug: null,
             sidebarExpanded: true,
             actions: spies,
         });
