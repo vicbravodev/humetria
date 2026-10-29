@@ -34,6 +34,20 @@ it('dresses every email in the Humetría design system', function (MailMessage $
     'the Fortify password reset' => fn (): MailMessage => (new ResetPassword('token'))->toMail(User::factory()->make()),
 ]);
 
+it('uses only CSS the mail clients understand', function (): void {
+    $html = (string) (new MailMessage)->greeting('Hola')->line('Texto')->action('Aceptar', 'https://humetria.test')->render();
+
+    expect($html)
+        // Outlook, Yahoo, AOL and Gmail with other accounts ignore `start`: the text would fall back to the client's default.
+        ->toContain('text-align: left')
+        ->not->toContain('text-align: start')
+        // Laravel's leftovers that half the clients drop and that change nothing here (caniemail).
+        ->not->toContain('position:')
+        ->not->toContain('vw;')
+        ->not->toContain('float:')
+        ->not->toContain('overflow:');
+});
+
 it('ships the PNG of the logo the emails load, since mail clients do not show SVG', function (): void {
     expect(public_path('brand/humetria-horizontal-color.png'))->toBeFile();
 });
