@@ -157,10 +157,14 @@ it('previews a work center with the state of the three tools', function (): void
 
 it('takes the header tools link to the tools section', function (): void {
     // The link shows from the sm breakpoint up: on a phone the header only fits the logo and the two calls to action.
+    // The section lands right under the 64 px sticky header (`scroll-mt-16`); the jump is instant, there is no smooth scroll.
+    $sectionTop = '() => Math.abs(document.getElementById("herramientas").getBoundingClientRect().top - 64) < 2';
+
     visitPage('landing', '/')
+        ->assertScript($sectionTop, false)
         ->click('@header-tools')
         ->assertScript('() => window.location.hash', '#herramientas')
-        ->assertScript('() => new Promise((resolve) => setTimeout(() => { const box = document.getElementById("herramientas").getBoundingClientRect(); resolve(box.top < window.innerHeight && box.bottom > 0); }, 1000))');
+        ->assertScript($sectionTop);
 });
 
 it('details each of the three tools', function (): void {
