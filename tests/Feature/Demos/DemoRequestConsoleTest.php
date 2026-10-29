@@ -6,12 +6,9 @@ use App\Models\User;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
-use App\Modules\Demos\Http\Controllers\DemoRequestConsoleController;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
-
-mutates(DemoRequestConsoleController::class, DemoProfile::class, Workforce::class, Tool::class);
 
 it('lives at /admin/demo-requests', function (): void {
     expect(route('demo-requests.index', absolute: false))->toBe('/admin/demo-requests');

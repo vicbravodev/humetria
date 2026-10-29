@@ -7,7 +7,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use Carbon\CarbonImmutable;
 
-mutates(TenantInvitation::class, InvitationStatus::class);
+mutates(TenantInvitation::class);
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-10-28 12:00:00', 'UTC'));

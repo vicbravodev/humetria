@@ -28,12 +28,19 @@ Nada está terminado hasta que esto pasa en verde:
 
 ```bash
 composer test          # pint --test + phpstan (max) + Pest Unit/Feature con cobertura ≥ 90% + Browser en paralelo
-composer test:mutate   # mutación sobre las clases declaradas con mutates(), score ≥ 85%
 npm run types:check
 npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
-En local, `composer ci:check` corre todo en orden. El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
+y el CI en verde, que además corre la mutación (score ≥ 85%). En local, `composer ci:check` corre todo lo de arriba en orden.
+
+**La mutación no se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el
+usuario la pide, y siempre acotada a las clases que tocaste: `composer mutate -- --class='App\Modules\Tenancy\Actions\X'`
+(4 procesos, solo los tests con `mutates()`); `composer mutate:retry` repite primero lo que escapó. La corrida completa
+(`composer mutate:full`, `--min=95`) es para el CI: `.github/workflows/mutation.yml` la corre cada noche y a mano.
+Ver `docs/testing.md`.
+
+El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
 (chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
 tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
 (`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
@@ -44,7 +51,8 @@ cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca l
 Si la cobertura o el score bajan, faltan tests: no se baja el umbral. No corras la mutación al mismo tiempo que `composer test`:
 comparten la base `testing` y los dos dan resultados falsos.
 
-Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo.
+Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
+`composer test:fast` (Tia: solo los tests que tu cambio afecta; la primera corrida graba el grafo).
 
 ## Arquitectura: monolito modular
 
@@ -189,7 +197,7 @@ layouts/  hooks/  lib/  types/
 | Feature | Pest + `assertInertia` | HTTP, validación, autorización, aislamiento de tenant, props que recibe cada página |
 | Browser | Pest Browser (Playwright) | Solo flujos críticos: el empleado contesta desde el celular, enlace de un solo uso, flujo de Guía I |
 | Arquitectura | Pest `arch()` | Aislamiento de módulos, tipos estrictos, clases final, presets php y security |
-| Mutación | `composer test:mutate` | Lógica de calificación y privacidad: su test declara `mutates(Clase::class)` |
+| Mutación | `composer mutate -- --class=…` | Lógica con reglas, estados, límites y privacidad: su test declara `mutates(Clase::class)`; no controladores, FormRequests sin reglas propias, DTOs, enums de solo etiquetas |
 
 - Cada comportamiento: camino feliz + bordes + fallos. Bordes obligatorios a pensar: límites exactos
   (15/16, 50/51 trabajadores), vacíos, duplicados, otro tenant, usuario sin permiso, enlace ya usado,

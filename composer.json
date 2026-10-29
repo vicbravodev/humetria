@@ -68,8 +68,7 @@
             "npm run check",
             "npm run types:check",
             "npm run test:js",
-            "@test",
-            "@test:mutate"
+            "@test"
         ],
         "types:check": [
             "phpstan analyse"
@@ -85,9 +84,21 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan test --testsuite=Browser --parallel --processes=4"
         ],
-        "test:mutate": [
+        "test:fast": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --mutate --parallel --exclude-testsuite=Browser --min=85"
+            "pest --parallel --processes=4 --tia --locally"
+        ],
+        "mutate": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --group=__pest_mutate_only"
+        ],
+        "mutate:retry": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --group=__pest_mutate_only --retry"
+        ],
+        "mutate:full": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only --min=95 --ignore-min-score-on-zero-mutations"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

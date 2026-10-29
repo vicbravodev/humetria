@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Tenancy\Actions\ListTenants;
-use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(TenantConsoleController::class, ListTenants::class);
+mutates(ListTenants::class);
 
 it('lives at /admin/companies', function (): void {
     expect(route('companies.index', absolute: false))->toBe('/admin/companies');

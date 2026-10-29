@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\InviteOwner;
+use App\Modules\Tenancy\Actions\SendOwnerInvitationEmail;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Requests\StoreInvitationRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Support\SessionKey;
 
-mutates(InviteOwner::class, StoreInvitationRequest::class, OwnerInvitation::class);
+mutates(InviteOwner::class, StoreInvitationRequest::class, SendOwnerInvitationEmail::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-10-28 18:00 UTC');

@@ -3,9 +3,13 @@
 declare(strict_types=1);
 
 use App\Http\Impersonation;
+use App\Http\Middleware\AssignRequestContext;
+use App\Http\Middleware\AssignRequestId;
 use App\Models\User;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
+
+mutates(AssignRequestContext::class, AssignRequestId::class);
 
 it('assigns a request id to every web request and returns it in a header', function (): void {
     $response = $this->get(route('home'));
