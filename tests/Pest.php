@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
@@ -64,6 +66,27 @@ function superadmin(): User
 function signInAsSuperadmin(): void
 {
     test()->actingAs(superadmin());
+}
+
+function ownerOf(Tenant $tenant): User
+{
+    $user = User::factory()->create();
+    TenantMembership::factory()->for($tenant)->for($user)->create();
+
+    return $user;
+}
+
+/**
+ * Signs in a user (a new one by default) who belongs to the company at /admin/acme and returns that URL:
+ * /admin itself sends a person to their company, so the pages inside a company are reached from there.
+ */
+function signInToPanel(?User $user = null): string
+{
+    $user ??= User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->create(['slug' => 'acme']))->for($user)->create();
+    test()->actingAs($user);
+
+    return '/admin/acme';
 }
 
 /**

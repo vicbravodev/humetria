@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Impersonation;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Tags every log line, audit entry and queued job of the request with a
- * server-generated request id and the acting user, so one action can be
- * traced end to end. Context propagates to queued jobs automatically.
+ * Tags every log line, audit entry and queued job of the request with the acting user (and the
+ * impersonator, if any), next to the request id AssignRequestId already set. Context propagates
+ * to queued jobs automatically.
  */
 final class AssignRequestContext
 {
@@ -22,18 +22,16 @@ final class AssignRequestContext
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $requestId = Str::uuid()->toString();
-
-        Context::add('request_id', $requestId);
-
         if ($request->user() !== null) {
             Context::add('user_id', $request->user()->getAuthIdentifier());
         }
 
-        $response = $next($request);
+        $impersonatorId = app(Impersonation::class)->impersonatorId();
 
-        $response->headers->set('X-Request-Id', $requestId);
+        if ($impersonatorId !== null) {
+            Context::add('impersonator_id', $impersonatorId);
+        }
 
-        return $response;
+        return $next($request);
     }
 }

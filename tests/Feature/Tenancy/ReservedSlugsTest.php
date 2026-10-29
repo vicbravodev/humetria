@@ -16,3 +16,7 @@ it('reserves every first segment the app uses under /admin', function (): void {
     expect($segments)->not->toBeEmpty()
         ->and($segments->diff(TenantRules::RESERVED_SLUGS)->values()->all())->toBe([]);
 });
+
+it('reserves the impersonation segment, so no company can take its address', function (): void {
+    expect(TenantRules::RESERVED_SLUGS)->toContain('impersonation');
+});

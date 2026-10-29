@@ -12,11 +12,11 @@ import type { Appearance } from '@/hooks/use-appearance';
 import {
     complianceNavItems,
     mainNavItems,
+    settingsEntryHref,
     superadminNavItems,
 } from '@/lib/app-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
-import { edit as editProfile } from '@/routes/profile';
 
 export type PaletteCommand = Command & {
     group: string;
@@ -26,7 +26,9 @@ export type PaletteCommand = Command & {
 
 type Options = {
     isSuperadmin: boolean;
+    tenantSlug: string | null;
     sidebarExpanded: boolean;
+    impersonating: boolean;
     actions: {
         visit: (href: NonNullable<InertiaLinkProps['href']>) => void;
         setTheme: (appearance: Appearance) => void;
@@ -43,12 +45,18 @@ const THEMES: { id: Appearance; label: string; icon: LucideIcon }[] = [
 /** What the ⌘K palette offers: the pages this person can open, the theme and the sidebar. */
 export function paletteCommands({
     isSuperadmin,
+    tenantSlug,
     sidebarExpanded,
+    impersonating,
     actions,
 }: Options): PaletteCommand[] {
     const pages = isSuperadmin
-        ? [...mainNavItems, ...complianceNavItems, ...superadminNavItems]
-        : [...mainNavItems, ...complianceNavItems];
+        ? [
+              ...mainNavItems(tenantSlug),
+              ...complianceNavItems,
+              ...superadminNavItems,
+          ]
+        : [...mainNavItems(tenantSlug), ...complianceNavItems];
 
     return [
         ...pages.map(({ title, href, icon }) => ({
@@ -64,7 +72,7 @@ export function paletteCommands({
             keywords: ['perfil', 'cuenta', 'contraseña'],
             group: 'Ir a',
             icon: Settings,
-            run: () => actions.visit(editProfile()),
+            run: () => actions.visit(settingsEntryHref(impersonating)),
         },
         ...THEMES.map(({ id, label, icon }) => ({
             id,

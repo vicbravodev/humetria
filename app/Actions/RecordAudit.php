@@ -25,6 +25,7 @@ final class RecordAudit
         return AuditEntry::query()->create([
             'tenant_id' => Context::get('tenant_id'),
             'actor_id' => Context::get('user_id'),
+            'impersonator_id' => Context::get('impersonator_id'),
             'event' => $event,
             'subject_type' => $subject?->getMorphClass(),
             'subject_id' => is_scalar($subjectKey) ? (string) $subjectKey : null,

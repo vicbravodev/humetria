@@ -43,3 +43,15 @@ export type InvitationPage = { token: string; passwordRules: string } & (
     | ({ state: 'new_account' } & PendingInvitation)
     | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
 );
+
+export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
+
+/** The company a request is working in, shared on every page under /admin/{slug}. */
+export type CurrentTenant = TenantSummary &
+    Pick<TenantRow, 'status' | 'blocked'> & {
+        trial_days_left: number | null;
+    };
+
+/** One row of the list /admin shows a person who belongs to zero or several companies. */
+export type CompanyLink = TenantSummary &
+    Pick<TenantRow, 'status' | 'status_label' | 'blocked'>;

@@ -2,11 +2,14 @@ import { Link, usePage } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { TenantSwitcher } from '@/components/tenant-switcher';
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
+    SidebarMenu,
+    SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import {
     complianceNavItems,
@@ -14,15 +17,20 @@ import {
     superadminNavItems,
 } from '@/lib/app-navigation';
 import { dashboard } from '@/routes';
+import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
-    const { isSuperadmin } = usePage().props.auth;
+    const { auth, tenant } = usePage().props;
 
     return (
         <Sidebar variant="inset" collapsible="icon">
             <SidebarHeader className="px-3 pt-4 pb-4">
                 <Link
-                    href={dashboard()}
+                    href={
+                        tenant === null
+                            ? dashboard()
+                            : tenantDashboard(tenant.slug)
+                    }
                     prefetch
                     className="flex h-11 w-fit items-center rounded-md px-3 transition-[padding] duration-300 ease-drawer group-data-[collapsible=icon]:px-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
@@ -33,14 +41,19 @@ export function AppSidebar() {
                         <Logo kind="symbol" className="h-7" />
                     </span>
                 </Link>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <TenantSwitcher />
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarHeader>
 
             <SidebarContent className="gap-4 px-1">
-                <NavMain items={mainNavItems} />
+                <NavMain items={mainNavItems(tenant?.slug ?? null)} />
                 {complianceNavItems.length > 0 && (
                     <NavMain label="Cumplimiento" items={complianceNavItems} />
                 )}
-                {isSuperadmin && (
+                {auth.isSuperadmin && (
                     <NavMain label="Plataforma" items={superadminNavItems} />
                 )}
             </SidebarContent>

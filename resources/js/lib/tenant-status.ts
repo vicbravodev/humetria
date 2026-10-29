@@ -50,3 +50,10 @@ export function activationCopy(status: TenantRow['status']): ActivationCopy {
 export function ownerAction(owner: TenantRow['owner']): string {
     return owner === null ? 'Invitar owner' : 'Cambiar owner';
 }
+
+/** The company switcher's note for a company in trial. */
+export function trialLabel(daysLeft: number): string {
+    return daysLeft === 1
+        ? 'Prueba · último día'
+        : `Prueba · quedan ${daysLeft} días`;
+}

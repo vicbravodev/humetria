@@ -1,4 +1,12 @@
-import { Ban, CalendarCheck, Ellipsis, Pencil, UserPlus } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import {
+    Ban,
+    CalendarCheck,
+    Ellipsis,
+    LogIn,
+    Pencil,
+    UserPlus,
+} from 'lucide-react';
 import { useState } from 'react';
 import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
 import DeactivateTenantDialog from '@/components/tenancy/deactivate-tenant-dialog';
@@ -13,6 +21,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { activationCopy, ownerAction } from '@/lib/tenant-status';
+import { impersonate } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
 type Action = 'activate' | 'invite' | 'edit' | 'deactivate';
@@ -59,6 +68,20 @@ export default function TenantRowActions({
                         <UserPlus />
                         {ownerAction(tenant.owner)}
                     </DropdownMenuItem>
+                    {tenant.owner !== null && (
+                        <DropdownMenuItem asChild>
+                            {/* Another person's session: nothing prefetched as the superadmin carries over. */}
+                            <Link
+                                href={impersonate(tenant.id)}
+                                as="button"
+                                onClick={() => router.flushAll()}
+                                className="w-full"
+                            >
+                                <LogIn />
+                                Entrar como owner
+                            </Link>
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onSelect={() => setOpen('edit')}>
                         <Pencil />
                         Editar

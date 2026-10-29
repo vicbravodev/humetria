@@ -1,33 +1,13 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import PageHeader from '@/components/page-header';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import { settingsNavItems } from '@/lib/app-navigation';
 import { cn, toUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
-import type { NavItem } from '@/types';
-
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Perfil',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Seguridad',
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: 'Apariencia',
-        href: editAppearance(),
-        icon: null,
-    },
-];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const { impersonator } = usePage().props;
 
     return (
         <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
@@ -39,7 +19,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                         className="flex flex-col gap-1"
                         aria-label="Configuración"
                     >
-                        {sidebarNavItems.map((item) => {
+                        {settingsNavItems(impersonator !== null).map((item) => {
                             const current = isCurrentOrParentUrl(item.href);
 
                             return (

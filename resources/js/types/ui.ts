@@ -6,8 +6,6 @@ export type AppLayoutProps = {
     breadcrumbs?: BreadcrumbItem[] | undefined;
 };
 
-export type AppVariant = 'header' | 'sidebar';
-
 export type FlashToast = {
     type: 'success' | 'info' | 'warning' | 'error';
     message: string;

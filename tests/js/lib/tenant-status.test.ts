@@ -4,6 +4,7 @@ import {
     activationCopy,
     ownerAction,
     tenantStatusVariant,
+    trialLabel,
 } from '@/lib/tenant-status';
 import type { TenantRow } from '@/types';
 
@@ -84,5 +85,15 @@ describe('ownerAction', () => {
         expect(ownerAction({ name: 'Ana Pérez', email: 'ana@acme.mx' })).toBe(
             'Cambiar owner',
         );
+    });
+});
+
+describe('trialLabel', () => {
+    it.each([
+        [1, 'Prueba · último día'],
+        [2, 'Prueba · quedan 2 días'],
+        [14, 'Prueba · quedan 14 días'],
+    ])('says %i days left as "%s"', (daysLeft, label) => {
+        expect(trialLabel(daysLeft)).toBe(label);
     });
 });
