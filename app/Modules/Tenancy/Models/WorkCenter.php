@@ -43,6 +43,16 @@ final class WorkCenter extends Model
     use HasFactory, HasVersion4Uuids;
 
     /**
+     * The address in one line, as it is written in Mexico: "Reforma 222 int. 4, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México".
+     */
+    public function address(): string
+    {
+        $number = $this->interior_number === null ? $this->exterior_number : "{$this->exterior_number} int. {$this->interior_number}";
+
+        return "{$this->street} {$number}, col. {$this->neighborhood}, C.P. {$this->postal_code}, {$this->municipality}, {$this->state->label()}";
+    }
+
+    /**
      * @return BelongsTo<Tenant, $this>
      */
     public function tenant(): BelongsTo

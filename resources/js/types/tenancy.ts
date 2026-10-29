@@ -55,3 +55,26 @@ export type CurrentTenant = TenantSummary &
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &
     Pick<TenantRow, 'status' | 'status_label' | 'blocked'>;
+
+/** One work center as its company's list shows it. */
+export type WorkCenterRow = {
+    id: string;
+    name: string;
+    street: string;
+    exterior_number: string;
+    interior_number: string | null;
+    neighborhood: string;
+    postal_code: string;
+    municipality: string;
+    /** ISO 3166-2:MX code without the country, like "QUE". */
+    state: string;
+    main_activity: string;
+    /** Street to state in one line, already written for display. */
+    address: string;
+    /** The day it was archived, written for display; null while active. */
+    archived_on: string | null;
+};
+
+export type MexicanStateOption = { value: string; label: string };
+
+export type WorkCentersView = 'active' | 'archived';

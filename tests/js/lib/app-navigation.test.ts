@@ -18,6 +18,20 @@ describe('mainNavItems', () => {
     it('points Panel at /admin when there is no company', () => {
         expect(toUrl(mainNavItems(null)[0]?.href ?? '')).toBe('/admin');
     });
+
+    it("lists the company's work centers after Panel", () => {
+        const items = mainNavItems('acme');
+
+        expect(items.map((item) => item.title)).toEqual([
+            'Panel',
+            'Centros de trabajo',
+        ]);
+        expect(toUrl(items[1]?.href ?? '')).toBe('/admin/acme/work-centers');
+    });
+
+    it('offers no work centers without a company', () => {
+        expect(mainNavItems(null).map((item) => item.title)).toEqual(['Panel']);
+    });
 });
 
 describe('settingsNavItems', () => {

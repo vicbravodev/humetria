@@ -160,6 +160,9 @@ return [
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
     'custom' => [
+        'postal_code' => [
+            'regex' => 'Escribe un código postal de 5 dígitos.',
+        ],
         'profile' => [
             'required' => 'Elige para quién es Humetría.',
         ],
@@ -169,6 +172,9 @@ return [
         'slug' => [
             'not_in' => 'Esa dirección está reservada. Elige otra.',
             'unique' => 'Esa dirección ya la usa otra empresa.',
+        ],
+        'state' => [
+            'in' => 'Elige un estado de la lista.',
         ],
         'tools' => [
             'required' => 'Elige al menos una herramienta.',
@@ -184,15 +190,23 @@ return [
         'company' => 'empresa',
         'current_password' => 'contraseña actual',
         'email' => 'correo electrónico',
+        'exterior_number' => 'número exterior',
+        'interior_number' => 'número interior',
         'legal_name' => 'razón social',
+        'main_activity' => 'actividad principal',
         'message' => 'mensaje',
+        'municipality' => 'municipio o alcaldía',
         'name' => 'nombre',
+        'neighborhood' => 'colonia',
         'password' => 'contraseña',
         'password_confirmation' => 'confirmación de contraseña',
+        'postal_code' => 'código postal',
         'profile' => 'perfil',
         'recovery_code' => 'código de recuperación',
         'rfc' => 'RFC',
         'slug' => 'dirección',
+        'state' => 'estado',
+        'street' => 'calle',
         'tools' => 'herramientas',
         'trade_name' => 'nombre comercial',
         'whatsapp' => 'WhatsApp',

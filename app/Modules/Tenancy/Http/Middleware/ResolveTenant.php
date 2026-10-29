@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Http\Middleware;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
@@ -20,7 +21,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ResolveTenant
 {
-    public function __construct(private readonly ListUserTenants $listUserTenants) {}
+    public function __construct(
+        private readonly ListUserTenants $listUserTenants,
+        private readonly TenantContext $tenantContext,
+    ) {}
 
     /**
      * @param  Closure(Request): Response  $next
@@ -42,6 +46,7 @@ final class ResolveTenant
 
         $request->route()?->setParameter('tenant', $tenant);
         Context::add('tenant_id', $tenant->id);
+        $this->tenantContext->set($tenant);
 
         $status = $tenant->status();
 

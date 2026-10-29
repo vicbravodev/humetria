@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\AwaitableWebpage;
@@ -83,6 +84,32 @@ function ownerOf(Tenant $tenant): User
 function workIn(Tenant $tenant): void
 {
     resolve(TenantContext::class)->set($tenant);
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function workCenterForm(array $overrides = []): array
+{
+    return [
+        'name' => 'Planta Querétaro',
+        'street' => 'Av. 5 de Febrero',
+        'exterior_number' => '1200',
+        'interior_number' => 'Nave 3',
+        'neighborhood' => 'Zona Industrial Benito Juárez',
+        'postal_code' => '76120',
+        'municipality' => 'Querétaro',
+        'state' => 'QUE',
+        'main_activity' => 'Manufactura de autopartes',
+        ...$overrides,
+    ];
+}
+
+/** The work center as stored now, read past the company scope. */
+function reloaded(WorkCenter $workCenter): WorkCenter
+{
+    return WorkCenter::query()->withoutGlobalScopes()->findOrFail($workCenter->id);
 }
 
 /**

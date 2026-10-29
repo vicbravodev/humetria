@@ -48,7 +48,7 @@ final class TenantRules
      * Valid UTF-8 without control characters: Postgres rejects invalid UTF-8 (and the
      * exception would carry the submitted values) and pdo_pgsql silently cuts at a NUL.
      */
-    private const string SINGLE_LINE = 'regex:/\A[^\x00-\x1F\x7F]*\z/u';
+    public const string SINGLE_LINE = 'regex:/\A[^\x00-\x1F\x7F]*\z/u';
 
     /**
      * What a person types is not what is stored: the RFC is uppercase without spaces, the address lowercase.

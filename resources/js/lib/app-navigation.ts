@@ -1,4 +1,4 @@
-import { Building2, House, Inbox } from 'lucide-react';
+import { Building2, Factory, House, Inbox } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
@@ -6,16 +6,28 @@ import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
+import { index as workCenters } from '@/routes/tenant/work-centers';
 import type { NavItem } from '@/types';
 
-/** The pages of the panel, as the sidebar and the ⌘K palette list them; Panel is the current company's, or /admin without one. */
-export const mainNavItems = (tenantSlug: string | null): NavItem[] => [
-    {
-        title: 'Panel',
-        href: tenantSlug === null ? dashboard() : tenantDashboard(tenantSlug),
-        icon: House,
-    },
-];
+/**
+ * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
+ * without one; the company's own pages appear only inside a company.
+ */
+export const mainNavItems = (tenantSlug: string | null): NavItem[] =>
+    tenantSlug === null
+        ? [{ title: 'Panel', href: dashboard(), icon: House }]
+        : [
+              {
+                  title: 'Panel',
+                  href: tenantDashboard(tenantSlug),
+                  icon: House,
+              },
+              {
+                  title: 'Centros de trabajo',
+                  href: workCenters(tenantSlug),
+                  icon: Factory,
+              },
+          ];
 
 // NOM-035, NOM-037 and Ley Silla enter here when each gets its first page.
 export const complianceNavItems: NavItem[] = [];
