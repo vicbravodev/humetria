@@ -62,3 +62,16 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         // Page title in h1 (30/38).
         ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px');
 })->with(['light' => false, 'dark' => true]);
+
+it('moves with the design system motion', function (): void {
+    $this->actingAs(superadmin());
+
+    visitPage('dashboard', '/admin')
+        // Pressables answer with the strong ease-out curve.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).transitionTimingFunction.includes("cubic-bezier(0.23, 1, 0.32, 1)")')
+        // Moving to another page cross-fades it through the View Transitions API.
+        ->assertScript('() => { window.transitions = 0; const start = document.startViewTransition.bind(document); document.startViewTransition = (update) => { window.transitions++; return start(update); }; return true; }')
+        ->click('Empresas')
+        ->assertPathIs('/admin/companies')
+        ->assertScript('() => window.transitions', 1);
+});

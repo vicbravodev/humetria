@@ -10,7 +10,10 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
             <AppSidebar />
             <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
                 <AppSidebarHeader />
-                {children}
+                {/* The part that cross-fades between pages (app.css, ::view-transition-*(page)). */}
+                <div className="flex flex-1 flex-col [view-transition-name:page]">
+                    {children}
+                </div>
             </AppContent>
         </AppShell>
     );

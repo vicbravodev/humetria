@@ -110,6 +110,14 @@
     --risk-muy-alto-fg: #f7a08c;
 }
 
+/* Motion: see docs/design-system/design-system.md, "Movimiento". */
+@theme {
+    /* Strong curves: Tailwind's ease-out / ease-in-out read as these everywhere. */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @theme inline {
     --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
     --radius-sm: calc(var(--radius) - 4px); /* 6px */
@@ -175,5 +183,48 @@
         @apply bg-background text-foreground;
         font-size: 16px;
         line-height: 24px;
+    }
+}
+
+/*
+ * Page changes (lib/page-transition.ts): the sidebar stays put and only the panel's content cross-fades,
+ * the new page rising 4 px. Fast exit, slightly longer entry.
+ */
+::view-transition-old(page) {
+    animation: 120ms var(--ease-out) both page-out;
+}
+
+::view-transition-new(page) {
+    animation: 220ms var(--ease-out) both page-in;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}
+
+@keyframes page-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-new(page) {
+        animation-name: page-out;
+        animation-direction: reverse;
+    }
+
+    *,
+    ::before,
+    ::after {
+        scroll-behavior: auto !important;
     }
 }
