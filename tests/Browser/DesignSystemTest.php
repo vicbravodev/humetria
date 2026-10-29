@@ -81,6 +81,8 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         // Its name comes back as a tooltip.
         ->hover('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->assertScript('() => document.querySelector(\'[role="tooltip"]\')?.textContent', 'Empresas')
+        // axe reads colors as painted: let the tooltip finish fading in before it judges the contrast.
+        ->assertScript(SETTLED)
         ->assertNoAccessibilityIssues(1);
 
     $page->refresh()
