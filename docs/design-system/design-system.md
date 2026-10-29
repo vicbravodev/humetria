@@ -68,6 +68,7 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 - **Duraciones:** 100–150 ms para presionar y cambios de color; 150–200 ms para tooltips, menús y el chip del tema; 300 ms para el sidebar; 120 ms de salida y 220 ms de entrada entre páginas. Ninguna interfaz pasa de 300 ms.
 - **Presionar:** todo `Button` baja a `scale(0.97)` mientras se presiona.
 - **Entre páginas:** solo el contenido del panel cambia (View Transitions API): la página vieja se desvanece y la nueva sube 4 px. Envíos de formulario, recargas parciales y cambios dentro de la misma ruta no se animan (`lib/page-transition.ts`).
+- **Diálogos:** entran desde `scale(0.96)` con un desvanecido en 200 ms y salen en 150 ms, centrados.
 - **Menús, select y popovers:** crecen desde su disparador (`origin-(--radix-…-content-transform-origin)`), 200 ms al abrir y 100 ms al cerrar.
 - **Calendario:** al cambiar de mes las semanas entran de lado y las anteriores salen hacia el otro.
 - **Tooltips:** crecen desde su disparador (`origin-(--radix-tooltip-content-transform-origin)`); una vez abierto uno, los siguientes aparecen sin animación.
