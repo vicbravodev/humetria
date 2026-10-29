@@ -1,5 +1,4 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -8,7 +7,6 @@ import {
     DialogDescription,
     DialogFooter,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { deactivate } from '@/routes/companies';
@@ -17,23 +15,18 @@ import type { TenantRow } from '@/types';
 /** Asks for confirmation before blocking a company. Its data is kept. */
 export default function DeactivateTenantDialog({
     tenant,
+    open,
+    onOpenChange,
 }: {
     tenant: TenantRow;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
-    const [open, setOpen] = useState(false);
     const hasTrialLeft =
         tenant.status === 'trial' || tenant.status === 'not_started';
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    aria-label={`Desactivar ${tenant.trade_name}`}
-                >
-                    Desactivar
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogTitle>¿Desactivar {tenant.trade_name}?</DialogTitle>
                 <DialogDescription>
@@ -43,7 +36,7 @@ export default function DeactivateTenantDialog({
                 </DialogDescription>
                 <Form
                     {...deactivate.form(tenant.id)}
-                    onSuccess={() => setOpen(false)}
+                    onSuccess={() => onOpenChange(false)}
                 >
                     {({ processing }) => (
                         <DialogFooter className="gap-2">

@@ -39,6 +39,7 @@ export default function TenantOwnerCell({ tenant }: { tenant: TenantRow }) {
                                 <Button
                                     type="submit"
                                     variant="outline"
+                                    size="sm"
                                     disabled={processing}
                                     aria-label={`Reenviar invitación de ${tenant.trade_name}`}
                                 >

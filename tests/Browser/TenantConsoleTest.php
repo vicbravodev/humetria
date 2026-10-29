@@ -7,6 +7,9 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 
+// The labels of the open row menu, in order.
+const MENU_ITEMS = '() => [...document.querySelectorAll(\'[role="menuitem"]\')].map((item) => item.textContent).join(", ")';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -43,12 +46,29 @@ it('shows the superadmin every company with its status', function (bool $dark, b
         ->assertSee('Carla Soto · carla@acme.mx')
         ->assertSee('Dora Luna · dora@acme.mx')
         ->assertSee('Eva Mora · eva@acme.mx')
-        ->assertSee('Cambiar owner')
         ->assertSee('Grupo Ejemplo')
         ->assertSee('Grupo Ejemplo S.A. de C.V.')
         ->assertSee('GEJ0101011A1')
-        ->assertSee('Sin iniciar');
+        ->assertSee('Sin iniciar')
+        // A company with an owner offers to change it, from its row's menu.
+        ->click('[aria-label="Acciones de Con owner"]')
+        ->assertSee('Cambiar owner');
 })->with($looks);
+
+it('keeps the actions of each row in one menu, so the table fits without scrolling sideways', function (): void {
+    signInAsSuperadmin();
+    TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']))->create();
+
+    visit('/admin/companies')
+        ->resize(1280, 800)
+        ->assertScript('() => { const box = document.querySelector(\'[data-slot="table-container"]\'); return box.scrollWidth <= box.clientWidth; }')
+        ->assertScript('() => document.querySelectorAll(\'[data-test="tenant-actions"]\').length', 1)
+        ->click('[aria-label="Acciones de Grupo Ejemplo"]')
+        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Desactivar')
+        // Desactivar is apart from the rest and in the destructive color.
+        ->assertScript('() => document.querySelector(\'[role="menuitem"][data-variant="destructive"]\')?.textContent', 'Desactivar')
+        ->assertScript('() => document.querySelector(\'[role="menu"] [role="separator"]\') !== null');
+});
 
 it('says so when there are no companies yet', function (bool $dark): void {
     signInAsSuperadmin();
@@ -139,7 +159,7 @@ it('edits the legal name from the dialog and shows it in the row', function (): 
     Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo', 'legal_name' => 'Grupo Ejemplo S.A. de C.V.', 'slug' => 'grupo-ejemplo']);
 
     visit('/admin/companies')
-        ->click('Editar')
+        ->click('@tenant-actions')->click('Editar')
         ->assertSee('Editar empresa')
         ->assertValue('trade_name', 'Grupo Ejemplo')
         ->assertValue('slug', 'grupo-ejemplo')
@@ -160,7 +180,7 @@ it('warns that the old addresses stop working when the address is edited', funct
     Tenant::factory()->create(['slug' => 'grupo-ejemplo']);
 
     visit('/admin/companies')
-        ->click('Editar')
+        ->click('@tenant-actions')->click('Editar')
         ->type('slug', 'otra-direccion')
         ->assertSee('Las direcciones anteriores de esta empresa dejarán de funcionar.');
 });
@@ -169,7 +189,7 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
     signInAsSuperadmin();
     Tenant::factory()->create();
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Editar')->assertSee('Editar empresa'));
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Editar')->assertSee('Editar empresa'));
 })->with($looks);
 
 it('activates a company that has not started, choosing the date', function (): void {
@@ -180,7 +200,7 @@ it('activates a company that has not started, choosing the date', function (): v
 
     visit('/admin/companies')
         ->assertSee('Sin iniciar')
-        ->click('Activar')
+        ->click('@tenant-actions')->click('Activar')
         ->assertSee('Activar empresa')
         // The date is picked in a calendar in Spanish, not typed.
         ->assertSeeIn('#tenant-active_until', 'Elige una fecha')
@@ -206,7 +226,7 @@ it('lets no day before tomorrow be picked', function (): void {
     $today = now('America/Mexico_City');
 
     visit('/admin/companies')
-        ->click('Activar')
+        ->click('@tenant-actions')->click('Activar')
         ->click('#tenant-active_until')
         // It opens on the first day it allows, with today greyed out and out of reach.
         ->assertScript('() => document.activeElement.closest("[data-day]")?.dataset.day', $today->copy()->addDay()->format('Y-m-d'))
@@ -218,7 +238,7 @@ it('passes the accessibility and CSP checks with the calendar open', function (b
     Tenant::factory()->create();
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page
-        ->click('Activar')
+        ->click('@tenant-actions')->click('Activar')
         ->click('#tenant-active_until')
         ->assertVisible('[data-slot="calendar"]'));
 })->with($looks);
@@ -238,7 +258,7 @@ it('offers to reactivate a blocked company', function (): void {
     Tenant::factory()->deactivated()->create();
 
     visit('/admin/companies')
-        ->click('Reactivar')
+        ->click('@tenant-actions')->click('Reactivar')
         ->assertSee('Reactivar empresa');
 });
 
@@ -247,7 +267,8 @@ it('offers to change the end date of an active company instead of activating it 
     Tenant::factory()->activeUntil(now()->addMonths(2))->create();
 
     visit('/admin/companies')
-        ->assertMissing('button[aria-label^="Activar "]')
+        ->click('@tenant-actions')
+        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Desactivar')
         ->click('Cambiar vigencia')
         ->assertSee('Elige el último día')
         ->assertSeeIn('[role=dialog] button[type=submit]', 'Guardar');
@@ -257,7 +278,7 @@ it('passes the accessibility and CSP checks with the activation dialog open', fu
     signInAsSuperadmin();
     Tenant::factory()->create();
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Activar')->assertSee('Activar empresa'));
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Activar')->assertSee('Activar empresa'));
 })->with($looks);
 
 it('deactivates an active company after confirming, and hides the button afterwards', function (): void {
@@ -266,7 +287,7 @@ it('deactivates an active company after confirming, and hides the button afterwa
 
     visit('/admin/companies')
         ->assertSee('Activa hasta')
-        ->click('Desactivar')
+        ->click('@tenant-actions')->click('Desactivar')
         ->assertSee('¿Desactivar Grupo Ejemplo?')
         ->assertSee('Sus datos se conservan.')
         ->assertDontSee('La prueba no se puede reanudar.')
@@ -285,7 +306,7 @@ it('warns that a trial cannot be resumed once the company is deactivated', funct
     Tenant::factory()->inTrial(now())->create();
 
     visit('/admin/companies')
-        ->click('Desactivar')
+        ->click('@tenant-actions')->click('Desactivar')
         ->assertSee('La prueba no se puede reanudar.');
 });
 
@@ -293,14 +314,16 @@ it('does not offer to deactivate a blocked company', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->deactivated()->create();
 
-    visit('/admin/companies')->assertDontSee('Desactivar');
+    visit('/admin/companies')
+        ->click('@tenant-actions')
+        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar');
 });
 
 it('passes the accessibility and CSP checks with the deactivation dialog open', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     Tenant::factory()->create();
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Desactivar')->assertSee('Sus datos se conservan.'));
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Desactivar')->assertSee('Sus datos se conservan.'));
 })->with($looks);
 
 it('invites the owner from the console', function (): void {
@@ -309,7 +332,7 @@ it('invites the owner from the console', function (): void {
 
     visit('/admin/companies')
         ->assertSee('Sin invitar')
-        ->click('Invitar owner')
+        ->click('@tenant-actions')->click('Invitar owner')
         ->assertSee('Le enviamos un correo con un enlace, válido por 7 días')
         ->type('name', 'Ana Pérez')
         ->type('email', 'ana@acme.mx')
@@ -364,7 +387,7 @@ it('shows what is wrong in the invitation dialog and keeps it open', function ()
     Tenant::factory()->create();
 
     visit('/admin/companies')
-        ->click('Invitar owner')
+        ->click('@tenant-actions')->click('Invitar owner')
         ->type('name', 'Ana Pérez')
         ->type('email', 'no-es-correo')
         ->press('Enviar invitación')
@@ -377,5 +400,5 @@ it('passes the accessibility and CSP checks with the invitation dialog open', fu
     signInAsSuperadmin();
     Tenant::factory()->create();
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('Invitar owner')->assertSee('Enviar invitación'));
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Invitar owner')->assertSee('Enviar invitación'));
 })->with($looks);
