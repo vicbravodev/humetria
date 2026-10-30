@@ -14,6 +14,7 @@ it('closes expired evaluations hourly and runs the queue housekeeping on schedul
     expect($events)->toBe([
         'campaigns:close-expired' => '0 * * * *',
         'horizon:snapshot' => '*/5 * * * *',
+        'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
         'queue:prune-failed' => '0 0 * * *',
     ]);

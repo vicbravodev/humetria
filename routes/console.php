@@ -17,5 +17,7 @@ Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $clo
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
+// DB-IP publishes at the start of each month. On every server: each reads its own copy.
+Schedule::command('geoip:update')->monthlyOn(5, '06:00');
 Schedule::command('queue:prune-batches')->daily();
 Schedule::command('queue:prune-failed')->daily();

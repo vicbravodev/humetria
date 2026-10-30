@@ -254,6 +254,7 @@ contra él.
   puerto 5433 (`FORWARD_DB_PORT`); `phpunit.xml` fija ese host y puerto, así que el `.env` puede apuntar a `pgsql`.
 - Primera vez: `composer install`, `cp .env.example .env`, `sail up -d`, `sail artisan key:generate`, `sail artisan migrate`.
   El primer superadmin: `sail artisan humetria:create-superadmin`.
+  La base de ciudades para los correos de cuenta: `sail artisan geoip:update` (luego la baja cada mes el scheduler).
 - El correo local va a mailtrap-local (bandeja en `http://localhost:3550`): ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
 - Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado;
