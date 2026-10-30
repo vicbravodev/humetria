@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\Tenancy\Data\WorkCenterProfile;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -32,6 +34,26 @@ final class CompanyWorkCenters implements WorkCenters
         $workCenter = WorkCenter::query()->whereNull('archived_at')->find($id, ['id', 'name', 'archived_at']);
 
         return $workCenter === null ? null : $this->summary($workCenter);
+    }
+
+    public function profile(string $id): ?WorkCenterProfile
+    {
+        $workCenter = WorkCenter::query()->find($id);
+
+        if ($workCenter === null) {
+            return null;
+        }
+
+        $tenant = Tenant::query()->findOrFail($workCenter->tenant_id, ['id', 'legal_name', 'rfc']);
+
+        return new WorkCenterProfile(
+            $workCenter->id,
+            $workCenter->name,
+            $tenant->legal_name,
+            $tenant->rfc,
+            $workCenter->address(),
+            $workCenter->main_activity,
+        );
     }
 
     private function summary(WorkCenter $workCenter): WorkCenterSummary
