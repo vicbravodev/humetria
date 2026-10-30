@@ -6,6 +6,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { useHeldValue } from '@/hooks/use-held-value';
 import {
     describeDate,
     fromCalendarDate,
@@ -22,6 +23,9 @@ type Props = {
     min?: string | undefined;
     invalid?: boolean;
     describedBy?: string | undefined;
+    /** The day picked, when the page holds it (Y-m-d); without it the field keeps its own. */
+    value?: string | undefined;
+    onChange?: ((value: string) => void) | undefined;
 };
 
 /**
@@ -35,8 +39,10 @@ export default function DatePicker({
     min,
     invalid = false,
     describedBy,
+    value: held,
+    onChange,
 }: Props) {
-    const [value, setValue] = useState(defaultValue);
+    const [value, setValue] = useHeldValue(defaultValue, held, onChange);
     const [open, setOpen] = useState(false);
     const selected = fromCalendarDate(value);
     const first = min === undefined ? undefined : fromCalendarDate(min);

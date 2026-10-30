@@ -384,7 +384,7 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $this->get($url);
 
     // The same with 3 or 30 people: nothing is read person by person.
-    $this->expectsDatabaseQueryCount(18);
+    $this->expectsDatabaseQueryCount(22);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);
@@ -421,4 +421,105 @@ it('says how the sending of the last batch of links goes, while it goes', functi
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page->where('sending', null));
+});
+
+it('dates the history of an evaluation and links its work center', function (): void {
+    Carbon::setTestNow('2026-10-08 18:00:00');
+    $campaign = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $campaign->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Closed, 'launched_at' => '2026-10-10 16:00:00', 'closes_on' => '2026-10-29', 'closed_at' => '2026-10-30 03:00:00']);
+
+    // Closed at 21:00 of the 29th in Mexico City: the next one is due two years after that day.
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('campaign.workCenterId', $this->plant->id)
+            ->where('campaign.createdOn', '8 oct 2026')
+            ->where('campaign.launchedOn', '10 oct 2026')
+            ->where('campaign.closedOn', '29 oct 2026')
+            ->where('campaign.nextDueBy', '29 oct 2028'));
+
+    $draft = Campaign::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $draft->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('campaign.nextDueBy', null));
+});
+
+it('tells a draft how many of its people the links reach, only to those who manage it', function (): void {
+    $people = staffOf($this->tenant, $this->plant, 20);
+    $people[0]->update(['email' => null, 'mobile' => '5512345678']);
+    staffOf($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), 3);
+    $draft = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $draft->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('contact', ['reachable' => 19, 'unreachable' => 1]));
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->get(route('tenant.campaigns.show', [$this->tenant, $draft->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('contact', null));
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, campaignWithAnswers($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), 'nom035.guide-ii', 1, 0)->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('contact', null));
+});
+
+it('counts who answered in each area, of everyone still in the campaign, only to those who manage it', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $sales = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ventas']);
+    $board = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Dirección']);
+    $done = ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed];
+    $half = ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Pending];
+    personIn($campaign, 'Ana', $done, employee: ['area_id' => $sales->id]);
+    personIn($campaign, 'Beto', $half, employee: ['area_id' => $sales->id]);
+    personIn($campaign, 'Ceci', $half, ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed], ['area_id' => $sales->id]);
+    personIn($campaign, 'Dora', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled], employee: ['area_id' => $sales->id]);
+    personIn($campaign, 'Eva', $done, employee: ['area_id' => $board->id]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('areas', [
+            ['id' => $board->id, 'name' => 'Dirección', 'answered' => 1, 'pending' => 0, 'total' => 1],
+            ['id' => $sales->id, 'name' => 'Ventas', 'answered' => 1, 'pending' => 1, 'total' => 3],
+        ]));
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('areas', null));
+});
+
+it('counts the people who finished each day from launch to the last day, once enough of them did', function (): void {
+    Carbon::setTestNow('2026-10-29 18:00:00');
+    $campaign = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $campaign->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Active, 'launched_at' => '2026-10-27 15:00:00', 'closes_on' => '2026-10-31']);
+    $finish = function (string $first, string $last) use ($campaign): void {
+        $person = personIn($campaign, 'Persona', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
+        ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $person->id)->where('instrument', 'nom035.guide-i')->update(['completed_at' => $first]);
+        ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $person->id)->where('instrument', 'nom035.guide-ii')->update(['completed_at' => $last]);
+    };
+    // Each counts on the day of their last guide, in Mexico City: 02:00 UTC on the 28th is still the 27th there.
+    $finish('2026-10-27 16:00:00', '2026-10-28 02:00:00');
+    $finish('2026-10-27 16:00:00', '2026-10-27 20:00:00');
+    $finish('2026-10-27 16:00:00', '2026-10-28 18:00:00');
+    $finish('2026-10-28 16:00:00', '2026-10-29 16:00:00');
+    personIn($campaign, 'A medias', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Pending]);
+    $url = route('tenant.campaigns.show', [$this->tenant, $campaign->id]);
+
+    // Four people: a day with one of them could tell who answered when.
+    $this->actingAs($this->hr)->get($url)
+        ->assertInertia(fn (Assert $page) => $page->where('answersByDay', ['minimum' => 5, 'days' => null]));
+
+    $finish('2026-10-29 17:00:00', '2026-10-29 17:30:00');
+
+    $this->actingAs($this->hr)->get($url)
+        ->assertInertia(fn (Assert $page) => $page->where('answersByDay', ['minimum' => 5, 'days' => [
+            ['date' => '2026-10-27', 'answers' => 2],
+            ['date' => '2026-10-28', 'answers' => 1],
+            ['date' => '2026-10-29', 'answers' => 2],
+            ['date' => '2026-10-30', 'answers' => null],
+            ['date' => '2026-10-31', 'answers' => null],
+        ]]));
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get($url)
+        ->assertInertia(fn (Assert $page) => $page->where('answersByDay', null));
 });

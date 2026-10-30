@@ -35,7 +35,29 @@ export type CampaignDetail = CampaignSummary & {
     sampleSize: number | null;
     quotas: GenderQuota[];
     launchedOn: string | null;
+    workCenterId: string;
+    createdOn: string;
+    /** Two years after it closed (num. 7.9); null while open. */
+    nextDueBy: string | null;
 };
+
+/** Who answered in one area, of everyone still in the campaign, and how many wait with a link sent. */
+export type AreaParticipation = {
+    id: string;
+    name: string;
+    answered: number;
+    pending: number;
+    total: number;
+};
+
+/** People who finished on one day (Y-m-d); null for the days still to come. */
+export type AnswerDay = { date: string; answers: number | null };
+
+/** The days from launch to the last day, or null while fewer than the minimum group answered. */
+export type AnswersByDay = { minimum: number; days: AnswerDay[] | null };
+
+/** Before launch: how many of the people the links reach by email, and how many they do not. */
+export type DraftContact = { reachable: number; unreachable: number };
 
 export type InstrumentProgress = {
     key: string;
