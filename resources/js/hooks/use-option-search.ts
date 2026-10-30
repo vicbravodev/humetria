@@ -25,6 +25,8 @@ export type OptionSource =
     | {
           initial: Option[];
           load: (query: string, signal: AbortSignal) => Promise<Option[]>;
+          /** Offer to add what was typed when no option found has that label. */
+          allowNew?: boolean;
           minLength?: number;
           delay?: number;
       };
@@ -81,7 +83,7 @@ export function useOptionSearch(source: OptionSource, query: string) {
     const local = filterOptions(index, query, LIMIT);
     const fromServer = 'load' in source && remote.status !== 'idle';
     const status = 'load' in source ? remote.status : 'done';
-    const allowNew = 'options' in source && source.allowNew === true;
+    const allowNew = source.allowNew === true;
     const found = fromServer ? remote.options : local.options;
     const options = allowNew ? withNewOption(found, query) : found;
     const more = !fromServer && local.more;

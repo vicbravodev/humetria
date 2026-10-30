@@ -25,6 +25,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use LogicException;
 
 /**
  * «Usuarios»: who has access to the company and with which role. Only its owner manages it; the owner's own
@@ -32,6 +33,8 @@ use Inertia\Response;
  */
 final class MemberController extends Controller
 {
+    private const int PER_PAGE = 25;
+
     public function __construct(private readonly CompanyRoles $roles) {}
 
     public function index(Tenant $tenant, #[CurrentUser] User $user): Response
@@ -39,16 +42,25 @@ final class MemberController extends Controller
         $this->authorizeOwner();
         $roles = $this->roles->inCompany($tenant);
 
+        $owner = array_search(TenantRole::Owner, $roles, true);
+
         return Inertia::render('tenancy/members', [
-            'members' => $tenant->memberships()->with('user')->get()
-                ->map(fn (TenantMembership $member): ?array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user))
-                ->filter()
+            'members' => $tenant->memberships()
+                ->with('user')
+                ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
+                ->whereIn('tenant_memberships.user_id', array_keys($roles))
                 // The owner first, then by name.
-                ->sortBy(fn (array $row): string => ($row['role'] === TenantRole::Owner->value ? '0' : '1').mb_strtolower($row['name']))
-                ->values()
-                ->all(),
-            'invitations' => $tenant->invitations()->open()->where('role', '<>', TenantRole::Owner)->latest()->get()
-                ->map(fn (TenantInvitation $invitation): array => [
+                ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner === false ? 0 : $owner])
+                ->orderBy('users.name')
+                ->orderBy('tenant_memberships.id')
+                ->select('tenant_memberships.*')
+                ->paginate(self::PER_PAGE, pageName: 'members')
+                ->withQueryString()
+                ->through(fn (TenantMembership $member): array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user)),
+            'invitations' => $tenant->invitations()->open()->where('role', '<>', TenantRole::Owner)->latest()->orderByDesc('id')
+                ->paginate(self::PER_PAGE, pageName: 'invitations')
+                ->withQueryString()
+                ->through(fn (TenantInvitation $invitation): array => [
                     'id' => $invitation->id,
                     'name' => $invitation->name,
                     'email' => $invitation->email,
@@ -57,7 +69,7 @@ final class MemberController extends Controller
                     'status' => $invitation->status()->value,
                     'status_label' => $invitation->status()->label(),
                     'expires_on' => DisplayDate::day($invitation->expires_at),
-                ])->all(),
+                ]),
             'roles' => array_map(
                 fn (TenantRole $role): array => ['value' => $role->value, 'label' => $role->label()],
                 [TenantRole::Hr, TenantRole::Viewer],
@@ -116,13 +128,16 @@ final class MemberController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, email: string, role: string, role_label: string, is_you: bool, since: string}|null
+     * Only people with a role in the company are listed, so both are there; anything else is broken data.
+     *
+     * @return array{id: int, name: string, email: string, role: string, role_label: string, is_you: bool, since: string}
      */
-    private function memberRow(TenantMembership $member, ?TenantRole $role, User $you): ?array
+    private function memberRow(TenantMembership $member, ?TenantRole $role, User $you): array
     {
-        $user = $member->user;
+        $user = $member->user ?? throw new LogicException("Membership [{$member->id}] has no user.");
+        $role ??= throw new LogicException("Membership [{$member->id}] has no role.");
 
-        return $user === null || $role === null ? null : [
+        return [
             'id' => $member->id,
             'name' => $user->name,
             'email' => $user->email,

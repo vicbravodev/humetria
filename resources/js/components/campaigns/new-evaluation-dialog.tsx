@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { useState } from 'react';
 import PopulationField from '@/components/campaigns/population-field';
-import WorkCenterSelect from '@/components/campaigns/work-center-select';
+import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,27 +23,23 @@ import type { WorkCenterEvaluation } from '@/types';
  */
 export default function NewEvaluationDialog({
     tenantSlug,
-    workCenters,
+    workCenter,
 }: {
     tenantSlug: string;
-    workCenters: WorkCenterEvaluation[];
+    workCenter: WorkCenterEvaluation;
 }) {
     const [open, setOpen] = useState(false);
-    const [workCenterId, setWorkCenterId] = useState('');
-    const eligible = workCenters.filter((workCenter) => workCenter.eligible);
-    const chosen = eligible.find(
-        (workCenter) => workCenter.id === workCenterId,
-    );
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button disabled={eligible.length === 0}>
-                    Nueva evaluación
+                <Button variant="outline" size="sm">
+                    Evaluar
+                    <span className="sr-only"> {workCenter.name}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
-                <DialogTitle>Nueva evaluación NOM-035</DialogTitle>
+                <DialogTitle>Evaluar {workCenter.name}</DialogTitle>
                 <DialogDescription>
                     Se prepara como borrador. Nadie recibe nada hasta que la
                     lances.
@@ -56,15 +52,15 @@ export default function NewEvaluationDialog({
                 >
                     {({ processing, errors }) => (
                         <>
-                            <WorkCenterSelect
-                                workCenters={eligible}
-                                value={workCenterId}
-                                onChange={setWorkCenterId}
-                                error={errors['work_center_id']}
+                            <input
+                                type="hidden"
+                                name="work_center_id"
+                                value={workCenter.id}
                             />
-                            {chosen?.guides.includes('III') === true && (
+                            <InputError message={errors['work_center_id']} />
+                            {workCenter.guides.includes('III') && (
                                 <PopulationField
-                                    workers={chosen.workers}
+                                    workers={workCenter.workers}
                                     error={errors['population']}
                                 />
                             )}
@@ -80,12 +76,7 @@ export default function NewEvaluationDialog({
                                 <DialogClose asChild>
                                     <Button variant="outline">Cancelar</Button>
                                 </DialogClose>
-                                <Button
-                                    type="submit"
-                                    disabled={
-                                        processing || chosen === undefined
-                                    }
-                                >
+                                <Button type="submit" disabled={processing}>
                                     {processing && <Spinner />}
                                     Preparar borrador
                                 </Button>

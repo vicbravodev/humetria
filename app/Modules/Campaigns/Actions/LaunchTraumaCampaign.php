@@ -11,7 +11,6 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
-use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
@@ -31,8 +30,7 @@ final readonly class LaunchTraumaCampaign
         private CurrentTenant $currentTenant,
         private WorkCenters $workCenters,
         private Roster $roster,
-        private Companies $companies,
-        private SendSurveyInvitation $sendInvitation,
+        private QueueSurveyInvitations $queueInvitations,
         private RecordAudit $recordAudit,
     ) {}
 
@@ -57,9 +55,7 @@ final readonly class LaunchTraumaCampaign
             throw ValidationException::withMessages(['employee_ids' => 'Elige solo personas activas de este centro de trabajo.']);
         }
 
-        $tradeName = $this->companies->current()->tradeName;
-
-        return DB::transaction(function () use ($workCenterId, $chosen, $active, $closesOn, $createdBy, $tradeName): Campaign {
+        return DB::transaction(function () use ($workCenterId, $chosen, $active, $closesOn, $createdBy): Campaign {
             $campaign = Campaign::query()->create([
                 'tenant_id' => $this->currentTenant->id(),
                 'work_center_id' => $workCenterId,
@@ -70,18 +66,14 @@ final readonly class LaunchTraumaCampaign
                 'launched_at' => now(),
                 'created_by' => $createdBy,
             ]);
-            $invited = 0;
+            $participants = CampaignInstruments::enroll($campaign, array_fill_keys($chosen, false));
+            $queue = [];
 
             foreach ($chosen as $employeeId) {
-                $participant = $campaign->participants()->create(['tenant_id' => $campaign->tenant_id, 'employee_id' => $employeeId]);
-                CampaignInstruments::give($participant, $campaign->instruments);
-                $email = $active->get($employeeId)?->email;
-
-                if ($email !== null) {
-                    $this->sendInvitation->handle($campaign, $participant, $email, $tradeName);
-                    $invited++;
-                }
+                $queue[$participants[$employeeId]] = $active->get($employeeId)?->email !== null;
             }
+
+            $invited = $this->queueInvitations->handle($campaign, $queue);
 
             $counts = ['participants' => count($chosen), 'invited' => $invited];
             Log::info('campaign.launched', ['campaign_id' => $campaign->id, ...$counts]);

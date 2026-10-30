@@ -1,3 +1,5 @@
+import type { Paginated } from '@/types/demos';
+
 export type CampaignStatus = 'draft' | 'active' | 'closed';
 
 export type CampaignKind = 'nom035_evaluation' | 'nom035_trauma';
@@ -39,7 +41,32 @@ export type InstrumentProgress = {
     title: string;
     invited: number;
     completed: number;
+    /** Pending with a link sent. */
+    pending: number;
+    /** Pending with no link: no email. */
+    unreachable: number;
     cancelled: number;
+};
+
+/** The last batch of survey links while the queue sends it: how many it went through, of all. */
+export type CampaignSending = { done: number; total: number };
+
+/** How many people of a campaign stand somewhere, as a choice of the people filter. */
+export type StandingCount = { value: string; label: string; count: number };
+
+/** How the people of a campaign are narrowed, as the server sends it back. */
+export type PeopleFilters = {
+    status: string;
+    guide: string | null;
+    area: { value: string; label: string } | null;
+    q: string;
+};
+
+/** Who can be followed up: a page of people, where they stand, and the filters that narrowed them. */
+export type PeoplePage = {
+    people: Paginated<CampaignPerson>;
+    standings: StandingCount[];
+    filters: PeopleFilters;
 };
 
 export type SampledPerson = {

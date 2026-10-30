@@ -1,14 +1,14 @@
 import ActiveCampaignActions from '@/components/campaigns/active-campaign-actions';
+import CampaignPeopleSection from '@/components/campaigns/campaign-people-section';
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
-import PostButton from '@/components/campaigns/post-button';
-import PeopleTable from '@/components/campaigns/people-table';
+import SendingProgress from '@/components/campaigns/sending-progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { progressNote } from '@/lib/campaigns';
-import { resend } from '@/routes/tenant/campaigns/participants';
 import type {
     CampaignDetail,
-    CampaignPerson,
+    CampaignSending,
     InstrumentProgress,
+    PeoplePage,
     ReplacementPool,
 } from '@/types';
 
@@ -21,6 +21,7 @@ export default function CampaignFollowUp({
     campaign,
     instruments,
     people,
+    sending,
     minDeadline,
     replacementPool,
 }: {
@@ -29,7 +30,8 @@ export default function CampaignFollowUp({
     replacementPool: ReplacementPool[] | null;
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
-    people: CampaignPerson[] | null;
+    people: PeoplePage | null;
+    sending: CampaignSending | null;
 }) {
     const progress = campaign.progress;
     const sampleShort =
@@ -58,37 +60,16 @@ export default function CampaignFollowUp({
                     </AlertDescription>
                 </Alert>
             )}
+            {sending !== null && <SendingProgress sending={sending} />}
             <InstrumentsProgress instruments={instruments} />
             {people !== null && (
-                <section className="flex flex-col gap-4">
-                    <h2 className="text-xl leading-7 font-semibold">
-                        Personas ({people.length})
-                    </h2>
-                    <PeopleTable
-                        people={people}
-                        {...(active
-                            ? {
-                                  action: (person: CampaignPerson) =>
-                                      person.reachable &&
-                                      person.guides.some(
-                                          (guide) => guide.status === 'pending',
-                                      ) ? (
-                                          <PostButton
-                                              form={resend.form([
-                                                  tenantSlug,
-                                                  campaign.id,
-                                                  person.id,
-                                              ])}
-                                              variant="ghost"
-                                              size="sm"
-                                          >
-                                              Reenviar
-                                          </PostButton>
-                                      ) : null,
-                              }
-                            : {})}
-                    />
-                </section>
+                <CampaignPeopleSection
+                    tenantSlug={tenantSlug}
+                    campaignId={campaign.id}
+                    active={active}
+                    people={people}
+                    instruments={instruments}
+                />
             )}
         </>
     );

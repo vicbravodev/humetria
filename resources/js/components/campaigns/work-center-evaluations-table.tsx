@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import NewEvaluationDialog from '@/components/campaigns/new-evaluation-dialog';
 import {
     Table,
     TableBody,
@@ -16,9 +17,12 @@ import type { WorkCenterEvaluation } from '@/types';
 export default function WorkCenterEvaluationsTable({
     tenantSlug,
     workCenters,
+    canManage,
 }: {
     tenantSlug: string;
     workCenters: WorkCenterEvaluation[];
+    /** Offer to start an evaluation where one can be. */
+    canManage: boolean;
 }) {
     return (
         <Table>
@@ -31,6 +35,11 @@ export default function WorkCenterEvaluationsTable({
                     <TableHead>Personal</TableHead>
                     <TableHead>Última evaluación</TableHead>
                     <TableHead>Siguiente antes del</TableHead>
+                    {canManage && (
+                        <TableHead>
+                            <span className="sr-only">Acciones</span>
+                        </TableHead>
+                    )}
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,6 +86,16 @@ export default function WorkCenterEvaluationsTable({
                                 </span>
                             )}
                         </TableCell>
+                        {canManage && (
+                            <TableCell className="w-px text-right">
+                                {workCenter.eligible && (
+                                    <NewEvaluationDialog
+                                        tenantSlug={tenantSlug}
+                                        workCenter={workCenter}
+                                    />
+                                )}
+                            </TableCell>
+                        )}
                     </TableRow>
                 ))}
             </TableBody>

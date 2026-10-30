@@ -5,18 +5,24 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Actions;
 
 use App\Modules\Tenancy\Models\WorkCenter;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 final class ListWorkCenters
 {
+    public const int PER_PAGE = 25;
+
     /**
-     * Every work center of the current company, archived ones included, by name.
+     * The current company's work centers in use, or the archived ones, by name, a page at a time.
      *
-     * @return Collection<int, WorkCenter>
+     * @return LengthAwarePaginator<int, WorkCenter>
      */
-    public function handle(): Collection
+    public function handle(bool $archived): LengthAwarePaginator
     {
-        // ponytail: no pagination; a company has a handful of work centers. Paginate if one ever has hundreds.
-        return WorkCenter::query()->orderBy('name')->get();
+        return WorkCenter::query()
+            ->when($archived, fn ($query) => $query->whereNotNull('archived_at'), fn ($query) => $query->whereNull('archived_at'))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
     }
 }

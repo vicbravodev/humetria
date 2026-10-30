@@ -47,17 +47,39 @@ it('lists the people with access, the owner first, and the open invitations', fu
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/members')
-            ->where('members', fn ($members): bool => collect($members)->pluck('name')->all() === ['Olga Owner', 'Ana Lectora', 'Beto RH'])
-            ->where('members.0.is_you', true)
-            ->where('members.2', fn ($row): bool => collect($row)->except('id')->all() === [
+            ->where('members.data', fn ($members): bool => collect($members)->pluck('name')->all() === ['Olga Owner', 'Ana Lectora', 'Beto RH'])
+            ->where('members.data.0.is_you', true)
+            ->where('members.data.2', fn ($row): bool => collect($row)->except('id')->all() === [
                 'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'RH', 'is_you' => false, 'since' => '29 oct 2026',
             ])
-            ->has('invitations', 1)
-            ->where('invitations.0', [
+            ->where('invitations.total', 1)
+            ->where('invitations.data.0', [
                 'id' => $invitation->id, 'name' => 'Carla', 'email' => 'carla@acme.mx', 'role' => 'viewer', 'role_label' => 'Consulta',
                 'status' => 'pending', 'status_label' => 'Invitación enviada', 'expires_on' => '5 nov 2026',
             ])
             ->where('roles', [['value' => 'hr', 'label' => 'RH'], ['value' => 'viewer', 'label' => 'Consulta']]));
+});
+
+it('pages the people with access and the invitations, each on its own, the owner always first', function (): void {
+    foreach (range(1, 25) as $index) {
+        TenantMembership::factory()->for($this->tenant)->for(User::factory()->create(['name' => sprintf('Aaa %02d', $index)]))->viewer()->create();
+        TenantInvitation::factory()->for($this->tenant)->role($index % 2 === 0 ? TenantRole::Hr : TenantRole::Viewer)->create(['email' => "persona{$index}@acme.mx"]);
+    }
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('members.total', 26)
+            ->where('members.data.0.name', 'Olga Owner')
+            ->where('members.data.1.name', 'Aaa 01')
+            ->where('invitations.total', 25));
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.index', [$this->tenant, 'members' => 2, 'invitations' => 2]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('members.data', 1)
+            ->where('members.data.0.name', 'Aaa 25')
+            ->has('invitations.data', 0));
 });
 
 it('is only for the owner', function (TenantRole $role): void {

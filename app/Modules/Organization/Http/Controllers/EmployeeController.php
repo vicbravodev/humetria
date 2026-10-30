@@ -54,18 +54,13 @@ final class EmployeeController extends Controller
                 'employee_number' => $employee->employee_number,
                 'deactivated_on' => $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'),
             ]),
+            // Each chosen filter with its name, for the fields that search them on the server.
             'filters' => [
                 'q' => $filters->search,
-                'work_center' => $filters->workCenterId,
-                'area' => $filters->areaId,
+                'work_center' => $filters->workCenterId === null ? null : ['value' => $filters->workCenterId, 'label' => $centerNames[$filters->workCenterId] ?? ''],
+                'area' => $filters->areaId === null ? null : ['value' => $filters->areaId, 'label' => Area::query()->find($filters->areaId, ['id', 'name'])->name ?? ''],
                 'status' => $filters->active ? 'active' : 'inactive',
             ],
-            'workCenters' => array_values(array_map(
-                fn (WorkCenterSummary $center): array => ['value' => $center->id, 'label' => $center->name],
-                array_filter($centers, fn (WorkCenterSummary $center): bool => ! $center->archived),
-            )),
-            'areas' => Area::query()->orderBy('name')->get(['id', 'name'])
-                ->map(fn (Area $area): array => ['value' => $area->id, 'label' => $area->name])->all(),
             'genders' => array_map(fn (Gender $gender): array => ['value' => $gender->value, 'label' => $gender->label()], Gender::cases()),
         ]);
     }

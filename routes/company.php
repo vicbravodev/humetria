@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
+use App\Modules\Tenancy\Http\Controllers\WorkCenterOptionsController;
 use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use App\Modules\Tenancy\Http\Requests\TenantRules;
@@ -17,6 +18,7 @@ $notReserved = '(?!(?:'.implode('|', array_map(preg_quote(...), TenantRules::RES
 Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class])->group(function () use ($notReserved): void {
     Route::get('admin/{tenant:slug}', TenantDashboardController::class)->where('tenant', $notReserved)->name('tenant.dashboard');
 
+    Route::get('admin/{tenant:slug}/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.work-centers.options');
     Route::get('admin/{tenant:slug}/work-centers', [WorkCenterController::class, 'index'])->where('tenant', $notReserved)->name('tenant.work-centers.index');
     Route::post('admin/{tenant:slug}/work-centers', [WorkCenterController::class, 'store'])->where('tenant', $notReserved)->name('tenant.work-centers.store');
     Route::put('admin/{tenant:slug}/work-centers/{workCenter}', [WorkCenterController::class, 'update'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.update');

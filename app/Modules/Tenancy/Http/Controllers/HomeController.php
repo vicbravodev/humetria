@@ -24,18 +24,18 @@ final class HomeController extends Controller
 
         $companies = $listUserTenants->handle($user->id);
 
-        if ($companies->count() === 1) {
-            return redirect()->route('tenant.dashboard', $companies->sole());
+        if ($companies->total() === 1) {
+            return redirect()->route('tenant.dashboard', $companies->getCollection()->sole());
         }
 
         return Inertia::render('tenancy/companies', [
-            'companies' => $companies->map(fn (Tenant $company): array => [
+            'companies' => $companies->through(fn (Tenant $company): array => [
                 'slug' => $company->slug,
                 'trade_name' => $company->trade_name,
                 'status' => $company->status()->value,
                 'status_label' => $company->status()->label(),
                 'blocked' => $company->status()->isBlocked(),
-            ])->all(),
+            ]),
         ]);
     }
 }

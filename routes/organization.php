@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Organization\Http\Controllers\AreaOptionsController;
 use App\Modules\Organization\Http\Controllers\EmployeeController;
 use App\Modules\Organization\Http\Controllers\EmployeeImportController;
 use Illuminate\Support\Facades\Route;
@@ -16,3 +17,4 @@ Route::post('admin/{tenant:slug}/employees/{employee}/reactivate', [EmployeeCont
 Route::get('admin/{tenant:slug}/employees/import', [EmployeeImportController::class, 'create'])->where('tenant', $notReserved)->name('tenant.employees.import.create');
 Route::get('admin/{tenant:slug}/employees/import/template', [EmployeeImportController::class, 'template'])->where('tenant', $notReserved)->name('tenant.employees.import.template');
 Route::post('admin/{tenant:slug}/employees/import', [EmployeeImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.employees.import.store');
+Route::get('admin/{tenant:slug}/areas/options', AreaOptionsController::class)->where('tenant', $notReserved)->name('tenant.areas.options');

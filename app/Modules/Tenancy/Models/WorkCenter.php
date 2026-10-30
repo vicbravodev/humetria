@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\SearchesText;
 use App\Modules\Tenancy\Enums\MexicanState;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\WorkCenterFactory;
@@ -39,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class WorkCenter extends Model
 {
     /** @use HasFactory<WorkCenterFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, SearchesText;
 
     /**
      * The address in one line, as it is written in Mexico: "Reforma 222 int. 4, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México".

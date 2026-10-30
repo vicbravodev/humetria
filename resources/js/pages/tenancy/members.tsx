@@ -1,17 +1,23 @@
 import { Head, usePage } from '@inertiajs/react';
+import ConsolePagination from '@/components/console-pagination';
 import PageHeader from '@/components/page-header';
 import InviteMemberDialog from '@/components/tenancy/invite-member-dialog';
 import MemberInvitationsTable from '@/components/tenancy/member-invitations-table';
 import MembersTable from '@/components/tenancy/members-table';
-import type { MemberInvitationRow, MemberRow, RoleOption } from '@/types';
+import type {
+    MemberInvitationRow,
+    MemberRow,
+    Paginated,
+    RoleOption,
+} from '@/types';
 
 export default function Members({
     members,
     invitations,
     roles,
 }: {
-    members: MemberRow[];
-    invitations: MemberInvitationRow[];
+    members: Paginated<MemberRow>;
+    invitations: Paginated<MemberInvitationRow>;
     roles: RoleOption[];
 }) {
     // Always set here: this page only exists inside a company.
@@ -26,17 +32,27 @@ export default function Members({
                 </PageHeader>
                 <MembersTable
                     tenantSlug={tenantSlug}
-                    members={members}
+                    members={members.data}
                     roles={roles}
                 />
-                {invitations.length > 0 && (
+                <ConsolePagination
+                    page={members}
+                    label="Páginas de usuarios"
+                    previous="Anteriores"
+                    next="Siguientes"
+                />
+                {invitations.total > 0 && (
                     <section className="flex flex-col gap-4">
                         <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
                             Invitaciones pendientes
                         </h2>
                         <MemberInvitationsTable
                             tenantSlug={tenantSlug}
-                            invitations={invitations}
+                            invitations={invitations.data}
+                        />
+                        <ConsolePagination
+                            page={invitations}
+                            label="Páginas de invitaciones"
                         />
                     </section>
                 )}

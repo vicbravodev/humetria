@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
+use App\Modules\Campaigns\Enums\InvitationStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\Campaigns\ParticipantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -27,16 +29,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $in_sample
  * @property string|null $token_hash
  * @property CarbonImmutable|null $invited_at
+ * @property InvitationStatus|null $invitation_status
+ * @property string|null $invitation_batch
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
 #[Table('campaign_participants')]
-#[Fillable(['tenant_id', 'campaign_id', 'employee_id', 'in_sample', 'token_hash', 'invited_at'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'campaign_id', 'employee_id', 'in_sample', 'token_hash', 'invited_at', 'invitation_status', 'invitation_batch'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(ParticipantFactory::class)]
 final class Participant extends Model
 {
     /** @use HasFactory<ParticipantFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     public static function hashToken(string $token): string
     {
@@ -67,6 +71,7 @@ final class Participant extends Model
         return [
             'in_sample' => 'boolean',
             'invited_at' => 'immutable_datetime',
+            'invitation_status' => InvitationStatus::class,
         ];
     }
 }

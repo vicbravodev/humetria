@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Campaigns;
 
+use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use Database\Factories\Organization\EmployeeFactory;
@@ -32,6 +33,7 @@ final class ParticipantFactory extends Factory
                 'work_center_id' => $this->campaign($attributes)->work_center_id,
             ]),
             'invited_at' => now(),
+            'invitation_status' => InvitationStatus::Sent,
         ];
     }
 

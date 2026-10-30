@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Actions;
 
+use App\Modules\Campaigns\Enums\CampaignStatus;
+use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
-use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -24,35 +25,35 @@ final readonly class DrawReplacements
 {
     public function __construct(
         private Roster $roster,
-        private Companies $companies,
-        private SendSurveyInvitation $sendInvitation,
+        private QueueSurveyInvitations $queueInvitations,
     ) {}
 
     /**
      * @throws ValidationException when fewer people are left outside the sample.
+     * @throws CampaignStateChanged when another request closed it meanwhile.
      */
     public function handle(Campaign $campaign, string $gender, int $count): int
     {
-        $available = $this->available($campaign)[$gender] ?? [];
+        DB::transaction(function () use ($campaign, $gender, $count): void {
+            // Under lock, so two draws at once never pick the same people, and closing it meanwhile waits.
+            $campaign = Campaign::lockIn($campaign, CampaignStatus::Active);
+            $available = $this->available($campaign)[$gender] ?? [];
 
-        if ($count > count($available)) {
-            throw ValidationException::withMessages(['count' => match (count($available)) {
-                0 => 'Ya no queda nadie de ese género fuera de la muestra.',
-                1 => 'Solo queda 1 persona de ese género fuera de la muestra.',
-                default => 'Solo quedan '.count($available).' personas de ese género fuera de la muestra.',
-            }]);
-        }
-
-        $tradeName = $this->companies->current()->tradeName;
-
-        DB::transaction(function () use ($campaign, $available, $count, $tradeName): void {
-            foreach (array_slice((new Randomizer)->shuffleArray($available), 0, $count) as $person) {
-                $participant = $this->enroll($campaign, $person);
-
-                if ($person->email !== null) {
-                    $this->sendInvitation->handle($campaign, $participant, $person->email, $tradeName);
-                }
+            if ($count > count($available)) {
+                throw ValidationException::withMessages(['count' => match (count($available)) {
+                    0 => 'Ya no queda nadie de ese género fuera de la muestra.',
+                    1 => 'Solo queda 1 persona de ese género fuera de la muestra.',
+                    default => 'Solo quedan '.count($available).' personas de ese género fuera de la muestra.',
+                }]);
             }
+
+            $drawn = [];
+
+            foreach (array_slice((new Randomizer)->shuffleArray($available), 0, $count) as $person) {
+                $drawn[$this->enroll($campaign, $person)->id] = $person->email !== null;
+            }
+
+            $this->queueInvitations->handle($campaign, $drawn);
         });
 
         Log::info('campaign.replacements_drawn', ['campaign_id' => $campaign->id, 'gender' => $gender, 'count' => $count]);

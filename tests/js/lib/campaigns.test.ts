@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     campaignMeta,
+    guideBreakdown,
     instrumentsText,
-    matchesPerson,
+    peoplePage,
+    peopleQuery,
     progressCaption,
     progressCount,
     progressNote,
@@ -111,22 +113,90 @@ describe('quotasText', () => {
     });
 });
 
-describe('matchesPerson', () => {
-    const person = {
-        id: 'p1',
-        name: 'José Martínez',
-        area: 'Producción',
-        reachable: true,
-        inSample: false,
-        guides: [],
+describe('peopleQuery', () => {
+    const filters = {
+        status: 'pending',
+        guide: null,
+        area: null,
+        q: '',
     };
 
-    it('finds by name or area, ignoring case and accents', () => {
-        expect(matchesPerson(person, '')).toBe(true);
-        expect(matchesPerson(person, '  ')).toBe(true);
-        expect(matchesPerson(person, 'jose')).toBe(true);
-        expect(matchesPerson(person, 'MARTÍNEZ')).toBe(true);
-        expect(matchesPerson(person, 'produccion')).toBe(true);
-        expect(matchesPerson(person, 'ventas')).toBe(false);
+    it('leaves out what does not narrow the default list of pending people', () => {
+        expect(peopleQuery(filters)).toEqual({});
+        expect(peopleQuery({ ...filters, q: '   ' })).toEqual({});
+    });
+
+    it('keeps every filter that narrows it', () => {
+        expect(
+            peopleQuery({
+                status: 'all',
+                guide: 'nom035.guide-iii',
+                area: { value: 'a1', label: 'Ventas' },
+                q: ' ana ',
+            }),
+        ).toEqual({
+            status: 'all',
+            guide: 'nom035.guide-iii',
+            area: 'a1',
+            q: 'ana',
+        });
+    });
+});
+
+describe('peoplePage', () => {
+    const filters = { status: 'pending', guide: null, area: null, q: '' };
+    const people = {
+        data: [],
+        total: 0,
+        current_page: 1,
+        last_page: 1,
+        prev_page_url: null,
+        next_page_url: null,
+    };
+
+    it('gives the people to follow up only with where they stand', () => {
+        expect(peoplePage(people, [], filters)).toEqual({
+            people,
+            standings: [],
+            filters,
+        });
+        expect(peoplePage(null, null, filters)).toBeNull();
+        expect(peoplePage(people, null, filters)).toBeNull();
+    });
+});
+
+describe('guideBreakdown', () => {
+    const guide = {
+        key: 'nom035.guide-ii',
+        title: 'Guía II',
+        invited: 0,
+        completed: 0,
+        pending: 0,
+        unreachable: 0,
+        cancelled: 0,
+    };
+
+    it('says where those who did not answer stand, leaving out what is zero', () => {
+        expect(
+            guideBreakdown({
+                ...guide,
+                pending: 12,
+                unreachable: 3,
+                cancelled: 2,
+            }),
+        ).toBe(
+            '12 pendientes · 3 sin correo · 2 canceladas por bajas o cambios de centro',
+        );
+        expect(
+            guideBreakdown({
+                ...guide,
+                pending: 1,
+                unreachable: 1,
+                cancelled: 1,
+            }),
+        ).toBe(
+            '1 pendiente · 1 sin correo · 1 cancelada por bajas o cambios de centro',
+        );
+        expect(guideBreakdown(guide)).toBe('Nadie pendiente');
     });
 });

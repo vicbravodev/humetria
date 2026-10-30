@@ -6,8 +6,10 @@ namespace App\Modules\Organization\Support;
 
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Organization\Models\Employee;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use LogicException;
 
 final class CompanyRoster implements Roster
@@ -33,7 +35,31 @@ final class CompanyRoster implements Roster
 
     public function findMany(array $employeeIds): array
     {
-        return $this->query()->whereKey($employeeIds)->get()->mapWithKeys(fn (Employee $employee): array => [$employee->id => $this->entry($employee)])->all();
+        return $this->query()->among('employees.id', $employeeIds)->get()->mapWithKeys(fn (Employee $employee): array => [$employee->id => $this->entry($employee)])->all();
+    }
+
+    public function page(RosterQuery $query, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
+    {
+        return $this->matching($query)->with('area')->paginate($perPage, pageName: $pageName)->withQueryString()->through($this->entry(...));
+    }
+
+    public function matchingIds(RosterQuery $query): array
+    {
+        return array_values($this->matching($query)->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all());
+    }
+
+    /**
+     * @return Builder<Employee>
+     */
+    private function matching(RosterQuery $query): Builder
+    {
+        return Employee::query()
+            ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->among('employees.id', $query->employeeIds ?? []))
+            ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
+            ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
+            ->matching(['name', 'email', 'employee_number'], $query->search)
+            ->orderBy('name')
+            ->orderBy('id');
     }
 
     /**

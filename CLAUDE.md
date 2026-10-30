@@ -188,6 +188,17 @@ layouts/  hooks/  lib/  types/
 - Integridad en la base de datos: llaves foráneas, `unique`, `check` y `not null` además de la validación.
 - Operaciones de varios pasos dentro de `DB::transaction()`.
 
+## Listas
+
+- Toda lista o tabla de registros se pagina en el servidor, sin excepción: llega a la página como paginador de
+  Laravel (`->paginate()->withQueryString()`, `Paginated<T>` en el front), nunca como arreglo completo. Con búsqueda
+  y filtros en el servidor cuando aplique (`SearchesText`: sin distinguir mayúsculas ni acentos).
+- Antes de mostrar una lista, evalúa si un resumen (conteos por estado) sirve mejor, con el detalle paginado a un clic.
+- Un campo que elige un registro que crece (centro de trabajo, área) lo busca en el servidor (`serverSource`), no
+  recibe la lista entera. Solo los catálogos fijos (enums) y los resúmenes cortos viajan como arreglo.
+- `tests/Unit/PaginatedListsTest.php` rechaza un arreglo en las props de una página salvo los de su lista, cada uno
+  con su razón, y exige que cada página paginada esté en `tests/Feature/PaginatedListsTest.php`, que afirma el paginador.
+
 ## Testing
 
 | Capa | Herramienta | Qué cubre |

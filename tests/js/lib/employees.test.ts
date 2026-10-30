@@ -24,8 +24,8 @@ describe('employeeQuery', () => {
         expect(
             employeeQuery({
                 q: ' ana ',
-                work_center: 'c1',
-                area: 'a1',
+                work_center: { value: 'c1', label: 'Planta Norte' },
+                area: { value: 'a1', label: 'Ventas' },
                 status: 'inactive',
             }),
         ).toEqual({

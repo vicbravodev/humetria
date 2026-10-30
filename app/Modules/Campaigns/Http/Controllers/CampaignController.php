@@ -7,13 +7,16 @@ namespace App\Modules\Campaigns\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Actions\CreateEvaluationDraft;
 use App\Modules\Campaigns\Actions\DeleteDraft;
+use App\Modules\Campaigns\Data\PeopleFilter;
 use App\Modules\Campaigns\Enums\CampaignStatus;
+use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Http\Requests\CreateEvaluationRequest;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Support\CampaignPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,7 +47,26 @@ final class CampaignController extends Controller
 
     public function show(Request $request, mixed $tenant, string $campaign): Response
     {
-        return Inertia::render('campaigns/show', $this->pages->show(self::find($campaign), $request->user()?->can('manage-campaigns') ?? false));
+        $found = self::find($campaign);
+
+        return Inertia::render('campaigns/show', $this->pages->show($found, $request->user()?->can('manage-campaigns') ?? false, self::peopleFilter($request, $found)));
+    }
+
+    /**
+     * The people filter from the query string: pending people by default, and anything unknown left out.
+     */
+    public static function peopleFilter(Request $request, Campaign $campaign): PeopleFilter
+    {
+        $status = $request->string('status')->toString();
+        $guide = $request->string('guide')->toString();
+        $area = $request->string('area')->toString();
+
+        return new PeopleFilter(
+            standing: $status === 'all' ? null : Standing::tryFrom($status) ?? Standing::Pending,
+            guide: in_array($guide, $campaign->instruments, true) ? $guide : null,
+            areaId: Str::isUuid($area) ? $area : null,
+            search: $request->string('q')->trim()->limit(100, '')->toString(),
+        );
     }
 
     public function destroy(mixed $tenant, string $campaign, DeleteDraft $deleteDraft): RedirectResponse

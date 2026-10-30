@@ -5,20 +5,24 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Actions\DrawReplacements;
+use App\Modules\Campaigns\Data\PeopleFilter;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\Population;
+use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
-use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
+use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -30,6 +34,10 @@ final readonly class CampaignPages
 {
     private const array GENDER_LABELS = ['female' => 'Mujeres', 'male' => 'Hombres', 'other' => 'Otro'];
 
+    private const int OPEN_PER_PAGE = 12;
+
+    private const int CLOSED_PER_PAGE = 25;
+
     private const array PERSON_GENDER = ['female' => 'Mujer', 'male' => 'Hombre', 'other' => 'Otro'];
 
     public function __construct(
@@ -40,29 +48,41 @@ final readonly class CampaignPages
         private Roster $roster,
         private InstrumentTally $tally,
         private DrawReplacements $replacements,
+        private CampaignPeople $people,
+        private Areas $areas,
     ) {}
 
     /**
-     * @return array{campaigns: list<array<string, mixed>>, workCenters: list<array<string, mixed>>}
+     * Open and closed evaluations and the work centers in use, each paged on its own.
+     *
+     * @return array{open: LengthAwarePaginator<int, array<string, mixed>>, closed: LengthAwarePaginator<int, array<string, mixed>>, workCenters: LengthAwarePaginator<int, array<string, mixed>>}
      */
     public function index(): array
     {
-        $campaigns = Campaign::query()->orderByDesc('created_at')->get();
-        $tally = $this->tally->of(array_values($campaigns->map(fn (Campaign $campaign): string => $campaign->id)->all()));
+        $open = Campaign::query()->whereIn('status', [CampaignStatus::Draft, CampaignStatus::Active])->orderByDesc('created_at')->orderByDesc('id')
+            ->paginate(self::OPEN_PER_PAGE, pageName: 'open')->withQueryString();
+        $closed = Campaign::query()->where('status', CampaignStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')
+            ->paginate(self::CLOSED_PER_PAGE, pageName: 'closed')->withQueryString();
+        $ids = [...$open->getCollection()->modelKeys(), ...$closed->getCollection()->modelKeys()];
+        $tally = $this->tally->of(array_values(array_filter($ids, is_string(...))));
         $names = $this->workCenterNames();
+        $card = fn (Campaign $campaign): array => $this->card($campaign, $names, $tally[$campaign->id] ?? []);
 
         return [
-            'campaigns' => array_values($campaigns->map(fn (Campaign $campaign): array => $this->card($campaign, $names, $tally[$campaign->id] ?? []))->all()),
-            'workCenters' => $this->workCenterRows($campaigns),
+            'open' => $open->through($card),
+            'closed' => $closed->through($card),
+            'workCenters' => $this->workCenterRows(),
         ];
     }
 
     /**
-     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, people: list<array<string, mixed>>|null, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null, minDeadline: string|null, replacementPool: list<array{gender: string, label: string, available: int}>|null}
+     * @return array<string, mixed>
      */
-    public function show(Campaign $campaign, bool $canManage): array
+    public function show(Campaign $campaign, bool $canManage, PeopleFilter $filter = new PeopleFilter): array
     {
         $tally = $this->tally->of([$campaign->id])[$campaign->id] ?? [];
+        $followed = $canManage && $campaign->status !== CampaignStatus::Draft;
+        $unreachable = $campaign->status === CampaignStatus::Draft ? [] : $this->tally->unreachable($campaign->id);
 
         return [
             'campaign' => [
@@ -79,9 +99,19 @@ final readonly class CampaignPages
                 'title' => $this->instruments->definition($key)->shortTitle,
                 'invited' => ($tally[$key][InstrumentStatus::Pending->value] ?? 0) + ($tally[$key][InstrumentStatus::Completed->value] ?? 0),
                 'completed' => $tally[$key][InstrumentStatus::Completed->value] ?? 0,
+                'pending' => ($tally[$key][InstrumentStatus::Pending->value] ?? 0) - ($unreachable[$key] ?? 0),
+                'unreachable' => $unreachable[$key] ?? 0,
                 'cancelled' => $tally[$key][InstrumentStatus::Cancelled->value] ?? 0,
             ], $campaign->instruments),
-            'people' => $canManage && $campaign->status !== CampaignStatus::Draft ? $this->people($campaign) : null,
+            'people' => $followed ? $this->people->page($campaign, $filter) : null,
+            'standings' => $followed ? $this->standings($campaign, $filter->guide) : null,
+            'sending' => $campaign->status === CampaignStatus::Active ? $this->sending($campaign) : null,
+            'filters' => [
+                'status' => $filter->standing->value ?? 'all',
+                'guide' => $filter->guide,
+                'area' => $filter->areaId === null ? null : ['value' => $filter->areaId, 'label' => $this->areas->name($filter->areaId) ?? ''],
+                'q' => $filter->search,
+            ],
             'sample' => $canManage && $campaign->status === CampaignStatus::Draft && $campaign->population === Population::Sample
                 ? $this->sample($campaign)
                 : null,
@@ -161,19 +191,20 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return list<array<string, string>>
+     * Who the draw put in the sample, by name, a page at a time.
+     *
+     * @return LengthAwarePaginator<int, array{id: string, name: string, area: string, gender: string}>
      */
-    private function sample(Campaign $campaign): array
+    private function sample(Campaign $campaign): LengthAwarePaginator
     {
-        $people = $this->roster->findMany(array_values($campaign->participants()->get(['employee_id'])->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        usort($people, fn (RosterEntry $a, RosterEntry $b): int => strcmp($a->name, $b->name));
+        $sampled = array_values($campaign->participants()->get(['employee_id'])->map(fn (Participant $participant): string => $participant->employee_id)->all());
 
-        return array_map(fn (RosterEntry $person): array => [
+        return $this->roster->page(new RosterQuery(employeeIds: $sampled), CampaignPeople::PER_PAGE)->through(fn (RosterEntry $person): array => [
             'id' => $person->id,
             'name' => $person->name,
             'area' => $person->areaName,
             'gender' => self::PERSON_GENDER[$person->gender] ?? $person->gender,
-        ], $people);
+        ]);
     }
 
     /**
@@ -196,39 +227,38 @@ final readonly class CampaignPages
     }
 
     /**
-     * Who was invited and where each stands with each guide: whether they answered, never what. By name.
+     * How the last batch of links goes while some are still waiting: how many it already sent or gave up on, of all.
      *
-     * @return list<array<string, mixed>>
+     * @return array{done: int, total: int}|null
      */
-    private function people(Campaign $campaign): array
+    private function sending(Campaign $campaign): ?array
     {
-        $participants = $campaign->participants()->with('instruments')->get();
-        $roster = $this->roster->findMany(array_values($participants->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $titles = array_combine($campaign->instruments, array_map(fn (string $key): string => $this->instruments->definition($key)->shortTitle, $campaign->instruments));
-        $people = [];
-
-        foreach ($participants as $participant) {
-            $person = $roster[$participant->employee_id] ?? null;
-            $guides = $participant->instruments->sortBy(fn (ParticipantInstrument $guide): int|false => array_search($guide->instrument, $campaign->instruments, true));
-
-            $people[] = [
-                'id' => $participant->id,
-                'name' => $person->name ?? '',
-                'area' => $person->areaName ?? '',
-                'reachable' => $person?->email !== null,
-                'inSample' => $participant->in_sample,
-                'guides' => array_values($guides->map(fn (ParticipantInstrument $guide): array => [
-                    'key' => $guide->instrument,
-                    'title' => $titles[$guide->instrument] ?? $guide->instrument,
-                    'status' => $guide->status->value,
-                    'statusLabel' => $guide->status->label(),
-                ])->all()),
-            ];
+        if ($campaign->invitation_batch === null) {
+            return null;
         }
 
-        usort($people, fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
+        $counts = $campaign->participants()
+            ->where('invitation_batch', $campaign->invitation_batch)
+            ->toBase()
+            ->selectRaw("count(*)::int as total, count(*) filter (where invitation_status = 'queued')::int as queued")
+            ->first();
+        $total = is_int($counts?->total) ? $counts->total : 0;
+        $queued = is_int($counts?->queued) ? $counts->queued : 0;
 
-        return $people;
+        return $queued === 0 ? null : ['done' => $total - $queued, 'total' => $total];
+    }
+
+    /**
+     * How many people stand where, in the order of the filter's choices, and everyone.
+     *
+     * @return list<array{value: string, label: string, count: int}>
+     */
+    private function standings(Campaign $campaign, ?string $guide): array
+    {
+        $counts = $this->people->standings($campaign, $guide);
+        $standings = array_map(fn (Standing $standing): array => ['value' => $standing->value, 'label' => $standing->label(), 'count' => $counts[$standing->value] ?? 0], Standing::cases());
+
+        return [...$standings, ['value' => 'all', 'label' => 'Todas', 'count' => array_sum($counts)]];
     }
 
     /**
@@ -246,24 +276,20 @@ final readonly class CampaignPages
     }
 
     /**
-     * @param  Collection<int, Campaign>  $campaigns
-     * @return list<array<string, mixed>>
+     * The work centers in use, a page at a time, each with its evaluations.
+     *
+     * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    private function workCenterRows(Collection $campaigns): array
+    private function workCenterRows(): LengthAwarePaginator
     {
+        $page = $this->workCenters->activePage(CampaignPeople::PER_PAGE, 'centers');
         $headcount = $this->headcount->byWorkCenter();
-        $evaluations = $campaigns->where('kind', CampaignKind::Nom035Evaluation);
-        $rows = [];
+        $evaluations = Campaign::query()
+            ->where('kind', CampaignKind::Nom035Evaluation)
+            ->whereIn('work_center_id', array_map(fn (WorkCenterSummary $workCenter): string => $workCenter->id, $page->items()))
+            ->get(['id', 'work_center_id', 'status', 'closed_at']);
 
-        foreach ($this->workCenters->all() as $workCenter) {
-            if ($workCenter->archived) {
-                continue;
-            }
-
-            $rows[] = $this->workCenterRow($workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id));
-        }
-
-        return $rows;
+        return $page->through(fn (WorkCenterSummary $workCenter): array => $this->workCenterRow($workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id)));
     }
 
     /**

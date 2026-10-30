@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Campaigns\Actions\LaunchCampaign;
-use App\Modules\Campaigns\Actions\SendSurveyInvitation;
+use App\Modules\Campaigns\Actions\QueueSurveyInvitations;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(LaunchCampaign::class, SendSurveyInvitation::class, DeadlineRequest::class, SurveyInvitation::class);
+mutates(LaunchCampaign::class, QueueSurveyInvitations::class, DeadlineRequest::class, SurveyInvitation::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
@@ -233,4 +233,28 @@ it('launches nothing twice when another request launches it between the check an
         ->and(AuditEntry::query()->where('event', 'campaign.launched')->count())->toBe(0)
         ->and($campaign->refresh()->closes_on?->toDateString())->toBe('2026-11-30');
     Notification::assertNothingSent();
+});
+
+it('launches in the same number of queries for any number of people', function (): void {
+    $queries = function (int $people): int {
+        $plant = WorkCenter::factory()->for($this->tenant)->create();
+        staffOf($this->tenant, $plant, $people);
+        draftFor($this->tenant, $plant, $this->hr);
+        // The clock stands still in these tests: the draft is found by its work center, not as the latest.
+        $campaign = Campaign::query()->withoutGlobalScopes()->where('work_center_id', $plant->id)->sole();
+        // The sending runs in the queue, not in the request: only the launch is counted.
+        Illuminate\Support\Facades\Bus::fake();
+        Illuminate\Support\Facades\DB::flushQueryLog();
+        Illuminate\Support\Facades\DB::enableQueryLog();
+        launch($this->tenant, $campaign, $this->hr)->assertSessionHasNoErrors()->assertRedirect();
+        Illuminate\Support\Facades\DB::disableQueryLog();
+
+        return count(Illuminate\Support\Facades\DB::getQueryLog());
+    };
+
+    $twenty = $queries(20);
+
+    expect($queries(120))->toBe($twenty)
+        ->and(Participant::query()->withoutGlobalScopes()->count())->toBe(140)
+        ->and(ParticipantInstrument::query()->withoutGlobalScopes()->count())->toBe(280);
 });

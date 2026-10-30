@@ -48,7 +48,7 @@ it('puts the blocked page, with no props of its own, where the panel would be', 
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/blocked')
             ->where('tenant.blocked', true)
-            ->has('tenants', 1)
+            ->has('tenants.data', 1)
             // Only what every page shares: nothing from the dashboard rides along.
             ->where('tenant.slug', $tenant->slug));
 })->with($blocked);

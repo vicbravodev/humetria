@@ -5,10 +5,10 @@ import PageHeader from '@/components/page-header';
 
 export default function EmployeeImport({
     maxRows,
-    workCenters,
+    hasWorkCenters,
 }: {
     maxRows: number;
-    workCenters: string[];
+    hasWorkCenters: boolean;
 }) {
     // Always set here: this page only exists inside a company.
     const tenantSlug = usePage().props.tenant?.slug ?? '';
@@ -21,7 +21,7 @@ export default function EmployeeImport({
                 <ImportInstructions
                     tenantSlug={tenantSlug}
                     maxRows={maxRows}
-                    workCenters={workCenters}
+                    hasWorkCenters={hasWorkCenters}
                 />
                 <ImportForm tenantSlug={tenantSlug} />
             </div>

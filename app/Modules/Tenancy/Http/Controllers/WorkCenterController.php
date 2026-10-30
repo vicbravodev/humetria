@@ -34,16 +34,14 @@ final class WorkCenterController extends Controller
     {
         $headcount = $this->headcount->byWorkCenter();
 
-        $workCenters = $listWorkCenters->handle();
-        $active = $workCenters->whereNull('archived_at');
-        $archived = $workCenters->whereNotNull('archived_at');
         $showArchived = $request->boolean('archived');
+        $archived = WorkCenter::query()->whereNotNull('archived_at')->count();
 
         return Inertia::render('tenancy/work-centers', [
             'view' => $showArchived ? 'archived' : 'active',
-            'counts' => ['active' => $active->count(), 'archived' => $archived->count()],
-            'workCenters' => ($showArchived ? $archived : $active)->values()
-                ->map(fn (WorkCenter $workCenter): array => $this->row($workCenter, $headcount[$workCenter->id] ?? 0))->all(),
+            'counts' => ['active' => WorkCenter::query()->count() - $archived, 'archived' => $archived],
+            'workCenters' => $listWorkCenters->handle($showArchived)
+                ->through(fn (WorkCenter $workCenter): array => $this->row($workCenter, $headcount[$workCenter->id] ?? 0)),
             'states' => collect(MexicanState::cases())
                 ->map(fn (MexicanState $state): array => ['value' => $state->value, 'label' => $state->label()])
                 ->sortBy('label')

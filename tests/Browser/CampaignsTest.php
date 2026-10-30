@@ -35,8 +35,25 @@ it('lists the work centers to evaluate before any evaluation', function (bool $d
         ->assertSee('No hay evaluaciones abiertas')
         ->assertSee('Planta Norte')
         ->assertSee('NOM-035: Guías I y II')
-        ->assertSee('Sin evaluar');
+        ->assertSee('Sin evaluar')
+        ->assertSee('Evaluar');
 })->with($looks);
+
+it('pages the evaluations and the work centers', function (): void {
+    $tenant = campaignsCompany();
+
+    foreach (range(1, 26) as $index) {
+        WorkCenter::factory()->for($tenant)->create(['name' => sprintf('Centro %02d', $index)]);
+    }
+
+    visit('/admin/acme/campaigns')
+        ->assertSee('Centro 25')
+        ->assertDontSee('Centro 26')
+        ->click('[aria-label="Páginas de centros de trabajo"] >> text=Siguientes')
+        ->assertSee('Centro 26')
+        ->assertQueryStringHas('centers', '2')
+        ->assertNoJavaScriptErrors();
+});
 
 it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
@@ -49,7 +66,8 @@ it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobil
         ->assertSee('Planta Norte')
         ->assertSee('Borrador')
         ->assertSee('Muestra de 53: Mujeres 27 · Hombres 26')
-        ->assertSee('Muestra sorteada (53)');
+        ->assertSee('Muestra sorteada (53)')
+        ->assertSee('Página 1 de 3');
 })->with($looks);
 
 it('prepares an evaluation from the panel, reached from the sidebar', function (): void {
@@ -59,9 +77,8 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
     visit('/admin/acme')
         ->click('NOM-035')
         ->assertPathIs('/admin/acme/campaigns')
-        ->click('Nueva evaluación')
-        ->click('#evaluation-work-center')
-        ->click('[role="option"]:has-text("Planta Norte")')
+        ->click('button:has-text("Evaluar")')
+        ->assertSee('Evaluar Planta Norte')
         ->assertSee('¿Quién contesta la Guía III?')
         ->assertSee('Se sortean 53 de 60 personas')
         ->click('Una muestra representativa')
@@ -107,9 +124,83 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('En curso')
         ->assertSee('Faltan 43 respuestas para el mínimo de la muestra')
         ->assertSee('10 de 53')
-        ->assertSee('Personas (60)')
-        ->assertSee('Guía III · Contestó');
+        ->assertSee('43 pendientes')
+        ->assertSee('Pendientes (60)')
+        ->assertSee('Página 1 de 3');
 })->with($looks);
+
+it('narrows who answered a guide and searches them by name', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, female: 30)->values();
+    $people[0]->update(['name' => 'Zoila Contreras', 'area_id' => App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Calidad'])->id]);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+    $zoila = App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('employee_id', $people[0]->id)->sole();
+    App\Modules\Campaigns\Models\ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $zoila->id)->update(['status' => 'completed', 'completed_at' => now()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertSee('Pendientes (29)')
+        ->assertDontSee('Zoila Contreras')
+        ->click('[aria-label="Situación"]')
+        ->click('text=Contestaron (1)')
+        ->assertSee('Zoila Contreras')
+        ->click('[aria-label="Situación"]')
+        ->click('text=Todas (30)')
+        ->click('#filter-area')
+        ->type('[role="combobox"][aria-controls="filter-area-options"]', 'cali')
+        ->assertSee('Calidad')
+        ->keys('[role="combobox"][aria-controls="filter-area-options"]', 'Enter')
+        ->assertQueryStringHas('area')
+        ->assertSee('Zoila Contreras')
+        ->type('[aria-label="Buscar por nombre, correo o número"]', 'zoila')
+        ->assertQueryStringHas('q', 'zoila')
+        ->assertSee('Zoila Contreras')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows how the sending of the links goes until it ends, and offers to resend to whom it failed', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'invitation_batch' => 'a31a4b00-0000-4000-8000-000000000002']);
+
+    foreach (['sent', 'sent', 'failed', 'queued'] as $status) {
+        $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_batch' => $campaign->invitation_batch, 'invitation_status' => $status]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+    }
+
+    $page = visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
+        ->assertSee('Enviando invitaciones 3 de 4')
+        ->assertSee('No se pudo enviar el enlace a 1 persona.');
+
+    App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('invitation_status', 'queued')->update(['invitation_status' => 'sent']);
+
+    $page->wait(4)->assertDontSee('Enviando invitaciones');
+})->with($looks);
+
+it('sends the link again only to whom it failed', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['sent', 'failed', 'failed'] as $status) {
+        $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_status' => $status]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+    }
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Ver y reenviar')
+        ->assertSee('Envío fallido (2)')
+        ->click('Reenviar a 2 personas')
+        ->click('Reenviar enlaces')
+        ->assertSee('Enlace reenviado a 2 personas.')
+        ->assertNoJavaScriptErrors();
+
+    Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 2);
+});
 
 it('sends links again, invites a newcomer and draws replacements from the evaluation page', function (): void {
     $tenant = campaignsCompany();
@@ -122,11 +213,13 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
     staffOf($tenant, $plant, female: 1);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Reenviar a pendientes')
+        ->click('Reenviar a 60 personas')
+        ->assertSee('el anterior deja de servir')
+        ->click('Reenviar enlaces')
         ->assertSee('Enlace reenviado a 60 personas.')
         ->click('Invitar a quien falte')
         ->assertSee('Se invitó a 1 persona.')
-        ->assertSee('Personas (61)')
+        ->assertSee('Pendientes (61)')
         ->click('Sortear reemplazos')
         ->assertSee('del mismo género de quienes no contestarán')
         ->assertSee('¿De qué género son quienes no contestarán?')
@@ -155,7 +248,7 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación cerrada. Los enlaces ya no funcionan.')
         ->assertSee('Cerrada')
-        ->assertDontSee('Reenviar a pendientes')
+        ->assertDontSee('Reenviar a 60 personas')
         ->assertNoJavaScriptErrors();
 
     expect($campaign->refresh()->status->value)->toBe('closed');
@@ -173,6 +266,33 @@ it('applies Guía I to the people of an event', function (bool $dark, bool $mobi
         ->assertSee('Ana López');
 })->with($looks);
 
+it('keeps who was ticked across pages and searches, and ticks everyone a search found', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 30)->values();
+    $people[0]->update(['name' => 'Aarón Abad']);
+    $people[1]->update(['name' => 'Zacarías Qwértyz']);
+    $people[2]->update(['name' => 'Zoé Qwértyz']);
+
+    visit("/admin/acme/campaigns/trauma?work_center={$plant->id}")
+        ->click('Aarón Abad')
+        ->assertSee('(1 elegidas)')
+        ->click('Siguientes')
+        ->assertSee('Página 2 de 2')
+        ->assertSee('(1 elegidas)')
+        ->type('[aria-label="Buscar por nombre, correo o número"]', 'qwertyz')
+        ->assertSee('Elegir a las 2 encontradas')
+        ->click('Elegir a las 2 encontradas')
+        ->assertSee('(3 elegidas)')
+        ->click('Enviar Guía I')
+        ->assertSee('Guía I enviada a las personas elegidas.')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->pluck('employee_id')->sort()->values()->all())
+        ->toBe(collect([$people[0]->id, $people[1]->id, $people[2]->id])->sort()->values()->all());
+});
+
 it('sends Guía I to the people ticked, from the NOM-035 page', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();
@@ -183,7 +303,9 @@ it('sends Guía I to the people ticked, from the NOM-035 page', function (): voi
     visit('/admin/acme/campaigns')
         ->click('Guía I por acontecimiento')
         ->click('#trauma-work-center')
-        ->click('[role="option"]:has-text("Planta Norte")')
+        ->type('[role="combobox"][aria-controls="trauma-work-center-options"]', 'norte')
+        ->assertSee('Planta Norte')
+        ->keys('[role="combobox"][aria-controls="trauma-work-center-options"]', 'Enter')
         ->assertSee('Ana López')
         ->click('Ana López')
         ->assertSee('(1 elegidas)')

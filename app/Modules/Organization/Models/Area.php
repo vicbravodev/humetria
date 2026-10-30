@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\SearchesText;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\AreaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -27,5 +28,5 @@ use Illuminate\Database\Eloquent\Model;
 final class Area extends Model
 {
     /** @use HasFactory<AreaFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, SearchesText;
 }

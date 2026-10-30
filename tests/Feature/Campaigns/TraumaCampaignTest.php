@@ -35,22 +35,47 @@ function traumaForm(WorkCenter $workCenter, array $employeeIds, array $overrides
     return ['work_center_id' => $workCenter->id, 'employee_ids' => $employeeIds, 'closes_on' => '2026-11-09', ...$overrides];
 }
 
-it('offers the active people of the chosen work center', function (): void {
+it('offers the active people of the chosen work center, a page at a time', function (): void {
     $this->people[0]->update(['name' => 'Ana López', 'deactivated_at' => now()]);
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->component('campaigns/trauma')
-            ->where('workCenterId', $this->plant->id)
-            ->has('workCenters', 1)
-            ->has('people', 4)
-            ->has('people.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'reachable']))
+            ->where('workCenter', ['value' => $this->plant->id, 'label' => 'Planta Norte'])
+            ->missing('workCenters')
+            ->where('people.total', 4)
+            ->has('people.data.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'reachable']))
+            ->where('filters', ['q' => ''])
+            ->where('maxPeople', 1000)
+            ->missing('matching')
             ->where('minDeadline', '2026-11-03'));
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.trauma.create', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('workCenterId', null)->where('people', []));
+        ->assertInertia(fn (Assert $page) => $page->where('workCenter', null)->where('people', null));
+
+    $archived = WorkCenter::factory()->for($this->tenant)->archived()->create();
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $archived->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('workCenter', null)->where('people', null));
+});
+
+it('searches the people on the server, and gives everyone the search found when asked', function (): void {
+    $this->people[1]->update(['name' => 'José Qwértyz']);
+    $this->people[2]->update(['name' => 'Josefina Qwértyz']);
+    staffOf($this->tenant, $this->plant, 25);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'q' => 'qwertyz']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('people.total', 2)
+            ->where('filters', ['q' => 'qwertyz'])
+            ->reloadOnly('matching', fn (Assert $reload) => $reload->where('matching', fn ($ids): bool => collect($ids)->sort()->values()->all() === collect([$this->people[1]->id, $this->people[2]->id])->sort()->values()->all())));
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page->where('people.total', 30)->has('people.data', 5));
 });
 
 it('applies Guía I to the people chosen only, and emails them their link', function (): void {
@@ -114,4 +139,23 @@ it('lets only those who manage campaigns apply it', function (): void {
 
     $this->actingAs($viewer)->get(route('tenant.campaigns.trauma.create', $this->tenant))->assertForbidden();
     $this->actingAs($viewer)->post(route('tenant.campaigns.trauma.store', $this->tenant), traumaForm($this->plant, [$this->people[0]->id]))->assertForbidden();
+});
+
+it('applies it in the same number of queries for any number of people', function (): void {
+    $queries = function (int $people): int {
+        $center = WorkCenter::factory()->for($this->tenant)->create();
+        $ids = staffOf($this->tenant, $center, $people)->pluck('id')->all();
+        Illuminate\Support\Facades\Bus::fake();
+        Illuminate\Support\Facades\DB::flushQueryLog();
+        Illuminate\Support\Facades\DB::enableQueryLog();
+        $this->actingAs($this->hr)->post(route('tenant.campaigns.trauma.store', $this->tenant), traumaForm($center, $ids))->assertSessionHasNoErrors()->assertRedirect();
+        Illuminate\Support\Facades\DB::disableQueryLog();
+
+        return count(Illuminate\Support\Facades\DB::getQueryLog());
+    };
+    // The first request also warms what every request caches (the company's permissions).
+    $queries(1);
+    $two = $queries(2);
+
+    expect($queries(40))->toBe($two);
 });

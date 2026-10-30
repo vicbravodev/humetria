@@ -1,7 +1,8 @@
 import ProgressBar from '@/components/humetria/progress-bar';
+import { guideBreakdown } from '@/lib/campaigns';
 import type { InstrumentProgress } from '@/types';
 
-/** How many answered each guide, out of everyone invited to it. Never what they answered. */
+/** How many answered each guide, out of everyone invited to it, and where the rest stand. Never what they answered. */
 export default function InstrumentsProgress({
     instruments,
 }: {
@@ -25,12 +26,9 @@ export default function InstrumentsProgress({
                         max={instrument.invited}
                         label={`Respuestas de la ${instrument.title}`}
                     />
-                    {instrument.cancelled > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                            {instrument.cancelled} canceladas por bajas o
-                            cambios de centro
-                        </p>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                        {guideBreakdown(instrument)}
+                    </p>
                 </section>
             ))}
         </div>

@@ -13,6 +13,9 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 final class TraumaCampaignRequest extends FormRequest
 {
+    /** Most people one event's Guía I can be sent to at once. */
+    public const int MAX_PEOPLE = 1000;
+
     /**
      * @return array<string, mixed>
      */
@@ -20,7 +23,7 @@ final class TraumaCampaignRequest extends FormRequest
     {
         return [
             'work_center_id' => ['required', 'uuid'],
-            'employee_ids' => ['required', 'array', 'min:1', 'max:1000'],
+            'employee_ids' => ['required', 'array', 'min:1', 'max:'.self::MAX_PEOPLE],
             'employee_ids.*' => ['string', 'distinct'],
             'closes_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.CampaignClock::today()->addDay()->format('Y-m-d')],
         ];

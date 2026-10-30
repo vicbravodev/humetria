@@ -12,13 +12,17 @@ use App\Modules\Campaigns\Actions\ExtendCampaign;
 use App\Modules\Campaigns\Actions\InviteMissing;
 use App\Modules\Campaigns\Actions\LaunchCampaign;
 use App\Modules\Campaigns\Actions\ResendInvitations;
+use App\Modules\Campaigns\Data\PeopleFilter;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
+use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
 use App\Modules\Campaigns\Http\Requests\ReplacementsRequest;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Support\CampaignPeople;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -50,10 +54,18 @@ final class CampaignActionController extends Controller
         return redirect()->route('tenant.campaigns.show', [$tenant, $draft->id]);
     }
 
-    public function resend(mixed $tenant, string $campaign, ResendInvitations $resendInvitations): RedirectResponse
+    /**
+     * To the people the list's filters narrow it to whose link failed, when it shows them; else to the pending ones,
+     * whatever standing it showed.
+     */
+    public function resend(Request $request, mixed $tenant, string $campaign, ResendInvitations $resendInvitations, CampaignPeople $people): RedirectResponse
     {
         Gate::authorize('manage-campaigns');
-        $sent = $resendInvitations->handle(CampaignController::find($campaign, CampaignStatus::Active));
+        $active = CampaignController::find($campaign, CampaignStatus::Active);
+        $filter = CampaignController::peopleFilter($request, $active);
+        $standing = $filter->standing === Standing::Failed ? Standing::Failed : Standing::Pending;
+        $pending = new PeopleFilter($standing, $filter->guide, $filter->areaId, $filter->search);
+        $sent = $resendInvitations->handle($active, $people->employeeIds($active, $pending));
 
         return $this->done($sent, 'No hay a quién reenviar: nadie con correo tiene guías pendientes.', 'Enlace reenviado a 1 persona.', "Enlace reenviado a {$sent} personas.");
     }
@@ -65,7 +77,7 @@ final class CampaignActionController extends Controller
         $person = Participant::query()->where('campaign_id', $active->id)->findOrFail($participant);
 
         // Nothing pending, or no email to send it to.
-        abort_if($resendInvitations->handle($active, $person) === 0, 409);
+        abort_if($resendInvitations->handle($active, [$person->employee_id]) === 0, 409);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Enlace reenviado.']);
 
         return back();

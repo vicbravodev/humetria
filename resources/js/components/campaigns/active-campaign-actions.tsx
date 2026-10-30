@@ -2,12 +2,12 @@ import CloseDialog from '@/components/campaigns/close-dialog';
 import ExtendDialog from '@/components/campaigns/extend-dialog';
 import PostButton from '@/components/campaigns/post-button';
 import ReplacementsDialog from '@/components/campaigns/replacements-dialog';
-import { inviteMissing, resend } from '@/routes/tenant/campaigns';
+import { inviteMissing } from '@/routes/tenant/campaigns';
 import type { CampaignDetail, ReplacementPool } from '@/types';
 
 /**
- * What RH does while an evaluation runs: send links again, invite whoever is missing, draw replacements, give more
- * days, close it.
+ * What RH does while an evaluation runs: invite whoever is missing, draw replacements, give more days, close it.
+ * Sending links again is done from the list of people.
  */
 export default function ActiveCampaignActions({
     tenantSlug,
@@ -28,9 +28,6 @@ export default function ActiveCampaignActions({
 
     return (
         <div className="flex flex-wrap items-center gap-3">
-            <PostButton form={resend.form([tenantSlug, campaign.id])}>
-                Reenviar a pendientes
-            </PostButton>
             {campaign.kind === 'nom035_evaluation' && (
                 <PostButton
                     form={inviteMissing.form([tenantSlug, campaign.id])}

@@ -3,6 +3,11 @@ import type {
     CampaignProgress,
     CampaignSummary,
     GenderQuota,
+    InstrumentProgress,
+    Paginated,
+    PeopleFilters,
+    PeoplePage,
+    StandingCount,
 } from '@/types';
 
 /** The guides of a campaign, written for display: "Guía I", "Guías I y III". */
@@ -71,18 +76,40 @@ export function quotasText(quotas: GenderQuota[]): string {
     return quotas.map((quota) => `${quota.label} ${quota.count}`).join(' · ');
 }
 
-/** Whether a person matches a search by name or area, ignoring case and accents: "jose" finds "José". */
-export function matchesPerson(person: CampaignPerson, search: string): boolean {
-    const normalize = (text: string) =>
-        text
-            .normalize('NFD')
-            .replace(/\p{Diacritic}/gu, '')
-            .toLowerCase()
-            .trim();
-    const wanted = normalize(search);
+/** The query string for the filters: only what narrows the default list of pending people. */
+export function peopleQuery(
+    filters: PeopleFilters,
+): Partial<Record<keyof PeopleFilters, string>> {
+    const q = filters.q.trim();
 
-    return (
-        wanted === '' ||
-        normalize(`${person.name} ${person.area}`).includes(wanted)
-    );
+    return {
+        ...(filters.status === 'pending' ? {} : { status: filters.status }),
+        ...(filters.guide === null ? {} : { guide: filters.guide }),
+        ...(filters.area === null ? {} : { area: filters.area.value }),
+        ...(q === '' ? {} : { q }),
+    };
+}
+
+/** The people a manager follows up, or null for whoever only sees the counts. */
+export function peoplePage(
+    people: Paginated<CampaignPerson> | null,
+    standings: StandingCount[] | null,
+    filters: PeopleFilters,
+): PeoplePage | null {
+    return people === null || standings === null
+        ? null
+        : { people, standings, filters };
+}
+
+/** Where those who did not answer a guide stand: "12 pendientes · 3 sin correo · 2 canceladas por bajas…". */
+export function guideBreakdown(guide: InstrumentProgress): string {
+    const parts = [
+        guide.pending > 0 &&
+            `${guide.pending} ${guide.pending === 1 ? 'pendiente' : 'pendientes'}`,
+        guide.unreachable > 0 && `${guide.unreachable} sin correo`,
+        guide.cancelled > 0 &&
+            `${guide.cancelled} ${guide.cancelled === 1 ? 'cancelada' : 'canceladas'} por bajas o cambios de centro`,
+    ].filter((part) => part !== false);
+
+    return parts.length === 0 ? 'Nadie pendiente' : parts.join(' · ');
 }

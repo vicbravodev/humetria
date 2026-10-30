@@ -30,7 +30,7 @@ it('tells a person without companies to contact the administrator', function ():
     $this->actingAs(User::factory()->create())
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('tenancy/companies')->has('companies', 0));
+        ->assertInertia(fn (Assert $page) => $page->component('tenancy/companies')->where('companies.total', 0));
 });
 
 it('sends a person with one company to its panel', function (): void {
@@ -52,15 +52,15 @@ it('lists the companies of a person with two, the blocked one flagged', function
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/companies')
-            ->has('companies', 2)
-            ->where('companies.0.slug', 'acme')
-            ->where('companies.0.trade_name', 'Acme Industrial')
-            ->where('companies.0.status', 'not_started')
-            ->where('companies.0.status_label', 'Sin iniciar')
-            ->where('companies.0.blocked', false)
-            ->where('companies.1.slug', 'beta')
-            ->where('companies.1.status', 'deactivated')
-            ->where('companies.1.blocked', true));
+            ->where('companies.total', 2)
+            ->where('companies.data.0.slug', 'acme')
+            ->where('companies.data.0.trade_name', 'Acme Industrial')
+            ->where('companies.data.0.status', 'not_started')
+            ->where('companies.data.0.status_label', 'Sin iniciar')
+            ->where('companies.data.0.blocked', false)
+            ->where('companies.data.1.slug', 'beta')
+            ->where('companies.data.1.status', 'deactivated')
+            ->where('companies.data.1.blocked', true));
 });
 
 it('does not expose the legal name, the RFC or ids of the companies', function (): void {
@@ -72,6 +72,18 @@ it('does not expose the legal name, the RFC or ids of the companies', function (
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('companies.0', fn (Assert $company) => $company
+            ->has('companies.data.0', fn (Assert $company) => $company
                 ->hasAll(['slug', 'trade_name', 'status', 'status_label', 'blocked'])));
+});
+
+it('pages the companies of a person 25 at a time', function (): void {
+    $user = User::factory()->create();
+
+    foreach (range(1, 26) as $index) {
+        TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => sprintf('Empresa %02d', $index)]))->for($user)->create();
+    }
+
+    $this->actingAs($user)
+        ->get(route('dashboard', ['page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page->where('companies.total', 26)->has('companies.data', 1)->where('companies.data.0.trade_name', 'Empresa 26'));
 });

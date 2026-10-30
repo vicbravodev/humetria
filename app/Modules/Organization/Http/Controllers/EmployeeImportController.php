@@ -32,7 +32,7 @@ final class EmployeeImportController extends Controller
 
         return Inertia::render('organization/employee-import', [
             'maxRows' => EmployeeCsv::MAX_ROWS,
-            'workCenters' => array_column($this->activeCenters(), 'name'),
+            'hasWorkCenters' => $this->activeCenters() !== [],
         ]);
     }
 

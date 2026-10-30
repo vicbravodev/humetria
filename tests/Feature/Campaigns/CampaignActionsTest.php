@@ -71,6 +71,41 @@ it('sends the link again to everyone with a guide pending and an email, killing 
     }
 });
 
+it('sends the link again only to the pending people the filters narrow the list to', function (): void {
+    $people = collect();
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: function () use (&$people): void {
+        $people = staffOf($this->tenant, $this->plant, 20)->values();
+        $people[0]->update(['name' => 'Zyx López']);
+        $people[1]->update(['name' => 'Zyx María Ruiz']);
+        $people[2]->update(['name' => 'Zyxa Soto']);
+    });
+    $answered = participantOf($campaign, $people[2]);
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $answered->id)->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+    $untouched = participantOf($campaign, $people[3])->token_hash;
+
+    $this->actingAs($this->hr)
+        // Whatever standing the list showed, only pending people get a link.
+        ->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['q' => 'zyx', 'status' => 'all', 'guide' => 'nom035.guide-ii'])
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Enlace reenviado a 2 personas.']]);
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 2);
+    expect(participantOf($campaign, $people[3])->token_hash)->toBe($untouched)
+        ->and(participantOf($campaign, $people[0])->token_hash)->not->toBe($untouched);
+});
+
+it('sends the link again to whoever it failed to reach, and no one else, when the list shows them', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $failed = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->limit(3)->pluck('id');
+    Participant::query()->withoutGlobalScopes()->whereKey($failed)->update(['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
+
+    $this->actingAs($this->hr)
+        ->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['status' => 'failed'])
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Enlace reenviado a 3 personas.']]);
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 3);
+    expect(Participant::query()->withoutGlobalScopes()->whereKey($failed)->pluck('invitation_status')->unique()->all())->toBe([App\Modules\Campaigns\Enums\InvitationStatus::Sent]);
+});
+
 it('sends the link again to one person', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
     $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->first();
@@ -135,6 +170,23 @@ it('invites someone who got an email after the launch, and gives back the guides
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 2);
 });
 
+it('keeps the link of someone who returned without an email: it works again, so they are not «Sin correo»', function (): void {
+    $people = staffOf($this->tenant, $this->plant, 18)->values();
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
+    $returned = participantOf($campaign, $people[1]);
+    $link = $returned->token_hash;
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $returned->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
+    $people[1]->update(['email' => null, 'mobile' => '5512345678']);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]));
+
+    $returned = participantOf($campaign, $people[1]);
+    expect(guidesOf($returned))->toBe(['nom035.guide-i' => 'pending', 'nom035.guide-ii' => 'pending'])
+        ->and($returned->token_hash)->toBe($link)
+        ->and($returned->invitation_status)->toBe(App\Modules\Campaigns\Enums\InvitationStatus::Sent);
+    Notification::assertNothingSent();
+});
+
 it('says when there is nobody to invite', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
 
@@ -193,3 +245,29 @@ it('acts only on an active campaign, for those who manage campaigns, in their ow
     Campaign::query()->withoutGlobalScopes()->whereKey($campaign->id)->update(['status' => 'closed', 'closed_at' => now()]);
     $this->actingAs($this->hr)->post(route($route, $parameters($campaign)), $body)->assertStatus(409);
 })->with(['tenant.campaigns.resend', 'tenant.campaigns.participants.resend', 'tenant.campaigns.invite-missing', 'tenant.campaigns.replacements']);
+
+it('does nothing to an evaluation another request closed meanwhile', function (string $action): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, 'sample', fn () => staffOf($this->tenant, $this->plant, female: 40, male: 20));
+    staffOf($this->tenant, $this->plant, female: 1);
+    $stale = Campaign::query()->findOrFail($campaign->id);
+    Campaign::query()->whereKey($campaign->id)->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Closed, 'closed_at' => now()]);
+    $participants = Participant::query()->withoutGlobalScopes()->count();
+
+    expect(fn () => match ($action) {
+        'invite missing' => resolve(InviteMissing::class)->handle($stale),
+        'replacements' => resolve(DrawReplacements::class)->handle($stale, 'female', 1),
+        'resend' => resolve(ResendInvitations::class)->handle($stale),
+    })->toThrow(App\Modules\Campaigns\Exceptions\CampaignStateChanged::class);
+
+    Notification::assertNothingSent();
+    expect(Participant::query()->withoutGlobalScopes()->count())->toBe($participants);
+})->with(['invite missing', 'replacements', 'resend']);
+
+it('resends to any number of people, past what Postgres binds one by one', function (): void {
+    $people = staffOf($this->tenant, $this->plant, 18)->values();
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
+    $ids = [...array_map(fn (): string => (string) Illuminate\Support\Str::uuid(), range(1, 70_000)), $people[0]->id];
+
+    expect(resolve(ResendInvitations::class)->handle($campaign, $ids))->toBe(1);
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 1);
+});

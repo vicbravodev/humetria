@@ -21,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ResolveTenant
 {
+    private const int SWITCHER_COMPANIES = 10;
+
     public function __construct(
         private readonly ListUserTenants $listUserTenants,
         private readonly TenantContext $tenantContext,
@@ -72,9 +74,15 @@ final class ResolveTenant
                 'manage_campaigns' => $user->can('manage-campaigns'),
             ],
         ]);
-        Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($user->id)
-            ->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])
-            ->all());
+        // For the company switcher: the first few, and how many there are to see them all on their own page.
+        Inertia::share('tenants', function () use ($user): array {
+            $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES);
+
+            return [
+                'data' => array_values($companies->getCollection()->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])->all()),
+                'total' => $companies->total(),
+            ];
+        });
 
         return $next($request);
     }

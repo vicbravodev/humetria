@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
@@ -26,7 +27,7 @@ test('security page is displayed', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/security')
             ->where('canManagePasskeys', true)
-            ->where('passkeys', [])
+            ->where('passkeys.total', 0)
             ->where('canManageTwoFactor', true)
             ->where('twoFactorEnabled', false),
         );
@@ -62,7 +63,7 @@ test('security page renders without two factor when feature is disabled', functi
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/security')
             ->where('canManagePasskeys', false)
-            ->where('passkeys', [])
+            ->where('passkeys', null)
             ->where('canManageTwoFactor', false)
             ->missing('twoFactorEnabled')
             ->missing('requiresConfirmation'),
@@ -103,4 +104,27 @@ test('correct password must be provided to update password', function () {
     $response
         ->assertSessionHasErrors('current_password')
         ->assertRedirect(route('security.edit'));
+});
+
+test('security page lists the passkeys 10 at a time, newest first', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 11) as $index) {
+        DB::table('passkeys')->insert([
+            'user_id' => $user->id,
+            'name' => "Llave {$index}",
+            'credential_id' => "credential-{$index}",
+            'credential' => '{}',
+            'created_at' => now()->addMinutes($index),
+            'updated_at' => now(),
+        ]);
+    }
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit', ['passkeys' => 2]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('passkeys.total', 11)
+            ->has('passkeys.data', 1)
+            ->where('passkeys.data.0.name', 'Llave 1'));
 });

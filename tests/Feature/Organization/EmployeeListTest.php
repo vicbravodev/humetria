@@ -51,12 +51,13 @@ it('lists the active employees by name, with their center and area', function ()
                 'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null,
             ])
             ->where('filters', ['q' => '', 'work_center' => null, 'area' => null, 'status' => 'active'])
-            ->where('workCenters', [['value' => $this->office->id, 'label' => 'Oficinas'], ['value' => $this->plant->id, 'label' => 'Planta Norte']])
-            ->where('areas', [['value' => $this->production->id, 'label' => 'Producción'], ['value' => $this->sales->id, 'label' => 'Ventas']])
+            // Work centers and areas are searched on the server as they are chosen, never sent whole.
+            ->missing('workCenters')
+            ->missing('areas')
             ->where('genders', [['value' => 'female', 'label' => 'Mujer'], ['value' => 'male', 'label' => 'Hombre'], ['value' => 'other', 'label' => 'Otro / prefiero no decir']]));
 });
 
-it('searches by name, email or employee number, ignoring case', function (string $q, array $names): void {
+it('searches by name, email or employee number, ignoring case and accents', function (string $q, array $names): void {
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'email' => 'ana@acme.mx', 'employee_number' => 'N-77']);
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Beto Díaz', 'email' => 'beto@otro.mx']);
 
@@ -69,6 +70,7 @@ it('searches by name, email or employee number, ignoring case', function (string
     'name' => ['LÓPEZ', ['Ana López']],
     'email' => [' acme.mx ', ['Ana López']],
     'number' => ['n-77', ['Ana López']],
+    'accents' => ['diaz', ['Beto Díaz']],
     'nothing' => ['zzz', []],
     'a wildcard is literal' => ['%', []],
 ]);
@@ -87,6 +89,12 @@ it('filters by work center, area and status, together', function (): void {
         ->and($names(['work_center' => $this->plant->id, 'area' => $this->production->id]))->toBe(['Planta Producción'])
         ->and($names(['status' => 'inactive']))->toBe(['Planta Baja'])
         ->and($names(['area' => 'not-a-uuid', 'work_center' => 'x', 'status' => 'nope']))->toBe(['Oficina Producción', 'Planta Producción', 'Planta Ventas']);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'work_center' => $this->plant->id, 'area' => $this->production->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.work_center', ['value' => $this->plant->id, 'label' => 'Planta Norte'])
+            ->where('filters.area', ['value' => $this->production->id, 'label' => 'Producción']));
 });
 
 it('pages 25 at a time', function (): void {
@@ -106,7 +114,7 @@ it('lists the page with a fixed number of queries', function (): void {
     $owner = $this->owner->fresh();
 
     // Superadmin check, company, membership, role, permission cache (2), the user's permissions and roles there, work
-    // centers, count, page, the page's areas, all areas and the user's companies: none per row.
+    // centers, count, page, the page's areas and the user's first companies with their count: none per row.
     $this->expectsDatabaseQueryCount(14);
 
     $this->actingAs($owner)->get(route('tenant.employees.index', $this->tenant))->assertOk();

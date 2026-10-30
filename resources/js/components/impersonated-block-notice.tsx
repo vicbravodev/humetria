@@ -15,7 +15,7 @@ export function ImpersonatedBlockNotice() {
     return (
         <TenantBlockedDialog
             tradeName={tenant.trade_name}
-            canSwitch={tenants.length > 1}
+            canSwitch={tenants.total > 1}
             impersonating
         />
     );

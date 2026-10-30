@@ -1,8 +1,8 @@
-/** How the employees list is narrowed, as the server sends it back. */
+/** How the employees list is narrowed, as the server sends it back: a chosen center or area with its name. */
 export type EmployeeFilters = {
     q: string;
-    work_center: string | null;
-    area: string | null;
+    work_center: { value: string; label: string } | null;
+    area: { value: string; label: string } | null;
     status: 'active' | 'inactive';
 };
 
@@ -16,8 +16,8 @@ export function employeeQuery(
         ...(q === '' ? {} : { q }),
         ...(filters.work_center === null
             ? {}
-            : { work_center: filters.work_center }),
-        ...(filters.area === null ? {} : { area: filters.area }),
+            : { work_center: filters.work_center.value }),
+        ...(filters.area === null ? {} : { area: filters.area.value }),
         ...(filters.status === 'inactive' ? { status: 'inactive' } : {}),
     };
 }
