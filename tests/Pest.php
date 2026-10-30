@@ -89,6 +89,12 @@ function workIn(Tenant $tenant): void
     resolve(TenantContext::class)->set($tenant);
 }
 
+/** The company of a row of another module, which knows it only by its id. */
+function tenantOf(string $tenantId): Tenant
+{
+    return Tenant::query()->findOrFail($tenantId);
+}
+
 /** A new user who belongs to `$tenant` with `$role`. */
 function memberOf(Tenant $tenant, TenantRole $role): User
 {

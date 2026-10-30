@@ -18,6 +18,9 @@ use Illuminate\Support\Str;
  */
 final class EmployeeFactory extends Factory
 {
+    /** Named here so the factory also works when used on its own, as other modules' factories do. */
+    protected $model = Employee::class;
+
     /**
      * @return array<model-property<Employee>, mixed>
      */
