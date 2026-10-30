@@ -48,11 +48,11 @@ export default function DemoRequestForm() {
 
                 return message === null;
             }}
-            className="relative grid gap-6 rounded-lg border border-border bg-card p-4 text-left sm:p-8"
+            className="relative grid gap-5 rounded-lg border bg-card p-5 sm:p-7"
         >
             {({ processing, errors }) => (
                 <>
-                    <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="grid gap-3.5 sm:grid-cols-2">
                         <DemoTextField
                             name="name"
                             label="Nombre"
@@ -60,14 +60,6 @@ export default function DemoRequestForm() {
                             required
                             maxLength={120}
                             error={errors['name']}
-                        />
-                        <DemoTextField
-                            name="company"
-                            label="Empresa"
-                            autoComplete="organization"
-                            required
-                            maxLength={160}
-                            error={errors['company']}
                         />
                         <DemoTextField
                             name="email"
@@ -78,6 +70,14 @@ export default function DemoRequestForm() {
                             required
                             maxLength={190}
                             error={errors['email']}
+                        />
+                        <DemoTextField
+                            name="company"
+                            label="Empresa"
+                            autoComplete="organization"
+                            required
+                            maxLength={160}
+                            error={errors['company']}
                         />
                         <DemoTextField
                             name="whatsapp"
@@ -112,11 +112,13 @@ export default function DemoRequestForm() {
                         size="lg"
                         disabled={processing}
                         data-test="demo-request-submit"
-                        className="justify-self-start"
                     >
                         {processing && <Spinner />}
-                        Agendar mi demo
+                        Agendar demo
                     </Button>
+                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                        Usamos tus datos solo para contactarte.
+                    </p>
                 </>
             )}
         </Form>
