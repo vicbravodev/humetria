@@ -109,6 +109,26 @@ it('imports a valid file once confirmed: adds new people and updates those it fi
     Log::shouldHaveReceived('info')->with('employees.imported', ['created' => 1, 'updated' => 2]);
 });
 
+it('announces who the file moves to another work center, as moving them by hand does', function (): void {
+    $office = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficinas']);
+    $moved = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'employee_number' => 'A-1']);
+    Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'employee_number' => 'B-2']);
+    Illuminate\Support\Facades\Event::fake([App\Modules\Organization\Events\EmployeeMoved::class]);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile([
+            'Ana López,ana@acme.mx,,Mujer,Oficinas,Ventas,Vendedora,A-1',
+            'Beto Díaz,beto@acme.mx,,Hombre,Planta Querétaro,Almacén,Almacenista,B-2',
+        ])])
+        ->assertRedirect(route('tenant.employees.index', $this->tenant));
+
+    Illuminate\Support\Facades\Event::assertDispatchedTimes(App\Modules\Organization\Events\EmployeeMoved::class, 1);
+    Illuminate\Support\Facades\Event::assertDispatched(fn (App\Modules\Organization\Events\EmployeeMoved $event): bool => $event->employeeId === $moved->id
+        && $event->fromWorkCenterId === $this->plant->id
+        && $event->toWorkCenterId === $office->id
+        && $event->tenantId === $this->tenant->id);
+});
+
 it('reports every row with a problem and imports nothing, even when confirmed', function (): void {
     Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'email' => 'tomado@acme.mx', 'employee_number' => 'T-1']);
 

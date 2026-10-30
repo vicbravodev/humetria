@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Actions;
 
 use App\Modules\Organization\Data\EmployeeImportPlan;
+use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\EmployeeAttributes;
@@ -34,7 +35,14 @@ final readonly class ImportEmployees
                 if ($row->existingId === null) {
                     Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
                 } else {
-                    Employee::query()->findOrFail($row->existingId)->update($attributes);
+                    $employee = Employee::query()->findOrFail($row->existingId);
+                    $from = $employee->work_center_id;
+                    $employee->update($attributes);
+
+                    // As moving them by hand: an open evaluation of the old work center lets them go (criterio C-24).
+                    if ($employee->work_center_id !== $from) {
+                        event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $employee->work_center_id));
+                    }
                 }
             }
 
