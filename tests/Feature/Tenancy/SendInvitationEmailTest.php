@@ -28,6 +28,14 @@ it('queues the email once the transaction that wrote the invitation commits', fu
         && $job->notifiables->sole()->routes === ['mail' => 'ana@acme.mx']);
 });
 
+it('encrypts the queued email: the plain token never sits readable in Redis or on the Horizon dashboard', function (): void {
+    $invitation = TenantInvitation::factory()->create();
+
+    app(SendInvitationEmail::class)->handle($invitation, 'Acme', 'tok');
+
+    Queue::assertPushed(SendQueuedNotifications::class, fn (SendQueuedNotifications $job): bool => $job->shouldBeEncrypted);
+});
+
 it('never queues the email for an invitation that was rolled back', function (): void {
     $invitation = TenantInvitation::factory()->create();
 
