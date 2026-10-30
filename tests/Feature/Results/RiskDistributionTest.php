@@ -67,7 +67,11 @@ it('counts how many questionnaires fall in each risk level, never averaging them
         ->and(levelsOf($result, 'categories', 'leadership_relations'))->toBe([2, 0, 0, 4, 1])
         ->and(collect($result['categories'])->pluck('label')->all())->toBe(['Ambiente de trabajo', 'Factores propios de la actividad', 'Organización del tiempo de trabajo', 'Liderazgo y relaciones en el trabajo'])
         ->and(collect($result['domains'])->pluck('key')->all())->toContain('workload', 'violence')
-        ->and(array_sum(levelsOf($result, 'domains', 'violence')))->toBe(7);
+        ->and(array_sum(levelsOf($result, 'domains', 'violence')))->toBe(7)
+        // Each domain names its category, so a report can nest them; a category names none.
+        ->and(collect($result['domains'])->firstWhere('key', 'violence')['category'])->toBe('leadership_relations')
+        ->and(collect($result['domains'])->firstWhere('key', 'workload')['category'])->toBe('activity_factors')
+        ->and(collect($result['categories'])->pluck('category')->unique()->all())->toBe([null]);
 });
 
 it('shows a group of 5 questionnaires, and none of 4', function (int $answered, bool $visible): void {

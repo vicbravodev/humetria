@@ -268,7 +268,8 @@ it('never gives the pages an answer', function (): void {
  */
 function personIn(Campaign $campaign, string $name, array $guides, array $participant = [], array $employee = []): Participant
 {
-    $person = App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $campaign->tenant_id, 'work_center_id' => $campaign->work_center_id, 'name' => $name, ...$employee]);
+    // The email follows the name (plus hex, which spells no name): a random one could match a search for someone else.
+    $person = App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $campaign->tenant_id, 'work_center_id' => $campaign->work_center_id, 'name' => $name, 'email' => Illuminate\Support\Str::slug($name).'.'.bin2hex(random_bytes(3)).'@example.test', ...$employee]);
     $invited = Participant::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, ...$participant]);
 
     foreach ($guides as $instrument => $status) {

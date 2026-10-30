@@ -41,7 +41,7 @@ export default function ResultsBody({
                 levels={levels}
             />
             <ItemsResults sections={items} />
-            <section className="flex flex-col gap-4 rounded-xl border bg-card p-5 sm:p-6">
+            <section className="flex flex-col gap-4">
                 <h2 className="text-lg font-semibold">
                     Qué pide la norma en cada nivel
                 </h2>

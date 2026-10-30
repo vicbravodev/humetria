@@ -72,6 +72,7 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 - **Menús, select y popovers:** crecen desde su disparador (`origin-(--radix-…-content-transform-origin)`), 200 ms al abrir y 100 ms al cerrar.
 - **Calendario:** al cambiar de mes las semanas entran de lado y las anteriores salen hacia el otro.
 - **Tooltips:** crecen desde su disparador (`origin-(--radix-tooltip-content-transform-origin)`); una vez abierto uno, los siguientes aparecen sin animación.
+- **Gráficas del informe (la única excepción a los 300 ms):** al abrir el informe, una sola vez, las barras crecen desde su eje (`animate-report-grow`, 850 ms, escalonadas 70 ms por fila), los cuadros del resumen aparecen uno tras otro (`animate-report-pop`), cada bloque sube a su lugar (`animate-report-rise`) y los KPI cuentan hacia arriba en 1.2 s (`useCountUp`). Nada de esto pasa con `prefers-reduced-motion` ni al imprimir.
 - Con `prefers-reduced-motion` desaparecen los desplazamientos y escalas; quedan los desvanecidos.
 
 ## Iconografía
@@ -101,7 +102,8 @@ estados vacíos con el siguiente paso.
 - **Encuesta** (`EncuestaMovil`, `EncuestaEscritorio`): `SurveyShell` con el logo del consultor y “Confidencial”, progreso por sección, instrucción de entrada en un bloque `accent` y `SurveyQuestion` con 5 opciones verticales de 56 px. En móvil va una pregunta por pantalla; en escritorio, hasta 3 de la misma sección. “Siguiente” es explícito y nunca avanza solo.
 - **Escala de riesgo** (`RiskLevel`, `RiskScale`).
 - **Resultados** (`LevelBar`, `LevelLegend`, `ShareMeter`): primero una frase que dice cuántos quedan en riesgo alto o muy alto y qué dominio pesa más, luego la calificación final como una sola barra con su leyenda, y los dominios, categorías y áreas ordenados del peor al mejor, cada uno como barra; los conteos quedan en una tabla a un clic (en el informe, a la vista). Las preguntas van de la más desfavorable a la menos, con un `ShareMeter` por pregunta.
-- **Cabecera de reporte** (`ReportHeader`): logo del consultor, sello “hecho con humetría”, título, guía y ficha.
+- **Cabecera de reporte** (`ReportHeader`): sello “hecho con humetría”, la norma y la guía en `primary`, título, empresa y centro, y la ficha (periodo, cuestionarios, instrumento, elaboró).
+- **Informe del numeral 7.7:** barra fija con las secciones, aviso de lo que falta capturar (`risk-medio-bg`), resumen ejecutivo (3 KPI, un cuadro por cuestionario y tres hallazgos), los 3 dominios donde actuar primero, la gráfica divergente categoría → dominio (a la izquierda nulo a medio, a la derecha alto o muy alto), las áreas en tres niveles con las protegidas contadas aparte, los ocho incisos del 7.7 y los anexos. Se imprime siempre en claro, con un salto de página antes de Focos, Dominios, Informe 7.7 y Anexo.
 
 ## Accesibilidad
 

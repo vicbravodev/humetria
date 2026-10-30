@@ -14,6 +14,8 @@ export type LevelCounts = number[];
 export type RiskGroup = {
     key: string;
     label: string;
+    /** The category a domain belongs to (Tablas 3 y 6); null for a category. */
+    category: string | null;
     levels: LevelCounts;
 };
 
@@ -105,6 +107,8 @@ export type ReportCenter = {
 export type NomReport = {
     center: ReportCenter;
     guide: string;
+    /** How many items the guide has: 46 for the Guía II, 72 for the III. */
+    itemCount: number;
     period: string;
     participation: Participation;
     method: string;

@@ -20,17 +20,22 @@ export default function ReportDetailsDialog({
     tenantSlug,
     campaignId,
     form,
+    complete,
 }: {
     tenantSlug: string;
     campaignId: string;
     form: ReportForm;
+    /** Whether HR already filled it in: then it is edited, not completed. */
+    complete: boolean;
 }) {
     const [open, setOpen] = useState(false);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">Completar informe</Button>
+                <Button variant="outline">
+                    {complete ? 'Editar informe' : 'Completar informe'}
+                </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
                 <DialogTitle>Completar el informe</DialogTitle>

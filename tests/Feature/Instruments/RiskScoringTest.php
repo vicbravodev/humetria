@@ -244,6 +244,23 @@ it('sums each domain from its items and each category from its domains, as Tabla
         ->and($score->total)->toBe(array_sum($expectedDomains));
 })->with(['nom035.guide-ii', 'nom035.guide-iii']);
 
+it('names the category of each domain, as Tablas 3 and 6 group them, and none for a category', function (string $key): void {
+    $score = scoreOf($key, nom035Answers($key));
+    $expected = [];
+
+    foreach (CATEGORY_DOMAINS as $category => $domains) {
+        foreach ($domains as $domain) {
+            if (array_key_exists($domain, DOMAIN_ITEMS[$key])) {
+                $expected[$domain] = $category;
+            }
+        }
+    }
+
+    expect(array_map(fn (GroupScore $group): ?string => $group->category, groupsByKey($score->domains)))->toEqualCanonicalizing($expected)
+        ->and(array_keys(array_map(fn (GroupScore $group): ?string => $group->category, groupsByKey($score->domains))))->toBe(array_keys(DOMAIN_ITEMS[$key]))
+        ->and(array_unique(array_map(fn (GroupScore $group): ?string => $group->category, $score->categories)))->toBe([null]);
+})->with(['nom035.guide-ii', 'nom035.guide-iii']);
+
 it('groups every item in exactly one domain', function (string $key, int $count): void {
     $items = array_merge(...array_values(DOMAIN_ITEMS[$key]));
     sort($items);
