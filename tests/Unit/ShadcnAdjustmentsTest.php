@@ -20,6 +20,8 @@ it('leaves no shadcn default that breaks the design system', function (string $f
 })->with([
     'ring-[3px]', 'ring-ring/50', 'shadow-xs', 'md:text-sm', 'dark:bg-input/30',
     'destructive-foreground', 'dark:bg-destructive/60', 'ring-ring/', 'outline-ring/',
+    // A lighter tint drops white text under 4.5:1; hover brightens the solid fill instead (pantallas: .btn-p:hover).
+    'hover:bg-primary/90', 'hover:bg-destructive/90',
 ]);
 
 it('keeps shadows only on floating surfaces', function (string $component): void {
