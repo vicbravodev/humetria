@@ -103,6 +103,7 @@ it('shows a closed evaluation by risk level: the center, its categories and doma
                 'hidden' => 0,
             ])
             ->where('items.0.items.0.counts', [5, 0, 0, 0, 6])
+            ->where('items.0.items.0.unfavorable', 5)
             ->where('filters.area', null)
             ->where('levels.0', ['value' => 'null', 'label' => 'Nulo o despreciable', 'action' => 'El riesgo resulta despreciable por lo que no se requiere medidas adicionales.'])
             ->where('levels.4.label', 'Muy alto')

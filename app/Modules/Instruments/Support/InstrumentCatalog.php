@@ -49,4 +49,9 @@ final readonly class InstrumentCatalog implements Instruments
 
         return $this->riskScorer->score($key, $answers);
     }
+
+    public function itemScore(string $key, int $item, string $answer): int
+    {
+        return $this->riskScorer->scoreItem($key, $item, $answer);
+    }
 }

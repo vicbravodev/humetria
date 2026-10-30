@@ -77,10 +77,11 @@ final readonly class RiskDistribution
 
     /**
      * How each question was answered, by section, with the count of each option in the order the questionnaire offers
-     * them. A question answered by fewer than the minimum (the blocks behind a gate are answered by some) shows none.
+     * them and how many answered on the side that scores risk. A question answered by fewer than the minimum (the
+     * blocks behind a gate are answered by some) shows none.
      *
      * @param  list<AnonymousRecord>  $records
-     * @return list<array{title: string|null, instruction: string, items: list<array{number: int, text: string, answered: int, counts: list<int>|null}>}>
+     * @return list<array{title: string|null, instruction: string, items: list<array{number: int, text: string, answered: int, counts: list<int>|null, unfavorable: int|null}>}>
      */
     public function items(string $instrument, array $records): array
     {
@@ -94,8 +95,11 @@ final readonly class RiskDistribution
             foreach ($section->items as $item) {
                 $given = array_values(array_filter(array_map(fn (AnonymousRecord $record): ?string => $record->answers[$item->number] ?? null, $records)));
                 $counts = array_map(fn (string $option): int => count(array_keys($given, $option, true)), $options);
+                // Unfavorable: on the side of the item's own scale that scores 3 or 4 points (Tablas 2 and 5).
+                $unfavorable = count(array_filter($given, fn (string $answer): bool => $this->instruments->itemScore($instrument, $item->number, $answer) >= 3));
                 $answered = count($given);
-                $items[] = ['number' => $item->number, 'text' => $item->text, 'answered' => $answered, 'counts' => $this->isShown($answered) ? $counts : null];
+                $shown = $this->isShown($answered);
+                $items[] = ['number' => $item->number, 'text' => $item->text, 'answered' => $answered, 'counts' => $shown ? $counts : null, 'unfavorable' => $shown ? $unfavorable : null];
             }
 
             $sections[] = ['title' => $section->title, 'instruction' => $section->instruction, 'items' => $items];
