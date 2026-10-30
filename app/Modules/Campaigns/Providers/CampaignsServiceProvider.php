@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Providers;
 
+use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\Campaigns\Listeners\CancelOnDeactivation;
 use App\Modules\Campaigns\Listeners\CancelOnMove;
+use App\Modules\Campaigns\Support\CompanyCampaignRecords;
 use App\Modules\Campaigns\Support\CompanyOpenCampaigns;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
@@ -21,6 +23,7 @@ final class CampaignsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(OpenCampaigns::class, CompanyOpenCampaigns::class);
+        $this->app->bind(CampaignRecords::class, CompanyCampaignRecords::class);
     }
 
     public function boot(): void
