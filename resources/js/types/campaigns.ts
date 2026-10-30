@@ -22,6 +22,7 @@ export type CampaignSummary = {
     instruments: string[];
     closesOn: string | null;
     closedOn: string | null;
+    launchedOn: string | null;
     progress: CampaignProgress | null;
 };
 
@@ -80,14 +81,22 @@ export type SampledPerson = {
 export type WorkCenterEvaluation = {
     id: string;
     name: string;
+    /** Its main activity: "Manufactura de autopartes". */
+    activity: string;
     workers: number;
     guides: ('I' | 'II' | 'III')[];
     lastEvaluatedOn: string | null;
     dueOn: string | null;
     overdue: boolean;
-    openCampaignId: string | null;
+    /** The last closed evaluation, to read its results. */
+    lastCampaignId: string | null;
+    /** The evaluation in draft or running, if any. */
+    openCampaign: CampaignSummary | null;
     eligible: boolean;
 };
+
+/** How many work centers in use call for Guía I alone (up to 15), Guías I and II (16 to 50) and I and III (over 50). */
+export type CentersBySize = { small: number; medium: number; large: number };
 
 export type SurveyOption = { value: string; label: string };
 

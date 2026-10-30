@@ -28,9 +28,13 @@ final class CampaignController extends Controller
 {
     public function __construct(private readonly CampaignPages $pages) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('campaigns/index', $this->pages->index());
+        return Inertia::render('campaigns/index', [
+            ...$this->pages->index(),
+            // The work center the new-evaluation assistant chose, asked for by that assistant alone.
+            'candidate' => Inertia::optional(fn (): ?array => $this->pages->candidate($request->string('evaluate')->toString())),
+        ]);
     }
 
     public function store(CreateEvaluationRequest $request, mixed $tenant, CreateEvaluationDraft $createDraft): RedirectResponse

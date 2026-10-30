@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { chooseAll, idList, toggleChosen } from '@/lib/selection';
+import { chooseAll, chosenNames, idList, toggleChosen } from '@/lib/selection';
 
 describe('toggleChosen', () => {
     it('adds once and removes', () => {
@@ -20,5 +20,20 @@ describe('idList', () => {
         expect(idList(['a', 1, 'b', null])).toEqual(['a', 'b']);
         expect(idList(undefined)).toEqual([]);
         expect(idList('a')).toEqual([]);
+    });
+});
+
+describe('chosenNames', () => {
+    it('names the chosen people seen so far, and counts the rest', () => {
+        expect(
+            chosenNames(['a', 'b', 'c'], { a: 'Ana', c: 'Carla', z: 'Zoé' }),
+        ).toEqual({
+            named: [
+                { id: 'a', name: 'Ana' },
+                { id: 'c', name: 'Carla' },
+            ],
+            unnamed: 1,
+        });
+        expect(chosenNames([], {})).toEqual({ named: [], unnamed: 0 });
     });
 });

@@ -24,3 +24,17 @@ export function idList(value: unknown): string[] {
         ? value.filter((id): id is string => typeof id === 'string')
         : [];
 }
+
+/** The chosen people whose name was seen (in order), and how many were chosen without it (all a search found). */
+export function chosenNames(
+    chosen: string[],
+    names: Record<string, string>,
+): { named: { id: string; name: string }[]; unnamed: number } {
+    const named = chosen.flatMap((id) => {
+        const name = names[id];
+
+        return name === undefined ? [] : [{ id, name }];
+    });
+
+    return { named, unnamed: chosen.length - named.length };
+}
