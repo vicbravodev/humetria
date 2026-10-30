@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1 · 29 de octubre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.1 · 29 de octubre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -295,7 +295,7 @@ grupos pequeños. Para segmentar resultados basta el centro y el área.
 
 **Qué hacemos.** Las preguntas, instrucciones y opciones se presentan **tal como están en el DOF**, sin reescribirlas.
 Solo se corrigen erratas en etiquetas internas («Escaza claridad de funciones» → «Escasa»; «9, 10. 11» → «9, 10,
-11»). El texto que ve la persona no cambia.
+11»; «Insuficiente sentido de pertenencia e, inestabilidad» → «… e inestabilidad»). El texto que ve la persona no cambia.
 
 **Por qué.** Modificar la redacción de una guía la convierte en un cuestionario propio, que la norma exige validar
 (num. 7.5).
@@ -356,6 +356,33 @@ organizacional deberá realizarse, al menos, cada dos años» (num. 7.9).
 
 ---
 
+## Cómo se prueba
+
+Cada criterio que la plataforma aplica tiene pruebas automáticas que fallan si deja de cumplirse. Las de calificación
+están escritas a partir del anexo, no del código: son una segunda transcripción independiente de las tablas.
+
+| Criterio | Pruebas |
+|---|---|
+| C-01, C-02, C-03 | `tests/Feature/Instruments/Nom035GuidesTest.php`, `tests/Feature/Campaigns/CreateEvaluationTest.php` (15/16, 50/51, plantilla activa) |
+| C-04 | `tests/Feature/Campaigns/LaunchCampaignTest.php` (Guía I a todos) |
+| C-05 | `tests/Feature/Campaigns/TraumaCampaignTest.php`, `tests/Browser/CampaignsTest.php` |
+| C-06 | `tests/Feature/Instruments/TraumaScreeningTest.php` (cada umbral de GR.I) |
+| C-07 | `tests/Feature/Campaigns/SubmitSurveyTest.php` (tamizaje con la persona) |
+| C-08, C-09 | `tests/Feature/Instruments/Nom035SampleTest.php` (N = 51, 52, 100, 500, 1000, 10000; nunca n > N), `tests/Feature/Campaigns/CreateEvaluationTest.php` |
+| C-10 | `tests/Feature/Instruments/Nom035SampleTest.php` (reparto), `tests/Feature/Campaigns/CreateEvaluationTest.php` (sorteo aleatorio y proporcional), `tests/Feature/Campaigns/LaunchCampaignTest.php` (no se lanza una muestra desactualizada), `tests/Feature/Campaigns/CampaignActionsTest.php` (reemplazos) |
+| C-11, C-12, C-13, C-15 | `tests/Feature/Instruments/RiskScoringTest.php` (escala de cada ítem, bloques filtro en 0, cada límite de cada rango en c − 1, c y c + 1) |
+| C-14 | `tests/Feature/Instruments/RiskScoringTest.php` (cada cuestionario por sí solo) |
+| C-16, C-17 | `tests/Feature/Campaigns/OpenSurveyTest.php`, `tests/Browser/SurveyTest.php` (presentación, «dos últimos meses») |
+| C-18 | `tests/Feature/Instruments/AnswerValidationTest.php`, `tests/Feature/Campaigns/SubmitSurveyTest.php` (completo, coherente, una sola vez) |
+| C-19 | `tests/Feature/Campaigns/SubmitSurveyTest.php` (guías en cualquier orden) |
+| C-21 | `tests/Feature/Instruments/Nom035DefinitionsTest.php` (cada pregunta igual al anexo) |
+| C-22 | `tests/Feature/Responses/ResponseStorageTest.php` (sin columnas ni llaves hacia la persona, UUID v4), `tests/Feature/Campaigns/SubmitSurveyTest.php` (nada en el log), `tests/Feature/Campaigns/CampaignPagesTest.php` (ninguna respuesta en las páginas de RH) |
+| C-24 | `tests/Feature/Campaigns/RosterChangesTest.php`, `tests/Feature/Campaigns/CampaignActionsTest.php`, `tests/Feature/Tenancy/ArchiveWorkCenterTest.php` |
+| C-25 | `tests/Feature/Campaigns/CloseCampaignTest.php` |
+| C-26 | `tests/Feature/Campaigns/CampaignPagesTest.php` (última evaluación y fecha límite) |
+
+C-20 (sin ficha de la Guía V) se cumple por ausencia, y C-23 (mínimo por grupo) llega con los resultados.
+
 ## Lo que la plataforma no cubre (por ahora)
 
 Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona:
@@ -387,3 +414,4 @@ valoración clínica (5.5, 5.8 c) llegan en la siguiente versión.
 | Versión | Fecha | Cambio |
 |---|---|---|
 | 1 | 2026-10-29 | Primera versión, con base en el DOF del 23/10/2018 y las preguntas frecuentes de la STPS (partes uno y dos). |
+| 1.1 | 2026-10-29 | Se agrega «Cómo se prueba» y la errata «pertenencia e, inestabilidad» a C-21. Ningún criterio cambia. |
