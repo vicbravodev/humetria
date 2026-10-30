@@ -81,13 +81,13 @@ final class SendSurveyInvitations implements ShouldQueue
                 continue;
             }
 
-            if (RateLimiter::tooManyAttempts(self::LIMITER, config()->integer('campaigns.invitations_per_minute'))) {
+            // Counted first and then compared, in one atomic step, so workers sending at once never pass the limit together.
+            if (RateLimiter::hit(self::LIMITER) > config()->integer('campaigns.invitations_per_minute')) {
                 $this->release(RateLimiter::availableIn(self::LIMITER));
 
                 return;
             }
 
-            RateLimiter::hit(self::LIMITER);
             $token = Str::random(64);
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::route('mail', $email)->notify(new SurveyInvitation($tradeName, $token, $lastDay));
