@@ -83,7 +83,7 @@ it('renders the email with no English left in the default template', function ()
 
     expect($html)->toContain('Hola, Ana Pérez')
         ->toContain('Te invitaron a Humetría como owner de Acme')
-        ->toContain('¿El botón no abre? Copia este enlace en tu navegador:')
+        ->toContain('Si el botón no funciona, copia este enlace en tu navegador:')
         ->not->toContain('Regards')
         ->not->toContain('trouble clicking')
         ->not->toContain('All rights reserved');

@@ -127,6 +127,21 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Legal Footer
+    |--------------------------------------------------------------------------
+    |
+    | Humetría's own emails close with its legal address and a link to the
+    | privacy notice. Each is left out while it is empty.
+    |
+    */
+
+    'legal' => [
+        'address' => env('MAIL_LEGAL_ADDRESS'),
+        'privacy_url' => env('MAIL_PRIVACY_URL'),
+    ],
+
     'markdown' => [
         'theme' => 'humetria',
 

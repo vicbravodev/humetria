@@ -1,23 +1,9 @@
+@props(['preheader' => null, 'reason' => null, 'company' => null])
 <x-mail::layout>
-<x-slot:header>
-<x-mail::header :url="config('app.url')">
-{{ config('app.name') }}
-</x-mail::header>
-</x-slot:header>
-
-{{ $slot }}
-
-@isset($subcopy)
-<x-slot:subcopy>
-<x-mail::subcopy>
-{{ $subcopy }}
-</x-mail::subcopy>
-</x-slot:subcopy>
-@endisset
-
+{!! $slot !!}
 <x-slot:footer>
-<x-mail::footer>
-Enviado por Humetría, herramientas para Recursos Humanos.
-</x-mail::footer>
+{!! $reason !!}
+
+{{ $company ? 'hecho con humetría' : 'Humetría'.(config('mail.legal.address') ? ' · '.config('mail.legal.address') : '') }}
 </x-slot:footer>
 </x-mail::layout>
