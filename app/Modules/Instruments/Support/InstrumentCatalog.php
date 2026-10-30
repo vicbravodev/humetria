@@ -6,6 +6,7 @@ namespace App\Modules\Instruments\Support;
 
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Data\InstrumentDefinition;
+use App\Modules\Instruments\Data\RiskScore;
 use App\Modules\Instruments\Data\TraumaOutcome;
 use App\Modules\Instruments\Support\Nom035\GuideOne;
 use App\Modules\Instruments\Support\Nom035\GuideThree;
@@ -14,7 +15,7 @@ use InvalidArgumentException;
 
 final readonly class InstrumentCatalog implements Instruments
 {
-    public function __construct(private AnswerValidator $validator, private TraumaScreener $traumaScreener) {}
+    public function __construct(private AnswerValidator $validator, private TraumaScreener $traumaScreener, private RiskScorer $riskScorer) {}
 
     public function definition(string $key): InstrumentDefinition
     {
@@ -36,5 +37,16 @@ final readonly class InstrumentCatalog implements Instruments
         $this->validate(GuideOne::KEY, $answers);
 
         return $this->traumaScreener->screen($answers);
+    }
+
+    public function scoreRisk(string $key, array $answers): RiskScore
+    {
+        if ($key !== GuideTwo::KEY && $key !== GuideThree::KEY) {
+            throw new InvalidArgumentException("[{$key}] is not scored by risk level.");
+        }
+
+        $this->validate($key, $answers);
+
+        return $this->riskScorer->score($key, $answers);
     }
 }

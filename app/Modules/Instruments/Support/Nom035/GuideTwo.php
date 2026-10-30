@@ -81,4 +81,53 @@ final class GuideTwo
             ]), Nom035::supervisionGate()),
         ]);
     }
+
+    /**
+     * Tablas 2 and 3 and the ranges of II.3 c: which items score 0 on "Siempre", how they group, and the ranges of each level.
+     */
+    public static function scoring(): ScoringTable
+    {
+        return new ScoringTable(
+            zeroOnAlways: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33],
+            dimensions: [
+                'dangerous_conditions' => ['label' => 'Condiciones peligrosas e inseguras', 'domain' => 'environment_conditions', 'items' => [2]],
+                'deficient_conditions' => ['label' => 'Condiciones deficientes e insalubres', 'domain' => 'environment_conditions', 'items' => [1]],
+                'hazardous_work' => ['label' => 'Trabajos peligrosos', 'domain' => 'environment_conditions', 'items' => [3]],
+                'quantitative_load' => ['label' => 'Cargas cuantitativas', 'domain' => 'workload', 'items' => [4, 9]],
+                'accelerated_pace' => ['label' => 'Ritmos de trabajo acelerado', 'domain' => 'workload', 'items' => [5, 6]],
+                'mental_load' => ['label' => 'Carga mental', 'domain' => 'workload', 'items' => [7, 8]],
+                'emotional_load' => ['label' => 'Cargas psicológicas emocionales', 'domain' => 'workload', 'items' => [41, 42, 43]],
+                'high_responsibility' => ['label' => 'Cargas de alta responsabilidad', 'domain' => 'workload', 'items' => [10, 11]],
+                'contradictory_load' => ['label' => 'Cargas contradictorias o inconsistentes', 'domain' => 'workload', 'items' => [12, 13]],
+                'lack_of_autonomy' => ['label' => 'Falta de control y autonomía sobre el trabajo', 'domain' => 'lack_of_control', 'items' => [20, 21, 22]],
+                'limited_development' => ['label' => 'Limitada o nula posibilidad de desarrollo', 'domain' => 'lack_of_control', 'items' => [18, 19]],
+                'limited_training' => ['label' => 'Limitada o inexistente capacitación', 'domain' => 'lack_of_control', 'items' => [26, 27]],
+                'long_hours' => ['label' => 'Jornadas de trabajo extensas', 'domain' => 'work_day', 'items' => [14, 15]],
+                'work_outside' => ['label' => 'Influencia del trabajo fuera del centro laboral', 'domain' => 'work_family', 'items' => [16]],
+                'family_responsibilities' => ['label' => 'Influencia de las responsabilidades familiares', 'domain' => 'work_family', 'items' => [17]],
+                'unclear_roles' => ['label' => 'Escasa claridad de funciones', 'domain' => 'leadership', 'items' => [23, 24, 25]],
+                'leadership_traits' => ['label' => 'Características del liderazgo', 'domain' => 'leadership', 'items' => [28, 29]],
+                'social_relations' => ['label' => 'Relaciones sociales en el trabajo', 'domain' => 'relations', 'items' => [30, 31, 32]],
+                'supervised_relations' => ['label' => 'Deficiente relación con los colaboradores que supervisa', 'domain' => 'relations', 'items' => [44, 45, 46]],
+                'workplace_violence' => ['label' => 'Violencia laboral', 'domain' => 'violence', 'items' => [33, 34, 35, 36, 37, 38, 39, 40]],
+            ],
+            domains: [
+                'environment_conditions' => ['label' => 'Condiciones en el ambiente de trabajo', 'category' => 'work_environment', 'cutoffs' => [3, 5, 7, 9]],
+                'workload' => ['label' => 'Carga de trabajo', 'category' => 'activity_factors', 'cutoffs' => [12, 16, 20, 24]],
+                'lack_of_control' => ['label' => 'Falta de control sobre el trabajo', 'category' => 'activity_factors', 'cutoffs' => [5, 8, 11, 14]],
+                'work_day' => ['label' => 'Jornada de trabajo', 'category' => 'work_time', 'cutoffs' => [1, 2, 4, 6]],
+                'work_family' => ['label' => 'Interferencia en la relación trabajo-familia', 'category' => 'work_time', 'cutoffs' => [1, 2, 4, 6]],
+                'leadership' => ['label' => 'Liderazgo', 'category' => 'leadership_relations', 'cutoffs' => [3, 5, 8, 11]],
+                'relations' => ['label' => 'Relaciones en el trabajo', 'category' => 'leadership_relations', 'cutoffs' => [5, 8, 11, 14]],
+                'violence' => ['label' => 'Violencia', 'category' => 'leadership_relations', 'cutoffs' => [7, 10, 13, 16]],
+            ],
+            categories: [
+                'work_environment' => ['label' => 'Ambiente de trabajo', 'cutoffs' => [3, 5, 7, 9]],
+                'activity_factors' => ['label' => 'Factores propios de la actividad', 'cutoffs' => [10, 20, 30, 40]],
+                'work_time' => ['label' => 'Organización del tiempo de trabajo', 'cutoffs' => [4, 6, 9, 12]],
+                'leadership_relations' => ['label' => 'Liderazgo y relaciones en el trabajo', 'cutoffs' => [10, 18, 28, 38]],
+            ],
+            final: [20, 45, 70, 90],
+        );
+    }
 }

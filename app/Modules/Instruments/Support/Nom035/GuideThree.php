@@ -119,4 +119,61 @@ final class GuideThree
             ]), Nom035::supervisionGate()),
         ]);
     }
+
+    /**
+     * Tablas 5 and 6 and the ranges of III.3 c: which items score 0 on "Siempre", how they group, and the ranges of each level.
+     */
+    public static function scoring(): ScoringTable
+    {
+        return new ScoringTable(
+            zeroOnAlways: [1, 4, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57],
+            dimensions: [
+                'dangerous_conditions' => ['label' => 'Condiciones peligrosas e inseguras', 'domain' => 'environment_conditions', 'items' => [1, 3]],
+                'deficient_conditions' => ['label' => 'Condiciones deficientes e insalubres', 'domain' => 'environment_conditions', 'items' => [2, 4]],
+                'hazardous_work' => ['label' => 'Trabajos peligrosos', 'domain' => 'environment_conditions', 'items' => [5]],
+                'quantitative_load' => ['label' => 'Cargas cuantitativas', 'domain' => 'workload', 'items' => [6, 12]],
+                'accelerated_pace' => ['label' => 'Ritmos de trabajo acelerado', 'domain' => 'workload', 'items' => [7, 8]],
+                'mental_load' => ['label' => 'Carga mental', 'domain' => 'workload', 'items' => [9, 10, 11]],
+                'emotional_load' => ['label' => 'Cargas psicológicas emocionales', 'domain' => 'workload', 'items' => [65, 66, 67, 68]],
+                'high_responsibility' => ['label' => 'Cargas de alta responsabilidad', 'domain' => 'workload', 'items' => [13, 14]],
+                'contradictory_load' => ['label' => 'Cargas contradictorias o inconsistentes', 'domain' => 'workload', 'items' => [15, 16]],
+                'lack_of_autonomy' => ['label' => 'Falta de control y autonomía sobre el trabajo', 'domain' => 'lack_of_control', 'items' => [25, 26, 27, 28]],
+                'limited_development' => ['label' => 'Limitada o nula posibilidad de desarrollo', 'domain' => 'lack_of_control', 'items' => [23, 24]],
+                'change_management' => ['label' => 'Insuficiente participación y manejo del cambio', 'domain' => 'lack_of_control', 'items' => [29, 30]],
+                'limited_training' => ['label' => 'Limitada o inexistente capacitación', 'domain' => 'lack_of_control', 'items' => [35, 36]],
+                'long_hours' => ['label' => 'Jornadas de trabajo extensas', 'domain' => 'work_day', 'items' => [17, 18]],
+                'work_outside' => ['label' => 'Influencia del trabajo fuera del centro laboral', 'domain' => 'work_family', 'items' => [19, 20]],
+                'family_responsibilities' => ['label' => 'Influencia de las responsabilidades familiares', 'domain' => 'work_family', 'items' => [21, 22]],
+                'unclear_roles' => ['label' => 'Escasa claridad de funciones', 'domain' => 'leadership', 'items' => [31, 32, 33, 34]],
+                'leadership_traits' => ['label' => 'Características del liderazgo', 'domain' => 'leadership', 'items' => [37, 38, 39, 40, 41]],
+                'social_relations' => ['label' => 'Relaciones sociales en el trabajo', 'domain' => 'relations', 'items' => [42, 43, 44, 45, 46]],
+                'supervised_relations' => ['label' => 'Deficiente relación con los colaboradores que supervisa', 'domain' => 'relations', 'items' => [69, 70, 71, 72]],
+                'workplace_violence' => ['label' => 'Violencia laboral', 'domain' => 'violence', 'items' => [57, 58, 59, 60, 61, 62, 63, 64]],
+                'performance_feedback' => ['label' => 'Escasa o nula retroalimentación del desempeño', 'domain' => 'performance_recognition', 'items' => [47, 48]],
+                'recognition_compensation' => ['label' => 'Escaso o nulo reconocimiento y compensación', 'domain' => 'performance_recognition', 'items' => [49, 50, 51, 52]],
+                'limited_belonging' => ['label' => 'Limitado sentido de pertenencia', 'domain' => 'belonging_instability', 'items' => [55, 56]],
+                'job_instability' => ['label' => 'Inestabilidad laboral', 'domain' => 'belonging_instability', 'items' => [53, 54]],
+            ],
+            domains: [
+                'environment_conditions' => ['label' => 'Condiciones en el ambiente de trabajo', 'category' => 'work_environment', 'cutoffs' => [5, 9, 11, 14]],
+                'workload' => ['label' => 'Carga de trabajo', 'category' => 'activity_factors', 'cutoffs' => [15, 21, 27, 37]],
+                'lack_of_control' => ['label' => 'Falta de control sobre el trabajo', 'category' => 'activity_factors', 'cutoffs' => [11, 16, 21, 25]],
+                'work_day' => ['label' => 'Jornada de trabajo', 'category' => 'work_time', 'cutoffs' => [1, 2, 4, 6]],
+                'work_family' => ['label' => 'Interferencia en la relación trabajo-familia', 'category' => 'work_time', 'cutoffs' => [4, 6, 8, 10]],
+                'leadership' => ['label' => 'Liderazgo', 'category' => 'leadership_relations', 'cutoffs' => [9, 12, 16, 20]],
+                'relations' => ['label' => 'Relaciones en el trabajo', 'category' => 'leadership_relations', 'cutoffs' => [10, 13, 17, 21]],
+                'violence' => ['label' => 'Violencia', 'category' => 'leadership_relations', 'cutoffs' => [7, 10, 13, 16]],
+                'performance_recognition' => ['label' => 'Reconocimiento del desempeño', 'category' => 'organizational_environment', 'cutoffs' => [6, 10, 14, 18]],
+                'belonging_instability' => ['label' => 'Insuficiente sentido de pertenencia e inestabilidad', 'category' => 'organizational_environment', 'cutoffs' => [4, 6, 8, 10]],
+            ],
+            categories: [
+                'work_environment' => ['label' => 'Ambiente de trabajo', 'cutoffs' => [5, 9, 11, 14]],
+                'activity_factors' => ['label' => 'Factores propios de la actividad', 'cutoffs' => [15, 30, 45, 60]],
+                'work_time' => ['label' => 'Organización del tiempo de trabajo', 'cutoffs' => [5, 7, 10, 13]],
+                'leadership_relations' => ['label' => 'Liderazgo y relaciones en el trabajo', 'cutoffs' => [14, 29, 42, 58]],
+                'organizational_environment' => ['label' => 'Entorno organizacional', 'cutoffs' => [10, 14, 18, 23]],
+            ],
+            final: [50, 75, 99, 140],
+        );
+    }
 }

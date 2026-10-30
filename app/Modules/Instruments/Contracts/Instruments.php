@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Instruments\Contracts;
 
 use App\Modules\Instruments\Data\InstrumentDefinition;
+use App\Modules\Instruments\Data\RiskScore;
 use App\Modules\Instruments\Data\TraumaOutcome;
 use InvalidArgumentException;
 
@@ -36,4 +37,13 @@ interface Instruments
      * @throws InvalidArgumentException when they are not a complete, coherent Guía I.
      */
     public function screenTrauma(array $answers): TraumaOutcome;
+
+    /**
+     * Scores one NOM-035 Guía II or III by domain, category and total (II.3, III.3). Validates the answers first.
+     *
+     * @param  array<array-key, mixed>  $answers
+     *
+     * @throws InvalidArgumentException for another instrument or answers that are not complete and coherent.
+     */
+    public function scoreRisk(string $key, array $answers): RiskScore;
 }
