@@ -38,6 +38,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         }
     });
 })->with([
+    'the panel' => ['dashboard', fn () => route('tenant.dashboard', listsCompany()[0]), ['cycle', 'closed']],
     'NOM-035' => ['campaigns/index', fn () => route('tenant.campaigns.index', listsCompany()[0]), ['events', 'closed', 'workCenters']],
     'an evaluation' => ['campaigns/show', function () {
         [$tenant, , $campaign] = listsCompany();

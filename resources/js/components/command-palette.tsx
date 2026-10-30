@@ -1,7 +1,8 @@
 import { router, usePage } from '@inertiajs/react';
-import { Search } from 'lucide-react';
 import { useState } from 'react';
+import { CommandPaletteFooter } from '@/components/command-palette-footer';
 import { CommandPaletteResults } from '@/components/command-palette-results';
+import { CommandPaletteSearch } from '@/components/command-palette-search';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useAppearance } from '@/hooks/use-appearance';
@@ -16,8 +17,8 @@ import { paletteCommands } from '@/lib/palette-commands';
 const RESULTS = 'command-results';
 
 /**
- * ⌘K: go to a page, switch the theme or fold the sidebar by typing. It opens at once, without animation,
- * because it is reached for many times a day.
+ * ⌘K (pantalla Paleta): start an action, go to a page, switch the theme or fold the sidebar by typing. It opens at
+ * once, without animation, because it is reached for many times a day.
  */
 export function CommandPalette() {
     useCommandPaletteShortcut();
@@ -65,34 +66,21 @@ export function CommandPalette() {
         >
             <DialogContent
                 aria-describedby={undefined}
-                className="top-[18%] translate-y-0 gap-0 overflow-hidden p-0 data-[state=closed]:animate-none data-[state=open]:animate-none sm:max-w-xl"
+                className="top-[12vh] translate-y-0 gap-0 overflow-hidden rounded-[14px] p-0 data-[state=closed]:animate-none data-[state=open]:animate-none sm:max-w-[640px] [&>button:last-child]:hidden"
             >
                 <DialogTitle className="sr-only">Buscar o ir a</DialogTitle>
-                <div className="flex h-14 items-center gap-3 border-b pr-14 pl-4">
-                    <Search
-                        aria-hidden
-                        className="size-5 shrink-0 text-muted-foreground"
-                    />
-                    <input
-                        id="command-search"
-                        role="combobox"
-                        aria-label="Buscar"
-                        aria-expanded={results.length > 0}
-                        aria-controls={RESULTS}
-                        aria-autocomplete="list"
-                        aria-activedescendant={
-                            results.length > 0
-                                ? `${RESULTS}-${active}`
-                                : undefined
-                        }
-                        autoComplete="off"
-                        placeholder="Busca una página o una acción"
-                        value={query}
-                        onChange={(event) => {
-                            setQuery(event.target.value);
+                <CommandPaletteSearch
+                    controls={RESULTS}
+                    activeId={
+                        results.length > 0 ? `${RESULTS}-${active}` : undefined
+                    }
+                    field={{
+                        value: query,
+                        onChange: (value) => {
+                            setQuery(value);
                             setActive(0);
-                        }}
-                        onKeyDown={(event) => {
+                        },
+                        onKeyDown: (event) => {
                             const next = moveActive(
                                 event.key,
                                 active,
@@ -108,10 +96,9 @@ export function CommandPalette() {
                             } else if (event.key === 'Enter') {
                                 run(active);
                             }
-                        }}
-                        className="h-full flex-1 bg-transparent text-base outline-hidden placeholder:text-muted-foreground"
-                    />
-                </div>
+                        },
+                    }}
+                />
                 <CommandPaletteResults
                     id={RESULTS}
                     results={results}
@@ -119,6 +106,7 @@ export function CommandPalette() {
                     onPoint={setActive}
                     onRun={run}
                 />
+                <CommandPaletteFooter />
             </DialogContent>
         </Dialog>
     );

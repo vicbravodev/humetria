@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { NextObligationCard } from '@/components/next-obligation-card';
 import { TenantSwitcher } from '@/components/tenant-switcher';
 import {
     Sidebar,
@@ -20,9 +21,9 @@ import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
-    const { auth, tenant } = usePage().props;
+    const { auth, tenant, inCourse } = usePage().props;
     const mainItems = mainNavItems(tenant, auth.isSuperadmin);
-    const complianceItems = complianceNavItems(tenant);
+    const complianceItems = complianceNavItems(tenant, inCourse?.count);
 
     return (
         <Sidebar variant="inset" collapsible="icon">
@@ -60,6 +61,7 @@ export function AppSidebar() {
                 )}
             </SidebarContent>
 
+            <NextObligationCard />
             <SidebarFooter className="mx-3 border-t border-sidebar-border px-0 py-4 group-data-[collapsible=icon]:mx-1.5">
                 <NavUser />
             </SidebarFooter>

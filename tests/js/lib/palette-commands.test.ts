@@ -94,7 +94,44 @@ describe('paletteCommands', () => {
         ]);
         expect(spies.toggleSidebar).toHaveBeenCalledOnce();
     });
+});
 
+describe('paletteCommands inside a company', () => {
+    it('offers the actions a role may take inside a company, before the pages', () => {
+        const actionsFor = (manage: boolean) =>
+            paletteCommands({
+                isSuperadmin: false,
+                tenant: {
+                    slug: 'acme',
+                    can: {
+                        manage_organization: manage,
+                        manage_members: manage,
+                        manage_campaigns: manage,
+                        view_trauma_screenings: manage,
+                    },
+                },
+                sidebarExpanded: true,
+                impersonating: false,
+                actions: actions(),
+            });
+        const commands = actionsFor(true);
+
+        expect(
+            commands
+                .filter(({ group }) => group === 'Acciones')
+                .map(({ label, id }) => [label, id]),
+        ).toEqual([
+            ['Nueva evaluación', 'new-evaluation'],
+            ['Cargar empleados desde CSV', '/admin/acme/employees/import'],
+        ]);
+        expect(commands[0]?.group).toBe('Acciones');
+        expect(
+            actionsFor(false).filter(({ group }) => group === 'Acciones'),
+        ).toEqual([]);
+    });
+});
+
+describe('paletteCommands while impersonating', () => {
     it("opens Configuración at appearance while impersonating, since the owner's account is off limits", () => {
         const settingsUrl = (impersonating: boolean) => {
             const spies = actions();

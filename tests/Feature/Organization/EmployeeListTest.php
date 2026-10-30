@@ -155,7 +155,7 @@ it('lists the page with a fixed number of queries', function (): void {
 
     // Superadmin check, company, membership, role, permission cache (2), the user's permissions and roles there, work
     // centers, the company's counts, count, page, the page's areas and the user's first companies with their count: none per row.
-    $this->expectsDatabaseQueryCount(15);
+    $this->expectsDatabaseQueryCount(16);
 
     $this->actingAs($owner)->get(route('tenant.employees.index', $this->tenant))->assertOk();
 });
