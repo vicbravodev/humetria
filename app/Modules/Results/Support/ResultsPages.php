@@ -43,6 +43,7 @@ final readonly class ResultsPages
                 'closedOn' => $campaign->closedOn,
                 'workers' => $campaign->workers,
                 'sampleSize' => $campaign->sampleSize,
+                'instruments' => array_map(fn (string $key): string => $this->instruments->definition($key)->shortTitle, $campaign->instruments),
             ],
             'guide' => $guide === null ? null : ['key' => $guide, 'title' => $this->instruments->definition($guide)->shortTitle],
             'participation' => $guide === null ? null : ['invited' => $campaign->invited[$guide] ?? 0, 'answered' => $campaign->answered[$guide] ?? 0],

@@ -1,12 +1,10 @@
-import { Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import PageHeader from '@/components/page-header';
 import PrintButton from '@/components/results/print-button';
 import ReportDetailsDialog from '@/components/results/report-details-dialog';
 import ShareDialog from '@/components/results/share-dialog';
-import { results } from '@/routes/tenant/campaigns';
 import type { ReportForm, ShareDurationOption } from '@/types';
 
-/** Back to the results, and what can be done with the report: fill it in, share it, print it. */
+/** The top of the report page, never printed: what it is, and what can be done with it: fill it in, share it, print it. */
 export default function ReportToolbar({
     tenantSlug,
     campaignId,
@@ -19,15 +17,11 @@ export default function ReportToolbar({
     durations: ShareDurationOption[] | null;
 }) {
     return (
-        <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
-            <Link
-                href={results([tenantSlug, campaignId])}
-                className="flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        <div className="print:hidden">
+            <PageHeader
+                title="Informe 7.7"
+                description="El informe del numeral 7.7, tal como se imprime. Complétalo, compártelo con un enlace temporal o guárdalo en PDF."
             >
-                <ArrowLeft aria-hidden="true" className="size-4" />
-                Resultados
-            </Link>
-            <div className="flex flex-wrap gap-2">
                 {form !== null && (
                     <ReportDetailsDialog
                         tenantSlug={tenantSlug}
@@ -43,7 +37,7 @@ export default function ReportToolbar({
                     />
                 )}
                 <PrintButton />
-            </div>
+            </PageHeader>
         </div>
     );
 }

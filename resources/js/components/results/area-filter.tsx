@@ -11,7 +11,10 @@ import type { AreaResult } from '@/types';
 
 const WHOLE_CENTER = 'all';
 
-/** Narrows the center's results to one area shown. The minimum of five applies after the filter, on the server. */
+/**
+ * Narrows the center's results to one area shown; nothing when none is. The minimum of five applies after the filter,
+ * on the server.
+ */
 export default function AreaFilter({
     url,
     areas,
@@ -19,13 +22,18 @@ export default function AreaFilter({
 }: {
     url: string;
     areas: AreaResult[];
-    selected: string | null;
+    /** The area the results are narrowed to; null for the whole center. */
+    selected: { value: string } | null;
 }) {
+    if (areas.length === 0) {
+        return null;
+    }
+
     return (
         <div className="grid gap-2 sm:w-72">
             <Label htmlFor="results-area">Área</Label>
             <Select
-                value={selected ?? WHOLE_CENTER}
+                value={selected?.value ?? WHOLE_CENTER}
                 onValueChange={(value) =>
                     router.get(
                         url,

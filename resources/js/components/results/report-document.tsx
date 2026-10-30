@@ -13,7 +13,7 @@ export default function ReportDocument({
     levels: RiskLevelInfo[];
 }) {
     return (
-        <article className="grid gap-10">
+        <article className="grid gap-10 rounded-xl border bg-card p-5 sm:p-10 print:border-0 print:bg-transparent print:p-0">
             <ReportHeader report={report} />
             <ReportSection
                 number={1}

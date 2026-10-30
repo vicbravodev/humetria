@@ -61,6 +61,8 @@ export type ResultsCampaign = {
     closedOn: string | null;
     workers: number | null;
     sampleSize: number | null;
+    /** The guides it applies, by short title: "Guía I", "Guía II". */
+    instruments: string[];
 };
 
 export type Participation = {
@@ -86,6 +88,7 @@ export type ScreenedPerson = {
     id: string;
     name: string;
     area: string;
+    jobTitle: string;
     answeredOn: string;
 };
 

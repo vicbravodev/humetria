@@ -1,8 +1,9 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import Notice from '@/components/humetria/notice';
 import ReportDocument from '@/components/results/report-document';
 import ReportShares from '@/components/results/report-shares';
 import ReportToolbar from '@/components/results/report-toolbar';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { resultsTrail } from '@/lib/results';
 import type {
     NomReport,
     Paginated,
@@ -30,11 +31,18 @@ export default function Report({
     shares: Paginated<ReportShareRow> | null;
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';
+    setLayoutProps({
+        breadcrumbs: resultsTrail(
+            tenantSlug,
+            { id: campaignId, workCenter: report.center.name },
+            'Informe 7.7',
+        ),
+    });
 
     return (
         <>
             <Head title={`Informe · ${report.center.name}`} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8 print:p-0">
+            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16 print:max-w-none print:p-0">
                 <ReportToolbar
                     tenantSlug={tenantSlug}
                     campaignId={campaignId}
@@ -42,15 +50,17 @@ export default function Report({
                     durations={durations}
                 />
                 {!report.complete && (
-                    <Alert className="print:hidden">
-                        <AlertDescription>
-                            Faltan las conclusiones, las recomendaciones y el
-                            responsable de la evaluación.
+                    <div className="print:hidden">
+                        <Notice>
+                            <strong>
+                                Faltan las conclusiones, las recomendaciones y
+                                el responsable de la evaluación.
+                            </strong>
                             {canEdit
                                 ? ' Complétalos antes de entregar el informe.'
                                 : ' Quien gestiona las evaluaciones puede completarlos.'}
-                        </AlertDescription>
-                    </Alert>
+                        </Notice>
+                    </div>
                 )}
                 {shares !== null && (
                     <ReportShares
