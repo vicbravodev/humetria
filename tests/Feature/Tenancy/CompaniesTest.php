@@ -44,3 +44,15 @@ it('describes the company the code works in now', function (): void {
 it('has no current company outside one', function (): void {
     resolve(Companies::class)->current();
 })->throws(App\Modules\Tenancy\Exceptions\NoCurrentTenant::class);
+
+it('gives the owner\'s email as whom the people of the company write to, and nothing while it has no owner', function (): void {
+    $tenant = Tenant::factory()->create();
+    memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr)->update(['email' => 'rh@acme.mx']);
+    resolve(Companies::class)->enter($tenant->id);
+
+    expect(resolve(Companies::class)->contact())->toBeNull();
+
+    ownerOf($tenant)->update(['email' => 'olga@acme.mx']);
+
+    expect(resolve(Companies::class)->contact())->toBe('olga@acme.mx');
+});

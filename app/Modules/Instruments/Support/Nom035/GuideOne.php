@@ -66,6 +66,6 @@ final class GuideOne
                 19 => '¿Ha estado nervioso o constantemente en alerta?',
                 20 => '¿Se ha sobresaltado fácilmente por cualquier cosa?',
             ])),
-        ]);
+        ], minutes: 5);
     }
 }

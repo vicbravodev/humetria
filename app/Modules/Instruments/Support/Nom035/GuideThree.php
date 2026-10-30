@@ -117,7 +117,7 @@ final class GuideThree
                 71 => 'Cooperan poco cuando se necesita',
                 72 => 'Ignoran las sugerencias para mejorar su trabajo',
             ]), Nom035::supervisionGate()),
-        ]);
+        ], minutes: 15);
     }
 
     /**

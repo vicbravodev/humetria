@@ -145,34 +145,42 @@ strong {
 
 /* A highlighted note: accent (confidentiality) or warning (what does carry a name). */
 .callout {
+    border-radius: 12px;
     margin: 0 0 22px;
     width: 100%;
 }
 
 .callout td {
-    border-radius: 12px;
     padding: 16px 18px;
     vertical-align: top;
 }
 
-.callout-accent td {
+.callout-accent {
     background-color: #e5f1ee;
     color: #14211f;
 }
 
-.callout-warning td {
+.callout-warning {
     background-color: #f6eedc;
     color: #7a5714;
 }
 
+.callout-accent p {
+    color: #14211f;
+}
+
+.callout-warning p {
+    color: #7a5714;
+}
+
 .callout p {
-    color: inherit;
     margin: 0;
 }
 
 .callout .callout-icon {
     padding-right: 0;
-    width: 32px;
+    padding-top: 18px;
+    width: 38px;
 }
 
 /* An outlined box: a company, a date. */

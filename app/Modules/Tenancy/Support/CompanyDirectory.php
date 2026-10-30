@@ -34,6 +34,11 @@ final readonly class CompanyDirectory implements Companies
         return self::summary(Tenant::query()->findOrFail($this->tenantContext->id()));
     }
 
+    public function contact(): ?string
+    {
+        return Tenant::query()->findOrFail($this->tenantContext->id())->ownerMembership()->with('user:id,email')->first()?->user?->email;
+    }
+
     private static function summary(Tenant $tenant): CompanySummary
     {
         $logo = $tenant->logo_path === null ? null : new CompanyLogo(

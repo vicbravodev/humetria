@@ -79,7 +79,7 @@ final class GuideTwo
                 45 => 'Dificultan el logro de los resultados del trabajo',
                 46 => 'Ignoran las sugerencias para mejorar su trabajo',
             ]), Nom035::supervisionGate()),
-        ]);
+        ], minutes: 10);
     }
 
     /**

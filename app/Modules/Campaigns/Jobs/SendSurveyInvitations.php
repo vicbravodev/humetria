@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Jobs;
 
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\InvitationStatus;
+use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
+use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -69,8 +73,11 @@ final class SendSurveyInvitations implements ShouldQueue
             ->update(['invitation_status' => null, 'invitation_batch' => null]);
         $waiting = $this->waiting()->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $tradeName = resolve(Companies::class)->current()->tradeName;
-        $lastDay = CampaignClock::day($campaign->closes_on, isDate: true);
+        $companies = resolve(Companies::class);
+        $company = $companies->current();
+        $contact = $companies->contact();
+        $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
+        $minutes = array_sum(array_map(fn (string $key): int => resolve(Instruments::class)->definition($key)->minutes, $campaign->instruments));
 
         foreach ($waiting as $participant) {
             $email = $people[$participant->employee_id]->email ?? null;
@@ -88,9 +95,17 @@ final class SendSurveyInvitations implements ShouldQueue
                 return;
             }
 
+            // Whoever already got a link is reminded; a Guía I campaign asks the same way each time.
+            $kind = match (true) {
+                $campaign->kind === CampaignKind::Nom035Trauma => SurveyEmail::Trauma,
+                $participant->invited_at !== null => SurveyEmail::Reminder,
+                default => SurveyEmail::Invitation,
+            };
             $token = Str::random(64);
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
-            Notification::route('mail', $email)->notify(new SurveyInvitation($tradeName, $token, $lastDay));
+            Notification::route('mail', $email)->notify(new SurveyInvitation(
+                $kind, $token, $people[$participant->employee_id]->name ?? '', $company, $contact, $workCenter, $campaign->closes_on, $minutes,
+            ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }
 

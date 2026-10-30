@@ -12,8 +12,8 @@
 <table class="brand" width="100%" cellpadding="0" cellspacing="0" role="presentation">
 <tr>
 <td align="left">
-@if ($company->logoUrl)
-<img src="{{ $company->logoUrl }}" width="{{ $company->logoWidth }}" height="{{ $company->logoHeight }}" alt="{{ $company->tradeName }}" class="company-logo">
+@if ($company->logo)
+<img src="{{ $company->logo->url }}" width="{{ $company->logo->width }}" height="{{ $company->logo->height }}" alt="{{ $company->tradeName }}" class="company-logo">
 @else
 <span class="company-name">{{ $company->tradeName }}</span>
 @endif

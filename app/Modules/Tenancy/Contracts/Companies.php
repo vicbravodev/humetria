@@ -28,4 +28,11 @@ interface Companies
      * @throws NoCurrentTenant outside a company.
      */
     public function current(): CompanySummary;
+
+    /**
+     * Whom the people of the company write to with questions: its owner's email, or null while it has no owner.
+     *
+     * @throws NoCurrentTenant outside a company.
+     */
+    public function contact(): ?string;
 }
