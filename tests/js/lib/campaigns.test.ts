@@ -148,6 +148,8 @@ describe('peoplePage', () => {
     const people = {
         data: [],
         total: 0,
+        from: null,
+        to: null,
         current_page: 1,
         last_page: 1,
         prev_page_url: null,

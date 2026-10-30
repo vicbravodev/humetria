@@ -140,22 +140,25 @@ it('shows how each question was answered, and only a question answered by at lea
     $items = collect($sections)->flatMap(fn (array $section): array => $section['items'])->keyBy('number');
 
     expect($sections[0]['instruction'])->toBe('Para responder las preguntas siguientes considere las condiciones de su centro de trabajo, así como la cantidad y ritmo de trabajo.')
-        ->and($items[1])->toBe(['number' => 1, 'text' => 'Mi trabajo me exige hacer mucho esfuerzo físico', 'answered' => 8, 'counts' => [1, 0, 0, 0, 7]])
-        // Item 18 scores 0 on "Siempre": the calm ones answered it so.
+        // Unfavorable: answered on the side that scores 3 or 4 points; on item 1 that is "Siempre".
+        ->and($items[1])->toBe(['number' => 1, 'text' => 'Mi trabajo me exige hacer mucho esfuerzo físico', 'answered' => 8, 'counts' => [1, 0, 0, 0, 7], 'unfavorable' => 1])
+        // Item 18 scores 0 on "Siempre": the calm ones answered it so, and the unfavorable side is "Nunca".
         ->and($items[18]['counts'])->toBe([4, 0, 0, 0, 4])
+        ->and($items[18]['unfavorable'])->toBe(4)
         // Clients: only those who answered "yes" to the gate, 5 of 8.
-        ->and($items[41])->toBe(['number' => 41, 'text' => $items[41]['text'], 'answered' => 5, 'counts' => [1, 0, 0, 0, 4]])
+        ->and($items[41])->toBe(['number' => 41, 'text' => $items[41]['text'], 'answered' => 5, 'counts' => [1, 0, 0, 0, 4], 'unfavorable' => 1])
         ->and($items)->toHaveCount(46);
 
     $fewer = collect($this->distribution->items('nom035.guide-ii', [...guideTwoRecords(AREA_A, never: 3, calm: 3), ...guideTwoRecords(AREA_B, always: 1)]))
         ->flatMap(fn (array $section): array => $section['items'])->keyBy('number');
 
-    expect($fewer[41])->toBe(['number' => 41, 'text' => $items[41]['text'], 'answered' => 4, 'counts' => null])
+    expect($fewer[41])->toBe(['number' => 41, 'text' => $items[41]['text'], 'answered' => 4, 'counts' => null, 'unfavorable' => null])
         ->and($fewer[1]['counts'])->toBe([1, 0, 0, 0, 6]);
 });
 
 it('shows no question of a group under the minimum', function (): void {
     $items = collect($this->distribution->items('nom035.guide-ii', guideTwoRecords(AREA_A, never: 4)))->flatMap(fn (array $section): array => $section['items']);
 
-    expect($items->pluck('counts')->filter()->all())->toBe([]);
+    expect($items->pluck('counts')->filter()->all())->toBe([])
+        ->and($items->pluck('unfavorable')->filter()->all())->toBe([]);
 });

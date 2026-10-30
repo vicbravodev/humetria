@@ -60,6 +60,7 @@ export default function ManagePasskeys(props: Props) {
                     label="Páginas de llaves de acceso"
                     previous="Más recientes"
                     next="Más antiguas"
+                    pinned={false}
                 />
             )}
 

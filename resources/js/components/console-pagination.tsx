@@ -1,13 +1,19 @@
-import { Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import PageButton from '@/components/page-button';
+import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
+/**
+ * The pages of a list: which rows are on screen and the way to the next ones. Pinned to the bottom of the screen
+ * while the list scrolls, so turning the page never means scrolling to the end first.
+ */
 export default function ConsolePagination({
     page,
     label,
     previous = 'Ver más recientes',
     next = 'Ver más antiguas',
     preserveState = false,
+    pinned = true,
 }: {
     page: Paginated<unknown>;
     label: string;
@@ -16,6 +22,8 @@ export default function ConsolePagination({
     next?: string;
     /** Keep what the page holds that is not in its address, like a selection, when turning pages. */
     preserveState?: boolean;
+    /** Stay in view at the bottom while the list scrolls; off inside a form or a smaller block of a page. */
+    pinned?: boolean;
 }) {
     if (page.last_page <= 1) {
         return null;
@@ -24,32 +32,30 @@ export default function ConsolePagination({
     return (
         <nav
             aria-label={label}
-            className="flex flex-wrap items-center justify-between gap-4"
+            className={cn(
+                'flex flex-wrap items-center justify-between gap-x-4 gap-y-2',
+                pinned &&
+                    'sticky bottom-0 z-10 -mx-4 -mb-6 border-t bg-background px-4 py-3 md:-mx-10 md:-mb-8 md:px-10 print:static',
+            )}
         >
-            <p className="text-sm text-muted-foreground">
-                Página {page.current_page} de {page.last_page}
+            <p className="text-sm text-muted-foreground tabular-nums">
+                {page.from ?? 0}–{page.to ?? 0} de {page.total} · Página{' '}
+                {page.current_page} de {page.last_page}
             </p>
             <div className="flex gap-2">
-                {page.prev_page_url !== null && (
-                    <Button variant="outline" asChild>
-                        <Link
-                            href={page.prev_page_url}
-                            preserveState={preserveState}
-                        >
-                            {previous}
-                        </Link>
-                    </Button>
-                )}
-                {page.next_page_url !== null && (
-                    <Button variant="outline" asChild>
-                        <Link
-                            href={page.next_page_url}
-                            preserveState={preserveState}
-                        >
-                            {next}
-                        </Link>
-                    </Button>
-                )}
+                <PageButton
+                    href={page.prev_page_url}
+                    label={previous}
+                    icon={ChevronLeft}
+                    preserveState={preserveState}
+                />
+                <PageButton
+                    href={page.next_page_url}
+                    label={next}
+                    icon={ChevronRight}
+                    iconAfter
+                    preserveState={preserveState}
+                />
             </div>
         </nav>
     );

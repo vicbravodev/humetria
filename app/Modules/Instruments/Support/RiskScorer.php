@@ -77,6 +77,12 @@ final class RiskScorer
         };
     }
 
+    /** The points of one answer to one item of the guide. */
+    public function scoreItem(string $key, int $item, string $answer): int
+    {
+        return $this->itemScore(self::table($key), $item, $answer);
+    }
+
     private function itemScore(ScoringTable $table, int $item, mixed $answer): int
     {
         if (! is_string($answer) || ! array_key_exists($answer, self::SCALE)) {

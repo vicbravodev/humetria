@@ -94,6 +94,7 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 - **Panel de RH** (`PanelRH`): encabezado con cliente y título, 3 `KpiCard`, “Campañas activas” en una rejilla de `CampaignCard` y, separadas por `space-12`, las “Campañas cerradas” en una `Table` con su `RiskLevel` final y la descarga del PDF.
 - **Encuesta** (`EncuestaMovil`, `EncuestaEscritorio`): `SurveyShell` con el logo del consultor y “Confidencial”, progreso por sección, instrucción de entrada en un bloque `accent` y `SurveyQuestion` con 5 opciones verticales de 56 px. En móvil va una pregunta por pantalla; en escritorio, hasta 3 de la misma sección. “Siguiente” es explícito y nunca avanza solo.
 - **Escala de riesgo** (`RiskLevel`, `RiskScale`).
+- **Resultados** (`LevelBar`, `LevelLegend`, `ShareMeter`): primero una frase que dice cuántos quedan en riesgo alto o muy alto y qué dominio pesa más, luego la calificación final como una sola barra con su leyenda, y los dominios, categorías y áreas ordenados del peor al mejor, cada uno como barra; los conteos quedan en una tabla a un clic (en el informe, a la vista). Las preguntas van de la más desfavorable a la menos, con un `ShareMeter` por pregunta.
 - **Cabecera de reporte** (`ReportHeader`): logo del consultor, sello “hecho con humetría”, título, guía y ficha.
 
 ## Accesibilidad

@@ -15,6 +15,9 @@ export type DemoRequestRow = {
 export type Paginated<T> = {
     data: T[];
     total: number;
+    /** The first and last row on this page, 1-based; null on an empty page. */
+    from: number | null;
+    to: number | null;
     current_page: number;
     last_page: number;
     prev_page_url: string | null;

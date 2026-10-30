@@ -74,6 +74,7 @@ export default function ReportShares({
                 label="Páginas de enlaces"
                 previous="Anteriores"
                 next="Siguientes"
+                pinned={false}
             />
         </section>
     );

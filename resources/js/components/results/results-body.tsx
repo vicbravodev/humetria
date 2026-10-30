@@ -59,14 +59,18 @@ export default function ResultsBody({
 
     return (
         <>
-            {report}
-            {areas.visible.length > 0 && (
-                <AreaFilter
-                    url={url}
-                    areas={areas.visible}
-                    selected={area?.value ?? null}
-                />
-            )}
+            <div className="flex flex-wrap items-end justify-between gap-4">
+                {areas.visible.length > 0 ? (
+                    <AreaFilter
+                        url={url}
+                        areas={areas.visible}
+                        selected={area?.value ?? null}
+                    />
+                ) : (
+                    <span />
+                )}
+                {report}
+            </div>
             <RiskResultsSections
                 results={results}
                 areas={areas}

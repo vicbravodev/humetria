@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+    highRisk,
+    rankBySeverity,
+    rankItems,
+    riskVerdict,
+    shareOf,
+    unfavorableText,
+    worstGroupText,
     hiddenAreasText,
     levelSegments,
     needingAction,
@@ -47,5 +54,105 @@ describe('hiddenAreasText', () => {
         expect(hiddenAreasText(0)).toBeNull();
         expect(hiddenAreasText(1)).toBe('1 área no se muestra');
         expect(hiddenAreasText(3)).toBe('3 áreas no se muestran');
+    });
+});
+
+describe('highRisk', () => {
+    it('adds the questionnaires in Alto and Muy alto', () => {
+        expect(highRisk([2, 6, 3, 3, 15])).toBe(18);
+        expect(highRisk([4, 3, 2, 0, 0])).toBe(0);
+    });
+});
+
+describe('shareOf', () => {
+    it('is the share as a number, unrounded, for widths', () => {
+        expect(shareOf(1, 3)).toBeCloseTo(33.333, 2);
+        expect(shareOf(0, 0)).toBe(0);
+    });
+});
+
+describe('rankBySeverity', () => {
+    it('puts first the group with the largest share in Alto or Muy alto, then from Medio up, keeping ties in order', () => {
+        const rows = [
+            { key: 'a', levels: [5, 0, 0, 0, 5] },
+            { key: 'b', levels: [0, 0, 0, 10, 10] },
+            { key: 'c', levels: [0, 0, 5, 0, 5] },
+            { key: 'd', levels: [5, 0, 0, 0, 5] },
+        ];
+
+        expect(rankBySeverity(rows).map((row) => row.key)).toEqual([
+            'b',
+            'c',
+            'a',
+            'd',
+        ]);
+    });
+});
+
+describe('riskVerdict', () => {
+    it('says how many are in Alto or Muy alto', () => {
+        expect(riskVerdict([2, 6, 3, 3, 15])).toBe(
+            '18 de 29 cuestionarios (62 %) quedan en riesgo alto o muy alto.',
+        );
+    });
+
+    it('says when none is, but some are in Medio', () => {
+        expect(riskVerdict([2, 6, 2, 0, 0])).toBe(
+            'Ningún cuestionario queda en riesgo alto o muy alto; 2 de 10 (20 %) quedan en riesgo medio.',
+        );
+    });
+
+    it('says when every questionnaire is in Nulo or Bajo', () => {
+        expect(riskVerdict([4, 6, 0, 0, 0])).toBe(
+            'Los 10 cuestionarios quedan en riesgo nulo o bajo: la norma no pide un Programa de intervención.',
+        );
+    });
+});
+
+describe('worstGroupText', () => {
+    const worst = {
+        key: 'a',
+        label: 'Carga de trabajo',
+        levels: [0, 0, 2, 3, 5],
+    };
+    const calm = { key: 'b', label: 'Liderazgo', levels: [5, 5, 0, 0, 0] };
+    const groups = [worst, calm];
+
+    it('names the group with the largest share in Alto or Muy alto', () => {
+        expect(worstGroupText(groups, 'dominio')).toBe(
+            'El dominio que más pesa es Carga de trabajo: 80 % en riesgo alto o muy alto.',
+        );
+    });
+
+    it('is nothing when no group has anyone in Alto or Muy alto', () => {
+        expect(worstGroupText([calm], 'dominio')).toBeNull();
+        expect(worstGroupText([], 'dominio')).toBeNull();
+    });
+});
+
+describe('unfavorableText', () => {
+    it('says how many answered a question unfavorably', () => {
+        expect(unfavorableText(7, 29)).toBe('7 de 29 desfavorables (24 %)');
+    });
+});
+
+describe('rankItems', () => {
+    it('puts first the question with the largest share of unfavorable answers, and the hidden ones last', () => {
+        const items = [
+            { number: 1, text: 'a', answered: 10, counts: [], unfavorable: 2 },
+            {
+                number: 2,
+                text: 'b',
+                answered: 10,
+                counts: null,
+                unfavorable: null,
+            },
+            { number: 3, text: 'c', answered: 5, counts: [], unfavorable: 4 },
+            { number: 4, text: 'd', answered: 10, counts: [], unfavorable: 2 },
+        ];
+
+        expect(rankItems(items).map((item) => item.number)).toEqual([
+            3, 1, 4, 2,
+        ]);
     });
 });

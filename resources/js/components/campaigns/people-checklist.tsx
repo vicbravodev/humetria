@@ -104,6 +104,7 @@ export default function PeopleChecklist({
                 preserveState
                 previous="Anteriores"
                 next="Siguientes"
+                pinned={false}
             />
             <InputError id="trauma-people-error" role="alert" message={error} />
         </fieldset>

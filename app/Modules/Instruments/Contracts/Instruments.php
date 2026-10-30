@@ -46,4 +46,12 @@ interface Instruments
      * @throws InvalidArgumentException for another instrument or answers that are not complete and coherent.
      */
     public function scoreRisk(string $key, array $answers): RiskScore;
+
+    /**
+     * The points one answer gives one item of a Guía II or III (Tablas 2 and 5): 0 to 4, where 3 and 4 are the side
+     * that scores risk. An answer that is not on the scale gives 0.
+     *
+     * @throws InvalidArgumentException for an instrument not scored by risk level.
+     */
+    public function itemScore(string $key, int $item, string $answer): int;
 }

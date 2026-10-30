@@ -171,6 +171,19 @@ it('scores every item on its own scale', function (string $key, string $value): 
     expect(scoreOf($key, $answers)->total)->toBe($expected);
 })->with(['nom035.guide-ii', 'nom035.guide-iii'])->with(['always', 'almost_always', 'sometimes', 'almost_never', 'never']);
 
+it('scores one answer to one item: 4 points on "Siempre" for most items, 0 for those scored the other way around', function (string $key, int $item, string $answer, int $score): void {
+    expect(resolve(Instruments::class)->itemScore($key, $item, $answer))->toBe($score);
+})->with([
+    ['nom035.guide-ii', 1, 'always', 4],
+    ['nom035.guide-ii', 1, 'almost_never', 1],
+    ['nom035.guide-ii', 1, 'never', 0],
+    ['nom035.guide-ii', 18, 'always', 0],
+    ['nom035.guide-ii', 33, 'never', 4],
+    ['nom035.guide-iii', 23, 'always', 0],
+    ['nom035.guide-iii', 57, 'almost_always', 1],
+    ['nom035.guide-iii', 1, 'sometimes', 2],
+]);
+
 it('scores a Guía II answered all "Siempre" with 120: items 18 to 33 score 0 and the other 30 score 4', function (): void {
     expect(scoreOf('nom035.guide-ii', nom035Answers('nom035.guide-ii', 'always'))->total)->toBe(120);
 });
