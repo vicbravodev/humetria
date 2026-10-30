@@ -21,4 +21,9 @@ final class CompanyHeadcount implements Headcount
 
         return $counts;
     }
+
+    public function ofCompany(string $tenantId): int
+    {
+        return Employee::query()->withoutGlobalScopes()->where('tenant_id', $tenantId)->whereNull('deactivated_at')->count();
+    }
 }

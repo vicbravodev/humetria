@@ -219,6 +219,13 @@ strong {
     text-align: center;
 }
 
+/* A company's initials in a circle. */
+.box .avatar {
+    border-radius: 20px;
+    font-size: 13px;
+    padding: 0;
+}
+
 /* Three facts in a row between two rules: time, device, last day. */
 .facts {
     border-bottom: 1px solid #dce5e2;

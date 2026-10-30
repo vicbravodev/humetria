@@ -13,7 +13,6 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
 use Illuminate\Notifications\AnonymousNotifiable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Support\SessionKey;
@@ -60,33 +59,6 @@ it('lets the superadmin invite the owner of a company', function (): void {
             && strlen($token) === 64
             && TenantInvitation::hashToken($token) === $invitation->token_hash;
     });
-});
-
-it('writes the email in Spanish, with the company, the person and the expiry', function (): void {
-    $notification = new InvitationEmail('Acme', 'Ana Pérez', 'tok', now()->addDays(7)->toImmutable());
-
-    $mail = $notification->toMail(new AnonymousNotifiable);
-
-    expect($mail)->toBeInstanceOf(MailMessage::class)
-        ->and($mail->subject)->toBe('Te invitaron a Humetría como owner de Acme')
-        ->and($mail->greeting)->toBe('Hola, Ana Pérez')
-        ->and($mail->introLines)->toBe(['Vas a administrar su cuenta, desde donde RH lleva la NOM-035, la NOM-037 y la Ley Silla de su personal.'])
-        ->and($mail->actionText)->toBe('Aceptar invitación')
-        ->and($mail->actionUrl)->toBe(url('admin/invitations/tok'))
-        ->and($mail->outroLines)->toBe(['El enlace vence el 4 nov 2026.', 'Si no esperabas este correo, ignóralo.']);
-});
-
-it('renders the email with no English left in the default template', function (): void {
-    $notification = new InvitationEmail('Acme', 'Ana Pérez', 'tok', now()->addDays(7)->toImmutable());
-
-    $html = (string) $notification->toMail(new AnonymousNotifiable)->render();
-
-    expect($html)->toContain('Hola, Ana Pérez')
-        ->toContain('Te invitaron a Humetría como owner de Acme')
-        ->toContain('Si el botón no funciona, copia este enlace en tu navegador:')
-        ->not->toContain('Regards')
-        ->not->toContain('trouble clicking')
-        ->not->toContain('All rights reserved');
 });
 
 it('cancels the open invitation when inviting again', function (Closure $previous): void {

@@ -13,4 +13,9 @@ interface Headcount
      * @return array<string, int> active employees by work center id; a work center with nobody is left out.
      */
     public function byWorkCenter(): array;
+
+    /**
+     * How many active people a company has, from anywhere: the console works in no company.
+     */
+    public function ofCompany(string $tenantId): int;
 }
