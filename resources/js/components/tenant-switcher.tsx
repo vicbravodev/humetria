@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { TenantName } from '@/components/tenant-name';
 import { SidebarMenuButton } from '@/components/ui/sidebar';
+import { dashboard as home } from '@/routes';
 import { dashboard } from '@/routes/tenant';
 
 /** The company the sidebar is working in; with more than one, it is also the way to move to another. */
@@ -18,7 +19,7 @@ export function TenantSwitcher() {
         return null;
     }
 
-    if (tenants.length < 2) {
+    if (tenants.total < 2) {
         return (
             <div
                 data-test="tenant-switcher"
@@ -47,7 +48,7 @@ export function TenantSwitcher() {
                 className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                 align="start"
             >
-                {tenants.map(({ slug, trade_name }) => (
+                {tenants.data.map(({ slug, trade_name }) => (
                     <DropdownMenuItem key={slug} asChild>
                         <Link
                             className="flex w-full cursor-pointer items-center justify-between"
@@ -61,6 +62,13 @@ export function TenantSwitcher() {
                         </Link>
                     </DropdownMenuItem>
                 ))}
+                {tenants.total > tenants.data.length && (
+                    <DropdownMenuItem asChild>
+                        <Link className="w-full cursor-pointer" href={home()}>
+                            Ver las {tenants.total} empresas
+                        </Link>
+                    </DropdownMenuItem>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );

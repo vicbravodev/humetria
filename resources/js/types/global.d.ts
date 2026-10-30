@@ -17,7 +17,8 @@ declare module '@inertiajs/core' {
             /** The superadmin working as auth.user; null outside an impersonation. */
             impersonator: string | null;
             tenant: CurrentTenant | null;
-            tenants: TenantSummary[];
+            /** The user's first companies, for the switcher, and how many they have. */
+            tenants: { data: TenantSummary[]; total: number };
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

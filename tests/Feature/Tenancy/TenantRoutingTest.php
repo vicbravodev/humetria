@@ -120,10 +120,25 @@ it('shares the companies of the user ordered by name, and never somebody else\'s
         ->get(route('tenant.dashboard', $zeta))
         ->assertInertia(fn (Assert $page) => $page
             ->where('tenants', [
-                ['slug' => 'alfa', 'trade_name' => 'Alfa'],
-                ['slug' => 'zeta', 'trade_name' => 'Zeta'],
+                'data' => [
+                    ['slug' => 'alfa', 'trade_name' => 'Alfa'],
+                    ['slug' => 'zeta', 'trade_name' => 'Zeta'],
+                ],
+                'total' => 2,
             ])
-            ->where('tenants', fn ($tenants): bool => ! collect($tenants)->contains('slug', $foreign->slug)));
+            ->where('tenants.data', fn ($tenants): bool => ! collect($tenants)->contains('slug', $foreign->slug)));
+});
+
+it('shares only the first 10 companies of the user, with how many there are', function (): void {
+    $user = User::factory()->create();
+
+    foreach (range(1, 11) as $index) {
+        TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => sprintf('Empresa %02d', $index)]))->for($user)->create();
+    }
+
+    $this->actingAs($user)
+        ->get(route('tenant.dashboard', Tenant::query()->where('trade_name', 'Empresa 01')->sole()))
+        ->assertInertia(fn (Assert $page) => $page->has('tenants.data', 10)->where('tenants.total', 11)->where('tenants.data.9.trade_name', 'Empresa 10'));
 });
 
 it('does not shadow the fixed pages under /admin', function (): void {
