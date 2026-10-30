@@ -223,3 +223,18 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
 
     $this->get($url)->assertOk();
 })->with([3, 30]);
+
+it('offers replacements for each gender that has people left outside the sample', function (): void {
+    staffOf($this->tenant, $this->plant, female: 40, male: 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.store', $this->tenant), ['work_center_id' => $this->plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.launch', [$this->tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('replacementPool', [
+            ['gender' => 'female', 'label' => 'Mujeres', 'available' => 5],
+            ['gender' => 'male', 'label' => 'Hombres', 'available' => 2],
+        ]));
+});

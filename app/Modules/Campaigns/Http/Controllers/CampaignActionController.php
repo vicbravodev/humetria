@@ -86,7 +86,7 @@ final class CampaignActionController extends Controller
         Gate::authorize('manage-campaigns');
         $active = CampaignController::find($campaign, CampaignStatus::Active);
         abort_if($active->population !== Population::Sample, 409);
-        $count = $drawReplacements->handle($active, $request->count());
+        $count = $drawReplacements->handle($active, $request->gender(), $request->count());
 
         return $this->done($count, '', 'Se sorteó 1 persona más para la muestra.', "Se sortearon {$count} personas más para la muestra.");
     }

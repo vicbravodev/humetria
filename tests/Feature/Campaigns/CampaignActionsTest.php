@@ -143,37 +143,43 @@ it('says when there is nobody to invite', function (): void {
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'info', 'message' => 'No falta nadie por invitar.']]);
 });
 
-it('draws replacements for the sample from people outside it, by gender', function (): void {
+it('draws replacements of the gender of who will not answer, from people outside the sample', function (string $gender): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, 'sample', fn () => staffOf($this->tenant, $this->plant, female: 40, male: 20));
     $before = Participant::query()->withoutGlobalScopes()->where('in_sample', true)->pluck('employee_id')->all();
 
     $this->actingAs($this->hr)
-        ->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 3])
+        ->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 2, 'gender' => $gender])
         ->assertSessionHasNoErrors()
-        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Se sortearon 3 personas más para la muestra.']]);
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Se sortearon 2 personas más para la muestra.']]);
 
     $drawn = Participant::query()->withoutGlobalScopes()->where('in_sample', true)->whereNotIn('employee_id', $before)->get();
-    $genders = Employee::query()->withoutGlobalScopes()->whereIn('id', $drawn->pluck('employee_id'))->pluck('gender')->map->value->countBy()->all();
+    $genders = Employee::query()->withoutGlobalScopes()->whereIn('id', $drawn->pluck('employee_id'))->pluck('gender')->map->value->unique()->values()->all();
 
-    expect($drawn)->toHaveCount(3)
-        ->and($genders)->toEqual(['female' => 2, 'male' => 1])
+    expect($drawn)->toHaveCount(2)
+        ->and($genders)->toBe([$gender])
         ->and($drawn->every(fn (Participant $participant): bool => guidesOf($participant) === ['nom035.guide-i' => 'pending', 'nom035.guide-iii' => 'pending']))->toBeTrue();
-    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 3);
-});
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 2);
+})->with(['female', 'male']);
 
-it('draws no more replacements than people outside the sample', function (): void {
-    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, 'sample', fn () => staffOf($this->tenant, $this->plant, 60));
+it('draws no more replacements than people of that gender outside the sample', function (): void {
+    // 40 women and 20 men: the sample of 53 takes 35 and 18, leaving 5 and 2.
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, 'sample', fn () => staffOf($this->tenant, $this->plant, female: 40, male: 20));
 
     $this->actingAs($this->hr)
-        ->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 8])
-        ->assertSessionHasErrors(['count' => 'Solo quedan 7 personas fuera de la muestra.']);
+        ->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 3, 'gender' => 'male'])
+        ->assertSessionHasErrors(['count' => 'Solo quedan 2 personas de ese género fuera de la muestra.']);
+    $this->actingAs($this->hr)
+        ->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 1, 'gender' => 'other'])
+        ->assertSessionHasErrors(['count' => 'Ya no queda nadie de ese género fuera de la muestra.']);
 });
 
-it('draws replacements only for a sampled evaluation, and a sensible number', function (): void {
+it('draws replacements only for a sampled evaluation, a sensible number and a known gender', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 2])->assertStatus(409);
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 0])->assertSessionHasErrors('count');
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 2, 'gender' => 'female'])->assertStatus(409);
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 0, 'gender' => 'female'])->assertSessionHasErrors('count');
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 1, 'gender' => 'robot'])->assertSessionHasErrors('gender');
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.replacements', [$this->tenant, $campaign->id]), ['count' => 1])->assertSessionHasErrors('gender');
 });
 
 it('acts only on an active campaign, for those who manage campaigns, in their own company', function (string $route): void {
@@ -181,8 +187,9 @@ it('acts only on an active campaign, for those who manage campaigns, in their ow
     $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->firstOrFail();
     $parameters = fn (Campaign $target): array => $route === 'tenant.campaigns.participants.resend' ? [$this->tenant, $target->id, $participant->id] : [$this->tenant, $target->id];
 
-    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(route($route, $parameters($campaign)), ['count' => 1])->assertForbidden();
-    $this->actingAs($this->hr)->post(route($route, $parameters(Campaign::factory()->active()->create())), ['count' => 1])->assertNotFound();
+    $body = ['count' => 1, 'gender' => 'female'];
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(route($route, $parameters($campaign)), $body)->assertForbidden();
+    $this->actingAs($this->hr)->post(route($route, $parameters(Campaign::factory()->active()->create())), $body)->assertNotFound();
     Campaign::query()->withoutGlobalScopes()->whereKey($campaign->id)->update(['status' => 'closed', 'closed_at' => now()]);
-    $this->actingAs($this->hr)->post(route($route, $parameters($campaign)), ['count' => 1])->assertStatus(409);
+    $this->actingAs($this->hr)->post(route($route, $parameters($campaign)), $body)->assertStatus(409);
 })->with(['tenant.campaigns.resend', 'tenant.campaigns.participants.resend', 'tenant.campaigns.invite-missing', 'tenant.campaigns.replacements']);

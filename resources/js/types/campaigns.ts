@@ -117,3 +117,10 @@ export type RosterPerson = {
     area: string;
     reachable: boolean;
 };
+
+/** People of one gender left outside a sample, who can replace someone of that gender. */
+export type ReplacementPool = {
+    gender: string;
+    label: string;
+    available: number;
+};

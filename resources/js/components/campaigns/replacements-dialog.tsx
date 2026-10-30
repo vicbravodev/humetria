@@ -13,16 +13,21 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { replacements } from '@/routes/tenant/campaigns';
+import type { ReplacementPool } from '@/types';
+import ReplacementGenderField from '@/components/campaigns/replacement-gender-field';
 
-/** Draws more people into the sample when some of the drawn will not answer (III.2 c). */
+/**
+ * Draws more people into the sample when some of the drawn will not answer (III.2 c): of the same gender as them, so the
+ * sample keeps its split (III.1).
+ */
 export default function ReplacementsDialog({
     tenantSlug,
     campaignId,
-    suggested,
+    pool,
 }: {
     tenantSlug: string;
     campaignId: string;
-    suggested: number;
+    pool: ReplacementPool[];
 }) {
     const [open, setOpen] = useState(false);
 
@@ -45,6 +50,10 @@ export default function ReplacementsDialog({
                 >
                     {({ processing, errors }) => (
                         <>
+                            <ReplacementGenderField
+                                pool={pool}
+                                error={errors['gender']}
+                            />
                             <FormField
                                 name="count"
                                 label="¿Cuántas personas más?"
@@ -52,7 +61,7 @@ export default function ReplacementsDialog({
                                 type="number"
                                 min={1}
                                 inputMode="numeric"
-                                defaultValue={String(Math.max(suggested, 1))}
+                                defaultValue="1"
                                 error={errors['count']}
                             />
                             <DialogFooter className="gap-2">

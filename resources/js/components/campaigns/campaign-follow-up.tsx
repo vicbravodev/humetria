@@ -9,6 +9,7 @@ import type {
     CampaignDetail,
     CampaignPerson,
     InstrumentProgress,
+    ReplacementPool,
 } from '@/types';
 
 /**
@@ -21,9 +22,11 @@ export default function CampaignFollowUp({
     instruments,
     people,
     minDeadline,
+    replacementPool,
 }: {
     tenantSlug: string;
     minDeadline: string | null;
+    replacementPool: ReplacementPool[] | null;
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: CampaignPerson[] | null;
@@ -43,6 +46,7 @@ export default function CampaignFollowUp({
                     tenantSlug={tenantSlug}
                     campaign={campaign}
                     minDeadline={minDeadline}
+                    replacementPool={replacementPool}
                 />
             )}
             {sampleShort && (

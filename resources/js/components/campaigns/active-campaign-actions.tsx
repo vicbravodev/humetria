@@ -3,7 +3,7 @@ import ExtendDialog from '@/components/campaigns/extend-dialog';
 import PostButton from '@/components/campaigns/post-button';
 import ReplacementsDialog from '@/components/campaigns/replacements-dialog';
 import { inviteMissing, resend } from '@/routes/tenant/campaigns';
-import type { CampaignDetail } from '@/types';
+import type { CampaignDetail, ReplacementPool } from '@/types';
 
 /**
  * What RH does while an evaluation runs: send links again, invite whoever is missing, draw replacements, give more
@@ -13,10 +13,12 @@ export default function ActiveCampaignActions({
     tenantSlug,
     campaign,
     minDeadline,
+    replacementPool,
 }: {
     tenantSlug: string;
     campaign: CampaignDetail;
     minDeadline: string;
+    replacementPool: ReplacementPool[] | null;
 }) {
     const progress = campaign.progress;
     const shortBy =
@@ -36,11 +38,11 @@ export default function ActiveCampaignActions({
                     Invitar a quien falte
                 </PostButton>
             )}
-            {campaign.population === 'sample' && progress !== null && (
+            {replacementPool !== null && replacementPool.length > 0 && (
                 <ReplacementsDialog
                     tenantSlug={tenantSlug}
                     campaignId={campaign.id}
-                    suggested={progress.target - progress.completed}
+                    pool={replacementPool}
                 />
             )}
             <ExtendDialog

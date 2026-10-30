@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Support;
 
+use App\Modules\Campaigns\Actions\DrawReplacements;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
@@ -38,6 +39,7 @@ final readonly class CampaignPages
         private Instruments $instruments,
         private Roster $roster,
         private InstrumentTally $tally,
+        private DrawReplacements $replacements,
     ) {}
 
     /**
@@ -56,7 +58,7 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, people: list<array<string, mixed>>|null, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null, minDeadline: string|null}
+     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, people: list<array<string, mixed>>|null, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null, minDeadline: string|null, replacementPool: list<array{gender: string, label: string, available: int}>|null}
      */
     public function show(Campaign $campaign, bool $canManage): array
     {
@@ -89,6 +91,9 @@ final readonly class CampaignPages
                 : null,
             // The earliest last day it can be extended to, while it runs.
             'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
+            'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
+                ? $this->replacementPool($campaign)
+                : null,
         ];
     }
 
@@ -169,6 +174,25 @@ final readonly class CampaignPages
             'area' => $person->areaName,
             'gender' => self::PERSON_GENDER[$person->gender] ?? $person->gender,
         ], $people);
+    }
+
+    /**
+     * How many people of each gender are left outside the sample, to replace someone of that gender who will not answer.
+     *
+     * @return list<array{gender: string, label: string, available: int}>
+     */
+    private function replacementPool(Campaign $campaign): array
+    {
+        $available = $this->replacements->available($campaign);
+        $pool = [];
+
+        foreach (self::GENDER_LABELS as $gender => $label) {
+            if (isset($available[$gender])) {
+                $pool[] = ['gender' => $gender, 'label' => $label, 'available' => count($available[$gender])];
+            }
+        }
+
+        return $pool;
     }
 
     /**

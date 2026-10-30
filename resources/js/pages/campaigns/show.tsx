@@ -12,6 +12,7 @@ import type {
     CampaignDetail,
     CampaignPerson,
     InstrumentProgress,
+    ReplacementPool,
     SampledPerson,
 } from '@/types';
 
@@ -22,6 +23,7 @@ export default function Campaign({
     sample,
     launch,
     minDeadline,
+    replacementPool,
 }: {
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
@@ -29,6 +31,7 @@ export default function Campaign({
     sample: SampledPerson[] | null;
     launch: { min: string; suggested: string } | null;
     minDeadline: string | null;
+    replacementPool: ReplacementPool[] | null;
 }) {
     const { tenant } = usePage().props;
     const tenantSlug = tenant?.slug ?? '';
@@ -63,6 +66,7 @@ export default function Campaign({
                         instruments={instruments}
                         people={people}
                         minDeadline={minDeadline}
+                        replacementPool={replacementPool}
                     />
                 )}
                 {isDraft && canManage && (
