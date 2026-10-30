@@ -27,6 +27,13 @@ final class CompanyWorkCenters implements WorkCenters
             ->through($this->summary(...));
     }
 
+    public function findActive(string $id): ?WorkCenterSummary
+    {
+        $workCenter = WorkCenter::query()->whereNull('archived_at')->find($id, ['id', 'name', 'archived_at']);
+
+        return $workCenter === null ? null : $this->summary($workCenter);
+    }
+
     private function summary(WorkCenter $workCenter): WorkCenterSummary
     {
         return new WorkCenterSummary($workCenter->id, $workCenter->name, $workCenter->archived_at !== null);

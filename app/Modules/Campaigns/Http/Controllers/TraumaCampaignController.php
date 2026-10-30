@@ -12,7 +12,6 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
-use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -28,14 +27,13 @@ final class TraumaCampaignController extends Controller
     public function create(Request $request, WorkCenters $workCenters, Roster $roster): Response
     {
         Gate::authorize('manage-campaigns');
-        $active = array_values(array_filter($workCenters->all(), fn (WorkCenterSummary $workCenter): bool => ! $workCenter->archived));
         $chosen = $request->string('work_center')->toString();
-        $workCenterId = Str::isUuid($chosen) && collect($active)->contains('id', $chosen) ? $chosen : null;
+        $workCenter = Str::isUuid($chosen) ? $workCenters->findActive($chosen) : null;
+        $workCenterId = $workCenter?->id;
         $query = new RosterQuery(activeInWorkCenter: $workCenterId, search: $request->string('q')->trim()->limit(100, '')->toString());
 
         return Inertia::render('campaigns/trauma', [
-            'workCenters' => array_map(fn (WorkCenterSummary $workCenter): array => ['id' => $workCenter->id, 'name' => $workCenter->name], $active),
-            'workCenterId' => $workCenterId,
+            'workCenter' => $workCenter === null ? null : ['value' => $workCenter->id, 'label' => $workCenter->name],
             'people' => $workCenterId === null ? null : $roster->page($query)->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
                 'name' => $person->name,

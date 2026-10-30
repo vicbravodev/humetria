@@ -29,3 +29,15 @@ it('pages the company\'s work centers in use, by name', function (): void {
     expect(resolve(WorkCenters::class)->activePage(perPage: 1, pageName: 'centers')->items())
         ->toEqual([new WorkCenterSummary($north->id, 'Norte', false)]);
 });
+
+it('finds a work center in use of the company, and no archived or other company\'s one', function (): void {
+    $tenant = Tenant::factory()->create();
+    $north = WorkCenter::factory()->for($tenant)->create(['name' => 'Norte']);
+    $archived = WorkCenter::factory()->for($tenant)->archived()->create();
+    $other = WorkCenter::factory()->for(Tenant::factory()->create())->create();
+    workIn($tenant);
+
+    expect(resolve(WorkCenters::class)->findActive($north->id))->toEqual(new WorkCenterSummary($north->id, 'Norte', false))
+        ->and(resolve(WorkCenters::class)->findActive($archived->id))->toBeNull()
+        ->and(resolve(WorkCenters::class)->findActive($other->id))->toBeNull();
+});

@@ -42,8 +42,8 @@ it('offers the active people of the chosen work center, a page at a time', funct
         ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->component('campaigns/trauma')
-            ->where('workCenterId', $this->plant->id)
-            ->has('workCenters', 1)
+            ->where('workCenter', ['value' => $this->plant->id, 'label' => 'Planta Norte'])
+            ->missing('workCenters')
             ->where('people.total', 4)
             ->has('people.data.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'reachable']))
             ->where('filters', ['q' => ''])
@@ -52,19 +52,24 @@ it('offers the active people of the chosen work center, a page at a time', funct
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.trauma.create', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('workCenterId', null)->where('people', null));
+        ->assertInertia(fn (Assert $page) => $page->where('workCenter', null)->where('people', null));
+
+    $archived = WorkCenter::factory()->for($this->tenant)->archived()->create();
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $archived->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('workCenter', null)->where('people', null));
 });
 
 it('searches the people on the server, and gives everyone the search found when asked', function (): void {
-    $this->people[1]->update(['name' => 'José Zúñiga']);
-    $this->people[2]->update(['name' => 'Josefina Zúñiga']);
+    $this->people[1]->update(['name' => 'José Qwértyz']);
+    $this->people[2]->update(['name' => 'Josefina Qwértyz']);
     staffOf($this->tenant, $this->plant, 25);
 
     $this->actingAs($this->hr)
-        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'q' => 'zuniga']))
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'q' => 'qwertyz']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('people.total', 2)
-            ->where('filters', ['q' => 'zuniga'])
+            ->where('filters', ['q' => 'qwertyz'])
             ->reloadOnly('matching', fn (Assert $reload) => $reload->where('matching', fn ($ids): bool => collect($ids)->sort()->values()->all() === collect([$this->people[1]->id, $this->people[2]->id])->sort()->values()->all())));
 
     $this->actingAs($this->hr)

@@ -231,8 +231,8 @@ it('keeps who was ticked across pages and searches, and ticks everyone a search 
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
     $people = staffOf($tenant, $plant, 30)->values();
     $people[0]->update(['name' => 'Aarón Abad']);
-    $people[1]->update(['name' => 'Zacarías Zúñiga']);
-    $people[2]->update(['name' => 'Zoé Zúñiga']);
+    $people[1]->update(['name' => 'Zacarías Qwértyz']);
+    $people[2]->update(['name' => 'Zoé Qwértyz']);
 
     visit("/admin/acme/campaigns/trauma?work_center={$plant->id}")
         ->click('Aarón Abad')
@@ -240,7 +240,7 @@ it('keeps who was ticked across pages and searches, and ticks everyone a search 
         ->click('Siguientes')
         ->assertSee('Página 2 de 2')
         ->assertSee('(1 elegidas)')
-        ->type('[aria-label="Buscar por nombre, correo o número"]', 'zuniga')
+        ->type('[aria-label="Buscar por nombre, correo o número"]', 'qwertyz')
         ->assertSee('Elegir a las 2 encontradas')
         ->click('Elegir a las 2 encontradas')
         ->assertSee('(3 elegidas)')
@@ -262,7 +262,9 @@ it('sends Guía I to the people ticked, from the NOM-035 page', function (): voi
     visit('/admin/acme/campaigns')
         ->click('Guía I por acontecimiento')
         ->click('#trauma-work-center')
-        ->click('[role="option"]:has-text("Planta Norte")')
+        ->type('[role="combobox"][aria-controls="trauma-work-center-options"]', 'norte')
+        ->assertSee('Planta Norte')
+        ->keys('[role="combobox"][aria-controls="trauma-work-center-options"]', 'Enter')
         ->assertSee('Ana López')
         ->click('Ana López')
         ->assertSee('(1 elegidas)')

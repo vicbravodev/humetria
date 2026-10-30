@@ -25,4 +25,7 @@ interface WorkCenters
      * @return LengthAwarePaginator<int, WorkCenterSummary>
      */
     public function activePage(int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator;
+
+    /** A work center in use (not archived) by id; null when archived or outside the company. */
+    public function findActive(string $id): ?WorkCenterSummary;
 }

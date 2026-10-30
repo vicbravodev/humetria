@@ -1,29 +1,23 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import TraumaForm from '@/components/campaigns/trauma-form';
+import Combobox from '@/components/humetria/combobox';
 import PageHeader from '@/components/page-header';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { loadServerOptions } from '@/lib/server-options';
 import { index } from '@/routes/tenant/campaigns';
 import { create } from '@/routes/tenant/campaigns/trauma';
-import type { Paginated, RosterPerson } from '@/types';
+import { options as workCenterOptions } from '@/routes/tenant/work-centers';
+import type { ChoiceOption, Paginated, RosterPerson } from '@/types';
 
 export default function Trauma({
-    workCenters,
-    workCenterId,
+    workCenter,
     people,
     filters,
     minDeadline,
     suggestedDeadline,
 }: {
-    workCenters: { id: string; name: string }[];
-    workCenterId: string | null;
+    workCenter: ChoiceOption | null;
     people: Paginated<RosterPerson> | null;
     filters: { q: string };
     minDeadline: string;
@@ -57,40 +51,36 @@ export default function Trauma({
                     <Label htmlFor="trauma-work-center">
                         Centro de trabajo
                     </Label>
-                    <Select
-                        value={workCenterId ?? ''}
-                        onValueChange={(id) =>
+                    <Combobox
+                        id="trauma-work-center"
+                        name="work_center"
+                        source={{
+                            initial: workCenter === null ? [] : [workCenter],
+                            minLength: 1,
+                            load: (query, signal) =>
+                                loadServerOptions(
+                                    workCenterOptions.url(tenantSlug),
+                                    query,
+                                    signal,
+                                ),
+                        }}
+                        defaultValue={workCenter ?? undefined}
+                        placeholder="Elige un centro"
+                        onChange={(option) =>
                             router.get(
                                 create.url(tenantSlug, {
-                                    query: { work_center: id },
+                                    query: { work_center: option.value },
                                 }),
                             )
                         }
-                    >
-                        <SelectTrigger
-                            id="trauma-work-center"
-                            className="w-full"
-                        >
-                            <SelectValue placeholder="Elige un centro" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {workCenters.map((workCenter) => (
-                                <SelectItem
-                                    key={workCenter.id}
-                                    value={workCenter.id}
-                                >
-                                    {workCenter.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    />
                 </div>
-                {workCenterId !== null && people !== null && (
+                {workCenter !== null && people !== null && (
                     <TraumaForm
                         // A new list of people for each work center.
-                        key={workCenterId}
+                        key={workCenter.value}
                         tenantSlug={tenantSlug}
-                        workCenterId={workCenterId}
+                        workCenterId={workCenter.value}
                         people={people}
                         search={filters.q}
                         minDeadline={minDeadline}
