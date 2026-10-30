@@ -12,7 +12,7 @@ export function TenantName({ tenant }: { tenant: CurrentTenant }) {
                     {tenant.trade_name}
                 </span>
                 {tenant.trial_days_left !== null && (
-                    <span className="truncate text-[13px] text-muted-foreground">
+                    <span className="text-[13px] leading-[18px] text-muted-foreground">
                         {trialLabel(tenant.trial_days_left)}
                     </span>
                 )}

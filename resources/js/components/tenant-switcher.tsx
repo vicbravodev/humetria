@@ -23,7 +23,7 @@ export function TenantSwitcher() {
         return (
             <div
                 data-test="tenant-switcher"
-                className="flex min-h-14 items-center gap-2.5 rounded-[10px] border border-sidebar-border bg-card px-2.5 group-data-[collapsible=icon]:min-h-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-1.5"
+                className="flex min-h-14 items-center gap-2.5 rounded-[10px] border border-sidebar-border bg-card px-2.5 group-data-[collapsible=icon]:sr-only group-data-[collapsible=icon]:min-h-0"
             >
                 <TenantName tenant={tenant} />
             </div>

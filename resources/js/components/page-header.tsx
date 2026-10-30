@@ -38,7 +38,7 @@ export default function PageHeader({
                     {status}
                 </div>
                 {description !== undefined && (
-                    <p className="max-w-2xl text-[17px] leading-6 text-pretty text-muted-foreground">
+                    <p className="max-w-[620px] text-[17px] leading-6 text-pretty text-muted-foreground">
                         {description}
                     </p>
                 )}

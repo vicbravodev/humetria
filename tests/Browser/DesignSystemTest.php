@@ -61,12 +61,12 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
-        // Group label (Plataforma, the only one left to a superadmin) in caption style; items of 44 px in body-strong with 20 px icons.
-        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "uppercase" && label.fontSize === "13px"; }')
+        // Group label (Plataforma, the only one left to a superadmin) in sentence case at 13 px (pantallas: Panel); items of 44 px at 16 px with 20 px icons.
+        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "none" && label.fontSize === "13px"; }')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => button.getBoundingClientRect().height >= 44 && getComputedStyle(button).fontSize === "16px")')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] svg\')].every((icon) => icon.getBoundingClientRect().width === 20)')
-        // Active item: 600 and its icon in sidebar-primary.
-        ->assertScript('() => { const active = document.querySelector(\'[data-sidebar="menu-button"][data-active="true"]\'); const probe = document.createElement("span"); probe.style.color = "var(--sidebar-primary)"; document.body.append(probe); const primary = getComputedStyle(probe).color; probe.remove(); return getComputedStyle(active).fontWeight === "600" && getComputedStyle(active.querySelector("svg")).color === primary; }')
+        // Active item: a card (card fill, 500) with its icon in sidebar-primary (pantallas: Panel).
+        ->assertScript('() => { const active = document.querySelector(\'[data-sidebar="menu-button"][data-active="true"]\'); const probe = document.createElement("span"); probe.style.color = "var(--sidebar-primary)"; probe.style.backgroundColor = "var(--card)"; document.body.append(probe); const primary = getComputedStyle(probe).color; const card = getComputedStyle(probe).backgroundColor; probe.remove(); return getComputedStyle(active).fontWeight === "500" && getComputedStyle(active).backgroundColor === card && getComputedStyle(active.querySelector("svg")).color === primary; }')
         // Page title in h1 (30/38).
         ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px');
 })->with(['light' => false, 'dark' => true]);
