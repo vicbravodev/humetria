@@ -175,12 +175,16 @@ it('never writes an answer, nor the id of an anonymous response, to the log', fu
         ->not->toContain('requires_clinical_assessment');
 });
 
-it('limits how often a guide can be sent', function (): void {
-    foreach (range(1, 20) as $attempt) {
-        submitGuide('nom035.guide-iii', [], "guess-{$attempt}");
+it('limits how often one link sends answers, without blocking a room of people on one network', function (): void {
+    foreach (range(1, 10) as $attempt) {
+        submitGuide('nom035.guide-iii', [], 'the-token');
     }
 
-    submitGuide('nom035.guide-iii', [], 'guess-21')->assertTooManyRequests();
+    submitGuide('nom035.guide-iii', [], 'the-token')->assertTooManyRequests();
+
+    foreach (range(1, 60) as $person) {
+        submitGuide('nom035.guide-iii', [], "link-{$person}")->assertRedirect();
+    }
 });
 
 it('locks the person and reads the campaign under a shared lock before taking a guide', function (): void {

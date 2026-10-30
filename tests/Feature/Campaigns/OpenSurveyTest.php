@@ -138,10 +138,26 @@ it('needs no account, and a signed-in person sees the same survey', function ():
     $this->actingAs(superadmin())->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('unavailable', null));
 });
 
-it('limits how often a link can be tried', function (): void {
-    foreach (range(1, 60) as $attempt) {
-        $this->get(route('survey.show', "guess-{$attempt}"))->assertOk();
+it('limits how often one link is opened, without blocking a room of people on one network', function (): void {
+    surveyParticipant();
+
+    foreach (range(1, 30) as $attempt) {
+        $this->get(route('survey.show', 'the-token'))->assertOk();
     }
 
-    $this->get(route('survey.show', 'guess-61'))->assertTooManyRequests();
+    $this->get(route('survey.show', 'the-token'))->assertTooManyRequests();
+
+    // A group session: a hundred people on the same Wi-Fi, each with their own link.
+    foreach (range(1, 100) as $person) {
+        $this->get(route('survey.show', "link-{$person}"))->assertOk();
+    }
+});
+
+it('limits how many links one network can try', function (): void {
+    foreach (range(1, 600) as $attempt) {
+        $this->get(route('survey.show', "guess-{$attempt}"));
+    }
+
+    $this->get(route('survey.show', 'guess-601'))->assertTooManyRequests();
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.2'])->get(route('survey.show', 'guess-602'))->assertOk();
 });
