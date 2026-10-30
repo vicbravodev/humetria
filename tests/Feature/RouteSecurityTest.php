@@ -31,6 +31,7 @@ function publicRouteNames(): array
         'invitations.show', // guest: invitation link from the email; the token is the credential
         'invitations.accept', // guest: accepts the invitation; throttled, single-use token
         'survey.show', // guest: survey link from the email; the token is the credential; throttled
+        'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
     ];
 }
 

@@ -6,16 +6,20 @@ namespace App\Modules\Campaigns\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Actions\OpenSurvey;
+use App\Modules\Campaigns\Actions\SubmitSurvey;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Exceptions\SurveyUnavailable;
+use App\Modules\Campaigns\Http\Requests\SubmitSurveyRequest;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Data\InstrumentDefinition;
 use App\Modules\Instruments\Data\ItemDefinition;
 use App\Modules\Instruments\Data\SectionDefinition;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 /**
  * The employee's survey, reached from the emailed link. No account: the link's token is the credential.
@@ -57,6 +61,24 @@ final class SurveyController extends Controller
             'closesOn' => $survey->campaign->closes_on === null ? null : CampaignClock::day($survey->campaign->closes_on, isDate: true),
             'instruments' => $instruments,
         ]);
+    }
+
+    /**
+     * Back to the survey either way: it shows the next guide, the thanks, or why the link no longer works.
+     */
+    public function submit(SubmitSurveyRequest $request, string $token, string $instrument, SubmitSurvey $submitSurvey): RedirectResponse
+    {
+        try {
+            $submitSurvey->handle($token, $instrument, $request->answers());
+        } catch (InvalidArgumentException $invalid) {
+            return redirect()->route('survey.show', $token)->withErrors(['answers' => $invalid->getMessage()]);
+        } catch (SurveyUnavailable) {
+            return redirect()->route('survey.show', $token);
+        }
+
+        Inertia::flash('submitted', $instrument);
+
+        return redirect()->route('survey.show', $token);
     }
 
     /**
