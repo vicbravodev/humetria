@@ -208,6 +208,7 @@ return [
         'conclusions' => 'conclusiones',
         'count' => 'cantidad',
         'current_password' => 'contraseña actual',
+        'duration' => 'duración',
         'email' => 'correo electrónico',
         'employee_ids' => 'personas',
         'employee_number' => 'número de empleado',

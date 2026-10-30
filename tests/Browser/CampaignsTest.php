@@ -403,3 +403,47 @@ it('completes the report with what HR writes', function (): void {
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('shares the report through a temporary link that opens with no account until it is revoked', function (): void {
+    $tenant = campaignsCompany();
+    $tenant->update(['trade_name' => 'Acme']);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    $page = visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->click('Compartir')
+        ->click('#share-duration')
+        ->click('[role="option"]:has-text("15 minutos")')
+        ->press('Crear enlace')
+        ->assertSee('Cópialo ahora: no se vuelve a mostrar.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+    $link = $page->value('#report-link');
+
+    expect($link)->toContain('/report/');
+
+    $page->navigate(parse_url($link, PHP_URL_PATH) ?: '')
+        ->assertSee('Acme compartió este informe contigo')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial');
+
+    visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->assertSee('Enlaces abiertos')
+        ->click('Revocar')
+        ->assertSee('Enlace revocado.')
+        ->assertDontSee('Enlaces abiertos')
+        ->navigate(parse_url($link, PHP_URL_PATH) ?: '')
+        ->assertSee('Este enlace ya no está disponible');
+});
+
+it('opens a shared report, or says the link is no longer available', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Results\Models\ReportShare::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => hash('sha256', str_repeat('a', 64))]);
+
+    visitPage('results/shared-report', '/report/'.str_repeat('a', 64), $dark, $mobile)
+        ->assertSee('Acme compartió este informe contigo')
+        ->assertSee('Imprimir o guardar PDF');
+    visitPage('results/shared-report', '/report/'.str_repeat('b', 64), $dark, $mobile)
+        ->assertSee('Este enlace ya no está disponible')
+        ->assertDontSee('Acme');
+})->with($looks);

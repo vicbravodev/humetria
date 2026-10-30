@@ -9,8 +9,11 @@ use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Results\Actions\SaveReportDetails;
+use App\Modules\Results\Enums\ShareDuration;
 use App\Modules\Results\Http\Requests\ReportDetailsRequest;
+use App\Modules\Results\Models\ReportShare;
 use App\Modules\Results\Support\ReportBuilder;
+use App\Modules\Results\Support\ResultsClock;
 use App\Modules\Results\Support\RiskLevels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +27,8 @@ use Inertia\Response;
  */
 final class ReportController extends Controller
 {
+    private const int SHARES_PER_PAGE = 10;
+
     public function __construct(private readonly CampaignRecords $campaigns) {}
 
     public function show(Request $request, mixed $tenant, string $campaign, ReportBuilder $builder, RecordAudit $audit): Response
@@ -39,6 +44,11 @@ final class ReportController extends Controller
             'levels' => RiskLevels::catalog(),
             'canEdit' => $canEdit,
             'form' => $canEdit ? ReportBuilder::form($report) : null,
+            'durations' => $canEdit ? ShareDuration::catalog() : null,
+            // The links that still open, newest first, only for those who may revoke them.
+            'shares' => $canEdit ? ReportShare::query()->where('campaign_id', $found->id)->open()->orderByDesc('created_at')->orderByDesc('id')
+                ->paginate(self::SHARES_PER_PAGE, ['id', 'created_at', 'expires_at'], 'shares')->withQueryString()
+                ->through(fn (ReportShare $share): array => ['id' => $share->id, 'createdAt' => ResultsClock::moment($share->created_at), 'expiresAt' => ResultsClock::moment($share->expires_at)]) : null,
         ]);
     }
 

@@ -1,5 +1,6 @@
 import type { Auth } from '@/types/auth';
 import type { EmployeeImportSummary } from '@/types/organization';
+import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
 
@@ -26,6 +27,8 @@ declare module '@inertiajs/core' {
             toast?: FlashToast;
             /** What a checked employees CSV would do, or its problems; see the import page. */
             import?: EmployeeImportSummary;
+            /** A link to a report just opened, shown once: only its hash is kept. */
+            reportLink?: ReportLink;
         };
     }
 }

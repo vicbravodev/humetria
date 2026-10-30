@@ -62,6 +62,12 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.campaigns.screenings', [$tenant, $campaign->id]);
     }, ['people']],
+    'the 7.7 report and its links' => ['results/report', function () {
+        [$tenant, $plant] = listsCompany();
+        $closed = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+        return route('tenant.campaigns.report', [$tenant, $closed->id]);
+    }, ['shares']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

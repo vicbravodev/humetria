@@ -122,3 +122,22 @@ export type ReportForm = {
     responsible_name: string;
     responsible_license: string;
 };
+
+/** A temporary link just opened: shown once, in the clear. */
+export type ReportLink = {
+    url: string;
+    expiresAt: string;
+};
+
+/** A link to the report that still opens. */
+export type ReportShareRow = {
+    id: string;
+    createdAt: string;
+    expiresAt: string;
+};
+
+/** A duration a link may last. */
+export type ShareDurationOption = {
+    value: string;
+    label: string;
+};
