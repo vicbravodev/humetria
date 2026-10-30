@@ -314,6 +314,8 @@ it('applies Guía I to the people of an event', function (bool $dark, bool $mobi
 
     visitPage('campaigns/trauma', "/admin/acme/campaigns/trauma?work_center={$plant->id}", $dark, $mobile)
         ->assertSee('trayecto directo')
+        ->assertSee('Qué pasa después')
+        ->assertSee('Solo personas de Planta Norte.')
         ->assertSee('Ana López');
 })->with($looks);
 
@@ -336,7 +338,9 @@ it('keeps who was ticked across pages and searches, and ticks everyone a search 
         ->assertSee('Elegir a las 2 encontradas')
         ->click('Elegir a las 2 encontradas')
         ->assertSee('(3 elegidas)')
-        ->click('Enviar Guía I')
+        ->assertSee('+2 más')
+        ->assertSee('Enviar Guía I a 3 personas')
+        ->click('button:has-text("Enviar Guía I")')
         ->assertSee('Guía I enviada a las personas elegidas.')
         ->assertNoJavaScriptErrors();
 
@@ -360,7 +364,7 @@ it('sends Guía I to the people ticked, from the NOM-035 page', function (): voi
         ->assertSee('Ana López')
         ->click('Ana López')
         ->assertSee('(1 elegidas)')
-        ->click('Enviar Guía I')
+        ->click('button:has-text("Enviar Guía I")')
         ->assertSee('Guía I enviada a las personas elegidas.')
         ->assertSee('Guía I por acontecimiento')
         ->assertNoJavaScriptErrors();
