@@ -12,6 +12,7 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_organization,
     manage_members,
     manage_campaigns: manage_organization,
+    view_trauma_screenings: manage_organization,
 });
 const acme = (manageOrganization = true, manageMembers = true) => ({
     slug: 'acme',

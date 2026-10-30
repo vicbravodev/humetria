@@ -13,4 +13,15 @@ final class CompanyAreas implements Areas
     {
         return Area::query()->find($areaId, ['id', 'name'])?->name;
     }
+
+    public function names(array $areaIds): array
+    {
+        $names = [];
+
+        foreach (Area::query()->whereIn('id', $areaIds)->get(['id', 'name']) as $area) {
+            $names[$area->id] = $area->name;
+        }
+
+        return $names;
+    }
 }

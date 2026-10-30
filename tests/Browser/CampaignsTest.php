@@ -316,3 +316,134 @@ it('sends Guía I to the people ticked, from the NOM-035 page', function (): voi
 
     expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->sole()->employee_id)->toBe($people[0]->id);
 });
+
+it('shows the results of a closed evaluation by risk level, and filters them by area', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['Producción' => ['never', 6], 'Ventas' => ['always', 5]] as $name => [$value, $count]) {
+        $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => $name]);
+        App\Modules\Responses\Models\AnonymousResponse::factory()->count($count)->create(['campaign_id' => $campaign->id, 'area_id' => $area->id, 'answers' => nom035Answers('nom035.guide-ii', $value)]);
+    }
+
+    visitPage('results/show', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile)
+        ->assertSee('Calificación final')
+        ->assertSee('Liderazgo y relaciones en el trabajo')
+        ->assertSee('Producción')
+        ->assertSee('Qué pide la norma en cada nivel')
+        ->assertSee('Guía I: acontecimientos traumáticos severos');
+})->with($looks);
+
+it('narrows the results to one area, and reaches them from the evaluation', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['Producción' => 6, 'Ventas' => 5] as $name => $count) {
+        $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => $name]);
+        App\Modules\Responses\Models\AnonymousResponse::factory()->count($count)->create(['campaign_id' => $campaign->id, 'area_id' => $area->id, 'answers' => nom035Answers('nom035.guide-ii')]);
+    }
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Resultados')
+        ->assertPathIs("/admin/acme/campaigns/{$campaign->id}/results")
+        ->assertSee('Cuántos de los 11 cuestionarios de todo el centro')
+        ->click('#results-area')
+        ->click('[role="option"] >> text=Ventas')
+        ->assertSee('Cuántos de los 5 cuestionarios de Ventas')
+        ->assertQueryStringHas('area')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('lists who requires a clinical assessment after their Guía I, reached from the results', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    $person->update(['name' => 'Ana López']);
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver quiénes la requieren'))
+        ->assertSee('Personas que requieren valoración clínica')
+        ->assertSee('1 de 1 personas')
+        ->assertSee('Ana López');
+})->with($looks);
+
+it('shows the 7.7 report of a closed evaluation, ready to print', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii')]);
+
+    visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Informe del numeral 7.7'))
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial')
+        ->assertSee('Datos del centro de trabajo')
+        ->assertSee('Pendiente de capturar')
+        ->assertSee('Imprimir o guardar PDF');
+})->with($looks);
+
+it('completes the report with what HR writes', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->click('Completar informe')
+        ->fill('#report-conclusions', 'La mayoría queda en riesgo medio.')
+        ->fill('#report-recommendations', 'Programa de intervención en carga de trabajo.')
+        ->fill('#report-responsible_name', 'Dra. Laura Méndez')
+        ->fill('#report-responsible_license', '12345678')
+        ->press('Guardar')
+        ->assertSee('Informe guardado.')
+        ->assertSee('La mayoría queda en riesgo medio.')
+        ->assertSee('Dra. Laura Méndez · Cédula profesional 12345678')
+        ->assertDontSee('Pendiente de capturar')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('shares the report through a temporary link that opens with no account until it is revoked', function (): void {
+    $tenant = campaignsCompany();
+    $tenant->update(['trade_name' => 'Acme']);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    $page = visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->click('Compartir')
+        ->click('#share-duration')
+        ->click('[role="option"]:has-text("15 minutos")')
+        ->press('Crear enlace')
+        ->assertSee('Cópialo ahora: no se vuelve a mostrar.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+    $link = $page->value('#report-link');
+
+    expect($link)->toContain('/report/');
+
+    $page->navigate(parse_url($link, PHP_URL_PATH) ?: '')
+        ->assertSee('Acme compartió este informe contigo')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial');
+
+    visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->assertSee('Enlaces abiertos')
+        ->click('Revocar')
+        ->assertSee('Enlace revocado.')
+        ->assertDontSee('Enlaces abiertos')
+        ->navigate(parse_url($link, PHP_URL_PATH) ?: '')
+        ->assertSee('Este enlace ya no está disponible');
+});
+
+it('opens a shared report, or says the link is no longer available', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Results\Models\ReportShare::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => hash('sha256', str_repeat('a', 64))]);
+
+    visitPage('results/shared-report', '/report/'.str_repeat('a', 64), $dark, $mobile)
+        ->assertSee('Acme compartió este informe contigo')
+        ->assertSee('Imprimir o guardar PDF');
+    visitPage('results/shared-report', '/report/'.str_repeat('b', 64), $dark, $mobile)
+        ->assertSee('Este enlace ya no está disponible')
+        ->assertDontSee('Acme');
+})->with($looks);

@@ -20,6 +20,8 @@ void createInertiaApp({
             // The survey has its own frame (SurveyShell), outside the panel.
             case name === 'landing':
             case name === 'campaigns/survey':
+            // A report opened from a temporary link: no panel, nobody signed in.
+            case name === 'results/shared-report':
                 return null;
             case name.startsWith('auth/'):
             case name === 'tenancy/accept-invitation':

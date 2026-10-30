@@ -17,6 +17,11 @@ const ARRAY_PROPS = [
     'campaigns/show:instruments' => 'resumen por guía de la evaluación: tres a lo más',
     'campaigns/show:standings' => 'conteos por situación: cinco',
     'campaigns/show:replacementPool' => 'conteos por género: tres a lo más',
+    'results/show:items' => 'catálogo fijo: las preguntas de la guía, contadas (72 a lo más)',
+    'results/report:durations' => 'catálogo fijo: las seis duraciones de un enlace',
+    'results/report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
+    'results/shared-report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
+    'results/show:levels' => 'catálogo fijo: los cinco niveles de riesgo',
 ];
 
 /** @return array<string, string> page => its source */

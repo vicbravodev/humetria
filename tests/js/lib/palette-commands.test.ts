@@ -20,6 +20,7 @@ describe('paletteCommands', () => {
                     manage_organization: true,
                     manage_members: true,
                     manage_campaigns: true,
+                    view_trauma_screenings: true,
                 },
             },
             sidebarExpanded: true,

@@ -21,7 +21,7 @@ it('shares the role and what it allows with every page of the company', function
         ->assertInertia(fn (Assert $page) => $page
             ->where('tenant.role', $role->value)
             ->where('tenant.role_label', $role->label())
-            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns]));
+            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns]));
 })->with([
     'owner' => [TenantRole::Owner, true, true, true],
     'hr' => [TenantRole::Hr, true, false, true],
@@ -35,7 +35,9 @@ it('asks Spatie what the current person may do in the company', function (Tenant
 
     expect(Gate::allows('manage-organization'))->toBe($organization)
         ->and(Gate::allows('manage-members'))->toBe($members)
-        ->and(Gate::allows('manage-campaigns'))->toBe($campaigns);
+        ->and(Gate::allows('manage-campaigns'))->toBe($campaigns)
+        // Who runs the evaluations also channels whoever needs care (num. 5.5): the Guía I list.
+        ->and(Gate::allows('view-trauma-screenings'))->toBe($campaigns);
 })->with([
     'owner' => [TenantRole::Owner, true, true, true],
     'hr' => [TenantRole::Hr, true, false, true],

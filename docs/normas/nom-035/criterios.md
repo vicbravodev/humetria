@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.1 · 29 de octubre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.2 · 30 de octubre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -322,6 +322,46 @@ aplica después de cada filtro.
 **Por qué.** Con grupos muy pequeños, un resultado "agregado" revela la respuesta de una persona. La norma no lo exige;
 es protección adicional de Humetría, coherente con C-22.
 
+Cómo se aplica en los resultados:
+
+- **Áreas, con supresión complementaria.** Un área se muestra si tiene al menos 5 cuestionarios **y** lo que queda
+  oculto suma 0 o al menos 5; si no, se ocultan también las áreas visibles más chicas hasta cumplirlo. Sin esto, «el
+  centro menos las áreas visibles» revelaría al grupo pequeño.
+- **Preguntas.** Cada pregunta se muestra solo si la contestaron al menos 5 (las de los bloques filtro las contesta una
+  parte), y solo para el centro completo: por área, la resta entre el centro y el área revelaría a los demás.
+- **Dimensiones.** No se muestran: la norma no les da niveles, y sumarlas es lo que la STPS prohíbe (C-14).
+
+### C-27. Los resultados de las Guías II y III solo existen con la evaluación cerrada · Humetría
+
+**Qué hacemos.** Mientras la evaluación está abierta, RH ve quién ya contestó (C-22), pero ningún resultado de las
+Guías II y III. Los resultados aparecen al cerrarla y ya no cambian.
+
+**Por qué.** Si RH viera los resultados moverse con cada respuesta, sabría qué contestó la última persona que marcó
+«ya contestó». La Guía I no espera: es identificada a propósito y la canalización (num. 5.5) no debe demorarse.
+
+### C-28. Lista de canalización de la Guía I · Norma
+
+**Qué hacemos.** Owner y RH ven quiénes requieren valoración clínica, con su área y el día en que contestaron. El rol
+de consulta no la ve, ni contada. Cada consulta de la lista queda en la bitácora.
+
+**Qué dice la norma.** Identificar a los trabajadores que fueron sujetos a acontecimientos traumáticos severos y
+canalizarlos para su atención (num. 5.5); llevar el registro de sus nombres (num. 5.8 c).
+
+### C-29. Informe del numeral 7.7 y enlace temporal · Norma + Humetría
+
+**Qué hacemos.** El informe se arma con lo que la plataforma sabe: datos del centro (a), método (d) y resultados (e).
+RH captura objetivo (b), actividades (c), conclusiones (f), recomendaciones y acciones de intervención (g) y el
+responsable con su cédula, «en su caso» (h). Se imprime o se guarda como PDF desde el navegador.
+
+Para que alguien sin cuenta lo lea (la dirección de la empresa, un auditor), quien gestiona evaluaciones crea un
+**enlace temporal** de 15 minutos a 48 horas. Solo se guarda el hash del enlace; se muestra una vez. Se puede revocar,
+cada apertura queda en la bitácora y nunca incluye la Guía I. Un enlace vencido, revocado o de una empresa bloqueada no
+abre nada ni nombra a la empresa.
+
+**Qué dice la norma.** «El resultado (…) deberá constar en un informe que contenga lo siguiente: a) Datos del centro de
+trabajo verificado (…) h) Datos del responsable de la evaluación» (num. 7.7). El informe es también lo que se pone a
+disposición de los trabajadores (num. 7.8).
+
 ---
 
 ## F. Durante la evaluación
@@ -380,8 +420,12 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-24 | `tests/Feature/Campaigns/RosterChangesTest.php`, `tests/Feature/Campaigns/CampaignActionsTest.php`, `tests/Feature/Tenancy/ArchiveWorkCenterTest.php` |
 | C-25 | `tests/Feature/Campaigns/CloseCampaignTest.php` |
 | C-26 | `tests/Feature/Campaigns/CampaignPagesTest.php` (última evaluación y fecha límite) |
+| C-14, C-15, C-23 | `tests/Feature/Results/RiskDistributionTest.php` (conteo por nivel, 4/5, supresión complementaria, preguntas con menos de 5), `tests/Feature/Results/ResultsPageTest.php` (filtro por área, ninguna respuesta en las props, número de consultas) |
+| C-27 | `tests/Feature/Results/ResultsPageTest.php` (sin resultados con la evaluación abierta) |
+| C-28 | `tests/Feature/Results/ScreeningsPageTest.php` (solo owner y RH, bitácora), `tests/Feature/Results/ResultsPageTest.php` (consulta no la ve) |
+| C-29 | `tests/Feature/Results/ReportTest.php` (incisos a–h), `tests/Feature/Results/ReportSharesTest.php` (15 min a 48 h, hash, vencido, revocado, empresa bloqueada, sin Guía I) |
 
-C-20 (sin ficha de la Guía V) se cumple por ausencia, y C-23 (mínimo por grupo) llega con los resultados.
+C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
 ## Lo que la plataforma no cubre (por ahora)
 
@@ -394,8 +438,8 @@ Obligaciones de la norma que dependen del cliente o que Humetría todavía no ge
 - mecanismo de quejas (8.1 b);
 - integración al diagnóstico de seguridad y salud de la NOM-030 (7.6).
 
-El informe del num. 7.7, la consulta de resultados por los trabajadores (7.8) y la lista de personas que requieren
-valoración clínica (5.5, 5.8 c) llegan en la siguiente versión.
+La consulta de los trabajadores (7.8) se cumple con el informe impreso o publicado por la empresa: no hay todavía un
+acceso propio para los trabajadores.
 
 ## Si la norma cambia
 
@@ -415,3 +459,4 @@ valoración clínica (5.5, 5.8 c) llegan en la siguiente versión.
 |---|---|---|
 | 1 | 2026-10-29 | Primera versión, con base en el DOF del 23/10/2018 y las preguntas frecuentes de la STPS (partes uno y dos). |
 | 1.1 | 2026-10-29 | Se agrega «Cómo se prueba» y la errata «pertenencia e, inestabilidad» a C-21. Ningún criterio cambia. |
+| 1.2 | 2026-10-30 | Resultados: C-23 detalla la supresión complementaria y el mínimo por pregunta; nuevos C-27 (resultados solo con la evaluación cerrada), C-28 (lista de canalización) y C-29 (informe 7.7 y enlace temporal). |

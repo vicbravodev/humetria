@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import CampaignFacts from '@/components/campaigns/campaign-facts';
-import CampaignStatusBadge from '@/components/campaigns/campaign-status-badge';
+import CampaignHeaderActions from '@/components/campaigns/campaign-header-actions';
 import DraftActions from '@/components/campaigns/draft-actions';
 import CampaignFollowUp from '@/components/campaigns/campaign-follow-up';
 import LaunchForm from '@/components/campaigns/launch-form';
@@ -65,9 +65,9 @@ export default function Campaign({
                     caption={campaign.kindLabel}
                     title={campaign.workCenter}
                 >
-                    <CampaignStatusBadge
-                        status={campaign.status}
-                        label={campaign.statusLabel}
+                    <CampaignHeaderActions
+                        tenantSlug={tenantSlug}
+                        campaign={campaign}
                     />
                 </PageHeader>
                 <CampaignFacts campaign={campaign} />

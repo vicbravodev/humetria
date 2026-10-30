@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Contracts;
 
+use App\Modules\Tenancy\Data\WorkCenterProfile;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -28,4 +29,7 @@ interface WorkCenters
 
     /** A work center in use (not archived) by id; null when archived or outside the company. */
     public function findActive(string $id): ?WorkCenterSummary;
+
+    /** A work center by id, archived ones included, as a report names it; null outside the company. */
+    public function profile(string $id): ?WorkCenterProfile;
 }

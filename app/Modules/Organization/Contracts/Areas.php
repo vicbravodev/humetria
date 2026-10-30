@@ -11,4 +11,12 @@ interface Areas
 {
     /** An area's name; null outside the company. */
     public function name(string $areaId): ?string;
+
+    /**
+     * Several areas' names at once; ids outside the company are left out.
+     *
+     * @param  list<string>  $areaIds
+     * @return array<string, string> by id
+     */
+    public function names(array $areaIds): array;
 }

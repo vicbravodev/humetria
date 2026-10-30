@@ -323,3 +323,24 @@
         animation-name: calendar-fade-out;
     }
 }
+
+/* A report prints alone: no sidebar, no top bar, no panel frame, and anything marked print:hidden stays on screen. */
+@media print {
+    [data-slot='sidebar'] {
+        display: none;
+    }
+
+    [data-slot='sidebar-inset'] {
+        margin: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    [data-slot='table-container'] {
+        overflow: visible;
+    }
+
+    details {
+        break-inside: avoid;
+    }
+}
