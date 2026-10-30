@@ -91,6 +91,12 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 
 ## Patrones
 
+Las pantallas completas están en `pantallas/` (29, en claro y oscuro, con su mapa en `pantallas/LEEME.md`) y son el
+estándar: toda pantalla, existente o nueva, se arma con sus piezas — marco con migas (`AppBreadcrumbs`), `PageHeader`
+con estado y ficha, `ArcMeter` (el arco de la "h"), `CountTabs`, `Notice`, `Initials`, tablas con cabecera `muted` y
+estados vacíos con el siguiente paso.
+
+
 - **Panel de RH** (`PanelRH`): encabezado con cliente y título, 3 `KpiCard`, “Campañas activas” en una rejilla de `CampaignCard` y, separadas por `space-12`, las “Campañas cerradas” en una `Table` con su `RiskLevel` final y la descarga del PDF.
 - **Encuesta** (`EncuestaMovil`, `EncuestaEscritorio`): `SurveyShell` con el logo del consultor y “Confidencial”, progreso por sección, instrucción de entrada en un bloque `accent` y `SurveyQuestion` con 5 opciones verticales de 56 px. En móvil va una pregunta por pantalla; en escritorio, hasta 3 de la misma sección. “Siguiente” es explícito y nunca avanza solo.
 - **Escala de riesgo** (`RiskLevel`, `RiskScale`).
