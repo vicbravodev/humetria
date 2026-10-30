@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sends a new link to everyone with a guide pending and an email (or to one person): each new link replaces the one
+ * Sends a new link to everyone with a guide pending and an email (or to some people): each new link replaces the one
  * before it, so a lost or forwarded email stops working.
  */
 final readonly class ResendInvitations
@@ -21,12 +21,13 @@ final readonly class ResendInvitations
     public function __construct(private Roster $roster, private Companies $companies, private SendSurveyInvitation $sendInvitation) {}
 
     /**
+     * @param  list<string>|null  $employeeIds  only these people, when given.
      * @return int how many people got a new link.
      */
-    public function handle(Campaign $campaign, ?Participant $only = null): int
+    public function handle(Campaign $campaign, ?array $employeeIds = null): int
     {
         $participants = $campaign->participants()
-            ->when($only !== null, fn ($query) => $query->whereKey($only?->id))
+            ->when($employeeIds !== null, fn ($query) => $query->whereIn('employee_id', $employeeIds ?? []))
             ->whereHas('instruments', fn ($query) => $query->where('status', InstrumentStatus::Pending))
             ->get();
         $people = $this->roster->findMany(array_values($participants->map(fn (Participant $participant): string => $participant->employee_id)->all()));

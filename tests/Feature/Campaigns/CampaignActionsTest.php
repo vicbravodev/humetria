@@ -71,6 +71,28 @@ it('sends the link again to everyone with a guide pending and an email, killing 
     }
 });
 
+it('sends the link again only to the pending people the filters narrow the list to', function (): void {
+    $people = collect();
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: function () use (&$people): void {
+        $people = staffOf($this->tenant, $this->plant, 20)->values();
+        $people[0]->update(['name' => 'Zyx López']);
+        $people[1]->update(['name' => 'Zyx María Ruiz']);
+        $people[2]->update(['name' => 'Zyxa Soto']);
+    });
+    $answered = participantOf($campaign, $people[2]);
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $answered->id)->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+    $untouched = participantOf($campaign, $people[3])->token_hash;
+
+    $this->actingAs($this->hr)
+        // Whatever standing the list showed, only pending people get a link.
+        ->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['q' => 'zyx', 'status' => 'all', 'guide' => 'nom035.guide-ii'])
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Enlace reenviado a 2 personas.']]);
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 2);
+    expect(participantOf($campaign, $people[3])->token_hash)->toBe($untouched)
+        ->and(participantOf($campaign, $people[0])->token_hash)->not->toBe($untouched);
+});
+
 it('sends the link again to one person', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
     $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->first();

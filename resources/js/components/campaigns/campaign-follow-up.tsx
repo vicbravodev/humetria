@@ -1,6 +1,7 @@
 import ActiveCampaignActions from '@/components/campaigns/active-campaign-actions';
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
 import PostButton from '@/components/campaigns/post-button';
+import ResendFilteredDialog from '@/components/campaigns/resend-filtered-dialog';
 import PeopleTable from '@/components/campaigns/people-table';
 import PeopleToolbar from '@/components/campaigns/people-toolbar';
 import ConsolePagination from '@/components/console-pagination';
@@ -65,9 +66,19 @@ export default function CampaignFollowUp({
             <InstrumentsProgress instruments={instruments} />
             {people !== null && (
                 <section className="flex flex-col gap-4">
-                    <h2 className="text-xl leading-7 font-semibold">
-                        Personas
-                    </h2>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h2 className="text-xl leading-7 font-semibold">
+                            Personas
+                        </h2>
+                        {active && (
+                            <ResendFilteredDialog
+                                tenantSlug={tenantSlug}
+                                campaignId={campaign.id}
+                                filters={people.filters}
+                                count={people.people.total}
+                            />
+                        )}
+                    </div>
                     <PeopleToolbar
                         url={show.url([tenantSlug, campaign.id])}
                         filters={people.filters}

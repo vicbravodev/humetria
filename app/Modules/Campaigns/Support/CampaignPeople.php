@@ -99,6 +99,16 @@ final readonly class CampaignPeople
         });
     }
 
+    /**
+     * The ids of everyone the filter matches.
+     *
+     * @return list<string>
+     */
+    public function employeeIds(Campaign $campaign, PeopleFilter $filter): array
+    {
+        return $this->roster->matchingIds($this->rosterQuery($campaign, $filter));
+    }
+
     private function rosterQuery(Campaign $campaign, PeopleFilter $filter): RosterQuery
     {
         $standings = DB::query()->fromSub($this->standingQuery($campaign, $filter->guide), 'people')

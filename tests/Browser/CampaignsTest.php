@@ -150,7 +150,9 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
     staffOf($tenant, $plant, female: 1);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Reenviar a pendientes')
+        ->click('Reenviar a 60 personas')
+        ->assertSee('el anterior deja de servir')
+        ->click('Reenviar enlaces')
         ->assertSee('Enlace reenviado a 60 personas.')
         ->click('Invitar a quien falte')
         ->assertSee('Se invitó a 1 persona.')
@@ -183,7 +185,7 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación cerrada. Los enlaces ya no funcionan.')
         ->assertSee('Cerrada')
-        ->assertDontSee('Reenviar a pendientes')
+        ->assertDontSee('Reenviar a 60 personas')
         ->assertNoJavaScriptErrors();
 
     expect($campaign->refresh()->status->value)->toBe('closed');
