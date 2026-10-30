@@ -49,6 +49,7 @@ it('opens with the company, the deadline and each guide as the person answers it
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('campaigns/survey')
+            ->where('token', 'the-token')
             ->where('unavailable', null)
             ->where('company', 'Acme')
             ->where('closesOn', '14 nov 2026')
@@ -99,6 +100,7 @@ it('says a link is not valid without naming any company', function (string $toke
         ->assertInertia(fn (Assert $page) => $page
             ->component('campaigns/survey')
             ->where('unavailable', 'invalid')
+            ->where('token', null)
             ->where('company', null)
             ->where('instruments', []));
 })->with(['another-token', str_repeat('a', 64)]);

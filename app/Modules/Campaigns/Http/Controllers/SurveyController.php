@@ -34,6 +34,7 @@ final class SurveyController extends Controller
             $survey = $openSurvey->handle($token);
         } catch (SurveyUnavailable $unavailable) {
             return Inertia::render('campaigns/survey', [
+                'token' => null,
                 'unavailable' => $unavailable->reason->value,
                 'company' => $unavailable->company,
                 'closesOn' => null,
@@ -56,6 +57,8 @@ final class SurveyController extends Controller
         }
 
         return Inertia::render('campaigns/survey', [
+            // Already in the URL: the page posts each guide back to it.
+            'token' => $token,
             'unavailable' => null,
             'company' => $survey->company,
             'closesOn' => $survey->campaign->closes_on === null ? null : CampaignClock::day($survey->campaign->closes_on, isDate: true),
@@ -75,8 +78,6 @@ final class SurveyController extends Controller
         } catch (SurveyUnavailable) {
             return redirect()->route('survey.show', $token);
         }
-
-        Inertia::flash('submitted', $instrument);
 
         return redirect()->route('survey.show', $token);
     }

@@ -1,14 +1,13 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import CampaignFacts from '@/components/campaigns/campaign-facts';
 import CampaignStatusBadge from '@/components/campaigns/campaign-status-badge';
-import DeleteDraftDialog from '@/components/campaigns/delete-draft-dialog';
+import DraftActions from '@/components/campaigns/draft-actions';
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
 import LaunchForm from '@/components/campaigns/launch-form';
 import SampleTable from '@/components/campaigns/sample-table';
 import PageHeader from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { index, redraw } from '@/routes/tenant/campaigns';
+import { index } from '@/routes/tenant/campaigns';
 import type {
     CampaignDetail,
     InstrumentProgress,
@@ -54,25 +53,11 @@ export default function Campaign({
                 <CampaignFacts campaign={campaign} />
                 {!isDraft && <InstrumentsProgress instruments={instruments} />}
                 {isDraft && canManage && (
-                    <div className="flex flex-wrap items-center gap-3">
-                        {campaign.population === 'sample' && (
-                            <Form {...redraw.form([tenantSlug, campaign.id])}>
-                                {({ processing }) => (
-                                    <Button
-                                        type="submit"
-                                        variant="outline"
-                                        disabled={processing}
-                                    >
-                                        Volver a sortear
-                                    </Button>
-                                )}
-                            </Form>
-                        )}
-                        <DeleteDraftDialog
-                            tenantSlug={tenantSlug}
-                            campaignId={campaign.id}
-                        />
-                    </div>
+                    <DraftActions
+                        tenantSlug={tenantSlug}
+                        campaignId={campaign.id}
+                        sampled={campaign.population === 'sample'}
+                    />
                 )}
                 {launch !== null && (
                     <LaunchForm
