@@ -326,6 +326,11 @@ strong {
     line-height: 6px;
 }
 
+.risk-bar {
+    border-radius: 999px;
+    margin: 0 0 4px;
+}
+
 .legend {
     color: #14211f;
     font-size: 13px;

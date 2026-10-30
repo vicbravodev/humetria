@@ -7,6 +7,7 @@ namespace App\Modules\Campaigns\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
+use App\Modules\Campaigns\Events\CampaignClosed;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Support\InstrumentTally;
@@ -46,5 +47,6 @@ final readonly class CloseCampaign
 
         Log::info('campaign.closed', ['campaign_id' => $campaign->id, 'automatic' => $automatic]);
         $this->recordAudit->handle('campaign.closed', $campaign, $counts);
+        event(new CampaignClosed($campaign->tenant_id, $campaign->id));
     }
 }
