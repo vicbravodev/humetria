@@ -109,3 +109,11 @@ export type CampaignPerson = {
     inSample: boolean;
     guides: ParticipantGuide[];
 };
+
+/** A person who can be chosen for a Guía I campaign. */
+export type RosterPerson = {
+    id: string;
+    name: string;
+    area: string;
+    reachable: boolean;
+};

@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
 import CampaignCard from '@/components/campaigns/campaign-card';
 import ClosedCampaignsTable from '@/components/campaigns/closed-campaigns-table';
@@ -6,6 +6,8 @@ import NewEvaluationDialog from '@/components/campaigns/new-evaluation-dialog';
 import WorkCenterEvaluationsTable from '@/components/campaigns/work-center-evaluations-table';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { create as createTrauma } from '@/routes/tenant/campaigns/trauma';
 import type { CampaignSummary, WorkCenterEvaluation } from '@/types';
 
 export default function Campaigns({
@@ -28,10 +30,17 @@ export default function Campaigns({
             <div className="flex flex-col gap-10 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader caption="Cumplimiento" title="NOM-035">
                     {canManage && (
-                        <NewEvaluationDialog
-                            tenantSlug={tenantSlug}
-                            workCenters={workCenters}
-                        />
+                        <div className="flex flex-wrap gap-3">
+                            <Button variant="outline" asChild>
+                                <Link href={createTrauma(tenantSlug)}>
+                                    Guía I por acontecimiento
+                                </Link>
+                            </Button>
+                            <NewEvaluationDialog
+                                tenantSlug={tenantSlug}
+                                workCenters={workCenters}
+                            />
+                        </div>
                     )}
                 </PageHeader>
                 <section className="flex flex-col gap-4">

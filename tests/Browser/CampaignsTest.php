@@ -157,3 +157,37 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
 
     expect($campaign->refresh()->status->value)->toBe('closed');
 });
+
+it('applies Guía I to the people of an event', function (bool $dark, bool $mobile): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 3)->values();
+    $people[0]->update(['name' => 'Ana López']);
+
+    visitPage('campaigns/trauma', "/admin/acme/campaigns/trauma?work_center={$plant->id}", $dark, $mobile)
+        ->assertSee('trayecto directo')
+        ->assertSee('Ana López');
+})->with($looks);
+
+it('sends Guía I to the people ticked, from the NOM-035 page', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 3)->values();
+    $people[0]->update(['name' => 'Ana López']);
+
+    visit('/admin/acme/campaigns')
+        ->click('Guía I por acontecimiento')
+        ->click('#trauma-work-center')
+        ->click('[role="option"]:has-text("Planta Norte")')
+        ->assertSee('Ana López')
+        ->click('Ana López')
+        ->assertSee('(1 elegidas)')
+        ->click('Enviar Guía I')
+        ->assertSee('Guía I enviada a las personas elegidas.')
+        ->assertSee('Guía I por acontecimiento')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->sole()->employee_id)->toBe($people[0]->id);
+});
