@@ -182,3 +182,17 @@ it('limits how often a guide can be sent', function (): void {
 
     submitGuide('nom035.guide-iii', [], 'guess-21')->assertTooManyRequests();
 });
+
+it('locks the person and reads the campaign under a shared lock before taking a guide', function (): void {
+    $queries = [];
+    Illuminate\Support\Facades\DB::listen(function ($query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
+
+    submitGuide('nom035.guide-i', guideOneAnswers())->assertSessionHasNoErrors();
+
+    // A second submission of the same guide waits on the person's row and then finds it answered; a close waits on
+    // the campaign's row, so nothing is taken after it closes.
+    expect(collect($queries)->contains(fn (string $sql): bool => str_contains($sql, 'from "campaign_participants"') && str_ends_with($sql, 'for update')))->toBeTrue()
+        ->and(collect($queries)->contains(fn (string $sql): bool => str_contains($sql, 'from "campaigns"') && str_ends_with($sql, 'for share')))->toBeTrue();
+});

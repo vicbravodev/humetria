@@ -9,6 +9,7 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Support\Facades\Context;
+use Throwable;
 
 /**
  * Closes, in every company, the evaluations whose last day is over in the display time zone. Links already stop
@@ -28,14 +29,22 @@ final readonly class CloseExpiredCampaigns
             ->where('closes_on', '<', CampaignClock::today()->format('Y-m-d'))
             ->get(['id', 'tenant_id']);
 
+        $closed = 0;
+
         foreach ($expired as $campaign) {
-            // Each in its own company, as the system: no person closed it.
-            Context::scope(function () use ($campaign): void {
-                $this->companies->enter($campaign->tenant_id);
-                $this->closeCampaign->handle(Campaign::query()->findOrFail($campaign->id), automatic: true);
-            }, ['user_id' => null]);
+            try {
+                // Each in its own company, as the system: no person closed it.
+                Context::scope(function () use ($campaign): void {
+                    $this->companies->enter($campaign->tenant_id);
+                    $this->closeCampaign->handle(Campaign::query()->findOrFail($campaign->id), automatic: true);
+                }, ['user_id' => null]);
+                $closed++;
+            } catch (Throwable $failure) {
+                // One company's failure never keeps the others open; the next hour tries it again.
+                report($failure);
+            }
         }
 
-        return $expired->count();
+        return $closed;
     }
 }

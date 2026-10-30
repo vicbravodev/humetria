@@ -213,3 +213,24 @@ it('launches only a draft, and only for those who manage campaigns', function ()
     launch($this->tenant, $draft, memberOf($this->tenant, TenantRole::Viewer))->assertForbidden();
     launch($this->tenant, Campaign::factory()->create(), $this->hr)->assertNotFound();
 });
+
+it('launches nothing twice when another request launches it between the check and the lock', function (): void {
+    staffOf($this->tenant, $this->plant, 16);
+    $campaign = draftFor($this->tenant, $this->plant, $this->hr);
+    $raced = false;
+
+    // The controller reads the draft; before the launch locks it, another tab (or a double click) launches it.
+    Illuminate\Support\Facades\Event::listen('eloquent.retrieved: '.Campaign::class, function () use ($campaign, &$raced): void {
+        if (! $raced) {
+            $raced = true;
+            Illuminate\Support\Facades\DB::table('campaigns')->where('id', $campaign->id)->update(['status' => 'active', 'launched_at' => now(), 'closes_on' => '2026-11-30']);
+        }
+    });
+
+    launch($this->tenant, $campaign, $this->hr)->assertStatus(409);
+
+    expect(Participant::query()->withoutGlobalScopes()->count())->toBe(0)
+        ->and(AuditEntry::query()->where('event', 'campaign.launched')->count())->toBe(0)
+        ->and($campaign->refresh()->closes_on?->toDateString())->toBe('2026-11-30');
+    Notification::assertNothingSent();
+});

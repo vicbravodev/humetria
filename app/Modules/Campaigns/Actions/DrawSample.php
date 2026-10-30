@@ -30,7 +30,7 @@ final readonly class DrawSample
 
     public function handle(Campaign $campaign): void
     {
-        if ($campaign->status !== CampaignStatus::Draft || $campaign->population !== Population::Sample) {
+        if ($campaign->population !== Population::Sample) {
             throw new LogicException('Only the draft of a sampled evaluation is drawn.');
         }
 
@@ -48,6 +48,8 @@ final readonly class DrawSample
         }
 
         DB::transaction(function () use ($campaign, $people, $size, $quotas, $drawn): void {
+            // Under lock: a launch racing this redraw either sees the new draw or this one sees it launched.
+            $campaign = Campaign::lockIn($campaign, CampaignStatus::Draft);
             $campaign->participants()->delete();
             $campaign->update(['workers' => count($people), 'sample_size' => $size, 'quotas' => $quotas]);
             $now = now();

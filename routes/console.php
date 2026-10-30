@@ -15,4 +15,4 @@ Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $clo
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
 })->purpose('Close the evaluations whose last day is over');
 
-Schedule::command('campaigns:close-expired')->hourly();
+Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();

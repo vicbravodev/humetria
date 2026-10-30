@@ -185,3 +185,22 @@ it('sends guests to the login', function (): void {
     $this->get(route('tenant.campaigns.index', $this->tenant))->assertRedirect(route('login'));
     $this->post(route('tenant.campaigns.store', $this->tenant), ['work_center_id' => $this->plant->id])->assertRedirect(route('login'));
 });
+
+it('redraws or deletes nothing once the draft was launched by another request', function (string $method, string $route): void {
+    staffOf($this->tenant, $this->plant, 60);
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.store', $this->tenant), ['work_center_id' => $this->plant->id, 'population' => 'sample']);
+    $campaign = storedCampaign();
+    $raced = false;
+
+    Illuminate\Support\Facades\Event::listen('eloquent.retrieved: '.Campaign::class, function () use ($campaign, &$raced): void {
+        if (! $raced) {
+            $raced = true;
+            Illuminate\Support\Facades\DB::table('campaigns')->where('id', $campaign->id)->update(['status' => 'active', 'launched_at' => now(), 'closes_on' => now()->addWeek()->toDateString()]);
+        }
+    });
+
+    $this->actingAs($this->hr)->{$method}(route($route, [$this->tenant, $campaign->id]))->assertStatus(409);
+
+    expect(Campaign::query()->withoutGlobalScopes()->count())->toBe(1)
+        ->and(sampledParticipants($campaign))->toHaveCount(53);
+})->with([['post', 'tenant.campaigns.redraw'], ['delete', 'tenant.campaigns.destroy']]);

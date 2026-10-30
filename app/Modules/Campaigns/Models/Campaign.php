@@ -8,6 +8,7 @@ use App\Concerns\BelongsToCurrentTenant;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
+use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use Carbon\CarbonImmutable;
 use Database\Factories\Campaigns\CampaignFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -44,6 +45,23 @@ final class Campaign extends Model
 {
     /** @use HasFactory<CampaignFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+
+    /**
+     * Re-reads the campaign under lock, inside the caller's transaction, so a state checked on a copy read earlier
+     * cannot have changed meanwhile: two launches, a redraw racing a launch, or two closes, never both pass.
+     *
+     * @throws CampaignStateChanged when it is no longer in `$status`.
+     */
+    public static function lockIn(self $campaign, CampaignStatus $status): self
+    {
+        $locked = self::query()->lockForUpdate()->findOrFail($campaign->id);
+
+        if ($locked->status !== $status) {
+            throw new CampaignStateChanged;
+        }
+
+        return $locked;
+    }
 
     /**
      * @return HasMany<Participant, $this>

@@ -7,6 +7,7 @@ namespace App\Modules\Campaigns\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
+use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Exceptions\DraftOutdated;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
@@ -20,7 +21,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use LogicException;
 
 /**
  * Launches a NOM-035 evaluation: everyone active in the work center takes Guía I, and Guía II or, with Guía III,
@@ -41,18 +41,17 @@ final readonly class LaunchCampaign
 
     /**
      * @throws ValidationException when the roster changed since the draft.
+     * @throws CampaignStateChanged when another request launched or deleted it meanwhile.
      */
     public function handle(Campaign $campaign, CarbonImmutable $closesOn): void
     {
-        if ($campaign->status !== CampaignStatus::Draft) {
-            throw new LogicException('Only a draft is launched.');
-        }
-
-        $people = $this->roster->activeIn($campaign->work_center_id);
-        $this->assertDraftStillHolds($campaign, $people);
         $tradeName = $this->companies->current()->tradeName;
 
-        DB::transaction(function () use ($campaign, $people, $closesOn, $tradeName): void {
+        DB::transaction(function () use ($campaign, $closesOn, $tradeName): void {
+            // Under lock: a second launch (a double click, another tab) waits here and then finds it launched.
+            $campaign = Campaign::lockIn($campaign, CampaignStatus::Draft);
+            $people = $this->roster->activeIn($campaign->work_center_id);
+            $this->assertDraftStillHolds($campaign, $people);
             $campaign->update(['status' => CampaignStatus::Active, 'launched_at' => now(), 'closes_on' => $closesOn, 'workers' => count($people)]);
             $sampled = array_flip($this->sampledIds($campaign));
             $invited = 0;

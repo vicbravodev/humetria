@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Actions;
 
+use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Support\CampaignClock;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +21,13 @@ final class ExtendCampaign
      * @throws ValidationException when the new last day is not after the current one.
      */
     public function handle(Campaign $campaign, CarbonImmutable $closesOn): void
+    {
+        DB::transaction(function () use ($campaign, $closesOn): void {
+            $this->extend(Campaign::lockIn($campaign, CampaignStatus::Active), $closesOn);
+        });
+    }
+
+    private function extend(Campaign $campaign, CarbonImmutable $closesOn): void
     {
         $current = $campaign->closes_on;
 

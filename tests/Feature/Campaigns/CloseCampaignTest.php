@@ -116,7 +116,43 @@ it('runs the closing of expired evaluations every hour', function (): void {
     $events = collect(resolve(Schedule::class)->events())->filter(fn ($event): bool => str_contains((string) $event->command, 'campaigns:close-expired'));
 
     expect($events)->toHaveCount(1)
-        ->and($events->first()->expression)->toBe('0 * * * *');
+        ->and($events->first()->expression)->toBe('0 * * * *')
+        ->and($events->first()->onOneServer)->toBeTrue()
+        ->and($events->first()->withoutOverlapping)->toBeTrue();
 
     $this->artisan('campaigns:close-expired')->assertSuccessful();
+});
+
+it('closes nothing twice when another request closes it between the check and the lock', function (): void {
+    $raced = false;
+
+    Illuminate\Support\Facades\Event::listen('eloquent.retrieved: '.Campaign::class, function () use (&$raced): void {
+        if (! $raced) {
+            $raced = true;
+            Illuminate\Support\Facades\DB::table('campaigns')->where('id', $this->campaign->id)->update(['status' => 'closed', 'closed_at' => now()]);
+        }
+    });
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]))->assertStatus(409);
+
+    expect(AuditEntry::query()->where('event', 'campaign.closed')->count())->toBe(0);
+});
+
+it('keeps closing the other companies\' evaluations when one fails', function (): void {
+    $broken = Campaign::factory()->active('2026-11-01')->create();
+    $fine = Campaign::factory()->active('2026-11-01')->create();
+    $failed = false;
+
+    // The first one to close fails (say, the database hiccups); the next must still close.
+    Illuminate\Support\Facades\Event::listen('eloquent.updating: '.Campaign::class, function (Campaign $campaign) use ($broken, &$failed): void {
+        if ($campaign->id === $broken->id && ! $failed) {
+            $failed = true;
+
+            throw new RuntimeException('Database hiccup');
+        }
+    });
+
+    expect(resolve(CloseExpiredCampaigns::class)->handle())->toBe(1)
+        ->and($fine->refresh()->status)->toBe(CampaignStatus::Closed)
+        ->and($broken->refresh()->status)->toBe(CampaignStatus::Active);
 });

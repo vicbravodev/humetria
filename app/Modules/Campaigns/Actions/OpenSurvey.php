@@ -35,7 +35,8 @@ final readonly class OpenSurvey
         }
 
         $company = $this->companies->enter($participant->tenant_id);
-        $campaign = $participant->campaign()->firstOrFail();
+        // Sending an answer holds the campaign with a shared lock, so closing it waits until the answer is in.
+        $campaign = ($forUpdate ? $participant->campaign()->sharedLock() : $participant->campaign())->firstOrFail();
 
         if ($company->blocked) {
             throw new SurveyUnavailable(SurveyUnavailableReason::Suspended, $company->tradeName);
