@@ -69,7 +69,12 @@ export default function Results({
                         levels={levels}
                     />
                 )}
-                {trauma !== null && <TraumaSummary counts={trauma} />}
+                {trauma !== null && (
+                    <TraumaSummary
+                        url={[tenantSlug, campaign.id]}
+                        counts={trauma}
+                    />
+                )}
             </div>
         </>
     );

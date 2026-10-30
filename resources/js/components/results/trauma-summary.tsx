@@ -1,7 +1,16 @@
+import { Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { screenings } from '@/routes/tenant/campaigns';
 import type { ScreeningCounts } from '@/types';
 
-/** The Guía I of the campaign, counted. Only for those who channel people to care (num. 5.5). */
-export default function TraumaSummary({ counts }: { counts: ScreeningCounts }) {
+/** The Guía I of the campaign, counted, and the way to who needs care. Only for those who channel people (num. 5.5). */
+export default function TraumaSummary({
+    url,
+    counts,
+}: {
+    url: Parameters<typeof screenings>[0];
+    counts: ScreeningCounts;
+}) {
     return (
         <section className="grid gap-3 rounded-xl border bg-card p-6">
             <h2 className="text-xl font-semibold">
@@ -25,6 +34,9 @@ export default function TraumaSummary({ counts }: { counts: ScreeningCounts }) {
                     </dd>
                 </div>
             </dl>
+            <Button asChild variant="outline" className="w-fit">
+                <Link href={screenings(url)}>Ver quiénes la requieren</Link>
+            </Button>
         </section>
     );
 }

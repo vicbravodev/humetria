@@ -356,3 +356,17 @@ it('narrows the results to one area, and reaches them from the evaluation', func
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('lists who requires a clinical assessment after their Guía I, reached from the results', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    $person->update(['name' => 'Ana López']);
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver quiénes la requieren'))
+        ->assertSee('Personas que requieren valoración clínica')
+        ->assertSee('1 de 1 personas')
+        ->assertSee('Ana López');
+})->with($looks);

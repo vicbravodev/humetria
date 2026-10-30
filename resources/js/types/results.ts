@@ -78,3 +78,11 @@ export type DistributionRow = {
     answered?: number;
     levels: LevelCounts;
 };
+
+/** A person whose Guía I requires a clinical assessment (num. 5.5). */
+export type ScreenedPerson = {
+    id: string;
+    name: string;
+    area: string;
+    answeredOn: string;
+};
