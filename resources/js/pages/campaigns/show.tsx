@@ -6,6 +6,7 @@ import DraftActions from '@/components/campaigns/draft-actions';
 import CampaignFollowUp from '@/components/campaigns/campaign-follow-up';
 import LaunchForm from '@/components/campaigns/launch-form';
 import SampleTable from '@/components/campaigns/sample-table';
+import ConsolePagination from '@/components/console-pagination';
 import PageHeader from '@/components/page-header';
 import { index } from '@/routes/tenant/campaigns';
 import { peoplePage } from '@/lib/campaigns';
@@ -36,7 +37,7 @@ export default function Campaign({
     people: Paginated<CampaignPerson> | null;
     standings: StandingCount[] | null;
     filters: PeopleFilters;
-    sample: SampledPerson[] | null;
+    sample: Paginated<SampledPerson> | null;
     launch: { min: string; suggested: string } | null;
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
@@ -95,9 +96,15 @@ export default function Campaign({
                 {sample !== null && (
                     <section className="flex flex-col gap-4">
                         <h2 className="text-xl leading-7 font-semibold">
-                            Muestra sorteada ({sample.length})
+                            Muestra sorteada ({sample.total})
                         </h2>
-                        <SampleTable people={sample} />
+                        <SampleTable people={sample.data} />
+                        <ConsolePagination
+                            page={sample}
+                            label="Páginas de la muestra"
+                            previous="Anteriores"
+                            next="Siguientes"
+                        />
                     </section>
                 )}
             </div>

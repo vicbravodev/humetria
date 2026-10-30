@@ -19,8 +19,10 @@ use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -176,19 +178,20 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return list<array<string, string>>
+     * Who the draw put in the sample, by name, a page at a time.
+     *
+     * @return LengthAwarePaginator<int, array{id: string, name: string, area: string, gender: string}>
      */
-    private function sample(Campaign $campaign): array
+    private function sample(Campaign $campaign): LengthAwarePaginator
     {
-        $people = $this->roster->findMany(array_values($campaign->participants()->get(['employee_id'])->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        usort($people, fn (RosterEntry $a, RosterEntry $b): int => strcmp($a->name, $b->name));
+        $sampled = array_values($campaign->participants()->get(['employee_id'])->map(fn (Participant $participant): string => $participant->employee_id)->all());
 
-        return array_map(fn (RosterEntry $person): array => [
+        return $this->roster->page(new RosterQuery(employeeIds: $sampled), CampaignPeople::PER_PAGE)->through(fn (RosterEntry $person): array => [
             'id' => $person->id,
             'name' => $person->name,
             'area' => $person->areaName,
             'gender' => self::PERSON_GENDER[$person->gender] ?? $person->gender,
-        ], $people);
+        ]);
     }
 
     /**

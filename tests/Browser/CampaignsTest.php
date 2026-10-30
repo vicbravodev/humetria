@@ -49,7 +49,8 @@ it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobil
         ->assertSee('Planta Norte')
         ->assertSee('Borrador')
         ->assertSee('Muestra de 53: Mujeres 27 · Hombres 26')
-        ->assertSee('Muestra sorteada (53)');
+        ->assertSee('Muestra sorteada (53)')
+        ->assertSee('Página 1 de 3');
 })->with($looks);
 
 it('prepares an evaluation from the panel, reached from the sidebar', function (): void {

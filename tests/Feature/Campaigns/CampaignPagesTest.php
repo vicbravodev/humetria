@@ -128,8 +128,13 @@ it('shows a sampled draft with its quotas and who was drawn, to those who manage
                 ['gender' => 'female', 'label' => 'Mujeres', 'count' => 27],
                 ['gender' => 'male', 'label' => 'Hombres', 'count' => 26],
             ])
-            ->has('sample', 53)
-            ->has('sample.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'gender'])));
+            ->where('sample.total', 53)
+            ->has('sample.data', 25)
+            ->has('sample.data.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'gender'])));
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id, 'page' => 3]))
+        ->assertInertia(fn (Assert $page) => $page->has('sample.data', 3));
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
