@@ -170,6 +170,23 @@ it('invites someone who got an email after the launch, and gives back the guides
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 2);
 });
 
+it('keeps the link of someone who returned without an email: it works again, so they are not «Sin correo»', function (): void {
+    $people = staffOf($this->tenant, $this->plant, 18)->values();
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
+    $returned = participantOf($campaign, $people[1]);
+    $link = $returned->token_hash;
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $returned->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
+    $people[1]->update(['email' => null, 'mobile' => '5512345678']);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]));
+
+    $returned = participantOf($campaign, $people[1]);
+    expect(guidesOf($returned))->toBe(['nom035.guide-i' => 'pending', 'nom035.guide-ii' => 'pending'])
+        ->and($returned->token_hash)->toBe($link)
+        ->and($returned->invitation_status)->toBe(App\Modules\Campaigns\Enums\InvitationStatus::Sent);
+    Notification::assertNothingSent();
+});
+
 it('says when there is nobody to invite', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
 

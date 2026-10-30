@@ -14,8 +14,8 @@ use Illuminate\Support\Str;
 
 /**
  * Leaves the survey links of some people of a campaign to the queue: those with an email wait in a new batch of jobs,
- * one per block of people, dispatched once the surrounding transaction commits; those without one are marked so. The
- * request that does it sends nothing.
+ * one per block of people, dispatched once the surrounding transaction commits; those without one, and no link from
+ * before, are marked so. The request that does it sends nothing.
  */
 final class QueueSurveyInvitations
 {
@@ -30,8 +30,9 @@ final class QueueSurveyInvitations
         $reached = array_keys(array_filter($participants));
         $unreachable = array_keys(array_filter($participants, fn (bool $hasEmail): bool => ! $hasEmail));
 
+        // Who already holds a link keeps it: it works again as soon as they have a guide pending (someone who returned).
         if ($unreachable !== []) {
-            Participant::query()->whereKey($unreachable)->update(['invitation_status' => InvitationStatus::NoEmail, 'invitation_batch' => null]);
+            Participant::query()->whereKey($unreachable)->whereNull('token_hash')->update(['invitation_status' => InvitationStatus::NoEmail, 'invitation_batch' => null]);
         }
 
         if ($reached === []) {
