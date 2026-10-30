@@ -128,3 +128,11 @@ it('gives the ids of everyone a query matches, without paging', function (): voi
     expect(resolve(Roster::class)->matchingIds(new RosterQuery(activeInWorkCenter: $this->plant->id)))->toBe([$ana->id, $luis->id])
         ->and(resolve(Roster::class)->matchingIds(new RosterQuery(activeInWorkCenter: $this->plant->id, search: 'mora')))->toBe([$luis->id]);
 });
+
+it('searches ignoring accents and case', function (): void {
+    $jose = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'José Núñez']);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->matchingIds(new RosterQuery(employeeIds: [$jose->id], search: 'jose nunez')))->toBe([$jose->id])
+        ->and(resolve(Roster::class)->matchingIds(new RosterQuery(employeeIds: [$jose->id], search: 'NÚÑ')))->toBe([$jose->id]);
+});

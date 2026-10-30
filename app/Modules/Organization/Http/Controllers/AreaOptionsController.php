@@ -6,7 +6,6 @@ namespace App\Modules\Organization\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Models\Area;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 /**
@@ -23,11 +22,9 @@ final class AreaOptionsController extends Controller
     public function __invoke(Request $request): array
     {
         $search = $request->string('q')->trim()->limit(100, '')->toString();
-        // LIKE's own wildcards in what was typed are searched as themselves.
-        $like = '%'.addcslashes($search, '\\%_').'%';
 
         return array_values(Area::query()
-            ->when($search !== '', fn (Builder $query) => $query->where('name', 'ilike', $like))
+            ->matching(['name'], $search)
             ->orderBy('name')
             ->orderBy('id')
             ->limit(self::LIMIT)

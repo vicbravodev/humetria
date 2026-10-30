@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\SearchesText;
 use App\Modules\Organization\Enums\Gender;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class Employee extends Model
 {
     /** @use HasFactory<EmployeeFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, SearchesText;
 
     /**
      * @return BelongsTo<Area, $this>

@@ -47,3 +47,11 @@ it('is only for members of the company', function (): void {
         ->getJson(route('tenant.areas.options', $this->tenant))
         ->assertNotFound();
 });
+
+it('finds areas ignoring accents', function (): void {
+    Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción']);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->getJson(route('tenant.areas.options', [$this->tenant, 'q' => 'produccion']))
+        ->assertJsonPath('0.label', 'Producción');
+});

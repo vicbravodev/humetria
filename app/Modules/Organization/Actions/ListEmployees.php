@@ -20,18 +20,12 @@ final class ListEmployees
      */
     public function handle(EmployeeFilters $filters): LengthAwarePaginator
     {
-        // LIKE's own wildcards in what was typed are searched as themselves.
-        $like = '%'.addcslashes($filters->search, '\\%_').'%';
-
         return Employee::query()
             ->with('area:id,name')
             ->when($filters->active, fn (Builder $query) => $query->whereNull('deactivated_at'), fn (Builder $query) => $query->whereNotNull('deactivated_at'))
             ->when($filters->workCenterId !== null, fn (Builder $query) => $query->where('work_center_id', $filters->workCenterId))
             ->when($filters->areaId !== null, fn (Builder $query) => $query->where('area_id', $filters->areaId))
-            ->when($filters->search !== '', fn (Builder $query) => $query->where(fn (Builder $match) => $match
-                ->where('name', 'ilike', $like)
-                ->orWhere('email', 'ilike', $like)
-                ->orWhere('employee_number', 'ilike', $like)))
+            ->matching(['name', 'email', 'employee_number'], $filters->search)
             ->orderBy('name')
             ->orderBy('id')
             ->paginate(self::PER_PAGE)

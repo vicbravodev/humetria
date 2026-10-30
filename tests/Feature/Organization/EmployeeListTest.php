@@ -56,7 +56,7 @@ it('lists the active employees by name, with their center and area', function ()
             ->where('genders', [['value' => 'female', 'label' => 'Mujer'], ['value' => 'male', 'label' => 'Hombre'], ['value' => 'other', 'label' => 'Otro / prefiero no decir']]));
 });
 
-it('searches by name, email or employee number, ignoring case', function (string $q, array $names): void {
+it('searches by name, email or employee number, ignoring case and accents', function (string $q, array $names): void {
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'email' => 'ana@acme.mx', 'employee_number' => 'N-77']);
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Beto Díaz', 'email' => 'beto@otro.mx']);
 
@@ -69,6 +69,7 @@ it('searches by name, email or employee number, ignoring case', function (string
     'name' => ['LÓPEZ', ['Ana López']],
     'email' => [' acme.mx ', ['Ana López']],
     'number' => ['n-77', ['Ana López']],
+    'accents' => ['diaz', ['Beto Díaz']],
     'nothing' => ['zzz', []],
     'a wildcard is literal' => ['%', []],
 ]);

@@ -53,17 +53,11 @@ final class CompanyRoster implements Roster
      */
     private function matching(RosterQuery $query): Builder
     {
-        // LIKE's own wildcards in what was typed are searched as themselves.
-        $like = '%'.addcslashes($query->search, '\\%_').'%';
-
         return Employee::query()
             ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->whereKey($query->employeeIds))
             ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
             ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
-            ->when($query->search !== '', fn (Builder $employees) => $employees->where(fn (Builder $match) => $match
-                ->where('name', 'ilike', $like)
-                ->orWhere('email', 'ilike', $like)
-                ->orWhere('employee_number', 'ilike', $like)))
+            ->matching(['name', 'email', 'employee_number'], $query->search)
             ->orderBy('name')
             ->orderBy('id');
     }
