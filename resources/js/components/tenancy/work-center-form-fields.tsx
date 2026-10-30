@@ -2,6 +2,19 @@ import TenantField from '@/components/tenancy/tenant-field';
 import WorkCenterStateField from '@/components/tenancy/work-center-state-field';
 import type { MexicanStateOption, WorkCenterRow } from '@/types';
 
+/** The parts of a work center its form writes as text. */
+type TextKey = keyof Pick<
+    WorkCenterRow,
+    | 'name'
+    | 'street'
+    | 'exterior_number'
+    | 'interior_number'
+    | 'neighborhood'
+    | 'postal_code'
+    | 'municipality'
+    | 'main_activity'
+>;
+
 /** The fields of a work center: its name, its address in parts, as the NOM-035 report names it, and its activity. */
 export default function WorkCenterFormFields({
     errors,
@@ -12,7 +25,7 @@ export default function WorkCenterFormFields({
     states: MexicanStateOption[];
     workCenter?: WorkCenterRow;
 }) {
-    const field = (name: keyof WorkCenterRow) => ({
+    const field = (name: TextKey) => ({
         name,
         defaultValue: workCenter?.[name] ?? undefined,
         error: errors[name],

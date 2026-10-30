@@ -36,7 +36,7 @@ it('lists the work centers with their address, and the archived ones apart', fun
         ->assertDontSee('Bodega Vieja');
 
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
-        ->click('Archivados 1')
+        ->click('Archivados')
         ->assertPathIs('/admin/acme/work-centers'))
         ->assertSee('Bodega Vieja')
         ->assertDontSee('Planta Querétaro');
@@ -168,7 +168,7 @@ it('archives a work center after confirming, and restores it from the archive', 
         ->press('Archivar')
         ->assertSee('Centro de trabajo archivado.')
         ->assertSee('Aún no hay centros de trabajo')
-        ->click('Archivados 1')
+        ->click('Archivados')
         ->assertSee('Bodega Norte')
         ->click('@work-center-actions')->click('Restaurar')
         ->assertSee('Centro de trabajo restaurado.')
@@ -205,7 +205,8 @@ it('shows how many people each work center has and which NOM-035 guides apply', 
     Employee::factory()->count(16)->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
 
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile)
-        ->assertSee('16 personas')
-        ->assertSee('NOM-035: Guías I y II')
-        ->assertSee('Sin personal');
+        ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) dl', '16')
+        ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) dl', 'I y II')
+        ->assertSeeIn('article:has(h2:text-is("Planta Querétaro"))', 'Sin evaluar')
+        ->assertSeeIn('article:has(h2:text-is("Bodega Sur"))', 'Sin personal');
 })->with($looks);

@@ -100,6 +100,18 @@ export type WorkCenterRow = {
     employees: number;
     /** The NOM-035 guides that apply by that number: none with nobody, I up to 15, I and II up to 50, I and III above. */
     guides: ('I' | 'II' | 'III')[];
+    /** Its five largest areas, with their active people. */
+    areas: { name: string; employees: number }[];
+    /** How many other areas it has. */
+    more_areas: number;
+    /** Where it stands with its NOM-035 evaluations; null when it was never evaluated. */
+    evaluation: WorkCenterEvaluationStanding | null;
+};
+
+export type WorkCenterEvaluationStanding = {
+    state: 'draft' | 'running' | 'due' | 'overdue';
+    /** The running one's last day, or the day the next one is (or was) due; null for a draft. */
+    day: string | null;
 };
 
 export type MexicanStateOption = { value: string; label: string };

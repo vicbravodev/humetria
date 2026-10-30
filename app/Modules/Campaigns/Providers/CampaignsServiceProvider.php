@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Providers;
 
 use App\Modules\Campaigns\Contracts\CampaignRecords;
+use App\Modules\Campaigns\Contracts\EvaluationSchedule;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\Campaigns\Listeners\CancelOnDeactivation;
 use App\Modules\Campaigns\Listeners\CancelOnMove;
 use App\Modules\Campaigns\Support\CompanyCampaignRecords;
+use App\Modules\Campaigns\Support\CompanyEvaluationSchedule;
 use App\Modules\Campaigns\Support\CompanyOpenCampaigns;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
@@ -24,6 +26,7 @@ final class CampaignsServiceProvider extends ServiceProvider
     {
         $this->app->bind(OpenCampaigns::class, CompanyOpenCampaigns::class);
         $this->app->bind(CampaignRecords::class, CompanyCampaignRecords::class);
+        $this->app->bind(EvaluationSchedule::class, CompanyEvaluationSchedule::class);
     }
 
     public function boot(): void
