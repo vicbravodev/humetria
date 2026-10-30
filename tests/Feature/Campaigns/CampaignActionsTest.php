@@ -228,3 +228,20 @@ it('acts only on an active campaign, for those who manage campaigns, in their ow
     Campaign::query()->withoutGlobalScopes()->whereKey($campaign->id)->update(['status' => 'closed', 'closed_at' => now()]);
     $this->actingAs($this->hr)->post(route($route, $parameters($campaign)), $body)->assertStatus(409);
 })->with(['tenant.campaigns.resend', 'tenant.campaigns.participants.resend', 'tenant.campaigns.invite-missing', 'tenant.campaigns.replacements']);
+
+it('does nothing to an evaluation another request closed meanwhile', function (string $action): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, 'sample', fn () => staffOf($this->tenant, $this->plant, female: 40, male: 20));
+    staffOf($this->tenant, $this->plant, female: 1);
+    $stale = Campaign::query()->findOrFail($campaign->id);
+    Campaign::query()->whereKey($campaign->id)->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Closed, 'closed_at' => now()]);
+    $participants = Participant::query()->withoutGlobalScopes()->count();
+
+    expect(fn () => match ($action) {
+        'invite missing' => resolve(InviteMissing::class)->handle($stale),
+        'replacements' => resolve(DrawReplacements::class)->handle($stale, 'female', 1),
+        'resend' => resolve(ResendInvitations::class)->handle($stale),
+    })->toThrow(App\Modules\Campaigns\Exceptions\CampaignStateChanged::class);
+
+    Notification::assertNothingSent();
+    expect(Participant::query()->withoutGlobalScopes()->count())->toBe($participants);
+})->with(['invite missing', 'replacements', 'resend']);

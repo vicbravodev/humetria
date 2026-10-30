@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Actions;
 
+use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\InvitationStatus;
+use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Support\CampaignInstruments;
@@ -27,11 +29,16 @@ final readonly class InviteMissing
     /**
      * @return int how many people got a link.
      */
+    /**
+     * @throws CampaignStateChanged when another request closed it meanwhile.
+     */
     public function handle(Campaign $campaign): int
     {
-        $people = $this->roster->activeIn($campaign->work_center_id);
-        $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
-        $sent = DB::transaction(function () use ($campaign, $people, $participants): int {
+        $sent = DB::transaction(function () use ($campaign): int {
+            // Under lock: closing it meanwhile waits here, or this finds it closed.
+            $campaign = Campaign::lockIn($campaign, CampaignStatus::Active);
+            $people = $this->roster->activeIn($campaign->work_center_id);
+            $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
             $owed = [];
 
             foreach ($people as $person) {
