@@ -10,5 +10,7 @@ final readonly class WorkCenterSummary
         public string $id,
         public string $name,
         public bool $archived,
+        /** What is done there (actividad principal), as a card describes it. */
+        public string $mainActivity,
     ) {}
 }
