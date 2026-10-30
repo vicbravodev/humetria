@@ -1,18 +1,21 @@
 import { router } from '@inertiajs/react';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
+import ConsolePagination from '@/components/console-pagination';
 import Heading from '@/components/heading';
 import PasskeyItem from '@/components/passkeys/passkey-item';
 import PasskeysEmptyState from '@/components/passkeys/passkeys-empty-state';
 import PasskeyRegistration from '@/components/passkeys/passkey-register';
+import type { Paginated } from '@/types';
 import type { Passkey } from '@/types/auth';
 
 export type Props = {
     canManagePasskeys?: boolean | undefined;
-    passkeys?: Passkey[] | undefined;
+    passkeys?: Paginated<Passkey> | null | undefined;
 };
 
 export default function ManagePasskeys(props: Props) {
-    const passkeys = props.passkeys ?? [];
+    const page = props.passkeys ?? null;
+    const passkeys = page?.data ?? [];
 
     const handleDelete = (id: number, onError: () => void) => {
         router.delete(destroy.url(id), {
@@ -50,6 +53,15 @@ export default function ManagePasskeys(props: Props) {
                     <PasskeysEmptyState />
                 )}
             </div>
+
+            {page !== null && (
+                <ConsolePagination
+                    page={page}
+                    label="Páginas de llaves de acceso"
+                    previous="Más recientes"
+                    next="Más antiguas"
+                />
+            )}
 
             <PasskeyRegistration onSuccess={handleRegisterSuccess} />
         </div>
