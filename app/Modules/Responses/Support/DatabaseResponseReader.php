@@ -37,6 +37,30 @@ final class DatabaseResponseReader implements ResponseReader
         ];
     }
 
+    public function requiringCounts(array $campaignIds): array
+    {
+        if ($campaignIds === []) {
+            return [];
+        }
+
+        $counts = [];
+        $rows = TraumaScreening::query()
+            ->whereIn('campaign_id', $campaignIds)
+            ->where('requires_clinical_assessment', true)
+            ->groupBy('campaign_id')
+            ->toBase()
+            ->selectRaw('campaign_id, count(*)::int as requiring')
+            ->get();
+
+        foreach ($rows as $row) {
+            if (is_string($row->campaign_id) && is_int($row->requiring)) {
+                $counts[$row->campaign_id] = $row->requiring;
+            }
+        }
+
+        return $counts;
+    }
+
     public function requiringAssessment(string $campaignId, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
     {
         return TraumaScreening::query()
