@@ -1,5 +1,7 @@
 import type { Auth } from '@/types/auth';
+import type { EmployeeImportSummary } from '@/types/organization';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
+import type { FlashToast } from '@/types/ui';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -18,6 +20,11 @@ declare module '@inertiajs/core' {
             tenants: TenantSummary[];
             sidebarOpen: boolean;
             [key: string]: unknown;
+        };
+        flashDataType: {
+            toast?: FlashToast;
+            /** What a checked employees CSV would do, or its problems; see the import page. */
+            import?: EmployeeImportSummary;
         };
     }
 }

@@ -7,26 +7,72 @@ import {
 } from '@/lib/app-navigation';
 import { toUrl } from '@/lib/utils';
 
+const can = (manage_organization: boolean, manage_members: boolean) => ({
+    manage_organization,
+    manage_members,
+});
+const acme = (manageOrganization = true, manageMembers = true) => ({
+    slug: 'acme',
+    can: can(manageOrganization, manageMembers),
+});
+const titles = (tenant: ReturnType<typeof acme> | null) =>
+    mainNavItems(tenant, false).map((item) => item.title);
+
 describe('mainNavItems', () => {
     it("points Panel at the current company's panel", () => {
-        const [panel] = mainNavItems('acme', false);
+        const [panel] = mainNavItems(acme(), false);
 
         expect(panel?.title).toBe('Panel');
         expect(toUrl(panel?.href ?? '')).toBe('/admin/acme');
     });
 
-    it('points Panel at /admin when there is no company', () => {
+    it('points Panel at /admin when there is no company, with nothing else', () => {
         expect(toUrl(mainNavItems(null, false)[0]?.href ?? '')).toBe('/admin');
+        expect(titles(null)).toEqual(['Panel']);
     });
 
     it('leaves Panel out for a superadmin outside a company: /admin sends them to Empresas', () => {
         expect(mainNavItems(null, true)).toEqual([]);
     });
 
-    it('keeps Panel for a superadmin inside a company they belong to', () => {
-        expect(toUrl(mainNavItems('acme', true)[0]?.href ?? '')).toBe(
+    it('keeps the company pages for a superadmin inside a company they belong to', () => {
+        expect(
+            mainNavItems(acme(), true).map((item) => toUrl(item.href)),
+        ).toEqual([
             '/admin/acme',
-        );
+            '/admin/acme/work-centers',
+            '/admin/acme/employees',
+            '/admin/acme/members',
+        ]);
+    });
+
+    it("lists the company's pages the role may open", () => {
+        expect(titles(acme())).toEqual([
+            'Panel',
+            'Centros de trabajo',
+            'Empleados',
+            'Usuarios',
+        ]);
+        expect(titles(acme(true, false))).toEqual([
+            'Panel',
+            'Centros de trabajo',
+            'Empleados',
+        ]);
+        expect(titles(acme(false, false))).toEqual([
+            'Panel',
+            'Centros de trabajo',
+        ]);
+    });
+
+    it('points each page at the current company', () => {
+        expect(
+            mainNavItems(acme(), false).map((item) => toUrl(item.href)),
+        ).toEqual([
+            '/admin/acme',
+            '/admin/acme/work-centers',
+            '/admin/acme/employees',
+            '/admin/acme/members',
+        ]);
     });
 });
 

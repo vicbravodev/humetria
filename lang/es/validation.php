@@ -160,8 +160,25 @@ return [
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
     'custom' => [
+        'email' => [
+            'required_without' => 'Escribe un correo o un celular.',
+        ],
+        'gender' => [
+            'in' => 'Elige una opción de la lista.',
+            'required' => 'Elige una opción de la lista.',
+        ],
+        'mobile' => [
+            'regex' => 'Escribe un celular de 10 dígitos, por ejemplo 55 1234 5678.',
+        ],
+        'postal_code' => [
+            'regex' => 'Escribe un código postal de 5 dígitos.',
+        ],
         'profile' => [
             'required' => 'Elige para quién es Humetría.',
+        ],
+        'role' => [
+            'in' => 'Elige RH o Consulta.',
+            'required' => 'Elige RH o Consulta.',
         ],
         'rfc' => [
             'unique' => 'Ya hay una empresa con este RFC.',
@@ -169,6 +186,9 @@ return [
         'slug' => [
             'not_in' => 'Esa dirección está reservada. Elige otra.',
             'unique' => 'Esa dirección ya la usa otra empresa.',
+        ],
+        'state' => [
+            'in' => 'Elige un estado de la lista.',
         ],
         'tools' => [
             'required' => 'Elige al menos una herramienta.',
@@ -180,22 +200,36 @@ return [
 
     'attributes' => [
         'active_until' => 'fecha de vigencia',
+        'area' => 'área',
         'code' => 'código',
         'company' => 'empresa',
         'current_password' => 'contraseña actual',
         'email' => 'correo electrónico',
+        'employee_number' => 'número de empleado',
+        'exterior_number' => 'número exterior',
+        'gender' => 'género',
+        'interior_number' => 'número interior',
+        'job_title' => 'puesto',
         'legal_name' => 'razón social',
+        'main_activity' => 'actividad principal',
         'message' => 'mensaje',
+        'mobile' => 'celular',
+        'municipality' => 'municipio o alcaldía',
         'name' => 'nombre',
+        'neighborhood' => 'colonia',
         'password' => 'contraseña',
         'password_confirmation' => 'confirmación de contraseña',
+        'postal_code' => 'código postal',
         'profile' => 'perfil',
         'recovery_code' => 'código de recuperación',
         'rfc' => 'RFC',
         'slug' => 'dirección',
+        'state' => 'estado',
+        'street' => 'calle',
         'tools' => 'herramientas',
         'trade_name' => 'nombre comercial',
         'whatsapp' => 'WhatsApp',
+        'work_center_id' => 'centro de trabajo',
         'workforce' => 'número de trabajadores',
     ],
 ];

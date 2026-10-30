@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -39,6 +40,23 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     /** Platform role (Humetría staff): passes every ability, see AppServiceProvider. */
     public const string SUPERADMIN = 'superadmin';
+
+    private ?bool $superadmin = null;
+
+    /**
+     * Whether the user holds the platform's superadmin role. That Spatie role belongs to no company, so it is read
+     * past the current team: inside a company, hasRole() only sees that company's roles. Read once per instance.
+     */
+    public function isSuperadmin(): bool
+    {
+        return $this->superadmin ??= DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', self::SUPERADMIN)
+            ->whereNull('model_has_roles.tenant_id')
+            ->where('model_has_roles.model_type', $this->getMorphClass())
+            ->where('model_has_roles.model_id', $this->id)
+            ->exists();
+    }
 
     /**
      * Get the attributes that should be cast.

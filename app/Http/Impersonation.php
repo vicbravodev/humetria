@@ -80,7 +80,7 @@ final readonly class Impersonation
         $this->session->forget([self::SESSION_KEY, self::IMPERSONATED_KEY, self::PASSWORD_CONFIRMED_KEY]);
         $impersonator = User::query()->find($impersonatorId);
 
-        if ($impersonator === null || ! $impersonator->hasRole(User::SUPERADMIN)) {
+        if ($impersonator === null || ! $impersonator->isSuperadmin()) {
             $this->guard->logout();
             $this->session->invalidate();
             $this->session->regenerateToken();

@@ -5,7 +5,9 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto rounded-lg border bg-card"
+      // Focusable: a table wider than a phone scrolls inside this frame, and the keyboard must reach it too.
+      tabIndex={0}
+      className="relative w-full overflow-x-auto rounded-lg border bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <table
         data-slot="table"

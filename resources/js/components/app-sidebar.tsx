@@ -21,7 +21,7 @@ import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
     const { auth, tenant } = usePage().props;
-    const mainItems = mainNavItems(tenant?.slug ?? null, auth.isSuperadmin);
+    const mainItems = mainNavItems(tenant, auth.isSuperadmin);
 
     return (
         <Sidebar variant="inset" collapsible="icon">

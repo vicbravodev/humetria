@@ -44,7 +44,7 @@ final class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
-                'isSuperadmin' => $request->user()?->hasRole(User::SUPERADMIN) ?? false,
+                'isSuperadmin' => $request->user()?->isSuperadmin() ?? false,
             ],
             // The superadmin working as auth.user, for the banner that lets them out; null otherwise.
             'impersonator' => $this->impersonatorName(),

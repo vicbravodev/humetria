@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Providers;
 
 use App\Models\User;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\Tenancy\Support\CompanyWorkCenters;
+use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -14,6 +18,13 @@ use Illuminate\Support\ServiceProvider;
 
 final class TenancyServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        // ResolveTenant fills it in, everyone else reads it through the contract.
+        $this->app->bind(CurrentTenant::class, TenantContext::class);
+        $this->app->bind(WorkCenters::class, CompanyWorkCenters::class);
+    }
+
     public function boot(): void
     {
         // Only the superadmin manages companies, through Gate::before; everyone else gets a 404 that reveals nothing.

@@ -7,9 +7,9 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
-use Illuminate\Database\QueryException;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 
 it('allows a single owner per company', function (): void {
     $tenant = Tenant::factory()->create();
@@ -50,16 +50,12 @@ it('lets two companies each have an open invitation', function (): void {
     expect(TenantInvitation::factory()->for(Tenant::factory()->create())->create())->toBeInstanceOf(TenantInvitation::class);
 });
 
-it('rejects an unknown role', function (): void {
-    $tenant = Tenant::factory()->create();
+it('rejects a role that does not exist', function (): void {
     $user = User::factory()->create();
+    setPermissionsTeamId(Tenant::factory()->create()->id);
 
-    expect(fn () => DB::table('tenant_memberships')->insert([
-        'tenant_id' => $tenant->id,
-        'user_id' => $user->id,
-        'role' => 'boss',
-    ]))->toThrow(QueryException::class);
-});
+    $user->assignRole('boss');
+})->throws(RoleDoesNotExist::class);
 
 it('finds the owner and the open invitation of a company', function (): void {
     $tenant = Tenant::factory()->create();
@@ -70,7 +66,7 @@ it('finds the owner and the open invitation of a company', function (): void {
     expect($tenant->ownerMembership?->is($membership))->toBeTrue()
         ->and($tenant->openInvitation?->is($open))->toBeTrue()
         ->and($tenant->invitations)->toHaveCount(2)
-        ->and($membership->role)->toBe(TenantRole::Owner)
+        ->and(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole()))->toBe(TenantRole::Owner)
         ->and($membership->tenant->is($tenant))->toBeTrue()
         ->and($membership->user)->toBeInstanceOf(User::class)
         ->and($open->tenant->is($tenant))->toBeTrue();

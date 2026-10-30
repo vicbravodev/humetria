@@ -3,8 +3,11 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
@@ -58,6 +61,8 @@ function something()
 function superadmin(): User
 {
     $user = User::factory()->create();
+    // The platform role belongs to no company: assigned outside any team.
+    setPermissionsTeamId(null);
     $user->assignRole(User::SUPERADMIN);
 
     return $user;
@@ -74,6 +79,49 @@ function ownerOf(Tenant $tenant): User
     TenantMembership::factory()->for($tenant)->for($user)->create();
 
     return $user;
+}
+
+/**
+ * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
+ */
+function workIn(Tenant $tenant): void
+{
+    resolve(TenantContext::class)->set($tenant);
+}
+
+/** A new user who belongs to `$tenant` with `$role`. */
+function memberOf(Tenant $tenant, TenantRole $role): User
+{
+    $user = User::factory()->create();
+    TenantMembership::factory()->for($tenant)->for($user)->role($role)->create();
+
+    return $user;
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function workCenterForm(array $overrides = []): array
+{
+    return [
+        'name' => 'Planta Querétaro',
+        'street' => 'Av. 5 de Febrero',
+        'exterior_number' => '1200',
+        'interior_number' => 'Nave 3',
+        'neighborhood' => 'Zona Industrial Benito Juárez',
+        'postal_code' => '76120',
+        'municipality' => 'Querétaro',
+        'state' => 'QUE',
+        'main_activity' => 'Manufactura de autopartes',
+        ...$overrides,
+    ];
+}
+
+/** The work center as stored now, read past the company scope. */
+function reloaded(WorkCenter $workCenter): WorkCenter
+{
+    return WorkCenter::query()->withoutGlobalScopes()->findOrFail($workCenter->id);
 }
 
 /**

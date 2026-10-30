@@ -14,7 +14,10 @@ describe('paletteCommands', () => {
         const spies = actions();
         paletteCommands({
             isSuperadmin: false,
-            tenantSlug: 'acme',
+            tenant: {
+                slug: 'acme',
+                can: { manage_organization: true, manage_members: true },
+            },
             sidebarExpanded: true,
             impersonating: false,
             actions: spies,
@@ -32,7 +35,7 @@ describe('paletteCommands', () => {
         const labels = (isSuperadmin: boolean) =>
             paletteCommands({
                 isSuperadmin,
-                tenantSlug: null,
+                tenant: null,
                 sidebarExpanded: true,
                 impersonating: false,
                 actions: actions(),
@@ -49,7 +52,7 @@ describe('paletteCommands', () => {
         const label = (sidebarExpanded: boolean) =>
             paletteCommands({
                 isSuperadmin: false,
-                tenantSlug: null,
+                tenant: null,
                 sidebarExpanded,
                 impersonating: false,
                 actions: actions(),
@@ -63,7 +66,7 @@ describe('paletteCommands', () => {
         const spies = actions();
         const commands = paletteCommands({
             isSuperadmin: true,
-            tenantSlug: null,
+            tenant: null,
             sidebarExpanded: true,
             impersonating: false,
             actions: spies,
@@ -92,7 +95,7 @@ describe('paletteCommands', () => {
             const spies = actions();
             paletteCommands({
                 isSuperadmin: true,
-                tenantSlug: null,
+                tenant: null,
                 sidebarExpanded: true,
                 impersonating,
                 actions: spies,

@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\Log;
 
 mutates(AcceptInvitation::class);
@@ -41,7 +42,7 @@ it('removes the previous owner from the company when the new one accepts', funct
     $owner = $tenant->ownerMembership()->sole();
 
     expect($owner->user_id)->toBe($next->id)
-        ->and(TenantMembership::query()->where('tenant_id', $tenant->id)->where('role', TenantRole::Owner)->count())->toBe(1)
+        ->and(array_keys(resolve(CompanyRoles::class)->inCompany($tenant), TenantRole::Owner, true))->toBe([$next->id])
         ->and($previous->fresh())->not->toBeNull()
         ->and(TenantMembership::query()->where('tenant_id', $other->id)->sole()->user_id)->toBe($previous->id);
 });

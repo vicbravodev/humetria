@@ -18,7 +18,7 @@ final class HomeController extends Controller
 {
     public function __invoke(#[CurrentUser] User $user, ListUserTenants $listUserTenants): RedirectResponse|Response
     {
-        if ($user->hasRole(User::SUPERADMIN)) {
+        if ($user->isSuperadmin()) {
             return redirect()->route('companies.index');
         }
 

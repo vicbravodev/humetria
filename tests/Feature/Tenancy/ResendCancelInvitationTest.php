@@ -9,7 +9,7 @@ use App\Modules\Tenancy\Actions\ResendInvitation;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
-use App\Modules\Tenancy\Notifications\OwnerInvitation;
+use App\Modules\Tenancy\Notifications\InvitationEmail;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -27,7 +27,7 @@ beforeEach(function (): void {
 function sentToken(): string
 {
     $token = '';
-    Notification::assertSentOnDemand(OwnerInvitation::class, function (OwnerInvitation $notification) use (&$token): bool {
+    Notification::assertSentOnDemand(InvitationEmail::class, function (InvitationEmail $notification) use (&$token): bool {
         $token = basename($notification->toMail(new AnonymousNotifiable)->actionUrl ?? '');
 
         return true;
@@ -62,7 +62,7 @@ it('resends with a new link that works while the old one no longer does', functi
         ->and($invitation->invited_by)->toBe($admin->id)
         ->and(TenantInvitation::query()->count())->toBe(1);
 
-    Notification::assertSentOnDemandTimes(OwnerInvitation::class, 1);
+    Notification::assertSentOnDemandTimes(InvitationEmail::class, 1);
 
     auth()->logout();
     $this->get(route('invitations.show', 'old-token'))->assertInertia(fn ($page) => $page->where('state', 'invalid'));

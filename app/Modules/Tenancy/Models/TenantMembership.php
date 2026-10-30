@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Models;
 
 use App\Models\User;
-use App\Modules\Tenancy\Enums\TenantRole;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\TenantMembershipFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,16 +14,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A user's role inside a company.
+ * A user who belongs to a company. Their role there is kept by Spatie (see CompanyRoles).
  *
  * @property int $id
  * @property string $tenant_id
  * @property int $user_id
- * @property TenantRole $role
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'user_id', 'role'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'user_id'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantMembershipFactory::class)]
 final class TenantMembership extends Model
 {
@@ -45,15 +43,5 @@ final class TenantMembership extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'role' => TenantRole::class,
-        ];
     }
 }
