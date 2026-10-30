@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     complianceNavItems,
     mainNavItems,
+    navTrail,
     settingsEntryHref,
     settingsNavItems,
 } from '@/lib/app-navigation';
@@ -116,5 +117,35 @@ describe('settingsEntryHref', () => {
         expect(toUrl(settingsEntryHref(true))).toBe(
             '/admin/settings/appearance',
         );
+    });
+});
+
+describe('navTrail', () => {
+    const sections = [
+        { label: 'Acme', items: mainNavItems(acme(), false) },
+        { label: 'Cumplimiento', items: complianceNavItems(acme()) },
+    ];
+
+    it('names the section and the page on a page of the sidebar', () => {
+        expect(navTrail(sections, '/admin/acme/employees')).toEqual([
+            { title: 'Acme' },
+            { title: 'Empleados' },
+        ]);
+    });
+
+    it('links back to the sidebar page a deeper page hangs from', () => {
+        const [crumb, ...rest] = navTrail(sections, '/admin/acme/campaigns/7');
+
+        expect(crumb?.title).toBe('NOM-035');
+        expect(toUrl(crumb?.href ?? '')).toBe('/admin/acme/campaigns');
+        expect(rest).toEqual([]);
+    });
+
+    it('does not take the Panel for the parent of every company page', () => {
+        expect(navTrail(sections, '/admin/acme/unknown')).toEqual([]);
+    });
+
+    it('has nothing to say outside the sidebar', () => {
+        expect(navTrail(sections, '/admin/settings/profile')).toEqual([]);
     });
 });

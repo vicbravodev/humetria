@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,7 +23,7 @@ export function TenantSwitcher() {
         return (
             <div
                 data-test="tenant-switcher"
-                className="flex min-h-11 items-center px-3 group-data-[collapsible=icon]:sr-only group-data-[collapsible=icon]:min-h-0"
+                className="flex min-h-14 items-center gap-2.5 rounded-[10px] border border-sidebar-border bg-card px-2.5 group-data-[collapsible=icon]:min-h-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-1.5"
             >
                 <TenantName tenant={tenant} />
             </div>
@@ -35,13 +35,12 @@ export function TenantSwitcher() {
             <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                     size="lg"
-                    className="h-14 font-normal data-[state=open]:bg-sidebar-accent"
+                    className="h-14 gap-2.5 rounded-[10px] border border-sidebar-border bg-card px-2.5 font-normal group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent hover:border-input hover:bg-card data-[state=open]:border-input"
                     data-test="tenant-switcher"
                     tooltip={tenant.trade_name}
                 >
-                    <Building2 />
                     <TenantName tenant={tenant} />
-                    <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />
+                    <ChevronsUpDown className="ml-auto text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent

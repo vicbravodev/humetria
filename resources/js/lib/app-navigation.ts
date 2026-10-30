@@ -18,7 +18,8 @@ import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as workCenters } from '@/routes/tenant/work-centers';
-import type { CurrentTenant, NavItem } from '@/types';
+import { toUrl } from '@/lib/utils';
+import type { BreadcrumbItem, CurrentTenant, NavItem } from '@/types';
 
 /** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
 export type NavTenant = Pick<CurrentTenant, 'slug' | 'can'>;
@@ -105,3 +106,33 @@ export const settingsNavItems = (impersonating: boolean): NavItem[] =>
 /** Where "Configuración" in the user menu lands. */
 export const settingsEntryHref = (impersonating: boolean): NavItem['href'] =>
     impersonating ? editAppearance() : editProfile();
+
+export type NavSection = { label: string; items: NavItem[] };
+
+/**
+ * The top bar's trail when a page sets none: on a sidebar page, its section and its name ("Cumplimiento › NOM-035");
+ * below one, a link back to it. A page that opens other pages (Panel) is never taken for their parent.
+ */
+export const navTrail = (
+    sections: NavSection[],
+    path: string,
+): BreadcrumbItem[] => {
+    const all = sections.flatMap(({ label, items }) =>
+        items.map((item) => ({ label, item, url: toUrl(item.href) })),
+    );
+    const exact = all.find(({ url }) => url === path);
+
+    if (exact !== undefined) {
+        return [{ title: exact.label }, { title: exact.item.title }];
+    }
+
+    const parent = all.find(
+        ({ url }) =>
+            path.startsWith(`${url}/`) &&
+            !all.some((other) => other.url.startsWith(`${url}/`)),
+    );
+
+    return parent === undefined
+        ? []
+        : [{ title: parent.item.title, href: parent.item.href }];
+};
