@@ -38,14 +38,13 @@ it('shows the superadmin every company with its status', function (bool $dark, b
         ->assertSee('Empresas')
         ->assertSee('5 empresas')
         ->assertSee('Sin invitar')
-        ->assertSee('Ana Pérez · ana@acme.mx')
-        ->assertSee('Activo')
-        ->assertSee('Invitación enviada')
-        ->assertSee('Vence el')
+        ->assertSee('Ana Pérez')
+        ->assertSee('ana@acme.mx')
+        ->assertSee('Invitación enviada · vence el')
         ->assertSee('Vencida')
-        ->assertSee('Carla Soto · carla@acme.mx')
-        ->assertSee('Dora Luna · dora@acme.mx')
-        ->assertSee('Eva Mora · eva@acme.mx')
+        ->assertSee('carla@acme.mx')
+        ->assertSee('dora@acme.mx')
+        ->assertSee('eva@acme.mx')
         ->assertSee('Grupo Ejemplo')
         ->assertSee('Grupo Ejemplo S.A. de C.V.')
         ->assertSee('GEJ0101011A1')
@@ -349,7 +348,7 @@ it('invites the owner from the console', function (): void {
         ->type('email', 'ana@acme.mx')
         ->press('Enviar invitación')
         ->assertSee('Invitación enviada.')
-        ->assertSee('Ana Pérez · ana@acme.mx')
+        ->assertSee('ana@acme.mx')
         ->assertDontSee('Sin invitar')
         ->assertNoJavaScriptErrors();
 
@@ -361,12 +360,12 @@ it('cancels an invitation from the console', function (): void {
     $invitation = TenantInvitation::factory()->for(Tenant::factory()->create())->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
 
     visit('/admin/companies')
-        ->assertSee('Ana Pérez · ana@acme.mx')
+        ->assertSee('ana@acme.mx')
         ->click('Cancelar')
         ->assertSee('El enlace dejará de funcionar.')
         ->press('Cancelar invitación')
         ->assertSee('Invitación cancelada.')
-        ->assertDontSee('Ana Pérez · ana@acme.mx')
+        ->assertDontSee('ana@acme.mx')
         ->assertSee('Sin invitar')
         ->assertNoJavaScriptErrors();
 
@@ -463,3 +462,18 @@ it('passes the accessibility and CSP checks with the impersonation banner', func
         ->click('@tenant-actions')->click('Entrar como owner')
         ->assertSee('Estás viendo Humetría como'));
 })->with($looks);
+
+it('narrows the companies by name or RFC and by status', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->activeUntil(now()->addMonth())->create(['trade_name' => 'Autopartes Querétaro']);
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    visit('/admin/companies')
+        ->type('input[type="search"]', 'queretaro')
+        ->assertDontSee('Grupo Ejemplo')
+        ->assertSee('Autopartes Querétaro')
+        ->assertQueryStringHas('q', 'queretaro')
+        ->click('a[href*="status=trial"]')
+        ->assertSee('Ninguna empresa coincide')
+        ->assertNoJavaScriptErrors();
+});

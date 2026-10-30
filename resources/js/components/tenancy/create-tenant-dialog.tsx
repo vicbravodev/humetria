@@ -1,4 +1,5 @@
 import { Form } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import TenantFormFields from '@/components/tenancy/tenant-form-fields';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,10 @@ export default function CreateTenantDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>Dar de alta empresa</Button>
+                <Button>
+                    <Plus aria-hidden />
+                    Dar de alta empresa
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogTitle>Dar de alta empresa</DialogTitle>

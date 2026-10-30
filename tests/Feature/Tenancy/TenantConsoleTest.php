@@ -117,12 +117,12 @@ it('renders the empty console when there are no companies yet', function (): voi
             ->where('tenants.total', 0));
 });
 
-it('reads the page in seven queries: the superadmin role, the permission cache (permissions and their roles), the count, the page, the owners and the open invitations', function (): void {
+it('reads the page in eight queries: the superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page, the owners and the open invitations', function (): void {
     Tenant::factory()->count(30)->create();
     // A fresh instance, as a real request gets: its roles are not loaded yet.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(7);
+    $this->expectsDatabaseQueryCount(8);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -163,8 +163,61 @@ it('lists companies with a fixed number of queries', function (): void {
     Tenant::factory()->create();
     $superadmin = superadmin()->fresh();
 
-    // The superadmin role, the permission cache (permissions and their roles), the count, the page, the owners, their
-    // users and the open invitations.
-    $this->expectsDatabaseQueryCount(8);
+    // The superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page,
+    // the owners, their users and the open invitations.
+    $this->expectsDatabaseQueryCount(9);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
+});
+
+it('finds a company by its names or its RFC, without minding case nor accents', function (): void {
+    Tenant::factory()->create(['trade_name' => 'Autopartes Querétaro', 'legal_name' => 'APQ S.A. de C.V.', 'rfc' => 'APQ010101AAA']);
+    Tenant::factory()->create(['trade_name' => 'Beta', 'legal_name' => 'Grupo Logístico S.A.', 'rfc' => 'BET020202BBB']);
+    Tenant::factory()->create(['trade_name' => 'Gamma', 'legal_name' => 'Gamma S.A.', 'rfc' => 'GAM030303CCC']);
+
+    $names = fn (string $search): array => collect($this->actingAs(superadmin())
+        ->get(route('companies.index', ['q' => $search]))
+        ->inertiaProps('tenants.data'))->pluck('trade_name')->all();
+
+    expect($names('queretaro'))->toBe(['Autopartes Querétaro'])
+        ->and($names('LOGISTICO'))->toBe(['Beta'])
+        ->and($names('gam030'))->toBe(['Gamma']);
+});
+
+it('shows one status at a time, counts each within the search, and keeps both in the pages', function (): void {
+    $this->travelTo('2026-10-27 18:00 UTC');
+    Tenant::factory()->activeUntil(now()->addMonth())->create(['trade_name' => 'Activa']);
+    Tenant::factory()->inTrial(now()->subDays(3))->create(['trade_name' => 'Prueba']);
+    Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Vencida']);
+    Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS))->create(['trade_name' => 'Prueba terminada']);
+    Tenant::factory()->activeUntil(now()->addMonth())->deactivated()->create(['trade_name' => 'Desactivada']);
+    Tenant::factory()->create(['trade_name' => 'Sin iniciar']);
+
+    $view = fn (string $status): array => collect($this->actingAs(superadmin())
+        ->get(route('companies.index', ['status' => $status]))
+        ->inertiaProps('tenants.data'))->pluck('trade_name')->sort()->values()->all();
+
+    expect($view('active'))->toBe(['Activa'])
+        ->and($view('trial'))->toBe(['Prueba'])
+        ->and($view('expired'))->toBe(['Prueba terminada', 'Vencida'])
+        ->and($view('deactivated'))->toBe(['Desactivada'])
+        ->and($view('anything'))->toHaveCount(6);
+
+    $this->actingAs(superadmin())
+        ->get(route('companies.index', ['status' => 'trial', 'q' => 'prueba']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters', ['q' => 'prueba', 'status' => 'trial'])
+            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'deactivated' => 0])
+            ->where('tenants.first_page_url', fn (string $url): bool => str_contains($url, 'status=trial') && str_contains($url, 'q=prueba')));
+});
+
+it('counts the trials that end within the next seven days', function (): void {
+    $this->travelTo('2026-10-27 18:00 UTC');
+    Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS - 7))->create();
+    Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS - 1))->create();
+    Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS - 8))->create();
+    Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS))->create();
+
+    $this->actingAs(superadmin())
+        ->get(route('companies.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('trialsEndingSoon', 2));
 });

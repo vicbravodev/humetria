@@ -56,6 +56,11 @@ export type InvitationPage = { token: string; passwordRules: string } & (
     | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
 );
 
+/** The views of the console's companies. */
+export type TenantView = 'all' | 'active' | 'trial' | 'expired' | 'deactivated';
+
+export type TenantFilters = { q: string; status: TenantView };
+
 export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 
 /** The company a request is working in, shared on every page under /admin/{slug}. */
