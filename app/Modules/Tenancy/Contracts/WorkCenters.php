@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Contracts;
 
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * The current company's work centers, as other modules need them: to place people in one and to name it.
@@ -17,4 +18,11 @@ interface WorkCenters
      * @return list<WorkCenterSummary>
      */
     public function all(): array;
+
+    /**
+     * The current company's work centers in use (not archived), by name, a page at a time.
+     *
+     * @return LengthAwarePaginator<int, WorkCenterSummary>
+     */
+    public function activePage(int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator;
 }

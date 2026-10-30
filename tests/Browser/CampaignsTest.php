@@ -35,8 +35,25 @@ it('lists the work centers to evaluate before any evaluation', function (bool $d
         ->assertSee('No hay evaluaciones abiertas')
         ->assertSee('Planta Norte')
         ->assertSee('NOM-035: Guías I y II')
-        ->assertSee('Sin evaluar');
+        ->assertSee('Sin evaluar')
+        ->assertSee('Evaluar');
 })->with($looks);
+
+it('pages the evaluations and the work centers', function (): void {
+    $tenant = campaignsCompany();
+
+    foreach (range(1, 26) as $index) {
+        WorkCenter::factory()->for($tenant)->create(['name' => sprintf('Centro %02d', $index)]);
+    }
+
+    visit('/admin/acme/campaigns')
+        ->assertSee('Centro 25')
+        ->assertDontSee('Centro 26')
+        ->click('[aria-label="Páginas de centros de trabajo"] >> text=Siguientes')
+        ->assertSee('Centro 26')
+        ->assertQueryStringHas('centers', '2')
+        ->assertNoJavaScriptErrors();
+});
 
 it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
@@ -60,9 +77,8 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
     visit('/admin/acme')
         ->click('NOM-035')
         ->assertPathIs('/admin/acme/campaigns')
-        ->click('Nueva evaluación')
-        ->click('#evaluation-work-center')
-        ->click('[role="option"]:has-text("Planta Norte")')
+        ->click('button:has-text("Evaluar")')
+        ->assertSee('Evaluar Planta Norte')
         ->assertSee('¿Quién contesta la Guía III?')
         ->assertSee('Se sortean 53 de 60 personas')
         ->click('Una muestra representativa')

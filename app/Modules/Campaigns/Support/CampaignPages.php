@@ -34,6 +34,10 @@ final readonly class CampaignPages
 {
     private const array GENDER_LABELS = ['female' => 'Mujeres', 'male' => 'Hombres', 'other' => 'Otro'];
 
+    private const int OPEN_PER_PAGE = 12;
+
+    private const int CLOSED_PER_PAGE = 25;
+
     private const array PERSON_GENDER = ['female' => 'Mujer', 'male' => 'Hombre', 'other' => 'Otro'];
 
     public function __construct(
@@ -49,17 +53,25 @@ final readonly class CampaignPages
     ) {}
 
     /**
-     * @return array{campaigns: list<array<string, mixed>>, workCenters: list<array<string, mixed>>}
+     * Open and closed evaluations and the work centers in use, each paged on its own.
+     *
+     * @return array{open: LengthAwarePaginator<int, array<string, mixed>>, closed: LengthAwarePaginator<int, array<string, mixed>>, workCenters: LengthAwarePaginator<int, array<string, mixed>>}
      */
     public function index(): array
     {
-        $campaigns = Campaign::query()->orderByDesc('created_at')->get();
-        $tally = $this->tally->of(array_values($campaigns->map(fn (Campaign $campaign): string => $campaign->id)->all()));
+        $open = Campaign::query()->whereIn('status', [CampaignStatus::Draft, CampaignStatus::Active])->orderByDesc('created_at')->orderByDesc('id')
+            ->paginate(self::OPEN_PER_PAGE, pageName: 'open')->withQueryString();
+        $closed = Campaign::query()->where('status', CampaignStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')
+            ->paginate(self::CLOSED_PER_PAGE, pageName: 'closed')->withQueryString();
+        $ids = [...$open->getCollection()->modelKeys(), ...$closed->getCollection()->modelKeys()];
+        $tally = $this->tally->of(array_values(array_filter($ids, is_string(...))));
         $names = $this->workCenterNames();
+        $card = fn (Campaign $campaign): array => $this->card($campaign, $names, $tally[$campaign->id] ?? []);
 
         return [
-            'campaigns' => array_values($campaigns->map(fn (Campaign $campaign): array => $this->card($campaign, $names, $tally[$campaign->id] ?? []))->all()),
-            'workCenters' => $this->workCenterRows($campaigns),
+            'open' => $open->through($card),
+            'closed' => $closed->through($card),
+            'workCenters' => $this->workCenterRows(),
         ];
     }
 
@@ -241,24 +253,20 @@ final readonly class CampaignPages
     }
 
     /**
-     * @param  Collection<int, Campaign>  $campaigns
-     * @return list<array<string, mixed>>
+     * The work centers in use, a page at a time, each with its evaluations.
+     *
+     * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    private function workCenterRows(Collection $campaigns): array
+    private function workCenterRows(): LengthAwarePaginator
     {
+        $page = $this->workCenters->activePage(CampaignPeople::PER_PAGE, 'centers');
         $headcount = $this->headcount->byWorkCenter();
-        $evaluations = $campaigns->where('kind', CampaignKind::Nom035Evaluation);
-        $rows = [];
+        $evaluations = Campaign::query()
+            ->where('kind', CampaignKind::Nom035Evaluation)
+            ->whereIn('work_center_id', array_map(fn (WorkCenterSummary $workCenter): string => $workCenter->id, $page->items()))
+            ->get(['id', 'work_center_id', 'status', 'closed_at']);
 
-        foreach ($this->workCenters->all() as $workCenter) {
-            if ($workCenter->archived) {
-                continue;
-            }
-
-            $rows[] = $this->workCenterRow($workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id));
-        }
-
-        return $rows;
+        return $page->through(fn (WorkCenterSummary $workCenter): array => $this->workCenterRow($workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id)));
     }
 
     /**

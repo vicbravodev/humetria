@@ -71,7 +71,8 @@ it('lists open evaluations with their progress, and each work center with its la
         ->get(route('tenant.campaigns.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->component('campaigns/index')
-            ->where('campaigns.0', [
+            ->where('open.total', 1)
+            ->where('open.data.0', [
                 'id' => $open->id,
                 'workCenter' => 'Planta Norte',
                 'kind' => 'nom035_evaluation',
@@ -83,9 +84,11 @@ it('lists open evaluations with their progress, and each work center with its la
                 'closedOn' => null,
                 'progress' => ['completed' => 21, 'target' => 52, 'againstSample' => true],
             ])
-            ->where('campaigns.1.status', 'closed')
-            ->where('campaigns.1.closedOn', '20 oct 2024')
-            ->where('workCenters', [
+            ->where('closed.total', 1)
+            ->where('closed.data.0.status', 'closed')
+            ->where('closed.data.0.closedOn', '20 oct 2024')
+            ->where('workCenters.total', 2)
+            ->where('workCenters.data', [
                 [
                     'id' => $warehouse->id, 'name' => 'Almacén', 'workers' => 20, 'guides' => ['I', 'II'],
                     'lastEvaluatedOn' => '20 oct 2024', 'dueOn' => '20 oct 2026', 'overdue' => true,
@@ -107,9 +110,41 @@ it('measures a Guía II evaluation against everyone invited, and a draft not at 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('campaigns.0.progress', null)
-            ->where('campaigns.1.progress', ['completed' => 7, 'target' => 18, 'againstSample' => false]));
+            ->where('open.data.0.progress', null)
+            ->where('open.data.1.progress', ['completed' => 7, 'target' => 18, 'againstSample' => false]));
 });
+
+it('pages open and closed evaluations and the work centers, each on its own', function (): void {
+    foreach (range(1, 13) as $index) {
+        $center = WorkCenter::factory()->for($this->tenant)->create(['name' => sprintf('Centro %02d', $index)]);
+        Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+        Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+        Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+    }
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.index', [$this->tenant, 'open' => 2, 'closed' => 2, 'centers' => 1]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('open.total', 13)->has('open.data', 1)
+            ->where('closed.total', 26)->has('closed.data', 1)
+            ->where('workCenters.total', 14)->has('workCenters.data', 14)
+            ->where('workCenters.data.0.name', 'Centro 01'));
+});
+
+it('reads the evaluations page in a fixed number of queries', function (int $centers): void {
+    foreach (range(1, $centers) as $index) {
+        $center = WorkCenter::factory()->for($this->tenant)->create();
+        campaignWithAnswers($this->tenant, $center, 'nom035.guide-ii', 2, 1);
+        Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+    }
+    $this->actingAs($this->hr);
+    $url = route('tenant.campaigns.index', $this->tenant);
+    $this->get($url);
+
+    $this->expectsDatabaseQueryCount(16);
+
+    $this->get($url)->assertOk();
+})->with([2, 20]);
 
 it('shows a sampled draft with its quotas and who was drawn, to those who manage it only', function (): void {
     staffOf($this->tenant, $this->plant, female: 30, male: 30);
