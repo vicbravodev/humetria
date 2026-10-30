@@ -80,6 +80,7 @@ export default function CampaignFollowUp({
                         )}
                     </div>
                     <PeopleToolbar
+                        tenantSlug={tenantSlug}
                         url={show.url([tenantSlug, campaign.id])}
                         filters={people.filters}
                         standings={people.standings}

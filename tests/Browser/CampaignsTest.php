@@ -116,7 +116,7 @@ it('narrows who answered a guide and searches them by name', function (): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
     $people = staffOf($tenant, $plant, female: 30)->values();
-    $people[0]->update(['name' => 'Zoila Contreras']);
+    $people[0]->update(['name' => 'Zoila Contreras', 'area_id' => App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Calidad'])->id]);
     Illuminate\Support\Facades\Notification::fake();
     $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
     $campaign = Campaign::query()->withoutGlobalScopes()->sole();
@@ -132,10 +132,15 @@ it('narrows who answered a guide and searches them by name', function (): void {
         ->assertSee('Zoila Contreras')
         ->click('[aria-label="Situación"]')
         ->click('text=Todas (30)')
-        ->type('[aria-label="Buscar por nombre, correo o número"]', 'zoila')
+        ->click('#filter-area')
+        ->type('[role="combobox"][aria-controls="filter-area-options"]', 'cali')
+        ->assertSee('Calidad')
+        ->keys('[role="combobox"][aria-controls="filter-area-options"]', 'Enter')
+        ->assertQueryStringHas('area')
         ->assertSee('Zoila Contreras')
-        ->assertSee('Todas (30)')
+        ->type('[aria-label="Buscar por nombre, correo o número"]', 'zoila')
         ->assertQueryStringHas('q', 'zoila')
+        ->assertSee('Zoila Contreras')
         ->assertNoJavaScriptErrors();
 });
 

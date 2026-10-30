@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react';
+import Combobox from '@/components/humetria/combobox';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -9,17 +10,22 @@ import {
 } from '@/components/ui/select';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { peopleQuery } from '@/lib/campaigns';
+import { loadServerOptions } from '@/lib/server-options';
+import { options as areaOptions } from '@/routes/tenant/areas';
 import type { InstrumentProgress, PeopleFilters, StandingCount } from '@/types';
 
 const ALL_GUIDES = 'all';
+const ALL_AREAS = { value: '', label: 'Todas las áreas' };
 
-/** Narrows the people of a campaign: text in the name, email or number; where they stand; one guide. */
+/** Narrows the people of a campaign: text in the name, email or number; where they stand; one guide; one area. */
 export default function PeopleToolbar({
+    tenantSlug,
     url,
     filters,
     standings,
     instruments,
 }: {
+    tenantSlug: string;
     url: string;
     filters: PeopleFilters;
     standings: StandingCount[];
@@ -30,7 +36,7 @@ export default function PeopleToolbar({
     return (
         <div
             role="search"
-            className="grid gap-3 md:grid-cols-[1fr_14rem_12rem]"
+            className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_14rem_12rem_14rem]"
         >
             <div className="relative">
                 <Search
@@ -79,6 +85,25 @@ export default function PeopleToolbar({
                     ))}
                 </SelectContent>
             </Select>
+            <Combobox
+                id="filter-area"
+                name="area"
+                source={{
+                    initial: [ALL_AREAS],
+                    minLength: 1,
+                    load: (query, signal) =>
+                        loadServerOptions(
+                            areaOptions.url(tenantSlug),
+                            query,
+                            signal,
+                        ),
+                }}
+                defaultValue={filters.area ?? ALL_AREAS}
+                placeholder="Área"
+                onChange={(option) =>
+                    filter({ area: option.value === '' ? null : option })
+                }
+            />
         </div>
     );
 }
