@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -53,10 +54,15 @@ function appRoutes(): array
     return array_values(Route::getRoutes()->getRoutes());
 }
 
+/**
+ * Resolved the way the router runs them: groups expanded (and aliases, once the HTTP kernel registered them), so `auth` inside a middleware group
+ * (Horizon wraps its routes in a `horizon` group built from config/horizon.php) counts too.
+ */
 function requiresAuthentication(LaravelRoute $route): bool
 {
-    return collect($route->gatherMiddleware())
-        ->contains(fn (mixed $middleware): bool => is_string($middleware) && ($middleware === 'auth' || Str::startsWith($middleware, 'auth:')));
+    return collect(Route::gatherRouteMiddleware($route))
+        ->contains(fn (mixed $middleware): bool => is_string($middleware)
+            && (in_array($middleware, ['auth', Authenticate::class], true) || Str::startsWith($middleware, ['auth:', Authenticate::class.':'])));
 }
 
 test('every route has a name', function () {
