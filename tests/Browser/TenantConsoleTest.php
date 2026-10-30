@@ -91,6 +91,18 @@ it('links the console from the sidebar only for the superadmin', function (): vo
         ->assertMissing('a[href$="/admin/companies"]');
 });
 
+it('marks the sidebar as the console only for the superadmin outside a company', function (): void {
+    signInAsSuperadmin();
+
+    visit('/admin/companies')
+        ->assertSeeIn('[data-slot="sidebar-header"]', 'Consola');
+
+    $panel = signInToPanel();
+
+    visit($panel)
+        ->assertDontSeeIn('[data-slot="sidebar-header"]', 'Consola');
+});
+
 it('gives the superadmin no Panel outside a company: Empresas is where they start', function (): void {
     signInAsSuperadmin();
 

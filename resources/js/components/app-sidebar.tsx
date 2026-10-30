@@ -37,8 +37,14 @@ export function AppSidebar() {
                     prefetch
                     className="flex h-11 w-fit items-center rounded-md px-3 transition-[padding] duration-300 ease-drawer group-data-[collapsible=icon]:px-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
-                    <span className="contents group-data-[collapsible=icon]:hidden">
+                    <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                         <Logo className="h-7" />
+                        {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
+                        {auth.isSuperadmin && tenant === null && (
+                            <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-[13px] leading-[18px] font-medium text-warning-foreground">
+                                Consola
+                            </span>
+                        )}
                     </span>
                     <span className="hidden group-data-[collapsible=icon]:contents">
                         <Logo kind="symbol" className="h-7" />

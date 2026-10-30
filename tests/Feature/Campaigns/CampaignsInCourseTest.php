@@ -51,7 +51,8 @@ it('shares what is in course on every page of a company, in one query', function
         $campaignQueries += str_contains($query->sql, 'from "campaigns"') ? 1 : 0;
     });
 
-    $this->get(route('tenant.work-centers.index', $this->tenant))
+    // A page that reads no campaigns of its own: every campaign query here is the shared one.
+    $this->get(route('tenant.members.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('inCourse', ['count' => 1, 'daysLeft' => 11, 'elapsed' => 21]));
 
     expect($campaignQueries)->toBe(1);
