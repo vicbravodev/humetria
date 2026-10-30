@@ -88,3 +88,29 @@ it('refuses a suspended company with 423', function (): void {
 
     expect(reloaded($workCenter)->archived_at)->toBeNull();
 });
+
+it('keeps a work center with an open NOM-035 evaluation from being archived', function (string $status): void {
+    $tenant = Tenant::factory()->create();
+    $workCenter = WorkCenter::factory()->for($tenant)->create();
+    App\Modules\Campaigns\Models\Campaign::factory()->create([
+        'tenant_id' => $tenant->id,
+        'work_center_id' => $workCenter->id,
+        ...($status === 'active' ? ['status' => 'active', 'launched_at' => now(), 'closes_on' => now()->addWeek()->toDateString()] : []),
+    ]);
+
+    $this->actingAs(ownerOf($tenant))
+        ->post(route('tenant.work-centers.archive', [$tenant, $workCenter->id]))
+        ->assertSessionHasErrors(['work_center' => 'Este centro tiene una evaluación NOM-035 abierta. Ciérrala o elimina su borrador antes de archivarlo.']);
+
+    expect(reloaded($workCenter)->archived_at)->toBeNull();
+})->with(['draft', 'active']);
+
+it('archives a work center whose evaluations are all closed', function (): void {
+    $tenant = Tenant::factory()->create();
+    $workCenter = WorkCenter::factory()->for($tenant)->create();
+    App\Modules\Campaigns\Models\Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $workCenter->id]);
+
+    $this->actingAs(ownerOf($tenant))->post(route('tenant.work-centers.archive', [$tenant, $workCenter->id]))->assertSessionHasNoErrors();
+
+    expect(reloaded($workCenter)->archived_at)->not->toBeNull();
+});

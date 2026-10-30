@@ -16,7 +16,11 @@ describe('paletteCommands', () => {
             isSuperadmin: false,
             tenant: {
                 slug: 'acme',
-                can: { manage_organization: true, manage_members: true },
+                can: {
+                    manage_organization: true,
+                    manage_members: true,
+                    manage_campaigns: true,
+                },
             },
             sidebarExpanded: true,
             impersonating: false,

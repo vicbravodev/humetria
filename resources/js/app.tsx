@@ -17,7 +17,9 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            // The survey has its own frame (SurveyShell), outside the panel.
             case name === 'landing':
+            case name === 'campaigns/survey':
                 return null;
             case name.startsWith('auth/'):
             case name === 'tenancy/accept-invitation':

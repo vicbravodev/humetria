@@ -69,6 +69,7 @@ final class ResolveTenant
             'can' => [
                 'manage_organization' => $user->can('manage-organization'),
                 'manage_members' => $user->can('manage-members'),
+                'manage_campaigns' => $user->can('manage-campaigns'),
             ],
         ]);
         Inertia::share('tenants', fn (): array => $this->listUserTenants->handle($user->id)

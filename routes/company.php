@@ -31,4 +31,5 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
 
     require __DIR__.'/organization.php';
+    require __DIR__.'/campaigns.php';
 });

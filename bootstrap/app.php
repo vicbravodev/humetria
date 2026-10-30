@@ -47,6 +47,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Survey answers never go back into the session, even from a submission that fails validation (criterio C-22).
+        $exceptions->dontFlash(['answers']);
+
         // A failed query's message embeds its bindings (emails, phones, answers…). Report it without them.
         $exceptions->report(function (QueryException $exception): false {
             Log::error('database.query_failed', [

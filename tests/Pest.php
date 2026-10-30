@@ -89,6 +89,12 @@ function workIn(Tenant $tenant): void
     resolve(TenantContext::class)->set($tenant);
 }
 
+/** The company of a row of another module, which knows it only by its id. */
+function tenantOf(string $tenantId): Tenant
+{
+    return Tenant::query()->findOrFail($tenantId);
+}
+
 /** A new user who belongs to `$tenant` with `$role`. */
 function memberOf(Tenant $tenant, TenantRole $role): User
 {
@@ -217,4 +223,73 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
         // (endless ones, like the OTP caret blink, never finish and are left alone).
         ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)')
         ->assertNoAccessibilityIssues(1);
+}
+
+/**
+ * A complete NOM-035 Guía II or III with every item answered `$value`, and its two gates answered as given: a "no"
+ * leaves the block's items out, as the survey does.
+ *
+ * @return array<string, string>
+ */
+function nom035Answers(string $key, string $value = 'sometimes', bool $clients = true, bool $supervises = true): array
+{
+    [$base, $clientItems, $supervisionItems] = $key === 'nom035.guide-ii'
+        ? [range(1, 40), range(41, 43), range(44, 46)]
+        : [range(1, 64), range(65, 68), range(69, 72)];
+    $items = [...$base, ...($clients ? $clientItems : []), ...($supervises ? $supervisionItems : [])];
+    $answers = [];
+
+    foreach ($items as $number) {
+        $answers[(string) $number] = $value;
+    }
+
+    // Assigned, never spread: a spread renumbers the numeric item keys.
+    $answers['serves_clients'] = $clients ? 'yes' : 'no';
+    $answers['supervises'] = $supervises ? 'yes' : 'no';
+
+    return $answers;
+}
+
+/**
+ * A complete Guía I with "yes" on the items given and "no" on the rest. With no "yes" in section I (items 1 to 6) it
+ * ends there, as GR.I a) says.
+ *
+ * @param  list<int>  $yes
+ * @return array<string, string>
+ */
+function guideOneAnswers(array $yes = []): array
+{
+    $last = array_intersect($yes, range(1, 6)) === [] ? 6 : 20;
+    $answers = [];
+
+    foreach (range(1, $last) as $number) {
+        $answers[(string) $number] = in_array($number, $yes, true) ? 'yes' : 'no';
+    }
+
+    return $answers;
+}
+
+/**
+ * Active people in a work center of `$tenant`, in one area, by gender: `$female` women, `$male` men and `$other` who
+ * answered "Otro / prefiero no decir".
+ *
+ * @return Illuminate\Support\Collection<int, App\Modules\Organization\Models\Employee>
+ */
+function staffOf(Tenant $tenant, WorkCenter $workCenter, int $female, int $male = 0, int $other = 0): Illuminate\Support\Collection
+{
+    $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id]);
+    $people = collect();
+
+    foreach (['female' => $female, 'male' => $male, 'other' => $other] as $gender => $count) {
+        if ($count > 0) {
+            $people = $people->concat(App\Modules\Organization\Models\Employee::factory()->count($count)->create([
+                'tenant_id' => $tenant->id,
+                'work_center_id' => $workCenter->id,
+                'area_id' => $area->id,
+                'gender' => $gender,
+            ]));
+        }
+    }
+
+    return $people;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Organization\Actions;
 
+use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Models\Employee;
 use Illuminate\Support\Facades\Log;
 
@@ -15,6 +16,7 @@ final class DeactivateEmployee
         $employee->update(['deactivated_at' => now()]);
 
         Log::info('employee.deactivated', ['employee_id' => $employee->id]);
+        event(new EmployeeDeactivated($employee->tenant_id, $employee->id));
 
         return $employee;
     }

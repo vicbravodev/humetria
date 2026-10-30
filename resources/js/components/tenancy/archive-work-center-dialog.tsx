@@ -1,4 +1,5 @@
 import { Form } from '@inertiajs/react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -39,20 +40,30 @@ export default function ArchiveWorkCenterDialog({
                     })}
                     onSuccess={() => onOpenChange(false)}
                 >
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Archivar
-                            </Button>
-                        </DialogFooter>
+                    {({ processing, errors }) => (
+                        <>
+                            {/* An evaluation in progress keeps it: its people are still answering. */}
+                            {errors['work_center'] !== undefined && (
+                                <Alert variant="destructive" className="mb-4">
+                                    <AlertDescription>
+                                        {errors['work_center']}
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            <DialogFooter className="gap-2">
+                                <DialogClose asChild>
+                                    <Button variant="outline">Cancelar</Button>
+                                </DialogClose>
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    disabled={processing}
+                                >
+                                    {processing && <Spinner />}
+                                    Archivar
+                                </Button>
+                            </DialogFooter>
+                        </>
                     )}
                 </Form>
             </DialogContent>

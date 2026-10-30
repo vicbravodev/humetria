@@ -212,6 +212,11 @@ layouts/  hooks/  lib/  types/
 
 ## Reglas de dominio NOM-035 (fuente: DOF 23/10/2018)
 
+La interpretación de la NOM-035 está en `docs/normas/nom-035/criterios.md`, con su fuente, y **manda**: si el código o un
+diseño la contradicen, se corrige el código o el diseño, o se actualiza el criterio con su justificación. El texto literal
+de las guías y sus tablas está en `docs/normas/nom-035/texto-de-referencia.md`; las pruebas del instrumento se escriben
+contra él.
+
 - La guía aplica **por centro de trabajo** (num. 4.4 y 2), no por empresa:
   hasta 15 trabajadores → solo Guía I; 16 a 50 → Guías I y II; más de 50 → Guías I y III.
 - Guía I aplica a todos. Requiere valoración clínica si en la Sección I hay algún "SÍ" y además:
