@@ -1,11 +1,12 @@
+import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
-import EmployeeDialog from '@/components/organization/employee-dialog';
+import EmployeeSheet from '@/components/organization/employee-sheet';
 import { Button } from '@/components/ui/button';
-import { DialogTrigger } from '@/components/ui/dialog';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { store } from '@/routes/tenant/employees';
 import type { EmployeeChoices } from '@/types';
 
-export default function CreateEmployeeDialog({
+export default function CreateEmployeeSheet({
     tenantSlug,
     choices,
 }: {
@@ -15,21 +16,24 @@ export default function CreateEmployeeDialog({
     const [open, setOpen] = useState(false);
 
     return (
-        <EmployeeDialog
+        <EmployeeSheet
             open={open}
             onOpenChange={setOpen}
             copy={{
-                title: 'Dar de alta empleado',
+                title: 'Dar de alta',
                 description:
-                    'Sus respuestas a las encuestas serán anónimas: RH solo verá resultados de grupos.',
+                    'Una persona de tu plantilla, para incluirla en las evaluaciones.',
                 submit: 'Dar de alta',
             }}
             form={store.form(tenantSlug)}
             choices={choices}
             trigger={
-                <DialogTrigger asChild>
-                    <Button>Dar de alta empleado</Button>
-                </DialogTrigger>
+                <SheetTrigger asChild>
+                    <Button>
+                        <UserPlus />
+                        Dar de alta
+                    </Button>
+                </SheetTrigger>
             }
         />
     );
