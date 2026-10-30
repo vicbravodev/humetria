@@ -92,3 +92,20 @@ export type SurveyInstrument = {
 };
 
 export type SurveyUnavailable = 'invalid' | 'closed' | 'done' | 'suspended';
+
+export type ParticipantGuide = {
+    key: string;
+    title: string;
+    status: 'pending' | 'completed' | 'cancelled';
+    statusLabel: string;
+};
+
+/** A person invited to a campaign: whether they answered each guide, never what. */
+export type CampaignPerson = {
+    id: string;
+    name: string;
+    area: string;
+    reachable: boolean;
+    inSample: boolean;
+    guides: ParticipantGuide[];
+};

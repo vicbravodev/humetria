@@ -167,3 +167,55 @@ it('never gives the pages an answer', function (): void {
         });
     }
 });
+
+it('lists who was invited to a launched campaign and where each stands, only to those who manage it', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $people = staffOf($this->tenant, $this->plant, 2)->values();
+    $people[0]->update(['name' => 'Beatriz Soto', 'email' => null, 'mobile' => '5512345678']);
+    $people[1]->update(['name' => 'Ana López']);
+
+    foreach ($people as $index => $person) {
+        $participant = Participant::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'token_hash' => $index === 1 ? 'x' : null]);
+        ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-i', ...($index === 1 ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : [])]);
+        ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
+    }
+
+    $ana = Participant::query()->withoutGlobalScopes()->where('employee_id', $people[1]->id)->sole();
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('people', [
+                [
+                    'id' => $ana->id, 'name' => 'Ana López', 'area' => $people[1]->area->name, 'reachable' => true, 'inSample' => false,
+                    'guides' => [
+                        ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'status' => 'completed', 'statusLabel' => 'Contestó'],
+                        ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
+                    ],
+                ],
+                [
+                    'id' => Participant::query()->withoutGlobalScopes()->where('employee_id', $people[0]->id)->sole()->id,
+                    'name' => 'Beatriz Soto', 'area' => $people[0]->area->name, 'reachable' => false, 'inSample' => false,
+                    'guides' => [
+                        ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
+                        ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
+                    ],
+                ],
+            ]));
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('people', null)->has('instruments', 2));
+});
+
+it('reads the progress of a campaign of any size in a fixed number of queries', function (int $people): void {
+    $campaign = campaignWithAnswers($this->tenant, $this->plant, 'nom035.guide-ii', $people, 1);
+    $this->actingAs($this->hr);
+    $url = route('tenant.campaigns.show', [$this->tenant, $campaign->id]);
+    $this->get($url);
+
+    // The same with 3 or 30 people: nothing is read person by person.
+    $this->expectsDatabaseQueryCount(13);
+
+    $this->get($url)->assertOk();
+})->with([3, 30]);

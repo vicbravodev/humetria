@@ -1,4 +1,9 @@
-import type { CampaignProgress, CampaignSummary, GenderQuota } from '@/types';
+import type {
+    CampaignPerson,
+    CampaignProgress,
+    CampaignSummary,
+    GenderQuota,
+} from '@/types';
 
 /** The guides of a campaign, written for display: "Guía I", "Guías I y III". */
 export function instrumentsText(titles: string[]): string {
@@ -64,4 +69,20 @@ export function campaignMeta(campaign: CampaignSummary): string {
 /** How many people of each gender the sample takes: "Mujeres 45 · Hombres 34 · Otro 1". */
 export function quotasText(quotas: GenderQuota[]): string {
     return quotas.map((quota) => `${quota.label} ${quota.count}`).join(' · ');
+}
+
+/** Whether a person matches a search by name or area, ignoring case and accents: "jose" finds "José". */
+export function matchesPerson(person: CampaignPerson, search: string): boolean {
+    const normalize = (text: string) =>
+        text
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .toLowerCase()
+            .trim();
+    const wanted = normalize(search);
+
+    return (
+        wanted === '' ||
+        normalize(`${person.name} ${person.area}`).includes(wanted)
+    );
 }

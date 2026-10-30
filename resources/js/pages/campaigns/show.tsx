@@ -3,13 +3,14 @@ import { ArrowLeft } from 'lucide-react';
 import CampaignFacts from '@/components/campaigns/campaign-facts';
 import CampaignStatusBadge from '@/components/campaigns/campaign-status-badge';
 import DraftActions from '@/components/campaigns/draft-actions';
-import InstrumentsProgress from '@/components/campaigns/instruments-progress';
+import CampaignFollowUp from '@/components/campaigns/campaign-follow-up';
 import LaunchForm from '@/components/campaigns/launch-form';
 import SampleTable from '@/components/campaigns/sample-table';
 import PageHeader from '@/components/page-header';
 import { index } from '@/routes/tenant/campaigns';
 import type {
     CampaignDetail,
+    CampaignPerson,
     InstrumentProgress,
     SampledPerson,
 } from '@/types';
@@ -17,11 +18,13 @@ import type {
 export default function Campaign({
     campaign,
     instruments,
+    people,
     sample,
     launch,
 }: {
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
+    people: CampaignPerson[] | null;
     sample: SampledPerson[] | null;
     launch: { min: string; suggested: string } | null;
 }) {
@@ -51,7 +54,13 @@ export default function Campaign({
                     />
                 </PageHeader>
                 <CampaignFacts campaign={campaign} />
-                {!isDraft && <InstrumentsProgress instruments={instruments} />}
+                {!isDraft && (
+                    <CampaignFollowUp
+                        campaign={campaign}
+                        instruments={instruments}
+                        people={people}
+                    />
+                )}
                 {isDraft && canManage && (
                     <DraftActions
                         tenantSlug={tenantSlug}

@@ -92,3 +92,21 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
 
     Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 20);
 });
+
+it('follows a launched evaluation: answers per guide, the sample and who answered', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 30, male: 30);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+    App\Modules\Campaigns\Models\ParticipantInstrument::query()->withoutGlobalScopes()->where('instrument', 'nom035.guide-iii')->limit(10)->update(['status' => 'completed', 'completed_at' => now()]);
+
+    visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
+        ->assertSee('En curso')
+        ->assertSee('Faltan 43 respuestas para el mínimo de la muestra')
+        ->assertSee('10 de 53')
+        ->assertSee('Personas (60)')
+        ->assertSee('Guía III · Contestó');
+})->with($looks);
