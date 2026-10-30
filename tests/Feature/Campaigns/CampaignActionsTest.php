@@ -93,6 +93,19 @@ it('sends the link again only to the pending people the filters narrow the list 
         ->and(participantOf($campaign, $people[0])->token_hash)->not->toBe($untouched);
 });
 
+it('sends the link again to whoever it failed to reach, and no one else, when the list shows them', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $failed = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->limit(3)->pluck('id');
+    Participant::query()->withoutGlobalScopes()->whereKey($failed)->update(['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
+
+    $this->actingAs($this->hr)
+        ->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['status' => 'failed'])
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Enlace reenviado a 3 personas.']]);
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 3);
+    expect(Participant::query()->withoutGlobalScopes()->whereKey($failed)->pluck('invitation_status')->unique()->all())->toBe([App\Modules\Campaigns\Enums\InvitationStatus::Sent]);
+});
+
 it('sends the link again to one person', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
     $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->first();

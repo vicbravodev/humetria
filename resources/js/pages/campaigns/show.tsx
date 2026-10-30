@@ -12,6 +12,7 @@ import { index } from '@/routes/tenant/campaigns';
 import { peoplePage } from '@/lib/campaigns';
 import type {
     CampaignDetail,
+    CampaignSending,
     PeopleFilters,
     CampaignPerson,
     Paginated,
@@ -27,6 +28,7 @@ export default function Campaign({
     people,
     standings,
     filters,
+    sending,
     sample,
     launch,
     minDeadline,
@@ -37,6 +39,7 @@ export default function Campaign({
     people: Paginated<CampaignPerson> | null;
     standings: StandingCount[] | null;
     filters: PeopleFilters;
+    sending: CampaignSending | null;
     sample: Paginated<SampledPerson> | null;
     launch: { min: string; suggested: string } | null;
     minDeadline: string | null;
@@ -74,6 +77,7 @@ export default function Campaign({
                         campaign={campaign}
                         instruments={instruments}
                         people={peoplePage(people, standings, filters)}
+                        sending={sending}
                         minDeadline={minDeadline}
                         replacementPool={replacementPool}
                     />

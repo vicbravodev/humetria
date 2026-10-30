@@ -16,8 +16,8 @@ import { resend } from '@/routes/tenant/campaigns';
 import type { PeopleFilters } from '@/types';
 
 /**
- * Sends a new link to the pending people the filters show, after saying their old link stops working. Only while the
- * list shows pending people: then how many get one is exactly how many are listed.
+ * Sends a new link to the people the filters show, after saying their old link stops working. Only while the list shows
+ * pending people, or those whose link failed: then how many get one is exactly how many are listed.
  */
 export default function ResendFilteredDialog({
     tenantSlug,
@@ -33,7 +33,7 @@ export default function ResendFilteredDialog({
     const [open, setOpen] = useState(false);
     const people = count === 1 ? '1 persona' : `${count} personas`;
 
-    if (filters.status !== 'pending' || count === 0) {
+    if (!['pending', 'failed'].includes(filters.status) || count === 0) {
         return null;
     }
 

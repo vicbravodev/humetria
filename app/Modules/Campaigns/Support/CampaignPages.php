@@ -105,6 +105,7 @@ final readonly class CampaignPages
             ], $campaign->instruments),
             'people' => $followed ? $this->people->page($campaign, $filter) : null,
             'standings' => $followed ? $this->standings($campaign, $filter->guide) : null,
+            'sending' => $campaign->status === CampaignStatus::Active ? $this->sending($campaign) : null,
             'filters' => [
                 'status' => $filter->standing->value ?? 'all',
                 'guide' => $filter->guide,
@@ -223,6 +224,28 @@ final readonly class CampaignPages
         }
 
         return $pool;
+    }
+
+    /**
+     * How the last batch of links goes while some are still waiting: how many it already sent or gave up on, of all.
+     *
+     * @return array{done: int, total: int}|null
+     */
+    private function sending(Campaign $campaign): ?array
+    {
+        if ($campaign->invitation_batch === null) {
+            return null;
+        }
+
+        $counts = $campaign->participants()
+            ->where('invitation_batch', $campaign->invitation_batch)
+            ->toBase()
+            ->selectRaw("count(*)::int as total, count(*) filter (where invitation_status = 'queued')::int as queued")
+            ->first();
+        $total = is_int($counts?->total) ? $counts->total : 0;
+        $queued = is_int($counts?->queued) ? $counts->queued : 0;
+
+        return $queued === 0 ? null : ['done' => $total - $queued, 'total' => $total];
     }
 
     /**

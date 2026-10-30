@@ -161,6 +161,47 @@ it('narrows who answered a guide and searches them by name', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
+it('shows how the sending of the links goes until it ends, and offers to resend to whom it failed', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'invitation_batch' => 'a31a4b00-0000-4000-8000-000000000002']);
+
+    foreach (['sent', 'sent', 'failed', 'queued'] as $status) {
+        $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_batch' => $campaign->invitation_batch, 'invitation_status' => $status]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+    }
+
+    $page = visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
+        ->assertSee('Enviando invitaciones 3 de 4')
+        ->assertSee('No se pudo enviar el enlace a 1 persona.');
+
+    App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('invitation_status', 'queued')->update(['invitation_status' => 'sent']);
+
+    $page->wait(4)->assertDontSee('Enviando invitaciones');
+})->with($looks);
+
+it('sends the link again only to whom it failed', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['sent', 'failed', 'failed'] as $status) {
+        $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_status' => $status]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+    }
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Ver y reenviar')
+        ->assertSee('Envío fallido (2)')
+        ->click('Reenviar a 2 personas')
+        ->click('Reenviar enlaces')
+        ->assertSee('Enlace reenviado a 2 personas.')
+        ->assertNoJavaScriptErrors();
+
+    Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 2);
+});
+
 it('sends links again, invites a newcomer and draws replacements from the evaluation page', function (): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);

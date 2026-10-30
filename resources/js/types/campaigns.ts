@@ -48,6 +48,9 @@ export type InstrumentProgress = {
     cancelled: number;
 };
 
+/** The last batch of survey links while the queue sends it: how many it went through, of all. */
+export type CampaignSending = { done: number; total: number };
+
 /** How many people of a campaign stand somewhere, as a choice of the people filter. */
 export type StandingCount = { value: string; label: string; count: number };
 

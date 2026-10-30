@@ -1,17 +1,12 @@
 import ActiveCampaignActions from '@/components/campaigns/active-campaign-actions';
+import CampaignPeopleSection from '@/components/campaigns/campaign-people-section';
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
-import PostButton from '@/components/campaigns/post-button';
-import ResendFilteredDialog from '@/components/campaigns/resend-filtered-dialog';
-import PeopleTable from '@/components/campaigns/people-table';
-import PeopleToolbar from '@/components/campaigns/people-toolbar';
-import ConsolePagination from '@/components/console-pagination';
+import SendingProgress from '@/components/campaigns/sending-progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { progressNote } from '@/lib/campaigns';
-import { show } from '@/routes/tenant/campaigns';
-import { resend } from '@/routes/tenant/campaigns/participants';
 import type {
     CampaignDetail,
-    CampaignPerson,
+    CampaignSending,
     InstrumentProgress,
     PeoplePage,
     ReplacementPool,
@@ -26,6 +21,7 @@ export default function CampaignFollowUp({
     campaign,
     instruments,
     people,
+    sending,
     minDeadline,
     replacementPool,
 }: {
@@ -35,6 +31,7 @@ export default function CampaignFollowUp({
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: PeoplePage | null;
+    sending: CampaignSending | null;
 }) {
     const progress = campaign.progress;
     const sampleShort =
@@ -63,60 +60,16 @@ export default function CampaignFollowUp({
                     </AlertDescription>
                 </Alert>
             )}
+            {sending !== null && <SendingProgress sending={sending} />}
             <InstrumentsProgress instruments={instruments} />
             {people !== null && (
-                <section className="flex flex-col gap-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h2 className="text-xl leading-7 font-semibold">
-                            Personas
-                        </h2>
-                        {active && (
-                            <ResendFilteredDialog
-                                tenantSlug={tenantSlug}
-                                campaignId={campaign.id}
-                                filters={people.filters}
-                                count={people.people.total}
-                            />
-                        )}
-                    </div>
-                    <PeopleToolbar
-                        tenantSlug={tenantSlug}
-                        url={show.url([tenantSlug, campaign.id])}
-                        filters={people.filters}
-                        standings={people.standings}
-                        instruments={instruments}
-                    />
-                    <PeopleTable
-                        people={people.people.data}
-                        {...(active
-                            ? {
-                                  action: (person: CampaignPerson) =>
-                                      person.reachable &&
-                                      person.guides.some(
-                                          (guide) => guide.status === 'pending',
-                                      ) ? (
-                                          <PostButton
-                                              form={resend.form([
-                                                  tenantSlug,
-                                                  campaign.id,
-                                                  person.id,
-                                              ])}
-                                              variant="ghost"
-                                              size="sm"
-                                          >
-                                              Reenviar
-                                          </PostButton>
-                                      ) : null,
-                              }
-                            : {})}
-                    />
-                    <ConsolePagination
-                        page={people.people}
-                        label="Páginas de personas"
-                        previous="Anteriores"
-                        next="Siguientes"
-                    />
-                </section>
+                <CampaignPeopleSection
+                    tenantSlug={tenantSlug}
+                    campaignId={campaign.id}
+                    active={active}
+                    people={people}
+                    instruments={instruments}
+                />
             )}
         </>
     );

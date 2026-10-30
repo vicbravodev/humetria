@@ -352,3 +352,22 @@ it('offers replacements for each gender that has people left outside the sample'
             ['gender' => 'male', 'label' => 'Hombres', 'available' => 2],
         ]));
 });
+
+it('says how the sending of the last batch of links goes, while it goes', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'invitation_batch' => 'a31a4b00-0000-4000-8000-000000000001']);
+    $batch = ['invitation_batch' => $campaign->invitation_batch];
+    personIn($campaign, 'Enviada', ['nom035.guide-i' => InstrumentStatus::Pending], $batch);
+    personIn($campaign, 'Falló', ['nom035.guide-i' => InstrumentStatus::Pending], [...$batch, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
+    $queued = personIn($campaign, 'En cola', ['nom035.guide-i' => InstrumentStatus::Pending], [...$batch, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Queued]);
+    personIn($campaign, 'De antes', ['nom035.guide-i' => InstrumentStatus::Pending]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('sending', ['done' => 2, 'total' => 3]));
+
+    $queued->update(['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Sent]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('sending', null));
+});
