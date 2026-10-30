@@ -1,19 +1,21 @@
 import { cn } from '@/lib/utils';
 import type { StepProgress } from '@/lib/survey';
 
-/** "Sección 1 de 8 · 1 de 9 respondidas", with one segment per section: progress by section, not a slow percentage. */
+/** "Guía I · Sección 1 de 4 · 1 de 6 respondidas", with one segment per section: progress by section, not a slow percentage. */
 export default function SectionProgress({
+    guide,
     progress,
 }: {
+    guide: string;
     progress: StepProgress;
 }) {
     return (
-        <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-4 text-sm">
+        <div className="flex flex-col gap-2 md:hidden">
+            <div className="flex items-baseline justify-between gap-4 text-base">
                 <span className="font-medium">
-                    Sección {progress.section} de {progress.sections}
+                    {guide} · Sección {progress.section} de {progress.sections}
                 </span>
-                <span className="text-muted-foreground">
+                <span className="shrink-0 text-muted-foreground">
                     {progress.answered} de {progress.inSection} respondidas
                 </span>
             </div>
@@ -22,10 +24,10 @@ export default function SectionProgress({
                     <span
                         key={index}
                         className={cn(
-                            'h-1 flex-1 rounded-full',
+                            'h-1.5 flex-1 rounded-full',
                             index < progress.section
                                 ? 'bg-primary'
-                                : 'bg-muted',
+                                : 'bg-track',
                         )}
                     />
                 ))}
