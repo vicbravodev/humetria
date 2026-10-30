@@ -100,7 +100,8 @@ final class SendSurveyInvitations implements ShouldQueue
     public function failed(?Throwable $exception): void
     {
         $failed = $this->waiting()->update(['invitation_status' => InvitationStatus::Failed]);
-        Log::warning('campaign.invitations_failed', ['campaign_id' => $this->campaignId, 'failed' => $failed, 'exception' => $exception?->getMessage()]);
+        // The exception's class only: a mail error's message can carry the address.
+        Log::warning('campaign.invitations_failed', ['campaign_id' => $this->campaignId, 'failed' => $failed, 'exception' => $exception === null ? null : $exception::class]);
     }
 
     /**

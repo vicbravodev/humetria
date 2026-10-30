@@ -107,10 +107,13 @@ it('marks as failed whoever of its block was still waiting when it gives up', fu
     [$job] = batchedJobs();
     Participant::query()->withoutGlobalScopes()->limit(4)->update(['invitation_status' => InvitationStatus::Sent]);
 
-    $job->failed(new RuntimeException('SMTP down'));
+    Illuminate\Support\Facades\Log::spy();
+
+    $job->failed(new RuntimeException('550 ana@acme.mx rejected'));
 
     expect(participantsOf($campaign)->countBy(fn (Participant $participant): string => $participant->invitation_status?->value ?? 'none')->all())
         ->toEqual(['sent' => 4, 'failed' => 16]);
+    Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->with('campaign.invitations_failed', ['campaign_id' => $campaign->id, 'failed' => 16, 'exception' => RuntimeException::class]);
 });
 
 it('waits for the next minute when the emails per minute are used up', function (): void {
