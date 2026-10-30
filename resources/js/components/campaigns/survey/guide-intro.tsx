@@ -1,4 +1,6 @@
+import { ArrowLeft, ArrowRight, IdCard, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { SurveyInstrument } from '@/types';
 
 /**
@@ -6,23 +8,41 @@ import type { SurveyInstrument } from '@/types';
  */
 export default function GuideIntro({
     instrument,
+    onBack,
     onStart,
 }: {
     instrument: SurveyInstrument;
+    onBack: () => void;
     onStart: () => void;
 }) {
+    const Icon = instrument.identified ? IdCard : Lock;
+
     return (
-        <section className="flex flex-col gap-5">
-            <p className="text-sm font-medium tracking-[0.02em] text-muted-foreground uppercase">
+        <section className="flex w-full max-w-2xl flex-col gap-[22px]">
+            <p className="text-base font-medium text-muted-foreground">
                 {instrument.shortTitle}
             </p>
-            <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em]">
+            <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                 {instrument.title}
             </h1>
-            <div className="rounded-xl bg-accent p-5 text-lg leading-7 text-accent-foreground">
+            <div
+                className={cn(
+                    'flex items-start gap-3 rounded-xl p-4 text-[17px] leading-[26px]',
+                    instrument.identified
+                        ? 'bg-warning text-warning-foreground'
+                        : 'bg-accent text-accent-foreground',
+                )}
+            >
+                <Icon
+                    aria-hidden="true"
+                    className={cn(
+                        'mt-0.5 size-5 shrink-0',
+                        !instrument.identified && 'text-primary',
+                    )}
+                />
                 {instrument.identified ? (
                     <p>
-                        Esta parte{' '}
+                        Esta guía{' '}
                         <strong className="font-semibold">
                             sí lleva su nombre
                         </strong>
@@ -32,7 +52,7 @@ export default function GuideIntro({
                     </p>
                 ) : (
                     <p>
-                        Esta parte es{' '}
+                        Esta guía es{' '}
                         <strong className="font-semibold">anónima</strong>: sus
                         respuestas no llevan su nombre y nadie de su empresa
                         puede ver lo que contesta. Los resultados se presentan
@@ -40,9 +60,25 @@ export default function GuideIntro({
                     </p>
                 )}
             </div>
-            <Button size="lg" className="h-14 text-lg" onClick={onStart}>
-                Comenzar
-            </Button>
+            <div className="flex items-center justify-between gap-3">
+                <Button
+                    variant="ghost"
+                    size="lg"
+                    className="px-3 text-[17px]"
+                    onClick={onBack}
+                >
+                    <ArrowLeft aria-hidden="true" />
+                    Anterior
+                </Button>
+                <Button
+                    size="lg"
+                    className="min-w-40 rounded-[10px] text-[17px]"
+                    onClick={onStart}
+                >
+                    Empezar
+                    <ArrowRight aria-hidden="true" />
+                </Button>
+            </div>
         </section>
     );
 }

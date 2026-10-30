@@ -1,3 +1,10 @@
+import {
+    CalendarClock,
+    CalendarRange,
+    CircleCheck,
+    ListChecks,
+    Lock,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /**
@@ -14,41 +21,68 @@ export default function SurveyIntro({
     closesOn: string | null;
     children?: ReactNode;
 }) {
+    const points = [
+        {
+            icon: CircleCheck,
+            text: 'No hay respuestas correctas ni incorrectas.',
+        },
+        {
+            icon: CalendarRange,
+            text: (
+                <>
+                    Considere las condiciones de su trabajo de los{' '}
+                    <strong className="font-semibold">dos últimos meses</strong>
+                    .
+                </>
+            ),
+        },
+        {
+            icon: ListChecks,
+            text: 'Conteste todas las preguntas, con calma y con sinceridad: su opinión es lo más importante.',
+        },
+        ...(closesOn === null
+            ? []
+            : [
+                  {
+                      icon: CalendarClock,
+                      text: `Puede contestar hasta el ${closesOn}.`,
+                  },
+              ]),
+    ];
+
     return (
-        <section className="flex flex-col gap-5">
-            <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em]">
-                Evaluación de factores de riesgo psicosocial
-            </h1>
-            <div className="flex flex-col gap-4 text-lg leading-7">
+        <section className="flex w-full max-w-2xl flex-col gap-[22px]">
+            <div className="flex flex-col gap-2.5">
+                <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
+                    Evaluación de factores de riesgo psicosocial
+                </h1>
                 <p>
                     {company} aplica esta evaluación para identificar y prevenir
                     los factores de riesgo psicosocial en el trabajo, como lo
                     pide la NOM-035-STPS-2018.
                 </p>
-                <ul className="flex list-disc flex-col gap-2 pl-6">
-                    <li>
-                        Sus respuestas son confidenciales y se usan solo para
-                        mejorar el ambiente de trabajo.
-                    </li>
-                    <li>No hay respuestas correctas ni incorrectas.</li>
-                    <li>
-                        Considere las condiciones de su trabajo de los{' '}
-                        <strong className="font-semibold">
-                            dos últimos meses
-                        </strong>
-                        .
-                    </li>
-                    <li>
-                        Conteste todas las preguntas, con calma y con
-                        sinceridad: su opinión es lo más importante.
-                    </li>
-                </ul>
-                {closesOn !== null && (
-                    <p className="text-muted-foreground">
-                        Puede contestar hasta el {closesOn}.
-                    </p>
-                )}
             </div>
+            <div className="flex items-start gap-3 rounded-xl bg-accent p-4 text-accent-foreground">
+                <Lock
+                    aria-hidden="true"
+                    className="mt-1 size-5 shrink-0 text-primary"
+                />
+                <p className="text-[17px] leading-[26px]">
+                    Sus respuestas son confidenciales y se usan solo para
+                    mejorar el ambiente de trabajo.
+                </p>
+            </div>
+            <ul className="flex flex-col gap-2.5">
+                {points.map(({ icon: Icon, text }, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                        <Icon
+                            aria-hidden="true"
+                            className="mt-1 size-5 shrink-0 text-muted-foreground"
+                        />
+                        <span>{text}</span>
+                    </li>
+                ))}
+            </ul>
             {children}
         </section>
     );

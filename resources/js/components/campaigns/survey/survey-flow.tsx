@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import { useState } from 'react';
 import SurveyIntro from '@/components/campaigns/survey/survey-intro';
 import SurveyRunner from '@/components/campaigns/survey/survey-runner';
@@ -27,31 +28,54 @@ export default function SurveyFlow({
     );
 
     if (started) {
-        return <SurveyRunner token={token} instrument={next} />;
+        return (
+            <SurveyRunner
+                token={token}
+                instruments={instruments}
+                instrument={next}
+                onBack={() => setStarted(false)}
+            />
+        );
     }
 
     return (
         <SurveyIntro company={company} closesOn={closesOn}>
-            <ul className="flex flex-col gap-3">
-                {instruments.map((instrument) => (
+            <ol className="overflow-hidden rounded-lg border bg-card">
+                {instruments.map((instrument, index) => (
                     <li
                         key={instrument.key}
-                        className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4"
+                        className="flex items-center gap-3 border-t px-4 py-3.5 first:border-t-0"
                     >
-                        <span className="text-lg">
-                            {instrument.shortTitle}: {instrument.title}
+                        <span
+                            aria-hidden="true"
+                            className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-secondary text-base font-medium text-muted-foreground tabular-nums"
+                        >
+                            {index + 1}
                         </span>
-                        <span className="shrink-0 text-muted-foreground">
-                            {instrument.status === 'completed'
-                                ? 'Enviada'
-                                : 'Pendiente'}
+                        <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="text-[17px] font-medium">
+                                {instrument.shortTitle}
+                            </span>
+                            <span className="text-base text-muted-foreground">
+                                {instrument.title}
+                            </span>
                         </span>
+                        {instrument.status === 'completed' ? (
+                            <span className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">
+                                <Check aria-hidden="true" className="size-4" />
+                                Enviada
+                            </span>
+                        ) : (
+                            <span className="shrink-0 text-base text-muted-foreground">
+                                Pendiente
+                            </span>
+                        )}
                     </li>
                 ))}
-            </ul>
+            </ol>
             <Button
                 size="lg"
-                className="h-14 text-lg"
+                className="w-full rounded-[10px] text-[17px]"
                 onClick={() => setStarted(true)}
             >
                 {answered ? `Continuar con la ${next.shortTitle}` : 'Comenzar'}

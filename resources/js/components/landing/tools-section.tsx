@@ -7,24 +7,22 @@ export default function ToolsSection() {
         <section
             id="herramientas"
             aria-labelledby="herramientas-title"
-            className="scroll-mt-16 border-y bg-muted"
+            className="scroll-mt-16 border-y bg-sidebar"
         >
-            <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-                <SectionHeading id="herramientas-title" title="Herramientas">
-                    Tres obligaciones de la STPS, cada una con lo que la norma o
-                    la ley te pide.
+            <div className="mx-auto flex max-w-[1200px] flex-col gap-10 px-4 py-16 sm:px-6 lg:py-[88px]">
+                <SectionHeading
+                    id="herramientas-title"
+                    title="Tres obligaciones, un solo lugar"
+                >
+                    Cada herramienta hace exactamente lo que pide la norma o la
+                    ley. Nada más, nada menos.
                 </SectionHeading>
 
-                <div className="mt-10 grid gap-6 lg:grid-cols-3">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-5">
                     {TOOLS.map((tool) => (
                         <ToolCard key={tool.key} tool={tool} />
                     ))}
                 </div>
-
-                <p className="mt-10 text-muted-foreground">
-                    Humetría reúne en un solo lugar las obligaciones de RH ante
-                    la STPS.
-                </p>
             </div>
         </section>
     );
