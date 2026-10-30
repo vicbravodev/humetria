@@ -1,17 +1,20 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { Upload } from 'lucide-react';
 import ConsolePagination from '@/components/console-pagination';
-import CreateEmployeeDialog from '@/components/organization/create-employee-dialog';
+import CreateEmployeeSheet from '@/components/organization/create-employee-sheet';
 import EmployeesEmpty from '@/components/organization/employees-empty';
+import EmployeesNotice from '@/components/organization/employees-notice';
 import EmployeesTable from '@/components/organization/employees-table';
 import EmployeesToolbar from '@/components/organization/employees-toolbar';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { employeeQuery } from '@/lib/employees';
+import { employeeQuery, headcountText } from '@/lib/employees';
 import { options as areaOptions } from '@/routes/tenant/areas';
 import { create as importPage } from '@/routes/tenant/employees/import';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type {
     ChoiceOption,
+    EmployeeCounts,
     EmployeeFilters,
     EmployeeRow,
     Paginated,
@@ -19,10 +22,12 @@ import type {
 
 export default function Employees({
     employees,
+    counts,
     filters,
     genders,
 }: {
     employees: Paginated<EmployeeRow>;
+    counts: EmployeeCounts;
     filters: EmployeeFilters;
     genders: ChoiceOption[];
 }) {
@@ -33,33 +38,46 @@ export default function Employees({
         areasUrl: areaOptions.url(tenantSlug),
         genders,
     };
-    const filtered = Object.keys(employeeQuery(filters)).length > 0;
+    // The Bajas tab alone is not a search: it gets its own empty state.
+    const filtered =
+        Object.keys(employeeQuery({ ...filters, status: 'active' })).length > 0;
 
     return (
         <>
             <Head title="Empleados" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <PageHeader title="Empleados">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <p className="text-muted-foreground">
-                            {employees.total === 1
-                                ? '1 persona'
-                                : `${employees.total} personas`}
-                        </p>
-                        <Button variant="outline" asChild>
-                            <Link href={importPage(tenantSlug)}>
-                                Cargar CSV
-                            </Link>
-                        </Button>
-                        <CreateEmployeeDialog
-                            tenantSlug={tenantSlug}
-                            choices={choices}
-                        />
-                    </div>
+                <PageHeader
+                    title="Empleados"
+                    description={headcountText(counts)}
+                >
+                    <Button variant="outline" asChild>
+                        <Link href={importPage(tenantSlug)}>
+                            <Upload />
+                            Cargar CSV
+                        </Link>
+                    </Button>
+                    <CreateEmployeeSheet
+                        tenantSlug={tenantSlug}
+                        choices={choices}
+                    />
                 </PageHeader>
-                <EmployeesToolbar tenantSlug={tenantSlug} filters={filters} />
+                {counts.without_email > 0 && (
+                    <EmployeesNotice
+                        tenantSlug={tenantSlug}
+                        filters={filters}
+                        count={counts.without_email}
+                    />
+                )}
+                <EmployeesToolbar
+                    tenantSlug={tenantSlug}
+                    filters={filters}
+                    counts={counts}
+                />
                 {employees.data.length === 0 ? (
-                    <EmployeesEmpty filtered={filtered} />
+                    <EmployeesEmpty
+                        filtered={filtered}
+                        inactive={filters.status === 'inactive'}
+                    />
                 ) : (
                     <EmployeesTable
                         tenantSlug={tenantSlug}

@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react';
 import { Ellipsis, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import DeactivateEmployeeDialog from '@/components/organization/deactivate-employee-dialog';
-import EmployeeDialog from '@/components/organization/employee-dialog';
+import EmployeeSheet from '@/components/organization/employee-sheet';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -87,7 +87,7 @@ export default function EmployeeRowActions({
                     )}
                 </DropdownMenuContent>
             </DropdownMenu>
-            <EmployeeDialog
+            <EmployeeSheet
                 {...dialog('edit')}
                 copy={{
                     title: 'Editar empleado',

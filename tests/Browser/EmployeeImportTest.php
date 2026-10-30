@@ -63,7 +63,10 @@ it('lists the rows to fix and imports nothing', function (bool $dark, bool $mobi
         ->attach('file', $path)
         ->press('Revisar archivo')
         ->assertSee('No se importó nada'))
-        ->assertSee('Fila 2: Escribe un correo o un celular. No hay un centro de trabajo «Planta Sur».')
+        ->assertSee('Corrige 1 fila')
+        ->assertSeeIn('[aria-labelledby="import-errors"] tbody tr', 'Fila 2')
+        ->assertSee('Escribe un correo o un celular.')
+        ->assertSee('No hay un centro de trabajo «Planta Sur».')
         ->assertDontSee('Importar 1 empleado');
 
     expect(Employee::query()->withoutGlobalScopes()->count())->toBe(0);
