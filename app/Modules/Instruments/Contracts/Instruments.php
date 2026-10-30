@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Instruments\Contracts;
 
 use App\Modules\Instruments\Data\InstrumentDefinition;
+use App\Modules\Instruments\Data\TraumaOutcome;
 use InvalidArgumentException;
 
 /**
@@ -26,4 +27,13 @@ interface Instruments
      * @throws InvalidArgumentException with a message for the person answering.
      */
     public function validate(string $key, array $answers): void;
+
+    /**
+     * Whether the person of a NOM-035 Guía I needs a clinical assessment (GR.I). Validates the answers first.
+     *
+     * @param  array<array-key, mixed>  $answers
+     *
+     * @throws InvalidArgumentException when they are not a complete, coherent Guía I.
+     */
+    public function screenTrauma(array $answers): TraumaOutcome;
 }

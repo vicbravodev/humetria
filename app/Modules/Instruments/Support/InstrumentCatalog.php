@@ -6,6 +6,7 @@ namespace App\Modules\Instruments\Support;
 
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Data\InstrumentDefinition;
+use App\Modules\Instruments\Data\TraumaOutcome;
 use App\Modules\Instruments\Support\Nom035\GuideOne;
 use App\Modules\Instruments\Support\Nom035\GuideThree;
 use App\Modules\Instruments\Support\Nom035\GuideTwo;
@@ -13,7 +14,7 @@ use InvalidArgumentException;
 
 final readonly class InstrumentCatalog implements Instruments
 {
-    public function __construct(private AnswerValidator $validator) {}
+    public function __construct(private AnswerValidator $validator, private TraumaScreener $traumaScreener) {}
 
     public function definition(string $key): InstrumentDefinition
     {
@@ -28,5 +29,12 @@ final readonly class InstrumentCatalog implements Instruments
     public function validate(string $key, array $answers): void
     {
         $this->validator->validate($this->definition($key), $answers);
+    }
+
+    public function screenTrauma(array $answers): TraumaOutcome
+    {
+        $this->validate(GuideOne::KEY, $answers);
+
+        return $this->traumaScreener->screen($answers);
     }
 }
