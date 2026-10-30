@@ -123,7 +123,7 @@ describe('worstGroupText', () => {
 
     it('names the group with the largest share in Alto or Muy alto', () => {
         expect(worstGroupText(groups, 'dominio')).toBe(
-            'El dominio que más pesa es Carga de trabajo: 80 % en riesgo alto o muy alto.',
+            'El dominio que más pesa es Carga de trabajo, con 80 % en riesgo alto o muy alto.',
         );
     });
 

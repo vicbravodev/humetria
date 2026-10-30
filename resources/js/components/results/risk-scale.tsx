@@ -4,11 +4,11 @@ import type { RiskLevelInfo } from '@/types';
 /** The five levels with the action each one needs (design system: RiskScale), from Nulo to Muy alto. */
 export default function RiskScale({ levels }: { levels: RiskLevelInfo[] }) {
     return (
-        <dl className="divide-y rounded-xl border bg-card">
+        <dl className="divide-y">
             {levels.map((level) => (
                 <div
                     key={level.value}
-                    className="grid gap-2 px-4 py-3 sm:grid-cols-[13rem_1fr] sm:items-center"
+                    className="grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[13rem_1fr] sm:items-center"
                 >
                     <dt>
                         <RiskLevel level={level.value} label={level.label} />

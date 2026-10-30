@@ -107,7 +107,7 @@ export function worstGroupText(
         return null;
     }
 
-    return `El ${noun} que más pesa es ${worst.label}: ${percentText(highRisk(worst.levels), total(worst.levels))} en riesgo alto o muy alto.`;
+    return `El ${noun} que más pesa es ${worst.label}, con ${percentText(highRisk(worst.levels), total(worst.levels))} en riesgo alto o muy alto.`;
 }
 
 /** "7 de 29 desfavorables (24 %)": the answers to a question on the side that scores risk. */

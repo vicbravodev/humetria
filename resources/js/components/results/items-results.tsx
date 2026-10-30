@@ -17,7 +17,7 @@ export default function ItemsResults({
     return (
         <section className="grid gap-4">
             <div className="grid gap-1">
-                <h2 className="text-xl font-semibold">Por pregunta</h2>
+                <h2 className="text-lg font-semibold">Por pregunta</h2>
                 <p className="max-w-[75ch] text-sm text-muted-foreground">
                     Cómo contestó todo el centro cada pregunta. Una respuesta es
                     desfavorable cuando da 3 o 4 puntos en la escala de esa

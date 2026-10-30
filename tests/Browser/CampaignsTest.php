@@ -332,7 +332,7 @@ it('shows the results of a closed evaluation by risk level, and filters them by 
         ->assertSee('Liderazgo y relaciones en el trabajo')
         ->assertSee('Producción')
         ->assertSee('Qué pide la norma en cada nivel')
-        ->assertSee('Guía I: acontecimientos traumáticos severos');
+        ->assertSee('Guía I · acontecimientos traumáticos');
 })->with($looks);
 
 it('narrows the results to one area, and reaches them from the evaluation', function (): void {
@@ -348,10 +348,12 @@ it('narrows the results to one area, and reaches them from the evaluation', func
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->click('Resultados')
         ->assertPathIs("/admin/acme/campaigns/{$campaign->id}/results")
-        ->assertSee('Cuántos de los 11 cuestionarios de todo el centro')
+        ->assertSee('Calificación final · Guía II')
+        ->assertSee('de 11 cuestionarios')
         ->click('#results-area')
         ->click('[role="option"] >> text=Ventas')
-        ->assertSee('Cuántos de los 5 cuestionarios de Ventas')
+        ->assertSee('Calificación final · Guía II · Ventas')
+        ->assertSee('de 5 cuestionarios')
         ->assertQueryStringHas('area')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
@@ -365,7 +367,7 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
     $person->update(['name' => 'Ana López']);
     App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
 
-    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver quiénes la requieren'))
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver canalización'))
         ->assertSee('Personas que requieren valoración clínica')
         ->assertSee('1 de 1 personas')
         ->assertSee('Ana López');
@@ -377,7 +379,7 @@ it('shows the 7.7 report of a closed evaluation, ready to print', function (bool
     $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
     App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii')]);
 
-    visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Informe del numeral 7.7'))
+    visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Informe 7.7'))
         ->assertSee('Diagnóstico de factores de riesgo psicosocial')
         ->assertSee('Datos del centro de trabajo')
         ->assertSee('Pendiente de capturar')

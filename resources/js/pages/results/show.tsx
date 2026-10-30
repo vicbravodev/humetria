@@ -1,15 +1,11 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
-import PageHeader from '@/components/page-header';
-import OpenEvaluationNotice from '@/components/results/open-evaluation-notice';
+import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import AreaFilter from '@/components/results/area-filter';
 import ResultsBody from '@/components/results/results-body';
-import ResultsFacts from '@/components/results/results-facts';
+import ResultsHeader from '@/components/results/results-header';
+import ResultsOverview from '@/components/results/results-overview';
 import TraumaSummary from '@/components/results/trauma-summary';
-import {
-    report,
-    results as resultsRoute,
-    show,
-} from '@/routes/tenant/campaigns';
+import { resultsTrail } from '@/lib/results';
+import { report, results as resultsRoute } from '@/routes/tenant/campaigns';
 import type {
     AreaResults,
     ItemSection,
@@ -42,44 +38,49 @@ export default function Results({
     trauma: ScreeningCounts | null;
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const area = filters.area;
+    setLayoutProps({
+        breadcrumbs: resultsTrail(tenantSlug, campaign, 'Resultados'),
+    });
 
     return (
         <>
             <Head title={`Resultados · ${campaign.workCenter}`} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <Link
-                    href={show([tenantSlug, campaign.id])}
-                    className="flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                >
-                    <ArrowLeft aria-hidden="true" className="size-4" />
-                    {campaign.kindLabel}
-                </Link>
-                <PageHeader
-                    caption={`Resultados · ${guide?.title ?? campaign.kindLabel}`}
-                    title={campaign.workCenter}
-                />
-                <ResultsFacts
+            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+                <ResultsHeader
                     campaign={campaign}
-                    participation={participation}
+                    reportUrl={
+                        results === null
+                            ? null
+                            : report.url([tenantSlug, campaign.id])
+                    }
                 />
-                <OpenEvaluationNotice guide={guide} closed={campaign.closed} />
-                {results !== null && areas !== null && items !== null && (
-                    <ResultsBody
-                        url={resultsRoute.url([tenantSlug, campaign.id])}
-                        reportUrl={report.url([tenantSlug, campaign.id])}
-                        results={results}
-                        areas={areas}
-                        items={items}
-                        area={filters.area}
-                        levels={levels}
-                    />
-                )}
+                <AreaFilter
+                    url={resultsRoute.url([tenantSlug, campaign.id])}
+                    areas={areas?.visible ?? []}
+                    selected={area}
+                />
+                <ResultsOverview
+                    guide={guide}
+                    participation={participation}
+                    results={results}
+                    area={area}
+                    levels={levels}
+                />
                 {trauma !== null && (
-                    <TraumaSummary
-                        url={[tenantSlug, campaign.id]}
-                        counts={trauma}
-                    />
+                    <div className="grid gap-5 lg:grid-cols-2">
+                        <TraumaSummary
+                            url={[tenantSlug, campaign.id]}
+                            counts={trauma}
+                        />
+                    </div>
                 )}
+                <ResultsBody
+                    results={results}
+                    areas={areas}
+                    items={items}
+                    levels={levels}
+                />
             </div>
         </>
     );
