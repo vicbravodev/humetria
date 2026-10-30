@@ -5,7 +5,11 @@ import OpenEvaluationNotice from '@/components/results/open-evaluation-notice';
 import ResultsBody from '@/components/results/results-body';
 import ResultsFacts from '@/components/results/results-facts';
 import TraumaSummary from '@/components/results/trauma-summary';
-import { results as resultsRoute, show } from '@/routes/tenant/campaigns';
+import {
+    report,
+    results as resultsRoute,
+    show,
+} from '@/routes/tenant/campaigns';
 import type {
     AreaResults,
     ItemSection,
@@ -62,6 +66,7 @@ export default function Results({
                 {results !== null && areas !== null && items !== null && (
                     <ResultsBody
                         url={resultsRoute.url([tenantSlug, campaign.id])}
+                        reportUrl={report.url([tenantSlug, campaign.id])}
                         results={results}
                         areas={areas}
                         items={items}

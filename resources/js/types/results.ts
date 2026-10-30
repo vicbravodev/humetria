@@ -86,3 +86,39 @@ export type ScreenedPerson = {
     area: string;
     answeredOn: string;
 };
+
+/** The work center as the report names it (num. 7.7 a). */
+export type ReportCenter = {
+    legalName: string;
+    rfc: string;
+    name: string;
+    address: string;
+    mainActivity: string;
+};
+
+/** The report of a closed evaluation (num. 7.7). What HR has not filled in yet is null. */
+export type NomReport = {
+    center: ReportCenter;
+    guide: string;
+    period: string;
+    participation: Participation;
+    method: string;
+    objective: string;
+    activities: string;
+    conclusions: string | null;
+    recommendations: string | null;
+    responsible: { name: string; license: string | null } | null;
+    complete: boolean;
+    results: RiskResults;
+    areas: AreaResults;
+};
+
+/** What HR fills in for the report. */
+export type ReportForm = {
+    objective: string;
+    activities: string;
+    conclusions: string;
+    recommendations: string;
+    responsible_name: string;
+    responsible_license: string;
+};

@@ -31,7 +31,7 @@ final readonly class ResultsPages
     public function show(CampaignRecord $campaign, ?string $areaId, bool $withScreenings): array
     {
         $guide = self::riskGuide($campaign);
-        $results = $guide !== null && $campaign->closed ? $this->results($campaign, $guide, $areaId) : null;
+        $results = $guide !== null && $campaign->closed ? $this->risk($campaign, $guide, $areaId) : null;
 
         return [
             'campaign' => [
@@ -56,9 +56,11 @@ final readonly class ResultsPages
     }
 
     /**
+     * The Guía II or III results of a closed evaluation: the center (or one area shown), its areas and its questions.
+     *
      * @return array{results: array<string, mixed>, areas: array{visible: list<array<string, mixed>>, hidden: int}, items: list<array<string, mixed>>, area: array{value: string, label: string}|null}
      */
-    private function results(CampaignRecord $campaign, string $guide, ?string $areaId): array
+    public function risk(CampaignRecord $campaign, string $guide, ?string $areaId): array
     {
         $records = $this->responses->anonymous($campaign->id, $guide);
         $areas = $this->distribution->areas($guide, $records);

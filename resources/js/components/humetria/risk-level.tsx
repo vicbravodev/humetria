@@ -45,7 +45,7 @@ export default function RiskLevel({
             </span>
             <span
                 className={cn(
-                    'rounded-md px-2 py-0.5 text-sm font-semibold whitespace-nowrap',
+                    'rounded-md px-2 py-0.5 text-sm font-semibold tracking-normal whitespace-nowrap normal-case',
                     tone.label,
                 )}
             >

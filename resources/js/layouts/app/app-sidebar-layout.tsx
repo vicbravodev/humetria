@@ -13,7 +13,7 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
             <AppSidebar />
             <AppContent className="min-w-0 overflow-x-clip">
                 {/* One sticky block, so the top bar stays under the banner instead of sliding beneath it. */}
-                <div className="sticky top-0 z-20 md:overflow-clip md:rounded-t-xl">
+                <div className="sticky top-0 z-20 md:overflow-clip md:rounded-t-xl print:hidden">
                     <ImpersonationBanner />
                     <AppSidebarHeader />
                 </div>

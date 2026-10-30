@@ -21,17 +21,11 @@ const OPTIONS = [
  * How each question of a section was answered, counted by option. A question answered by fewer than five (those behind
  * a yes/no gate are answered by some) shows no counts.
  */
-export default function ItemsTable({
-    section,
-    index,
-}: {
-    section: ItemSection;
-    index: number;
-}) {
+export default function ItemsTable({ section }: { section: ItemSection }) {
     return (
         <Table>
-            <TableCaption className="text-left">
-                {section.title ?? `Bloque ${index + 1}`}: {section.instruction}
+            <TableCaption className="sr-only">
+                Respuestas por pregunta: {section.instruction}
             </TableCaption>
             <TableHeader>
                 <TableRow>

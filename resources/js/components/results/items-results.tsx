@@ -20,14 +20,14 @@ export default function ItemsResults({
                     className="rounded-xl border bg-card p-4 [&_summary]:cursor-pointer"
                 >
                     <summary className="font-medium">
-                        {section.title ?? `Bloque ${index + 1}`}
+                        {section.title ?? section.instruction}
                         <span className="text-muted-foreground">
                             {' '}
                             · {section.items.length} preguntas
                         </span>
                     </summary>
                     <div className="mt-4">
-                        <ItemsTable section={section} index={index} />
+                        <ItemsTable section={section} />
                     </div>
                 </details>
             ))}

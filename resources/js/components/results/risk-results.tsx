@@ -9,14 +9,16 @@ export default function RiskResultsSections({
     results,
     areas,
     levels,
-    scope,
+    area,
 }: {
     results: RiskResults;
     areas: AreaResults;
     levels: RiskLevelInfo[];
-    scope: string;
+    /** The area the results are narrowed to, by name; null for the whole center. */
+    area: string | null;
 }) {
     const hidden = hiddenAreasText(areas.hidden);
+    const scope = area ?? 'todo el centro';
 
     return (
         <>

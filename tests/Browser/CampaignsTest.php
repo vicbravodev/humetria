@@ -370,3 +370,36 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
         ->assertSee('1 de 1 personas')
         ->assertSee('Ana López');
 })->with($looks);
+
+it('shows the 7.7 report of a closed evaluation, ready to print', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii')]);
+
+    visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Informe del numeral 7.7'))
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial')
+        ->assertSee('Datos del centro de trabajo')
+        ->assertSee('Pendiente de capturar')
+        ->assertSee('Imprimir o guardar PDF');
+})->with($looks);
+
+it('completes the report with what HR writes', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->click('Completar informe')
+        ->fill('#report-conclusions', 'La mayoría queda en riesgo medio.')
+        ->fill('#report-recommendations', 'Programa de intervención en carga de trabajo.')
+        ->fill('#report-responsible_name', 'Dra. Laura Méndez')
+        ->fill('#report-responsible_license', '12345678')
+        ->press('Guardar')
+        ->assertSee('Informe guardado.')
+        ->assertSee('La mayoría queda en riesgo medio.')
+        ->assertSee('Dra. Laura Méndez · Cédula profesional 12345678')
+        ->assertDontSee('Pendiente de capturar')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
