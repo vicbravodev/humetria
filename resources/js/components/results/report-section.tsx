@@ -14,7 +14,7 @@ export default function ReportSection({
 }) {
     return (
         <section className="grid break-inside-avoid-page gap-3">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-lg font-semibold">
                 {number}. {title}
                 <span className="ml-2 text-sm font-normal text-muted-foreground">
                     (7.7 {incise})

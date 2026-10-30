@@ -18,7 +18,7 @@ export default function ReportHeader({ report }: { report: NomReport }) {
     ];
 
     return (
-        <header className="grid gap-6 rounded-xl border bg-card p-6 print:border-0 print:p-0">
+        <header className="grid gap-6 border-b pb-8">
             <div className="flex items-start justify-between gap-4">
                 <p className="text-lg font-medium">{report.center.legalName}</p>
                 <Logo kind="seal" className="h-4" />
@@ -31,10 +31,10 @@ export default function ReportHeader({ report }: { report: NomReport }) {
                     NOM-035-STPS-2018 · {report.guide} · Informe del numeral 7.7
                 </p>
             </div>
-            <dl className="grid gap-4 border-t pt-6 sm:grid-cols-2 lg:grid-cols-4">
+            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {facts.map((fact) => (
                     <div key={fact.label} className="grid gap-1">
-                        <dt className="text-[13px] leading-[18px] font-medium tracking-[0.02em] text-muted-foreground uppercase">
+                        <dt className="text-sm text-muted-foreground">
                             {fact.label}
                         </dt>
                         <dd className="font-medium">{fact.value}</dd>

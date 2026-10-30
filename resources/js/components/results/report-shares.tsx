@@ -28,8 +28,14 @@ export default function ReportShares({
     }
 
     return (
-        <section className="grid gap-3 print:hidden">
-            <h2 className="text-xl font-semibold">Enlaces abiertos</h2>
+        <section className="flex flex-col gap-4 print:hidden">
+            <div className="flex flex-col gap-1">
+                <h2 className="text-lg font-semibold">Enlaces abiertos</h2>
+                <p className="text-sm text-muted-foreground">
+                    Quien tenga uno abre el informe sin cuenta hasta que vence o
+                    lo revocas.
+                </p>
+            </div>
             <Table>
                 <TableCaption className="sr-only">
                     Enlaces temporales al informe que siguen abiertos
