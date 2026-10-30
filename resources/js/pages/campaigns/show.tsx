@@ -56,6 +56,7 @@ export default function Campaign({
                 <CampaignFacts campaign={campaign} />
                 {!isDraft && (
                     <CampaignFollowUp
+                        tenantSlug={tenantSlug}
                         campaign={campaign}
                         instruments={instruments}
                         people={people}

@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Campaigns\Actions\DrawReplacements;
 use App\Modules\Campaigns\Actions\DrawSample;
+use App\Modules\Campaigns\Actions\InviteMissing;
 use App\Modules\Campaigns\Actions\LaunchCampaign;
+use App\Modules\Campaigns\Actions\ResendInvitations;
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Http\Requests\LaunchCampaignRequest;
+use App\Modules\Campaigns\Http\Requests\ReplacementsRequest;
+use App\Modules\Campaigns\Models\Participant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -40,5 +46,57 @@ final class CampaignActionController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Evaluación lanzada. Las invitaciones van en camino.']);
 
         return redirect()->route('tenant.campaigns.show', [$tenant, $draft->id]);
+    }
+
+    public function resend(mixed $tenant, string $campaign, ResendInvitations $resendInvitations): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $sent = $resendInvitations->handle(CampaignController::find($campaign, CampaignStatus::Active));
+
+        return $this->done($sent, 'No hay a quién reenviar: nadie con correo tiene guías pendientes.', 'Enlace reenviado a 1 persona.', "Enlace reenviado a {$sent} personas.");
+    }
+
+    public function resendOne(mixed $tenant, string $campaign, string $participant, ResendInvitations $resendInvitations): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $active = CampaignController::find($campaign, CampaignStatus::Active);
+        $person = Participant::query()->where('campaign_id', $active->id)->findOrFail($participant);
+
+        // Nothing pending, or no email to send it to.
+        abort_if($resendInvitations->handle($active, $person) === 0, 409);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Enlace reenviado.']);
+
+        return back();
+    }
+
+    public function inviteMissing(mixed $tenant, string $campaign, InviteMissing $inviteMissing): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $active = CampaignController::find($campaign, CampaignStatus::Active);
+        abort_if($active->kind !== CampaignKind::Nom035Evaluation, 409);
+        $sent = $inviteMissing->handle($active);
+
+        return $this->done($sent, 'No falta nadie por invitar.', 'Se invitó a 1 persona.', "Se invitó a {$sent} personas.");
+    }
+
+    public function replacements(ReplacementsRequest $request, mixed $tenant, string $campaign, DrawReplacements $drawReplacements): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $active = CampaignController::find($campaign, CampaignStatus::Active);
+        abort_if($active->population !== Population::Sample, 409);
+        $count = $drawReplacements->handle($active, $request->count());
+
+        return $this->done($count, '', 'Se sorteó 1 persona más para la muestra.', "Se sortearon {$count} personas más para la muestra.");
+    }
+
+    private function done(int $count, string $none, string $one, string $many): RedirectResponse
+    {
+        Inertia::flash('toast', match ($count) {
+            0 => ['type' => 'info', 'message' => $none],
+            1 => ['type' => 'success', 'message' => $one],
+            default => ['type' => 'success', 'message' => $many],
+        });
+
+        return back();
     }
 }

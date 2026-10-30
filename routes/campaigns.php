@@ -14,3 +14,7 @@ Route::get('admin/{tenant:slug}/campaigns/{campaign}', [CampaignController::clas
 Route::delete('admin/{tenant:slug}/campaigns/{campaign}', [CampaignController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.destroy');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/redraw', [CampaignActionController::class, 'redraw'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.redraw');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/launch', [CampaignActionController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.launch');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/resend', [CampaignActionController::class, 'resend'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.resend');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/participants/{participant}/resend', [CampaignActionController::class, 'resendOne'])->where('tenant', $notReserved)->whereUuid(['campaign', 'participant'])->name('tenant.campaigns.participants.resend');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/invite-missing', [CampaignActionController::class, 'inviteMissing'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.invite-missing');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/replacements', [CampaignActionController::class, 'replacements'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.replacements');

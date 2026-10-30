@@ -1,7 +1,10 @@
+import ActiveCampaignActions from '@/components/campaigns/active-campaign-actions';
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
+import PostButton from '@/components/campaigns/post-button';
 import PeopleTable from '@/components/campaigns/people-table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { progressNote } from '@/lib/campaigns';
+import { resend } from '@/routes/tenant/campaigns/participants';
 import type {
     CampaignDetail,
     CampaignPerson,
@@ -13,10 +16,12 @@ import type {
  * manage it, who answered.
  */
 export default function CampaignFollowUp({
+    tenantSlug,
     campaign,
     instruments,
     people,
 }: {
+    tenantSlug: string;
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: CampaignPerson[] | null;
@@ -27,8 +32,16 @@ export default function CampaignFollowUp({
         progress.againstSample &&
         progress.completed < progress.target;
 
+    const active = campaign.status === 'active' && people !== null;
+
     return (
         <>
+            {active && (
+                <ActiveCampaignActions
+                    tenantSlug={tenantSlug}
+                    campaign={campaign}
+                />
+            )}
             {sampleShort && (
                 <Alert>
                     <AlertDescription>
@@ -44,7 +57,30 @@ export default function CampaignFollowUp({
                     <h2 className="text-xl leading-7 font-semibold">
                         Personas ({people.length})
                     </h2>
-                    <PeopleTable people={people} />
+                    <PeopleTable
+                        people={people}
+                        {...(active
+                            ? {
+                                  action: (person: CampaignPerson) =>
+                                      person.reachable &&
+                                      person.guides.some(
+                                          (guide) => guide.status === 'pending',
+                                      ) ? (
+                                          <PostButton
+                                              form={resend.form([
+                                                  tenantSlug,
+                                                  campaign.id,
+                                                  person.id,
+                                              ])}
+                                              variant="ghost"
+                                              size="sm"
+                                          >
+                                              Reenviar
+                                          </PostButton>
+                                      ) : null,
+                              }
+                            : {})}
+                    />
                 </section>
             )}
         </>

@@ -110,3 +110,29 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('Personas (60)')
         ->assertSee('Guía III · Contestó');
 })->with($looks);
+
+it('sends links again, invites a newcomer and draws replacements from the evaluation page', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 30, male: 30);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+    staffOf($tenant, $plant, female: 1);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Reenviar a pendientes')
+        ->assertSee('Enlace reenviado a 60 personas.')
+        ->click('Invitar a quien falte')
+        ->assertSee('Se invitó a 1 persona.')
+        ->assertSee('Personas (61)')
+        ->click('Sortear reemplazos')
+        ->clear('#replacements-count')
+        ->type('#replacements-count', '2')
+        ->click('Sortear e invitar')
+        ->assertSee('Se sortearon 2 personas más para la muestra.')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('in_sample', true)->count())->toBe(55);
+});

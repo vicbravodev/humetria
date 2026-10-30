@@ -6,11 +6,11 @@ namespace App\Modules\Campaigns\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Enums\CampaignStatus;
-use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Exceptions\DraftOutdated;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Instruments\Contracts\Nom035Sample;
 use App\Modules\Organization\Contracts\Roster;
@@ -19,7 +19,6 @@ use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 
@@ -60,7 +59,7 @@ final readonly class LaunchCampaign
 
             foreach ($people as $person) {
                 $participant = $campaign->participants()->firstOrCreate(['employee_id' => $person->id], ['tenant_id' => $campaign->tenant_id]);
-                $this->giveInstruments($participant, $this->instrumentsFor($campaign, isset($sampled[$person->id])));
+                CampaignInstruments::give($participant, CampaignInstruments::for($campaign, isset($sampled[$person->id])));
 
                 if ($person->email !== null) {
                     $this->sendInvitation->handle($campaign, $participant, $person->email, $tradeName);
@@ -128,34 +127,5 @@ final readonly class LaunchCampaign
     private function sampledIds(Campaign $campaign): array
     {
         return array_values($campaign->participants()->get(['employee_id'])->map(fn (Participant $participant): string => $participant->employee_id)->all());
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function instrumentsFor(Campaign $campaign, bool $inSample): array
-    {
-        return array_values(array_filter(
-            $campaign->instruments,
-            fn (string $key): bool => $key !== 'nom035.guide-iii' || $campaign->population !== Population::Sample || $inSample,
-        ));
-    }
-
-    /**
-     * @param  list<string>  $instruments
-     */
-    private function giveInstruments(Participant $participant, array $instruments): void
-    {
-        $now = now();
-
-        $participant->instruments()->insert(array_map(fn (string $instrument): array => [
-            'id' => Str::uuid()->toString(),
-            'tenant_id' => $participant->tenant_id,
-            'participant_id' => $participant->id,
-            'instrument' => $instrument,
-            'status' => InstrumentStatus::Pending->value,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ], $instruments));
     }
 }
