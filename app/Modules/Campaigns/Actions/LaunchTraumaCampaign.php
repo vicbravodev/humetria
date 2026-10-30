@@ -66,12 +66,11 @@ final readonly class LaunchTraumaCampaign
                 'launched_at' => now(),
                 'created_by' => $createdBy,
             ]);
+            $participants = CampaignInstruments::enroll($campaign, array_fill_keys($chosen, false));
             $queue = [];
 
             foreach ($chosen as $employeeId) {
-                $participant = $campaign->participants()->create(['tenant_id' => $campaign->tenant_id, 'employee_id' => $employeeId]);
-                CampaignInstruments::give($participant, $campaign->instruments);
-                $queue[$participant->id] = $active->get($employeeId)?->email !== null;
+                $queue[$participants[$employeeId]] = $active->get($employeeId)?->email !== null;
             }
 
             $invited = $this->queueInvitations->handle($campaign, $queue);

@@ -140,3 +140,22 @@ it('lets only those who manage campaigns apply it', function (): void {
     $this->actingAs($viewer)->get(route('tenant.campaigns.trauma.create', $this->tenant))->assertForbidden();
     $this->actingAs($viewer)->post(route('tenant.campaigns.trauma.store', $this->tenant), traumaForm($this->plant, [$this->people[0]->id]))->assertForbidden();
 });
+
+it('applies it in the same number of queries for any number of people', function (): void {
+    $queries = function (int $people): int {
+        $center = WorkCenter::factory()->for($this->tenant)->create();
+        $ids = staffOf($this->tenant, $center, $people)->pluck('id')->all();
+        Illuminate\Support\Facades\Bus::fake();
+        Illuminate\Support\Facades\DB::flushQueryLog();
+        Illuminate\Support\Facades\DB::enableQueryLog();
+        $this->actingAs($this->hr)->post(route('tenant.campaigns.trauma.store', $this->tenant), traumaForm($center, $ids))->assertSessionHasNoErrors()->assertRedirect();
+        Illuminate\Support\Facades\DB::disableQueryLog();
+
+        return count(Illuminate\Support\Facades\DB::getQueryLog());
+    };
+    // The first request also warms what every request caches (the company's permissions).
+    $queries(1);
+    $two = $queries(2);
+
+    expect($queries(40))->toBe($two);
+});

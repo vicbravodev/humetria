@@ -50,12 +50,14 @@ final readonly class LaunchCampaign
             $this->assertDraftStillHolds($campaign, $people);
             $campaign->update(['status' => CampaignStatus::Active, 'launched_at' => now(), 'closes_on' => $closesOn, 'workers' => count($people)]);
             $sampled = array_flip($this->sampledIds($campaign));
+            $participants = CampaignInstruments::enroll($campaign, array_combine(
+                array_map(fn (RosterEntry $person): string => $person->id, $people),
+                array_map(fn (RosterEntry $person): bool => isset($sampled[$person->id]), $people),
+            ));
             $queue = [];
 
             foreach ($people as $person) {
-                $participant = $campaign->participants()->firstOrCreate(['employee_id' => $person->id], ['tenant_id' => $campaign->tenant_id]);
-                CampaignInstruments::give($participant, CampaignInstruments::for($campaign, isset($sampled[$person->id])));
-                $queue[$participant->id] = $person->email !== null;
+                $queue[$participants[$person->id]] = $person->email !== null;
             }
 
             $invited = $this->queueInvitations->handle($campaign, $queue);
