@@ -29,6 +29,7 @@ function screened(Campaign $campaign, string $name, string $answeredAt, bool $re
         'work_center_id' => $campaign->work_center_id,
         'area_id' => Area::factory()->create(['tenant_id' => $campaign->tenant_id, 'name' => "Área de {$name}"])->id,
         'name' => $name,
+        'job_title' => 'Operador',
         ...($active ? [] : ['deactivated_at' => now()]),
     ]);
     TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $employee->id, 'requires_clinical_assessment' => $requires, 'answered_at' => $answeredAt]);
@@ -50,7 +51,7 @@ it('lists who requires a clinical assessment, by when they answered, deactivated
             ->where('counts', ['answered' => 3, 'requiring' => 2])
             ->where('people.total', 2)
             // 06:00 UTC is still the 3rd in Mexico City... at midnight.
-            ->where('people.data.0', ['id' => $ana->id, 'name' => 'Ana López', 'area' => 'Área de Ana López', 'answeredOn' => '3 nov 2026'])
+            ->where('people.data.0', ['id' => $ana->id, 'name' => 'Ana López', 'area' => 'Área de Ana López', 'jobTitle' => 'Operador', 'answeredOn' => '3 nov 2026'])
             ->where('people.data.1.name', 'Luis Pérez'));
 })->with([TenantRole::Owner, TenantRole::Hr]);
 
@@ -59,7 +60,7 @@ it('gives no answer of the Guía I in the list, only who needs care', function (
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr))
         ->get(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]))
-        ->assertInertia(fn (Assert $page) => expect(array_keys($page->toArray()['props']['people']['data'][0]))->toBe(['id', 'name', 'area', 'answeredOn']));
+        ->assertInertia(fn (Assert $page) => expect(array_keys($page->toArray()['props']['people']['data'][0]))->toBe(['id', 'name', 'area', 'jobTitle', 'answeredOn']));
 });
 
 it('records in the audit trail who consulted the list', function (): void {

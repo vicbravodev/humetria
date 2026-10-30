@@ -25,14 +25,14 @@ function rosterEmployee(Tenant $tenant, WorkCenter $workCenter, Area $area, arra
     return Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $workCenter->id, 'area_id' => $area->id, ...$attributes]);
 }
 
-it('lists the active people of a work center by name, with their area and gender', function (): void {
-    $zoe = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Zoé Ruiz', 'gender' => Gender::Female, 'email' => 'zoe@acme.mx']);
-    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'gender' => Gender::Other, 'email' => null, 'mobile' => '5512345678']);
+it('lists the active people of a work center by name, with their area, gender and job title', function (): void {
+    $zoe = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Zoé Ruiz', 'gender' => Gender::Female, 'email' => 'zoe@acme.mx', 'job_title' => 'Supervisora']);
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'gender' => Gender::Other, 'email' => null, 'mobile' => '5512345678', 'job_title' => 'Operadora']);
     workIn($this->tenant);
 
     expect(resolve(Roster::class)->activeIn($this->plant->id))->toEqual([
-        new RosterEntry($ana->id, 'Ana López', null, 'other', $this->production->id, 'Producción', $this->plant->id, true),
-        new RosterEntry($zoe->id, 'Zoé Ruiz', 'zoe@acme.mx', 'female', $this->production->id, 'Producción', $this->plant->id, true),
+        new RosterEntry($ana->id, 'Ana López', null, 'other', $this->production->id, 'Producción', $this->plant->id, true, 'Operadora'),
+        new RosterEntry($zoe->id, 'Zoé Ruiz', 'zoe@acme.mx', 'female', $this->production->id, 'Producción', $this->plant->id, true, 'Supervisora'),
     ]);
 });
 

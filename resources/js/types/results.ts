@@ -86,6 +86,7 @@ export type ScreenedPerson = {
     id: string;
     name: string;
     area: string;
+    jobTitle: string;
     answeredOn: string;
 };
 

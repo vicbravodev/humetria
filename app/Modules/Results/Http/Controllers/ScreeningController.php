@@ -40,6 +40,7 @@ final class ScreeningController extends Controller
                 'id' => $record->employeeId,
                 'name' => $people[$record->employeeId]->name ?? '',
                 'area' => $people[$record->employeeId]->areaName ?? '',
+                'jobTitle' => $people[$record->employeeId]->jobTitle ?? '',
                 'answeredOn' => ResultsClock::day($record->answeredAt),
             ]),
         ]);

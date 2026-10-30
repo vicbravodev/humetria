@@ -6,7 +6,7 @@ namespace App\Modules\Organization\Data;
 
 /**
  * A person of the company as other modules need them: to invite them, to place them in a work center and an area, and
- * to split a sample by gender ("female", "male" or "other").
+ * to split a sample by gender ("female", "male" or "other"), and to tell them apart by their job title.
  */
 final readonly class RosterEntry
 {
@@ -19,5 +19,6 @@ final readonly class RosterEntry
         public string $areaName,
         public string $workCenterId,
         public bool $active,
+        public string $jobTitle,
     ) {}
 }

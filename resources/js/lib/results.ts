@@ -1,4 +1,6 @@
+import { index, show } from '@/routes/tenant/campaigns';
 import type {
+    BreadcrumbItem,
     ItemResult,
     LevelCounts,
     Participation,
@@ -121,4 +123,45 @@ export function rankItems(items: ItemResult[]): ItemResult[] {
             : shareOf(item.unfavorable, item.answered);
 
     return items.toSorted((a, b) => share(b) - share(a));
+}
+
+/**
+ * When an evaluation ran, from two days as the server writes them ("10 oct 2026"), with what they share written
+ * once: "10 al 29 oct 2026", "28 oct al 3 nov 2026". Since when while it runs; nothing before it starts.
+ */
+export function periodText(
+    from: string | null,
+    to: string | null,
+): string | null {
+    if (from === null) {
+        return null;
+    }
+
+    if (to === null) {
+        return `Desde el ${from}`;
+    }
+
+    const [fromDay, fromMonth, fromYear] = from.split(' ');
+    const [, toMonth, toYear] = to.split(' ');
+
+    if (fromYear !== toYear) {
+        return `${from} al ${to}`;
+    }
+
+    return fromMonth === toMonth
+        ? `${fromDay} al ${to}`
+        : `${fromDay} ${fromMonth} al ${to}`;
+}
+
+/** The trail of a page under an evaluation, in the top bar: "NOM-035 › Planta Norte › Resultados". */
+export function resultsTrail(
+    tenantSlug: string,
+    campaign: { id: string; workCenter: string },
+    page: string,
+): BreadcrumbItem[] {
+    return [
+        { title: 'NOM-035', href: index(tenantSlug) },
+        { title: campaign.workCenter, href: show([tenantSlug, campaign.id]) },
+        { title: page },
+    ];
 }
