@@ -1,10 +1,13 @@
 import { router } from '@inertiajs/react';
+import { KeyRound, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
 import ConsolePagination from '@/components/console-pagination';
-import Heading from '@/components/heading';
+import SettingRow from '@/components/humetria/setting-row';
 import PasskeyItem from '@/components/passkeys/passkey-item';
 import PasskeysEmptyState from '@/components/passkeys/passkeys-empty-state';
 import PasskeyRegistration from '@/components/passkeys/passkey-register';
+import { Button } from '@/components/ui/button';
 import type { Paginated } from '@/types';
 import type { Passkey } from '@/types/auth';
 
@@ -14,6 +17,7 @@ export type Props = {
 };
 
 export default function ManagePasskeys(props: Props) {
+    const [adding, setAdding] = useState(false);
     const page = props.passkeys ?? null;
     const passkeys = page?.data ?? [];
 
@@ -24,23 +28,36 @@ export default function ManagePasskeys(props: Props) {
         });
     };
 
-    const handleRegisterSuccess = () => {
-        router.reload();
-    };
-
     if (!(props.canManagePasskeys ?? false)) {
         return null;
     }
 
     return (
-        <div className="space-y-6">
-            <Heading
-                variant="small"
-                title="Llaves de acceso"
-                description="Administra tus llaves de acceso para iniciar sesión sin contraseña"
-            />
-
-            <div className="overflow-hidden rounded-lg border border-border">
+        <SettingRow
+            icon={KeyRound}
+            title="Llaves de acceso"
+            description="Entra con tu huella, tu rostro o el PIN de tu equipo, sin contraseña."
+            action={
+                <Button
+                    variant="outline"
+                    onClick={() => setAdding(true)}
+                    disabled={adding}
+                >
+                    <Plus aria-hidden />
+                    Agregar llave
+                </Button>
+            }
+        >
+            {adding && (
+                <PasskeyRegistration
+                    onSuccess={() => {
+                        setAdding(false);
+                        router.reload();
+                    }}
+                    onCancel={() => setAdding(false)}
+                />
+            )}
+            <div className="overflow-hidden rounded-xl border">
                 {passkeys.length > 0 ? (
                     passkeys.map((passkey) => (
                         <PasskeyItem
@@ -53,7 +70,6 @@ export default function ManagePasskeys(props: Props) {
                     <PasskeysEmptyState />
                 )}
             </div>
-
             {page !== null && (
                 <ConsolePagination
                     page={page}
@@ -63,8 +79,6 @@ export default function ManagePasskeys(props: Props) {
                     pinned={false}
                 />
             )}
-
-            <PasskeyRegistration onSuccess={handleRegisterSuccess} />
-        </div>
+        </SettingRow>
     );
 }

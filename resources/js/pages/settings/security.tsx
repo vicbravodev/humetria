@@ -4,7 +4,6 @@ import ManagePasskeys from '@/components/passkeys/manage-passkeys';
 import UpdatePasswordForm from '@/components/settings/update-password-form';
 import type { Props as ManageTwoFactorProps } from '@/components/two-factor/manage-two-factor';
 import ManageTwoFactor from '@/components/two-factor/manage-two-factor';
-import { edit } from '@/routes/security';
 
 // oxfmt-ignore
 type Props = {
@@ -16,8 +15,6 @@ export default function Security(props: Props) {
     return (
         <>
             <Head title="Seguridad" />
-
-            <h1 className="sr-only">Seguridad</h1>
 
             <UpdatePasswordForm passwordRules={props.passwordRules} />
 
@@ -36,10 +33,5 @@ export default function Security(props: Props) {
 }
 
 Security.layout = {
-    breadcrumbs: [
-        {
-            title: 'Seguridad',
-            href: edit(),
-        },
-    ],
+    breadcrumbs: [{ title: 'Cuenta' }, { title: 'Configuración' }],
 };

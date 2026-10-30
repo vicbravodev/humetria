@@ -75,5 +75,5 @@ it('renders the security settings once the password is confirmed', function (boo
         ->fill('password', 'password')
         ->press('@confirm-password-button')
         ->assertPathIs('/admin/settings/security')
-        ->assertSee('Cambiar contraseña'));
+        ->assertSee('Guardar contraseña'));
 })->with('looks');

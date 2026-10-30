@@ -1,9 +1,11 @@
 import { Form } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import Heading from '@/components/heading';
+import { Smartphone } from 'lucide-react';
+import SettingRow from '@/components/humetria/setting-row';
 import EnableTwoFactor from '@/components/two-factor/enable-two-factor';
 import TwoFactorRecoveryCodes from '@/components/two-factor/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor/two-factor-setup-modal';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { disable } from '@/routes/two-factor';
@@ -45,47 +47,46 @@ export default function ManageTwoFactor(props: Props) {
     }
 
     return (
-        <div className="space-y-6">
-            <Heading
-                variant="small"
-                title="Verificación en dos pasos"
-                description="Administra tu verificación en dos pasos"
-            />
-            {twoFactorEnabled ? (
-                <div className="flex flex-col items-start justify-start space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                        Al iniciar sesión te pediremos un código de seguridad
-                        aleatorio, que puedes obtener en una aplicación de
-                        autenticación (TOTP) en tu celular.
-                    </p>
-
-                    <div className="relative inline">
-                        <Form {...disable.form()}>
-                            {({ processing }) => (
-                                <Button
-                                    variant="destructive"
-                                    type="submit"
-                                    disabled={processing}
-                                >
-                                    Desactivar verificación en dos pasos
-                                </Button>
-                            )}
-                        </Form>
-                    </div>
-
-                    <TwoFactorRecoveryCodes
-                        recoveryCodesList={recoveryCodesList}
-                        fetchRecoveryCodes={fetchRecoveryCodes}
-                        errors={errors}
+        <SettingRow
+            icon={Smartphone}
+            title="Verificación en dos pasos"
+            status={
+                twoFactorEnabled ? (
+                    <Badge variant="success">Activada</Badge>
+                ) : (
+                    <Badge variant="secondary">Desactivada</Badge>
+                )
+            }
+            description="Al entrar, te pediremos también un código de una app de autenticación en tu celular."
+            action={
+                twoFactorEnabled ? (
+                    <Form {...disable.form()}>
+                        {({ processing }) => (
+                            <Button
+                                variant="outline"
+                                type="submit"
+                                disabled={processing}
+                                aria-label="Desactivar verificación en dos pasos"
+                            >
+                                Desactivar
+                            </Button>
+                        )}
+                    </Form>
+                ) : (
+                    <EnableTwoFactor
+                        hasSetupData={hasSetupData}
+                        onShowSetup={() => setShowSetupModal(true)}
                     />
-                </div>
-            ) : (
-                <EnableTwoFactor
-                    hasSetupData={hasSetupData}
-                    onShowSetup={() => setShowSetupModal(true)}
+                )
+            }
+        >
+            {twoFactorEnabled && (
+                <TwoFactorRecoveryCodes
+                    recoveryCodesList={recoveryCodesList}
+                    fetchRecoveryCodes={fetchRecoveryCodes}
+                    errors={errors}
                 />
             )}
-
             <TwoFactorSetupModal
                 isOpen={showSetupModal}
                 onClose={() => setShowSetupModal(false)}
@@ -97,6 +98,6 @@ export default function ManageTwoFactor(props: Props) {
                 fetchSetupData={fetchSetupData}
                 errors={errors}
             />
-        </div>
+        </SettingRow>
     );
 }
