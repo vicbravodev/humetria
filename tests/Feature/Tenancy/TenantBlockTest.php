@@ -60,7 +60,7 @@ it('carries nothing but the shared props to the blocked page', function (): void
         ->get(route('tenant.dashboard', $tenant))
         ->viewData('page')['props'];
 
-    expect(array_keys($props))->toEqualCanonicalizing(['name', 'auth', 'impersonator', 'tenant', 'tenants', 'sidebarOpen', 'errors']);
+    expect(array_keys($props))->toEqualCanonicalizing(['name', 'auth', 'impersonator', 'tenant', 'tenants', 'inCourse', 'sidebarOpen', 'errors']);
 });
 
 it('answers HEAD with the blocked page too', function (): void {
