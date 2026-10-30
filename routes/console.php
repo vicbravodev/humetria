@@ -16,3 +16,6 @@ Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $clo
 })->purpose('Close the evaluations whose last day is over');
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
+Schedule::command('horizon:snapshot')->everyFiveMinutes();
+Schedule::command('queue:prune-batches')->daily();
+Schedule::command('queue:prune-failed')->daily();

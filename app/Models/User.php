@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use SensitiveParameter;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -56,6 +59,21 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             ->where('model_has_roles.model_type', $this->getMorphClass())
             ->where('model_has_roles.model_id', $this->id)
             ->exists();
+    }
+
+    /**
+     * Fortify's emails go through the queue.
+     *
+     * @param  string  $token
+     */
+    public function sendPasswordResetNotification(#[SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 
     /**

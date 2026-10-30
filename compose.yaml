@@ -49,6 +49,39 @@ services:
         restart: unless-stopped
         depends_on:
             - laravel.test
+    # Queue workers (Horizon) and the scheduler run beside the app on its image; Docker restarts them if they die.
+    # After changing a job's code: `sail artisan horizon:terminate` and Docker brings Horizon back with it.
+    horizon:
+        image: 'sail-8.5/app'
+        working_dir: /var/www/html
+        command: ['php', 'artisan', 'horizon']
+        environment:
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        restart: unless-stopped
+        depends_on:
+            - laravel.test
+            - pgsql
+            - valkey
+            - mailtrap-local
+    scheduler:
+        image: 'sail-8.5/app'
+        working_dir: /var/www/html
+        command: ['php', 'artisan', 'schedule:work']
+        environment:
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        restart: unless-stopped
+        depends_on:
+            - laravel.test
+            - pgsql
+            - valkey
     pgsql:
         image: 'postgres:18-alpine'
         ports:

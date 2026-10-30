@@ -7,14 +7,20 @@ namespace App\Modules\Tenancy\Notifications;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Support\DisplayDate;
 use Carbon\CarbonImmutable;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * The email that carries the one-time link to join a company with a role. The plain token lives only here and in the link.
+ * The email that carries the one-time link to join a company with a role. The plain token lives only here and in the link
+ * (and in the queued job, encrypted, so neither Redis nor the Horizon dashboard shows it).
  */
-final class InvitationEmail extends Notification
+final class InvitationEmail extends Notification implements ShouldBeEncrypted, ShouldQueue
 {
+    use Queueable;
+
     public function __construct(
         private readonly string $tradeName,
         private readonly string $name,

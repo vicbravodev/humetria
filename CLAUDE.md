@@ -246,6 +246,10 @@ contra él.
   Postgres, Vite y los demás servicios. Vite arranca solo y Docker lo reinicia si se cae (`restart: unless-stopped`);
   su `node_modules` de Linux vive en un volumen, aparte del de tu máquina. Todo comando de la app va por el
   contenedor: `sail artisan …`, `sail composer …`, `sail npm …`. No se corre `php artisan serve` ni `npm run dev` local.
+- Las colas van en Redis (Valkey) y las procesa Horizon: el contenedor `horizon` (`php artisan horizon`) y el `scheduler`
+  (`php artisan schedule:work`) arrancan con `sail up -d` y Docker los reinicia si se caen. Tras cambiar el código de un
+  job: `sail artisan horizon:terminate`. El tablero vive en `/horizon`, solo para el superadmin. No se corre
+  `queue:work` a mano.
 - Los tests son la excepción: corren en local (`composer test`, Vitest, navegador) contra el Postgres de Docker en el
   puerto 5433 (`FORWARD_DB_PORT`); `phpunit.xml` fija ese host y puerto, así que el `.env` puede apuntar a `pgsql`.
 - Primera vez: `composer install`, `cp .env.example .env`, `sail up -d`, `sail artisan key:generate`, `sail artisan migrate`.

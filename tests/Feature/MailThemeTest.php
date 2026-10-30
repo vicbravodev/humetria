@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Mail\Markdown;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -31,7 +31,7 @@ it('dresses every email in the Humetría design system', function (MailMessage $
         ->not->toContain('#a1a1aa');
 })->with([
     'a notification' => fn (): MailMessage => (new MailMessage)->greeting('Hola')->action('Aceptar', 'https://humetria.test'),
-    'the Fortify password reset' => fn (): MailMessage => (new ResetPassword('token'))->toMail(User::factory()->make()),
+    'the Fortify password reset' => fn (): MailMessage => (new ResetPasswordNotification('token'))->toMail(User::factory()->make()),
 ]);
 
 it('uses only CSS the mail clients understand', function (): void {
@@ -61,12 +61,12 @@ it('writes the Fortify emails in Spanish', function (MailMessage $mail, string $
         ->not->toContain('Please click');
 })->with([
     'password reset' => [
-        fn (): MailMessage => (new ResetPassword('token'))->toMail(User::factory()->make()),
+        fn (): MailMessage => (new ResetPasswordNotification('token'))->toMail(User::factory()->make()),
         'Restablece tu contraseña de Humetría',
         'Restablecer contraseña',
     ],
     'email verification' => [
-        fn (): MailMessage => (new VerifyEmail)->toMail(User::factory()->create()),
+        fn (): MailMessage => (new VerifyEmailNotification)->toMail(User::factory()->create()),
         'Verifica tu correo en Humetría',
         'Verificar correo',
     ],
