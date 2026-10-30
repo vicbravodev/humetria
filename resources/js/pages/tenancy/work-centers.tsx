@@ -46,25 +46,27 @@ export default function WorkCenters({
                 </PageHeader>
                 {/* Only once there is something archived, or while looking at the archive. */}
                 {(counts.archived > 0 || view === 'archived') && (
-                    <CountTabs
-                        label="Vistas de centros de trabajo"
-                        tabs={[
-                            {
-                                label: 'Activos',
-                                count: counts.active,
-                                href: index.url(tenantSlug),
-                                active: view === 'active',
-                            },
-                            {
-                                label: 'Archivados',
-                                count: counts.archived,
-                                href: index.url(tenantSlug, {
-                                    query: { archived: 1 },
-                                }),
-                                active: view === 'archived',
-                            },
-                        ]}
-                    />
+                    <div>
+                        <CountTabs
+                            label="Vistas de centros de trabajo"
+                            tabs={[
+                                {
+                                    label: 'Activos',
+                                    count: counts.active,
+                                    href: index.url(tenantSlug),
+                                    active: view === 'active',
+                                },
+                                {
+                                    label: 'Archivados',
+                                    count: counts.archived,
+                                    href: index.url(tenantSlug, {
+                                        query: { archived: 1 },
+                                    }),
+                                    active: view === 'archived',
+                                },
+                            ]}
+                        />
+                    </div>
                 )}
                 {workCenters.total === 0 ? (
                     <WorkCentersEmpty view={view} />

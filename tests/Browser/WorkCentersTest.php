@@ -36,7 +36,7 @@ it('lists the work centers with their address, and the archived ones apart', fun
         ->assertDontSee('Bodega Vieja');
 
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
-        ->click('Archivados')
+        ->click('a[href$="archived=1"]')
         ->assertPathIs('/admin/acme/work-centers'))
         ->assertSee('Bodega Vieja')
         ->assertDontSee('Planta Querétaro');
@@ -168,7 +168,7 @@ it('archives a work center after confirming, and restores it from the archive', 
         ->press('Archivar')
         ->assertSee('Centro de trabajo archivado.')
         ->assertSee('Aún no hay centros de trabajo')
-        ->click('Archivados')
+        ->click('a[href$="archived=1"]')
         ->assertSee('Bodega Norte')
         ->click('@work-center-actions')->click('Restaurar')
         ->assertSee('Centro de trabajo restaurado.')
