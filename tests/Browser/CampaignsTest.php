@@ -32,11 +32,44 @@ it('lists the work centers to evaluate before any evaluation', function (bool $d
     staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 20);
 
     visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile)
-        ->assertSee('No hay evaluaciones abiertas')
         ->assertSee('Planta Norte')
-        ->assertSee('NOM-035: Guías I y II')
+        ->assertSee('Manufactura de autopartes')
+        ->assertSee('20 personas')
+        ->assertSee('I y II')
+        ->assertSee('De 16 a 50')
         ->assertSee('Sin evaluar')
+        ->assertSee('Qué guía aplica según el tamaño del centro')
         ->assertSee('Evaluar');
+})->with($looks);
+
+it('follows a running evaluation and the history from each work center', function (bool $dark, bool $mobile): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $this->post(route('tenant.campaigns.launch', [$tenant, Campaign::query()->withoutGlobalScopes()->sole()->id]), ['closes_on' => now()->addWeeks(2)->toDateString()]);
+    $warehouse = WorkCenter::factory()->for($tenant)->create(['name' => 'Almacén']);
+    staffOf($tenant, $warehouse, 3);
+    Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $warehouse->id]);
+
+    visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile)
+        ->assertSee('En curso')
+        ->assertSee('0 de 20')
+        ->assertSee('Ver avance')
+        ->assertSee('Al día')
+        ->assertSee('Ver resultados')
+        ->assertSee('Historial');
+})->with($looks);
+
+it('opens the new-evaluation assistant at its second step from a work center', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
+
+    visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile, fn ($page) => $page
+        ->click('button:has-text("Evaluar")')
+        ->assertSee('Nueva evaluación')
+        ->assertSee('A quién se aplica la Guía III'));
 })->with($looks);
 
 it('pages the evaluations and the work centers', function (): void {
@@ -78,16 +111,34 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
         ->click('NOM-035')
         ->assertPathIs('/admin/acme/campaigns')
         ->click('button:has-text("Evaluar")')
-        ->assertSee('Evaluar Planta Norte')
-        ->assertSee('¿Quién contesta la Guía III?')
-        ->assertSee('Se sortean 53 de 60 personas')
-        ->click('Una muestra representativa')
-        ->click('Preparar borrador')
+        ->assertSee('Planta Norte · 60 personas')
+        ->assertSee('Con más de 50 personas aplican las Guías I y III.')
+        ->assertSee('Muestra representativa · 53 personas')
+        ->click('button:has-text("Siguiente: fecha y envío")')
         ->assertSee('Borrador de evaluación creado.')
         ->assertSee('Muestra sorteada (53)')
         ->assertNoJavaScriptErrors();
 
     expect(Campaign::query()->withoutGlobalScopes()->sole()->sample_size)->toBe(53);
+});
+
+it('chooses the work center in the new-evaluation assistant, and everyone instead of a sample', function (): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
+
+    visit('/admin/acme/campaigns')
+        ->click('Nueva evaluación')
+        ->click('#evaluation-work-center')
+        ->type('[role="combobox"][aria-controls="evaluation-work-center-options"]', 'norte')
+        ->click('[role="option"]:has-text("Planta Norte")')
+        ->click('button:has-text("Siguiente: guías y muestra")')
+        ->assertSee('Planta Norte · 60 personas')
+        ->click('Todas las personas · 60')
+        ->click('button:has-text("Siguiente: fecha y envío")')
+        ->assertSee('Borrador de evaluación creado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Campaign::query()->withoutGlobalScopes()->sole()->population->value)->toBe('all');
 });
 
 it('launches a draft with the deadline suggested, inviting everyone by email', function (): void {

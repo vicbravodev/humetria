@@ -22,6 +22,7 @@ use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Closure;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -53,26 +54,55 @@ final readonly class CampaignPages
     ) {}
 
     /**
-     * Open and closed evaluations and the work centers in use, each paged on its own.
+     * Each work center in use with its evaluations, the open Guía I by event and the closed campaigns (history), each
+     * paged on its own; how many centers fall in each size the norm sets apart, and the minimum group of results.
      *
-     * @return array{open: LengthAwarePaginator<int, array<string, mixed>>, closed: LengthAwarePaginator<int, array<string, mixed>>, workCenters: LengthAwarePaginator<int, array<string, mixed>>}
+     * @return array{events: LengthAwarePaginator<int, array<string, mixed>>, closed: LengthAwarePaginator<int, array<string, mixed>>, workCenters: LengthAwarePaginator<int, array<string, mixed>>, centersBySize: array{small: int, medium: int, large: int}, minGroup: int}
      */
     public function index(): array
     {
-        $open = Campaign::query()->whereIn('status', [CampaignStatus::Draft, CampaignStatus::Active])->orderByDesc('created_at')->orderByDesc('id')
-            ->paginate(self::OPEN_PER_PAGE, pageName: 'open')->withQueryString();
+        $events = Campaign::query()->where('kind', CampaignKind::Nom035Trauma)->whereIn('status', [CampaignStatus::Draft, CampaignStatus::Active])
+            ->orderByDesc('created_at')->orderByDesc('id')
+            ->paginate(self::OPEN_PER_PAGE, pageName: 'events')->withQueryString();
         $closed = Campaign::query()->where('status', CampaignStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')
             ->paginate(self::CLOSED_PER_PAGE, pageName: 'closed')->withQueryString();
-        $ids = [...$open->getCollection()->modelKeys(), ...$closed->getCollection()->modelKeys()];
-        $tally = $this->tally->of(array_values(array_filter($ids, is_string(...))));
-        $names = $this->workCenterNames();
-        $card = fn (Campaign $campaign): array => $this->card($campaign, $names, $tally[$campaign->id] ?? []);
+        $centers = $this->workCenters->activePage(CampaignPeople::PER_PAGE, 'centers');
+        $evaluations = $this->evaluationsOf($centers->items());
+        $all = $this->workCenters->all();
+        $headcount = $this->headcount->byWorkCenter();
+        $card = $this->cards(
+            [...$events->getCollection()->all(), ...$closed->getCollection()->all(), ...$evaluations->where('status', '!==', CampaignStatus::Closed)->all()],
+            self::names($all),
+        );
 
         return [
-            'open' => $open->through($card),
+            'events' => $events->through($card),
             'closed' => $closed->through($card),
-            'workCenters' => $this->workCenterRows(),
+            'workCenters' => $centers->through(fn (WorkCenterSummary $workCenter): array => $this->workCenterRow(
+                $workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id), $card,
+            )),
+            'centersBySize' => $this->centersBySize($all, $headcount),
+            'minGroup' => config()->integer('results.min_group'),
         ];
+    }
+
+    /**
+     * A work center in use, as the assistant for a new evaluation needs it; null when archived or not found.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function candidate(string $workCenterId): ?array
+    {
+        $workCenter = $this->workCenters->findActive($workCenterId);
+
+        if ($workCenter === null) {
+            return null;
+        }
+
+        $evaluations = $this->evaluationsOf([$workCenter]);
+        $card = $this->cards($evaluations->where('status', '!==', CampaignStatus::Closed)->all(), [$workCenter->id => $workCenter->name]);
+
+        return $this->workCenterRow($workCenter, $this->headcount->byWorkCenter()[$workCenter->id] ?? 0, $evaluations, $card);
     }
 
     /**
@@ -92,7 +122,6 @@ final readonly class CampaignPages
                 'populationLabel' => $campaign->population?->label(),
                 'sampleSize' => $campaign->sample_size,
                 'quotas' => $this->quotas($campaign),
-                'launchedOn' => $campaign->launched_at === null ? null : CampaignClock::day($campaign->launched_at),
             ],
             'instruments' => array_map(fn (string $key): array => [
                 'key' => $key,
@@ -144,6 +173,7 @@ final readonly class CampaignPages
             'instruments' => array_map(fn (string $key): string => $this->instruments->definition($key)->shortTitle, $campaign->instruments),
             'closesOn' => $campaign->closes_on === null ? null : CampaignClock::day($campaign->closes_on, isDate: true),
             'closedOn' => $campaign->closed_at === null ? null : CampaignClock::day($campaign->closed_at),
+            'launchedOn' => $campaign->launched_at === null ? null : CampaignClock::day($campaign->launched_at),
             'progress' => $this->progress($campaign, $tally),
         ];
     }
@@ -266,9 +296,18 @@ final readonly class CampaignPages
      */
     private function workCenterNames(): array
     {
+        return self::names($this->workCenters->all());
+    }
+
+    /**
+     * @param  list<WorkCenterSummary>  $workCenters
+     * @return array<string, string>
+     */
+    private static function names(array $workCenters): array
+    {
         $names = [];
 
-        foreach ($this->workCenters->all() as $workCenter) {
+        foreach ($workCenters as $workCenter) {
             $names[$workCenter->id] = $workCenter->name;
         }
 
@@ -276,27 +315,68 @@ final readonly class CampaignPages
     }
 
     /**
-     * The work centers in use, a page at a time, each with its evaluations.
+     * The card of each campaign given, its progress tallied for all of them at once.
      *
-     * @return LengthAwarePaginator<int, array<string, mixed>>
+     * @param  array<int, Campaign>  $campaigns
+     * @param  array<string, string>  $names
+     * @return Closure(Campaign): array<string, mixed>
      */
-    private function workCenterRows(): LengthAwarePaginator
+    private function cards(array $campaigns, array $names): Closure
     {
-        $page = $this->workCenters->activePage(CampaignPeople::PER_PAGE, 'centers');
-        $headcount = $this->headcount->byWorkCenter();
-        $evaluations = Campaign::query()
-            ->where('kind', CampaignKind::Nom035Evaluation)
-            ->whereIn('work_center_id', array_map(fn (WorkCenterSummary $workCenter): string => $workCenter->id, $page->items()))
-            ->get(['id', 'work_center_id', 'status', 'closed_at']);
+        $tally = $this->tally->of(array_values(array_map(fn (Campaign $campaign): string => $campaign->id, $campaigns)));
 
-        return $page->through(fn (WorkCenterSummary $workCenter): array => $this->workCenterRow($workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id)));
+        return fn (Campaign $campaign): array => $this->card($campaign, $names, $tally[$campaign->id] ?? []);
+    }
+
+    /**
+     * The NOM-035 evaluations of the work centers given.
+     *
+     * @param  array<int, WorkCenterSummary>  $workCenters
+     * @return Collection<int, Campaign>
+     */
+    private function evaluationsOf(array $workCenters): Collection
+    {
+        return Campaign::query()
+            ->where('kind', CampaignKind::Nom035Evaluation)
+            ->whereIn('work_center_id', array_map(fn (WorkCenterSummary $workCenter): string => $workCenter->id, $workCenters))
+            ->get();
+    }
+
+    /**
+     * How many work centers in use call for Guía I alone (up to 15 people), Guías I and II (16 to 50) and Guías I and
+     * III (more than 50), num. 2. A center with nobody yet counts in none.
+     *
+     * @param  list<WorkCenterSummary>  $workCenters
+     * @param  array<string, int>  $headcount
+     * @return array{small: int, medium: int, large: int}
+     */
+    private function centersBySize(array $workCenters, array $headcount): array
+    {
+        $sizes = ['small' => 0, 'medium' => 0, 'large' => 0];
+
+        foreach ($workCenters as $workCenter) {
+            $guides = $workCenter->archived ? [] : $this->guides->for($headcount[$workCenter->id] ?? 0);
+            $size = match (array_last($guides)) {
+                'I' => 'small',
+                'II' => 'medium',
+                'III' => 'large',
+                null => null,
+            };
+
+            if ($size !== null) {
+                $sizes[$size]++;
+            }
+        }
+
+        return $sizes;
     }
 
     /**
      * @param  Collection<int, Campaign>  $evaluations  of this work center
+     * @param  Closure(Campaign): array<string, mixed>  $card
      * @return array<string, mixed>
      */
-    private function workCenterRow(WorkCenterSummary $workCenter, int $workers, Collection $evaluations): array
+    private function workCenterRow(WorkCenterSummary $workCenter, int $workers, Collection $evaluations, Closure $card): array
     {
         $open = $evaluations->first(fn (Campaign $campaign): bool => $campaign->status !== CampaignStatus::Closed);
         $last = $evaluations->where('status', CampaignStatus::Closed)->sortByDesc('closed_at')->first();
@@ -305,12 +385,14 @@ final readonly class CampaignPages
         return [
             'id' => $workCenter->id,
             'name' => $workCenter->name,
+            'activity' => $workCenter->mainActivity,
             'workers' => $workers,
             'guides' => $this->guides->for($workers),
             'lastEvaluatedOn' => $last?->closed_at === null ? null : CampaignClock::day($last->closed_at),
             'dueOn' => $due === null ? null : CampaignClock::day($due),
             'overdue' => $due !== null && $due->isPast(),
-            'openCampaignId' => $open?->id,
+            'lastCampaignId' => $last?->id,
+            'openCampaign' => $open === null ? null : $card($open),
             'eligible' => $workers > 0 && $open === null,
         ];
     }
