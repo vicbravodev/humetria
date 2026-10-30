@@ -64,7 +64,7 @@ it('keeps the actions of each row in one menu, so the table fits without scrolli
         ->assertScript('() => { const box = document.querySelector(\'[data-slot="table-container"]\'); return box.scrollWidth <= box.clientWidth; }')
         ->assertScript('() => document.querySelectorAll(\'[data-test="tenant-actions"]\').length', 1)
         ->click('[aria-label="Acciones de Grupo Ejemplo"]')
-        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Desactivar')
+        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Logo de los correos, Desactivar')
         // Desactivar is apart from the rest and in the destructive color.
         ->assertScript('() => document.querySelector(\'[role="menuitem"][data-variant="destructive"]\')?.textContent', 'Desactivar')
         ->assertScript('() => document.querySelector(\'[role="menu"] [role="separator"]\') !== null');
@@ -279,7 +279,7 @@ it('offers to change the end date of an active company instead of activating it 
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Desactivar')
+        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Logo de los correos, Desactivar')
         ->click('Cambiar vigencia')
         ->assertSee('Elige el último día')
         ->assertSeeIn('[role=dialog] button[type=submit]', 'Guardar');
@@ -327,7 +327,7 @@ it('does not offer to deactivate a blocked company', function (): void {
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar');
+        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo de los correos');
 });
 
 it('passes the accessibility and CSP checks with the deactivation dialog open', function (bool $dark, bool $mobile): void {

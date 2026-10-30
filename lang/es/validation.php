@@ -217,6 +217,7 @@ return [
         'interior_number' => 'número interior',
         'job_title' => 'puesto',
         'legal_name' => 'razón social',
+        'logo' => 'logo',
         'main_activity' => 'actividad principal',
         'message' => 'mensaje',
         'mobile' => 'celular',

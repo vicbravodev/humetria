@@ -19,6 +19,7 @@ use App\Modules\Tenancy\Support\DisplayDate;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,6 +40,7 @@ final class TenantConsoleController extends Controller
                     'trade_name' => $tenant->trade_name,
                     'rfc' => $tenant->rfc,
                     'slug' => $tenant->slug,
+                    'logo_url' => $tenant->logo_path === null ? null : Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
                     'status' => $status->value,
                     'status_label' => $status->label(),
                     'status_date' => $this->statusDate($tenant, $status),

@@ -3,6 +3,7 @@ import {
     Ban,
     CalendarCheck,
     Ellipsis,
+    ImageIcon,
     LogIn,
     Pencil,
     UserPlus,
@@ -12,6 +13,7 @@ import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
 import DeactivateTenantDialog from '@/components/tenancy/deactivate-tenant-dialog';
 import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
 import InviteOwnerDialog from '@/components/tenancy/invite-owner-dialog';
+import TenantLogoDialog from '@/components/tenancy/tenant-logo-dialog';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -24,7 +26,7 @@ import { activationCopy, ownerAction } from '@/lib/tenant-status';
 import { impersonate } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
-type Action = 'activate' | 'invite' | 'edit' | 'deactivate';
+type Action = 'activate' | 'invite' | 'edit' | 'logo' | 'deactivate';
 
 /**
  * Everything the superadmin can do with a company, behind one "…" button so the row stays narrow.
@@ -86,6 +88,10 @@ export default function TenantRowActions({
                         <Pencil />
                         Editar
                     </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setOpen('logo')}>
+                        <ImageIcon />
+                        Logo de los correos
+                    </DropdownMenuItem>
                     {!tenant.blocked && (
                         <>
                             <DropdownMenuSeparator />
@@ -106,6 +112,7 @@ export default function TenantRowActions({
             />
             <InviteOwnerDialog {...dialog('invite')} />
             <EditTenantDialog {...dialog('edit')} />
+            <TenantLogoDialog {...dialog('logo')} />
             <DeactivateTenantDialog {...dialog('deactivate')} />
         </>
     );

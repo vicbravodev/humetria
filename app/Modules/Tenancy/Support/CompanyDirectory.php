@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Data\CompanyLogo;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -34,6 +36,12 @@ final readonly class CompanyDirectory implements Companies
 
     private static function summary(Tenant $tenant): CompanySummary
     {
-        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->status()->isBlocked());
+        $logo = $tenant->logo_path === null ? null : new CompanyLogo(
+            Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
+            (int) $tenant->logo_width,
+            (int) $tenant->logo_height,
+        );
+
+        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->status()->isBlocked(), $logo);
     }
 }
