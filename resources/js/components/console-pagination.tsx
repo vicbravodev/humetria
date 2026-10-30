@@ -7,12 +7,15 @@ export default function ConsolePagination({
     label,
     previous = 'Ver más recientes',
     next = 'Ver más antiguas',
+    preserveState = false,
 }: {
     page: Paginated<unknown>;
     label: string;
     /** The buttons' text: by default the consoles' newest-first order. */
     previous?: string;
     next?: string;
+    /** Keep what the page holds that is not in its address, like a selection, when turning pages. */
+    preserveState?: boolean;
 }) {
     if (page.last_page <= 1) {
         return null;
@@ -29,12 +32,22 @@ export default function ConsolePagination({
             <div className="flex gap-2">
                 {page.prev_page_url !== null && (
                     <Button variant="outline" asChild>
-                        <Link href={page.prev_page_url}>{previous}</Link>
+                        <Link
+                            href={page.prev_page_url}
+                            preserveState={preserveState}
+                        >
+                            {previous}
+                        </Link>
                     </Button>
                 )}
                 {page.next_page_url !== null && (
                     <Button variant="outline" asChild>
-                        <Link href={page.next_page_url}>{next}</Link>
+                        <Link
+                            href={page.next_page_url}
+                            preserveState={preserveState}
+                        >
+                            {next}
+                        </Link>
                     </Button>
                 )}
             </div>

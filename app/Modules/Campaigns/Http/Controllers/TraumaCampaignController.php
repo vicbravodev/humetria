@@ -10,6 +10,7 @@ use App\Modules\Campaigns\Http\Requests\TraumaCampaignRequest;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
@@ -30,16 +31,20 @@ final class TraumaCampaignController extends Controller
         $active = array_values(array_filter($workCenters->all(), fn (WorkCenterSummary $workCenter): bool => ! $workCenter->archived));
         $chosen = $request->string('work_center')->toString();
         $workCenterId = Str::isUuid($chosen) && collect($active)->contains('id', $chosen) ? $chosen : null;
+        $query = new RosterQuery(activeInWorkCenter: $workCenterId, search: $request->string('q')->trim()->limit(100, '')->toString());
 
         return Inertia::render('campaigns/trauma', [
             'workCenters' => array_map(fn (WorkCenterSummary $workCenter): array => ['id' => $workCenter->id, 'name' => $workCenter->name], $active),
             'workCenterId' => $workCenterId,
-            'people' => $workCenterId === null ? [] : array_map(fn (RosterEntry $person): array => [
+            'people' => $workCenterId === null ? null : $roster->page($query)->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
                 'name' => $person->name,
                 'area' => $person->areaName,
                 'reachable' => $person->email !== null,
-            ], $roster->activeIn($workCenterId)),
+            ]),
+            'filters' => ['q' => $query->search],
+            // Only when asked: to choose at once everyone the search found, on every page.
+            'matching' => Inertia::optional(fn (): array => $workCenterId === null ? [] : $roster->matchingIds($query)),
             'minDeadline' => CampaignClock::today()->addDay()->format('Y-m-d'),
             'suggestedDeadline' => CampaignClock::today()->addWeek()->format('Y-m-d'),
         ]);

@@ -76,22 +76,6 @@ export function quotasText(quotas: GenderQuota[]): string {
     return quotas.map((quota) => `${quota.label} ${quota.count}`).join(' · ');
 }
 
-/** Whether a person matches a search by name or area, ignoring case and accents: "jose" finds "José". */
-export function matchesPerson(person: CampaignPerson, search: string): boolean {
-    const normalize = (text: string) =>
-        text
-            .normalize('NFD')
-            .replace(/\p{Diacritic}/gu, '')
-            .toLowerCase()
-            .trim();
-    const wanted = normalize(search);
-
-    return (
-        wanted === '' ||
-        normalize(`${person.name} ${person.area}`).includes(wanted)
-    );
-}
-
 /** The query string for the filters: only what narrows the default list of pending people. */
 export function peopleQuery(
     filters: PeopleFilters,

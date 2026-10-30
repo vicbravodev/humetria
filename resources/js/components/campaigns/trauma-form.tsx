@@ -5,20 +5,22 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { store } from '@/routes/tenant/campaigns/trauma';
-import type { RosterPerson } from '@/types';
+import { create, store } from '@/routes/tenant/campaigns/trauma';
+import type { Paginated, RosterPerson } from '@/types';
 
 /** Who of the work center answers Guía I, and until when. Sent at once by email. */
 export default function TraumaForm({
     tenantSlug,
     workCenterId,
     people,
+    search,
     minDeadline,
     suggestedDeadline,
 }: {
     tenantSlug: string;
     workCenterId: string;
-    people: RosterPerson[];
+    people: Paginated<RosterPerson>;
+    search: string;
     minDeadline: string;
     suggestedDeadline: string;
 }) {
@@ -33,7 +35,10 @@ export default function TraumaForm({
                     />
                     <InputError message={errors['work_center_id']} />
                     <PeopleChecklist
+                        url={create.url(tenantSlug)}
+                        workCenterId={workCenterId}
                         people={people}
+                        search={search}
                         error={errors['employee_ids']}
                     />
                     <div className="grid max-w-sm gap-2">

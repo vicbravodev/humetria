@@ -35,7 +35,7 @@ function traumaForm(WorkCenter $workCenter, array $employeeIds, array $overrides
     return ['work_center_id' => $workCenter->id, 'employee_ids' => $employeeIds, 'closes_on' => '2026-11-09', ...$overrides];
 }
 
-it('offers the active people of the chosen work center', function (): void {
+it('offers the active people of the chosen work center, a page at a time', function (): void {
     $this->people[0]->update(['name' => 'Ana López', 'deactivated_at' => now()]);
 
     $this->actingAs($this->hr)
@@ -44,13 +44,32 @@ it('offers the active people of the chosen work center', function (): void {
             ->component('campaigns/trauma')
             ->where('workCenterId', $this->plant->id)
             ->has('workCenters', 1)
-            ->has('people', 4)
-            ->has('people.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'reachable']))
+            ->where('people.total', 4)
+            ->has('people.data.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'reachable']))
+            ->where('filters', ['q' => ''])
+            ->missing('matching')
             ->where('minDeadline', '2026-11-03'));
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.trauma.create', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('workCenterId', null)->where('people', []));
+        ->assertInertia(fn (Assert $page) => $page->where('workCenterId', null)->where('people', null));
+});
+
+it('searches the people on the server, and gives everyone the search found when asked', function (): void {
+    $this->people[1]->update(['name' => 'José Zúñiga']);
+    $this->people[2]->update(['name' => 'Josefina Zúñiga']);
+    staffOf($this->tenant, $this->plant, 25);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'q' => 'zuniga']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('people.total', 2)
+            ->where('filters', ['q' => 'zuniga'])
+            ->reloadOnly('matching', fn (Assert $reload) => $reload->where('matching', fn ($ids): bool => collect($ids)->sort()->values()->all() === collect([$this->people[1]->id, $this->people[2]->id])->sort()->values()->all())));
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page->where('people.total', 30)->has('people.data', 5));
 });
 
 it('applies Guía I to the people chosen only, and emails them their link', function (): void {

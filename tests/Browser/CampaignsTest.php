@@ -209,6 +209,33 @@ it('applies Guía I to the people of an event', function (bool $dark, bool $mobi
         ->assertSee('Ana López');
 })->with($looks);
 
+it('keeps who was ticked across pages and searches, and ticks everyone a search found', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 30)->values();
+    $people[0]->update(['name' => 'Aarón Abad']);
+    $people[1]->update(['name' => 'Zacarías Zúñiga']);
+    $people[2]->update(['name' => 'Zoé Zúñiga']);
+
+    visit("/admin/acme/campaigns/trauma?work_center={$plant->id}")
+        ->click('Aarón Abad')
+        ->assertSee('(1 elegidas)')
+        ->click('Siguientes')
+        ->assertSee('Página 2 de 2')
+        ->assertSee('(1 elegidas)')
+        ->type('[aria-label="Buscar por nombre, correo o número"]', 'zuniga')
+        ->assertSee('Elegir a las 2 encontradas')
+        ->click('Elegir a las 2 encontradas')
+        ->assertSee('(3 elegidas)')
+        ->click('Enviar Guía I')
+        ->assertSee('Guía I enviada a las personas elegidas.')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->pluck('employee_id')->sort()->values()->all())
+        ->toBe(collect([$people[0]->id, $people[1]->id, $people[2]->id])->sort()->values()->all());
+});
+
 it('sends Guía I to the people ticked, from the NOM-035 page', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();

@@ -12,18 +12,20 @@ import {
 } from '@/components/ui/select';
 import { index } from '@/routes/tenant/campaigns';
 import { create } from '@/routes/tenant/campaigns/trauma';
-import type { RosterPerson } from '@/types';
+import type { Paginated, RosterPerson } from '@/types';
 
 export default function Trauma({
     workCenters,
     workCenterId,
     people,
+    filters,
     minDeadline,
     suggestedDeadline,
 }: {
     workCenters: { id: string; name: string }[];
     workCenterId: string | null;
-    people: RosterPerson[];
+    people: Paginated<RosterPerson> | null;
+    filters: { q: string };
     minDeadline: string;
     suggestedDeadline: string;
 }) {
@@ -83,13 +85,14 @@ export default function Trauma({
                         </SelectContent>
                     </Select>
                 </div>
-                {workCenterId !== null && (
+                {workCenterId !== null && people !== null && (
                     <TraumaForm
                         // A new list of people for each work center.
                         key={workCenterId}
                         tenantSlug={tenantSlug}
                         workCenterId={workCenterId}
                         people={people}
+                        search={filters.q}
                         minDeadline={minDeadline}
                         suggestedDeadline={suggestedDeadline}
                     />

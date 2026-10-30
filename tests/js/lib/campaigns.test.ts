@@ -3,7 +3,6 @@ import {
     campaignMeta,
     guideBreakdown,
     instrumentsText,
-    matchesPerson,
     peoplePage,
     peopleQuery,
     progressCaption,
@@ -111,26 +110,6 @@ describe('quotasText', () => {
             ]),
         ).toBe('Mujeres 45 · Hombres 34 · Otro 1');
         expect(quotasText([])).toBe('');
-    });
-});
-
-describe('matchesPerson', () => {
-    const person = {
-        id: 'p1',
-        name: 'José Martínez',
-        area: 'Producción',
-        reachable: true,
-        inSample: false,
-        guides: [],
-    };
-
-    it('finds by name or area, ignoring case and accents', () => {
-        expect(matchesPerson(person, '')).toBe(true);
-        expect(matchesPerson(person, '  ')).toBe(true);
-        expect(matchesPerson(person, 'jose')).toBe(true);
-        expect(matchesPerson(person, 'MARTÍNEZ')).toBe(true);
-        expect(matchesPerson(person, 'produccion')).toBe(true);
-        expect(matchesPerson(person, 'ventas')).toBe(false);
     });
 });
 
