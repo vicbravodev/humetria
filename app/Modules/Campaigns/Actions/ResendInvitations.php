@@ -32,7 +32,7 @@ final readonly class ResendInvitations
         $sent = DB::transaction(function () use ($campaign, $employeeIds): int {
             $campaign = Campaign::lockIn($campaign, CampaignStatus::Active);
             $participants = $campaign->participants()
-                ->when($employeeIds !== null, fn ($query) => $query->whereIn('employee_id', $employeeIds ?? []))
+                ->when($employeeIds !== null, fn ($query) => $query->among('campaign_participants.employee_id', $employeeIds ?? []))
                 ->whereHas('instruments', fn ($query) => $query->where('status', InstrumentStatus::Pending))
                 ->get();
             $people = $this->roster->findMany(array_values($participants->map(fn (Participant $participant): string => $participant->employee_id)->all()));

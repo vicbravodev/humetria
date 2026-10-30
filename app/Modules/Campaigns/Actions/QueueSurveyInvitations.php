@@ -32,7 +32,7 @@ final class QueueSurveyInvitations
 
         // Who already holds a link keeps it: it works again as soon as they have a guide pending (someone who returned).
         if ($unreachable !== []) {
-            Participant::query()->whereKey($unreachable)->whereNull('token_hash')->update(['invitation_status' => InvitationStatus::NoEmail, 'invitation_batch' => null]);
+            Participant::query()->among('id', $unreachable)->whereNull('token_hash')->update(['invitation_status' => InvitationStatus::NoEmail, 'invitation_batch' => null]);
         }
 
         if ($reached === []) {
@@ -40,7 +40,7 @@ final class QueueSurveyInvitations
         }
 
         $batch = (string) Str::uuid();
-        Participant::query()->whereKey($reached)->update(['invitation_status' => InvitationStatus::Queued, 'invitation_batch' => $batch]);
+        Participant::query()->among('id', $reached)->update(['invitation_status' => InvitationStatus::Queued, 'invitation_batch' => $batch]);
         $campaign->update(['invitation_batch' => $batch]);
         $jobs = array_map(fn (array $block): SendSurveyInvitations => new SendSurveyInvitations($campaign->id, $batch, $block), array_chunk($reached, self::BLOCK));
 

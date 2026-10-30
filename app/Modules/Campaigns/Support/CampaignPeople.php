@@ -119,9 +119,7 @@ final readonly class CampaignPeople
 
     private function rosterQuery(Campaign $campaign, PeopleFilter $filter): RosterQuery
     {
-        // ponytail: every matching id goes to the roster as one list (no join across modules): fine for thousands of
-        // people; past ~65,000 in one evaluation Postgres refuses the bound parameters, and the roster needs a contract
-        // that takes the ids in chunks or from a shared temporary table.
+        // Every matching id goes to the roster as one list (no join across modules); it binds them as one array.
 
         $standings = DB::query()->fromSub($this->standingQuery($campaign, $filter->guide), 'people')
             ->when($filter->standing !== null, fn ($query) => $query->where('standing', $filter->standing?->value))

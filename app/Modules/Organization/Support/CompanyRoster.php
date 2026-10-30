@@ -35,7 +35,7 @@ final class CompanyRoster implements Roster
 
     public function findMany(array $employeeIds): array
     {
-        return $this->query()->whereKey($employeeIds)->get()->mapWithKeys(fn (Employee $employee): array => [$employee->id => $this->entry($employee)])->all();
+        return $this->query()->among('employees.id', $employeeIds)->get()->mapWithKeys(fn (Employee $employee): array => [$employee->id => $this->entry($employee)])->all();
     }
 
     public function page(RosterQuery $query, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
@@ -54,7 +54,7 @@ final class CompanyRoster implements Roster
     private function matching(RosterQuery $query): Builder
     {
         return Employee::query()
-            ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->whereKey($query->employeeIds))
+            ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->among('employees.id', $query->employeeIds ?? []))
             ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
             ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
             ->matching(['name', 'email', 'employee_number'], $query->search)

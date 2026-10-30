@@ -136,3 +136,13 @@ it('searches ignoring accents and case', function (): void {
     expect(resolve(Roster::class)->matchingIds(new RosterQuery(employeeIds: [$jose->id], search: 'jose nunez')))->toBe([$jose->id])
         ->and(resolve(Roster::class)->matchingIds(new RosterQuery(employeeIds: [$jose->id], search: 'NÚÑ')))->toBe([$jose->id]);
 });
+
+it('takes any number of ids, past what Postgres binds one by one', function (): void {
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López']);
+    workIn($this->tenant);
+    $ids = [...array_map(fn (): string => (string) Str::uuid(), range(1, 70_000)), $ana->id, 'not-a-uuid'];
+
+    expect(resolve(Roster::class)->page(new RosterQuery(employeeIds: $ids))->total())->toBe(1)
+        ->and(resolve(Roster::class)->matchingIds(new RosterQuery(employeeIds: $ids)))->toBe([$ana->id])
+        ->and(array_keys(resolve(Roster::class)->findMany($ids)))->toBe([$ana->id]);
+});

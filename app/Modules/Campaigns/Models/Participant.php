@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use App\Modules\Campaigns\Enums\InvitationStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\Campaigns\ParticipantFactory;
@@ -39,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Participant extends Model
 {
     /** @use HasFactory<ParticipantFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     public static function hashToken(string $token): string
     {

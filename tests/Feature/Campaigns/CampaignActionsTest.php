@@ -262,3 +262,12 @@ it('does nothing to an evaluation another request closed meanwhile', function (s
     Notification::assertNothingSent();
     expect(Participant::query()->withoutGlobalScopes()->count())->toBe($participants);
 })->with(['invite missing', 'replacements', 'resend']);
+
+it('resends to any number of people, past what Postgres binds one by one', function (): void {
+    $people = staffOf($this->tenant, $this->plant, 18)->values();
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
+    $ids = [...array_map(fn (): string => (string) Illuminate\Support\Str::uuid(), range(1, 70_000)), $people[0]->id];
+
+    expect(resolve(ResendInvitations::class)->handle($campaign, $ids))->toBe(1);
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 1);
+});
