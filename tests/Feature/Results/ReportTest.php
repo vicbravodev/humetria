@@ -69,6 +69,7 @@ it('builds the 7.7 report of a closed evaluation, with what the platform knows a
                 'mainActivity' => 'Manufactura de autopartes',
             ])
             ->where('report.guide', 'Guía III')
+            ->where('report.itemCount', 72)
             ->where('report.period', '2 nov 2026 al 19 nov 2026')
             ->where('report.participation', ['invited' => 0, 'answered' => 0])
             ->where('report.method', 'Cuestionario de la Guía de referencia III de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del 2 nov 2026 al 19 nov 2026 a una muestra representativa de 67 de 80 trabajadores (III.1), seleccionada al azar y en proporción por género, y la Guía de referencia I a todas las personas. Cada cuestionario se calificó por sí solo, por categoría, dominio y calificación final (III.3), sin promedios. Los resultados de grupos con menos de 5 cuestionarios no se muestran, para proteger el anonimato de las respuestas.')

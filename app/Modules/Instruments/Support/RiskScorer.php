@@ -40,7 +40,7 @@ final class RiskScorer
         $categoryScores = array_fill_keys(array_keys($table->categories), 0);
 
         foreach ($table->domains as $domainKey => $domain) {
-            $domains[] = new GroupScore($domainKey, $domain['label'], $domainScores[$domainKey], RiskLevel::fromCutoffs($domainScores[$domainKey], $domain['cutoffs']));
+            $domains[] = new GroupScore($domainKey, $domain['label'], $domainScores[$domainKey], RiskLevel::fromCutoffs($domainScores[$domainKey], $domain['cutoffs']), $domain['category']);
             $categoryScores[$domain['category']] += $domainScores[$domainKey];
         }
 

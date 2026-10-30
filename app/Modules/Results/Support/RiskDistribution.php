@@ -26,7 +26,7 @@ final readonly class RiskDistribution
      * The final score, categories and domains of the questionnaires, or of one area when it is an area shown.
      *
      * @param  list<AnonymousRecord>  $records
-     * @return array{answered: int, visible: bool, final: list<int>, categories: list<array{key: string, label: string, levels: list<int>}>, domains: list<array{key: string, label: string, levels: list<int>}>}
+     * @return array{answered: int, visible: bool, final: list<int>, categories: list<array{key: string, label: string, category: string|null, levels: list<int>}>, domains: list<array{key: string, label: string, category: string|null, levels: list<int>}>}
      */
     public function of(string $instrument, array $records, ?string $areaId = null): array
     {
@@ -167,7 +167,7 @@ final readonly class RiskDistribution
 
     /**
      * @param  list<list<GroupScore>>  $groupsOfEach  the categories (or domains) of each questionnaire, in the same order
-     * @return list<array{key: string, label: string, levels: list<int>}>
+     * @return list<array{key: string, label: string, category: string|null, levels: list<int>}>
      */
     private static function groups(array $groupsOfEach): array
     {
@@ -177,6 +177,7 @@ final readonly class RiskDistribution
             $groups[] = [
                 'key' => $group->key,
                 'label' => $group->label,
+                'category' => $group->category,
                 'levels' => self::count(array_map(fn (array $groupsOfOne): RiskLevel => $groupsOfOne[$index]->level, $groupsOfEach)),
             ];
         }

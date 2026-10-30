@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Results\Support;
 
 use App\Modules\Campaigns\Data\CampaignRecord;
+use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Results\Models\ReportDetails;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 
@@ -17,7 +18,7 @@ final readonly class ReportBuilder
 {
     private const array NUMERALS = ['nom035.guide-ii' => 'II', 'nom035.guide-iii' => 'III'];
 
-    public function __construct(private ResultsPages $pages, private WorkCenters $workCenters) {}
+    public function __construct(private ResultsPages $pages, private WorkCenters $workCenters, private Instruments $instruments) {}
 
     /** The evaluation's guide scored by risk level, when it is closed and has one; else it has no report. */
     public static function guideOf(CampaignRecord $campaign): ?string
@@ -43,6 +44,7 @@ final readonly class ReportBuilder
                 'mainActivity' => $profile->mainActivity ?? '',
             ],
             'guide' => 'Guía '.self::NUMERALS[$guide],
+            'itemCount' => count($this->instruments->definition($guide)->itemNumbers()),
             'period' => self::period($campaign),
             'participation' => ['invited' => $campaign->invited[$guide] ?? 0, 'answered' => $campaign->answered[$guide] ?? 0],
             'method' => $this->method($campaign, $guide),
