@@ -42,6 +42,8 @@ export type ItemResult = {
     text: string;
     answered: number;
     counts: number[] | null;
+    /** How many answered it on the side that scores risk (3 or 4 points), or null with the counts. */
+    unfavorable: number | null;
 };
 
 export type ItemSection = {
