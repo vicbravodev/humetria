@@ -1,10 +1,20 @@
 import { Link } from '@inertiajs/react';
-import { Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { template } from '@/routes/tenant/employees/import';
+import { Check } from 'lucide-react';
 import { index as workCentersIndex } from '@/routes/tenant/work-centers';
 
-/** How to fill the CSV: the template, its columns and the work centers it can name. */
+/** The template's columns, as the file names them. */
+const COLUMNS = [
+    ['Nombre completo', 'nombre'],
+    ['Correo', 'correo'],
+    ['Celular', 'celular'],
+    ['Género', 'genero'],
+    ['Centro de trabajo', 'centro_de_trabajo'],
+    ['Área', 'area'],
+    ['Puesto', 'puesto'],
+    ['Número de empleado', 'numero_de_empleado'],
+];
+
+/** How to fill the CSV: its columns and the rules of each, with the work centers it can name. */
 export default function ImportInstructions({
     tenantSlug,
     maxRows,
@@ -15,15 +25,24 @@ export default function ImportInstructions({
     hasWorkCenters: boolean;
 }) {
     return (
-        <section className="grid gap-4 rounded-xl border bg-card p-6">
-            <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
-                Cómo llenarlo
-            </h2>
-            <ol className="grid list-decimal gap-2 pl-5 text-muted-foreground">
+        <aside className="grid gap-4 rounded-xl border bg-card px-5 py-[18px]">
+            <h2 className="text-sm leading-5 font-semibold">Cómo llenarlo</h2>
+            <ul className="-mt-2 divide-y">
+                {COLUMNS.map(([label, column]) => (
+                    <li key={column} className="flex items-center gap-2 py-2">
+                        <Check aria-hidden className="size-4 text-primary" />
+                        <span className="flex-1 text-sm">{label}</span>
+                        <span className="text-[13px] text-muted-foreground">
+                            {column}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+            <ul className="grid list-disc gap-1.5 pl-4 text-[13px] leading-[18px] text-muted-foreground">
                 <li>
-                    Descarga la plantilla y llena una fila por persona, hasta{' '}
+                    Una fila por persona, hasta{' '}
                     {maxRows.toLocaleString('es-MX')}. Correo y celular: al
-                    menos uno.
+                    menos uno; número de empleado, opcional.
                 </li>
                 <li>
                     Género: Mujer, Hombre u Otro. Un área que no exista se crea.
@@ -44,13 +63,7 @@ export default function ImportInstructions({
                     Quien ya esté (por número de empleado o, si no tiene, por
                     correo) se actualiza.
                 </li>
-            </ol>
-            <Button variant="outline" asChild className="w-fit">
-                <a href={template.url(tenantSlug)} download>
-                    <Download />
-                    Descargar plantilla
-                </a>
-            </Button>
-        </section>
+            </ul>
+        </aside>
     );
 }
