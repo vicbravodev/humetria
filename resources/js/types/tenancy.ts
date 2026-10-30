@@ -65,7 +65,11 @@ export type CurrentTenant = TenantSummary &
         role: TenantRole;
         role_label: string;
         /** What the person's role allows, so the page hides what the server would refuse. */
-        can: { manage_organization: boolean; manage_members: boolean };
+        can: {
+            manage_organization: boolean;
+            manage_members: boolean;
+            manage_campaigns: boolean;
+        };
     };
 
 export type TenantRole = 'owner' | 'hr' | 'viewer';
