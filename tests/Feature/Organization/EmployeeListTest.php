@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Organization\Actions\CountEmployees;
 use App\Modules\Organization\Actions\ListEmployees;
 use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Http\Controllers\EmployeeController;
@@ -12,7 +13,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(EmployeeController::class, ListEmployees::class);
+mutates(EmployeeController::class, ListEmployees::class, CountEmployees::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -50,7 +51,7 @@ it('lists the active employees by name, with their center and area', function ()
                 'gender' => 'female', 'gender_label' => 'Mujer', 'work_center_id' => $this->office->id, 'work_center' => 'Oficinas',
                 'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null,
             ])
-            ->where('filters', ['q' => '', 'work_center' => null, 'area' => null, 'status' => 'active'])
+            ->where('filters', ['q' => '', 'work_center' => null, 'area' => null, 'status' => 'active', 'without_email' => false])
             // Work centers and areas are searched on the server as they are chosen, never sent whole.
             ->missing('workCenters')
             ->missing('areas')
@@ -97,6 +98,45 @@ it('filters by work center, area and status, together', function (): void {
             ->where('filters.area', ['value' => $this->production->id, 'label' => 'Producción']));
 });
 
+it('counts the active and deactivated people, the active ones without email and the centers they work in', function (): void {
+    employeeIn($this->tenant, $this->plant, $this->production, ['email' => 'a@acme.mx']);
+    employeeIn($this->tenant, $this->plant, $this->sales, ['email' => null, 'mobile' => '5512345678']);
+    employeeIn($this->tenant, $this->office, $this->sales, ['email' => 'c@acme.mx']);
+    employeeIn($this->tenant, $this->office, $this->sales, ['email' => null, 'mobile' => '5587654321', 'deactivated_at' => now()]);
+    Employee::factory()->create(['email' => null, 'mobile' => '5511112222']);
+
+    // The counts are of the whole company: the filters narrow the list, never the tabs or the sentence above it.
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'work_center' => $this->plant->id, 'status' => 'inactive']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts', ['active' => 3, 'inactive' => 1, 'without_email' => 1, 'work_centers' => 2]));
+});
+
+it('counts nothing in a company without employees', function (): void {
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts', ['active' => 0, 'inactive' => 0, 'without_email' => 0, 'work_centers' => 0]));
+});
+
+it('lists only the people without email when asked, since the surveys go out by email', function (): void {
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Con Correo', 'email' => 'a@acme.mx']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Sin Correo', 'email' => null, 'mobile' => '5512345678']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Baja Sin Correo', 'email' => null, 'mobile' => '5587654321', 'deactivated_at' => now()]);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'without_email' => '1']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('employees.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === ['Sin Correo'])
+            ->where('filters.without_email', true));
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'without_email' => 'nope']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('employees.total', 2)
+            ->where('filters.without_email', false));
+});
+
 it('pages 25 at a time', function (): void {
     foreach (range(1, 26) as $i) {
         employeeIn($this->tenant, $this->plant, $this->production, ['name' => sprintf('Persona %02d', $i)]);
@@ -114,8 +154,8 @@ it('lists the page with a fixed number of queries', function (): void {
     $owner = $this->owner->fresh();
 
     // Superadmin check, company, membership, role, permission cache (2), the user's permissions and roles there, work
-    // centers, count, page, the page's areas and the user's first companies with their count: none per row.
-    $this->expectsDatabaseQueryCount(14);
+    // centers, the company's counts, count, page, the page's areas and the user's first companies with their count: none per row.
+    $this->expectsDatabaseQueryCount(15);
 
     $this->actingAs($owner)->get(route('tenant.employees.index', $this->tenant))->assertOk();
 });

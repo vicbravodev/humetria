@@ -25,6 +25,7 @@ final class ListEmployees
             ->when($filters->active, fn (Builder $query) => $query->whereNull('deactivated_at'), fn (Builder $query) => $query->whereNotNull('deactivated_at'))
             ->when($filters->workCenterId !== null, fn (Builder $query) => $query->where('work_center_id', $filters->workCenterId))
             ->when($filters->areaId !== null, fn (Builder $query) => $query->where('area_id', $filters->areaId))
+            ->when($filters->withoutEmail, fn (Builder $query) => $query->whereNull('email'))
             ->matching(['name', 'email', 'employee_number'], $filters->search)
             ->orderBy('name')
             ->orderBy('id')
