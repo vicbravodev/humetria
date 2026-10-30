@@ -16,6 +16,22 @@ final class GuideOne
 {
     public const string KEY = 'nom035.guide-i';
 
+    /**
+     * Sections II to IV are asked only after a "yes" in section I (GR.I a and b).
+     *
+     * @param  array<array-key, mixed>  $answers
+     */
+    public static function continuesAfterSectionOne(array $answers): bool
+    {
+        foreach (range(1, 6) as $number) {
+            if (($answers[(string) $number] ?? null) === 'yes') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function definition(): InstrumentDefinition
     {
         return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Acontecimientos traumáticos severos', true, [

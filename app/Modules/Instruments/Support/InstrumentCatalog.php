@@ -11,8 +11,10 @@ use App\Modules\Instruments\Support\Nom035\GuideThree;
 use App\Modules\Instruments\Support\Nom035\GuideTwo;
 use InvalidArgumentException;
 
-final class InstrumentCatalog implements Instruments
+final readonly class InstrumentCatalog implements Instruments
 {
+    public function __construct(private AnswerValidator $validator) {}
+
     public function definition(string $key): InstrumentDefinition
     {
         return match ($key) {
@@ -21,5 +23,10 @@ final class InstrumentCatalog implements Instruments
             GuideThree::KEY => GuideThree::definition(),
             default => throw new InvalidArgumentException("Unknown instrument [{$key}]."),
         };
+    }
+
+    public function validate(string $key, array $answers): void
+    {
+        $this->validator->validate($this->definition($key), $answers);
     }
 }

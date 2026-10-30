@@ -218,3 +218,47 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
         ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)')
         ->assertNoAccessibilityIssues(1);
 }
+
+/**
+ * A complete NOM-035 Guía II or III with every item answered `$value`, and its two gates answered as given: a "no"
+ * leaves the block's items out, as the survey does.
+ *
+ * @return array<string, string>
+ */
+function nom035Answers(string $key, string $value = 'sometimes', bool $clients = true, bool $supervises = true): array
+{
+    [$base, $clientItems, $supervisionItems] = $key === 'nom035.guide-ii'
+        ? [range(1, 40), range(41, 43), range(44, 46)]
+        : [range(1, 64), range(65, 68), range(69, 72)];
+    $items = [...$base, ...($clients ? $clientItems : []), ...($supervises ? $supervisionItems : [])];
+    $answers = [];
+
+    foreach ($items as $number) {
+        $answers[(string) $number] = $value;
+    }
+
+    // Assigned, never spread: a spread renumbers the numeric item keys.
+    $answers['serves_clients'] = $clients ? 'yes' : 'no';
+    $answers['supervises'] = $supervises ? 'yes' : 'no';
+
+    return $answers;
+}
+
+/**
+ * A complete Guía I with "yes" on the items given and "no" on the rest. With no "yes" in section I (items 1 to 6) it
+ * ends there, as GR.I a) says.
+ *
+ * @param  list<int>  $yes
+ * @return array<string, string>
+ */
+function guideOneAnswers(array $yes = []): array
+{
+    $last = array_intersect($yes, range(1, 6)) === [] ? 6 : 20;
+    $answers = [];
+
+    foreach (range(1, $last) as $number) {
+        $answers[(string) $number] = in_array($number, $yes, true) ? 'yes' : 'no';
+    }
+
+    return $answers;
+}
