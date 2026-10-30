@@ -96,7 +96,7 @@ export function riskVerdict(counts: LevelCounts): string {
 
 /** Which group (a domain, a category) has the largest share in Alto or Muy alto; nothing when none has any. */
 export function worstGroupText(
-    groups: RiskGroup[],
+    groups: Pick<RiskGroup, 'label' | 'levels'>[],
     noun: string,
 ): string | null {
     const worst = rankBySeverity(groups)[0];

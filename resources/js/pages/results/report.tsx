@@ -1,8 +1,9 @@
 import { Head, usePage } from '@inertiajs/react';
+import ReportDetailsDialog from '@/components/results/report-details-dialog';
 import ReportDocument from '@/components/results/report-document';
+import ReportPending from '@/components/results/report-pending';
 import ReportShares from '@/components/results/report-shares';
 import ReportToolbar from '@/components/results/report-toolbar';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import type {
     NomReport,
     Paginated,
@@ -16,7 +17,6 @@ export default function Report({
     campaignId,
     report,
     levels,
-    canEdit,
     form,
     durations,
     shares,
@@ -34,24 +34,29 @@ export default function Report({
     return (
         <>
             <Head title={`Informe · ${report.center.name}`} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8 print:p-0">
-                <ReportToolbar
-                    tenantSlug={tenantSlug}
-                    campaignId={campaignId}
-                    form={form}
-                    durations={durations}
-                />
-                {!report.complete && (
-                    <Alert className="print:hidden">
-                        <AlertDescription>
-                            Faltan las conclusiones, las recomendaciones y el
-                            responsable de la evaluación.
-                            {canEdit
-                                ? ' Complétalos antes de entregar el informe.'
-                                : ' Quien gestiona las evaluaciones puede completarlos.'}
-                        </AlertDescription>
-                    </Alert>
-                )}
+            <ReportToolbar
+                route={{ tenantSlug, campaignId }}
+                visible={report.results.visible}
+                complete={report.complete}
+                form={form}
+                durations={durations}
+            />
+            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-12 px-4 pt-6 pb-24 md:px-6 print:p-0">
+                <ReportPending report={report}>
+                    {form === null ? (
+                        <span className="text-sm">
+                            Quien gestiona las evaluaciones puede completarlos.
+                        </span>
+                    ) : (
+                        <ReportDetailsDialog
+                            tenantSlug={tenantSlug}
+                            campaignId={campaignId}
+                            form={form}
+                            complete={false}
+                        />
+                    )}
+                </ReportPending>
+                <ReportDocument report={report} levels={levels} />
                 {shares !== null && (
                     <ReportShares
                         tenantSlug={tenantSlug}
@@ -59,7 +64,6 @@ export default function Report({
                         shares={shares}
                     />
                 )}
-                <ReportDocument report={report} levels={levels} />
             </div>
         </>
     );
