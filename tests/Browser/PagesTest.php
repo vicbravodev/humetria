@@ -23,7 +23,24 @@ it('renders the landing page', function (bool $dark, bool $mobile): void {
 })->with('looks');
 
 it('renders the forgot password page', function (bool $dark, bool $mobile): void {
-    visitPage('auth/forgot-password', '/admin/forgot-password', $dark, $mobile);
+    visitPage('auth/forgot-password', '/admin/forgot-password', $dark, $mobile)
+        ->assertSee('¿Olvidaste tu contraseña?')
+        ->assertDontSee('Revisa tu correo');
+})->with('looks');
+
+it('says where the reset link went, waits before sending it again and lets the person change the email', function (bool $dark, bool $mobile): void {
+    User::factory()->create(['email' => 'rita@autopartes.mx']);
+
+    visitPage('auth/forgot-password', '/admin/forgot-password', $dark, $mobile, reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
+        ->fill('email', 'rita@autopartes.mx')
+        ->press('Enviar enlace')
+        ->assertSee('Revisa tu correo'))
+        ->assertSee('Si rita@autopartes.mx tiene cuenta, te llegará un enlace para crear una contraseña nueva.')
+        // The broker sends one link a minute: the button counts down to it, disabled until then.
+        ->assertScript('() => [...document.querySelectorAll("button")].some((button) => /^Enviar otra vez en 0:[0-5]\\d|^Enviar otra vez en 1:00/.test(button.textContent) && button.disabled)')
+        ->press('Usar otro correo')
+        ->assertSee('¿Olvidaste tu contraseña?')
+        ->assertValue('email', 'rita@autopartes.mx');
 })->with('looks');
 
 it('renders the reset password page from a real reset token', function (bool $dark, bool $mobile): void {

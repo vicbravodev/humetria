@@ -1,6 +1,6 @@
-// Components
-import { Form, Head } from '@inertiajs/react';
-import TextLink from '@/components/text-link';
+import { Form, Head, Link } from '@inertiajs/react';
+import { MailCheck } from 'lucide-react';
+import AuthHeading from '@/components/auth-heading';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { logout } from '@/routes';
@@ -11,36 +11,34 @@ export default function VerifyEmail({ status }: { status?: string }) {
         <>
             <Head title="Verificar correo" />
 
+            <AuthHeading icon={MailCheck} title="Verifica tu correo">
+                Abre el enlace que te enviamos por correo para verificar tu
+                dirección.
+            </AuthHeading>
+
             {status === 'verification-link-sent' && (
-                <div className="mb-4 text-center text-sm font-medium text-primary">
+                <p
+                    role="status"
+                    className="rounded-xl border px-4 py-3.5 text-sm font-medium text-primary"
+                >
                     Te enviamos un nuevo enlace de verificación al correo con el
                     que te registraste.
-                </div>
+                </p>
             )}
 
-            <Form {...send.form()} className="space-y-6 text-center">
+            <Form {...send.form()} className="flex flex-wrap gap-2.5">
                 {({ processing }) => (
                     <>
-                        <Button disabled={processing} variant="secondary">
+                        <Button variant="outline" disabled={processing}>
                             {processing && <Spinner />}
                             Reenviar correo de verificación
                         </Button>
-
-                        <TextLink
-                            href={logout()}
-                            className="mx-auto block text-sm"
-                        >
-                            Cerrar sesión
-                        </TextLink>
+                        <Button variant="ghost" asChild>
+                            <Link href={logout()}>Cerrar sesión</Link>
+                        </Button>
                     </>
                 )}
             </Form>
         </>
     );
 }
-
-VerifyEmail.layout = {
-    title: 'Verifica tu correo',
-    description:
-        'Abre el enlace que te enviamos por correo para verificar tu dirección.',
-};

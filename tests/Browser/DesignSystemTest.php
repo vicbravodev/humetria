@@ -25,8 +25,8 @@ function assertLogoInsideItsBox(AwaitableWebpage $page): void
 
 it('renders the login page accessibly', function (bool $dark, bool $mobile): void {
     assertLogoInsideItsBox(visitPage('auth/login', '/admin/login', $dark, $mobile)
-        // The title reads as one: 24/32 in 600.
-        ->assertScript('() => { const title = getComputedStyle(document.querySelector("h1")); return title.fontSize === "24px" && title.fontWeight === "600"; }'));
+        // The title reads as one, as the Login screen draws it: 28/36 in 600.
+        ->assertScript('() => { const title = getComputedStyle(document.querySelector("h1")); return title.fontSize === "28px" && title.lineHeight === "36px" && title.fontWeight === "600"; }'));
 })->with($looks);
 
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
