@@ -16,7 +16,7 @@ final class GuideThree
 
     public static function definition(): InstrumentDefinition
     {
-        return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Factores de riesgo psicosocial y entorno organizacional', false, Likert::options(), [
+        return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Factores de riesgo psicosocial y entorno organizacional', 'Guía III', false, Likert::options(), [
             new SectionDefinition(null, 'Para responder las preguntas siguientes considere las condiciones ambientales de su centro de trabajo.', Nom035::items([
                 1 => 'El espacio donde trabajo me permite realizar mis actividades de manera segura e higiénica',
                 2 => 'Mi trabajo me exige hacer mucho esfuerzo físico',

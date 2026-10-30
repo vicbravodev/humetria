@@ -157,15 +157,16 @@ it('asks the clients and supervision blocks only behind their yes or no question
     'Guía III' => ['nom035.guide-iii', [65, 66, 67, 68], [69, 70, 71, 72]],
 ]);
 
-it('identifies the person in Guía I only', function (string $key, bool $identified, string $title): void {
+it('identifies the person in Guía I only', function (string $key, bool $identified, string $title, string $shortTitle): void {
     $definition = resolve(Instruments::class)->definition($key);
 
     expect($definition->identified)->toBe($identified)
-        ->and($definition->title)->toBe($title);
+        ->and($definition->title)->toBe($title)
+        ->and($definition->shortTitle)->toBe($shortTitle);
 })->with([
-    ['nom035.guide-i', true, 'Acontecimientos traumáticos severos'],
-    ['nom035.guide-ii', false, 'Factores de riesgo psicosocial'],
-    ['nom035.guide-iii', false, 'Factores de riesgo psicosocial y entorno organizacional'],
+    ['nom035.guide-i', true, 'Acontecimientos traumáticos severos', 'Guía I'],
+    ['nom035.guide-ii', false, 'Factores de riesgo psicosocial', 'Guía II'],
+    ['nom035.guide-iii', false, 'Factores de riesgo psicosocial y entorno organizacional', 'Guía III'],
 ]);
 
 it('knows no other instrument', function (): void {

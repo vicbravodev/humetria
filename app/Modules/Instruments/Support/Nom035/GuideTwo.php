@@ -16,7 +16,7 @@ final class GuideTwo
 
     public static function definition(): InstrumentDefinition
     {
-        return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Factores de riesgo psicosocial', false, Likert::options(), [
+        return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Factores de riesgo psicosocial', 'Guía II', false, Likert::options(), [
             new SectionDefinition(null, 'Para responder las preguntas siguientes considere las condiciones de su centro de trabajo, así como la cantidad y ritmo de trabajo.', Nom035::items([
                 1 => 'Mi trabajo me exige hacer mucho esfuerzo físico',
                 2 => 'Me preocupa sufrir un accidente en mi trabajo',

@@ -34,7 +34,7 @@ final class GuideOne
 
     public static function definition(): InstrumentDefinition
     {
-        return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Acontecimientos traumáticos severos', true, [
+        return new InstrumentDefinition(self::KEY, Nom035::VERSION, 'Acontecimientos traumáticos severos', 'Guía I', true, [
             ['value' => 'yes', 'label' => 'Sí'],
             ['value' => 'no', 'label' => 'No'],
         ], [

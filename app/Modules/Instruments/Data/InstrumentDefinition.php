@@ -18,6 +18,7 @@ final readonly class InstrumentDefinition
         public string $key,
         public string $version,
         public string $title,
+        public string $shortTitle,
         public bool $identified,
         public array $options,
         public array $sections,

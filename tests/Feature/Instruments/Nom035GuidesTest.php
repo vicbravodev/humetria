@@ -22,3 +22,13 @@ it('says which guides apply to a work center by its number of workers', function
     'fifty-one' => [51, ['I', 'III']],
     'a thousand' => [1000, ['I', 'III']],
 ]);
+
+it('names the instruments a work center applies by its number of workers', function (int $workers, array $instruments): void {
+    expect(resolve(Nom035Guides::class)->instruments($workers))->toBe($instruments);
+})->with([
+    'nobody' => [0, []],
+    'fifteen' => [15, ['nom035.guide-i']],
+    'sixteen' => [16, ['nom035.guide-i', 'nom035.guide-ii']],
+    'fifty' => [50, ['nom035.guide-i', 'nom035.guide-ii']],
+    'fifty-one' => [51, ['nom035.guide-i', 'nom035.guide-iii']],
+]);
