@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 
 type Props = {
     onSuccess: () => void;
+    onCancel: () => void;
 };
 
-export default function PasskeyRegistration({ onSuccess }: Props) {
+/** Names and registers a new passkey on this device. */
+export default function PasskeyRegistration({ onSuccess, onCancel }: Props) {
     const [name, setName] = useState(() => {
         const ua = navigator.userAgent;
 
@@ -32,11 +34,9 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
         return [browser, os].filter(Boolean).join(' on ') || '';
     });
 
-    const [showForm, setShowForm] = useState(false);
     const { register, isLoading, error, isSupported } = usePasskeyRegister({
         onSuccess: () => {
             setName('');
-            setShowForm(false);
             onSuccess();
         },
     });
@@ -52,8 +52,8 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
     };
 
     const handleCancel = () => {
-        setShowForm(false);
         setName('');
+        onCancel();
     };
 
     if (!isSupported) {
@@ -64,18 +64,10 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
         );
     }
 
-    if (!showForm) {
-        return (
-            <Button variant="outline" onClick={() => setShowForm(true)}>
-                Agregar llave de acceso
-            </Button>
-        );
-    }
-
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
+            className="space-y-4 rounded-xl border bg-muted p-4"
         >
             <div className="grid gap-2">
                 <Label htmlFor="passkey-name">

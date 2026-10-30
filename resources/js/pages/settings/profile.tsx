@@ -1,19 +1,6 @@
-import { Form, Head, usePage } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { Head } from '@inertiajs/react';
 import DeleteUser from '@/components/delete-user';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { edit } from '@/routes/profile';
-import type { Auth } from '@/types';
-import { send } from '@/routes/verification';
-
-type PageProps = {
-    auth: Auth;
-};
+import ProfileForm from '@/components/settings/profile-form';
 
 export default function Profile({
     mustVerifyEmail,
@@ -22,118 +9,15 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
-    const { auth } = usePage<PageProps>().props;
-
     return (
         <>
             <Head title="Perfil" />
-
-            <h1 className="sr-only">Perfil</h1>
-
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Perfil"
-                    description="Actualiza tu nombre y tu correo electrónico"
-                />
-
-                <Form
-                    {...ProfileController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    className="space-y-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Nombre</Label>
-
-                                <Input
-                                    id="name"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.name}
-                                    name="name"
-                                    required
-                                    autoComplete="name"
-                                    placeholder="Nombre completo"
-                                />
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors['name']}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">
-                                    Correo electrónico
-                                </Label>
-
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
-                                    name="email"
-                                    required
-                                    autoComplete="username"
-                                    placeholder="nombre@empresa.mx"
-                                />
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors['email']}
-                                />
-                            </div>
-
-                            {mustVerifyEmail &&
-                                auth.user.email_verified_at === null && (
-                                    <div>
-                                        <p className="-mt-4 text-sm text-muted-foreground">
-                                            Tu correo no está verificado.{' '}
-                                            <Link
-                                                href={send()}
-                                                as="button"
-                                                className="text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
-                                            >
-                                                Reenviar verificación.
-                                            </Link>
-                                        </p>
-
-                                        {status ===
-                                            'verification-link-sent' && (
-                                            <div className="mt-2 text-sm font-medium text-primary">
-                                                Te enviamos un nuevo enlace de
-                                                verificación.
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="update-profile-button"
-                                >
-                                    Guardar cambios
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
-
+            <ProfileForm mustVerifyEmail={mustVerifyEmail} status={status} />
             <DeleteUser />
         </>
     );
 }
 
 Profile.layout = {
-    breadcrumbs: [
-        {
-            title: 'Perfil',
-            href: edit(),
-        },
-    ],
+    breadcrumbs: [{ title: 'Cuenta' }, { title: 'Configuración' }],
 };

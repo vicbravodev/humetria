@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Campaigns\Contracts\EvaluationSchedule;
+use App\Modules\Campaigns\Data\EvaluationStanding;
 use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Tenancy\Actions\ArchiveWorkCenter;
@@ -28,7 +30,14 @@ use Inertia\Response;
  */
 final class WorkCenterController extends Controller
 {
-    public function __construct(private readonly Headcount $headcount, private readonly Nom035Guides $guides) {}
+    /** The areas a card shows; the rest are only counted. */
+    private const int AREAS_SHOWN = 5;
+
+    public function __construct(
+        private readonly Headcount $headcount,
+        private readonly Nom035Guides $guides,
+        private readonly EvaluationSchedule $schedule,
+    ) {}
 
     public function index(Request $request, ListWorkCenters $listWorkCenters): Response
     {
@@ -36,12 +45,20 @@ final class WorkCenterController extends Controller
 
         $showArchived = $request->boolean('archived');
         $archived = WorkCenter::query()->whereNotNull('archived_at')->count();
+        $workCenters = $listWorkCenters->handle($showArchived);
+        $ids = array_values(array_map(fn (WorkCenter $workCenter): string => $workCenter->id, $workCenters->items()));
+        $areas = $this->headcount->areasByWorkCenter($ids);
+        $standings = $this->schedule->forWorkCenters($ids);
 
         return Inertia::render('tenancy/work-centers', [
             'view' => $showArchived ? 'archived' : 'active',
             'counts' => ['active' => WorkCenter::query()->count() - $archived, 'archived' => $archived],
-            'workCenters' => $listWorkCenters->handle($showArchived)
-                ->through(fn (WorkCenter $workCenter): array => $this->row($workCenter, $headcount[$workCenter->id] ?? 0)),
+            'workCenters' => $workCenters->through(fn (WorkCenter $workCenter): array => [
+                ...$this->row($workCenter, $headcount[$workCenter->id] ?? 0),
+                'areas' => array_slice($areas[$workCenter->id] ?? [], 0, self::AREAS_SHOWN),
+                'more_areas' => max(0, count($areas[$workCenter->id] ?? []) - self::AREAS_SHOWN),
+                'evaluation' => $this->evaluation($standings[$workCenter->id] ?? null),
+            ]),
             'states' => collect(MexicanState::cases())
                 ->map(fn (MexicanState $state): array => ['value' => $state->value, 'label' => $state->label()])
                 ->sortBy('label')
@@ -112,6 +129,14 @@ final class WorkCenterController extends Controller
         abort_if(($workCenter->archived_at !== null) !== $archived, 409);
 
         return $workCenter;
+    }
+
+    /**
+     * @return array{state: string, day: string|null}|null
+     */
+    private function evaluation(?EvaluationStanding $standing): ?array
+    {
+        return $standing === null ? null : ['state' => $standing->state, 'day' => $standing->day];
     }
 
     /**

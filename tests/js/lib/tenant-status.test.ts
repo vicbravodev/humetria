@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     activationCopy,
+    companiesQuery,
+    companiesSummary,
     ownerAction,
     tenantStatusVariant,
     trialLabel,
@@ -13,7 +15,7 @@ const variants: [
     'default' | 'secondary' | 'outline' | 'destructive',
 ][] = [
     ['active', 'default'],
-    ['trial', 'secondary'],
+    ['trial', 'default'],
     ['not_started', 'outline'],
     ['trial_ended', 'destructive'],
     ['expired', 'destructive'],
@@ -95,5 +97,28 @@ describe('trialLabel', () => {
         [14, 'Prueba · quedan 14 días'],
     ])('says %i days left as "%s"', (daysLeft, label) => {
         expect(trialLabel(daysLeft)).toBe(label);
+    });
+});
+
+describe('companiesSummary', () => {
+    it('counts the companies and the trials that end this week', () => {
+        expect(companiesSummary(1, 0)).toBe('1 empresa');
+        expect(companiesSummary(4, 0)).toBe('4 empresas');
+        expect(companiesSummary(4, 1)).toBe(
+            '4 empresas · 1 prueba termina esta semana',
+        );
+        expect(companiesSummary(4, 2)).toBe(
+            '4 empresas · 2 pruebas terminan esta semana',
+        );
+    });
+});
+
+describe('companiesQuery', () => {
+    it('leaves out the default view and an empty search', () => {
+        expect(companiesQuery({ q: '  ', status: 'all' })).toEqual({});
+        expect(companiesQuery({ q: ' acme ', status: 'trial' })).toEqual({
+            q: 'acme',
+            status: 'trial',
+        });
     });
 });

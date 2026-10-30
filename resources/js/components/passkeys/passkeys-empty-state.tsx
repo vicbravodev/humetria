@@ -1,14 +1,12 @@
-import { KeyRound } from 'lucide-react';
-
+/** What the list of passkeys says before there is one. */
 export default function PasskeysEmptyState() {
     return (
-        <div className="p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-                <KeyRound className="h-7 w-7 text-muted-foreground" />
-            </div>
-            <p className="font-medium">Aún no tienes llaves de acceso</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-                Agrega una llave de acceso para iniciar sesión sin contraseña
+        <div className="px-4 py-6 text-center">
+            <p className="text-sm font-medium">
+                Aún no tienes llaves de acceso
+            </p>
+            <p className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground">
+                Agrega una para entrar sin escribir tu contraseña.
             </p>
         </div>
     );

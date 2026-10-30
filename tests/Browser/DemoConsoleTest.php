@@ -77,3 +77,18 @@ it('links the console from the sidebar only for the superadmin', function (): vo
 
     visit('/admin')->assertDontSee('Solicitudes de demo');
 });
+
+it('opens the newest request and shows another one when chosen from the list', function (): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo', 'message' => 'Primero', 'created_at' => now()]);
+    DemoRequest::factory()->create(['name' => 'Rosa Medina', 'company' => 'Empresa Ejemplo', 'message' => 'Después', 'created_at' => now()->subDay()]);
+
+    visitPage('demos/index', '/admin/demo-requests')
+        ->assertSeeIn('@demo-request-detail', 'Ana López')
+        ->assertSee('Primero')
+        ->click('Rosa Medina')
+        ->assertSeeIn('@demo-request-detail', 'Rosa Medina')
+        ->assertSee('Después')
+        ->assertAttribute('li button[aria-current="true"]', 'aria-current', 'true')
+        ->assertNoJavaScriptErrors();
+});
