@@ -69,6 +69,7 @@ export type CurrentTenant = TenantSummary &
             manage_organization: boolean;
             manage_members: boolean;
             manage_campaigns: boolean;
+            view_trauma_screenings: boolean;
         };
     };
 
