@@ -96,6 +96,7 @@ it('emails a link that opens that person\'s survey, written as the survey speaks
 
         expect($mail->subject)->toBe('Autopartes del Bajío le invita a contestar una evaluación confidencial')
             ->and($mail->actionText)->toBe('Contestar evaluación')
+            ->and((string) $mail->render())->toContain('¿El botón no abre? Copie este enlace en su navegador:')->not->toContain('Copia este enlace en tu navegador')
             ->and(implode(' ', $mail->introLines))->toContain('NOM-035')->toContain('20 nov 2026')
             ->and(Participant::query()->withoutGlobalScopes()->where('token_hash', Participant::hashToken($token))->sole()->employee_id)->toBe($person->id);
 

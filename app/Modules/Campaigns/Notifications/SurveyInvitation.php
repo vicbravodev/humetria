@@ -30,6 +30,8 @@ final class SurveyInvitation extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
+            // Formal, as the survey: the fine print under the button says "usted" too.
+            ->markdown('notifications::email', ['formal' => true])
             ->subject("{$this->tradeName} le invita a contestar una evaluación confidencial")
             ->greeting('Hola')
             ->line("{$this->tradeName} aplica una evaluación de factores de riesgo psicosocial en el trabajo, como lo pide la NOM-035-STPS-2018. Toma unos minutos y la puede contestar desde su celular.")
