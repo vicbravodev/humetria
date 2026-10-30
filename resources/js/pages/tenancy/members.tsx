@@ -2,8 +2,8 @@ import { Head, usePage } from '@inertiajs/react';
 import ConsolePagination from '@/components/console-pagination';
 import PageHeader from '@/components/page-header';
 import InviteMemberDialog from '@/components/tenancy/invite-member-dialog';
-import MemberInvitationsTable from '@/components/tenancy/member-invitations-table';
 import MembersTable from '@/components/tenancy/members-table';
+import RoleCapabilities from '@/components/tenancy/role-capabilities';
 import type {
     MemberInvitationRow,
     MemberRow,
@@ -21,41 +21,45 @@ export default function Members({
     roles: RoleOption[];
 }) {
     // Always set here: this page only exists inside a company.
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const { tenant } = usePage().props;
+    const tenantSlug = tenant?.slug ?? '';
+    const tradeName = tenant?.trade_name ?? '';
 
     return (
         <>
             <Head title="Usuarios" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <PageHeader title="Usuarios">
-                    <InviteMemberDialog tenantSlug={tenantSlug} roles={roles} />
+                <PageHeader
+                    title="Usuarios"
+                    description={`Quién entra a Humetría por ${tradeName} y qué puede hacer.`}
+                >
+                    <InviteMemberDialog
+                        tenantSlug={tenantSlug}
+                        tradeName={tradeName}
+                        roles={roles}
+                    />
                 </PageHeader>
-                <MembersTable
-                    tenantSlug={tenantSlug}
-                    members={members.data}
-                    roles={roles}
-                />
-                <ConsolePagination
-                    page={members}
-                    label="Páginas de usuarios"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
-                {invitations.total > 0 && (
-                    <section className="flex flex-col gap-4">
-                        <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
-                            Invitaciones pendientes
-                        </h2>
-                        <MemberInvitationsTable
-                            tenantSlug={tenantSlug}
-                            invitations={invitations.data}
-                        />
-                        <ConsolePagination
-                            page={invitations}
-                            label="Páginas de invitaciones"
-                        />
-                    </section>
-                )}
+                <div className="flex flex-col gap-3">
+                    <MembersTable
+                        tenantSlug={tenantSlug}
+                        members={members.data}
+                        invitations={invitations.data}
+                        roles={roles}
+                    />
+                    <ConsolePagination
+                        page={members}
+                        label="Páginas de usuarios"
+                        previous="Anteriores"
+                        next="Siguientes"
+                        pinned={false}
+                    />
+                    <ConsolePagination
+                        page={invitations}
+                        label="Páginas de invitaciones"
+                        pinned={false}
+                    />
+                </div>
+                <RoleCapabilities />
             </div>
         </>
     );
