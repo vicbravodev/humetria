@@ -155,7 +155,7 @@ final readonly class CampaignPages
      * @param  array<string, array<string, int>>  $tally
      * @return array{completed: int, target: int, againstSample: bool}|null
      */
-    private function progress(Campaign $campaign, array $tally): ?array
+    public function progress(Campaign $campaign, array $tally): ?array
     {
         if ($campaign->status === CampaignStatus::Draft) {
             return null;

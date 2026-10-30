@@ -18,7 +18,7 @@ it('enters a company by id, so its data is what the code reads', function (): vo
 
     $company = resolve(Companies::class)->enter($tenant->id);
 
-    expect($company)->toEqual(new CompanySummary($tenant->id, 'Acme', blocked: false))
+    expect($company)->toEqual(new CompanySummary($tenant->id, 'Acme', $tenant->slug, blocked: false))
         ->and(resolve(CurrentTenant::class)->id())->toBe($tenant->id)
         ->and(WorkCenter::query()->pluck('name')->all())->toBe(['Planta Norte']);
 });
@@ -38,7 +38,7 @@ it('describes the company the code works in now', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     workIn($tenant);
 
-    expect(resolve(Companies::class)->current())->toEqual(new CompanySummary($tenant->id, 'Acme', blocked: false));
+    expect(resolve(Companies::class)->current())->toEqual(new CompanySummary($tenant->id, 'Acme', $tenant->slug, blocked: false));
 });
 
 it('has no current company outside one', function (): void {

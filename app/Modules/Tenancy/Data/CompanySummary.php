@@ -10,5 +10,8 @@ namespace App\Modules\Tenancy\Data;
  */
 final readonly class CompanySummary
 {
-    public function __construct(public string $id, public string $tradeName, public bool $blocked, public ?CompanyLogo $logo = null) {}
+    /**
+     * @param  string  $slug  Its address under /admin/, for links into it.
+     */
+    public function __construct(public string $id, public string $tradeName, public string $slug, public bool $blocked, public ?CompanyLogo $logo = null) {}
 }

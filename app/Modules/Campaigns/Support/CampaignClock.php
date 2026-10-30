@@ -31,6 +31,12 @@ final class CampaignClock
         return ! CarbonImmutable::now()->lessThan(self::deadline($closesOn));
     }
 
+    /** How many days a campaign whose last day is `$closesOn` still takes answers, counting today: 1 on its last day. */
+    public static function daysLeft(CarbonInterface $closesOn): int
+    {
+        return (int) self::today()->diffInDays(CarbonImmutable::parse($closesOn->format('Y-m-d'), self::zone())) + 1;
+    }
+
     /** A day as the design system writes it: "27 oct 2026". A date is taken as is; a moment, in the display zone. */
     public static function day(CarbonInterface $value, bool $isDate = false): string
     {

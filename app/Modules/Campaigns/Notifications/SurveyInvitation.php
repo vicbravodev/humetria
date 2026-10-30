@@ -39,8 +39,7 @@ final class SurveyInvitation extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $lastDay = CarbonImmutable::parse($this->closesOn->format('Y-m-d'), config()->string('app.display_timezone'));
-        // Counting today: on the last day there is one left.
-        $daysLeft = (int) CampaignClock::today()->diffInDays($lastDay) + 1;
+        $daysLeft = CampaignClock::daysLeft($this->closesOn);
         [$subject, $action] = match ($this->email) {
             SurveyEmail::Invitation => ['Su opinión sobre su trabajo · evaluación confidencial', 'Contestar la evaluación'],
             SurveyEmail::Reminder => [self::daysLeft($daysLeft).' para contestar su evaluación', 'Continuar la evaluación'],
