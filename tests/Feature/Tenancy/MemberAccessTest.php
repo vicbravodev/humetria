@@ -189,3 +189,26 @@ it('says nothing about a role on an invalid link', function (): void {
     $this->get(route('invitations.show', Str::random(64)))
         ->assertInertia(fn (Assert $page) => $page->where('invited_as', null));
 });
+
+it('says on the link page who sent the invitation and the role it gives', function (): void {
+    $token = Str::random(64);
+    $olga = User::factory()->create(['name' => 'Olga Owner']);
+    TenantInvitation::factory()->role(TenantRole::Hr)->withToken($token)->create(['invited_by' => $olga->id]);
+
+    $this->get(route('invitations.show', $token))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('inviter', 'Olga Owner')
+            ->where('role', 'hr')
+            ->where('role_label', 'RH'));
+});
+
+it('names no sender when the invitation has none, nor anything on an invalid link', function (): void {
+    $token = Str::random(64);
+    TenantInvitation::factory()->role(TenantRole::Viewer)->withToken($token)->create(['invited_by' => null]);
+
+    $this->get(route('invitations.show', $token))
+        ->assertInertia(fn (Assert $page) => $page->where('inviter', null)->where('role', 'viewer')->where('role_label', 'Consulta'));
+
+    $this->get(route('invitations.show', Str::random(64)))
+        ->assertInertia(fn (Assert $page) => $page->where('inviter', null)->where('role', null)->where('role_label', null));
+});

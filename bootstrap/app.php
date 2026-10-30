@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\ErrorPage;
 use App\Http\Middleware\AssignRequestContext;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EndRevokedImpersonation;
@@ -20,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Support\Header;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -82,6 +84,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return back();
         });
+
+        $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request));
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

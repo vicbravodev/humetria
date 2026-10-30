@@ -4,24 +4,31 @@ import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { KeyRound } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
+
+type Copy = { label: string; loading: string; separator: string };
+
+const LOGIN_COPY: Copy = {
+    label: 'Entrar con llave de acceso',
+    loading: 'Verificando…',
+    separator: 'o con tu correo',
+};
 
 type Props = {
     routes?: {
         options: UrlMethodPair;
         submit: UrlMethodPair;
     };
-    label?: string;
-    loadingLabel?: string;
-    separator?: string;
+    copy?: Copy;
+    /** The passkey as the main action (Confirmar); on the login it is the outlined first option. */
+    primary?: boolean;
 };
 
+/** The passkey button above a form, and the line that says the form is the other way in. Nothing when unsupported. */
 export default function PasskeyVerify({
     routes,
-    label,
-    loadingLabel,
-    separator,
+    copy = LOGIN_COPY,
+    primary,
 }: Props = {}) {
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
         ...(routes && {
@@ -44,30 +51,23 @@ export default function PasskeyVerify({
             <div className="grid gap-2">
                 <Button
                     type="button"
-                    variant="outline"
+                    variant={primary === true ? 'default' : 'outline'}
                     className="w-full"
                     onClick={verify}
                     disabled={isLoading}
                 >
-                    {isLoading ? <Spinner /> : <KeyRound className="h-4 w-4" />}
-                    {isLoading
-                        ? (loadingLabel ?? 'Verificando...')
-                        : (label ?? 'Iniciar sesión con llave de acceso')}
+                    {isLoading ? <Spinner /> : <KeyRound aria-hidden />}
+                    {isLoading ? copy.loading : copy.label}
                 </Button>
                 {error && (
                     <InputError message={error} className="text-center" />
                 )}
             </div>
 
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                        {separator ?? 'O continúa con tu correo'}
-                    </span>
-                </div>
+            <div className="flex items-center gap-3 text-[13px] leading-[18px] text-muted-foreground">
+                <span aria-hidden className="h-px flex-1 bg-border" />
+                {copy.separator}
+                <span aria-hidden className="h-px flex-1 bg-border" />
             </div>
         </>
     );

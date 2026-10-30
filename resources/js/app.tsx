@@ -22,6 +22,8 @@ void createInertiaApp({
             case name === 'campaigns/survey':
             // A report opened from a temporary link: no panel, nobody signed in.
             case name === 'results/shared-report':
+            // An error page stands alone: the address may not even be a page of the panel.
+            case name === 'error':
                 return null;
             case name.startsWith('auth/'):
             case name === 'tenancy/accept-invitation':

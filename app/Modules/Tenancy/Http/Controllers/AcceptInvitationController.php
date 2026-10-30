@@ -39,6 +39,9 @@ final class AcceptInvitationController extends Controller
             'state' => $state,
             'trade_name' => $invitation?->tenant?->trade_name,
             'invited_as' => $invitation?->tenant === null ? null : $invitation->role->invitedAs($invitation->tenant->trade_name),
+            'inviter' => $invitation?->inviter?->name,
+            'role' => $invitation?->role->value,
+            'role_label' => $invitation?->role->label(),
             'email' => $invitation?->email,
             'name' => $invitation?->name,
             'token' => $token,
@@ -105,7 +108,7 @@ final class AcceptInvitationController extends Controller
     private function pendingInvitation(string $token): ?TenantInvitation
     {
         $invitation = TenantInvitation::query()
-            ->with('tenant')
+            ->with(['tenant', 'inviter:id,name'])
             ->where('token_hash', TenantInvitation::hashToken($token))
             ->first();
 

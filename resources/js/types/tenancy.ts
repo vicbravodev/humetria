@@ -39,6 +39,10 @@ type PendingInvitation = {
     trade_name: string;
     /** What the person joins as, written for display ("Te invitaron como RH de Acme"). */
     invited_as: string;
+    /** Who sent it; null when no sender was recorded. */
+    inviter: string | null;
+    role: TenantRole;
+    role_label: string;
     email: string;
     name: string;
 };
@@ -49,6 +53,9 @@ export type InvitationPage = { token: string; passwordRules: string } & (
           state: 'invalid';
           trade_name: null;
           invited_as: null;
+          inviter: null;
+          role: null;
+          role_label: null;
           email: null;
           name: null;
       }
