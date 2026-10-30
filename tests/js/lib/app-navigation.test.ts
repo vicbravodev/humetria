@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    complianceNavItems,
     mainNavItems,
     settingsEntryHref,
     settingsNavItems,
@@ -74,6 +75,21 @@ describe('mainNavItems', () => {
             '/admin/acme/employees',
             '/admin/acme/members',
         ]);
+    });
+});
+
+describe('complianceNavItems', () => {
+    it('offers NOM-035 inside a company, to every role', () => {
+        expect(
+            complianceNavItems(acme(false, false)).map((item) => [
+                item.title,
+                toUrl(item.href),
+            ]),
+        ).toEqual([['NOM-035', '/admin/acme/campaigns']]);
+    });
+
+    it('offers nothing outside a company', () => {
+        expect(complianceNavItems(null)).toEqual([]);
     });
 });
 

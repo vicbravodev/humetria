@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\WorkCenter;
+
+$looks = [
+    'light desktop' => [false, false],
+    'dark desktop' => [true, false],
+    'light mobile' => [false, true],
+    'dark mobile' => [true, true],
+];
+
+/** Signs in an hr of the company at /admin/acme and returns it. */
+function campaignsCompany(): Tenant
+{
+    $user = User::factory()->create();
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    TenantMembership::factory()->for($tenant)->for($user)->role(TenantRole::Hr)->create();
+    test()->actingAs($user);
+
+    return $tenant;
+}
+
+it('lists the work centers to evaluate before any evaluation', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 20);
+
+    visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile)
+        ->assertSee('No hay evaluaciones abiertas')
+        ->assertSee('Planta Norte')
+        ->assertSee('NOM-035: Guías I y II')
+        ->assertSee('Sin evaluar');
+})->with($looks);
+
+it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 30, male: 30);
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
+        ->assertSee('Planta Norte')
+        ->assertSee('Borrador')
+        ->assertSee('Muestra de 53: Mujeres 27 · Hombres 26')
+        ->assertSee('Muestra sorteada (53)');
+})->with($looks);
+
+it('prepares an evaluation from the panel, reached from the sidebar', function (): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
+
+    visit('/admin/acme')
+        ->click('NOM-035')
+        ->assertPathIs('/admin/acme/campaigns')
+        ->click('Nueva evaluación')
+        ->click('#evaluation-work-center')
+        ->click('[role="option"]:has-text("Planta Norte")')
+        ->assertSee('¿Quién contesta la Guía III?')
+        ->assertSee('Se sortean 53 de 60 personas')
+        ->click('Una muestra representativa')
+        ->click('Preparar borrador')
+        ->assertSee('Borrador de evaluación creado.')
+        ->assertSee('Muestra sorteada (53)')
+        ->assertNoJavaScriptErrors();
+
+    expect(Campaign::query()->withoutGlobalScopes()->sole()->sample_size)->toBe(53);
+});

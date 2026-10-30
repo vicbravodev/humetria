@@ -22,6 +22,7 @@ import { dashboard as tenantDashboard } from '@/routes/tenant';
 export function AppSidebar() {
     const { auth, tenant } = usePage().props;
     const mainItems = mainNavItems(tenant, auth.isSuperadmin);
+    const complianceItems = complianceNavItems(tenant);
 
     return (
         <Sidebar variant="inset" collapsible="icon">
@@ -51,8 +52,8 @@ export function AppSidebar() {
 
             <SidebarContent className="gap-4 px-1">
                 {mainItems.length > 0 && <NavMain items={mainItems} />}
-                {complianceNavItems.length > 0 && (
-                    <NavMain label="Cumplimiento" items={complianceNavItems} />
+                {complianceItems.length > 0 && (
+                    <NavMain label="Cumplimiento" items={complianceItems} />
                 )}
                 {auth.isSuperadmin && (
                     <NavMain label="Plataforma" items={superadminNavItems} />

@@ -268,3 +268,28 @@ function guideOneAnswers(array $yes = []): array
 
     return $answers;
 }
+
+/**
+ * Active people in a work center of `$tenant`, in one area, by gender: `$female` women, `$male` men and `$other` who
+ * answered "Otro / prefiero no decir".
+ *
+ * @return Illuminate\Support\Collection<int, App\Modules\Organization\Models\Employee>
+ */
+function staffOf(Tenant $tenant, WorkCenter $workCenter, int $female, int $male = 0, int $other = 0): Illuminate\Support\Collection
+{
+    $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id]);
+    $people = collect();
+
+    foreach (['female' => $female, 'male' => $male, 'other' => $other] as $gender => $count) {
+        if ($count > 0) {
+            $people = $people->concat(App\Modules\Organization\Models\Employee::factory()->count($count)->create([
+                'tenant_id' => $tenant->id,
+                'work_center_id' => $workCenter->id,
+                'area_id' => $area->id,
+                'gender' => $gender,
+            ]));
+        }
+    }
+
+    return $people;
+}

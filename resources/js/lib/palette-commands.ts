@@ -53,7 +53,7 @@ export function paletteCommands({
 }: Options): PaletteCommand[] {
     const pages = [
         ...mainNavItems(tenant, isSuperadmin),
-        ...complianceNavItems,
+        ...complianceNavItems(tenant),
         ...(isSuperadmin ? superadminNavItems : []),
     ];
 

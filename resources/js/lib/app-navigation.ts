@@ -1,4 +1,12 @@
-import { Building2, Factory, House, Inbox, UserCog, Users } from 'lucide-react';
+import {
+    Building2,
+    ClipboardCheck,
+    Factory,
+    House,
+    Inbox,
+    UserCog,
+    Users,
+} from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
@@ -6,6 +14,7 @@ import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
+import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as workCenters } from '@/routes/tenant/work-centers';
@@ -56,8 +65,20 @@ export const mainNavItems = (
     ];
 };
 
-// NOM-035, NOM-037 and Ley Silla enter here when each gets its first page.
-export const complianceNavItems: NavItem[] = [];
+/**
+ * The compliance tools of the current company, for every role: who may change them is the page's to say. NOM-037 and
+ * Ley Silla enter here when each gets its first page.
+ */
+export const complianceNavItems = (tenant: NavTenant | null): NavItem[] =>
+    tenant === null
+        ? []
+        : [
+              {
+                  title: 'NOM-035',
+                  href: campaigns(tenant.slug),
+                  icon: ClipboardCheck,
+              },
+          ];
 
 // Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
 export const superadminNavItems: NavItem[] = [

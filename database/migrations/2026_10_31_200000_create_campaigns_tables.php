@@ -59,7 +59,8 @@ return new class extends Migration
                 ADD CONSTRAINT campaigns_population_known CHECK (population IS NULL OR population IN ({$populations})),
                 ADD CONSTRAINT campaigns_launched_dated CHECK (status = 'draft' OR (launched_at IS NOT NULL AND closes_on IS NOT NULL)),
                 ADD CONSTRAINT campaigns_closed_dated CHECK ((status = 'closed') = (closed_at IS NOT NULL)),
-                ADD CONSTRAINT campaigns_sample_sized CHECK ((population = 'sample') = (sample_size IS NOT NULL AND quotas IS NOT NULL))
+                ADD CONSTRAINT campaigns_sample_only_when_sampled CHECK (population = 'sample' OR (sample_size IS NULL AND quotas IS NULL)),
+                ADD CONSTRAINT campaigns_sample_drawn_before_launch CHECK (status = 'draft' OR population IS DISTINCT FROM 'sample' OR (sample_size IS NOT NULL AND quotas IS NOT NULL))
         SQL);
         DB::statement("CREATE UNIQUE INDEX campaigns_one_open_evaluation ON campaigns (tenant_id, work_center_id) WHERE kind = 'nom035_evaluation' AND status IN ('draft', 'active')");
 
