@@ -72,3 +72,23 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
 
     expect(Campaign::query()->withoutGlobalScopes()->sole()->sample_size)->toBe(53);
 });
+
+it('launches a draft with the deadline suggested, inviting everyone by email', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertSee('Lanzar la evaluación')
+        ->click('Lanzar e invitar')
+        ->assertSee('Evaluación lanzada. Las invitaciones van en camino.')
+        ->assertSee('En curso')
+        ->assertSee('0 de 20')
+        ->assertDontSee('Lanzar la evaluación')
+        ->assertNoJavaScriptErrors();
+
+    Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 20);
+});

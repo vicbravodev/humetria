@@ -13,3 +13,4 @@ Route::post('admin/{tenant:slug}/campaigns', [CampaignController::class, 'store'
 Route::get('admin/{tenant:slug}/campaigns/{campaign}', [CampaignController::class, 'show'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.show');
 Route::delete('admin/{tenant:slug}/campaigns/{campaign}', [CampaignController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.destroy');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/redraw', [CampaignActionController::class, 'redraw'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.redraw');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/launch', [CampaignActionController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.launch');

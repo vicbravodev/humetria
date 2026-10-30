@@ -24,6 +24,16 @@ final readonly class CompanyDirectory implements Companies
 
         $this->tenantContext->set($tenant);
 
+        return self::summary($tenant);
+    }
+
+    public function current(): CompanySummary
+    {
+        return self::summary(Tenant::query()->findOrFail($this->tenantContext->id()));
+    }
+
+    private static function summary(Tenant $tenant): CompanySummary
+    {
         return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->status()->isBlocked());
     }
 }

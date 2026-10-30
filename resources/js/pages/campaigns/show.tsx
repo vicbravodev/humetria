@@ -4,6 +4,7 @@ import CampaignFacts from '@/components/campaigns/campaign-facts';
 import CampaignStatusBadge from '@/components/campaigns/campaign-status-badge';
 import DeleteDraftDialog from '@/components/campaigns/delete-draft-dialog';
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
+import LaunchForm from '@/components/campaigns/launch-form';
 import SampleTable from '@/components/campaigns/sample-table';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -18,10 +19,12 @@ export default function Campaign({
     campaign,
     instruments,
     sample,
+    launch,
 }: {
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     sample: SampledPerson[] | null;
+    launch: { min: string; suggested: string } | null;
 }) {
     const { tenant } = usePage().props;
     const tenantSlug = tenant?.slug ?? '';
@@ -70,6 +73,14 @@ export default function Campaign({
                             campaignId={campaign.id}
                         />
                     </div>
+                )}
+                {launch !== null && (
+                    <LaunchForm
+                        tenantSlug={tenantSlug}
+                        campaignId={campaign.id}
+                        min={launch.min}
+                        suggested={launch.suggested}
+                    />
                 )}
                 {sample !== null && (
                     <section className="flex flex-col gap-4">

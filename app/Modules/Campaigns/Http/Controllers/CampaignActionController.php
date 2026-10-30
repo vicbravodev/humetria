@@ -6,8 +6,10 @@ namespace App\Modules\Campaigns\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Actions\DrawSample;
+use App\Modules\Campaigns\Actions\LaunchCampaign;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
+use App\Modules\Campaigns\Http\Requests\LaunchCampaignRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -25,6 +27,17 @@ final class CampaignActionController extends Controller
 
         $drawSample->handle($draft);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Muestra sorteada de nuevo.']);
+
+        return redirect()->route('tenant.campaigns.show', [$tenant, $draft->id]);
+    }
+
+    public function launch(LaunchCampaignRequest $request, mixed $tenant, string $campaign, LaunchCampaign $launchCampaign): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $draft = CampaignController::find($campaign, CampaignStatus::Draft);
+
+        $launchCampaign->handle($draft, $request->closesOn());
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Evaluación lanzada. Las invitaciones van en camino.']);
 
         return redirect()->route('tenant.campaigns.show', [$tenant, $draft->id]);
     }

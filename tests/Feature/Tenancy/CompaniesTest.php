@@ -33,3 +33,14 @@ it('reports a company that may not be used as blocked', function (): void {
 it('rejects an id that is no company', function (string $id): void {
     resolve(Companies::class)->enter($id);
 })->with(['0b6c3d3e-9a51-4f8a-9a0f-2f1d6e3b8c11', 'not-a-uuid'])->throws(InvalidArgumentException::class);
+
+it('describes the company the code works in now', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    workIn($tenant);
+
+    expect(resolve(Companies::class)->current())->toEqual(new CompanySummary($tenant->id, 'Acme', blocked: false));
+});
+
+it('has no current company outside one', function (): void {
+    resolve(Companies::class)->current();
+})->throws(App\Modules\Tenancy\Exceptions\NoCurrentTenant::class);

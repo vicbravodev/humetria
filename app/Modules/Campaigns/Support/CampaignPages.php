@@ -55,7 +55,7 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, sample: list<array<string, string>>|null}
+     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null}
      */
     public function show(Campaign $campaign, bool $canManage): array
     {
@@ -80,6 +80,10 @@ final readonly class CampaignPages
             ], $campaign->instruments),
             'sample' => $canManage && $campaign->status === CampaignStatus::Draft && $campaign->population === Population::Sample
                 ? $this->sample($campaign)
+                : null,
+            // The deadline it can be launched with: tomorrow at the earliest, two weeks suggested.
+            'launch' => $canManage && $campaign->status === CampaignStatus::Draft
+                ? ['min' => CampaignClock::today()->addDay()->format('Y-m-d'), 'suggested' => CampaignClock::today()->addWeeks(2)->format('Y-m-d')]
                 : null,
         ];
     }

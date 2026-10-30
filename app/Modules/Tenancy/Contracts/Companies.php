@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Contracts;
 
 use App\Modules\Tenancy\Data\CompanySummary;
+use App\Modules\Tenancy\Exceptions\NoCurrentTenant;
 use InvalidArgumentException;
 
 /**
@@ -20,4 +21,11 @@ interface Companies
      * @throws InvalidArgumentException when no company has that id.
      */
     public function enter(string $tenantId): CompanySummary;
+
+    /**
+     * The company the code works in now.
+     *
+     * @throws NoCurrentTenant outside a company.
+     */
+    public function current(): CompanySummary;
 }

@@ -133,7 +133,17 @@ it('shows a sampled draft with its quotas and who was drawn, to those who manage
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('sample', null));
+        ->assertInertia(fn (Assert $page) => $page->where('sample', null)->where('launch', null));
+});
+
+it('offers to launch a draft from tomorrow in Mexico City, suggesting two weeks', function (): void {
+    // 03:00 UTC on the 1st is still 31 October in Mexico City.
+    Carbon::setTestNow('2026-11-01 03:00:00');
+    $draft = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $draft->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('launch', ['min' => '2026-11-01', 'suggested' => '2026-11-14']));
 });
 
 it('counts each guide of a launched campaign', function (): void {
