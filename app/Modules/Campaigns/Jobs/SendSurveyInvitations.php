@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Jobs;
 
+use App\Modules\Campaigns\Enums\CampaignStatus;
+use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
@@ -26,7 +28,8 @@ use Throwable;
  * Sends the survey link of a block of people: each gets a new link (the one before stops working) and an email with
  * it. It runs in the company that queued it (its id travels in the job's Context). Only who is still waiting in this
  * job's batch is sent to, so running it again, or late after a newer batch, never sends a link twice; it can only
- * happen if the worker dies between sending an email and writing it down. It waits for the next minute when the
+ * happen if the worker dies between sending an email and writing it down. Who has no guide pending any more gets no
+ * link, and nobody does once the evaluation is closed or past its last day. It waits for the next minute when the
  * emails per minute are used up, and gives up after a day, marking who was left as failed.
  */
 final class SendSurveyInvitations implements ShouldQueue
@@ -50,10 +53,20 @@ final class SendSurveyInvitations implements ShouldQueue
     {
         $campaign = Campaign::query()->find($this->campaignId);
 
-        if ($campaign === null || $campaign->closes_on === null) {
+        if ($campaign === null) {
             return;
         }
 
+        // Closed, or past its last day: a link would only open on "cerrada".
+        if ($campaign->status !== CampaignStatus::Active || $campaign->closes_on === null || CampaignClock::hasPassed($campaign->closes_on)) {
+            $this->failed(null);
+
+            return;
+        }
+
+        // Who left or moved meanwhile has nothing pending: no link, and nothing left to wait for.
+        $this->waiting()->whereDoesntHave('instruments', fn ($guides) => $guides->where('status', InstrumentStatus::Pending))
+            ->update(['invitation_status' => null, 'invitation_batch' => null]);
         $waiting = $this->waiting()->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
         $tradeName = resolve(Companies::class)->current()->tradeName;

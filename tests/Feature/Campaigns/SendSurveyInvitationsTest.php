@@ -150,3 +150,28 @@ it('works in the company that queued it, from a worker with no request', functio
 
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 20);
 });
+
+it('sends nothing to whoever has no guide pending any more, and stops waiting for them', function (): void {
+    $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 20);
+    [$job] = batchedJobs();
+    $gone = participantsOf($campaign)->take(3)->pluck('id');
+    App\Modules\Campaigns\Models\ParticipantInstrument::query()->withoutGlobalScopes()->whereIn('participant_id', $gone)->update(['status' => 'cancelled', 'cancelled_at' => now()]);
+
+    $job->handle();
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 17);
+    expect(Participant::query()->withoutGlobalScopes()->whereKey($gone)->get()->every(fn (Participant $participant): bool => $participant->invitation_status === null && $participant->token_hash === null))->toBeTrue();
+});
+
+it('sends nothing once the evaluation is closed or past its last day, marking who waited as failed', function (string $case): void {
+    $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 20);
+    [$job] = batchedJobs();
+    $case === 'closed'
+        ? $campaign->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Closed, 'closed_at' => now()])
+        : $this->travelTo('2026-11-21 12:00:00');
+
+    $job->handle();
+
+    Notification::assertNothingSent();
+    expect(participantsOf($campaign)->pluck('invitation_status')->unique()->all())->toBe([InvitationStatus::Failed]);
+})->with(['closed', 'past its last day']);
