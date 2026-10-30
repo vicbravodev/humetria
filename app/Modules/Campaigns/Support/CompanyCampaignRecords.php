@@ -12,8 +12,6 @@ use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Models\Campaign;
-use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -86,9 +84,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
     private static function cycle(?Campaign $running, ?Campaign $last): ComplianceCycle
     {
         if ($running?->launched_at !== null && $running->closes_on !== null) {
-            $lastDay = self::lastDay($running->closes_on);
-
-            return new ComplianceCycle('in_course', CampaignClock::day($running->launched_at), CampaignClock::day($running->closes_on, isDate: true), self::elapsed(self::dayOf($running->launched_at), $lastDay));
+            return new ComplianceCycle('in_course', CampaignClock::day($running->launched_at), CampaignClock::day($running->closes_on, isDate: true), CampaignClock::elapsed($running->launched_at, CampaignClock::deadline($running->closes_on)->subDay()));
         }
 
         if ($last?->closed_at === null) {
@@ -98,7 +94,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
         $due = $last->closed_at->addYears(self::CYCLE_YEARS);
         $overdue = $due->isPast();
 
-        return new ComplianceCycle($overdue ? 'overdue' : 'up_to_date', CampaignClock::day($last->closed_at), CampaignClock::day($due), $overdue ? 100 : self::elapsed(self::dayOf($last->closed_at), self::dayOf($due)));
+        return new ComplianceCycle($overdue ? 'overdue' : 'up_to_date', CampaignClock::day($last->closed_at), CampaignClock::day($due), $overdue ? 100 : CampaignClock::elapsed($last->closed_at, $due));
     }
 
     /**
@@ -140,34 +136,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
             invited: $invited,
             answered: $answered,
             closesOn: $campaign->closes_on === null ? null : CampaignClock::day($campaign->closes_on, isDate: true),
-            daysLeft: $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null
-                ? max(0, self::days(CampaignClock::today(), self::lastDay($campaign->closes_on)))
-                : null,
+            daysLeft: $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null ? CampaignClock::daysLeft($campaign->closes_on) : null,
         );
-    }
-
-    /** The start of a campaign's last day, in the display time zone. */
-    private static function lastDay(CarbonInterface $closesOn): CarbonImmutable
-    {
-        return CampaignClock::deadline($closesOn)->subDay();
-    }
-
-    /** The start of the day a moment falls on, in the display time zone. */
-    private static function dayOf(CarbonInterface $moment): CarbonImmutable
-    {
-        return CampaignClock::today()->setTimestamp($moment->getTimestamp())->startOfDay();
-    }
-
-    /** How much of the days from `$start` to `$end` has gone by today, in percent from 0 to 100. */
-    private static function elapsed(CarbonImmutable $start, CarbonImmutable $end): int
-    {
-        $span = self::days($start, $end);
-
-        return $span <= 0 ? 100 : max(0, min(100, intdiv(100 * self::days($start, CampaignClock::today()), $span)));
-    }
-
-    private static function days(CarbonImmutable $from, CarbonImmutable $to): int
-    {
-        return intdiv($to->getTimestamp() - $from->getTimestamp(), 86400);
     }
 }

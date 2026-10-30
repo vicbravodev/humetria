@@ -230,7 +230,7 @@ it('reads the results with a fixed number of queries, however many answered', fu
     $url = route('tenant.campaigns.results', [$this->tenant, $this->evaluation->id]);
     $this->get($url);
 
-    $this->expectsDatabaseQueryCount(15);
+    $this->expectsDatabaseQueryCount(16);
 
     $this->get($url)->assertOk();
 })->with([5, 15]);

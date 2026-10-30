@@ -141,7 +141,7 @@ it('reads the evaluations page in a fixed number of queries', function (int $cen
     $url = route('tenant.campaigns.index', $this->tenant);
     $this->get($url);
 
-    $this->expectsDatabaseQueryCount(17);
+    $this->expectsDatabaseQueryCount(18);
 
     $this->get($url)->assertOk();
 })->with([2, 20]);
@@ -333,7 +333,7 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $this->get($url);
 
     // The same with 3 or 30 people: nothing is read person by person.
-    $this->expectsDatabaseQueryCount(18);
+    $this->expectsDatabaseQueryCount(19);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);

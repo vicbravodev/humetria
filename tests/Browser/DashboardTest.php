@@ -56,6 +56,19 @@ it('shows the panel as the redesign draws it, in both themes and on a phone', fu
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 
+it('counts the evaluations in course in the sidebar and tells when the next one closes, until it folds', function (): void {
+    visitPage('dashboard', panelCompany())
+        ->assertSeeIn('[data-sidebar="menu-badge"]', '1')
+        ->assertSeeIn('[data-test="next-obligation"]', 'La próxima evaluación cierra en 11 días')
+        ->click('[data-sidebar="trigger"]')
+        ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-test="next-obligation"]\')).display', 'none');
+});
+
+it('shows no next obligation without an evaluation in course', function (): void {
+    visitPage('dashboard', signInToPanel())->assertMissing('[data-test="next-obligation"]');
+});
+
 it('reminds whoever is missing from the panel', function (): void {
     visitPage('dashboard', panelCompany())
         ->click('Recordar a quien falta')

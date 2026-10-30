@@ -15,3 +15,10 @@ export type NavItem = {
     /** Something waiting there, as a count next to the name (NOM-035 · 1 en curso). */
     badge?: number;
 };
+
+/** The company's campaigns in course: how many, and of the soonest to close, its days left and percent gone by. */
+export type InCourse = {
+    count: number;
+    daysLeft: number | null;
+    elapsed: number;
+};

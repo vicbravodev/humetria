@@ -19,7 +19,7 @@ import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import { toUrl } from '@/lib/utils';
-import type { BreadcrumbItem, CurrentTenant, NavItem } from '@/types';
+import type { BreadcrumbItem, CurrentTenant, InCourse, NavItem } from '@/types';
 
 /** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
 export type NavTenant = Pick<CurrentTenant, 'slug' | 'can'>;
@@ -70,7 +70,10 @@ export const mainNavItems = (
  * The compliance tools of the current company, for every role: who may change them is the page's to say. NOM-037 and
  * Ley Silla enter here when each gets its first page.
  */
-export const complianceNavItems = (tenant: NavTenant | null): NavItem[] =>
+export const complianceNavItems = (
+    tenant: NavTenant | null,
+    inCourse = 0,
+): NavItem[] =>
     tenant === null
         ? []
         : [
@@ -78,8 +81,26 @@ export const complianceNavItems = (tenant: NavTenant | null): NavItem[] =>
                   title: 'NOM-035',
                   href: campaigns(tenant.slug),
                   icon: ClipboardCheck,
+                  badge: inCourse,
               },
           ];
+
+/**
+ * The sidebar's "Siguiente obligación": when the soonest evaluation in course closes ("en 11 días", "mañana",
+ * "hoy"); null without one.
+ */
+export const nextObligation = (
+    inCourse: InCourse | null,
+): { lead: string; when: string } | null => {
+    if (inCourse === null || inCourse.daysLeft === null) {
+        return null;
+    }
+
+    const days = inCourse.daysLeft;
+    const when = days <= 0 ? 'hoy' : days === 1 ? 'mañana' : `en ${days} días`;
+
+    return { lead: 'La próxima evaluación cierra', when };
+};
 
 // Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
 export const superadminNavItems: NavItem[] = [

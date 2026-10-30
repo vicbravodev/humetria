@@ -188,7 +188,7 @@ it('reads the panel in the same number of queries however much the company holds
     }
 
     $this->actingAs(ownerOf($this->tenant));
-    $this->expectsDatabaseQueryCount(22 + min($evaluations, 5));
+    $this->expectsDatabaseQueryCount(23 + min($evaluations, 5));
 
     $this->get(route('tenant.dashboard', $this->tenant))->assertOk();
 })->with([1, 3]);
