@@ -6,8 +6,10 @@ namespace App\Modules\Organization\Support;
 
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Organization\Models\Employee;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use LogicException;
 
 final class CompanyRoster implements Roster
@@ -34,6 +36,36 @@ final class CompanyRoster implements Roster
     public function findMany(array $employeeIds): array
     {
         return $this->query()->whereKey($employeeIds)->get()->mapWithKeys(fn (Employee $employee): array => [$employee->id => $this->entry($employee)])->all();
+    }
+
+    public function page(RosterQuery $query, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
+    {
+        return $this->matching($query)->with('area')->paginate($perPage, pageName: $pageName)->withQueryString()->through($this->entry(...));
+    }
+
+    public function matchingIds(RosterQuery $query): array
+    {
+        return array_values($this->matching($query)->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all());
+    }
+
+    /**
+     * @return Builder<Employee>
+     */
+    private function matching(RosterQuery $query): Builder
+    {
+        // LIKE's own wildcards in what was typed are searched as themselves.
+        $like = '%'.addcslashes($query->search, '\\%_').'%';
+
+        return Employee::query()
+            ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->whereKey($query->employeeIds))
+            ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
+            ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
+            ->when($query->search !== '', fn (Builder $employees) => $employees->where(fn (Builder $match) => $match
+                ->where('name', 'ilike', $like)
+                ->orWhere('email', 'ilike', $like)
+                ->orWhere('employee_number', 'ilike', $like)))
+            ->orderBy('name')
+            ->orderBy('id');
     }
 
     /**
