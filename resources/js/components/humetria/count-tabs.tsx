@@ -33,7 +33,7 @@ export default function CountTabs({
                     preserveScroll
                     aria-current={tab.active ? 'page' : undefined}
                     className={cn(
-                        'inline-flex h-[38px] shrink-0 items-center gap-2 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                        'relative inline-flex h-[38px] shrink-0 items-center gap-2 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                         tab.active && 'bg-card text-foreground shadow-raised',
                     )}
                 >
