@@ -188,3 +188,30 @@ export function readAnswers(text: string | null): Answers {
           )
         : {};
 }
+
+/** What forgetLink needs from Storage, so it can be tried without a browser. */
+export type KeyedStorage = Pick<Storage, 'length' | 'key' | 'removeItem'>;
+
+/**
+ * Clears every answer this device kept for a link that no longer works (closed, answered, replaced): nothing of it,
+ * Guía I's included, should stay on a phone that someone else may use.
+ */
+export function forgetLink(storage: KeyedStorage, token: string): void {
+    const prefix = storageKey(token, '');
+    const keys = Array.from({ length: storage.length }, (_, index) =>
+        storage.key(index),
+    );
+
+    for (const key of keys) {
+        if (key !== null && key.startsWith(prefix)) {
+            storage.removeItem(key);
+        }
+    }
+}
+
+/** The link's token in a survey address, "/survey/{token}". */
+export function tokenFromPath(path: string): string | null {
+    const match = /^\/survey\/([^/]+)$/.exec(path);
+
+    return match?.[1] === undefined ? null : decodeURIComponent(match[1]);
+}

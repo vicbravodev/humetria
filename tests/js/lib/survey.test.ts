@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    forgetLink,
     isComplete,
     payload,
     progressOf,
     readAnswers,
     steps,
     storageKey,
+    tokenFromPath,
     visibleKeys,
 } from '@/lib/survey';
 import type { SurveyInstrument, SurveySection } from '@/types';
@@ -241,5 +243,38 @@ describe('storage', () => {
         expect(readAnswers('[1,2]')).toEqual({});
         expect(readAnswers('not json')).toEqual({});
         expect(readAnswers(null)).toEqual({});
+    });
+});
+
+describe('forgetLink', () => {
+    it('clears from the device every answer kept for a link that no longer works, and nothing else', () => {
+        const kept = new Map([
+            ['humetria:survey:abc:nom035.guide-i', '{"1":"yes"}'],
+            ['humetria:survey:abc:nom035.guide-iii', '{}'],
+            ['humetria:survey:other:nom035.guide-i', '{}'],
+            ['appearance', 'dark'],
+        ]);
+        const storage = {
+            get length() {
+                return kept.size;
+            },
+            key: (index: number) => [...kept.keys()][index] ?? null,
+            removeItem: (key: string) => {
+                kept.delete(key);
+            },
+        };
+
+        forgetLink(storage, 'abc');
+
+        expect([...kept.keys()]).toEqual([
+            'humetria:survey:other:nom035.guide-i',
+            'appearance',
+        ]);
+    });
+
+    it('reads the link from the address', () => {
+        expect(tokenFromPath('/survey/abc123')).toBe('abc123');
+        expect(tokenFromPath('/survey/a%20b')).toBe('a b');
+        expect(tokenFromPath('/admin')).toBeNull();
     });
 });

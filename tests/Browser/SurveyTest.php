@@ -180,3 +180,15 @@ it('shows each question as the design system asks: the instruction, the question
         ->assertSee('Casi siempre')
         ->assertSee('Nadie de su empresa puede ver lo que contesta.');
 })->with($looks);
+
+it('clears what the device kept for a link once it no longer works', function (): void {
+    invitedPerson(['nom035.guide-i']);
+    $page = visit('/survey/the-token');
+    $page->script("() => { localStorage.setItem('humetria:survey:the-token:nom035.guide-i', '{\"1\":\"yes\"}'); localStorage.setItem('appearance', 'dark'); return true; }");
+    ParticipantInstrument::query()->withoutGlobalScopes()->update(['status' => 'completed', 'completed_at' => now()]);
+
+    $page->refresh()
+        ->assertSee('Ya contestó todo lo que le correspondía')
+        ->assertScript("() => localStorage.getItem('humetria:survey:the-token:nom035.guide-i')", null)
+        ->assertScript("() => localStorage.getItem('appearance')", 'dark');
+});
