@@ -48,7 +48,7 @@ it('lets a viewer see the work centers', function (): void {
     $this->actingAs(memberOf($workCenter->tenant, TenantRole::Viewer))
         ->get(route('tenant.work-centers.index', $workCenter->tenant))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('workCenters.0.name', 'Planta Norte'));
+        ->assertInertia(fn (Assert $page) => $page->where('workCenters.data.0.name', 'Planta Norte'));
 });
 
 it('does not let a viewer change a work center', function (): void {

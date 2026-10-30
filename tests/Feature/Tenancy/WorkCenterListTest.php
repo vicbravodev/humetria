@@ -35,10 +35,10 @@ it('lists the active work centers of the company by name, with their address in 
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/work-centers')
             ->where('view', 'active')
-            ->has('workCenters', 2)
-            ->where('workCenters.0.name', 'Oficinas Centrales')
-            ->where('workCenters.0.address', 'Reforma 222, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México')
-            ->where('workCenters.1', fn ($row): bool => collect($row)->except('id')->all() === [
+            ->where('workCenters.total', 2)
+            ->where('workCenters.data.0.name', 'Oficinas Centrales')
+            ->where('workCenters.data.0.address', 'Reforma 222, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México')
+            ->where('workCenters.data.1', fn ($row): bool => collect($row)->except('id')->all() === [
                 'name' => 'Planta Querétaro',
                 'street' => 'Av. 5 de Febrero',
                 'exterior_number' => '1200',
@@ -64,7 +64,7 @@ it('keeps archived work centers out of the list and counts both', function (): v
         ->get(route('tenant.work-centers.index', $tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->where('counts', ['active' => 1, 'archived' => 2])
-            ->where('workCenters', fn ($rows): bool => collect($rows)->pluck('name')->all() === ['Activo']));
+            ->where('workCenters.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === ['Activo']));
 });
 
 it('lists only the archived ones, with the day each was archived, when asked', function (): void {
@@ -77,9 +77,26 @@ it('lists only the archived ones, with the day each was archived, when asked', f
         ->get(route('tenant.work-centers.index', ['tenant' => $tenant, 'archived' => 1]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('view', 'archived')
-            ->has('workCenters', 1)
-            ->where('workCenters.0.name', 'Cerrado')
-            ->where('workCenters.0.archived_on', '2 nov 2026'));
+            ->has('workCenters.data', 1)
+            ->where('workCenters.data.0.name', 'Cerrado')
+            ->where('workCenters.data.0.archived_on', '2 nov 2026'));
+});
+
+it('pages the work centers 25 at a time, keeping the view', function (): void {
+    $tenant = Tenant::factory()->create();
+
+    foreach (range(1, 26) as $index) {
+        WorkCenter::factory()->for($tenant)->archived()->create(['name' => sprintf('Centro %02d', $index)]);
+    }
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.work-centers.index', ['tenant' => $tenant, 'archived' => 1, 'page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts', ['active' => 0, 'archived' => 26])
+            ->where('workCenters.total', 26)
+            ->has('workCenters.data', 1)
+            ->where('workCenters.data.0.name', 'Centro 26')
+            ->where('workCenters.prev_page_url', fn (string $url): bool => str_contains($url, 'archived=1')));
 });
 
 it('never shows the work centers of another company', function (): void {
@@ -89,7 +106,7 @@ it('never shows the work centers of another company', function (): void {
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.work-centers.index', $tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('workCenters', 0)
+            ->has('workCenters.data', 0)
             ->where('counts', ['active' => 0, 'archived' => 0]));
 });
 
@@ -142,7 +159,7 @@ it('counts each work center\'s active employees and says which NOM-035 guides ap
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.work-centers.index', $tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('workCenters', fn ($rows): bool => collect($rows)->map(fn ($row): array => [$row['name'], $row['employees'], $row['guides']])->all() === [
+            ->where('workCenters.data', fn ($rows): bool => collect($rows)->map(fn ($row): array => [$row['name'], $row['employees'], $row['guides']])->all() === [
                 ['A Chico', 15, ['I']],
                 ['B Mediano', 16, ['I', 'II']],
                 ['C Vacío', 0, []],

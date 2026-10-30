@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import ConsolePagination from '@/components/console-pagination';
 import PageHeader from '@/components/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
 import WorkCenterViews from '@/components/tenancy/work-center-views';
@@ -6,6 +7,7 @@ import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
 import WorkCentersTable from '@/components/tenancy/work-centers-table';
 import type {
     MexicanStateOption,
+    Paginated,
     WorkCenterRow,
     WorkCentersView,
 } from '@/types';
@@ -18,7 +20,7 @@ export default function WorkCenters({
 }: {
     view: WorkCentersView;
     counts: Record<WorkCentersView, number>;
-    workCenters: WorkCenterRow[];
+    workCenters: Paginated<WorkCenterRow>;
     states: MexicanStateOption[];
 }) {
     // Always set here: this page only exists inside a company.
@@ -46,16 +48,22 @@ export default function WorkCenters({
                         counts={counts}
                     />
                 )}
-                {workCenters.length === 0 ? (
+                {workCenters.total === 0 ? (
                     <WorkCentersEmpty view={view} />
                 ) : (
                     <WorkCentersTable
                         tenantSlug={tenantSlug}
                         view={view}
-                        workCenters={workCenters}
+                        workCenters={workCenters.data}
                         states={canManage ? states : null}
                     />
                 )}
+                <ConsolePagination
+                    page={workCenters}
+                    label="Páginas de centros de trabajo"
+                    previous="Anteriores"
+                    next="Siguientes"
+                />
             </div>
         </>
     );
