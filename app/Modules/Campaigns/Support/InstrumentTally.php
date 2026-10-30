@@ -26,7 +26,7 @@ final class InstrumentTally
             ->join('campaign_participants', 'campaign_participants.id', '=', 'participant_instruments.participant_id')
             ->whereIn('campaign_participants.campaign_id', $campaignIds)
             ->groupBy('campaign_participants.campaign_id', 'participant_instruments.instrument', 'participant_instruments.status')
-            ->selectRaw('campaign_participants.campaign_id, participant_instruments.instrument, participant_instruments.status, count(*) as total')
+            ->selectRaw('campaign_participants.campaign_id, participant_instruments.instrument, participant_instruments.status, count(*)::int as total')
             ->toBase()
             ->get();
 
