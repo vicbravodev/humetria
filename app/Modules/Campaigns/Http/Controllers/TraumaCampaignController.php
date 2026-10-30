@@ -41,6 +41,7 @@ final class TraumaCampaignController extends Controller
                 'reachable' => $person->email !== null,
             ]),
             'filters' => ['q' => $query->search],
+            'maxPeople' => TraumaCampaignRequest::MAX_PEOPLE,
             // Only when asked: to choose at once everyone the search found, on every page.
             'matching' => Inertia::optional(fn (): array => $workCenterId === null ? [] : $roster->matchingIds($query)),
             'minDeadline' => CampaignClock::today()->addDay()->format('Y-m-d'),

@@ -24,12 +24,15 @@ export default function PeopleChecklist({
     workCenterId,
     people,
     search,
+    maxPeople,
     error,
 }: {
     url: string;
     workCenterId: string;
     people: Paginated<RosterPerson>;
     search: string;
+    /** Most people that can be chosen: a search that finds more is narrowed first. */
+    maxPeople: number;
     error: string | undefined;
 }) {
     const { chosen, toggle, chooseFound, clear } =
@@ -52,7 +55,7 @@ export default function PeopleChecklist({
                     onChange={type}
                     className="max-w-sm flex-1"
                 />
-                {people.total > 0 && (
+                {people.total > 0 && people.total <= maxPeople && (
                     <Button
                         type="button"
                         variant="outline"

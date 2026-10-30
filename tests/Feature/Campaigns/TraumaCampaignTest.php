@@ -47,6 +47,7 @@ it('offers the active people of the chosen work center, a page at a time', funct
             ->where('people.total', 4)
             ->has('people.data.0', fn (Assert $person) => $person->hasAll(['id', 'name', 'area', 'reachable']))
             ->where('filters', ['q' => ''])
+            ->where('maxPeople', 1000)
             ->missing('matching')
             ->where('minDeadline', '2026-11-03'));
 

@@ -14,12 +14,14 @@ export default function Trauma({
     workCenter,
     people,
     filters,
+    maxPeople,
     minDeadline,
     suggestedDeadline,
 }: {
     workCenter: ChoiceOption | null;
     people: Paginated<RosterPerson> | null;
     filters: { q: string };
+    maxPeople: number;
     minDeadline: string;
     suggestedDeadline: string;
 }) {
@@ -77,6 +79,7 @@ export default function Trauma({
                         workCenterId={workCenter.value}
                         people={people}
                         search={filters.q}
+                        maxPeople={maxPeople}
                         minDeadline={minDeadline}
                         suggestedDeadline={suggestedDeadline}
                     />

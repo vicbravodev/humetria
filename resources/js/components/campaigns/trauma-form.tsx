@@ -14,6 +14,7 @@ export default function TraumaForm({
     workCenterId,
     people,
     search,
+    maxPeople,
     minDeadline,
     suggestedDeadline,
 }: {
@@ -21,6 +22,7 @@ export default function TraumaForm({
     workCenterId: string;
     people: Paginated<RosterPerson>;
     search: string;
+    maxPeople: number;
     minDeadline: string;
     suggestedDeadline: string;
 }) {
@@ -39,6 +41,7 @@ export default function TraumaForm({
                         workCenterId={workCenterId}
                         people={people}
                         search={search}
+                        maxPeople={maxPeople}
                         error={errors['employee_ids']}
                     />
                     <div className="grid max-w-sm gap-2">
