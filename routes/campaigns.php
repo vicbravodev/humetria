@@ -18,3 +18,5 @@ Route::post('admin/{tenant:slug}/campaigns/{campaign}/resend', [CampaignActionCo
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/participants/{participant}/resend', [CampaignActionController::class, 'resendOne'])->where('tenant', $notReserved)->whereUuid(['campaign', 'participant'])->name('tenant.campaigns.participants.resend');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/invite-missing', [CampaignActionController::class, 'inviteMissing'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.invite-missing');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/replacements', [CampaignActionController::class, 'replacements'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.replacements');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/extend', [CampaignActionController::class, 'extend'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.extend');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/close', [CampaignActionController::class, 'close'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.close');

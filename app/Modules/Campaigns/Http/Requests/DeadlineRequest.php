@@ -9,9 +9,10 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * The last day people can answer: tomorrow at the earliest, in the display time zone.
+ * The last day people can answer, to launch an evaluation or extend it: tomorrow at the earliest, in the display time
+ * zone.
  */
-final class LaunchCampaignRequest extends FormRequest
+final class DeadlineRequest extends FormRequest
 {
     /**
      * @return array<string, mixed>

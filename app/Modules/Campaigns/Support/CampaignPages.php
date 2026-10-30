@@ -56,7 +56,7 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, people: list<array<string, mixed>>|null, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null}
+     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, people: list<array<string, mixed>>|null, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null, minDeadline: string|null}
      */
     public function show(Campaign $campaign, bool $canManage): array
     {
@@ -87,6 +87,8 @@ final readonly class CampaignPages
             'launch' => $canManage && $campaign->status === CampaignStatus::Draft
                 ? ['min' => CampaignClock::today()->addDay()->format('Y-m-d'), 'suggested' => CampaignClock::today()->addWeeks(2)->format('Y-m-d')]
                 : null,
+            // The earliest last day it can be extended to, while it runs.
+            'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
         ];
     }
 

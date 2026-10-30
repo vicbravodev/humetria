@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Campaigns\Actions\CloseCampaign;
 use App\Modules\Campaigns\Actions\DrawReplacements;
 use App\Modules\Campaigns\Actions\DrawSample;
+use App\Modules\Campaigns\Actions\ExtendCampaign;
 use App\Modules\Campaigns\Actions\InviteMissing;
 use App\Modules\Campaigns\Actions\LaunchCampaign;
 use App\Modules\Campaigns\Actions\ResendInvitations;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
-use App\Modules\Campaigns\Http\Requests\LaunchCampaignRequest;
+use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
 use App\Modules\Campaigns\Http\Requests\ReplacementsRequest;
 use App\Modules\Campaigns\Models\Participant;
 use Illuminate\Http\RedirectResponse;
@@ -37,7 +39,7 @@ final class CampaignActionController extends Controller
         return redirect()->route('tenant.campaigns.show', [$tenant, $draft->id]);
     }
 
-    public function launch(LaunchCampaignRequest $request, mixed $tenant, string $campaign, LaunchCampaign $launchCampaign): RedirectResponse
+    public function launch(DeadlineRequest $request, mixed $tenant, string $campaign, LaunchCampaign $launchCampaign): RedirectResponse
     {
         Gate::authorize('manage-campaigns');
         $draft = CampaignController::find($campaign, CampaignStatus::Draft);
@@ -87,6 +89,25 @@ final class CampaignActionController extends Controller
         $count = $drawReplacements->handle($active, $request->count());
 
         return $this->done($count, '', 'Se sorteó 1 persona más para la muestra.', "Se sortearon {$count} personas más para la muestra.");
+    }
+
+    public function extend(DeadlineRequest $request, mixed $tenant, string $campaign, ExtendCampaign $extendCampaign): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $extendCampaign->handle(CampaignController::find($campaign, CampaignStatus::Active), $request->closesOn());
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Fecha de cierre actualizada.']);
+
+        return back();
+    }
+
+    public function close(mixed $tenant, string $campaign, CloseCampaign $closeCampaign): RedirectResponse
+    {
+        Gate::authorize('manage-campaigns');
+        $active = CampaignController::find($campaign, CampaignStatus::Active);
+        $closeCampaign->handle($active);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Evaluación cerrada. Los enlaces ya no funcionan.']);
+
+        return redirect()->route('tenant.campaigns.show', [$tenant, $active->id]);
     }
 
     private function done(int $count, string $none, string $one, string $many): RedirectResponse

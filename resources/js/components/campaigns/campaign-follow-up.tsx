@@ -20,8 +20,10 @@ export default function CampaignFollowUp({
     campaign,
     instruments,
     people,
+    minDeadline,
 }: {
     tenantSlug: string;
+    minDeadline: string | null;
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: CampaignPerson[] | null;
@@ -36,10 +38,11 @@ export default function CampaignFollowUp({
 
     return (
         <>
-            {active && (
+            {active && minDeadline !== null && (
                 <ActiveCampaignActions
                     tenantSlug={tenantSlug}
                     campaign={campaign}
+                    minDeadline={minDeadline}
                 />
             )}
             {sampleShort && (

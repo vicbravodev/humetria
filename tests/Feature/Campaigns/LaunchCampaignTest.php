@@ -7,7 +7,7 @@ use App\Modules\Campaigns\Actions\LaunchCampaign;
 use App\Modules\Campaigns\Actions\SendSurveyInvitation;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
-use App\Modules\Campaigns\Http\Requests\LaunchCampaignRequest;
+use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(LaunchCampaign::class, SendSurveyInvitation::class, LaunchCampaignRequest::class, SurveyInvitation::class);
+mutates(LaunchCampaign::class, SendSurveyInvitation::class, DeadlineRequest::class, SurveyInvitation::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');

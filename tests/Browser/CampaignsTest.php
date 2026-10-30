@@ -136,3 +136,24 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
 
     expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('in_sample', true)->count())->toBe(55);
 });
+
+it('extends the deadline and closes the evaluation, warning when the sample is short', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 60);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Cerrar evaluación')
+        ->assertSee('Faltan 53 respuestas para el mínimo de la muestra que pide la norma.')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Evaluación cerrada. Los enlaces ya no funcionan.')
+        ->assertSee('Cerrada')
+        ->assertDontSee('Reenviar a pendientes')
+        ->assertNoJavaScriptErrors();
+
+    expect($campaign->refresh()->status->value)->toBe('closed');
+});

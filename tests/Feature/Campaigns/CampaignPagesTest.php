@@ -203,9 +203,13 @@ it('lists who was invited to a launched campaign and where each stands, only to 
                 ],
             ]));
 
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('minDeadline', now()->setTimezone('America/Mexico_City')->addDay()->format('Y-m-d')));
+
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('people', null)->has('instruments', 2));
+        ->assertInertia(fn (Assert $page) => $page->where('people', null)->where('minDeadline', null)->has('instruments', 2));
 });
 
 it('reads the progress of a campaign of any size in a fixed number of queries', function (int $people): void {

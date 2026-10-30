@@ -21,12 +21,14 @@ export default function Campaign({
     people,
     sample,
     launch,
+    minDeadline,
 }: {
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: CampaignPerson[] | null;
     sample: SampledPerson[] | null;
     launch: { min: string; suggested: string } | null;
+    minDeadline: string | null;
 }) {
     const { tenant } = usePage().props;
     const tenantSlug = tenant?.slug ?? '';
@@ -60,6 +62,7 @@ export default function Campaign({
                         campaign={campaign}
                         instruments={instruments}
                         people={people}
+                        minDeadline={minDeadline}
                     />
                 )}
                 {isDraft && canManage && (
