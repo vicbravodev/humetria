@@ -93,6 +93,10 @@ final readonly class CampaignPages
                 'sampleSize' => $campaign->sample_size,
                 'quotas' => $this->quotas($campaign),
                 'launchedOn' => $campaign->launched_at === null ? null : CampaignClock::day($campaign->launched_at),
+                'workCenterId' => $campaign->work_center_id,
+                'createdOn' => CampaignClock::day($campaign->created_at),
+                // Num. 7.9: evaluated again within two years of closing.
+                'nextDueBy' => $campaign->closed_at === null ? null : CampaignClock::day($campaign->closed_at->addYears(2)),
             ],
             'instruments' => array_map(fn (string $key): array => [
                 'key' => $key,
@@ -105,6 +109,10 @@ final readonly class CampaignPages
             ], $campaign->instruments),
             'people' => $followed ? $this->people->page($campaign, $filter) : null,
             'standings' => $followed ? $this->standings($campaign, $filter->guide) : null,
+            'areas' => $followed ? $this->people->byArea($campaign) : null,
+            'answersByDay' => $followed && $campaign->status === CampaignStatus::Active ? $this->people->answersByDay($campaign) : null,
+            // Before launch: how many of the people the links will reach, by email.
+            'contact' => $canManage && $campaign->status === CampaignStatus::Draft ? $this->contact($campaign) : null,
             'sending' => $campaign->status === CampaignStatus::Active ? $this->sending($campaign) : null,
             'filters' => [
                 'status' => $filter->standing->value ?? 'all',
@@ -205,6 +213,17 @@ final readonly class CampaignPages
             'area' => $person->areaName,
             'gender' => self::PERSON_GENDER[$person->gender] ?? $person->gender,
         ]);
+    }
+
+    /**
+     * @return array{reachable: int, unreachable: int}
+     */
+    private function contact(Campaign $campaign): array
+    {
+        $people = $this->roster->activeIn($campaign->work_center_id);
+        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => $person->email !== null));
+
+        return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable];
     }
 
     /**

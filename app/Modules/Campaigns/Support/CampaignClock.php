@@ -19,6 +19,12 @@ final class CampaignClock
         return CarbonImmutable::now(self::zone())->startOfDay();
     }
 
+    /** The day a moment falls on in the display time zone, as Y-m-d. */
+    public static function date(CarbonInterface $moment): string
+    {
+        return $moment->setTimezone(self::zone())->format('Y-m-d');
+    }
+
     /** The moment a campaign whose last day is `$closesOn` stops taking answers. */
     public static function deadline(CarbonInterface $closesOn): CarbonImmutable
     {
