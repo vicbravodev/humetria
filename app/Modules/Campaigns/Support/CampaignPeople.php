@@ -25,11 +25,19 @@ final readonly class CampaignPeople
 {
     public const int PER_PAGE = 25;
 
-    /** One guide pending makes a person pending (or without email, if no link went out); else one cancelled, cancelled. */
+    /**
+     * One guide pending makes a person pending, or without email, or failed, by how their link went; else one cancelled,
+     * cancelled.
+     */
     private const string STANDING = <<<'SQL'
         case
             when bool_or(participant_instruments.status = 'pending')
-                then case when campaign_participants.invited_at is null then 'unreachable' else 'pending' end
+                then case campaign_participants.invitation_status
+                    when 'queued' then 'pending'
+                    when 'sent' then 'pending'
+                    when 'failed' then 'failed'
+                    else 'unreachable'
+                end
             when bool_or(participant_instruments.status = 'cancelled') then 'cancelled'
             else 'answered'
         end

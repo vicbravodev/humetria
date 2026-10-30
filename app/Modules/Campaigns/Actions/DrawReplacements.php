@@ -9,7 +9,6 @@ use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
-use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -24,8 +23,7 @@ final readonly class DrawReplacements
 {
     public function __construct(
         private Roster $roster,
-        private Companies $companies,
-        private SendSurveyInvitation $sendInvitation,
+        private QueueSurveyInvitations $queueInvitations,
     ) {}
 
     /**
@@ -43,16 +41,14 @@ final readonly class DrawReplacements
             }]);
         }
 
-        $tradeName = $this->companies->current()->tradeName;
+        DB::transaction(function () use ($campaign, $available, $count): void {
+            $drawn = [];
 
-        DB::transaction(function () use ($campaign, $available, $count, $tradeName): void {
             foreach (array_slice((new Randomizer)->shuffleArray($available), 0, $count) as $person) {
-                $participant = $this->enroll($campaign, $person);
-
-                if ($person->email !== null) {
-                    $this->sendInvitation->handle($campaign, $participant, $person->email, $tradeName);
-                }
+                $drawn[$this->enroll($campaign, $person)->id] = $person->email !== null;
             }
+
+            $this->queueInvitations->handle($campaign, $drawn);
         });
 
         Log::info('campaign.replacements_drawn', ['campaign_id' => $campaign->id, 'gender' => $gender, 'count' => $count]);

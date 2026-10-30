@@ -188,7 +188,7 @@ it('offers to launch a draft from tomorrow in Mexico City, suggesting two weeks'
 
 it('counts each guide of a launched campaign: answered, pending, without a link and cancelled', function (): void {
     $campaign = campaignWithAnswers($this->tenant, $this->plant, 'nom035.guide-ii', 4, 1);
-    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null], ['email' => null, 'mobile' => '5512345678']);
+    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '5512345678']);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
@@ -272,25 +272,29 @@ it('lists who still has a guide pending, by name, with where each stands, only t
 it('narrows the people by where they stand, counting each standing', function (): void {
     $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     personIn($campaign, 'Pendiente', ['nom035.guide-i' => InstrumentStatus::Pending]);
-    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending], ['invited_at' => null], ['email' => null, 'mobile' => '5512345678']);
+    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '5512345678']);
     personIn($campaign, 'Contestó', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
+    personIn($campaign, 'Falló', ['nom035.guide-i' => InstrumentStatus::Pending], ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
+    personIn($campaign, 'En cola', ['nom035.guide-i' => InstrumentStatus::Pending], ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Queued, 'invited_at' => null]);
 
     expect(peopleNames($this, $this->hr, $campaign, ['status' => 'unreachable']))->toBe(['Sin correo'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'failed']))->toBe(['Falló'])
         ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'answered']))->toBe(['Contestó'])
         ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'cancelled']))->toBe(['Baja'])
-        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'all']))->toBe(['Baja', 'Contestó', 'Pendiente', 'Sin correo'])
-        // Something else is the default.
-        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'nadie']))->toBe(['Pendiente']);
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'all']))->toBe(['Baja', 'Contestó', 'En cola', 'Falló', 'Pendiente', 'Sin correo'])
+        // Something else is the default: who has a link sent or on its way.
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'nadie']))->toBe(['En cola', 'Pendiente']);
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page->where('standings', [
-            ['value' => 'pending', 'label' => 'Pendientes', 'count' => 1],
+            ['value' => 'pending', 'label' => 'Pendientes', 'count' => 2],
             ['value' => 'unreachable', 'label' => 'Sin correo', 'count' => 1],
+            ['value' => 'failed', 'label' => 'Envío fallido', 'count' => 1],
             ['value' => 'answered', 'label' => 'Contestaron', 'count' => 1],
             ['value' => 'cancelled', 'label' => 'Canceladas', 'count' => 1],
-            ['value' => 'all', 'label' => 'Todas', 'count' => 4],
+            ['value' => 'all', 'label' => 'Todas', 'count' => 6],
         ]));
 });
 
@@ -311,7 +315,7 @@ it('narrows the people by guide, area and text, and keeps the standing counts to
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters', ['status' => 'pending', 'guide' => 'nom035.guide-i', 'area' => ['value' => $sales->id, 'label' => $sales->name], 'q' => 'ana'])
             ->where('standings.0.count', 1)
-            ->where('standings.2.count', 1));
+            ->where('standings.3.count', 1));
 });
 
 it('pages the people 25 at a time', function (): void {

@@ -36,10 +36,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $launched_at
  * @property CarbonImmutable|null $closed_at
  * @property int $created_by
+ * @property string|null $invitation_batch
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'kind', 'status', 'instruments', 'workers', 'population', 'sample_size', 'quotas', 'closes_on', 'launched_at', 'closed_at', 'created_by'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'work_center_id', 'kind', 'status', 'instruments', 'workers', 'population', 'sample_size', 'quotas', 'closes_on', 'launched_at', 'closed_at', 'created_by', 'invitation_batch'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(CampaignFactory::class)]
 final class Campaign extends Model
 {

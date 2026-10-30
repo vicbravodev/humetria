@@ -8,7 +8,6 @@ use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +17,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class ResendInvitations
 {
-    public function __construct(private Roster $roster, private Companies $companies, private SendSurveyInvitation $sendInvitation) {}
+    public function __construct(private Roster $roster, private QueueSurveyInvitations $queueInvitations) {}
 
     /**
      * @param  list<string>|null  $employeeIds  only these people, when given.
@@ -31,22 +30,15 @@ final readonly class ResendInvitations
             ->whereHas('instruments', fn ($query) => $query->where('status', InstrumentStatus::Pending))
             ->get();
         $people = $this->roster->findMany(array_values($participants->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $tradeName = $this->companies->current()->tradeName;
+        $reached = [];
 
-        $sent = DB::transaction(function () use ($campaign, $participants, $people, $tradeName): int {
-            $sent = 0;
-
-            foreach ($participants as $participant) {
-                $email = $people[$participant->employee_id]->email ?? null;
-
-                if ($email !== null) {
-                    $this->sendInvitation->handle($campaign, $participant, $email, $tradeName);
-                    $sent++;
-                }
+        foreach ($participants as $participant) {
+            if (($people[$participant->employee_id]->email ?? null) !== null) {
+                $reached[$participant->id] = true;
             }
+        }
 
-            return $sent;
-        });
+        $sent = DB::transaction(fn (): int => $this->queueInvitations->handle($campaign, $reached));
 
         Log::info('campaign.invitations_resent', ['campaign_id' => $campaign->id, 'sent' => $sent]);
 

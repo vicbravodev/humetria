@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Actions;
 
 use App\Modules\Campaigns\Enums\InstrumentStatus;
+use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
-use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class InviteMissing
 {
-    public function __construct(private Roster $roster, private Companies $companies, private SendSurveyInvitation $sendInvitation) {}
+    public function __construct(private Roster $roster, private QueueSurveyInvitations $queueInvitations) {}
 
     /**
      * @return int how many people got a link.
@@ -31,22 +31,19 @@ final readonly class InviteMissing
     {
         $people = $this->roster->activeIn($campaign->work_center_id);
         $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
-        $tradeName = $this->companies->current()->tradeName;
-
-        $sent = DB::transaction(function () use ($campaign, $people, $participants, $tradeName): int {
-            $sent = 0;
+        $sent = DB::transaction(function () use ($campaign, $people, $participants): int {
+            $owed = [];
 
             foreach ($people as $person) {
                 $participant = $participants->get($person->id);
-                $owed = $participant === null ? $this->join($campaign, $person) : $this->catchUp($participant);
+                $joined = $participant === null ? $this->join($campaign, $person) : $this->catchUp($participant);
 
-                if ($owed !== null && $person->email !== null) {
-                    $this->sendInvitation->handle($campaign, $owed, $person->email, $tradeName);
-                    $sent++;
+                if ($joined !== null) {
+                    $owed[$joined->id] = $person->email !== null;
                 }
             }
 
-            return $sent;
+            return $this->queueInvitations->handle($campaign, $owed);
         });
 
         Log::info('campaign.missing_invited', ['campaign_id' => $campaign->id, 'sent' => $sent]);
@@ -70,7 +67,7 @@ final readonly class InviteMissing
         $restored = $participant->instruments()
             ->where('status', InstrumentStatus::Cancelled)
             ->update(['status' => InstrumentStatus::Pending, 'cancelled_at' => null]);
-        $neverInvited = $participant->invited_at === null && $participant->instruments->contains('status', InstrumentStatus::Pending);
+        $neverInvited = in_array($participant->invitation_status, [null, InvitationStatus::NoEmail], true) && $participant->instruments->contains('status', InstrumentStatus::Pending);
 
         return $restored > 0 || $neverInvited ? $participant : null;
     }

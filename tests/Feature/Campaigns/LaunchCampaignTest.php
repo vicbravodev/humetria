@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Campaigns\Actions\LaunchCampaign;
-use App\Modules\Campaigns\Actions\SendSurveyInvitation;
+use App\Modules\Campaigns\Actions\QueueSurveyInvitations;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(LaunchCampaign::class, SendSurveyInvitation::class, DeadlineRequest::class, SurveyInvitation::class);
+mutates(LaunchCampaign::class, QueueSurveyInvitations::class, DeadlineRequest::class, SurveyInvitation::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');

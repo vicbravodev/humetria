@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Enums\InstrumentStatus;
+use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 
 /**
@@ -51,7 +52,7 @@ final class InstrumentTally
         $rows = ParticipantInstrument::query()
             ->join('campaign_participants', 'campaign_participants.id', '=', 'participant_instruments.participant_id')
             ->where('campaign_participants.campaign_id', $campaignId)
-            ->whereNull('campaign_participants.invited_at')
+            ->where(fn ($query) => $query->whereNull('campaign_participants.invitation_status')->orWhere('campaign_participants.invitation_status', InvitationStatus::NoEmail))
             ->where('participant_instruments.status', InstrumentStatus::Pending)
             ->groupBy('participant_instruments.instrument')
             ->selectRaw('participant_instruments.instrument, count(*)::int as total')
