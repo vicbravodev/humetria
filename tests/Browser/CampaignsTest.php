@@ -107,6 +107,7 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('En curso')
         ->assertSee('Faltan 43 respuestas para el mínimo de la muestra')
         ->assertSee('10 de 53')
+        ->assertSee('43 pendientes')
         ->assertSee('Pendientes (60)')
         ->assertSee('Página 1 de 3');
 })->with($looks);

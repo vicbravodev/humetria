@@ -41,6 +41,10 @@ export type InstrumentProgress = {
     title: string;
     invited: number;
     completed: number;
+    /** Pending with a link sent. */
+    pending: number;
+    /** Pending with no link: no email. */
+    unreachable: number;
     cancelled: number;
 };
 

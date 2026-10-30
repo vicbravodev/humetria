@@ -68,6 +68,7 @@ final readonly class CampaignPages
     {
         $tally = $this->tally->of([$campaign->id])[$campaign->id] ?? [];
         $followed = $canManage && $campaign->status !== CampaignStatus::Draft;
+        $unreachable = $campaign->status === CampaignStatus::Draft ? [] : $this->tally->unreachable($campaign->id);
 
         return [
             'campaign' => [
@@ -84,6 +85,8 @@ final readonly class CampaignPages
                 'title' => $this->instruments->definition($key)->shortTitle,
                 'invited' => ($tally[$key][InstrumentStatus::Pending->value] ?? 0) + ($tally[$key][InstrumentStatus::Completed->value] ?? 0),
                 'completed' => $tally[$key][InstrumentStatus::Completed->value] ?? 0,
+                'pending' => ($tally[$key][InstrumentStatus::Pending->value] ?? 0) - ($unreachable[$key] ?? 0),
+                'unreachable' => $unreachable[$key] ?? 0,
                 'cancelled' => $tally[$key][InstrumentStatus::Cancelled->value] ?? 0,
             ], $campaign->instruments),
             'people' => $followed ? $this->people->page($campaign, $filter) : null,

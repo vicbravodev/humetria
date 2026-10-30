@@ -3,6 +3,7 @@ import type {
     CampaignProgress,
     CampaignSummary,
     GenderQuota,
+    InstrumentProgress,
     Paginated,
     PeopleFilters,
     PeoplePage,
@@ -114,4 +115,17 @@ export function peoplePage(
     return people === null || standings === null
         ? null
         : { people, standings, filters };
+}
+
+/** Where those who did not answer a guide stand: "12 pendientes · 3 sin correo · 2 canceladas por bajas…". */
+export function guideBreakdown(guide: InstrumentProgress): string {
+    const parts = [
+        guide.pending > 0 &&
+            `${guide.pending} ${guide.pending === 1 ? 'pendiente' : 'pendientes'}`,
+        guide.unreachable > 0 && `${guide.unreachable} sin correo`,
+        guide.cancelled > 0 &&
+            `${guide.cancelled} ${guide.cancelled === 1 ? 'cancelada' : 'canceladas'} por bajas o cambios de centro`,
+    ].filter((part) => part !== false);
+
+    return parts.length === 0 ? 'Nadie pendiente' : parts.join(' · ');
 }

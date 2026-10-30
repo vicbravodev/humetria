@@ -146,14 +146,16 @@ it('offers to launch a draft from tomorrow in Mexico City, suggesting two weeks'
         ->assertInertia(fn (Assert $page) => $page->where('launch', ['min' => '2026-11-01', 'suggested' => '2026-11-14']));
 });
 
-it('counts each guide of a launched campaign', function (): void {
+it('counts each guide of a launched campaign: answered, pending, without a link and cancelled', function (): void {
     $campaign = campaignWithAnswers($this->tenant, $this->plant, 'nom035.guide-ii', 4, 1);
+    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null], ['email' => null, 'mobile' => '5512345678']);
+    personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
 
-    $this->actingAs($this->hr)
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page->where('instruments', [
-            ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'invited' => 0, 'completed' => 0, 'cancelled' => 0],
-            ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'invited' => 4, 'completed' => 1, 'cancelled' => 0],
+            ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'invited' => 2, 'completed' => 1, 'pending' => 0, 'unreachable' => 1, 'cancelled' => 0],
+            ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'invited' => 5, 'completed' => 1, 'pending' => 3, 'unreachable' => 1, 'cancelled' => 1],
         ]));
 });
 
@@ -287,7 +289,7 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $this->get($url);
 
     // The same with 3 or 30 people: nothing is read person by person.
-    $this->expectsDatabaseQueryCount(16);
+    $this->expectsDatabaseQueryCount(17);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     campaignMeta,
+    guideBreakdown,
     instrumentsText,
     matchesPerson,
     peoplePage,
@@ -182,5 +183,41 @@ describe('peoplePage', () => {
         });
         expect(peoplePage(null, null, filters)).toBeNull();
         expect(peoplePage(people, null, filters)).toBeNull();
+    });
+});
+
+describe('guideBreakdown', () => {
+    const guide = {
+        key: 'nom035.guide-ii',
+        title: 'Guía II',
+        invited: 0,
+        completed: 0,
+        pending: 0,
+        unreachable: 0,
+        cancelled: 0,
+    };
+
+    it('says where those who did not answer stand, leaving out what is zero', () => {
+        expect(
+            guideBreakdown({
+                ...guide,
+                pending: 12,
+                unreachable: 3,
+                cancelled: 2,
+            }),
+        ).toBe(
+            '12 pendientes · 3 sin correo · 2 canceladas por bajas o cambios de centro',
+        );
+        expect(
+            guideBreakdown({
+                ...guide,
+                pending: 1,
+                unreachable: 1,
+                cancelled: 1,
+            }),
+        ).toBe(
+            '1 pendiente · 1 sin correo · 1 cancelada por bajas o cambios de centro',
+        );
+        expect(guideBreakdown(guide)).toBe('Nadie pendiente');
     });
 });
