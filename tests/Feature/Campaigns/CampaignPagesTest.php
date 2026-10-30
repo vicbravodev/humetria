@@ -15,7 +15,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(CampaignPages::class);
+mutates(CampaignPages::class, App\Modules\Campaigns\Support\CampaignPeople::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
@@ -168,48 +168,116 @@ it('never gives the pages an answer', function (): void {
     }
 });
 
-it('lists who was invited to a launched campaign and where each stands, only to those who manage it', function (): void {
-    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
-    $people = staffOf($this->tenant, $this->plant, 2)->values();
-    $people[0]->update(['name' => 'Beatriz Soto', 'email' => null, 'mobile' => '5512345678']);
-    $people[1]->update(['name' => 'Ana López']);
+/**
+ * A person of the plant in `$campaign` with one guide per entry of `$guides` (instrument → status).
+ *
+ * @param  array<string, InstrumentStatus>  $guides
+ */
+function personIn(Campaign $campaign, string $name, array $guides, array $participant = [], array $employee = []): Participant
+{
+    $person = App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $campaign->tenant_id, 'work_center_id' => $campaign->work_center_id, 'name' => $name, ...$employee]);
+    $invited = Participant::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, ...$participant]);
 
-    foreach ($people as $index => $person) {
-        $participant = Participant::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'token_hash' => $index === 1 ? 'x' : null]);
-        ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-i', ...($index === 1 ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : [])]);
-        ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
+    foreach ($guides as $instrument => $status) {
+        ParticipantInstrument::factory()->create(['participant_id' => $invited->id, 'instrument' => $instrument, 'status' => $status, ...match ($status) {
+            InstrumentStatus::Completed => ['completed_at' => now()],
+            InstrumentStatus::Cancelled => ['cancelled_at' => now()],
+            InstrumentStatus::Pending => [],
+        }]);
     }
 
-    $ana = Participant::query()->withoutGlobalScopes()->where('employee_id', $people[1]->id)->sole();
+    return $invited;
+}
+
+/** The names on the people page of `$campaign` for `$query`, as `$user` sees it. */
+function peopleNames(Tests\TestCase $test, App\Models\User $user, Campaign $campaign, array $query = []): array
+{
+    $names = [];
+    $test->actingAs($user)
+        ->get(route('tenant.campaigns.show', ['tenant' => $test->tenant, 'campaign' => $campaign->id, ...$query]))
+        ->assertInertia(function (Assert $page) use (&$names): void {
+            $names = array_column($page->toArray()['props']['people']['data'], 'name');
+        });
+
+    return $names;
+}
+
+it('lists who still has a guide pending, by name, with where each stands, only to those who manage it', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $production = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción']);
+    $ana = personIn($campaign, 'Ana López', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Pending], employee: ['area_id' => $production->id]);
+    personIn($campaign, 'Beatriz Soto', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('people', [
-                [
-                    'id' => $ana->id, 'name' => 'Ana López', 'area' => $people[1]->area->name, 'reachable' => true, 'inSample' => false,
-                    'guides' => [
-                        ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'status' => 'completed', 'statusLabel' => 'Contestó'],
-                        ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
-                    ],
+            ->where('filters', ['status' => 'pending', 'guide' => null, 'area' => null, 'q' => ''])
+            ->where('people.total', 1)
+            ->where('people.data', [[
+                'id' => $ana->id, 'name' => 'Ana López', 'area' => 'Producción', 'reachable' => true, 'inSample' => false,
+                'guides' => [
+                    ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'status' => 'completed', 'statusLabel' => 'Contestó'],
+                    ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
                 ],
-                [
-                    'id' => Participant::query()->withoutGlobalScopes()->where('employee_id', $people[0]->id)->sole()->id,
-                    'name' => 'Beatriz Soto', 'area' => $people[0]->area->name, 'reachable' => false, 'inSample' => false,
-                    'guides' => [
-                        ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
-                        ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
-                    ],
-                ],
-            ]));
-
-    $this->actingAs($this->hr)
-        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('minDeadline', now()->setTimezone('America/Mexico_City')->addDay()->format('Y-m-d')));
+            ]])
+            ->where('minDeadline', now()->setTimezone('America/Mexico_City')->addDay()->format('Y-m-d')));
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('people', null)->where('minDeadline', null)->has('instruments', 2));
+        ->assertInertia(fn (Assert $page) => $page->where('people', null)->where('standings', null)->where('minDeadline', null)->has('instruments', 2));
+});
+
+it('narrows the people by where they stand, counting each standing', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    personIn($campaign, 'Pendiente', ['nom035.guide-i' => InstrumentStatus::Pending]);
+    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending], ['invited_at' => null], ['email' => null, 'mobile' => '5512345678']);
+    personIn($campaign, 'Contestó', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
+    personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
+
+    expect(peopleNames($this, $this->hr, $campaign, ['status' => 'unreachable']))->toBe(['Sin correo'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'answered']))->toBe(['Contestó'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'cancelled']))->toBe(['Baja'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'all']))->toBe(['Baja', 'Contestó', 'Pendiente', 'Sin correo'])
+        // Something else is the default.
+        ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'nadie']))->toBe(['Pendiente']);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('standings', [
+            ['value' => 'pending', 'label' => 'Pendientes', 'count' => 1],
+            ['value' => 'unreachable', 'label' => 'Sin correo', 'count' => 1],
+            ['value' => 'answered', 'label' => 'Contestaron', 'count' => 1],
+            ['value' => 'cancelled', 'label' => 'Canceladas', 'count' => 1],
+            ['value' => 'all', 'label' => 'Todas', 'count' => 4],
+        ]));
+});
+
+it('narrows the people by guide, area and text, and keeps the standing counts to the guide', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $sales = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id]);
+    personIn($campaign, 'Ana López', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Pending], employee: ['area_id' => $sales->id]);
+    personIn($campaign, 'Luis Mora', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending]);
+
+    expect(peopleNames($this, $this->hr, $campaign, ['guide' => 'nom035.guide-i']))->toBe(['Luis Mora'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['guide' => 'nom035.guide-i', 'status' => 'answered']))->toBe(['Ana López'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['guide' => 'nom035.guide-iii']))->toBe(['Ana López', 'Luis Mora'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['area' => $sales->id]))->toBe(['Ana López'])
+        ->and(peopleNames($this, $this->hr, $campaign, ['q' => 'MORA']))->toBe(['Luis Mora']);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id, 'guide' => 'nom035.guide-i', 'area' => $sales->id, 'q' => ' ana ']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters', ['status' => 'pending', 'guide' => 'nom035.guide-i', 'area' => ['value' => $sales->id, 'label' => $sales->name], 'q' => 'ana'])
+            ->where('standings.0.count', 1)
+            ->where('standings.2.count', 1));
+});
+
+it('pages the people 25 at a time', function (): void {
+    $campaign = campaignWithAnswers($this->tenant, $this->plant, 'nom035.guide-ii', 26, 0);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id, 'page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page->where('people.total', 26)->where('people.current_page', 2)->has('people.data', 1));
 });
 
 it('reads the progress of a campaign of any size in a fixed number of queries', function (int $people): void {
@@ -219,7 +287,7 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $this->get($url);
 
     // The same with 3 or 30 people: nothing is read person by person.
-    $this->expectsDatabaseQueryCount(13);
+    $this->expectsDatabaseQueryCount(16);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);

@@ -8,9 +8,13 @@ import LaunchForm from '@/components/campaigns/launch-form';
 import SampleTable from '@/components/campaigns/sample-table';
 import PageHeader from '@/components/page-header';
 import { index } from '@/routes/tenant/campaigns';
+import { peoplePage } from '@/lib/campaigns';
 import type {
     CampaignDetail,
+    PeopleFilters,
     CampaignPerson,
+    Paginated,
+    StandingCount,
     InstrumentProgress,
     ReplacementPool,
     SampledPerson,
@@ -20,6 +24,8 @@ export default function Campaign({
     campaign,
     instruments,
     people,
+    standings,
+    filters,
     sample,
     launch,
     minDeadline,
@@ -27,7 +33,9 @@ export default function Campaign({
 }: {
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
-    people: CampaignPerson[] | null;
+    people: Paginated<CampaignPerson> | null;
+    standings: StandingCount[] | null;
+    filters: PeopleFilters;
     sample: SampledPerson[] | null;
     launch: { min: string; suggested: string } | null;
     minDeadline: string | null;
@@ -64,7 +72,7 @@ export default function Campaign({
                         tenantSlug={tenantSlug}
                         campaign={campaign}
                         instruments={instruments}
-                        people={people}
+                        people={peoplePage(people, standings, filters)}
                         minDeadline={minDeadline}
                         replacementPool={replacementPool}
                     />

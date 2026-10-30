@@ -2,13 +2,17 @@ import ActiveCampaignActions from '@/components/campaigns/active-campaign-action
 import InstrumentsProgress from '@/components/campaigns/instruments-progress';
 import PostButton from '@/components/campaigns/post-button';
 import PeopleTable from '@/components/campaigns/people-table';
+import PeopleToolbar from '@/components/campaigns/people-toolbar';
+import ConsolePagination from '@/components/console-pagination';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { progressNote } from '@/lib/campaigns';
+import { show } from '@/routes/tenant/campaigns';
 import { resend } from '@/routes/tenant/campaigns/participants';
 import type {
     CampaignDetail,
     CampaignPerson,
     InstrumentProgress,
+    PeoplePage,
     ReplacementPool,
 } from '@/types';
 
@@ -29,7 +33,7 @@ export default function CampaignFollowUp({
     replacementPool: ReplacementPool[] | null;
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
-    people: CampaignPerson[] | null;
+    people: PeoplePage | null;
 }) {
     const progress = campaign.progress;
     const sampleShort =
@@ -62,10 +66,16 @@ export default function CampaignFollowUp({
             {people !== null && (
                 <section className="flex flex-col gap-4">
                     <h2 className="text-xl leading-7 font-semibold">
-                        Personas ({people.length})
+                        Personas
                     </h2>
+                    <PeopleToolbar
+                        url={show.url([tenantSlug, campaign.id])}
+                        filters={people.filters}
+                        standings={people.standings}
+                        instruments={instruments}
+                    />
                     <PeopleTable
-                        people={people}
+                        people={people.people.data}
                         {...(active
                             ? {
                                   action: (person: CampaignPerson) =>
@@ -87,6 +97,12 @@ export default function CampaignFollowUp({
                                       ) : null,
                               }
                             : {})}
+                    />
+                    <ConsolePagination
+                        page={people.people}
+                        label="Páginas de personas"
+                        previous="Anteriores"
+                        next="Siguientes"
                     />
                 </section>
             )}

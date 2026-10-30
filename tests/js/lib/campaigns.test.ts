@@ -3,6 +3,8 @@ import {
     campaignMeta,
     instrumentsText,
     matchesPerson,
+    peoplePage,
+    peopleQuery,
     progressCaption,
     progressCount,
     progressNote,
@@ -128,5 +130,57 @@ describe('matchesPerson', () => {
         expect(matchesPerson(person, 'MARTÍNEZ')).toBe(true);
         expect(matchesPerson(person, 'produccion')).toBe(true);
         expect(matchesPerson(person, 'ventas')).toBe(false);
+    });
+});
+
+describe('peopleQuery', () => {
+    const filters = {
+        status: 'pending',
+        guide: null,
+        area: null,
+        q: '',
+    };
+
+    it('leaves out what does not narrow the default list of pending people', () => {
+        expect(peopleQuery(filters)).toEqual({});
+        expect(peopleQuery({ ...filters, q: '   ' })).toEqual({});
+    });
+
+    it('keeps every filter that narrows it', () => {
+        expect(
+            peopleQuery({
+                status: 'all',
+                guide: 'nom035.guide-iii',
+                area: { value: 'a1', label: 'Ventas' },
+                q: ' ana ',
+            }),
+        ).toEqual({
+            status: 'all',
+            guide: 'nom035.guide-iii',
+            area: 'a1',
+            q: 'ana',
+        });
+    });
+});
+
+describe('peoplePage', () => {
+    const filters = { status: 'pending', guide: null, area: null, q: '' };
+    const people = {
+        data: [],
+        total: 0,
+        current_page: 1,
+        last_page: 1,
+        prev_page_url: null,
+        next_page_url: null,
+    };
+
+    it('gives the people to follow up only with where they stand', () => {
+        expect(peoplePage(people, [], filters)).toEqual({
+            people,
+            standings: [],
+            filters,
+        });
+        expect(peoplePage(null, null, filters)).toBeNull();
+        expect(peoplePage(people, null, filters)).toBeNull();
     });
 });

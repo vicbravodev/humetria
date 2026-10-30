@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Actions\DrawReplacements;
+use App\Modules\Campaigns\Data\PeopleFilter;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\Population;
+use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
-use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
+use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -40,6 +42,8 @@ final readonly class CampaignPages
         private Roster $roster,
         private InstrumentTally $tally,
         private DrawReplacements $replacements,
+        private CampaignPeople $people,
+        private Areas $areas,
     ) {}
 
     /**
@@ -58,11 +62,12 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return array{campaign: array<string, mixed>, instruments: list<array<string, mixed>>, people: list<array<string, mixed>>|null, sample: list<array<string, string>>|null, launch: array{min: string, suggested: string}|null, minDeadline: string|null, replacementPool: list<array{gender: string, label: string, available: int}>|null}
+     * @return array<string, mixed>
      */
-    public function show(Campaign $campaign, bool $canManage): array
+    public function show(Campaign $campaign, bool $canManage, PeopleFilter $filter = new PeopleFilter): array
     {
         $tally = $this->tally->of([$campaign->id])[$campaign->id] ?? [];
+        $followed = $canManage && $campaign->status !== CampaignStatus::Draft;
 
         return [
             'campaign' => [
@@ -81,7 +86,14 @@ final readonly class CampaignPages
                 'completed' => $tally[$key][InstrumentStatus::Completed->value] ?? 0,
                 'cancelled' => $tally[$key][InstrumentStatus::Cancelled->value] ?? 0,
             ], $campaign->instruments),
-            'people' => $canManage && $campaign->status !== CampaignStatus::Draft ? $this->people($campaign) : null,
+            'people' => $followed ? $this->people->page($campaign, $filter) : null,
+            'standings' => $followed ? $this->standings($campaign, $filter->guide) : null,
+            'filters' => [
+                'status' => $filter->standing->value ?? 'all',
+                'guide' => $filter->guide,
+                'area' => $filter->areaId === null ? null : ['value' => $filter->areaId, 'label' => $this->areas->name($filter->areaId) ?? ''],
+                'q' => $filter->search,
+            ],
             'sample' => $canManage && $campaign->status === CampaignStatus::Draft && $campaign->population === Population::Sample
                 ? $this->sample($campaign)
                 : null,
@@ -196,39 +208,16 @@ final readonly class CampaignPages
     }
 
     /**
-     * Who was invited and where each stands with each guide: whether they answered, never what. By name.
+     * How many people stand where, in the order of the filter's choices, and everyone.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{value: string, label: string, count: int}>
      */
-    private function people(Campaign $campaign): array
+    private function standings(Campaign $campaign, ?string $guide): array
     {
-        $participants = $campaign->participants()->with('instruments')->get();
-        $roster = $this->roster->findMany(array_values($participants->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $titles = array_combine($campaign->instruments, array_map(fn (string $key): string => $this->instruments->definition($key)->shortTitle, $campaign->instruments));
-        $people = [];
+        $counts = $this->people->standings($campaign, $guide);
+        $standings = array_map(fn (Standing $standing): array => ['value' => $standing->value, 'label' => $standing->label(), 'count' => $counts[$standing->value] ?? 0], Standing::cases());
 
-        foreach ($participants as $participant) {
-            $person = $roster[$participant->employee_id] ?? null;
-            $guides = $participant->instruments->sortBy(fn (ParticipantInstrument $guide): int|false => array_search($guide->instrument, $campaign->instruments, true));
-
-            $people[] = [
-                'id' => $participant->id,
-                'name' => $person->name ?? '',
-                'area' => $person->areaName ?? '',
-                'reachable' => $person?->email !== null,
-                'inSample' => $participant->in_sample,
-                'guides' => array_values($guides->map(fn (ParticipantInstrument $guide): array => [
-                    'key' => $guide->instrument,
-                    'title' => $titles[$guide->instrument] ?? $guide->instrument,
-                    'status' => $guide->status->value,
-                    'statusLabel' => $guide->status->label(),
-                ])->all()),
-            ];
-        }
-
-        usort($people, fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
-
-        return $people;
+        return [...$standings, ['value' => 'all', 'label' => 'Todas', 'count' => array_sum($counts)]];
     }
 
     /**

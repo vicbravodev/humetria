@@ -107,9 +107,36 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('En curso')
         ->assertSee('Faltan 43 respuestas para el mínimo de la muestra')
         ->assertSee('10 de 53')
-        ->assertSee('Personas (60)')
-        ->assertSee('Guía III · Contestó');
+        ->assertSee('Pendientes (60)')
+        ->assertSee('Página 1 de 3');
 })->with($looks);
+
+it('narrows who answered a guide and searches them by name', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, female: 30)->values();
+    $people[0]->update(['name' => 'Zoila Contreras']);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+    $zoila = App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('employee_id', $people[0]->id)->sole();
+    App\Modules\Campaigns\Models\ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $zoila->id)->update(['status' => 'completed', 'completed_at' => now()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertSee('Pendientes (29)')
+        ->assertDontSee('Zoila Contreras')
+        ->click('[aria-label="Situación"]')
+        ->click('text=Contestaron (1)')
+        ->assertSee('Zoila Contreras')
+        ->click('[aria-label="Situación"]')
+        ->click('text=Todas (30)')
+        ->type('[aria-label="Buscar por nombre, correo o número"]', 'zoila')
+        ->assertSee('Zoila Contreras')
+        ->assertSee('Todas (30)')
+        ->assertQueryStringHas('q', 'zoila')
+        ->assertNoJavaScriptErrors();
+});
 
 it('sends links again, invites a newcomer and draws replacements from the evaluation page', function (): void {
     $tenant = campaignsCompany();
@@ -126,7 +153,7 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
         ->assertSee('Enlace reenviado a 60 personas.')
         ->click('Invitar a quien falte')
         ->assertSee('Se invitó a 1 persona.')
-        ->assertSee('Personas (61)')
+        ->assertSee('Pendientes (61)')
         ->click('Sortear reemplazos')
         ->assertSee('del mismo género de quienes no contestarán')
         ->assertSee('¿De qué género son quienes no contestarán?')

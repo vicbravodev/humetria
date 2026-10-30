@@ -3,6 +3,10 @@ import type {
     CampaignProgress,
     CampaignSummary,
     GenderQuota,
+    Paginated,
+    PeopleFilters,
+    PeoplePage,
+    StandingCount,
 } from '@/types';
 
 /** The guides of a campaign, written for display: "Guía I", "Guías I y III". */
@@ -85,4 +89,29 @@ export function matchesPerson(person: CampaignPerson, search: string): boolean {
         wanted === '' ||
         normalize(`${person.name} ${person.area}`).includes(wanted)
     );
+}
+
+/** The query string for the filters: only what narrows the default list of pending people. */
+export function peopleQuery(
+    filters: PeopleFilters,
+): Partial<Record<keyof PeopleFilters, string>> {
+    const q = filters.q.trim();
+
+    return {
+        ...(filters.status === 'pending' ? {} : { status: filters.status }),
+        ...(filters.guide === null ? {} : { guide: filters.guide }),
+        ...(filters.area === null ? {} : { area: filters.area.value }),
+        ...(q === '' ? {} : { q }),
+    };
+}
+
+/** The people a manager follows up, or null for whoever only sees the counts. */
+export function peoplePage(
+    people: Paginated<CampaignPerson> | null,
+    standings: StandingCount[] | null,
+    filters: PeopleFilters,
+): PeoplePage | null {
+    return people === null || standings === null
+        ? null
+        : { people, standings, filters };
 }
