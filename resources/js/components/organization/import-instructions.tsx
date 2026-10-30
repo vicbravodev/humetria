@@ -1,16 +1,18 @@
+import { Link } from '@inertiajs/react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { template } from '@/routes/tenant/employees/import';
+import { index as workCentersIndex } from '@/routes/tenant/work-centers';
 
 /** How to fill the CSV: the template, its columns and the work centers it can name. */
 export default function ImportInstructions({
     tenantSlug,
     maxRows,
-    workCenters,
+    hasWorkCenters,
 }: {
     tenantSlug: string;
     maxRows: number;
-    workCenters: string[];
+    hasWorkCenters: boolean;
 }) {
     return (
         <section className="grid gap-4 rounded-xl border bg-card p-6">
@@ -27,11 +29,16 @@ export default function ImportInstructions({
                     Género: Mujer, Hombre u Otro. Un área que no exista se crea.
                 </li>
                 <li>
-                    Centro de trabajo, escrito como en Humetría:{' '}
-                    {workCenters.length === 0
-                        ? 'aún no hay ninguno; da de alta uno primero.'
-                        : workCenters.join(', ')}
-                    .
+                    Centro de trabajo, escrito como en{' '}
+                    <Link
+                        href={workCentersIndex(tenantSlug)}
+                        className="text-primary underline underline-offset-4"
+                    >
+                        Centros de trabajo
+                    </Link>
+                    {hasWorkCenters
+                        ? '.'
+                        : ': aún no hay ninguno; da de alta uno primero.'}
                 </li>
                 <li>
                     Quien ya esté (por número de empleado o, si no tiene, por

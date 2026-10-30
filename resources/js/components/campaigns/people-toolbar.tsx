@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { peopleQuery } from '@/lib/campaigns';
-import { loadServerOptions } from '@/lib/server-options';
+import { serverSource } from '@/lib/server-options';
 import { options as areaOptions } from '@/routes/tenant/areas';
 import type { InstrumentProgress, PeopleFilters, StandingCount } from '@/types';
 
@@ -78,16 +78,7 @@ export default function PeopleToolbar({
             <Combobox
                 id="filter-area"
                 name="area"
-                source={{
-                    initial: [ALL_AREAS],
-                    minLength: 1,
-                    load: (query, signal) =>
-                        loadServerOptions(
-                            areaOptions.url(tenantSlug),
-                            query,
-                            signal,
-                        ),
-                }}
+                source={serverSource(areaOptions.url(tenantSlug), [ALL_AREAS])}
                 defaultValue={filters.area ?? ALL_AREAS}
                 placeholder="Área"
                 onChange={(option) =>

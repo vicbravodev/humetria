@@ -49,14 +49,15 @@ it('lives at /admin/{slug}/employees/import', function (): void {
         ->and(route('tenant.employees.import.template', ['tenant' => 'acme'], absolute: false))->toBe('/admin/acme/employees/import/template');
 });
 
-it('shows the import page with the company\'s work centers', function (): void {
+it('shows the import page, saying whether the company has work centers to name', function (): void {
     $this->actingAs($this->owner)
         ->get(route('tenant.employees.import.create', $this->tenant))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('organization/employee-import')
             ->where('maxRows', 2000)
-            ->where('workCenters', ['Planta Querétaro']));
+            ->where('hasWorkCenters', true)
+            ->missing('workCenters'));
 });
 
 it('offers a template that Excel opens with its accents', function (): void {

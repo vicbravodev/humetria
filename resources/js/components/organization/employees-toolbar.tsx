@@ -9,7 +9,10 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useEmployeeFilters } from '@/hooks/use-employee-filters';
-import type { ChoiceOption, EmployeeFilters } from '@/types';
+import { serverSource } from '@/lib/server-options';
+import { options as areaOptions } from '@/routes/tenant/areas';
+import { options as workCenterOptions } from '@/routes/tenant/work-centers';
+import type { EmployeeFilters } from '@/types';
 
 const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 const ALL_AREAS = { value: '', label: 'Todas las áreas' };
@@ -18,17 +21,11 @@ const ALL_AREAS = { value: '', label: 'Todas las áreas' };
 export default function EmployeesToolbar({
     tenantSlug,
     filters,
-    workCenters,
-    areas,
 }: {
     tenantSlug: string;
     filters: EmployeeFilters;
-    workCenters: ChoiceOption[];
-    areas: ChoiceOption[];
 }) {
     const { text, type, filter } = useEmployeeFilters(tenantSlug, filters);
-    const chosen = (options: ChoiceOption[], value: string | null) =>
-        options.find((option) => option.value === value);
 
     return (
         <div
@@ -52,25 +49,25 @@ export default function EmployeesToolbar({
             <Combobox
                 id="filter-work-center"
                 name="work_center"
-                source={{ options: [ALL_CENTERS, ...workCenters] }}
-                defaultValue={
-                    chosen(workCenters, filters.work_center) ?? ALL_CENTERS
-                }
+                source={serverSource(workCenterOptions.url(tenantSlug), [
+                    ALL_CENTERS,
+                ])}
+                defaultValue={filters.work_center ?? ALL_CENTERS}
                 placeholder="Centro de trabajo"
                 onChange={(option) =>
                     filter({
-                        work_center: option.value === '' ? null : option.value,
+                        work_center: option.value === '' ? null : option,
                     })
                 }
             />
             <Combobox
                 id="filter-area"
                 name="area"
-                source={{ options: [ALL_AREAS, ...areas] }}
-                defaultValue={chosen(areas, filters.area) ?? ALL_AREAS}
+                source={serverSource(areaOptions.url(tenantSlug), [ALL_AREAS])}
+                defaultValue={filters.area ?? ALL_AREAS}
                 placeholder="Área"
                 onChange={(option) =>
-                    filter({ area: option.value === '' ? null : option.value })
+                    filter({ area: option.value === '' ? null : option })
                 }
             />
             <Select

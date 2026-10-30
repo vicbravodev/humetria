@@ -7,7 +7,9 @@ import EmployeesToolbar from '@/components/organization/employees-toolbar';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { employeeQuery } from '@/lib/employees';
+import { options as areaOptions } from '@/routes/tenant/areas';
 import { create as importPage } from '@/routes/tenant/employees/import';
+import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type {
     ChoiceOption,
     EmployeeFilters,
@@ -18,19 +20,19 @@ import type {
 export default function Employees({
     employees,
     filters,
-    workCenters,
-    areas,
     genders,
 }: {
     employees: Paginated<EmployeeRow>;
     filters: EmployeeFilters;
-    workCenters: ChoiceOption[];
-    areas: ChoiceOption[];
     genders: ChoiceOption[];
 }) {
     // Always set here: this page only exists inside a company.
     const tenantSlug = usePage().props.tenant?.slug ?? '';
-    const choices = { workCenters, areas, genders };
+    const choices = {
+        workCentersUrl: workCenterOptions.url(tenantSlug),
+        areasUrl: areaOptions.url(tenantSlug),
+        genders,
+    };
     const filtered = Object.keys(employeeQuery(filters)).length > 0;
 
     return (
@@ -55,12 +57,7 @@ export default function Employees({
                         />
                     </div>
                 </PageHeader>
-                <EmployeesToolbar
-                    tenantSlug={tenantSlug}
-                    filters={filters}
-                    workCenters={workCenters}
-                    areas={areas}
-                />
+                <EmployeesToolbar tenantSlug={tenantSlug} filters={filters} />
                 {employees.data.length === 0 ? (
                     <EmployeesEmpty filtered={filtered} />
                 ) : (

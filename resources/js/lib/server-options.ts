@@ -37,3 +37,27 @@ export async function loadServerOptions(
               .map((option) => ({ value: option.value, label: option.label }))
         : [];
 }
+
+/**
+ * Where a Combobox gets options that live on the server: `initial` until a letter is typed, then what the route finds.
+ * `allowNew` offers to add what was typed; `byName` makes each option's value its name, for a field that submits
+ * names (an area, which may be new).
+ */
+export function serverSource(
+    url: string,
+    initial: Option[] = [],
+    { allowNew = false, byName = false } = {},
+) {
+    return {
+        initial,
+        minLength: 1,
+        allowNew,
+        load: async (query: string, signal: AbortSignal) => {
+            const found = await loadServerOptions(url, query, signal);
+
+            return byName
+                ? found.map(({ label }) => ({ value: label, label }))
+                : found;
+        },
+    };
+}

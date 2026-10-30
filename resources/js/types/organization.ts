@@ -21,10 +21,10 @@ export type EmployeeRow = {
 /** A choice of a list (a work center, an area, a gender): what the form sends and what the person reads. */
 export type ChoiceOption = { value: string; label: string };
 
-/** The lists the employee form and the filters choose from. */
+/** What the employee form chooses from: the routes that search work centers and areas, and the genders. */
 export type EmployeeChoices = {
-    workCenters: ChoiceOption[];
-    areas: ChoiceOption[];
+    workCentersUrl: string;
+    areasUrl: string;
     genders: ChoiceOption[];
 };
 

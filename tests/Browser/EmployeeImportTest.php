@@ -33,10 +33,10 @@ afterEach(function (): void {
     File::deleteDirectory(storage_path('framework/testing/csv-'.getmypid()));
 });
 
-it('explains how to fill the file and names the work centers', function (bool $dark, bool $mobile): void {
+it('explains how to fill the file and points to the work centers it can name', function (bool $dark, bool $mobile): void {
     visitPage('organization/employee-import', '/admin/acme/employees/import', $dark, $mobile)
         ->assertSee('Cómo llenarlo')
-        ->assertSee('Planta Norte')
+        ->assertSee('escrito como en Centros de trabajo.')
         ->assertSee('Descargar plantilla');
 })->with($looks);
 

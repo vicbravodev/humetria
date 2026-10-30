@@ -4,7 +4,7 @@ import TraumaForm from '@/components/campaigns/trauma-form';
 import Combobox from '@/components/humetria/combobox';
 import PageHeader from '@/components/page-header';
 import { Label } from '@/components/ui/label';
-import { loadServerOptions } from '@/lib/server-options';
+import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/campaigns';
 import { create } from '@/routes/tenant/campaigns/trauma';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
@@ -54,16 +54,10 @@ export default function Trauma({
                     <Combobox
                         id="trauma-work-center"
                         name="work_center"
-                        source={{
-                            initial: workCenter === null ? [] : [workCenter],
-                            minLength: 1,
-                            load: (query, signal) =>
-                                loadServerOptions(
-                                    workCenterOptions.url(tenantSlug),
-                                    query,
-                                    signal,
-                                ),
-                        }}
+                        source={serverSource(
+                            workCenterOptions.url(tenantSlug),
+                            workCenter === null ? [] : [workCenter],
+                        )}
                         defaultValue={workCenter ?? undefined}
                         placeholder="Elige un centro"
                         onChange={(option) =>
