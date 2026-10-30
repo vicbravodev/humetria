@@ -69,6 +69,17 @@ it('shows no next obligation without an evaluation in course', function (): void
     visitPage('dashboard', signInToPanel())->assertMissing('[data-test="next-obligation"]');
 });
 
+it('starts an action from the ⌘K palette, grouped under its heading', function (): void {
+    visitPage('dashboard', panelCompany())
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->assertSeeIn('[role="listbox"] [role="group"]', 'Acciones')
+        ->type('#command-search', 'csv')
+        ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Cargar empleados desde CSV')
+        ->assertNoAccessibilityIssues(1)
+        ->keys('#command-search', 'Enter')
+        ->assertPathIs('/admin/acme/employees/import');
+});
+
 it('reminds whoever is missing from the panel', function (): void {
     visitPage('dashboard', panelCompany())
         ->click('Recordar a quien falta')
