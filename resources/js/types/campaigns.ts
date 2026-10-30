@@ -61,3 +61,34 @@ export type WorkCenterEvaluation = {
     openCampaignId: string | null;
     eligible: boolean;
 };
+
+export type SurveyOption = { value: string; label: string };
+
+export type SurveyItem = { number: number; text: string };
+
+export type SurveyGate = {
+    key: 'serves_clients' | 'supervises';
+    question: string;
+    instruction: string;
+};
+
+export type SurveySection = {
+    title: string | null;
+    instruction: string;
+    gate: SurveyGate | null;
+    items: SurveyItem[];
+};
+
+/** A guide as the person answers it, literal from the norm. */
+export type SurveyInstrument = {
+    key: string;
+    title: string;
+    shortTitle: string;
+    /** Guía I carries the person's name; Guías II and III never do. */
+    identified: boolean;
+    status: 'pending' | 'completed';
+    options: SurveyOption[];
+    sections: SurveySection[];
+};
+
+export type SurveyUnavailable = 'invalid' | 'closed' | 'done' | 'suspended';
