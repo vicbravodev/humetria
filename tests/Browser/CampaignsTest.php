@@ -128,6 +128,7 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
         ->assertSee('Se invitó a 1 persona.')
         ->assertSee('Personas (61)')
         ->click('Sortear reemplazos')
+        ->assertSee('del mismo género de quienes no contestarán')
         ->assertSee('¿De qué género son quienes no contestarán?')
         ->click('Hombres')
         ->clear('#replacements-count')

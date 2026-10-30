@@ -39,8 +39,9 @@ export default function ReplacementsDialog({
             <DialogContent>
                 <DialogTitle>Sortear reemplazos para la muestra</DialogTitle>
                 <DialogDescription>
-                    Se eligen al azar entre quienes no están en la muestra, en
-                    proporción por género, y reciben la Guía III por correo.
+                    Se eligen al azar entre quienes no están en la muestra, del
+                    mismo género de quienes no contestarán, y reciben la Guía
+                    III por correo.
                 </DialogDescription>
                 <Form
                     {...replacements.form([tenantSlug, campaignId])}
