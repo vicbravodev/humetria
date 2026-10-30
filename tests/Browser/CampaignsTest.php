@@ -316,3 +316,43 @@ it('sends Guía I to the people ticked, from the NOM-035 page', function (): voi
 
     expect(App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->sole()->employee_id)->toBe($people[0]->id);
 });
+
+it('shows the results of a closed evaluation by risk level, and filters them by area', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['Producción' => ['never', 6], 'Ventas' => ['always', 5]] as $name => [$value, $count]) {
+        $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => $name]);
+        App\Modules\Responses\Models\AnonymousResponse::factory()->count($count)->create(['campaign_id' => $campaign->id, 'area_id' => $area->id, 'answers' => nom035Answers('nom035.guide-ii', $value)]);
+    }
+
+    visitPage('results/show', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile)
+        ->assertSee('Calificación final')
+        ->assertSee('Liderazgo y relaciones en el trabajo')
+        ->assertSee('Producción')
+        ->assertSee('Qué pide la norma en cada nivel')
+        ->assertSee('Guía I: acontecimientos traumáticos severos');
+})->with($looks);
+
+it('narrows the results to one area, and reaches them from the evaluation', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['Producción' => 6, 'Ventas' => 5] as $name => $count) {
+        $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => $name]);
+        App\Modules\Responses\Models\AnonymousResponse::factory()->count($count)->create(['campaign_id' => $campaign->id, 'area_id' => $area->id, 'answers' => nom035Answers('nom035.guide-ii')]);
+    }
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Resultados')
+        ->assertPathIs("/admin/acme/campaigns/{$campaign->id}/results")
+        ->assertSee('Cuántos de los 11 cuestionarios de todo el centro')
+        ->click('#results-area')
+        ->click('[role="option"] >> text=Ventas')
+        ->assertSee('Cuántos de los 5 cuestionarios de Ventas')
+        ->assertQueryStringHas('area')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
