@@ -38,7 +38,7 @@ export default function StatusMessage({
                 </svg>
                 <Icon className="absolute bottom-1 left-1/2 size-[30px] -translate-x-1/2 text-primary" />
             </span>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-base font-medium text-muted-foreground">
                 {caption}
             </p>
             <h1 className="text-[30px] leading-[38px] font-semibold tracking-[-0.01em] text-balance">
