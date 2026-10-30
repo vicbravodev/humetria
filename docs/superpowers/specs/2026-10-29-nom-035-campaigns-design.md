@@ -2,9 +2,11 @@
 
 Fecha: 2026-10-29. Estado: propuesta.
 
-Anexo obligatorio: [`2026-10-29-nom-035-reference.md`](2026-10-29-nom-035-reference.md). Ahí está, literal del DOF,
+Anexo obligatorio: [`docs/normas/nom-035/texto-de-referencia.md`](../../normas/nom-035/texto-de-referencia.md). Ahí está, literal del DOF,
 el texto de las tres guías, las tablas de calificación, los rangos con sus `≤` verificados, la muestra y los criterios
 oficiales de la STPS. Este documento dice **qué se construye**; el anexo dice **qué dice la norma**.
+Cómo y por qué se interpreta cada punto, con su fuente, está en
+[`docs/normas/nom-035/criterios.md`](../../normas/nom-035/criterios.md), que manda sobre este documento.
 
 ## Intención
 

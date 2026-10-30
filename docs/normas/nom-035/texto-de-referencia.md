@@ -3,7 +3,8 @@
 Transcripción literal de la norma publicada en el DOF el 23/10/2018
 (<https://dof.gob.mx/nota_detalle.php?codigo=5541828&fecha=23/10/2018>), tomada el 2026-10-29. Las preguntas de las
 Guías II y III se extrajeron por script del HTML oficial y se verificó que salen completas y en orden (46 y 72). Es la
-fuente para escribir el contenido de los instrumentos y sus tests; ante cualquier duda manda el DOF.
+fuente para escribir el contenido de los instrumentos y sus tests; ante cualquier duda manda el DOF. Las decisiones de interpretación están en
+[`criterios.md`](criterios.md).
 
 **Nota sobre los rangos.** En el HTML del DOF los rangos se ven como `20<Cfinal<45`, pero el primer `<` lleva
 `text-decoration: underline` en el original, es decir `≤`. Aquí ya están escritos como `≤`: el límite inferior de cada
