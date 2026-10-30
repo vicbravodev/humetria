@@ -1,37 +1,40 @@
-import ActiveCampaignActions from '@/components/campaigns/active-campaign-actions';
+import AnswersByDayCard from '@/components/campaigns/answers-by-day-card';
+import AreaParticipationCard from '@/components/campaigns/area-participation-card';
 import CampaignPeopleSection from '@/components/campaigns/campaign-people-section';
-import InstrumentsProgress from '@/components/campaigns/instruments-progress';
+import ProgressCard from '@/components/campaigns/progress-card';
 import SendingProgress from '@/components/campaigns/sending-progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import Notice from '@/components/humetria/notice';
 import { progressNote } from '@/lib/campaigns';
 import type {
+    AnswersByDay,
+    AreaParticipation,
     CampaignDetail,
     CampaignSending,
     InstrumentProgress,
     PeoplePage,
-    ReplacementPool,
 } from '@/types';
 
 /**
- * A launched campaign: how many answered each guide, whether the Guía III sample is met (III.2 c), and, for those who
- * manage it, who answered.
+ * A running evaluation (pantalla Eval-Activa): how far it has come, by day and by area, whether the Guía III sample is
+ * met (III.2 c), and, for those who manage it, who answered.
  */
 export default function CampaignFollowUp({
-    tenantSlug,
+    route,
     campaign,
     instruments,
     people,
     sending,
-    minDeadline,
-    replacementPool,
+    areas,
+    answersByDay,
 }: {
-    tenantSlug: string;
-    minDeadline: string | null;
-    replacementPool: ReplacementPool[] | null;
+    /** The company's slug and the campaign's id. */
+    route: [string, string];
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: PeoplePage | null;
     sending: CampaignSending | null;
+    areas: AreaParticipation[] | null;
+    answersByDay: AnswersByDay | null;
 }) {
     const progress = campaign.progress;
     const sampleShort =
@@ -39,38 +42,40 @@ export default function CampaignFollowUp({
         progress.againstSample &&
         progress.completed < progress.target;
 
-    const active = campaign.status === 'active' && people !== null;
-
     return (
         <>
-            {active && minDeadline !== null && (
-                <ActiveCampaignActions
-                    tenantSlug={tenantSlug}
-                    campaign={campaign}
-                    minDeadline={minDeadline}
-                    replacementPool={replacementPool}
-                />
-            )}
             {sampleShort && (
-                <Alert>
-                    <AlertDescription>
+                <Notice>
+                    <strong>
                         {progressNote(progress)} para el mínimo de la muestra
-                        que pide la norma ({progress.target}). Si alguien no
-                        contestará, sortea reemplazos.
-                    </AlertDescription>
-                </Alert>
+                    </strong>{' '}
+                    que pide la norma ({progress.target}). Si alguien no
+                    contestará, sortea reemplazos.
+                </Notice>
             )}
-            {sending !== null && <SendingProgress sending={sending} />}
-            <InstrumentsProgress instruments={instruments} />
+            <section aria-label="Avance" className="grid gap-5 md:grid-cols-3">
+                {progress !== null && (
+                    <ProgressCard
+                        progress={progress}
+                        instruments={instruments}
+                    />
+                )}
+                {answersByDay !== null && (
+                    <AnswersByDayCard answers={answersByDay} />
+                )}
+            </section>
+            {areas !== null && areas.length > 0 && (
+                <AreaParticipationCard route={route} areas={areas} />
+            )}
             {people !== null && (
                 <CampaignPeopleSection
-                    tenantSlug={tenantSlug}
-                    campaignId={campaign.id}
-                    active={active}
+                    route={route}
+                    active={campaign.status === 'active'}
                     people={people}
                     instruments={instruments}
                 />
             )}
+            {sending !== null && <SendingProgress sending={sending} />}
         </>
     );
 }

@@ -1,4 +1,5 @@
 import { Form } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +13,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { destroy } from '@/routes/tenant/campaigns';
 
+/** Throws a draft away, after saying nobody was invited yet. */
 export default function DeleteDraftDialog({
     tenantSlug,
     campaignId,
@@ -22,7 +24,13 @@ export default function DeleteDraftDialog({
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="ghost">Eliminar borrador</Button>
+                <Button
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                >
+                    <Trash2 aria-hidden="true" />
+                    Eliminar borrador
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogTitle>¿Eliminar este borrador?</DialogTitle>

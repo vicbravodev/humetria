@@ -7,30 +7,30 @@ import {
     DialogDescription,
     DialogFooter,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { close } from '@/routes/tenant/campaigns';
 
 /**
- * Closes the evaluation now. With the sample short it says so first: the norm asks that the answers reach it
+ * Closes the evaluation now, opened from the page's menu. With the sample short it says so first: the norm asks that the answers reach it
  * (III.2 c), and closing is final.
  */
 export default function CloseDialog({
     tenantSlug,
     campaignId,
     shortBy,
+    open,
+    onOpenChange,
 }: {
     tenantSlug: string;
     campaignId: string;
     /** Answers missing to reach the sample; 0 when it is met or there is none. */
     shortBy: number;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="ghost">Cerrar evaluación</Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogTitle>¿Cerrar la evaluación?</DialogTitle>
                 <DialogDescription>
