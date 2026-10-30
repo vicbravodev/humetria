@@ -200,3 +200,9 @@ it('locks the person and reads the campaign under a shared lock before taking a 
     expect(collect($queries)->contains(fn (string $sql): bool => str_contains($sql, 'from "campaign_participants"') && str_ends_with($sql, 'for update')))->toBeTrue()
         ->and(collect($queries)->contains(fn (string $sql): bool => str_contains($sql, 'from "campaigns"') && str_ends_with($sql, 'for share')))->toBeTrue();
 });
+
+it('never keeps the answers of a malformed submission in the session', function (): void {
+    submitGuide('nom035.guide-iii', ['1' => ['sometimes'], '2' => 'almost_never'])->assertSessionHasErrors('answers.1');
+
+    expect(session()->getOldInput('answers'))->toBeNull();
+});
