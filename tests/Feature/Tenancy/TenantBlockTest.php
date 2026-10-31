@@ -94,7 +94,7 @@ it('lets a company that is not blocked work as usual', function (Closure $make):
     expect($this->effects)->toBe(1);
 })->with($open);
 
-it('lets an impersonated session through to a blocked company', function (): void {
+it('lets an impersonated session see a blocked company, never change it', function (): void {
     $tenant = Tenant::factory()->deactivated()->create();
     $user = ownerOf($tenant);
 
@@ -102,7 +102,7 @@ it('lets an impersonated session through to a blocked company', function (): voi
         ->withSession([Impersonation::SESSION_KEY => superadmin()->id, Impersonation::IMPERSONATED_KEY => $user->id])
         ->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
-    $this->post(route('tenant.block-probe', $tenant))->assertOk();
+    $this->post(route('tenant.block-probe', $tenant))->assertStatus(423);
 });
 
 it('still hides a blocked company from someone who is not a member', function (): void {

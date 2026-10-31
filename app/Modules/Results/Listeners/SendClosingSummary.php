@@ -36,7 +36,7 @@ final readonly class SendClosingSummary implements ShouldQueue
         $owner = $this->companies->contact();
         $campaign = $this->campaigns->find($event->campaignId);
 
-        if ($owner === null || $campaign === null) {
+        if ($company->blocked || $owner === null || $campaign === null) {
             return;
         }
 

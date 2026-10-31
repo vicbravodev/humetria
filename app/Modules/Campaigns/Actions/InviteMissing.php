@@ -10,6 +10,7 @@ use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -27,35 +28,86 @@ final readonly class InviteMissing
     public function __construct(private Roster $roster, private QueueSurveyInvitations $queueInvitations) {}
 
     /**
-     * @return int how many people got a link.
-     */
-    /**
+     * @return array{people: int, links: int} how many people it brought up to date, and how many of them got a link.
+     *
      * @throws CampaignStateChanged when another request closed it meanwhile.
      */
-    public function handle(Campaign $campaign): int
+    public function handle(Campaign $campaign): array
     {
-        $sent = DB::transaction(function () use ($campaign): int {
+        $done = DB::transaction(function () use ($campaign): array {
             // Under lock: closing it meanwhile waits here, or this finds it closed.
             $campaign = Campaign::lockIn($campaign, CampaignStatus::Active);
-            $people = $this->roster->activeIn($campaign->work_center_id);
-            $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
             $owed = [];
+            $people = 0;
 
-            foreach ($people as $person) {
-                $participant = $participants->get($person->id);
-                $joined = $participant === null ? $this->join($campaign, $person) : $this->catchUp($participant);
-
-                if ($joined !== null) {
-                    $owed[$joined->id] = $person->email !== null;
-                }
+            foreach ($this->owed($campaign) as [$person, $participant]) {
+                $people += self::updates($person, $participant) ? 1 : 0;
+                $participant = $participant === null ? $this->join($campaign, $person) : $this->restore($participant);
+                $owed[$participant->id] = SurveyInvitation::routes($person) !== [];
             }
 
-            return $this->queueInvitations->handle($campaign, $owed);
-        });
+            return ['people' => $people, 'links' => $this->queueInvitations->handle($campaign, $owed)];
+        }, Campaign::DEADLOCK_ATTEMPTS);
 
-        Log::info('campaign.missing_invited', ['campaign_id' => $campaign->id, 'sent' => $sent]);
+        Log::info('campaign.missing_invited', ['campaign_id' => $campaign->id, 'people' => $done['people'], 'sent' => $done['links']]);
 
-        return $sent;
+        return $done;
+    }
+
+    /**
+     * What handle() would do now, changing nothing: how many people it brings up to date (joins, gives back their
+     * guides, or sends a link) and how many of them get a link. Someone with no way to be reached who is neither new nor
+     * back changes nothing, so isn't counted.
+     *
+     * @return array{people: int, links: int}
+     */
+    public function count(Campaign $campaign): array
+    {
+        $people = 0;
+        $links = 0;
+
+        foreach ($this->owed($campaign) as [$person, $participant]) {
+            $people += self::updates($person, $participant) ? 1 : 0;
+            $links += SurveyInvitation::routes($person) !== [] ? 1 : 0;
+        }
+
+        return ['people' => $people, 'links' => $links];
+    }
+
+    /**
+     * Whether handle() changes anything for this person: they join, get their guides back, or get a link.
+     */
+    private static function updates(RosterEntry $person, ?Participant $participant): bool
+    {
+        return $participant === null
+            || $participant->instruments->contains('status', InstrumentStatus::Cancelled)
+            || SurveyInvitation::routes($person) !== [];
+    }
+
+    /**
+     * The active people of the work center owed a link, with their place in the campaign (null for someone hired after
+     * the launch): someone who returned, with guides cancelled while away, and whoever has a guide pending and never got
+     * a link.
+     *
+     * @return list<array{RosterEntry, ?Participant}>
+     */
+    private function owed(Campaign $campaign): array
+    {
+        $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
+        $owed = [];
+
+        foreach ($this->roster->activeIn($campaign->work_center_id) as $person) {
+            $participant = $participants->get($person->id);
+            $returned = $participant?->instruments->contains('status', InstrumentStatus::Cancelled) ?? false;
+            $neverInvited = $participant !== null && in_array($participant->invitation_status, [null, InvitationStatus::NoEmail], true)
+                && $participant->instruments->contains('status', InstrumentStatus::Pending);
+
+            if ($participant === null || $returned || $neverInvited) {
+                $owed[] = [$person, $participant];
+            }
+        }
+
+        return $owed;
     }
 
     private function join(Campaign $campaign, RosterEntry $person): Participant
@@ -67,15 +119,14 @@ final readonly class InviteMissing
     }
 
     /**
-     * Gives back the guides cancelled while the person was away. Returns them when they are owed a link.
+     * Gives back the guides cancelled while the person was away.
      */
-    private function catchUp(Participant $participant): ?Participant
+    private function restore(Participant $participant): Participant
     {
-        $restored = $participant->instruments()
+        $participant->instruments()
             ->where('status', InstrumentStatus::Cancelled)
             ->update(['status' => InstrumentStatus::Pending, 'cancelled_at' => null]);
-        $neverInvited = in_array($participant->invitation_status, [null, InvitationStatus::NoEmail], true) && $participant->instruments->contains('status', InstrumentStatus::Pending);
 
-        return $restored > 0 || $neverInvited ? $participant : null;
+        return $participant;
     }
 }

@@ -16,7 +16,7 @@ Artisan::command('campaigns:send-digests', function (SendProgressDigests $sendDi
 })->purpose('Email each owner how far its open evaluations got');
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
-Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone('America/Mexico_City')->onOneServer();
+Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

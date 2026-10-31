@@ -38,8 +38,8 @@ export default function ExtendDialog({
             <DialogContent>
                 <DialogTitle>Extender la fecha de cierre</DialogTitle>
                 <DialogDescription>
-                    Hoy cierra el {closesOn}. Las personas pueden contestar
-                    hasta el final del nuevo día.
+                    {closesOn !== null && `Ahora cierra el ${closesOn}. `}
+                    Las personas pueden contestar hasta el final del nuevo día.
                 </DialogDescription>
                 <Form
                     {...extend.form([tenantSlug, campaignId])}

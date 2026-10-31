@@ -110,6 +110,17 @@ it('shows no risk level below the minimum group, only the participation', functi
         ->not->toContain('valoración clínica');
 });
 
+it('still says who needs a clinical assessment when the risk levels stay hidden under the minimum', function (): void {
+    guideTwoBy($this->campaign, $this->area, 4, 'always');
+    TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true]);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]));
+
+    expect((string) closingSummaryTo('olga@autopartes.mx')->render())
+        ->toContain('Con menos de 5 cuestionarios no se muestran niveles de riesgo, para cuidar el anonimato.')
+        ->toContain('2 personas requieren valoración clínica (Guía I)');
+});
+
 it('closes a Guía I campaign with its participation and who needs a clinical assessment', function (): void {
     $trauma = Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     ParticipantInstrument::factory()->count(3)->create(['participant_id' => fn () => Participant::factory()->create(['campaign_id' => $trauma->id])->id, 'instrument' => 'nom035.guide-i', 'status' => InstrumentStatus::Completed, 'completed_at' => now()]);
@@ -134,6 +145,15 @@ it('sends it once the closing is committed, also when the last day closes it', f
 
     Event::assertDispatched(CampaignClosed::class, fn (CampaignClosed $event): bool => $event->tenantId === $this->tenant->id && $event->campaignId === $this->campaign->id);
     expect(new CampaignClosed('t', 'c'))->toBeInstanceOf(Illuminate\Contracts\Events\ShouldDispatchAfterCommit::class);
+});
+
+it('sends nothing to a blocked company', function (): void {
+    $this->campaign->update(['status' => 'closed', 'closed_at' => now()]);
+    $this->tenant->update(['deactivated_at' => now()]);
+
+    app(SendClosingSummary::class)->handle(new CampaignClosed($this->tenant->id, $this->campaign->id));
+
+    Notification::assertNothingSent();
 });
 
 it('sends nothing to a company with no owner', function (): void {

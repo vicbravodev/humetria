@@ -201,6 +201,7 @@ it('gives HR no single answer: no answers and no response ids in what the page r
             $props = json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR);
 
             expect(propsHaveKey($page->toArray()['props'], 'answers'))->toBeFalse();
+            expectNoIndividualResponses($page->toArray()['props']);
 
             foreach ($ids as $id) {
                 expect($props)->not->toContain($id);

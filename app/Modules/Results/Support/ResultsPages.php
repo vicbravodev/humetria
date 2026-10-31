@@ -57,11 +57,12 @@ final readonly class ResultsPages
     }
 
     /**
-     * The Guía II or III results of a closed evaluation: the center (or one area shown), its areas and its questions.
+     * The Guía II or III results of a closed evaluation: the center (or one area shown), its areas and, when asked
+     * for, its questions (the report leaves them out).
      *
-     * @return array{results: array<string, mixed>, areas: array{visible: list<array<string, mixed>>, hidden: int}, items: list<array<string, mixed>>, area: array{value: string, label: string}|null}
+     * @return array{results: array<string, mixed>, areas: array{visible: list<array<string, mixed>>, hidden: int}, items: list<array<string, mixed>>|null, area: array{value: string, label: string}|null}
      */
-    public function risk(CampaignRecord $campaign, string $guide, ?string $areaId): array
+    public function risk(CampaignRecord $campaign, string $guide, ?string $areaId, bool $withItems = true): array
     {
         $records = $this->responses->anonymous($campaign->id, $guide);
         $areas = $this->distribution->areas($guide, $records);
@@ -74,7 +75,7 @@ final readonly class ResultsPages
                 'visible' => array_map(fn (array $area): array => ['id' => $area['areaId'], 'name' => $names[$area['areaId']] ?? '', 'answered' => $area['answered'], 'final' => $area['final']], $areas['visible']),
                 'hidden' => $areas['hidden'],
             ],
-            'items' => $this->distribution->items($guide, $records),
+            'items' => $withItems ? $this->distribution->items($guide, $records) : null,
             'area' => $filtered === null ? null : ['value' => $filtered, 'label' => $names[$filtered]],
         ];
     }

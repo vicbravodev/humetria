@@ -65,7 +65,8 @@ it('adds an employee, creating the area the first time it is named', function ()
         ->and($area->only(['tenant_id', 'name']))->toBe(['tenant_id' => $this->tenant->id, 'name' => 'Producción'])
         ->and(AuditEntry::query()->count())->toBe(0);
 
-    Log::shouldHaveReceived('info')->once()->with('employee.created', ['employee_id' => $employee->id]);
+    Log::shouldHaveReceived('info', ['area.created', ['area_id' => $area->id]])->once();
+    Log::shouldHaveReceived('info', ['employee.created', ['employee_id' => $employee->id]])->once();
 });
 
 it('reuses an area the company has, whatever the case', function (): void {

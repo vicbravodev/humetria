@@ -26,6 +26,15 @@ it('answers 404 to anyone who is not a superadmin, so the console does not revea
         ->assertNotFound();
 });
 
+it('keeps the query string in the links between pages', function (): void {
+    DemoRequest::factory()->count(26)->create();
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-requests.index', ['page' => 1, 'sort' => 'latest']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('demoRequests.next_page_url', route('demo-requests.index', ['sort' => 'latest', 'page' => 2])));
+});
+
 it('lists every field of a demo request for the superadmin, labelled and in Mexico City time', function (): void {
     $demoRequest = DemoRequest::factory()->create([
         'name' => 'Ana López',

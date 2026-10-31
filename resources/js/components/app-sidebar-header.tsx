@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { AppBreadcrumbs } from '@/components/app-breadcrumbs';
+import { ThemeMenu } from '@/components/theme-menu';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
@@ -50,17 +51,23 @@ export function AppSidebarHeader({
                     aria-label="Buscar"
                     data-test="command-palette"
                     onClick={() => setCommandPaletteOpen(true)}
-                    className="gap-2 px-2.5 font-normal text-muted-foreground hover:text-foreground sm:w-60 sm:justify-start"
+                    className="gap-2 px-2.5 font-normal text-muted-foreground hover:text-foreground lg:w-60 lg:justify-start"
                 >
                     <Search className="size-[18px]" />
-                    <span className="hidden flex-1 text-left sm:inline">
+                    <span className="hidden flex-1 text-left lg:inline">
                         Buscar o ir a…
                     </span>
-                    <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-[13px] leading-[18px] sm:inline">
+                    <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-[13px] leading-[18px] lg:inline">
                         ⌘K
                     </kbd>
                 </Button>
-                <ThemeSwitch />
+                {/* On a phone the three-way switch would squeeze where the page sits: one button with a menu. */}
+                <div className="hidden sm:block">
+                    <ThemeSwitch />
+                </div>
+                <div className="sm:hidden">
+                    <ThemeMenu />
+                </div>
             </div>
         </header>
     );

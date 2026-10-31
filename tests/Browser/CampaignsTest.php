@@ -72,6 +72,25 @@ it('opens the new-evaluation assistant at its second step from a work center', f
         ->assertSee('A quién se aplica la Guía III'));
 })->with($looks);
 
+it('sets both header actions on one row beside the sidebar, and stacks them whole on a phone', function (bool $dark): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 20);
+    $page = visitPage('campaigns/index', '/admin/acme/campaigns', $dark);
+    // "row" when both actions share a row (tops within 2 px); "stacked" when each spans the whole header.
+    $layout = <<<'JS'
+        () => {
+            const header = document.querySelector('header:has(h1)').getBoundingClientRect();
+            const [trauma, evaluation] = ['Guía I por acontecimiento', 'Nueva evaluación'].map((name) => [...document.querySelectorAll('header:has(h1) a, header:has(h1) button')].find((action) => action.textContent === name).getBoundingClientRect());
+            if (Math.abs(trauma.top - evaluation.top) <= 2) return 'row';
+            return [trauma, evaluation].every((action) => Math.abs(action.width - header.width) <= 1) ? 'stacked' : 'ragged';
+        }
+        JS;
+
+    foreach ([375 => 'stacked', 768 => 'row', 1024 => 'row', 1280 => 'row'] as $width => $expected) {
+        resizeTo($page, $width)->assertScript($layout, $expected)->assertScript(spilledOut(), '');
+    }
+})->with(['light' => false, 'dark' => true]);
+
 it('pages the evaluations and the work centers', function (): void {
     $tenant = campaignsCompany();
 
@@ -270,12 +289,23 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
 
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->click('Recordar a 60')
-        ->assertSee('el anterior deja de servir')
+        ->assertSee('Es el mismo de antes: el que ya tienen sigue sirviendo.')
         ->click('Reenviar enlaces')
         ->assertSee('Enlace reenviado a 60 personas.')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
+        // Nothing goes out before confirming: it says who gets a link.
+        ->assertSee('¿Invitar a quien falte?')
+        ->assertSee('quienes entraron al centro de trabajo después del lanzamiento')
+        ->assertSeeIn('[role=dialog]', 'Se enviará un enlace a 1 persona.')
+        ->click('[role=dialog] button[type=submit]')
         ->assertSee('Se invitó a 1 persona.')
+        // Once everyone has their link, there is nobody left to invite.
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
+        ->assertSeeIn('[role=dialog]', 'No falta nadie por invitar.')
+        ->assertScript('document.querySelector("[role=dialog] button[type=submit]").disabled', true)
+        ->click('[role=dialog] button:has-text("Cancelar")')
         ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '61')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Sortear reemplazos")')
@@ -301,6 +331,10 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
     $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Extender fecha')
+        ->assertSee('Ahora cierra el '.App\Modules\Campaigns\Support\CampaignClock::day(now()->addWeek(), isDate: true).'.')
+        ->assertDontSee('Hoy cierra el')
+        ->click('Cancelar')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
         ->assertSee('Faltan 53 respuestas para el mínimo de la muestra que pide la norma.')
@@ -418,6 +452,20 @@ it('shows the results of a closed evaluation by risk level, and filters them by 
         ->assertSee('Guía I · acontecimientos traumáticos');
 })->with($looks);
 
+it('gives each question and each level of the norm room to read at every width', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(6)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+    $page = visitPage('results/show', "/admin/acme/campaigns/{$campaign->id}/results");
+    // The narrowest column of words among the questions and the levels' actions, in px.
+    $narrowest = '() => Math.min(...Array.from(document.querySelectorAll(\'ol > li > p:first-child, dl dd\')).filter((text) => text.offsetWidth > 0).map((text) => text.getBoundingClientRect().width)) >= 240';
+
+    foreach ([375, 768, 1024, 1280] as $width) {
+        resizeTo($page, $width)->assertScript($narrowest);
+    }
+});
+
 it('narrows the results to one area, and reaches them from the evaluation', function (): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
@@ -514,6 +562,12 @@ it('shares the report through a temporary link that opens with no account until 
     visit("/admin/acme/campaigns/{$campaign->id}/report")
         ->assertSee('Enlaces abiertos')
         ->click('Revocar')
+        // Nothing is revoked before confirming.
+        ->assertSee('¿Revocar este enlace?')
+        ->click('Cancelar')
+        ->assertDontSee('Enlace revocado.')
+        ->click('Revocar')
+        ->click('[role=dialog] button[type=submit]')
         ->assertSee('Enlace revocado.')
         ->assertDontSee('Enlaces abiertos')
         ->navigate(parse_url($link, PHP_URL_PATH) ?: '')
@@ -532,3 +586,30 @@ it('opens a shared report, or says the link is no longer available', function (b
         ->assertSee('Este enlace ya no está disponible')
         ->assertDontSee('Acme');
 })->with($looks);
+
+it('offers no new date once the last day has passed, but still lets hr close it', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create([
+        'tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'closes_on' => now()->subDays(2)->toDateString(),
+    ]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertDontSee('Extender fecha')
+        ->click('[aria-label="Más acciones"]')
+        ->assertSee('Cerrar evaluación')
+        ->assertNoJavaScriptErrors();
+});
+
+it('gives each part of the 7.7 report the width of the phone to read', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(6)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+    App\Modules\Results\Models\ReportShare::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => hash('sha256', str_repeat('a', 64))]);
+    // The narrowest text of the incises (7.7 a to h), in px: the code goes above it on a phone instead of beside it.
+    $narrowest = '() => Math.min(...[...document.querySelectorAll("h3")].filter((title) => title.closest("div.grid")?.firstElementChild?.textContent.startsWith("7.7")).map((title) => title.parentElement.parentElement.getBoundingClientRect().width))';
+
+    $page = visitPage('results/shared-report', '/report/'.str_repeat('a', 64), mobile: true);
+
+    resizeTo($page, 375)->assertScript($narrowest.' >= 300')->assertScript(spilledOut(), '');
+});

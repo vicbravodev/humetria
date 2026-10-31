@@ -1,6 +1,5 @@
-import { router } from '@inertiajs/react';
 import ConsolePagination from '@/components/console-pagination';
-import { Button } from '@/components/ui/button';
+import RevokeShareDialog from '@/components/results/revoke-share-dialog';
 import {
     Table,
     TableBody,
@@ -10,10 +9,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { destroy } from '@/routes/tenant/campaigns/shares';
 import type { Paginated, ReportShareRow } from '@/types';
 
-/** The links to the report that still open, each one revocable. Nothing when there are none. */
+/** The links to the report that still open, each one revocable once confirmed. Nothing when there are none. */
 export default function ReportShares({
     tenantSlug,
     campaignId,
@@ -53,23 +51,10 @@ export default function ReportShares({
                             <TableCell>{share.createdAt}</TableCell>
                             <TableCell>{share.expiresAt}</TableCell>
                             <TableCell className="text-right">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    aria-label={`Revocar el enlace que vence el ${share.expiresAt}`}
-                                    onClick={() =>
-                                        router.visit(
-                                            destroy([
-                                                tenantSlug,
-                                                campaignId,
-                                                share.id,
-                                            ]),
-                                            { preserveScroll: true },
-                                        )
-                                    }
-                                >
-                                    Revocar
-                                </Button>
+                                <RevokeShareDialog
+                                    route={[tenantSlug, campaignId]}
+                                    share={share}
+                                />
                             </TableCell>
                         </TableRow>
                     ))}

@@ -86,3 +86,47 @@ it('reminds whoever is missing from the panel', function (): void {
         ->click('Recordar a quien falta')
         ->assertSee('Enlace reenviado a 3 personas.');
 });
+
+/** Where the arc of the evaluation in course sits in its card: centered or not, and its figures beside it or below. */
+function activeCardLayout(): string
+{
+    return <<<'JS'
+        () => {
+            const card = document.querySelector('[aria-labelledby="active-evaluation"]').getBoundingClientRect();
+            const meter = document.querySelector('[aria-labelledby="active-evaluation"] [data-slot="arc-meter"]').getBoundingClientRect();
+            const kpis = document.querySelector('[data-test="active-kpis"]').getBoundingClientRect();
+            const centered = Math.abs((meter.left + meter.right) / 2 - (card.left + card.right) / 2) <= 2;
+
+            return `${centered ? 'centered' : 'aside'} ${kpis.top < meter.bottom && kpis.left >= meter.right ? 'beside' : 'below'}`;
+        }
+        JS;
+}
+
+it('centers the arc over its figures on a phone and sets them beside it on a desktop', function (bool $dark): void {
+    $page = visitPage('dashboard', panelCompany(), $dark);
+
+    foreach ([375 => 'centered below', 768 => 'centered below', 1280 => 'aside beside'] as $width => $layout) {
+        resizeTo($page, $width)->assertScript(activeCardLayout(), $layout);
+    }
+})->with(['light' => false, 'dark' => true]);
+
+it('keeps the page name whole in the top bar at every width, shortening a long company name first', function (): void {
+    $url = panelCompany();
+    Tenant::query()->where('slug', 'acme')->update(['trade_name' => 'Martínez, Aponte y Galarza e Hija']);
+    $page = visitPage('dashboard', $url);
+    // The crumbs that do not fit whole: the page's own always does, a company's name gives way with an ellipsis.
+    $cut = '() => Array.from(document.querySelectorAll(\'nav[aria-label="Ruta"] li\')).filter((crumb) => crumb.offsetWidth > 0 && crumb.scrollWidth > crumb.clientWidth).map((crumb) => crumb.textContent).join()';
+
+    foreach ([375 => '', 768 => 'Martínez, Aponte y Galarza e Hija', 1024 => 'Martínez, Aponte y Galarza e Hija', 1280 => ''] as $width => $shortened) {
+        resizeTo($page, $width)->assertScript($cut, $shortened);
+    }
+});
+
+it('fits each work center of the cycle inside its card at every width', function (): void {
+    $page = visitPage('dashboard', panelCompany());
+
+    foreach ([375, 768, 1024, 1280] as $width) {
+        // How many rows spill past their card's edge.
+        resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="cycle"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
+    }
+});

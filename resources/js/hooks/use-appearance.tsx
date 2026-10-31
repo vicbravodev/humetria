@@ -34,8 +34,13 @@ const getStoredAppearance = (): Appearance => {
         return 'system';
     }
 
-    return (localStorage.getItem('appearance') as Appearance) || 'system';
+    const stored = localStorage.getItem('appearance');
+
+    return isAppearance(stored) ? stored : 'system';
 };
+
+const isAppearance = (value: string | null): value is Appearance =>
+    value === 'light' || value === 'dark' || value === 'system';
 
 const isDarkMode = (appearance: Appearance): boolean => {
     return appearance === 'dark' || (appearance === 'system' && prefersDark());

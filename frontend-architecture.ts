@@ -74,6 +74,13 @@ export const frontendArchitecture = {
         'unicorn/filename-case': ['error', { case: 'kebabCase' }],
         'import/no-cycle': 'error',
         'no-restricted-imports': restrictImports(),
+        // Types are proven (guards, typed responses), never forced: no `as` but `as const`, no `!`, no `any`.
+        'typescript/consistent-type-assertions': [
+            'error',
+            { assertionStyle: 'never' },
+        ],
+        'typescript/no-non-null-assertion': 'error',
+        'typescript/no-explicit-any': 'error',
     },
     overrides: [
         {

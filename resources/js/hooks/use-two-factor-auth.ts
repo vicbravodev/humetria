@@ -19,6 +19,11 @@ export type UseTwoFactorAuthReturn = {
 
 export const OTP_MAX_LENGTH = 6;
 
+const isObject = (value: unknown): value is object =>
+    typeof value === 'object' && value !== null;
+
+const isString = (value: unknown): value is string => typeof value === 'string';
+
 export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     const { submit } = useHttp();
 
@@ -48,12 +53,17 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
 
     const fetchQrCode = useCallback(async (): Promise<void> => {
         try {
-            const { svg } = (await submit(qrCode())) as {
-                svg: string;
-                url: string;
-            };
+            const response = await submit(qrCode());
 
-            setQrCodeSvg(svg);
+            if (
+                !isObject(response) ||
+                !('svg' in response) ||
+                !isString(response.svg)
+            ) {
+                throw new Error('two_factor.qr_code_unexpected');
+            }
+
+            setQrCodeSvg(response.svg);
         } catch {
             setErrors((prev) => [...prev, 'No se pudo obtener el código QR']);
             setQrCodeSvg(null);
@@ -62,11 +72,17 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
 
     const fetchSetupKey = useCallback(async (): Promise<void> => {
         try {
-            const { secretKey: key } = (await submit(secretKey())) as {
-                secretKey: string;
-            };
+            const response = await submit(secretKey());
 
-            setManualSetupKey(key);
+            if (
+                !isObject(response) ||
+                !('secretKey' in response) ||
+                !isString(response.secretKey)
+            ) {
+                throw new Error('two_factor.secret_key_unexpected');
+            }
+
+            setManualSetupKey(response.secretKey);
         } catch {
             setErrors((prev) => [
                 ...prev,
@@ -79,7 +95,12 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     const fetchRecoveryCodes = useCallback(async (): Promise<void> => {
         try {
             setErrors([]);
-            const codes = (await submit(recoveryCodes())) as string[];
+            const codes = await submit(recoveryCodes());
+
+            if (!Array.isArray(codes) || !codes.every(isString)) {
+                throw new Error('two_factor.recovery_codes_unexpected');
+            }
+
             setRecoveryCodesList(codes);
         } catch {
             setErrors((prev) => [

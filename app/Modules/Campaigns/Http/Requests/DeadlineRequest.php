@@ -7,6 +7,7 @@ namespace App\Modules\Campaigns\Http\Requests;
 use App\Modules\Campaigns\Support\CampaignClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The last day people can answer, to launch an evaluation or extend it: tomorrow at the earliest, in the display time
@@ -14,6 +15,11 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 final class DeadlineRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-campaigns');
+    }
+
     /**
      * @return array<string, mixed>
      */

@@ -3,10 +3,16 @@ import { useState } from 'react';
 import CampaignMoreMenu from '@/components/campaigns/campaign-more-menu';
 import CloseDialog from '@/components/campaigns/close-dialog';
 import ExtendDialog from '@/components/campaigns/extend-dialog';
+import InviteMissingDialog from '@/components/campaigns/invite-missing-dialog';
 import ReplacementsDialog from '@/components/campaigns/replacements-dialog';
 import ResendFilteredDialog from '@/components/campaigns/resend-filtered-dialog';
 import { Button } from '@/components/ui/button';
-import type { CampaignDetail, ReplacementPool } from '@/types';
+import type {
+    CampaignDetail,
+    CampaignDialog,
+    InviteMissingCount,
+    ReplacementPool,
+} from '@/types';
 
 const PENDING = { status: 'pending', guide: null, area: null, q: '' };
 
@@ -20,16 +26,20 @@ export default function ActiveCampaignActions({
     minDeadline,
     replacementPool,
     pending,
+    missing,
 }: {
     tenantSlug: string;
     campaign: CampaignDetail;
-    minDeadline: string;
+    /** The earliest new last day; null once the last day has passed, when it can no longer be extended. */
+    minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
     /** People waiting with a link sent: who "Recordar" reaches. */
     pending: number;
+    /** Who «Invitar a quien falte» sends a link to. */
+    missing: InviteMissingCount;
 }) {
-    const [dialog, setDialog] = useState<'close' | 'replacements' | null>(null);
-    const toggle = (name: 'close' | 'replacements') => (open: boolean) =>
+    const [dialog, setDialog] = useState<CampaignDialog | null>(null);
+    const toggle = (name: CampaignDialog) => (open: boolean) =>
         setDialog(open ? name : null);
     const progress = campaign.progress;
     const shortBy =
@@ -47,12 +57,14 @@ export default function ActiveCampaignActions({
                 }
                 onOpen={setDialog}
             />
-            <ExtendDialog
-                tenantSlug={tenantSlug}
-                campaignId={campaign.id}
-                closesOn={campaign.closesOn}
-                min={minDeadline}
-            />
+            {minDeadline !== null && (
+                <ExtendDialog
+                    tenantSlug={tenantSlug}
+                    campaignId={campaign.id}
+                    closesOn={campaign.closesOn}
+                    min={minDeadline}
+                />
+            )}
             <ResendFilteredDialog
                 tenantSlug={tenantSlug}
                 campaignId={campaign.id}
@@ -64,6 +76,12 @@ export default function ActiveCampaignActions({
                         Recordar a {pending}
                     </Button>
                 }
+            />
+            <InviteMissingDialog
+                route={[tenantSlug, campaign.id]}
+                missing={missing}
+                open={dialog === 'invite'}
+                onOpenChange={toggle('invite')}
             />
             <CloseDialog
                 tenantSlug={tenantSlug}

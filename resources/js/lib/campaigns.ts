@@ -113,3 +113,33 @@ export function guideBreakdown(guide: InstrumentProgress): string {
 
     return parts.length === 0 ? 'Nadie pendiente' : parts.join(' · ');
 }
+
+function peopleText(count: number): string {
+    return `${count} ${count === 1 ? 'persona' : 'personas'}`;
+}
+
+/** What «Invitar a quien falte» will do, before confirming: who it brings up to date and who of them gets a link. */
+export function inviteMissingSummary(missing: {
+    people: number;
+    links: number;
+}): string {
+    if (missing.people === 0) {
+        return 'No falta nadie por invitar.';
+    }
+
+    const links = `Se enviará un enlace a ${peopleText(missing.links)}`;
+
+    if (missing.links === missing.people) {
+        return `${links}.`;
+    }
+
+    const updated = `Se pondrá al día a ${peopleText(missing.people)}.`;
+
+    if (missing.links > 0) {
+        return `${updated} ${links}; las demás no tienen correo.`;
+    }
+
+    return missing.people === 1
+        ? `${updated} No recibe enlace porque no tiene correo.`
+        : `${updated} No reciben enlace porque no tienen correo.`;
+}

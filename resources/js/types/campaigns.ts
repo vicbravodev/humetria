@@ -4,6 +4,9 @@ export type CampaignStatus = 'draft' | 'active' | 'closed';
 
 export type CampaignKind = 'nom035_evaluation' | 'nom035_trauma';
 
+/** The dialogs a running evaluation's menu opens. */
+export type CampaignDialog = 'invite' | 'replacements' | 'close';
+
 /** Answers of the guide that measures the campaign, against its sample or everyone invited. */
 export type CampaignProgress = {
     completed: number;
@@ -181,4 +184,10 @@ export type ReplacementPool = {
     gender: string;
     label: string;
     available: number;
+};
+
+/** What «Invitar a quien falte» would do now: who it brings up to date, and who of them gets a link. */
+export type InviteMissingCount = {
+    people: number;
+    links: number;
 };

@@ -18,10 +18,12 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Support\Header;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -80,12 +82,27 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            Inertia::flash('toast', ['type' => 'error', 'message' => 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
+            // The survey speaks "usted" to the person answering it; the panel, "tú".
+            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs('survey.*')
+                ? 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.'
+                : 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
 
             return back();
         });
 
-        $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request));
+        // A survey left open longer than the session expires its page: back to the survey instead of the panel's 419,
+        // with a word in "usted". The answers wait on the person's device, so sending again is all it takes.
+        $exceptions->render(function (HttpException $exception, Request $request): ?RedirectResponse {
+            if ($exception->getStatusCode() !== 419 || ! $request->routeIs('survey.*')) {
+                return null;
+            }
+
+            Inertia::flash('toast', ['type' => 'info', 'message' => 'La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.']);
+
+            return redirect()->route('survey.show', Arr::only($request->route()?->parameters() ?? [], 'token'));
+        });
+
+        $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request, $exception));
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

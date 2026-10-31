@@ -9,6 +9,7 @@ use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -98,7 +99,7 @@ final readonly class CampaignPeople
                 'id' => $participant->id,
                 'name' => $person->name,
                 'area' => $person->areaName,
-                'reachable' => $person->email !== null,
+                'reachable' => SurveyInvitation::routes($person) !== [],
                 'inSample' => $participant->in_sample,
                 'guides' => array_values($guides->map(fn (ParticipantInstrument $guide): array => [
                     'key' => $guide->instrument,

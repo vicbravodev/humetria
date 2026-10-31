@@ -42,11 +42,16 @@ export type AreaResults = {
 export type ItemResult = {
     number: number;
     text: string;
-    answered: number;
-    counts: number[] | null;
-    /** How many answered it on the side that scores risk (3 or 4 points), or null with the counts. */
-    unfavorable: number | null;
-};
+} & (
+    | {
+          answered: number;
+          counts: number[];
+          /** How many answered it on the side that scores risk (3 or 4 points). */
+          unfavorable: number;
+      }
+    /** Answered by fewer than the minimum: nothing of it is shown, not even how many answered. */
+    | { answered: null; counts: null; unfavorable: null }
+);
 
 export type ItemSection = {
     title: string | null;

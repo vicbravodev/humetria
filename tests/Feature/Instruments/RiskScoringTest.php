@@ -149,7 +149,7 @@ function answersTotalling(string $key, int $total): array
 
 function scoreOf(string $key, array $answers): RiskScore
 {
-    return resolve(Instruments::class)->scoreRisk($key, $answers);
+    return resolve(Instruments::class)->scoreRisk($key, $answers, 'dof-2018-10-23');
 }
 
 /** @return array<string, GroupScore> */
@@ -360,6 +360,10 @@ it('labels each level as the norm does', function (): void {
 it('scores only a valid questionnaire', function (): void {
     scoreOf('nom035.guide-iii', nom035Answers('nom035.guide-ii'));
 })->throws(InvalidArgumentException::class);
+
+it('scores only in a version of the norm it has the tables of', function (): void {
+    resolve(Instruments::class)->scoreRisk('nom035.guide-ii', nom035Answers('nom035.guide-ii'), 'dof-2030-01-01');
+})->throws(InvalidArgumentException::class, 'No scoring tables for [nom035.guide-ii] in version [dof-2030-01-01].');
 
 it('scores only Guías II and III', function (): void {
     scoreOf('nom035.guide-i', guideOneAnswers());
