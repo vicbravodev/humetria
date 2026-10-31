@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Http\Middleware;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\TenantContext;
 use Closure;
@@ -34,6 +35,8 @@ final class ResolveTenant
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // A new request starts without the people of the last one's company (a long-lived process serves many).
+        resolve(CompanyMembers::class)->forget();
         $slug = $request->route('tenant');
 
         // Implicit route binding only runs when the action type-hints the model; this middleware must not depend on that.

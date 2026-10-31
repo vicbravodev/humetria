@@ -16,6 +16,8 @@ use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Support\CommitteeGate;
+use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -434,4 +436,31 @@ it('removes the act file when registering fails after storing it', function (): 
         ->toThrow(RuntimeException::class, 'boom');
 
     expect(Storage::disk('local')->allFiles())->toBe([])->and(SafetyCommittee::query()->count())->toBe(0);
+});
+
+it('asks for the company people once per request, however many times the committee checks them', function (): void {
+    registerCommittee()->assertSessionHasNoErrors();
+    $this->actingAs($this->cora);
+
+    DB::enableQueryLog();
+    $this->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))->assertOk();
+    $reads = collect(DB::getQueryLog())->filter(fn (array $log): bool => str_contains((string) $log['query'], 'from "role_has_permissions"'));
+    DB::disableQueryLog();
+
+    // The gate and the page share one read of who can review.
+    expect($reads)->toHaveCount(1);
+});
+
+it('does not carry the people of one company over to another', function (): void {
+    $other = Tenant::factory()->create();
+    $stranger = memberOf($other, TenantRole::Hr);
+    $members = resolve(Members::class);
+
+    workIn($this->tenant);
+    $mine = array_map(fn (MemberSummary $member): int => $member->userId, $members->reviewers());
+    workIn($other);
+    $theirs = array_map(fn (MemberSummary $member): int => $member->userId, $members->reviewers());
+
+    expect($mine)->toContain($this->hr->id)->not->toContain($stranger->id)
+        ->and($theirs)->toBe([$stranger->id]);
 });

@@ -29,12 +29,14 @@ final readonly class CompanyRoles
     public function assign(User $user, Tenant $tenant, TenantRole $role): void
     {
         $this->inTeam($user, $tenant, fn () => $user->syncRoles([$role->value]));
+        $this->forgetMembers();
     }
 
     /** Takes the person's role in the company away; their roles elsewhere, and the superadmin one, stay. */
     public function remove(User $user, Tenant $tenant): void
     {
         $this->inTeam($user, $tenant, fn () => $user->syncRoles([]));
+        $this->forgetMembers();
     }
 
     /**
@@ -60,6 +62,12 @@ final readonly class CompanyRoles
         }
 
         return $roles;
+    }
+
+    /** The request's memo of the company's people is stale once a role changes. */
+    private function forgetMembers(): void
+    {
+        resolve(CompanyMembers::class)->forget();
     }
 
     /**
