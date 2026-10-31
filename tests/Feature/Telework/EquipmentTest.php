@@ -109,6 +109,13 @@ it('does not register equipment for an ended period, another company or a role w
     expect(EquipmentItem::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
+it('rejects an ended period in the action itself', function (): void {
+    $ended = TeleworkerFactory::new()->ended()->create(['tenant_id' => $this->tenant->id]);
+
+    expect(fn () => resolve(RegisterEquipment::class)->handle($ended, App\Modules\Telework\Enums\EquipmentKind::Chair, 'Silla', Carbon\CarbonImmutable::parse('2026-02-01'), $this->hr->id))->toThrow(ValidationException::class);
+    expect(EquipmentItem::query()->count())->toBe(0);
+});
+
 it('keeps one company\'s equipment out of another\'s queries', function (): void {
     pendingItem();
     $other = Tenant::factory()->create();

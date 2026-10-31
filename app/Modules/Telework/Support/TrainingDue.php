@@ -10,6 +10,7 @@ use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Training;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,7 +27,7 @@ final readonly class TrainingDue
 
     public function dueOn(Teleworker $teleworker): CarbonImmutable
     {
-        return $this->dueDates([$teleworker])[$teleworker->id];
+        return $this->schedule([$teleworker])[$teleworker->id]['due'];
     }
 
     /** The day the 11-month warning of this person is sent. */
@@ -53,62 +54,54 @@ final readonly class TrainingDue
     }
 
     /**
-     * The due day of each person, by teleworker id, with one query for all of them.
+     * For each person (by teleworker id) the last training they attended in their center during the current period, and
+     * the day the next one is due. Only trainings held on or after the day the period started count: what a person
+     * learned before teleworking is not training about their workplace (numeral 5.9). Without one, the due day counts
+     * from the start of the period. One query per thousand people.
      *
      * @param  list<Teleworker>  $teleworkers
-     * @return array<string, CarbonImmutable>
+     * @return array<string, array{last: string|null, due: CarbonImmutable}>
      */
-    public function dueDates(array $teleworkers): array
+    public function schedule(array $teleworkers): array
     {
         $zone = config()->string('app.display_timezone');
-        $last = $this->lastTrainings($teleworkers);
-        $due = [];
+        $last = $this->lastTrainings($teleworkers, $zone);
+        $schedule = [];
 
         foreach ($teleworkers as $teleworker) {
             $trained = $last[$teleworker->id] ?? null;
             $base = $trained !== null
                 ? CarbonImmutable::createFromFormat('Y-m-d', $trained, $zone)?->startOfDay()
                 : ($teleworker->started_at ?? $teleworker->created_at)->setTimezone($zone)->startOfDay();
-            $due[$teleworker->id] = ($base ?? CarbonImmutable::now($zone)->startOfDay())->addMonthsNoOverflow(self::MONTHS);
+            $schedule[$teleworker->id] = ['last' => $trained, 'due' => ($base ?? CarbonImmutable::now($zone)->startOfDay())->addMonthsNoOverflow(self::MONTHS)];
         }
 
-        return $due;
+        return $schedule;
     }
 
     /**
-     * The day of the last training each person attended in their center, Y-m-d, by teleworker id (absent: none).
-     *
      * @param  list<Teleworker>  $teleworkers
-     * @return array<string, string>
+     * @return array<string, string> teleworker id => Y-m-d
      */
-    public function lastTrainings(array $teleworkers): array
+    private function lastTrainings(array $teleworkers, string $zone): array
     {
-        if ($teleworkers === []) {
-            return [];
-        }
-
-        $rows = DB::table('training_attendees as attendee')
-            ->join('trainings as training', 'training.id', '=', 'attendee.training_id')
-            ->where('attendee.tenant_id', $this->tenant->id())
-            ->whereIn('attendee.employee_id', array_map(fn (Teleworker $teleworker): string => $teleworker->employee_id, $teleworkers))
-            ->groupBy('attendee.employee_id', 'training.work_center_id')
-            ->selectRaw('attendee.employee_id, training.work_center_id, max(training.held_on) as held_on')
-            ->get();
-        $latest = [];
-
-        foreach ($rows as $row) {
-            if (is_string($row->employee_id) && is_string($row->work_center_id) && is_string($row->held_on)) {
-                $latest["{$row->employee_id}|{$row->work_center_id}"] = $row->held_on;
-            }
-        }
-
         $last = [];
 
-        foreach ($teleworkers as $teleworker) {
-            $day = $latest["{$teleworker->employee_id}|{$teleworker->work_center_id}"] ?? null;
+        foreach (array_chunk(array_map(fn (Teleworker $teleworker): string => $teleworker->id, $teleworkers), 1000) as $ids) {
+            $rows = DB::table('teleworkers as period')
+                ->join('training_attendees as attendee', fn (JoinClause $join) => $join->on('attendee.employee_id', '=', 'period.employee_id')->on('attendee.tenant_id', '=', 'period.tenant_id'))
+                ->join('trainings as training', fn (JoinClause $join) => $join->on('training.id', '=', 'attendee.training_id')->on('training.work_center_id', '=', 'period.work_center_id'))
+                ->where('period.tenant_id', $this->tenant->id())
+                ->whereIn('period.id', $ids)
+                ->whereRaw('training.held_on >= (coalesce(period.started_at, period.created_at) at time zone ?)::date', [$zone])
+                ->groupBy('period.id')
+                ->selectRaw('period.id, max(training.held_on) as held_on')
+                ->get();
 
-            if ($day !== null) {
-                $last[$teleworker->id] = $day;
+            foreach ($rows as $row) {
+                if (is_string($row->id) && is_string($row->held_on)) {
+                    $last[$row->id] = $row->held_on;
+                }
             }
         }
 

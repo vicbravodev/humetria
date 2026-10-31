@@ -5,7 +5,7 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import type { Option } from '@/lib/option-search';
 import { serverSource } from '@/lib/server-options';
-import { addCenter, removeCenter } from '@/lib/telework/documents';
+import { addChoice, removeChoice } from '@/lib/telework/choices';
 import { employees } from '@/routes/tenant/telework/teleworkers';
 
 /**
@@ -45,7 +45,7 @@ export default function TrainingAttendeesField({
                     placeholder="Busca y agrega a una persona"
                     invalid={error !== undefined}
                     onChange={(person) =>
-                        setChosen((current) => addCenter(current, person))
+                        setChosen((current) => addChoice(current, person))
                     }
                 />
             )}
@@ -72,7 +72,7 @@ export default function TrainingAttendeesField({
                             aria-label={`Quitar a ${person.label}`}
                             onClick={() =>
                                 setChosen((current) =>
-                                    removeCenter(current, person.value),
+                                    removeChoice(current, person.value),
                                 )
                             }
                         >

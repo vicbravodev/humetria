@@ -42,8 +42,8 @@ export default function PortalEquipmentCard({
                 </p>
                 <p className="mt-1 text-base">
                     Confirme que lo recibió. Si no lo acepta, dígalo y escriba
-                    por qué. Queda constancia de la fecha, la hora y el
-                    dispositivo desde el que responde.
+                    por qué. Queda constancia de la fecha, la hora y la
+                    dirección IP desde la que responde.
                 </p>
                 {refusing && (
                     <div className="mt-2 grid gap-2">

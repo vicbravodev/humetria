@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
+const QUERIES_TRAININGS = 17;
+
 mutates(RegisterTraining::class, TrainingDue::class, TrainingController::class);
 
 beforeEach(function (): void {
@@ -191,6 +193,23 @@ it('keeps one company\'s trainings out of another\'s queries', function (): void
     expect(Training::query()->count())->toBe(0)->and(TrainingAttendee::query()->count())->toBe(0);
 });
 
+it('rejects a future date in the action, in the company time zone', function (): void {
+    // 03:00 UTC on 1 March is still 28 February in Mexico City.
+    $this->travelTo('2026-03-01 03:00:00');
+    $heldOn = fn (string $day) => fn () => resolve(RegisterTraining::class)->handle($this->center->id, CarbonImmutable::parse($day), TrainingModality::Mixed, [TrainingTopic::Ict], [$this->ana->id], null, $this->hr->id);
+
+    expect($heldOn('2026-03-01'))->toThrow(ValidationException::class);
+    expect($heldOn('2026-02-28')())->toBeInstanceOf(Training::class);
+});
+
+it('refuses in the database an unknown topic and reads past one it does not know', function (): void {
+    expect(fn () => DB::transaction(fn () => TrainingFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'topics' => ['hazards', 'cooking']])))->toThrow(QueryException::class);
+
+    $training = heldOn('2026-02-01', [$this->ana], ['hazards']);
+    DB::table('trainings')->where('id', $training->id)->update(['topics' => json_encode(['hazards'])]);
+    expect($training->refresh()->topics)->toBe([TrainingTopic::Hazards]);
+});
+
 it('rejects the action with no attendees even when called outside the request', function (): void {
     expect(fn () => resolve(RegisterTraining::class)->handle($this->center->id, CarbonImmutable::parse('2026-02-01'), TrainingModality::Mixed, [TrainingTopic::Ict], [], null, $this->hr->id))->toThrow(ValidationException::class);
 });
@@ -257,6 +276,37 @@ describe('the due date', function (): void {
             ->and($due->warnOn($teleworker)->toDateString())->toBe('2025-01-28');
     });
 
+    it('does not count a training held before the person joined', function (): void {
+        $teleworker = joinedOn('2026-01-10 15:00:00');
+        heldOn('2026-01-09', [$this->ana]);
+        $due = resolve(TrainingDue::class);
+
+        expect($due->dueOn($teleworker)->toDateString())->toBe('2027-01-10');
+    });
+
+    it('counts a training held on the day the person joined, read in the company time zone', function (): void {
+        // 03:00 UTC on the 11th is the 10th in Mexico City, so a training of the 10th is on the start day.
+        $teleworker = joinedOn('2026-01-11 03:00:00');
+        heldOn('2026-01-10', [$this->ana]);
+
+        expect(resolve(TrainingDue::class)->dueOn($teleworker)->toDateString())->toBe('2027-01-10');
+
+        heldOn('2026-01-20', [$this->ana]);
+        expect(resolve(TrainingDue::class)->dueOn($teleworker)->toDateString())->toBe('2027-01-20');
+    });
+
+    it('ignores the trainings of a previous period of a person who returned', function (): void {
+        TeleworkerFactory::new()->ended()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'started_at' => '2025-01-10 15:00:00']);
+        heldOn('2025-12-01', [$this->ana]);
+        $again = joinedOn('2026-03-01 15:00:00');
+
+        $due = resolve(TrainingDue::class);
+        expect($due->dueOn($again)->toDateString())->toBe('2027-03-01');
+
+        heldOn('2026-03-05', [$this->ana]);
+        expect($due->dueOn($again)->toDateString())->toBe('2027-03-05');
+    });
+
     it('ignores a training the person did not attend', function (): void {
         $teleworker = joinedOn('2026-01-10 15:00:00');
         heldOn('2026-02-20', [$this->beto]);
@@ -321,6 +371,31 @@ describe('the page', function (): void {
 
         $this->get(route('tenant.telework.trainings.index', [$this->tenant, 'center' => $foreign->id]))->assertInertia(fn (Assert $page) => $page
             ->has('trainings.data', 1)->where('filters.center', null)->where('uncovered', null));
+    });
+
+    it('pages the roster by due date and does not repeat the grouped query', function (): void {
+        foreach (range(1, 17) as $n) {
+            joinedOn(CarbonImmutable::parse('2026-01-01 15:00:00')->addDays($n)->toDateTimeString(), trainee(sprintf('Persona %02d', $n)));
+        }
+        $this->expectsDatabaseQueryCount(QUERIES_TRAININGS);
+
+        $this->get(route('tenant.telework.trainings.index', [$this->tenant, 'people_page' => 2]))->assertInertia(fn (Assert $page) => $page
+            ->where('people.total', 17)
+            ->where('people.last_page', 2)
+            ->where('people.current_page', 2)
+            ->has('people.data', 2)
+            ->where('people.data.0.name', 'Persona 16')
+            ->where('people.data.0.dueOn', '2027-01-17')
+            ->where('people.data.1.name', 'Persona 17'));
+    });
+
+    it('gives the first fifteen on page one in due order', function (): void {
+        foreach (range(1, 17) as $n) {
+            joinedOn(CarbonImmutable::parse('2026-01-01 15:00:00')->addDays($n)->toDateTimeString(), trainee(sprintf('Persona %02d', $n)));
+        }
+
+        $this->get(route('tenant.telework.trainings.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+            ->has('people.data', 15)->where('people.data.0.name', 'Persona 01')->where('people.data.14.name', 'Persona 15'));
     });
 
     it('paginates both lists fifteen at a time', function (): void {

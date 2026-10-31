@@ -1,4 +1,3 @@
-import type { Option } from '@/lib/option-search';
 import type { DocumentKindOption } from '@/types';
 
 /** The missing items of a version, as "d) Mecanismos y reglas de contacto…", in the kind's order. */
@@ -15,14 +14,7 @@ export function itemLetters(kind: DocumentKindOption | undefined): string[] {
     return (kind?.items ?? []).map((item) => item.value);
 }
 
-/** The work centers a document is being published to: each once, never the "all" choice of a filter. */
-export function addCenter(chosen: Option[], center: Option): Option[] {
-    return center.value === '' ||
-        chosen.some((option) => option.value === center.value)
-        ? chosen
-        : [...chosen, center];
-}
-
-export function removeCenter(chosen: Option[], value: string): Option[] {
-    return chosen.filter((option) => option.value !== value);
-}
+export {
+    addChoice as addCenter,
+    removeChoice as removeCenter,
+} from '@/lib/telework/choices';

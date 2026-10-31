@@ -55,7 +55,7 @@ final class Training extends Model
     protected function topics(): Attribute
     {
         return Attribute::make(
-            get: fn (mixed $value): array => is_string($value) ? array_values(array_map(fn (mixed $topic): TrainingTopic => TrainingTopic::from(is_string($topic) ? $topic : ''), (array) json_decode($value, true))) : [],
+            get: fn (mixed $value): array => is_string($value) ? array_values(array_filter(array_map(fn (mixed $topic): ?TrainingTopic => is_string($topic) ? TrainingTopic::tryFrom($topic) : null, (array) json_decode($value, true)))) : [],
             set: fn (array $topics): string => json_encode(array_map(fn (mixed $topic): string => $topic instanceof TrainingTopic ? $topic->value : (is_string($topic) ? $topic : ''), $topics), JSON_THROW_ON_ERROR),
         );
     }

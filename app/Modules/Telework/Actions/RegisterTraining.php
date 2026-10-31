@@ -40,7 +40,7 @@ final readonly class RegisterTraining
     public function handle(string $workCenterId, CarbonImmutable $heldOn, TrainingModality $modality, array $topics, array $employeeIds, ?string $evidenceFile, int $userId): Training
     {
         $attendees = array_values(array_unique($employeeIds));
-        $this->check($workCenterId, $topics, $attendees);
+        $this->check($heldOn, $workCenterId, $topics, $attendees);
 
         $tenantId = $this->tenant->id();
         $path = "trainings/{$tenantId}/".Str::uuid().'.pdf';
@@ -84,8 +84,12 @@ final readonly class RegisterTraining
      * @param  list<TrainingTopic>  $topics
      * @param  list<string>  $attendees
      */
-    private function check(string $workCenterId, array $topics, array $attendees): void
+    private function check(CarbonImmutable $heldOn, string $workCenterId, array $topics, array $attendees): void
     {
+        if ($heldOn->toDateString() > CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()) {
+            throw ValidationException::withMessages(['held_on' => 'La fecha no puede ser futura.']);
+        }
+
         if (! Str::isUuid($workCenterId) || $this->workCenters->findActive($workCenterId) === null) {
             throw ValidationException::withMessages(['work_center_id' => 'Elige un centro de trabajo de la empresa.']);
         }

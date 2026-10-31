@@ -114,15 +114,14 @@ final class TrainingController extends Controller
         $roster = array_values(Teleworker::query()->where('status', TeleworkerStatus::Active)
             ->when($selected !== null, fn (Builder $query) => $query->where('work_center_id', $selected?->id))
             ->get(['id', 'tenant_id', 'employee_id', 'work_center_id', 'started_at', 'created_at'])->all());
-        $due = $this->due->dueDates($roster);
-        $last = $this->due->lastTrainings($roster);
-        usort($roster, fn (Teleworker $a, Teleworker $b): int => [$due[$a->id], $a->id] <=> [$due[$b->id], $b->id]);
+        $schedule = $this->due->schedule($roster);
+        usort($roster, fn (Teleworker $a, Teleworker $b): int => [$schedule[$a->id]['due'], $a->id] <=> [$schedule[$b->id]['due'], $b->id]);
 
         $page = LengthAwarePaginator::resolveCurrentPage('people_page');
         $slice = array_slice($roster, ($page - 1) * self::PER_PAGE, self::PER_PAGE);
         $names = $this->roster->findMany(array_map(fn (Teleworker $teleworker): string => $teleworker->employee_id, $slice));
 
-        $rows = array_map(fn (Teleworker $teleworker): array => $this->row($teleworker, $due[$teleworker->id], $last[$teleworker->id] ?? null, $names, $centers, $today), $slice);
+        $rows = array_map(fn (Teleworker $teleworker): array => $this->row($teleworker, $schedule[$teleworker->id]['due'], $schedule[$teleworker->id]['last'], $names, $centers, $today), $slice);
 
         return (new LengthAwarePaginator($rows, count($roster), self::PER_PAGE, $page, ['path' => $request->url(), 'pageName' => 'people_page']))->withQueryString();
     }
