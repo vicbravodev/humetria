@@ -6,8 +6,10 @@ namespace App\Modules\Telework\Providers;
 
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
+use App\Modules\Telework\Events\DocumentPublished;
 use App\Modules\Telework\Listeners\EndOnDeactivation;
 use App\Modules\Telework\Listeners\EndOnMove;
+use App\Modules\Telework\Listeners\RequestOnPublication;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -40,5 +42,6 @@ final class TeleworkServiceProvider extends ServiceProvider
 
         Event::listen(EmployeeDeactivated::class, EndOnDeactivation::class);
         Event::listen(EmployeeMoved::class, EndOnMove::class);
+        Event::listen(DocumentPublished::class, RequestOnPublication::class);
     }
 }
