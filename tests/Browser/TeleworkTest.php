@@ -872,3 +872,43 @@ it('lets RH review a notice with a note and goes on to Guía I with the person t
         ->assertSee('Avisos de la persona')
         ->assertSee('Presencié un asalto camino a casa.');
 });
+
+it('lists the centers with their progress on the NOM-037 page', function (bool $dark, bool $mobile): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $person->id])->id]);
+
+    visitPage('telework/index', "{$url}/telework", $dark, $mobile)
+        ->assertSee('NOM-037')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('1 persona')
+        ->assertSee('renglones')
+        ->assertSee('Ver tablero');
+})->with($looks);
+
+it('shows the dashboard of a center with the rows of table 10.3 and its roster', function (bool $dark, bool $mobile): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    SafetyCommittee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $person->id])->id]);
+
+    visitPage('telework/center', "{$url}/telework/centers/{$center->id}", $dark, $mobile)
+        ->assertSee('Planta Querétaro')
+        ->assertSee('Tabla de inspección (10.3)')
+        ->assertSee('Listado de personas teletrabajadoras')
+        ->assertSee('Política de Teletrabajo')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Validado')
+        ->assertSee('Padrón');
+})->with($looks);
+
+it('shows the next step on a center that has no Comisión yet', function (): void {
+    [$url, $center] = teleworkerCenter(published: false);
+
+    visitPage('telework/center', "{$url}/telework/centers/{$center->id}")
+        ->assertSee('Registra la Comisión')
+        ->assertSee('Aún no hay personas')
+        ->assertNoJavaScriptErrors();
+});

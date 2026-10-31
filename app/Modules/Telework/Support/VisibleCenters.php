@@ -6,6 +6,7 @@ namespace App\Modules\Telework\Support;
 
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -27,6 +28,20 @@ final readonly class VisibleCenters
     public function limitedTo(int $userId): ?array
     {
         return Gate::allows('manage-telework') || ! Gate::allows('review-workplaces') ? null : $this->gate->workCenterIds($userId);
+    }
+
+    /**
+     * The centers in use the user may see, by name, a page at a time.
+     *
+     * @return LengthAwarePaginator<int, WorkCenterSummary>
+     */
+    public function page(int $userId, int $perPage): LengthAwarePaginator
+    {
+        $limit = $this->limitedTo($userId);
+        $visible = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && ($limit === null || in_array($center->id, $limit, true))));
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        return (new LengthAwarePaginator(array_slice($visible, ($page - 1) * $perPage, $perPage), count($visible), $perPage, $page, ['path' => LengthAwarePaginator::resolveCurrentPath()]))->withQueryString();
     }
 
     /**

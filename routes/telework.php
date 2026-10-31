@@ -12,6 +12,7 @@ use App\Modules\Telework\Http\Controllers\NoticeController;
 use App\Modules\Telework\Http\Controllers\PhotoController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
 use App\Modules\Telework\Http\Controllers\RosterController;
+use App\Modules\Telework\Http\Controllers\TeleworkController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use App\Modules\Telework\Http\Controllers\TrainingController;
@@ -22,6 +23,10 @@ use Illuminate\Support\Facades\Route;
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
 // Every name starts with tenant.telework.: it is how the committee role (LimitCommitteeToTelework) is let in.
 /** @var string $notReserved */
+// The entry point: every center the person may see with its progress, and the dashboard of one (the rows of table 10.3).
+Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.index');
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}', [TeleworkController::class, 'center'])->where('tenant', $notReserved)->name('tenant.telework.center');
+
 Route::get('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'edit'])->where('tenant', $notReserved)->name('tenant.telework.settings.edit');
 Route::put('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.settings.update');
 

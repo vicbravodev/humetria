@@ -69,6 +69,16 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.campaigns.report', [$tenant, $closed->id]);
     }, ['shares']],
+    'NOM-037 centers' => ['telework/index', function () {
+        [$tenant] = listsCompany();
+
+        return route('tenant.telework.index', $tenant);
+    }, ['centers']],
+    'NOM-037 roster of a center' => ['telework/center', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.telework.center', [$tenant, $plant->id]);
+    }, ['people']],
     'checklists to review' => ['telework/reviews', function () {
         [$tenant, $plant] = listsCompany();
         App\Modules\Telework\Models\CommitteeAssignment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'user_id' => auth()->id()]);
