@@ -86,7 +86,7 @@ function evidenceRefused(Closure $attempt): array
 }
 
 it('creates an evidence request that appears in the portal', function (): void {
-    // The reminder job would run inline and replace the portal link this test holds.
+    // Only the request is under test: the reminder job it queues does not run.
     Illuminate\Support\Facades\Queue::fake();
     $this->actingAs($this->cora)->post(evidenceUrl(), ['kind' => 'photos', 'note' => 'Una foto de la silla.'])->assertSessionHasNoErrors()->assertRedirect();
 
