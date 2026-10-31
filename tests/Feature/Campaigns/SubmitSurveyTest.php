@@ -187,6 +187,42 @@ it('limits how often one link sends answers, without blocking a room of people o
     }
 });
 
+it('sends a submission over the limit back to the survey, saying so with "usted"', function (): void {
+    $survey = route('survey.show', 'the-token');
+
+    foreach (range(1, 10) as $attempt) {
+        test()->from($survey)->post(route('survey.submit', ['the-token', 'nom035.guide-iii']), ['answers' => []], ['X-Inertia' => 'true']);
+    }
+
+    test()->from($survey)->post(route('survey.submit', ['the-token', 'nom035.guide-iii']), ['answers' => []], ['X-Inertia' => 'true'])
+        ->assertRedirect($survey)
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.']]);
+});
+
+it('sends a submission whose page expired back to the survey, its answers still on the device', function (bool $inertia): void {
+    // CSRF is only verified outside unit tests.
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $this->post(route('survey.submit', ['the-token', 'nom035.guide-iii']), ['answers' => nom035Answers('nom035.guide-iii')], $inertia ? ['X-Inertia' => 'true'] : [])
+        ->assertRedirect(route('survey.show', 'the-token'))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => [
+            'type' => 'info',
+            'message' => 'La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.',
+        ]]);
+
+    expect(guideStatus($this->participant, 'nom035.guide-iii'))->toBe(InstrumentStatus::Pending)
+        ->and(AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
+})->with(['inertia' => true, 'plain' => false]);
+
+it('keeps the panel\'s expired page for a form outside the survey', function (): void {
+    app()->detectEnvironment(fn (): string => 'local');
+    config(['app.debug' => false]);
+
+    $this->post(route('login'), ['email' => 'ana@acme.mx', 'password' => 'secreto'])
+        ->assertStatus(419)
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->component('error')->where('status', 419));
+});
+
 it('locks the person and reads the campaign under a shared lock before taking a guide', function (): void {
     $queries = [];
     Illuminate\Support\Facades\DB::listen(function ($query) use (&$queries): void {
