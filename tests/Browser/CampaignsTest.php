@@ -592,3 +592,16 @@ it('offers no new date once the last day has passed, but still lets hr close it'
         ->assertSee('Cerrar evaluación')
         ->assertNoJavaScriptErrors();
 });
+
+it('gives each part of the 7.7 report the width of the phone to read', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(6)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+    App\Modules\Results\Models\ReportShare::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => hash('sha256', str_repeat('a', 64))]);
+    // The narrowest text of the incises (7.7 a to h), in px: the code goes above it on a phone instead of beside it.
+    $narrowest = '() => Math.min(...[...document.querySelectorAll("h3")].filter((title) => title.closest("div.grid")?.firstElementChild?.textContent.startsWith("7.7")).map((title) => title.parentElement.parentElement.getBoundingClientRect().width))';
+
+    $page = visitPage('results/shared-report', '/report/'.str_repeat('a', 64), mobile: true);
+
+    resizeTo($page, 375)->assertScript($narrowest.' >= 300')->assertScript(spilledOut(), '');
+});
