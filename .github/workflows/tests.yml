@@ -18,7 +18,8 @@ env:
   DB_PASSWORD: password
 
 # The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
-# requires only the ci job, which waits for all of them: a job can be added or renamed without touching the settings.
+# requires only the ci job, which waits for checks and browser: a job can be added or renamed without touching the
+# settings. Mutation is not required: mutation-score reports it, and a pull request can merge before it ends.
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -130,8 +131,25 @@ jobs:
           echo "mutations_$SHARD=$mutations" >> "$GITHUB_OUTPUT"
 
   ci:
-    needs: [checks, browser, mutation]
+    needs: [checks, browser]
     # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: &every-job-passed |
+          failed=$(printf '%s' "$NEEDS" | jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"')
+          if [ -n "$failed" ]; then
+            echo "Failed jobs:"
+            echo "$failed"
+            exit 1
+          fi
+
+  # Not required on main: it holds the shards' total to --min, and its result shows on the pull request.
+  mutation-score:
+    needs: [mutation]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -144,16 +162,10 @@ jobs:
           php-version: '8.5'
           coverage: none
 
-      - name: Every job passed
+      - name: Every shard passed
         env:
           NEEDS: ${{ toJSON(needs) }}
-        run: |
-          failed=$(printf '%s' "$NEEDS" | jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"')
-          if [ -n "$failed" ]; then
-            echo "Failed jobs:"
-            echo "$failed"
-            exit 1
-          fi
+        run: *every-job-passed
 
       - name: Total mutation score
         env:
