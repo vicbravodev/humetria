@@ -21,9 +21,10 @@ mutates(CompanyRoles::class);
 it('defines the company roles and what each one allows', function (): void {
     $permissions = fn (string $role): array => Role::findByName($role)->permissions->pluck('name')->sort()->values()->all();
 
-    expect($permissions('owner'))->toBe(['manage-campaigns', 'manage-members', 'manage-organization', 'view-trauma-screenings'])
-        ->and($permissions('hr'))->toBe(['manage-campaigns', 'manage-organization', 'view-trauma-screenings'])
-        ->and($permissions('viewer'))->toBe([]);
+    expect($permissions('owner'))->toBe(['manage-campaigns', 'manage-members', 'manage-organization', 'manage-telework', 'review-workplaces', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('hr'))->toBe(['manage-campaigns', 'manage-organization', 'manage-telework', 'review-workplaces', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('viewer'))->toBe(['view-telework'])
+        ->and($permissions('committee'))->toBe(['review-workplaces', 'view-telework']);
 });
 
 it('keeps each person\'s role per company: hr in one, viewer in another', function (): void {

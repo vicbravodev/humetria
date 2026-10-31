@@ -58,6 +58,7 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
                 'does' => match ($this->role) {
                     TenantRole::Owner => 'administrarás la cuenta, sus miembros y todo lo que RH lleva: NOM-035, NOM-037 y Ley Silla.',
                     TenantRole::Hr => 'podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.',
+                    TenantRole::Committee => 'podrás revisar y validar los lugares de trabajo de la NOM-037 (teletrabajo) de sus centros.',
                     TenantRole::Viewer => 'podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.',
                 },
                 'initials' => self::initials($this->tradeName),

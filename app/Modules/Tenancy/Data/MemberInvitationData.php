@@ -10,7 +10,7 @@ final readonly class MemberInvitationData
 {
     /**
      * @param  string  $email  Lowercase, without spaces.
-     * @param  TenantRole  $role  hr or viewer: the owner is invited from the superadmin console.
+     * @param  TenantRole  $role  hr, viewer or committee: the owner is invited from the superadmin console.
      */
     public function __construct(
         public string $name,

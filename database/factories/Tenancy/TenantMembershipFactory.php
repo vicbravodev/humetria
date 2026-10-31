@@ -47,6 +47,11 @@ final class TenantMembershipFactory extends Factory
         return $this->role(TenantRole::Hr);
     }
 
+    public function committee(): self
+    {
+        return $this->role(TenantRole::Committee);
+    }
+
     public function viewer(): self
     {
         return $this->role(TenantRole::Viewer);

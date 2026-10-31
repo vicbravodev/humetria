@@ -17,6 +17,6 @@ final class MemberRoleRules
      */
     public static function role(): array
     {
-        return ['required', 'string', Rule::in([TenantRole::Hr->value, TenantRole::Viewer->value])];
+        return ['required', 'string', Rule::in([TenantRole::Hr->value, TenantRole::Viewer->value, TenantRole::Committee->value])];
     }
 }

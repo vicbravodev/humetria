@@ -7,8 +7,10 @@ namespace App\Modules\Tenancy\Providers;
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyDirectory;
+use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Auth\Access\Response as AccessResponse;
@@ -25,6 +27,7 @@ final class TenancyServiceProvider extends ServiceProvider
         // ResolveTenant fills it in, everyone else reads it through the contract.
         $this->app->bind(CurrentTenant::class, TenantContext::class);
         $this->app->bind(WorkCenters::class, CompanyWorkCenters::class);
+        $this->app->bind(Members::class, CompanyMembers::class);
         $this->app->bind(Companies::class, CompanyDirectory::class);
     }
 

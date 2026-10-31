@@ -58,7 +58,7 @@ it('lists the people with access, the owner first, and the open invitations', fu
                 'id' => $invitation->id, 'name' => 'Carla', 'email' => 'carla@acme.mx', 'role' => 'viewer', 'role_label' => 'Consulta',
                 'status' => 'pending', 'status_label' => 'Invitación enviada', 'expires_on' => '5 nov 2026',
             ])
-            ->where('roles', [['value' => 'hr', 'label' => 'RH'], ['value' => 'viewer', 'label' => 'Consulta']]));
+            ->where('roles', [['value' => 'hr', 'label' => 'RH'], ['value' => 'viewer', 'label' => 'Consulta'], ['value' => 'committee', 'label' => 'Comisión de seguridad e higiene']]));
 });
 
 it('pages the people with access and the invitations, each on its own, the owner always first', function (): void {

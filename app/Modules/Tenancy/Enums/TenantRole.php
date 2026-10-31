@@ -6,13 +6,14 @@ namespace App\Modules\Tenancy\Enums;
 
 /**
  * The Spatie roles a user can have inside a company (its team). What each allows lives in Spatie's permissions:
- * manage-organization (owner, hr) and manage-members (owner); a viewer only looks.
+ * manage-organization (owner, hr) and manage-members (owner); a viewer only looks; the committee (Comisión de seguridad e higiene) sees only NOM-037.
  */
 enum TenantRole: string
 {
     case Owner = 'owner';
     case Hr = 'hr';
     case Viewer = 'viewer';
+    case Committee = 'committee';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum TenantRole: string
             self::Owner => 'Dueño',
             self::Hr => 'RH',
             self::Viewer => 'Consulta',
+            self::Committee => 'Comisión de seguridad e higiene',
         };
     }
 
@@ -30,6 +32,7 @@ enum TenantRole: string
             self::Owner => "Te invitaron como owner de {$tradeName}",
             self::Hr => "Te invitaron como RH de {$tradeName}",
             self::Viewer => "Te invitaron a consultar {$tradeName}",
+            self::Committee => "Te invitaron a la Comisión de seguridad e higiene de {$tradeName}",
         };
     }
 }
