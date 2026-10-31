@@ -42,7 +42,7 @@ export default function ConsolePagination({
                 {page.from ?? 0}–{page.to ?? 0} de {page.total} · Página{' '}
                 {page.current_page} de {page.last_page}
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
                 <PageButton
                     href={page.prev_page_url}
                     label={previous}
