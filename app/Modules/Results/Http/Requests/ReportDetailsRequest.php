@@ -6,12 +6,18 @@ namespace App\Modules\Results\Http\Requests;
 
 use App\Modules\Results\Data\ReportDetailsData;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * What HR fills in for an evaluation's report (num. 7.7). Everything is required but the cédula: "en su caso".
  */
 final class ReportDetailsRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-campaigns');
+    }
+
     /**
      * @return array<string, mixed>
      */
