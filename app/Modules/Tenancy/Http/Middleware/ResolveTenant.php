@@ -76,6 +76,8 @@ final class ResolveTenant
                 'manage_members' => $user->can('manage-members'),
                 'manage_campaigns' => $user->can('manage-campaigns'),
                 'view_trauma_screenings' => $user->can('view-trauma-screenings'),
+                'manage_telework' => $user->can('manage-telework'),
+                'review_workplaces' => $user->can('review-workplaces'),
             ],
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.

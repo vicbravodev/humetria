@@ -14,6 +14,8 @@ export type NavItem = {
     isActive?: boolean;
     /** Something waiting there, as a count next to the name (NOM-035 · 1 en curso). */
     badge?: number;
+    /** Pages of the same tool, listed under it while it is open (NOM-037 · Documentos). */
+    children?: NavItem[];
 };
 
 /** The company's campaigns in course: how many, and of the soonest to close, its days left and percent gone by. */

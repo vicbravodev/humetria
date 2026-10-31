@@ -6,6 +6,9 @@ import {
     SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { toUrl } from '@/lib/utils';
@@ -48,6 +51,22 @@ export function NavMain({
                         </SidebarMenuButton>
                         {item.badge !== undefined && item.badge > 0 && (
                             <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                        )}
+                        {item.children !== undefined && isActive(item) && (
+                            <SidebarMenuSub>
+                                {item.children.map((child) => (
+                                    <SidebarMenuSubItem key={child.title}>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl(child.href)}
+                                        >
+                                            <Link href={child.href} prefetch>
+                                                <span>{child.title}</span>
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                ))}
+                            </SidebarMenuSub>
                         )}
                     </SidebarMenuItem>
                 ))}

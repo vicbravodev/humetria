@@ -60,7 +60,7 @@ it('limits a committee member to the telework routes', function (): void {
     $this->actingAs($committee)->get(route('tenant.telework.probe', $tenant))->assertOk();
     $this->actingAs($owner)->get(route('tenant.telework.probe', $tenant))->assertOk();
 
-    foreach (['tenant.dashboard', 'tenant.employees.index', 'tenant.campaigns.index', 'tenant.members.index', 'tenant.work-centers.index'] as $name) {
+    foreach (['tenant.employees.index', 'tenant.campaigns.index', 'tenant.members.index', 'tenant.work-centers.index'] as $name) {
         $this->actingAs($committee)->get(route($name, $tenant))->assertForbidden();
     }
 

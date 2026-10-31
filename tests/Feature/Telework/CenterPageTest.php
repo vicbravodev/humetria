@@ -59,7 +59,7 @@ function centerPerson(string $name = 'Ana Ruiz', string $review = 'valid'): Tele
     return $person;
 }
 
-function registerCommittee(): void
+function centerCommittee(): void
 {
     SafetyCommittee::factory()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id]);
 }
@@ -71,7 +71,7 @@ it('shows the empty state with the next step until the committee is registered a
         ->where('nextStep.title', 'Registra la Comisión')
         ->where('nextStep.href', route('tenant.telework.committee.show', [$this->tenant, $this->center->id])));
 
-    registerCommittee();
+    centerCommittee();
 
     $this->actingAs($this->owner)->get(centerUrl())->assertInertia(fn (Assert $page) => $page
         ->where('nextStep.kind', 'checklist')
@@ -84,7 +84,7 @@ it('shows the empty state with the next step until the committee is registered a
 
 it('lists the 17 rows of table 10.3 with their state, detail and where to fix them', function (): void {
     centerPerson();
-    registerCommittee();
+    centerCommittee();
 
     $this->actingAs($this->hr)->get(centerUrl())->assertOk()->assertInertia(fn (Assert $page) => $page
         ->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura'])
@@ -134,7 +134,7 @@ it('paginates the roster', function (): void {
 
 it('hides personal data from the viewer: counts and row states only', function (): void {
     centerPerson('Ana Ruiz');
-    registerCommittee();
+    centerCommittee();
 
     $response = $this->actingAs($this->viewer)->get(centerUrl())->assertOk()->assertInertia(fn (Assert $page) => $page
         ->where('people', null)
@@ -151,7 +151,7 @@ it('hides personal data from the viewer: counts and row states only', function (
 
 it('shows the committee its center with names but without marital status, phone or home address', function (): void {
     centerPerson('Ana Ruiz');
-    registerCommittee();
+    centerCommittee();
 
     $response = $this->actingAs($this->cora)->get(centerUrl())->assertOk()->assertInertia(fn (Assert $page) => $page
         ->where('people.data.0.name', 'Ana Ruiz')
@@ -188,7 +188,7 @@ it('keeps company A out of company B by address', function (): void {
 
 it('offers each role only the tabs it can open, with counts', function (string $who, array $expected): void {
     centerPerson();
-    registerCommittee();
+    centerCommittee();
     TeleworkDocumentFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'kind' => DocumentKind::Policy]);
     $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => Workplace::query()->firstOrFail()->id]);
 
@@ -201,7 +201,7 @@ it('offers each role only the tabs it can open, with counts', function (string $
 ]);
 
 it('asserts the query count of the center page and does not grow with people or documents', function (bool $more): void {
-    registerCommittee();
+    centerCommittee();
     ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     centerPerson();
     // The acknowledgements of the policy and the risk information are read together, once, whatever their number.

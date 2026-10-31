@@ -21,7 +21,7 @@ it('shares the role and what it allows with every page of the company', function
         ->assertInertia(fn (Assert $page) => $page
             ->where('tenant.role', $role->value)
             ->where('tenant.role_label', $role->label())
-            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns]));
+            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns, 'manage_telework' => $campaigns, 'review_workplaces' => $campaigns]));
 })->with([
     'owner' => [TenantRole::Owner, true, true, true],
     'hr' => [TenantRole::Hr, true, false, true],

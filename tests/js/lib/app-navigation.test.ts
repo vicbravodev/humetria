@@ -15,6 +15,8 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_members,
     manage_campaigns: manage_organization,
     view_trauma_screenings: manage_organization,
+    manage_telework: manage_organization,
+    review_workplaces: manage_organization,
 });
 const acme = (
     manageOrganization = true,
@@ -93,25 +95,55 @@ describe('mainNavItems for the committee', () => {
 });
 
 describe('complianceNavItems', () => {
-    it('offers NOM-035 inside a company, to every role', () => {
+    it('offers NOM-035 and NOM-037 inside a company, to every role but the committee', () => {
         expect(
             complianceNavItems(acme(false, false)).map((item) => [
                 item.title,
                 toUrl(item.href),
             ]),
-        ).toEqual([['NOM-035', '/admin/acme/campaigns']]);
+        ).toEqual([
+            ['NOM-035', '/admin/acme/campaigns'],
+            ['NOM-037', '/admin/acme/telework'],
+        ]);
     });
 
     it('offers nothing outside a company', () => {
         expect(complianceNavItems(null)).toEqual([]);
     });
 
-    it('offers the committee nothing yet: NOM-037 has no page', () => {
-        expect(complianceNavItems(acme(false, false, 'committee'))).toEqual([]);
+    // Behavior defined by NOM-037's entry page (it was empty while NOM-037 had no page).
+    it('offers the committee only NOM-037', () => {
+        expect(
+            complianceNavItems(acme(false, false, 'committee')).map(
+                (item) => item.title,
+            ),
+        ).toEqual(['NOM-037']);
+    });
+
+    it('lists the NOM-037 sub-links the role may open', () => {
+        const subLinks = (tenant: ReturnType<typeof acme>) =>
+            (
+                complianceNavItems(tenant).find(
+                    (item) => item.title === 'NOM-037',
+                )?.children ?? []
+            ).map((item) => [item.title, toUrl(item.href)]);
+
+        expect(subLinks(acme(true, true, 'owner'))).toEqual([
+            ['Centros', '/admin/acme/telework'],
+            ['Documentos', '/admin/acme/telework/documents'],
+            ['Capacitación', '/admin/acme/telework/trainings'],
+            ['Avisos', '/admin/acme/telework/notices'],
+            ['Configuración', '/admin/acme/telework/settings'],
+        ]);
+        expect(subLinks(acme(false, false, 'viewer'))).toEqual([
+            ['Centros', '/admin/acme/telework'],
+            ['Documentos', '/admin/acme/telework/documents'],
+        ]);
     });
 
     it('counts the evaluations in course on NOM-035', () => {
         expect(complianceNavItems(acme(), 2)[0]?.badge).toBe(2);
+        expect(complianceNavItems(acme(), 2)[1]?.badge).toBeUndefined();
         expect(complianceNavItems(acme())[0]?.badge).toBe(0);
     });
 });

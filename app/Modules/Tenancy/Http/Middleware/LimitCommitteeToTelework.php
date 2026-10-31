@@ -22,11 +22,13 @@ final class LimitCommitteeToTelework
      */
     public function handle(Request $request, Closure $next): Response
     {
-        abort_if(
-            $request->user()?->hasRole(TenantRole::Committee->value) === true && ! $request->routeIs('tenant.telework.*'),
-            403,
-        );
+        if ($request->user()?->hasRole(TenantRole::Committee->value) !== true || $request->routeIs('tenant.telework.*')) {
+            return $next($request);
+        }
 
-        return $next($request);
+        // The panel is the one page it may be sent to by habit: its start is NOM-037. Everything else is closed.
+        abort_unless($request->routeIs('tenant.dashboard'), 403);
+
+        return redirect()->route('tenant.telework.index', $request->route('tenant'));
     }
 }
