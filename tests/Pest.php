@@ -217,12 +217,103 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
 
     $page->assertScript(englishWords(), '[]');
 
-    return $page->assertNoJavaScriptErrors()
+    $page->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
         // (endless ones, like the OTP caret blink, never finish and are left alone).
-        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)');
+
+    if ($mobile) {
+        $page->assertScript(smallTouchTargets(), '');
+    }
+
+    return $page->assertNoAccessibilityIssues(1);
+}
+
+/**
+ * A script that names the controls a finger can hardly hit: less than 44 px tall, counting the invisible area a
+ * pseudo-element (`touch-hit`, the small buttons) or its input group adds around them. Left out, as WCAG 2.5.8 leaves
+ * them: a link or button inside a sentence, and a checkbox or radio whose label also toggles it. Empty when every control is big enough.
+ */
+function smallTouchTargets(): string
+{
+    return <<<'JS'
+        () => {
+            const reach = (element) => {
+                const box = element.getBoundingClientRect();
+                // A field and its button inside an input group take the touch of the whole group.
+                let height = Math.max(box.height, element.closest('[data-slot="input-group"]')?.getBoundingClientRect().height ?? 0);
+                for (const pseudo of ['::before', '::after']) {
+                    const style = getComputedStyle(element, pseudo);
+                    if (style.content !== 'none' && style.position === 'absolute') {
+                        height = Math.max(height, box.height - (parseFloat(style.top) || 0) - (parseFloat(style.bottom) || 0));
+                    }
+                }
+                return height;
+            };
+            const labelled = (element) => element.closest('label') !== null || (element.id !== '' && document.querySelector(`label[for="${element.id}"]`) !== null);
+
+            return Array.from(document.querySelectorAll('a[href], button, summary, [role="tab"], [role="combobox"], input:not([type="hidden"]), select, textarea')).filter((element) => {
+                const box = element.getBoundingClientRect();
+                if (box.width <= 1 || box.height <= 1 || getComputedStyle(element).visibility === 'hidden' || element.closest('[aria-hidden="true"], [inert]')) return false;
+                if (element.matches('a, button') && Array.from(element.parentElement.childNodes).some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '')) return false;
+                if ((element.matches('[role="checkbox"], [role="radio"], input[type="checkbox"], input[type="radio"]')) && labelled(element)) return false;
+                return reach(element) < 43.5;
+            }).map((element) => `${element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 40)} (${Math.round(reach(element))} px)`).join(' | ');
+        }
+        JS;
+}
+
+/**
+ * Resizes the window and waits until React has re-rendered for the new width (the sidebar becomes a sheet below
+ * 768 px) and its transitions have settled, so the next assertion measures the layout at that width.
+ */
+function resizeTo(AwaitableWebpage $page, int $width, int $height = 900): AwaitableWebpage
+{
+    $page->resize($width, $height)
+        // Settled once the page keeps the same width and nothing is in transition for five frames in a row.
+        ->assertScript(<<<'JS'
+            () => new Promise((resolve) => {
+                let last = '';
+                let still = 0;
+                const frame = () => {
+                    const now = Array.from(document.querySelectorAll('[data-slot="sidebar-inset"], main')).map((box) => box.getBoundingClientRect().width).join();
+                    const moving = document.getAnimations().some((animation) => animation.playState === 'running' && animation.effect?.getTiming().iterations !== Infinity);
+                    still = now === last && ! moving ? still + 1 : 0;
+                    last = now;
+                    still >= 5 ? resolve(true) : requestAnimationFrame(frame);
+                };
+                requestAnimationFrame(frame);
+            })
+            JS);
+
+    return $page;
+}
+
+/**
+ * A script that names what spills past the edges of the page's panel (or the window, outside the panel): an element
+ * cut off at the side, unless it sits in a box that scrolls sideways on purpose, as a wide table does. Empty when
+ * everything fits.
+ */
+function spilledOut(): string
+{
+    return <<<'JS'
+        () => {
+            const panel = document.querySelector('[data-slot="sidebar-inset"]');
+            const scrolls = (element) => {
+                for (let box = element.parentElement; box; box = box.parentElement) {
+                    if (['auto', 'scroll'].includes(getComputedStyle(box).overflowX)) return true;
+                }
+                return false;
+            };
+
+            return Array.from(document.querySelectorAll('body *')).filter((element) => {
+                const box = element.getBoundingClientRect();
+                const edge = panel?.contains(element) ? panel.getBoundingClientRect() : { left: 0, right: window.innerWidth };
+                return box.width > 0 && box.height > 0 && (box.right > edge.right + 1 || box.left < edge.left - 1) && ! scrolls(element) && ! element.closest('[aria-hidden="true"]');
+            }).map((element) => element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 30)).join(' | ');
+        }
+        JS;
 }
 
 /**

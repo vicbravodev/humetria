@@ -15,7 +15,7 @@ export default function ForgotPassword({ status }: { status: string | null }) {
 
             <Link
                 href={login()}
-                className="flex items-center gap-1.5 self-start rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+                className="touch-hit flex items-center gap-1.5 self-start rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
             >
                 <ArrowLeft aria-hidden className="size-4" />
                 Volver a iniciar sesión

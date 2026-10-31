@@ -5,7 +5,7 @@ export default function OtpSlots() {
     return (
         <InputOTPGroup>
             {Array.from({ length: OTP_MAX_LENGTH }, (_, index) => (
-                <InputOTPSlot key={index} index={index} />
+                <InputOTPSlot key={index} index={index} className="size-11" />
             ))}
         </InputOTPGroup>
     );

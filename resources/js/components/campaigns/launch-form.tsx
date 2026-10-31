@@ -57,7 +57,7 @@ export default function LaunchForm({
                                 </p>
                                 <Link
                                     href={employeesUrl}
-                                    className="w-fit text-sm font-medium text-primary hover:underline"
+                                    className="touch-hit w-fit text-sm font-medium text-primary hover:underline"
                                 >
                                     Ver las {peopleText(campaign.workers ?? 0)}
                                 </Link>

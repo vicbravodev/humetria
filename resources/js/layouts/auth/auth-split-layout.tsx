@@ -12,7 +12,7 @@ export default function AuthSplitLayout({ children }: { children: ReactNode }) {
     return (
         <div className="flex min-h-dvh bg-background">
             <main className="flex min-w-0 flex-1 flex-col px-4 py-8 sm:px-10">
-                <Link href={home()} className="self-start rounded-md">
+                <Link href={home()} className="touch-hit self-start rounded-md">
                     <Logo className="h-[26px]" />
                 </Link>
                 <div className="flex flex-1 items-center justify-center py-10">

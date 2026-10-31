@@ -43,7 +43,10 @@ export default function ErrorPage({
                 {survey ? (
                     <Logo className="h-[26px]" />
                 ) : (
-                    <Link href={home()} className="inline-block rounded-md">
+                    <Link
+                        href={home()}
+                        className="touch-hit inline-block rounded-md"
+                    >
                         <Logo className="h-[26px]" />
                     </Link>
                 )}

@@ -66,6 +66,14 @@ it('moves between pages of 25 requests', function (): void {
         ->assertSee('Ver más recientes');
 });
 
+it('fits both page buttons on a phone', function (): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->count(26)->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo']);
+
+    resizeTo(visitPage('demos/index', '/admin/demo-requests', mobile: true), 375)
+        ->assertScript(spilledOut(), '');
+});
+
 it('links the console from the sidebar only for the superadmin', function (): void {
     signInAsSuperadmin();
 

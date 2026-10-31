@@ -50,13 +50,13 @@ export function AppSidebarHeader({
                     aria-label="Buscar"
                     data-test="command-palette"
                     onClick={() => setCommandPaletteOpen(true)}
-                    className="gap-2 px-2.5 font-normal text-muted-foreground hover:text-foreground sm:w-60 sm:justify-start"
+                    className="gap-2 px-2.5 font-normal text-muted-foreground hover:text-foreground lg:w-60 lg:justify-start"
                 >
                     <Search className="size-[18px]" />
-                    <span className="hidden flex-1 text-left sm:inline">
+                    <span className="hidden flex-1 text-left lg:inline">
                         Buscar o ir a…
                     </span>
-                    <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-[13px] leading-[18px] sm:inline">
+                    <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-[13px] leading-[18px] lg:inline">
                         ⌘K
                     </kbd>
                 </Button>

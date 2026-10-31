@@ -45,7 +45,7 @@ export default function SendingProgress({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="size-8"
+                    className="touch-hit size-8"
                     aria-label="Ocultar"
                     onClick={() => setHidden(true)}
                 >

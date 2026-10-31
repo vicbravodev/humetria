@@ -55,6 +55,15 @@ it('lists the employees with their contact, center and area', function (bool $da
         ->assertSee('1 persona no tiene correo');
 })->with($looks);
 
+it('fits the search, the filters and the status tabs inside the page at every width', function (): void {
+    acmeWithEmployees();
+    $page = visitPage('organization/employees', '/admin/acme/employees');
+
+    foreach ([375, 768, 1024, 1280, 1440] as $width) {
+        resizeTo($page, $width)->assertScript(spilledOut(), '');
+    }
+});
+
 it('shows only the people the survey email cannot reach, and everyone again', function (): void {
     acmeWithEmployees();
 
