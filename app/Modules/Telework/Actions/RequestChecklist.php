@@ -10,6 +10,7 @@ use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -33,13 +34,14 @@ final readonly class RequestChecklist
         $checklist = Checklist::latestPublished($teleworker->work_center_id) ?? throw ValidationException::withMessages(['work_center' => 'La Comisión aún no publica la lista']);
 
         try {
-            $application = ChecklistApplication::query()->create([
+            // Its own savepoint: a violation aborts the caller's Postgres transaction unless it is rolled back to here.
+            $application = DB::transaction(fn (): ChecklistApplication => ChecklistApplication::query()->create([
                 'tenant_id' => $workplace->tenant_id,
                 'workplace_id' => $workplace->id,
                 'checklist_id' => $checklist->id,
                 'section' => $section,
                 'requested_at' => now(),
-            ]);
+            ]));
         } catch (UniqueConstraintViolationException $race) {
             // Another request asked at the same moment: theirs stands.
             return $pending() ?? throw $race;

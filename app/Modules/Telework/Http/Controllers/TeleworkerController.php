@@ -18,6 +18,7 @@ use App\Modules\Telework\Http\Requests\WorkplaceRequest;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,7 @@ use Inertia\Response;
  */
 final class TeleworkerController extends Controller
 {
-    public function __construct(private readonly WorkCenters $workCenters, private readonly Roster $roster) {}
+    public function __construct(private readonly WorkCenters $workCenters, private readonly Roster $roster, private readonly WorkplaceAddress $address) {}
 
     public function create(mixed $tenant, string $workCenter): Response
     {
@@ -121,7 +122,6 @@ final class TeleworkerController extends Controller
     private function summary(Teleworker $teleworker): array
     {
         $person = $this->roster->find($teleworker->employee_id);
-        $states = $this->workCenters->states();
 
         return [
             'id' => $teleworker->id,
@@ -132,7 +132,7 @@ final class TeleworkerController extends Controller
             'percentage' => $teleworker->telework_percentage,
             'workplaces' => $teleworker->workplaces()->with('applications')->get()->map(fn (Workplace $workplace): array => [
                 'id' => $workplace->id,
-                'address' => "{$workplace->street} {$workplace->exterior_number}, {$workplace->neighborhood}, {$workplace->municipality}, ".($states[$workplace->state] ?? $workplace->state),
+                'address' => $this->address->line($workplace),
                 'label' => $this->label($workplace),
             ])->all(),
         ];

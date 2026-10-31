@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\AuditEntry;
 use App\Modules\Telework\Actions\AddWorkplace;
 use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Actions\RequestChecklist;
@@ -10,6 +9,7 @@ use App\Modules\Telework\Enums\ChecklistStatus;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
+use App\Modules\Telework\Jobs\SendPortalInvitation;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\PortalLink;
@@ -22,9 +22,12 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\AnonymousNotifiable;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -170,29 +173,79 @@ it('emails the portal link and stores only its hash', function (): void {
     $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false)->has('pending.checklists', 1));
 });
 
-it('sends no email to someone without one, but still gives them a link', function (): void {
+it('sends no email to someone without one: RH hands them a link from the page', function (): void {
     $this->employee->forceFill(['email' => null])->save();
 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(1);
+    expect(PortalLink::query()->count())->toBe(0);
 });
 
-it('logs telework.aspirant_registered with ids only and audits it', function (): void {
-    Log::spy();
+it('queues only ids: the plain token never reaches the queue, and the job makes a working link', function (): void {
+    Queue::fake();
 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
 
-    $teleworker = aspirant();
-    $expected = ['teleworker_id' => $teleworker->id, 'employee_id' => $this->employee->id, 'work_center_id' => $this->center->id, 'workplaces' => 1];
-    Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context = []): bool => $message === 'telework.aspirant_registered' && $context === $expected)->once();
-    $entry = AuditEntry::query()->where('event', 'telework.aspirant_registered')->sole();
+    $job = null;
+    Queue::assertPushed(SendPortalInvitation::class, function (SendPortalInvitation $pushed) use (&$job): bool {
+        $job = $pushed;
 
-    expect($entry->subject_id)->toBe($teleworker->id)->and($entry->metadata)->toEqual([...$expected, 'registered_by' => $this->hr->id]);
-    foreach (['Ana', 'ana@acme.test', 'Hidalgo'] as $private) {
-        expect(json_encode($entry->metadata, JSON_THROW_ON_ERROR))->not->toContain($private);
-    }
+        return $pushed->tenantId === $this->tenant->id && $pushed->employeeId === $this->employee->id;
+    });
+    expect(PortalLink::query()->count())->toBe(0);
+
+    app()->call($job->handle(...));
+
+    $url = null;
+    Notification::assertSentOnDemand(PortalInvitation::class, function (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url): bool {
+        $url = $notification->toMail($notifiable)->actionUrl;
+
+        return true;
+    });
+    $token = basename($url);
+
+    expect(serialize($job))->not->toContain($token)
+        ->and($job)->toBeInstanceOf(ShouldQueue::class)
+        ->and(new PortalInvitation($token, 'Ana', 'Acme'))->not->toBeInstanceOf(ShouldQueue::class)
+        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
+    auth()->logout();
+    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+});
+
+it('sends nothing when the person left or the company is blocked before the job runs', function (): void {
+    Queue::fake();
+    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
+    $job = new SendPortalInvitation($this->tenant->id, $this->employee->id);
+    $this->employee->forceFill(['deactivated_at' => now()])->save();
+
+    app()->call($job->handle(...));
+
+    Notification::assertNothingSent();
+    expect(PortalLink::query()->count())->toBe(0);
+});
+
+it('answers with the pending application when the insert races, even inside a transaction', function (): void {
+    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
+    $workplace = aspirant()->workplaces[0];
+    $rival = (string) Str::uuid();
+    // Another request commits its own Sección II after ours looked and before it inserts: the unique index refuses ours.
+    Checklist::retrieved(function () use ($workplace, $rival): void {
+        ChecklistApplication::unguarded(fn () => DB::table('checklist_applications')->insert([
+            'id' => $rival, 'tenant_id' => $workplace->tenant_id, 'workplace_id' => $workplace->id, 'checklist_id' => $this->checklist->id,
+            'section' => 2, 'requested_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]));
+    });
+
+    $found = DB::transaction(function () use ($workplace): ChecklistApplication {
+        $found = resolve(RequestChecklist::class)->handle($workplace, Section::Two);
+        // The outer transaction is still usable: the failed insert was rolled back to its own savepoint.
+        ChecklistApplication::query()->count();
+
+        return $found;
+    });
+
+    expect($found->id)->toBe($rival);
 });
 
 it('shows the registration page of a work center with its checklist state', function (): void {
@@ -233,7 +286,7 @@ it('issues a new link to copy and invalidates the previous', function (): void {
     $this->employee->forceFill(['email' => null])->save();
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
     $teleworker = aspirant();
-    $first = PortalLink::query()->sole()->token_hash;
+    expect(PortalLink::query()->count())->toBe(0);
 
     $response = $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]));
 
@@ -241,7 +294,7 @@ it('issues a new link to copy and invalidates the previous', function (): void {
     $flash = session('inertia.flash_data')['portalLink'] ?? null;
     expect($flash)->toBeString()->toStartWith(url('/portal/'));
     $token = basename($flash);
-    expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token))->not->toBe($first);
+    expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
 
     auth()->logout();
     $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));

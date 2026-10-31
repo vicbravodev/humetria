@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * The email that carries a person's portal link, from their company and written as the portal speaks ("usted"). The plain
- * token lives only here and in the link.
+ * The email that carries a person's portal link, from their company and written as the portal speaks ("usted"). Sent as the job that made the
+ * link runs, never queued: the plain token must not reach the queue.
  */
-final class PortalInvitation extends Notification implements ShouldQueue
+final class PortalInvitation extends Notification
 {
-    use Queueable;
-
     public function __construct(private readonly string $token, private readonly string $name, private readonly string $company) {}
 
     /**

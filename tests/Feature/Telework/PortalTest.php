@@ -20,6 +20,7 @@ use Database\Factories\Telework\WorkplaceFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(IssuePortalLink::class, OpenPortal::class, PortalPending::class, PortalController::class);
@@ -91,7 +92,7 @@ it('shows the person their pending checklists, one per workplace', function (): 
             ->where('name', 'Ana Ruiz')
             ->has('pending.checklists', 2, fn (Assert $item) => $item
                 ->has('id')
-                ->where('workplace', 'Calle Hidalgo 45, Centro, Querétaro')
+                ->where('workplace', 'Calle Hidalgo 45, Centro, Querétaro, Querétaro')
                 ->where('section', 1)
                 ->where('label', 'Pendiente de contestar'))
             ->has('pending.sent', 0));
@@ -185,10 +186,24 @@ it('throttles per link and keeps the address cap separate', function (): void {
     // Another link from the same address is still served: a room on one Wi-Fi can open theirs at once.
     $this->get(route('portal.show', 'another-link'))->assertOk();
 
-    $limits = RateLimiter::limiter('portal-views')(Request::create('/portal/one-link'));
-    $actions = RateLimiter::limiter('portal-actions')(Request::create('/portal/one-link'));
+    $limit = fn (string $name, string $token): array => RateLimiter::limiter($name)(portalRequest($token));
+    $views = $limit('portal-views', 'one-link');
+    $actions = $limit('portal-actions', 'one-link');
 
-    expect(array_map(fn ($limit): int => $limit->maxAttempts, $limits))->toBe([30, 600])
+    expect(array_map(fn ($limit): int => $limit->maxAttempts, $views))->toBe([30, 600])
         ->and(array_map(fn ($limit): int => $limit->maxAttempts, $actions))->toBe([10, 300])
-        ->and($limits[0]->key)->not->toContain('one-link');
+        // The key is the link's hash, never the link; another link has another key and the address one is shared.
+        ->and($views[0]->key)->toBe('portal:'.hash('sha256', 'one-link'))
+        ->and($limit('portal-views', 'another-link')[0]->key)->not->toBe($views[0]->key)
+        ->and($limit('portal-views', 'another-link')[1]->key)->toBe($views[1]->key);
 });
+
+/** A request to the portal route with its token bound, as the limiter sees it. */
+function portalRequest(string $token): Request
+{
+    $request = Request::create("/portal/{$token}");
+    $route = Route::getRoutes()->match($request);
+    $request->setRouteResolver(fn () => $route);
+
+    return $request;
+}
