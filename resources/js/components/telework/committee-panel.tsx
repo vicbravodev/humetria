@@ -1,9 +1,10 @@
-import { ShieldCheck, Users } from 'lucide-react';
+import { FileText, ShieldCheck, Users } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import Notice from '@/components/humetria/notice';
 import AssignMemberForm from '@/components/telework/assign-member-form';
 import CommitteeMembersTable from '@/components/telework/committee-members-table';
 import RegisterCommitteeForm from '@/components/telework/register-committee-form';
+import { act } from '@/routes/tenant/telework/committee';
 import type { Committee, CommitteePerson } from '@/types';
 
 /**
@@ -70,6 +71,22 @@ export default function CommitteePanel({
                         candidates={candidates}
                     />
                 </div>
+            )}
+            {committee.hasAct && (
+                <a
+                    href={
+                        act({
+                            tenant: tenantSlug,
+                            workCenter: workCenterId,
+                        }).url
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-h-11 w-fit items-center gap-2 text-sm font-medium text-primary hover:underline"
+                >
+                    <FileText aria-hidden="true" className="size-[18px]" />
+                    Ver el acta de constitución (PDF)
+                </a>
             )}
             {!committee.hasAct && (
                 <Notice>

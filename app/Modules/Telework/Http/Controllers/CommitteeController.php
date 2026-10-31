@@ -14,6 +14,7 @@ use App\Modules\Telework\Http\Requests\CommitteeRequest;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Support\CommitteeGate;
+use App\Modules\Telework\Support\FileStore;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\MemberSummary;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The Comisión de seguridad e higiene of one work center: who sits on it and when it was constituted. A center outside
@@ -79,6 +81,22 @@ final class CommitteeController extends Controller
         return array_values(User::query()->whereIn('id', array_diff($assigned, $active))->orderBy('name')->orderBy('id')->get(['id', 'name', 'email'])
             ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => 'Sin acceso: ya no tiene un rol de la Comisión', 'active' => false])
             ->all());
+    }
+
+    public function act(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, FileStore $files): StreamedResponse
+    {
+        Gate::authorize('view-telework');
+        $center = $this->center($workCenters, $workCenter);
+        $user = $request->user();
+        abort_unless($user !== null && (Gate::allows('manage-telework') || $gate->isMember($user->id, $center->id)), 404);
+
+        $path = SafetyCommittee::query()->where('work_center_id', $center->id)->first()?->act_path;
+        abort_if($path === null, 404);
+
+        $response = $files->stream($path);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 
     public function store(CommitteeRequest $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, RegisterCommittee $register): RedirectResponse
