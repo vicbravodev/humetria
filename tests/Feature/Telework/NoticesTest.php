@@ -10,6 +10,7 @@ use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\Section;
+use App\Modules\Telework\Events\TraumaticEventReported;
 use App\Modules\Telework\Http\Controllers\PortalNoticeController;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\WorkerNotice;
@@ -25,6 +26,7 @@ use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -183,6 +185,40 @@ it('shows the notices area only to a person with an open telework period', funct
 
     $this->teleworker->update(['status' => 'ended', 'ended_at' => now(), 'end_reason' => 'other']);
     $this->get(route('portal.notices.show', noticeToken()))->assertNotFound();
+});
+
+describe('a severe traumatic event (6.3, C-27)', function (): void {
+    it('announces the event with the person and their work center, and keeps the flag', function (): void {
+        Event::fake([TraumaticEventReported::class]);
+
+        $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1']))->assertSessionHasNoErrors();
+
+        expect(WorkerNotice::query()->sole()->traumatic_event)->toBeTrue();
+        Event::assertDispatched(TraumaticEventReported::class, fn (TraumaticEventReported $event): bool => $event->tenantId === $this->tenant->id
+            && $event->employeeId === $this->employee->id
+            && $event->workCenterId === $this->center->id);
+        Event::assertDispatchedTimes(TraumaticEventReported::class, 1);
+    });
+
+    it('announces nothing for a change of conditions that is not traumatic, nor for the other notices', function (array $form): void {
+        Event::fake([TraumaticEventReported::class]);
+
+        $this->post(route('portal.notices.store', noticeToken()), noticeForm($form))->assertSessionHasNoErrors();
+
+        expect(WorkerNotice::query()->sole()->traumatic_event)->toBeFalse();
+        Event::assertNotDispatched(TraumaticEventReported::class);
+    })->with([
+        'conditions, not traumatic' => [['kind' => 'condition_change']],
+        'a risk that claims to be traumatic' => [['kind' => 'work_risk', 'traumatic_event' => '1']],
+    ]);
+
+    it('announces nothing when the notice is refused', function (): void {
+        Event::fake([TraumaticEventReported::class]);
+
+        $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1', 'description' => '']))->assertSessionHasErrors('description');
+
+        Event::assertNotDispatched(TraumaticEventReported::class);
+    });
 });
 
 describe('a change of address (6.7)', function (): void {

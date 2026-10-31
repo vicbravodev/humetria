@@ -346,6 +346,19 @@ it('applies Guía I to the people of an event', function (bool $dark, bool $mobi
         ->assertSee('Ana López');
 })->with($looks);
 
+it('arrives with the person of a traumatic-event notice already ticked', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 3)->values();
+    $people[0]->update(['name' => 'Ana López']);
+
+    visit("/admin/acme/campaigns/trauma?work_center={$plant->id}&employee={$people[0]->id}")
+        ->assertSee('(1 elegidas)')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('keeps who was ticked across pages and searches, and ticks everyone a search found', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();

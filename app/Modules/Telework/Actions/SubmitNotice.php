@@ -8,11 +8,13 @@ use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Events\TraumaticEventReported;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Support\OpenedPortal;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -57,6 +59,11 @@ final readonly class SubmitNotice
             ]);
 
             Log::info('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $teleworkerId, 'kind' => $kind->value, 'traumatic_event' => $traumaticEvent, 'temporary' => $temporary]);
+
+            if ($traumaticEvent) {
+                $teleworker = Teleworker::query()->findOrFail($teleworkerId, ['id', 'work_center_id']);
+                Event::dispatch(new TraumaticEventReported($portal->tenantId, $portal->employeeId, $teleworker->work_center_id));
+            }
 
             return $notice;
         });

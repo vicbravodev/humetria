@@ -30,6 +30,9 @@ final class TraumaCampaignController extends Controller
         $chosen = $request->string('work_center')->toString();
         $workCenter = Str::isUuid($chosen) ? $workCenters->findActive($chosen) : null;
         $workCenterId = $workCenter?->id;
+        // From a traumatic-event notice (Telework): the person it names, if they are active in this center.
+        $named = Str::isUuid($request->string('employee')->toString()) ? $roster->find($request->string('employee')->toString()) : null;
+        $preselected = $named !== null && $named->active && $named->workCenterId === $workCenterId ? $named : null;
         $query = new RosterQuery(activeInWorkCenter: $workCenterId, search: $request->string('q')->trim()->limit(100, '')->toString());
 
         return Inertia::render('campaigns/trauma', [
@@ -40,6 +43,7 @@ final class TraumaCampaignController extends Controller
                 'area' => $person->areaName,
                 'reachable' => $person->email !== null,
             ]),
+            'preselected' => $preselected === null ? null : ['id' => $preselected->id, 'name' => $preselected->name],
             'filters' => ['q' => $query->search],
             'maxPeople' => TraumaCampaignRequest::MAX_PEOPLE,
             // Only when asked: to choose at once everyone the search found, on every page.

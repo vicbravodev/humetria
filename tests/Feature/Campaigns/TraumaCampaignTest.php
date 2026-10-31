@@ -61,6 +61,39 @@ it('offers the active people of the chosen work center, a page at a time', funct
         ->assertInertia(fn (Assert $page) => $page->where('workCenter', null)->where('people', null));
 });
 
+it('preselects the person of a traumatic-event notice when they are active in the chosen center', function (): void {
+    $this->people[0]->update(['name' => 'Ana López']);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'employee' => $this->people[0]->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('preselected', ['id' => $this->people[0]->id, 'name' => 'Ana López']));
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('preselected', null));
+});
+
+it('ignores the person to preselect when they are not active in the chosen center', function (Closure $employee): void {
+    $other = WorkCenter::factory()->for($this->tenant)->create();
+    $outsider = staffOf($this->tenant, $other, 1)->first();
+    $this->people[1]->update(['deactivated_at' => now()]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'work_center' => $this->plant->id, 'employee' => $employee($outsider)]))
+        ->assertInertia(fn (Assert $page) => $page->where('preselected', null)->where('people.total', 4));
+})->with([
+    'someone of another center' => [fn ($outsider) => $outsider->id],
+    'someone deactivated' => [fn () => test()->people[1]->id],
+    'someone who does not exist' => [fn () => (string) Illuminate\Support\Str::uuid()],
+    'something that is not an id' => [fn () => 'not-a-uuid'],
+]);
+
+it('ignores the person to preselect when no center is chosen', function (): void {
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.trauma.create', [$this->tenant, 'employee' => $this->people[0]->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('preselected', null)->where('workCenter', null));
+});
+
 it('searches the people on the server, and gives everyone the search found when asked', function (): void {
     $this->people[1]->update(['name' => 'José Qwértyz']);
     $this->people[2]->update(['name' => 'Josefina Qwértyz']);
