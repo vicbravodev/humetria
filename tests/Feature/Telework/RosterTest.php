@@ -411,6 +411,8 @@ it('shows each workplace with its derived status and expiry, and whether the per
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('teleworker.canJoin', false)
+            ->where('teleworker.today', '2026-03-01')
+            ->where('teleworker.startedOn', null)
             ->where('teleworker.jobTitle', 'Analista')
             ->where('teleworker.workplaces.0.status', 'pending')
             ->where('teleworker.workplaces.0.expiresOn', null));

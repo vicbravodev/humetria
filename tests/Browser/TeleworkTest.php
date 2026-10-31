@@ -28,6 +28,7 @@ use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\VisitAuthorizationFactory;
 use Database\Factories\Telework\WorkplaceFactory;
+use Database\Factories\Telework\WorkplaceReviewFactory;
 use Illuminate\Support\Str;
 
 $looks = [
@@ -444,6 +445,75 @@ it('lets the Comisión cancel a visit request nobody answered', function (): voi
         ->click('[role="dialog"] [data-slot="dialog-footer"] button:last-child')
         ->assertSee('Solicitud de visita cancelada')
         ->assertSee('Cancelada')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+/** @return array{string, Tenant, App\Modules\Telework\Models\Teleworker} An aspirant of acme with a validated workplace in force. */
+function validatedAspirant(): array
+{
+    [$url, $center, $tenant] = teleworkerCenter();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista de soporte']);
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id]);
+
+    return [$url, $tenant, $teleworker];
+}
+
+it('shows the derived status of each workplace and the way into the roster', function (bool $dark, bool $mobile): void {
+    [$url, , $teleworker] = validatedAspirant();
+
+    visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}", $dark, $mobile)
+        ->assertSee('Validado')
+        ->assertSee('Vence el')
+        ->assertSee('Aún no está en el padrón')
+        ->assertSee('Pasar al padrón');
+})->with($looks);
+
+it('tells an aspirant without a validated workplace that they cannot join yet', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+
+    visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}")
+        ->assertSee('Por validar')
+        ->assertSee('Necesita al menos un lugar validado y vigente')
+        ->assertScript('[...document.querySelectorAll("button")].find((b) => b.textContent.includes("Pasar al padrón")).disabled', true);
+});
+
+it('moves an aspirant into the roster and then ends their telework', function (): void {
+    [$url, , $teleworker] = validatedAspirant();
+
+    visit("{$url}/telework/teleworkers/{$teleworker->id}")
+        ->press('Pasar al padrón')
+        ->assertValue('#roster-job-title', 'Analista de soporte')
+        ->click('#roster-marital')
+        ->type('[role="combobox"][aria-controls="roster-marital-options"]', 'solt')
+        ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
+        ->fill('#roster-activities', 'Atención de clientes.')
+        ->fill('#roster-phone', '4421234567')
+        ->fill('#workplace-new-street', 'Calle Reforma')
+        ->fill('#workplace-new-exterior_number', '12')
+        ->fill('#workplace-new-neighborhood', 'Centro')
+        ->fill('#workplace-new-postal_code', '76000')
+        ->fill('#workplace-new-municipality', 'Querétaro')
+        ->click('#workplace-new-state')
+        ->type('[role="combobox"][aria-controls="workplace-new-state-options"]', 'quer')
+        ->keys('[role="combobox"][aria-controls="workplace-new-state-options"]', 'Enter')
+        ->fill('#roster-no_equipment_reason', 'Usa su propio equipo.')
+        ->press('Guardar y pasar al padrón')
+        ->assertSee('Persona en el padrón de teletrabajo')
+        ->assertSee('En el padrón de teletrabajo')
+        ->press('Terminar teletrabajo')
+        ->assertSee('¿Terminar el teletrabajo de Ana Ruiz?')
+        ->click('Otro motivo')
+        ->fill('#end-note', 'Prueba.')
+        ->press('Confirmar y terminar')
+        ->assertSee('Teletrabajo terminado')
+        ->assertSee('Otro motivo')
+        ->assertSee('Prueba.')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });

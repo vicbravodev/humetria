@@ -23,6 +23,7 @@ use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -124,6 +125,7 @@ final class TeleworkerController extends Controller
     private function summary(Teleworker $teleworker): array
     {
         $person = $this->roster->find($teleworker->employee_id);
+        $zone = config()->string('app.display_timezone');
 
         return [
             'id' => $teleworker->id,
@@ -133,9 +135,11 @@ final class TeleworkerController extends Controller
             'status' => $teleworker->status->value,
             'percentage' => $teleworker->telework_percentage,
             'canJoin' => $teleworker->status === TeleworkerStatus::Aspirant && $this->joinRoster->hasWorkplaceInForce($teleworker),
+            'today' => CarbonImmutable::now($zone)->toDateString(),
+            'startedOn' => $teleworker->started_at?->setTimezone($zone)->toDateString(),
             'noEquipmentReason' => $teleworker->no_equipment_reason,
             'endReason' => $teleworker->end_reason?->label(),
-            'endedOn' => $teleworker->ended_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'endedOn' => $teleworker->ended_at?->setTimezone($zone)->toDateString(),
             'endNote' => $teleworker->end_note,
             'workplaces' => $teleworker->workplaces()->with('applications')->get()->map(fn (Workplace $workplace): array => $this->workplace($workplace))->all(),
         ];

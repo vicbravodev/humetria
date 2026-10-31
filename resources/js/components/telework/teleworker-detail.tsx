@@ -2,6 +2,9 @@ import { usePage } from '@inertiajs/react';
 import { Briefcase, Home, Percent } from 'lucide-react';
 import AddWorkplaceDialog from '@/components/telework/add-workplace-dialog';
 import PortalLinkPanel from '@/components/telework/portal-link-panel';
+import RosterPanel from '@/components/telework/roster-panel';
+import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
+import { expiryText } from '@/lib/telework/roster';
 import type { TeleworkerSummary } from '@/types';
 
 const STATUS: Record<TeleworkerSummary['status'], string> = {
@@ -35,6 +38,11 @@ export default function TeleworkerDetail({
                 </li>
                 <li>{STATUS[teleworker.status]}</li>
             </ul>
+            <RosterPanel
+                tenantSlug={tenantSlug}
+                teleworker={teleworker}
+                states={states}
+            />
             <PortalLinkPanel
                 tenantSlug={tenantSlug}
                 teleworkerId={teleworker.id}
@@ -64,6 +72,16 @@ export default function TeleworkerDetail({
                             <div className="min-w-0">
                                 <p className="text-base font-semibold">
                                     {workplace.address}
+                                </p>
+                                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-muted-foreground">
+                                    <WorkplaceStatusBadge
+                                        status={workplace.status}
+                                        label={workplace.statusLabel}
+                                    />
+                                    {expiryText(
+                                        workplace.status,
+                                        workplace.expiresOn,
+                                    )}
                                 </p>
                                 <p className="text-[15px] text-muted-foreground">
                                     Lista: {workplace.label}

@@ -72,7 +72,18 @@ export type TeleworkerWorkplace = {
     id: string;
     address: string;
     label: string;
+    /** Derived by the server from the latest review; never edited by hand. */
+    status: WorkplaceStatusValue;
+    statusLabel: string;
+    /** The first day the validation no longer holds, Y-m-d. */
+    expiresOn: string | null;
 };
+
+export type EndReasonValue =
+    | 'reversibility'
+    | 'left_company'
+    | 'transfer'
+    | 'other';
 
 export type TeleworkerSummary = {
     id: string;
@@ -81,6 +92,16 @@ export type TeleworkerSummary = {
     hasEmail: boolean;
     status: TeleworkerStatus;
     percentage: number;
+    /** An aspirant with at least one workplace validated and in force. */
+    canJoin: boolean;
+    /** Today in the company's time zone, Y-m-d. */
+    today: string;
+    startedOn: string | null;
+    noEquipmentReason: string | null;
+    /** How it ended, already worded; null while the period is open. */
+    endReason: string | null;
+    endedOn: string | null;
+    endNote: string | null;
     workplaces: TeleworkerWorkplace[];
 };
 
