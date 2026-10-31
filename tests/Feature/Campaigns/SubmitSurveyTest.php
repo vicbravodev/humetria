@@ -18,6 +18,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 mutates(SubmitSurvey::class, SurveyController::class, SubmitSurveyRequest::class, DatabaseResponseRecorder::class);
 
@@ -193,7 +195,39 @@ it('never writes an answer, nor the id of an anonymous response, to the log', fu
         ->not->toContain('requires_clinical_assessment');
 });
 
-it('limits how often one link sends answers, without blocking a room of people on one network', function (): void {
+it('writes no answer, link or response id in any line of the log file, context included', function (): void {
+    $path = storage_path('logs/survey-privacy-'.bin2hex(random_bytes(4)).'.log');
+    config(['logging.default' => 'single', 'logging.channels.single.path' => $path, 'logging.channels.single.level' => 'debug']);
+    Log::forgetChannel('single');
+
+    try {
+        submitGuide('nom035.guide-iii', nom035Answers('nom035.guide-iii', 'almost_never'))->assertSessionHasNoErrors();
+        submitGuide('nom035.guide-i', guideOneAnswers([2, 7]))->assertSessionHasNoErrors();
+        $file = File::get($path);
+    } finally {
+        File::delete($path);
+    }
+
+    $lines = array_map(fn (string $line): array => json_decode($line, true, flags: JSON_THROW_ON_ERROR), array_values(array_filter(explode("\n", $file))));
+    $recorded = array_values(array_filter($lines, fn (array $line): bool => str_ends_with($line['message'], '.recorded')));
+
+    // The real file of the app, written by its formatter: one JSON object per line, with the request's context.
+    expect(array_column($lines, 'message'))->toContain('response.recorded', 'trauma_screening.recorded', 'campaign_participant.completed')
+        ->and($lines[0]['extra'])->toHaveKey('request_id');
+    expect($file)->not->toContain('almost_never')
+        ->not->toContain('"yes"')
+        ->not->toContain('the-token')
+        ->not->toContain(Participant::hashToken('the-token'))
+        ->not->toContain(AnonymousResponse::query()->withoutGlobalScopes()->sole()->id)
+        ->not->toContain(TraumaScreening::query()->withoutGlobalScopes()->sole()->id)
+        ->not->toContain('requires_clinical_assessment');
+    // What records a response never says whose it is.
+    expect(json_encode($recorded, JSON_THROW_ON_ERROR))->toContain('campaign_id')
+        ->not->toContain($this->participant->id)
+        ->not->toContain($this->participant->employee_id);
+});
+
+it('limits how often one link sends answers,without blocking a room of people on one network', function (): void {
     foreach (range(1, 10) as $attempt) {
         submitGuide('nom035.guide-iii', [], 'the-token');
     }
