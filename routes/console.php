@@ -27,8 +27,8 @@ Artisan::command('telework:send-digests', function (SendTeleworkDigests $sendDig
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
-Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone('America/Mexico_City')->onOneServer()->withoutOverlapping();
-Schedule::command('telework:send-digests')->dailyAt('08:00')->timezone('America/Mexico_City')->onOneServer()->withoutOverlapping();
+Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('telework:send-digests')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
