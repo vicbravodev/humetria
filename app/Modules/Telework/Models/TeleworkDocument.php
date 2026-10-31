@@ -9,7 +9,9 @@ use App\Modules\Telework\Enums\DocumentKind;
 use Carbon\CarbonImmutable;
 use Database\Factories\Telework\TeleworkDocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -42,5 +44,19 @@ final class TeleworkDocument extends Model
     protected function casts(): array
     {
         return ['kind' => DocumentKind::class, 'covered_items' => 'array'];
+    }
+
+    /**
+     * Only the version in force: the latest of each kind in each work center.
+     *
+     * @param  Builder<TeleworkDocument>  $query
+     */
+    #[Scope]
+    protected function inForce(Builder $query): void
+    {
+        $query->where('version', self::query()->withoutGlobalScopes()->from('telework_documents as newer')
+            ->selectRaw('max(newer.version)')
+            ->whereColumn('newer.work_center_id', 'telework_documents.work_center_id')
+            ->whereColumn('newer.kind', 'telework_documents.kind'));
     }
 }

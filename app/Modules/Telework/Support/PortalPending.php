@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Telework\Data\PendingChecklist;
+use App\Modules\Telework\Data\PendingDocument;
 use App\Modules\Telework\Data\PendingPhotoRequest;
 use App\Modules\Telework\Data\PendingVisit;
 use App\Modules\Telework\Data\PortalPendingData;
 use App\Modules\Telework\Enums\EvidenceKind;
+use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\EvidenceRequest;
+use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
@@ -25,8 +28,10 @@ final readonly class PortalPending
 
     public function for(OpenedPortal $portal): PortalPendingData
     {
+        $documents = $this->documents($portal);
+
         if ($portal->teleworkerId === null) {
-            return new PortalPendingData([], []);
+            return new PortalPendingData([], [], [], [], $documents);
         }
 
         $workplaces = Workplace::query()->where('teleworker_id', $portal->teleworkerId)->whereNull('retired_at')->with('applications')->orderBy('created_at')->orderBy('id')->get();
@@ -55,6 +60,20 @@ final readonly class PortalPending
             $items['sent'],
             array_values($photos->map(fn (EvidenceRequest $request): PendingPhotoRequest => new PendingPhotoRequest($request->id, $lines[$request->workplace_id] ?? '', $request->note))->all()),
             array_values($visits->map(fn (VisitAuthorization $authorization): PendingVisit => new PendingVisit($authorization->id, $lines[$authorization->workplace_id] ?? ''))->all()),
+            $documents,
         );
+    }
+
+    /** @return list<PendingDocument> The versions in force asked of the person and not confirmed yet, oldest request first. */
+    private function documents(OpenedPortal $portal): array
+    {
+        $pending = Acknowledgement::query()->where('employee_id', $portal->employeeId)->whereNull('acknowledged_at')->select('document_id');
+
+        return array_values(TeleworkDocument::query()->inForce()->whereIn('id', $pending)->orderBy('created_at')->orderBy('id')->get()
+            ->map(fn (TeleworkDocument $document): PendingDocument => new PendingDocument(
+                $document->id,
+                "{$document->kind->label()} · versión {$document->version}",
+                $document->created_at->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            ))->all());
     }
 }

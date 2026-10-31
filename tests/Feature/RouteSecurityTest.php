@@ -37,6 +37,8 @@ function publicRouteNames(): array
         'portal.checklist.show', // guest: la lista de verificación de la persona; el token del portal es la credencial; solo ve sus lugares; throttled
         'portal.checklist.store', // guest: envía la lista una sola vez, bajo candado; el token del portal es la credencial; throttled
         'portal.evidence.store', // guest: la persona envía las fotos que pidió la Comisión, una sola vez, bajo candado; el token del portal es la credencial; solo sus lugares; throttled
+        'portal.documents.file', // guest: la persona lee el PDF que le pidieron confirmar; el token del portal es la credencial; solo documentos pedidos a ella; throttled
+        'portal.documents.acknowledge', // guest: la persona confirma que leyó, una sola vez, bajo candado; el token del portal es la credencial; throttled
         'portal.visits.confirm', // guest: la persona autoriza por escrito la visita a su lugar; el token del portal es la credencial; solo sus lugares; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
     ];

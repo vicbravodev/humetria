@@ -6,8 +6,12 @@ use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Telework\Actions\Acknowledge;
+use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
+use App\Modules\Telework\Enums\AckChannel;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
 use App\Modules\Telework\Listeners\RequestOnPublication;
@@ -23,14 +27,17 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RequestAcknowledgements::class, RequestOnPublication::class, RequestPolicyFromNewStaff::class);
+mutates(RequestAcknowledgements::class, RequestOnPublication::class, RequestPolicyFromNewStaff::class, Acknowledge::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.telework_files'));
@@ -133,7 +140,7 @@ it('logs telework.acknowledgement_requested with ids and counts only', function 
 it('mails the employee a fresh portal link made as the job runs, replacing the old one', function (): void {
     Notification::fake();
     $ana = staffer($this->center, ['name' => 'Ana Ruiz']);
-    $old = resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($ana->id);
+    $old = resolve(IssuePortalLink::class)->handle($ana->id);
     publishDocument(DocumentKind::Policy, $this->center);
 
     $job = new SendAcknowledgementRequest($this->tenant->id, $ana->id, null);
@@ -221,4 +228,120 @@ it('asks the risk information when someone joins the roster', function (): void 
     expect(resolve(RequestAcknowledgements::class)->forEmployee($period->employee_id, $period->work_center_id, DocumentKind::RiskInformation))->toBe(1)
         ->and(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1)
         ->and(resolve(RequestAcknowledgements::class)->forEmployee($person->id, $this->other->id, DocumentKind::RiskInformation))->toBe(0);
+});
+
+/** The portal token of an employee who was asked for the policy of the center. */
+function portalOf(Employee $employee): string
+{
+    return resolve(IssuePortalLink::class)->handle($employee->id);
+}
+
+it('acknowledges from the portal with the time, the address and the channel', function (): void {
+    Queue::fake();
+    $this->travelTo('2026-05-04 15:30:00');
+    $ana = staffer($this->center);
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+
+    resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
+
+    $request = Acknowledgement::query()->sole();
+    expect($request->acknowledged_at?->toIso8601String())->toBe('2026-05-04T15:30:00+00:00')
+        ->and($request->ip)->toBe('203.0.113.9')
+        ->and($request->channel)->toBe(AckChannel::Portal)
+        ->and($request->employee_id)->toBe($ana->id);
+});
+
+it('acknowledges once: the second time is refused and nothing changes', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
+    $this->travelTo(now()->addDay());
+
+    expect(fn () => resolve(Acknowledge::class)->handle($portal, $document->id, '198.51.100.1'))->toThrow(ValidationException::class);
+
+    $request = Acknowledgement::query()->sole();
+    expect($request->ip)->toBe('203.0.113.9')->and(Acknowledgement::query()->count())->toBe(1);
+});
+
+it('does not let a person acknowledge what was not asked of them', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    $outsider = staffer($this->other);
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    $portal = resolve(OpenPortal::class)->handle(portalOf($outsider));
+
+    expect(fn () => resolve(Acknowledge::class)->handle($portal, $document->id, null))->toThrow(ModelNotFoundException::class)
+        ->and(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0)
+        ->and($ana->id)->not->toBe($outsider->id);
+});
+
+it('logs telework.acknowledged with ids and channel, never the address', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    Log::spy();
+
+    resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
+
+    Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context = []): bool => $message === 'telework.acknowledged'
+        && $context === ['document_id' => $document->id, 'employee_id' => $ana->id, 'channel' => 'portal'])->once();
+});
+
+it('lists what is pending in the portal, newest versions only, and shows it gone once confirmed', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    publishDocument(DocumentKind::Policy, $this->center);
+    [$latest] = publishDocument(DocumentKind::Policy, $this->center);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    $token = portalOf($ana);
+
+    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page
+        ->has('pending.documents', 1)
+        ->where('pending.documents.0.id', $latest->id)
+        ->where('pending.documents.0.title', 'Política de Teletrabajo · versión 2')
+        ->where('pending.documents.0.publishedOn', now()->setTimezone(config()->string('app.display_timezone'))->toDateString()));
+
+    $this->post(route('portal.documents.acknowledge', [$token, $latest->id]))->assertRedirect(route('portal.show', $token));
+
+    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    expect($risk->id)->not->toBe($latest->id);
+});
+
+it('keeps the documents of another person out of a portal', function (): void {
+    Queue::fake();
+    staffer($this->center);
+    $outsider = staffer($this->other);
+    publishDocument(DocumentKind::Policy, $this->center);
+
+    $this->get(route('portal.show', portalOf($outsider)))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+});
+
+it('serves the PDF through the portal only to the person it was asked of', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    $outsider = staffer($this->other);
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    $token = portalOf($ana);
+
+    $response = $this->get(route('portal.documents.file', [$token, $document->id]))->assertOk();
+    expect($response->headers->get('Cache-Control'))->toContain('no-store')
+        ->and($response->streamedContent())->toStartWith('%PDF');
+    $this->get(route('portal.documents.file', [portalOf($outsider), $document->id]))->assertNotFound();
+    $this->get(route('portal.documents.file', ['nope', $document->id]))->assertNotFound();
+    $this->get(route('portal.documents.file', [$token, 'not-a-uuid']))->assertNotFound();
+});
+
+it('answers 404 when a dead link tries to acknowledge, and shows a validation error on a second try', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    $token = portalOf($ana);
+
+    $this->post(route('portal.documents.acknowledge', ['dead', $document->id]))->assertNotFound();
+    $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasNoErrors();
+    $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasErrors('document');
 });
