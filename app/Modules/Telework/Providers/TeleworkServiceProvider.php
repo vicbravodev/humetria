@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Providers;
 
+use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
+use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Telework\Events\DocumentPublished;
 use App\Modules\Telework\Listeners\EndOnDeactivation;
 use App\Modules\Telework\Listeners\EndOnMove;
 use App\Modules\Telework\Listeners\RequestOnPublication;
+use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -43,5 +46,6 @@ final class TeleworkServiceProvider extends ServiceProvider
         Event::listen(EmployeeDeactivated::class, EndOnDeactivation::class);
         Event::listen(EmployeeMoved::class, EndOnMove::class);
         Event::listen(DocumentPublished::class, RequestOnPublication::class);
+        Event::listen([EmployeeCreated::class, EmployeeReactivated::class, EmployeeMoved::class], RequestPolicyFromNewStaff::class);
     }
 }

@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Modules\Organization\Events\EmployeeCreated;
+use App\Modules\Organization\Events\EmployeeMoved;
+use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
 use App\Modules\Telework\Listeners\RequestOnPublication;
+use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\PortalLink;
@@ -20,12 +24,13 @@ use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
-mutates(RequestAcknowledgements::class, RequestOnPublication::class);
+mutates(RequestAcknowledgements::class, RequestOnPublication::class, RequestPolicyFromNewStaff::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.telework_files'));
@@ -175,4 +180,45 @@ it('sends nothing when nothing is pending, the person left or the company is blo
 
     Notification::assertNothingSent();
     expect(PortalLink::query()->count())->toBe(0);
+});
+
+it('asks new, reactivated and moved-in staff for the policy in force of their center', function (string $arrival): void {
+    publishDocument(DocumentKind::Policy, $this->center);
+    [$latest] = publishDocument(DocumentKind::Policy, $this->center);
+    [$elsewhere] = publishDocument(DocumentKind::Policy, $this->other);
+    Queue::fake();
+    $newcomer = staffer($this->center);
+
+    match ($arrival) {
+        'created' => Event::dispatch(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id)),
+        'reactivated' => Event::dispatch(new EmployeeReactivated($this->tenant->id, $newcomer->id)),
+        'moved' => Event::dispatch(new EmployeeMoved($this->tenant->id, $newcomer->id, $this->other->id, $this->center->id)),
+    };
+
+    $request = Acknowledgement::query()->sole();
+    expect($request->document_id)->toBe($latest->id)->and($request->employee_id)->toBe($newcomer->id)->and($request->document_id)->not->toBe($elsewhere->id);
+    Queue::assertPushed(SendAcknowledgementRequest::class, fn (SendAcknowledgementRequest $job): bool => $job->employeeId === $newcomer->id);
+})->with(['created', 'reactivated', 'moved']);
+
+it('asks a newcomer once even if the arrival is announced twice, and nothing without a policy', function (): void {
+    $lonely = staffer($this->other);
+    Event::dispatch(new EmployeeCreated($this->tenant->id, $lonely->id, $this->other->id));
+    expect(Acknowledgement::query()->count())->toBe(0);
+
+    publishDocument(DocumentKind::Policy, $this->other);
+    Acknowledgement::query()->delete();
+    Event::dispatch(new EmployeeCreated($this->tenant->id, $lonely->id, $this->other->id));
+    Event::dispatch(new EmployeeReactivated($this->tenant->id, $lonely->id));
+
+    expect(Acknowledgement::query()->count())->toBe(1);
+});
+
+it('asks the risk information when someone joins the roster', function (): void {
+    publishDocument(DocumentKind::RiskInformation, $this->center);
+    $person = staffer($this->center);
+    $period = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
+
+    expect(resolve(RequestAcknowledgements::class)->forEmployee($period->employee_id, $period->work_center_id, DocumentKind::RiskInformation))->toBe(1)
+        ->and(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1)
+        ->and(resolve(RequestAcknowledgements::class)->forEmployee($person->id, $this->other->id, DocumentKind::RiskInformation))->toBe(0);
 });

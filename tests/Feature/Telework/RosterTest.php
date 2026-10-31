@@ -5,15 +5,19 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Telework\Actions\EndTelework;
 use App\Modules\Telework\Actions\JoinRoster;
+use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Data\RosterData;
+use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\EndReason;
 use App\Modules\Telework\Enums\MaritalStatus;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Http\Controllers\RosterController;
+use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
+use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
@@ -32,6 +36,8 @@ use Database\Factories\Telework\WorkplaceReviewFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -490,4 +496,20 @@ it('offers nothing to do on an ended period: no link, no workplace, no expiry', 
     $this->post(route('tenant.telework.teleworkers.workplaces.store', [$this->tenant, $period->id]), rosterForm())->assertNotFound();
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $period->id]))
         ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.expiresOn', null)->where('teleworker.workplaces.0.status', 'valid'));
+});
+
+it('asks the person who joins the roster for the risk information in force of their center', function (): void {
+    Storage::fake(config()->string('filesystems.telework_files'));
+    rosterReview();
+    workIn($this->tenant);
+    $path = tempnam(sys_get_temp_dir(), 'doc');
+    file_put_contents($path, "%PDF-1.4\n%%EOF\n");
+    [$document] = resolve(PublishDocument::class)->handle(DocumentKind::RiskInformation, $path, [$this->center->id], [], $this->hr->id);
+    Queue::fake();
+
+    $this->post(joinUrl(), rosterForm())->assertSessionHasNoErrors();
+
+    $request = Acknowledgement::query()->sole();
+    expect($request->document_id)->toBe($document->id)->and($request->employee_id)->toBe($this->employee->id);
+    Queue::assertPushed(SendAcknowledgementRequest::class, fn ($job): bool => $job->employeeId === $this->employee->id);
 });

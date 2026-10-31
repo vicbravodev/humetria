@@ -6,6 +6,7 @@ namespace App\Modules\Telework\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Telework\Data\RosterData;
+use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Support\WorkplaceStanding;
@@ -19,7 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class JoinRoster
 {
-    public function __construct(private WorkplaceStanding $standing, private RecordAudit $audit) {}
+    public function __construct(private WorkplaceStanding $standing, private RecordAudit $audit, private RequestAcknowledgements $acknowledgements) {}
 
     /**
      * @throws ValidationException
@@ -57,6 +58,8 @@ final readonly class JoinRoster
             $record = ['teleworker_id' => $current->id, 'employee_id' => $current->employee_id, 'work_center_id' => $current->work_center_id];
             $this->audit->handle('telework.teleworker_joined', $current, [...$record, 'joined_by' => $userId]);
             Log::info('telework.teleworker_joined', $record);
+            // Whoever enters the roster after the risk information was published still has to acknowledge it.
+            $this->acknowledgements->forEmployee($current->employee_id, $current->work_center_id, DocumentKind::RiskInformation);
         });
     }
 
