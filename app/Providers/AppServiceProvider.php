@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\Geolocation;
+use App\Http\Impersonation;
+use App\Logging\RedactEveryChannel;
 use App\Models\User;
 use App\Support\DbIpGeolocation;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +28,18 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(Geolocation::class, DbIpGeolocation::class);
+
+        // Before any channel is built: whatever channel a log goes to, sensitive keys are redacted.
+        foreach (array_keys(Config::array('logging.channels')) as $channel) {
+            Config::push("logging.channels.{$channel}.tap", RedactEveryChannel::class);
+        }
+
+        // Who needs a clinical assessment after a Guía I is health data of named people: never for a superadmin acting
+        // as the owner. Hooked here, in register, so it runs before the check Spatie adds when it boots: a permission
+        // the owner holds would otherwise answer first.
+        $this->app->afterResolving(GateContract::class, fn (GateContract $gate) => $gate->before(
+            fn (User $user, string $ability): ?bool => $ability === 'view-trauma-screenings' && $this->app->make(Impersonation::class)->isActive() ? false : null,
+        ));
     }
 
     /**

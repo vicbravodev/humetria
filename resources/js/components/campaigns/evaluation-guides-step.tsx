@@ -46,7 +46,7 @@ export default function EvaluationGuidesStep({
                             <Button
                                 type="button"
                                 variant="link"
-                                className="h-auto px-0 font-medium"
+                                className="touch-hit h-auto px-0 font-medium"
                                 onClick={onBack}
                             >
                                 Cambiar

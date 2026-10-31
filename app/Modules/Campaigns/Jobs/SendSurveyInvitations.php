@@ -11,6 +11,7 @@ use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Instruments\Contracts\Instruments;
@@ -25,12 +26,11 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Sends the survey link of a block of people: each gets a new link (the one before stops working) and an email with
- * it. It runs in the company that queued it (its id travels in the job's Context). Only who is still waiting in this
+ * Sends the survey link of a block of people: each gets an email with their link, the same one any earlier email
+ * carried, so a reminder never takes away the link of someone halfway through. It runs in the company that queued it (its id travels in the job's Context). Only who is still waiting in this
  * job's batch is sent to, so running it again, or late after a newer batch, never sends a link twice; it can only
  * happen if the worker dies between sending an email and writing it down. Who has no guide pending any more gets no
  * link, and nobody does once the evaluation is closed or past its last day. It waits for the next minute when the
@@ -68,21 +68,29 @@ final class SendSurveyInvitations implements ShouldQueue
             return;
         }
 
+        $companies = resolve(Companies::class);
+        $company = $companies->current();
+
+        // A blocked company sends nothing; who was waiting is marked failed, so a resend reaches them once it is back.
+        if ($company->blocked) {
+            $this->failed(null);
+
+            return;
+        }
+
         // Who left or moved meanwhile has nothing pending: no link, and nothing left to wait for.
         $this->waiting()->whereDoesntHave('instruments', fn ($guides) => $guides->where('status', InstrumentStatus::Pending))
             ->update(['invitation_status' => null, 'invitation_batch' => null]);
-        $waiting = $this->waiting()->get();
+        $waiting = $this->waiting()->with(['instruments' => fn ($guides) => $guides->where('status', InstrumentStatus::Pending)])->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $companies = resolve(Companies::class);
-        $company = $companies->current();
         $contact = $companies->contact();
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
-        $minutes = array_sum(array_map(fn (string $key): int => resolve(Instruments::class)->definition($key)->minutes, $campaign->instruments));
 
         foreach ($waiting as $participant) {
-            $email = $people[$participant->employee_id]->email ?? null;
+            $person = $people[$participant->employee_id] ?? null;
+            $routes = $person === null ? [] : SurveyInvitation::routes($person);
 
-            if ($email === null) {
+            if ($person === null || $routes === []) {
                 $participant->update(['invitation_status' => InvitationStatus::NoEmail]);
 
                 continue;
@@ -101,15 +109,21 @@ final class SendSurveyInvitations implements ShouldQueue
                 $participant->invited_at !== null => SurveyEmail::Reminder,
                 default => SurveyEmail::Invitation,
             };
-            $token = Str::random(64);
+            $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
-            Notification::route('mail', $email)->notify(new SurveyInvitation(
-                $kind, $token, $people[$participant->employee_id]->name ?? '', $company, $contact, $workCenter, $campaign->closes_on, $minutes,
+            Notification::routes($routes)->notify(new SurveyInvitation(
+                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant),
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }
 
         Log::info('campaign.invitations_sent', ['campaign_id' => $campaign->id, 'sent' => $waiting->count()]);
+    }
+
+    /** How long the guides the person has left take together: a reminder never counts what they already answered. */
+    private static function minutes(Participant $participant): int
+    {
+        return $participant->instruments->sum(fn (ParticipantInstrument $guide): int => resolve(Instruments::class)->definition($guide->instrument)->minutes);
     }
 
     /**

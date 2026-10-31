@@ -14,11 +14,12 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Gives people more days to answer. The last day only ever moves later: nobody loses the time they were told they had.
+ * Once it has passed, the evaluation is over even if the hourly close has not run yet (criterio C-25).
  */
 final class ExtendCampaign
 {
     /**
-     * @throws ValidationException when the new last day is not after the current one.
+     * @throws ValidationException when the new last day is not after the current one, or the current one is over.
      */
     public function handle(Campaign $campaign, CarbonImmutable $closesOn): void
     {
@@ -30,6 +31,11 @@ final class ExtendCampaign
     private function extend(Campaign $campaign, CarbonImmutable $closesOn): void
     {
         $current = $campaign->closes_on;
+
+        // Past its last day its links already say "cerrada": the hourly close is only catching up.
+        if ($current !== null && CampaignClock::hasPassed($current)) {
+            throw ValidationException::withMessages(['closes_on' => 'Su último día ya pasó: ya no se puede extender.']);
+        }
 
         if ($current !== null && ! $closesOn->greaterThan($current)) {
             throw ValidationException::withMessages(['closes_on' => 'La nueva fecha debe ser posterior al '.CampaignClock::day($current, isDate: true).'.']);

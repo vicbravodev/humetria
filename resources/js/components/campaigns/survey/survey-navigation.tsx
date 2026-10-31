@@ -2,16 +2,17 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-/** "Anterior" in ghost and a large "Siguiente" on the right; on the last screen it sends the guide. */
+/**
+ * "Anterior" in ghost and a large "Siguiente" on the right; on the last screen it sends the guide. On the first screen
+ * "Anterior" goes back to the guide's introduction.
+ */
 export default function SurveyNavigation({
-    isFirst,
     isLast,
     canAdvance,
     sending,
     onBack,
     onNext,
 }: {
-    isFirst: boolean;
     isLast: boolean;
     canAdvance: boolean;
     sending: boolean;
@@ -25,7 +26,7 @@ export default function SurveyNavigation({
                 size="lg"
                 className="px-3 text-[17px]"
                 onClick={onBack}
-                disabled={isFirst || sending}
+                disabled={sending}
             >
                 <ArrowLeft aria-hidden="true" />
                 Anterior

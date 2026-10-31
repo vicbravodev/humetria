@@ -202,3 +202,26 @@ it('keeps hooks, lib and types free of components and layouts', function (string
 
     expect($result['output'])->toContain('no-restricted-imports');
 })->with(['hooks', 'lib', 'types']);
+
+it('rejects forcing types', function (string $code, string $rule): void {
+    $result = lintFrontendProbe([
+        'lib/'.probeId().'.ts' => $code,
+    ]);
+
+    expect($result['passed'])->toBeFalse()
+        ->and($result['output'])->toContain($rule);
+})->with([
+    'an as assertion' => ["export const read = (value: unknown): string => value as string;\n", 'consistent-type-assertions'],
+    'an angle-bracket assertion' => ["export const read = (value: unknown): string => <string>value;\n", 'consistent-type-assertions'],
+    'an object literal assertion' => ["export const read = { a: 1 } as { a: number };\n", 'consistent-type-assertions'],
+    'a non-null assertion' => ["export const read = (value: string | null): string => value!;\n", 'no-non-null-assertion'],
+    'any' => ["export const read = (value: any): string => String(value);\n", 'no-explicit-any'],
+]);
+
+it('allows as const', function (): void {
+    $result = lintFrontendProbe([
+        'lib/'.probeId().'.ts' => "export const levels = ['low', 'high'] as const;\n",
+    ]);
+
+    expect($result['passed'])->toBeTrue($result['output']);
+});

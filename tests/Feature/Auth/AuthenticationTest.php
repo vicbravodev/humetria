@@ -77,3 +77,19 @@ test('users are rate limited', function () {
 
     $response->assertTooManyRequests();
 });
+
+test('one account is rate limited however many addresses try it', function () {
+    $user = User::factory()->create();
+    $attempt = fn (int $address) => $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$address}"])
+        ->post(route('login.store'), ['email' => strtoupper($user->email), 'password' => 'wrong-password']);
+
+    foreach (range(1, 10) as $address) {
+        $attempt($address)->assertSessionHasErrors('email');
+    }
+
+    $attempt(11)->assertTooManyRequests();
+    // Another account, from a fresh address, is not held back.
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.12'])
+        ->post(route('login.store'), ['email' => User::factory()->create()->email, 'password' => 'wrong-password'])
+        ->assertSessionHasErrors('email');
+});

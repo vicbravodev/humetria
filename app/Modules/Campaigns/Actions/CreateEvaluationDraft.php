@@ -12,7 +12,6 @@ use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\WorkCenters;
-use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,21 +38,22 @@ final readonly class CreateEvaluationDraft
      */
     public function handle(string $workCenterId, Population $population, int $createdBy): Campaign
     {
-        $this->assertActiveWorkCenter($workCenterId);
-        $workers = count($this->roster->activeIn($workCenterId));
-
-        if ($workers === 0) {
-            throw ValidationException::withMessages(['work_center_id' => 'Este centro no tiene personas activas. Da de alta a su personal primero.']);
-        }
-
-        $instruments = $this->guides->instruments($workers);
-
-        if ($population === Population::Sample && ! in_array('nom035.guide-iii', $instruments, true)) {
-            throw ValidationException::withMessages(['population' => 'Solo la Guía III se puede aplicar a una muestra; este centro tiene 50 personas o menos.']);
-        }
-
         try {
-            return DB::transaction(function () use ($workCenterId, $population, $createdBy, $workers, $instruments): Campaign {
+            return DB::transaction(function () use ($workCenterId, $population, $createdBy): Campaign {
+                // Under lock on the work center: archiving it at the same time waits here, or this finds it archived.
+                $this->assertActiveWorkCenter($workCenterId);
+                $workers = count($this->roster->activeIn($workCenterId));
+
+                if ($workers === 0) {
+                    throw ValidationException::withMessages(['work_center_id' => 'Este centro no tiene personas activas. Da de alta a su personal primero.']);
+                }
+
+                $instruments = $this->guides->instruments($workers);
+
+                if ($population === Population::Sample && ! in_array('nom035.guide-iii', $instruments, true)) {
+                    throw ValidationException::withMessages(['population' => 'Solo la Guía III se puede aplicar a una muestra; este centro tiene 50 personas o menos.']);
+                }
+
                 $campaign = Campaign::query()->create([
                     'tenant_id' => $this->currentTenant->id(),
                     'work_center_id' => $workCenterId,
@@ -81,9 +81,7 @@ final readonly class CreateEvaluationDraft
 
     private function assertActiveWorkCenter(string $workCenterId): void
     {
-        $workCenter = collect($this->workCenters->all())->first(fn (WorkCenterSummary $summary): bool => $summary->id === $workCenterId);
-
-        if ($workCenter === null || $workCenter->archived) {
+        if ($this->workCenters->lockActive($workCenterId) === null) {
             throw ValidationException::withMessages(['work_center_id' => 'Elige un centro de trabajo activo.']);
         }
 

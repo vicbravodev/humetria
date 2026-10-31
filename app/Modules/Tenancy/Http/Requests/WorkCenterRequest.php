@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -19,6 +20,11 @@ use Illuminate\Validation\Rule;
  */
 final class WorkCenterRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-organization');
+    }
+
     /**
      * @return array<string, FieldRules>
      */

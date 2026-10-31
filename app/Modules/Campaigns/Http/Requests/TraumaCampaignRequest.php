@@ -7,12 +7,18 @@ namespace App\Modules\Campaigns\Http\Requests;
 use App\Modules\Campaigns\Support\CampaignClock;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Guía I for chosen people of a work center, and the last day they can answer.
  */
 final class TraumaCampaignRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-campaigns');
+    }
+
     /** Most people one event's Guía I can be sent to at once. */
     public const int MAX_PEOPLE = 1000;
 

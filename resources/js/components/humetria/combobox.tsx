@@ -68,7 +68,7 @@ export default function Combobox(props: Props) {
                 aria-label={placeholder}
                 className="w-(--radix-popover-trigger-width) min-w-56 p-0"
             >
-                <div className="flex h-11 items-center gap-2 border-b px-3">
+                <div className="flex h-12 items-center gap-2 border-b px-3">
                     <Search
                         aria-hidden
                         className="size-4 shrink-0 text-muted-foreground"

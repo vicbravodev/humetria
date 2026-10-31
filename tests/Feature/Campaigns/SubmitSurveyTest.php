@@ -18,6 +18,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 mutates(SubmitSurvey::class, SurveyController::class, SubmitSurveyRequest::class, DatabaseResponseRecorder::class);
 
@@ -142,6 +144,24 @@ it('refuses a guide the person was not given, or one cancelled', function (): vo
     expect(AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
+it('refuses, and keeps nothing of, a guide cancelled while its answers were being taken', function (): void {
+    // The person is deactivated at the very moment their answers are being stored.
+    $cancelled = false;
+    Illuminate\Support\Facades\DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$cancelled): void {
+        if (! $cancelled && str_starts_with($query->sql, 'insert into "anonymous_responses"')) {
+            $cancelled = true;
+            ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $this->participant->id)->where('status', InstrumentStatus::Pending)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
+        }
+    });
+
+    submitGuide('nom035.guide-iii', nom035Answers('nom035.guide-iii'))->assertRedirect(route('survey.show', 'the-token'));
+
+    // Here the cancelling runs inside the same transaction, so it is undone with it; what matters is nothing is taken.
+    expect($cancelled)->toBeTrue()
+        ->and(guideStatus($this->participant, 'nom035.guide-iii'))->not->toBe(InstrumentStatus::Completed)
+        ->and(AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
+});
+
 it('refuses answers after the last day, after closing, from a wrong link or while the company is suspended', function (Closure $change, string $token): void {
     $change($this->participant);
 
@@ -175,7 +195,39 @@ it('never writes an answer, nor the id of an anonymous response, to the log', fu
         ->not->toContain('requires_clinical_assessment');
 });
 
-it('limits how often one link sends answers, without blocking a room of people on one network', function (): void {
+it('writes no answer, link or response id in any line of the log file, context included', function (): void {
+    $path = storage_path('logs/survey-privacy-'.bin2hex(random_bytes(4)).'.log');
+    config(['logging.default' => 'single', 'logging.channels.single.path' => $path, 'logging.channels.single.level' => 'debug']);
+    Log::forgetChannel('single');
+
+    try {
+        submitGuide('nom035.guide-iii', nom035Answers('nom035.guide-iii', 'almost_never'))->assertSessionHasNoErrors();
+        submitGuide('nom035.guide-i', guideOneAnswers([2, 7]))->assertSessionHasNoErrors();
+        $file = File::get($path);
+    } finally {
+        File::delete($path);
+    }
+
+    $lines = array_map(fn (string $line): array => json_decode($line, true, flags: JSON_THROW_ON_ERROR), array_values(array_filter(explode("\n", $file))));
+    $recorded = array_values(array_filter($lines, fn (array $line): bool => str_ends_with($line['message'], '.recorded')));
+
+    // The real file of the app, written by its formatter: one JSON object per line, with the request's context.
+    expect(array_column($lines, 'message'))->toContain('response.recorded', 'trauma_screening.recorded', 'campaign_participant.completed')
+        ->and($lines[0]['extra'])->toHaveKey('request_id');
+    expect($file)->not->toContain('almost_never')
+        ->not->toContain('"yes"')
+        ->not->toContain('the-token')
+        ->not->toContain(Participant::hashToken('the-token'))
+        ->not->toContain(AnonymousResponse::query()->withoutGlobalScopes()->sole()->id)
+        ->not->toContain(TraumaScreening::query()->withoutGlobalScopes()->sole()->id)
+        ->not->toContain('requires_clinical_assessment');
+    // What records a response never says whose it is.
+    expect(json_encode($recorded, JSON_THROW_ON_ERROR))->toContain('campaign_id')
+        ->not->toContain($this->participant->id)
+        ->not->toContain($this->participant->employee_id);
+});
+
+it('limits how often one link sends answers,without blocking a room of people on one network', function (): void {
     foreach (range(1, 10) as $attempt) {
         submitGuide('nom035.guide-iii', [], 'the-token');
     }
@@ -185,6 +237,42 @@ it('limits how often one link sends answers, without blocking a room of people o
     foreach (range(1, 60) as $person) {
         submitGuide('nom035.guide-iii', [], "link-{$person}")->assertRedirect();
     }
+});
+
+it('sends a submission over the limit back to the survey, saying so with "usted"', function (): void {
+    $survey = route('survey.show', 'the-token');
+
+    foreach (range(1, 10) as $attempt) {
+        test()->from($survey)->post(route('survey.submit', ['the-token', 'nom035.guide-iii']), ['answers' => []], ['X-Inertia' => 'true']);
+    }
+
+    test()->from($survey)->post(route('survey.submit', ['the-token', 'nom035.guide-iii']), ['answers' => []], ['X-Inertia' => 'true'])
+        ->assertRedirect($survey)
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.']]);
+});
+
+it('sends a submission whose page expired back to the survey, its answers still on the device', function (bool $inertia): void {
+    // CSRF is only verified outside unit tests.
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $this->post(route('survey.submit', ['the-token', 'nom035.guide-iii']), ['answers' => nom035Answers('nom035.guide-iii')], $inertia ? ['X-Inertia' => 'true'] : [])
+        ->assertRedirect(route('survey.show', 'the-token'))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => [
+            'type' => 'info',
+            'message' => 'La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.',
+        ]]);
+
+    expect(guideStatus($this->participant, 'nom035.guide-iii'))->toBe(InstrumentStatus::Pending)
+        ->and(AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
+})->with(['inertia' => true, 'plain' => false]);
+
+it('keeps the panel\'s expired page for a form outside the survey', function (): void {
+    app()->detectEnvironment(fn (): string => 'local');
+    config(['app.debug' => false]);
+
+    $this->post(route('login'), ['email' => 'ana@acme.mx', 'password' => 'secreto'])
+        ->assertStatus(419)
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->component('error')->where('status', 419));
 });
 
 it('locks the person and reads the campaign under a shared lock before taking a guide', function (): void {

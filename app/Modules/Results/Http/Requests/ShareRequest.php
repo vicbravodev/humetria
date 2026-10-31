@@ -6,6 +6,7 @@ namespace App\Modules\Results\Http\Requests;
 
 use App\Modules\Results\Enums\ShareDuration;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -13,6 +14,11 @@ use Illuminate\Validation\Rule;
  */
 final class ShareRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-campaigns');
+    }
+
     /**
      * @return array<string, mixed>
      */

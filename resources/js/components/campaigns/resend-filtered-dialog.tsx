@@ -52,8 +52,8 @@ export default function ResendFilteredDialog({
             <DialogContent>
                 <DialogTitle>¿Reenviar el enlace?</DialogTitle>
                 <DialogDescription>
-                    Se enviará un enlace nuevo a {people}; el anterior deja de
-                    servir.
+                    Se reenvía su enlace a {people}. Es el mismo de antes: el
+                    que ya tienen sigue sirviendo.
                 </DialogDescription>
                 <Form
                     {...resend.form([tenantSlug, campaignId])}

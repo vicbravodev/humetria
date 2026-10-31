@@ -9,13 +9,14 @@ use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Organization\Contracts\Roster;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sends a new link to everyone with a guide pending and an email (or to some people): each new link replaces the one
- * before it, so a lost or forwarded email stops working.
+ * Sends the link again to everyone with a guide pending and an email (or to some people). It is the link they already
+ * had: someone halfway through the survey keeps their place.
  */
 final readonly class ResendInvitations
 {
@@ -39,13 +40,15 @@ final readonly class ResendInvitations
             $reached = [];
 
             foreach ($participants as $participant) {
-                if (($people[$participant->employee_id]->email ?? null) !== null) {
+                $person = $people[$participant->employee_id] ?? null;
+
+                if ($person !== null && SurveyInvitation::routes($person) !== []) {
                     $reached[$participant->id] = true;
                 }
             }
 
             return $this->queueInvitations->handle($campaign, $reached);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
 
         Log::info('campaign.invitations_resent', ['campaign_id' => $campaign->id, 'sent' => $sent]);
 

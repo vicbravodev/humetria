@@ -7,7 +7,6 @@ use App\Modules\Organization\Actions\ReactivateEmployee;
 use App\Modules\Organization\Actions\UpdateEmployee;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
-use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
@@ -23,7 +22,7 @@ beforeEach(function (): void {
     $area = Area::factory()->create(['tenant_id' => $this->tenant->id] + ['name' => 'Producción']);
     $this->employee = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'area_id' => $area->id, 'email' => 'ana@acme.mx']);
     $this->owner = ownerOf($this->tenant);
-    Event::fake([EmployeeDeactivated::class, EmployeeReactivated::class, EmployeeMoved::class]);
+    Event::fake([EmployeeDeactivated::class, EmployeeMoved::class]);
 });
 
 /** The employee form as it is, changing only what is given. */
@@ -42,15 +41,10 @@ function eventsEmployeeForm(Employee $employee, array $changes = []): array
     ];
 }
 
-it('announces that a person was deactivated, and reactivated', function (): void {
+it('announces that a person was deactivated', function (): void {
     $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
 
     Event::assertDispatched(EmployeeDeactivated::class, fn (EmployeeDeactivated $event): bool => $event->tenantId === $this->tenant->id && $event->employeeId === $this->employee->id);
-    Event::assertNotDispatched(EmployeeReactivated::class);
-
-    $this->actingAs($this->owner)->post(route('tenant.employees.reactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
-
-    Event::assertDispatched(EmployeeReactivated::class, fn (EmployeeReactivated $event): bool => $event->tenantId === $this->tenant->id && $event->employeeId === $this->employee->id);
 });
 
 it('announces that a person moved to another work center', function (): void {

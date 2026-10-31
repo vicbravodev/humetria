@@ -86,3 +86,17 @@ it('finds no list of another company\'s campaign', function (): void {
         ->get(route('tenant.campaigns.screenings', [$this->tenant, Campaign::factory()->trauma()->create()->id]))
         ->assertNotFound();
 });
+
+it('lists with a fixed number of queries, however many need care', function (int $people): void {
+    foreach (range(1, $people) as $number) {
+        screened($this->campaign, "Persona {$number}", '2026-11-05 15:00:00');
+    }
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    $url = route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]);
+    $this->get($url);
+
+    // The same whatever the size: nothing is read per row.
+    $this->expectsDatabaseQueryCount(18);
+
+    $this->get($url)->assertOk();
+})->with([1, 6]);

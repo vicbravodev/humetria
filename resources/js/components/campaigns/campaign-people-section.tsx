@@ -77,7 +77,7 @@ export default function CampaignPeopleSection({
                     action={
                         <Link
                             href={url('failed')}
-                            className="text-sm font-semibold underline underline-offset-4"
+                            className="touch-hit text-sm font-semibold underline underline-offset-4"
                         >
                             Ver y reenviar
                         </Link>

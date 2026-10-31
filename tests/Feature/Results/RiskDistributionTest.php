@@ -137,6 +137,13 @@ it('filters by an area it shows, and ignores an area it hides', function (): voi
         ->and($inC['final'])->toBe([3, 0, 5, 0, 6]);
 });
 
+it('scores each questionnaire in the version of the norm it was answered in, never the current one', function (): void {
+    $records = guideTwoRecords('area-a', calm: 5);
+    $records[] = new AnonymousRecord('area-a', 'dof-2030-01-01', calmGuideTwo());
+
+    $this->distribution->of('nom035.guide-ii', $records);
+})->throws(InvalidArgumentException::class, 'No scoring tables for [nom035.guide-ii] in version [dof-2030-01-01].');
+
 it('shows how each question was answered, and only a question answered by at least 5', function (): void {
     $records = [...guideTwoRecords(AREA_A, never: 4, calm: 3), ...guideTwoRecords(AREA_B, always: 1)];
 
@@ -156,7 +163,8 @@ it('shows how each question was answered, and only a question answered by at lea
     $fewer = collect($this->distribution->items('nom035.guide-ii', [...guideTwoRecords(AREA_A, never: 3, calm: 3), ...guideTwoRecords(AREA_B, always: 1)]))
         ->flatMap(fn (array $section): array => $section['items'])->keyBy('number');
 
-    expect($fewer[41])->toBe(['number' => 41, 'text' => $items[41]['text'], 'answered' => 4, 'counts' => null, 'unfavorable' => null])
+    // Not even how many answered: with the gate's "yes" counted, it would tell how many serve clients (criterio C-23).
+    expect($fewer[41])->toBe(['number' => 41, 'text' => $items[41]['text'], 'answered' => null, 'counts' => null, 'unfavorable' => null])
         ->and($fewer[1]['counts'])->toBe([1, 0, 0, 0, 6]);
 });
 
@@ -164,5 +172,6 @@ it('shows no question of a group under the minimum', function (): void {
     $items = collect($this->distribution->items('nom035.guide-ii', guideTwoRecords(AREA_A, never: 4)))->flatMap(fn (array $section): array => $section['items']);
 
     expect($items->pluck('counts')->filter()->all())->toBe([])
-        ->and($items->pluck('unfavorable')->filter()->all())->toBe([]);
+        ->and($items->pluck('unfavorable')->filter()->all())->toBe([])
+        ->and($items->pluck('answered')->reject(fn (?int $answered): bool => $answered === null)->all())->toBe([]);
 });

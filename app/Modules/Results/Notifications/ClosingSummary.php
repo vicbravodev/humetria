@@ -74,7 +74,7 @@ final class ClosingSummary extends Notification implements ShouldQueue
                 ),
                 'belowMinimum' => $this->hasRisk && $this->levels === null,
                 'minGroup' => config()->integer('results.min_group'),
-                'assessment' => $this->levels === null && $this->hasRisk ? 0 : $this->requiringAssessment,
+                'assessment' => $this->requiringAssessment,
                 'report' => $this->levels !== null,
             ]);
     }

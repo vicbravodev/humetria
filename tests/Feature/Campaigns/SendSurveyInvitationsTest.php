@@ -92,6 +92,17 @@ it('gives each person of its block a new link and emails it, once even when run 
         && $participant->invited_at?->equalTo(now()) === true))->toBeTrue();
 });
 
+it('sends no link while the company is blocked, and marks who was waiting as failed so it can be sent again', function (): void {
+    $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 20);
+    [$job] = batchedJobs();
+    $this->tenant->update(['deactivated_at' => now()]);
+
+    $job->handle();
+
+    Notification::assertNothingSent();
+    expect(participantsOf($campaign)->every(fn (Participant $participant): bool => $participant->invitation_status === InvitationStatus::Failed && $participant->token_hash === null))->toBeTrue();
+});
+
 it('leaves to a newer batch whoever it queued again', function (): void {
     $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 20);
     [$job] = batchedJobs();

@@ -8,6 +8,7 @@ use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -50,11 +51,11 @@ final readonly class DrawReplacements
             $drawn = [];
 
             foreach (array_slice((new Randomizer)->shuffleArray($available), 0, $count) as $person) {
-                $drawn[$this->enroll($campaign, $person)->id] = $person->email !== null;
+                $drawn[$this->enroll($campaign, $person)->id] = SurveyInvitation::routes($person) !== [];
             }
 
             $this->queueInvitations->handle($campaign, $drawn);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
 
         Log::info('campaign.replacements_drawn', ['campaign_id' => $campaign->id, 'gender' => $gender, 'count' => $count]);
 

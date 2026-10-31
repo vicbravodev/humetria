@@ -22,7 +22,7 @@ final class QueueSurveyInvitations
     public const int BLOCK = 50;
 
     /**
-     * @param  array<string, bool>  $participants  participant id => whether they have an email
+     * @param  array<string, bool>  $participants  participant id => whether a channel reaches them (SurveyInvitation::routes())
      * @return int how many links were queued.
      */
     public function handle(Campaign $campaign, array $participants): int

@@ -57,7 +57,8 @@ export default function PageHeader({
                 )}
             </div>
             {children !== undefined && (
-                <div className="flex flex-wrap items-center gap-2">
+                // On a phone the actions take a row of their own, so the ones that grow share it or stack whole.
+                <div className="flex flex-wrap items-center gap-2 max-sm:w-full">
                     {children}
                 </div>
             )}

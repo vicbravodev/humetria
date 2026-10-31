@@ -217,8 +217,9 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
 it('activates a company that has not started, choosing the date', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
-    // Mid-month, two months ahead: always reachable with two clicks on the next-month arrow.
-    $until = now('America/Mexico_City')->startOfMonth()->addMonths(2)->addDays(14);
+    // The calendar opens on the month of the first day it allows (tomorrow), not today's: on the last day of a month
+    // that is already the next one. Mid-month, two months after it: always two clicks on the next-month arrow.
+    $until = now('America/Mexico_City')->addDay()->startOfMonth()->addMonths(2)->addDays(14);
 
     visit('/admin/companies')
         ->assertSee('Sin iniciar')
@@ -486,6 +487,40 @@ it('narrows the companies by name or RFC and by status', function (): void {
         ->assertSee('Autopartes Querétaro')
         ->assertQueryStringHas('q', 'queretaro')
         ->click('a[href*="status=trial"]')
+        ->assertSee('Ninguna empresa coincide')
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps every letter typed while the last search is still answering', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    $page = visit('/admin/companies');
+    // Every request waits 400 ms to leave, so the first search is still answering while more is typed.
+    $page->script(SLOW_REQUESTS);
+    $page->type('input[type="search"]', 'Gru');
+    $page->wait(0.5);
+    $page->keys('input[type="search"]', ['p', 'o', ' ', 'E']);
+    $page->wait(2);
+
+    $page->assertQueryStringHas('q', 'Grupo E')
+        ->assertValue('input[type="search"]', 'Grupo E')
+        ->assertNoJavaScriptErrors();
+});
+
+it('does not undo a status tab clicked while a search waits to go out', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    $page = visit('/admin/companies');
+    $page->script(SLOW_REQUESTS);
+    $page->type('input[type="search"]', 'Gru');
+    $page->click('a[href*="status=deactivated"]');
+    $page->wait(2);
+
+    // The box says what the list is narrowed by: the search that never went out is dropped.
+    $page->assertQueryStringHas('status', 'deactivated')
+        ->assertValue('input[type="search"]', '')
         ->assertSee('Ninguna empresa coincide')
         ->assertNoJavaScriptErrors();
 });

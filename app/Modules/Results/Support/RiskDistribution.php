@@ -78,10 +78,10 @@ final readonly class RiskDistribution
     /**
      * How each question was answered, by section, with the count of each option in the order the questionnaire offers
      * them and how many answered on the side that scores risk. A question answered by fewer than the minimum (the
-     * blocks behind a gate are answered by some) shows none.
+     * blocks behind a gate are answered by some) shows none, not even how many answered it.
      *
      * @param  list<AnonymousRecord>  $records
-     * @return list<array{title: string|null, instruction: string, items: list<array{number: int, text: string, answered: int, counts: list<int>|null, unfavorable: int|null}>}>
+     * @return list<array{title: string|null, instruction: string, items: list<array{number: int, text: string, answered: int|null, counts: list<int>|null, unfavorable: int|null}>}>
      */
     public function items(string $instrument, array $records): array
     {
@@ -99,7 +99,7 @@ final readonly class RiskDistribution
                 $unfavorable = count(array_filter($given, fn (string $answer): bool => $this->instruments->itemScore($instrument, $item->number, $answer) >= 3));
                 $answered = count($given);
                 $shown = $this->isShown($answered);
-                $items[] = ['number' => $item->number, 'text' => $item->text, 'answered' => $answered, 'counts' => $shown ? $counts : null, 'unfavorable' => $shown ? $unfavorable : null];
+                $items[] = ['number' => $item->number, 'text' => $item->text, 'answered' => $shown ? $answered : null, 'counts' => $shown ? $counts : null, 'unfavorable' => $shown ? $unfavorable : null];
             }
 
             $sections[] = ['title' => $section->title, 'instruction' => $section->instruction, 'items' => $items];
@@ -162,7 +162,7 @@ final readonly class RiskDistribution
      */
     private function scores(string $instrument, array $records): array
     {
-        return array_map(fn (AnonymousRecord $record): RiskScore => $this->instruments->scoreRisk($instrument, $record->answers), $records);
+        return array_map(fn (AnonymousRecord $record): RiskScore => $this->instruments->scoreRisk($instrument, $record->answers, $record->version), $records);
     }
 
     /**

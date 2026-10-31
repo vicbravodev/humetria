@@ -7,6 +7,7 @@ namespace App\Modules\Campaigns\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Actions\LaunchTraumaCampaign;
 use App\Modules\Campaigns\Http\Requests\TraumaCampaignRequest;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -38,7 +39,7 @@ final class TraumaCampaignController extends Controller
                 'id' => $person->id,
                 'name' => $person->name,
                 'area' => $person->areaName,
-                'reachable' => $person->email !== null,
+                'reachable' => SurveyInvitation::routes($person) !== [],
             ]),
             'filters' => ['q' => $query->search],
             'maxPeople' => TraumaCampaignRequest::MAX_PEOPLE,

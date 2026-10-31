@@ -105,6 +105,22 @@ it('keeps a work center with an open NOM-035 evaluation from being archived', fu
     expect(reloaded($workCenter)->archived_at)->toBeNull();
 })->with(['draft', 'active']);
 
+it('locks the work center before checking it has no open evaluation, so a draft at the same time waits', function (): void {
+    $tenant = Tenant::factory()->create();
+    $workCenter = WorkCenter::factory()->for($tenant)->create();
+    $queries = [];
+    Illuminate\Support\Facades\DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
+
+    $this->actingAs(ownerOf($tenant))->post(route('tenant.work-centers.archive', [$tenant, $workCenter->id]))->assertSessionHasNoErrors();
+
+    $lock = collect($queries)->search(fn (string $sql): bool => str_contains($sql, 'from "work_centers"') && str_ends_with($sql, 'for update'));
+    $check = collect($queries)->search(fn (string $sql): bool => str_starts_with($sql, 'select exists') && str_contains($sql, 'from "campaigns"'));
+
+    expect($lock)->toBeInt()->and($check)->toBeInt()->and($lock)->toBeLessThan($check);
+});
+
 it('archives a work center whose evaluations are all closed', function (): void {
     $tenant = Tenant::factory()->create();
     $workCenter = WorkCenter::factory()->for($tenant)->create();

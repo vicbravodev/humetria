@@ -11,6 +11,7 @@ use Illuminate\Container\Attributes\RouteParameter;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\In;
 
@@ -19,6 +20,11 @@ use Illuminate\Validation\Rules\In;
  */
 final class InviteMemberRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-members');
+    }
+
     /**
      * @return array<string, list<In|string>>
      */

@@ -32,7 +32,7 @@ final readonly class CloseCampaign
             // closed.
             $campaign = Campaign::lockIn($campaign, CampaignStatus::Active);
             $this->close($campaign, $automatic);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
     }
 
     private function close(Campaign $campaign, bool $automatic): void

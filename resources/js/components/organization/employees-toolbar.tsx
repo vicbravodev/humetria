@@ -33,12 +33,12 @@ export default function EmployeesToolbar({
     });
 
     return (
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
             <div
                 role="search"
-                className="grid gap-3 sm:grid-cols-2 lg:flex lg:items-center"
+                className="grid gap-3 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:items-center"
             >
-                <div className="relative sm:col-span-2 lg:w-[400px]">
+                <div className="relative sm:col-span-2 xl:max-w-[400px] xl:min-w-0 xl:flex-1">
                     <Search
                         aria-hidden
                         className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -52,7 +52,7 @@ export default function EmployeesToolbar({
                         className="pl-10"
                     />
                 </div>
-                <div className="lg:w-48">
+                <div className="xl:w-48 xl:shrink-0">
                     <Combobox
                         id="filter-work-center"
                         name="work_center"
@@ -70,7 +70,7 @@ export default function EmployeesToolbar({
                         }
                     />
                 </div>
-                <div className="lg:w-44">
+                <div className="xl:w-44 xl:shrink-0">
                     <Combobox
                         id="filter-area"
                         name="area"
@@ -87,7 +87,7 @@ export default function EmployeesToolbar({
                     />
                 </div>
             </div>
-            <div className="lg:ml-auto">
+            <div className="xl:ml-auto xl:shrink-0">
                 <CountTabs
                     label="Estado de las personas"
                     tabs={[

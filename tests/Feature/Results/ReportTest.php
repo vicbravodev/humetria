@@ -10,6 +10,7 @@ use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Results\Actions\SaveReportDetails;
 use App\Modules\Results\Http\Controllers\ReportController;
 use App\Modules\Results\Models\ReportDetails;
+use App\Modules\Results\Models\ReportShare;
 use App\Modules\Results\Support\ReportBuilder;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -186,3 +187,19 @@ it('gives no single answer in the report', function (): void {
         ->get(route('tenant.campaigns.report', [$this->tenant, $this->evaluation->id]))
         ->assertInertia(fn (Assert $page) => expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain('"answers"')->not->toContain('"items"'));
 });
+
+it('builds the report with a fixed number of queries, however many areas, answers and links', function (int $areas): void {
+    foreach (range(1, $areas) as $ignored) {
+        $area = Area::factory()->create(['tenant_id' => $this->tenant->id]);
+        AnonymousResponse::factory()->count(5)->create(['campaign_id' => $this->evaluation->id, 'area_id' => $area->id, 'instrument' => 'nom035.guide-iii', 'answers' => nom035Answers('nom035.guide-iii', 'never')]);
+        ReportShare::factory()->create(['campaign_id' => $this->evaluation->id, 'created_at' => now(), 'expires_at' => now()->addHour()]);
+    }
+    $this->actingAs($this->hr)->put(route('tenant.campaigns.report.update', [$this->tenant, $this->evaluation->id]), reportForm());
+    $url = route('tenant.campaigns.report', [$this->tenant, $this->evaluation->id]);
+    $this->get($url);
+
+    // The same whatever the size: nothing is read per row.
+    $this->expectsDatabaseQueryCount(18);
+
+    $this->get($url)->assertOk();
+})->with([1, 4]);
