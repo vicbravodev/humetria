@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sends a new link to everyone with a guide pending and an email (or to some people): each new link replaces the one
- * before it, so a lost or forwarded email stops working.
+ * Sends the link again to everyone with a guide pending and an email (or to some people). It is the link they already
+ * had: someone halfway through the survey keeps their place.
  */
 final readonly class ResendInvitations
 {

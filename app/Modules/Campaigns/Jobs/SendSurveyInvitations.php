@@ -25,12 +25,11 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Sends the survey link of a block of people: each gets a new link (the one before stops working) and an email with
- * it. It runs in the company that queued it (its id travels in the job's Context). Only who is still waiting in this
+ * Sends the survey link of a block of people: each gets an email with their link, the same one any earlier email
+ * carried, so a reminder never takes away the link of someone halfway through. It runs in the company that queued it (its id travels in the job's Context). Only who is still waiting in this
  * job's batch is sent to, so running it again, or late after a newer batch, never sends a link twice; it can only
  * happen if the worker dies between sending an email and writing it down. Who has no guide pending any more gets no
  * link, and nobody does once the evaluation is closed or past its last day. It waits for the next minute when the
@@ -101,7 +100,7 @@ final class SendSurveyInvitations implements ShouldQueue
                 $participant->invited_at !== null => SurveyEmail::Reminder,
                 default => SurveyEmail::Invitation,
             };
-            $token = Str::random(64);
+            $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::route('mail', $email)->notify(new SurveyInvitation(
                 $kind, $token, $people[$participant->employee_id]->name ?? '', $company, $contact, $workCenter, $campaign->closes_on, $minutes,
