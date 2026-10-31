@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import DemoRequestDetail from '@/components/demos/demo-request-detail';
 import DemoRequestItem from '@/components/demos/demo-request-item';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { DemoRequestRow } from '@/types';
 
 /**
  * The requests of one page as an inbox (pantallas: Consola-Solicitudes): the list at the left, the one chosen in full
- * at the right. The newest is open to begin with.
+ * at the right. The newest is open to begin with. On a phone the request sits below the list: choosing one takes the
+ * focus there, so the screen and a screen reader land on it.
  */
 export default function DemoRequestsInbox({
     requests,
@@ -15,6 +17,15 @@ export default function DemoRequestsInbox({
     const [chosenId, setChosenId] = useState(requests[0]?.id);
     const chosen =
         requests.find((request) => request.id === chosenId) ?? requests[0];
+    const detail = useRef<HTMLElement>(null);
+    const stacked = useIsMobile();
+    const choose = (id: string) => {
+        setChosenId(id);
+
+        if (stacked) {
+            detail.current?.focus();
+        }
+    };
 
     return (
         <div className="flex min-h-[520px] flex-wrap overflow-hidden rounded-xl border bg-card">
@@ -27,11 +38,13 @@ export default function DemoRequestsInbox({
                         key={request.id}
                         request={request}
                         chosen={request.id === chosen?.id}
-                        onChoose={() => setChosenId(request.id)}
+                        onChoose={() => choose(request.id)}
                     />
                 ))}
             </ul>
-            {chosen !== undefined && <DemoRequestDetail request={chosen} />}
+            {chosen !== undefined && (
+                <DemoRequestDetail ref={detail} request={chosen} />
+            )}
         </div>
     );
 }
