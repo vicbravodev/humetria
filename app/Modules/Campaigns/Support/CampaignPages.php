@@ -158,7 +158,7 @@ final readonly class CampaignPages
                 ? ['min' => CampaignClock::today()->addDay()->format('Y-m-d'), 'suggested' => CampaignClock::today()->addWeeks(2)->format('Y-m-d')]
                 : null,
             // The earliest last day it can be extended to, while it runs.
-            'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
+            'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null && ! CampaignClock::hasPassed($campaign->closes_on) ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
             'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
                 ? $this->replacementPool($campaign)
                 : null,

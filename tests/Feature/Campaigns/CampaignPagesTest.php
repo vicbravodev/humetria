@@ -524,3 +524,13 @@ it('counts the people who finished each day from launch to the last day, once en
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get($url)
         ->assertInertia(fn (Assert $page) => $page->where('answersByDay', null));
 });
+
+it('offers no extension once the last day has passed, even before the hourly close runs', function (): void {
+    $campaign = Campaign::factory()->active()->create([
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'closes_on' => now()->subDays(2)->toDateString(),
+    ]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('minDeadline', null));
+});
