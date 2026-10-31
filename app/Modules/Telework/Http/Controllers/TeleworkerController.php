@@ -16,6 +16,7 @@ use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Http\Requests\RegisterAspirantRequest;
 use App\Modules\Telework\Http\Requests\WorkplaceRequest;
 use App\Modules\Telework\Models\Checklist;
+use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Support\WorkplaceAddress;
@@ -143,8 +144,29 @@ final class TeleworkerController extends Controller
             'endReason' => $teleworker->end_reason?->label(),
             'endedOn' => $teleworker->ended_at?->setTimezone($zone)->toDateString(),
             'endNote' => $teleworker->end_note,
+            'equipment' => $this->equipment($teleworker, $zone),
             'workplaces' => $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended))->all(),
         ];
+    }
+
+    /**
+     * The items delivered to the person, oldest delivery first, with where each stands.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function equipment(Teleworker $teleworker, string $zone): array
+    {
+        return array_values(EquipmentItem::query()->where('teleworker_id', $teleworker->id)->orderBy('delivered_on')->orderBy('created_at')->orderBy('id')->get()
+            ->map(fn (EquipmentItem $item): array => [
+                'id' => $item->id,
+                'kind' => $item->kind->label(),
+                'description' => $item->description,
+                'deliveredOn' => $item->delivered_on->toDateString(),
+                'status' => $item->status->value,
+                'statusLabel' => $item->status->label(),
+                'refusalReason' => $item->refusal_reason,
+                'respondedOn' => $item->responded_at?->setTimezone($zone)->toDateString(),
+            ])->all());
     }
 
     /**

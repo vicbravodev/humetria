@@ -1,5 +1,6 @@
 import { PartyPopper } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
+import PortalEquipmentSection from '@/components/telework/portal/portal-equipment-section';
 import PortalDocuments from '@/components/telework/portal/portal-documents';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
 import PortalPhotoRequestCard from '@/components/telework/portal/portal-photo-request-card';
@@ -37,6 +38,10 @@ export default function PortalHome({
                 </EmptyState>
             )}
             <PortalDocuments documents={pending.documents} token={token} />
+            <PortalEquipmentSection
+                equipment={pending.equipment}
+                token={token}
+            />
             {(pending.photos.length > 0 || pending.visits.length > 0) && (
                 <section aria-labelledby="portal-asked" className="grid gap-3">
                     <h2 id="portal-asked" className="text-xl font-semibold">

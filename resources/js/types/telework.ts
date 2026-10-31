@@ -1,3 +1,5 @@
+import type { PortalDocument } from './telework-documents';
+
 /** Someone who can sit on a work center's Comisión, with the role they hold in the company. */
 export type CommitteePerson = {
     id: number;
@@ -64,6 +66,32 @@ export type PortalPending = {
     photos: PortalPhotoRequest[];
     visits: PortalVisit[];
     documents: PortalDocument[];
+    equipment: PortalEquipment[];
+};
+
+/** An item of equipment delivered to the person that they have not answered yet. */
+export type PortalEquipment = {
+    id: string;
+    title: string;
+    /** What it is, worded ("Silla ergonómica"). */
+    kind: string;
+    /** Y-m-d. */
+    deliveredOn: string;
+};
+
+export type EquipmentStatusValue = 'pending' | 'received' | 'refused';
+
+/** An item of equipment delivered to a teleworker and where the person's answer stands. */
+export type EquipmentRow = {
+    id: string;
+    kind: string;
+    description: string;
+    deliveredOn: string;
+    status: EquipmentStatusValue;
+    statusLabel: string;
+    /** The person's reason when they refused it. */
+    refusalReason: string | null;
+    respondedOn: string | null;
 };
 
 export type TeleworkerStatus = 'aspirant' | 'active' | 'ended';
@@ -99,6 +127,7 @@ export type TeleworkerSummary = {
     today: string;
     startedOn: string | null;
     noEquipmentReason: string | null;
+    equipment: EquipmentRow[];
     /** How it ended, already worded; null while the period is open. */
     endReason: string | null;
     endedOn: string | null;
@@ -218,71 +247,3 @@ export type ReviewDetail = {
     evidence: ReviewEvidence[];
     authorizations: ReviewAuthorization[];
 };
-
-export type DocumentItem = { value: string; label: string };
-
-/** A kind of NOM-037 document, with the items of the norm it can cover (only the policy and the process have any). */
-export type DocumentKindOption = {
-    value: string;
-    label: string;
-    /** The numeral of the norm it answers to, when it has one. */
-    numeral: string | null;
-    items: DocumentItem[];
-};
-
-/** One version of a document in one work center. `missingItems` are the letters the version does not cover. */
-export type DocumentRow = {
-    id: string;
-    kind: string;
-    workCenter: { id: string; name: string };
-    version: number;
-    /** Y-m-d in the company's time zone. */
-    publishedOn: string;
-    coveredItems: string[];
-    missingItems: string[];
-    /** Null for the kinds nobody has to confirm. */
-    acknowledgements: AckProgress | null;
-};
-
-export type DocumentFilters = {
-    center: { value: string; label: string } | null;
-    versions: 'latest' | 'all';
-};
-
-/** How many of the people a document is for have confirmed it. */
-export type AckProgress = { acknowledged: number; expected: number };
-
-export type AckStatus = 'pending' | 'acknowledged';
-
-/** A person who was asked to confirm a document, with how they did. */
-export type AckPerson = {
-    id: string;
-    name: string;
-    jobTitle: string;
-    status: AckStatus;
-    /** How it was confirmed ("Portal", "En papel", "Panel"); null while pending. */
-    channelLabel: string | null;
-    /** Y-m-d in the company's time zone. */
-    acknowledgedOn: string | null;
-};
-
-export type AckCommitteeMember = {
-    name: string;
-    status: AckStatus;
-    acknowledgedOn: string | null;
-};
-
-/** "Every pending person the search found", chosen without listing them: the server resolves it. */
-export type AckAllMatching = { q: string; count: number };
-
-export type AckFilters = { status: 'all' | AckStatus; q: string };
-
-export type AckDocument = {
-    id: string;
-    title: string;
-    workCenter: string;
-    publishedOn: string;
-};
-
-/** A published document the person has to read and confirm in their portal. */
-export type PortalDocument = { id: string; title: string; publishedOn: string };

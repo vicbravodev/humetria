@@ -74,7 +74,7 @@ export default function RosterFields({
             <RosterArea
                 name="no_equipment_reason"
                 label="Equipo entregado"
-                hint="Escribe qué equipo se le entregó o por qué no se le entregó ninguno."
+                hint="Opcional si ya registraste el equipo de la persona. Si no se le entregó ninguno, escribe por qué."
                 errors={errors}
             />
         </div>

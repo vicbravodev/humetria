@@ -15,6 +15,7 @@ use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\ChecklistPhoto;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
+use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\TeleworkDocument;
@@ -28,6 +29,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\ChecklistFactory;
+use Database\Factories\Telework\EquipmentItemFactory;
 use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\VisitAuthorizationFactory;
@@ -678,3 +680,62 @@ it('lets the person read and confirm a document from their portal', function (bo
 
     expect(Acknowledgement::query()->sole()->acknowledged_at)->not->toBeNull();
 })->with($looks);
+
+it('shows the person the equipment waiting for their answer', function (bool $dark, bool $mobile): void {
+    $address = portalAddress();
+    $tenant = Tenant::query()->where('trade_name', 'Acme')->firstOrFail();
+    EquipmentItemFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => App\Modules\Telework\Models\Teleworker::query()->withoutGlobalScopes()->firstOrFail()->id, 'description' => 'Silla con soporte lumbar']);
+
+    visitPage('telework/portal', $address, $dark, $mobile)
+        ->assertSee('Equipo por confirmar')
+        ->assertSee('Silla con soporte lumbar')
+        ->assertSee('Lo recibí')
+        ->assertSee('No lo acepto');
+})->with($looks);
+
+it('lets RH register equipment and the person confirm one item and refuse another', function (): void {
+    [$url, $teleworker, $tenant] = [...(function (): array {
+        [$url, $tenant, $teleworker] = validatedAspirant();
+
+        return [$url, $teleworker, $tenant];
+    })()];
+
+    visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}")
+        ->assertSee('Equipo entregado')
+        ->assertSee('Aún no hay equipo registrado')
+        ->press('Registrar equipo')
+        ->click('#equipment-kind')
+        ->type('[role="combobox"][aria-controls="equipment-kind-options"]', 'silla')
+        ->keys('[role="combobox"][aria-controls="equipment-kind-options"]', 'Enter')
+        ->fill('#equipment-description', 'Silla con soporte lumbar')
+        ->press('[role="dialog"] button[type="submit"]')
+        ->assertSee('Equipo registrado')
+        ->assertSee('Silla con soporte lumbar')
+        ->assertSee('Por confirmar');
+
+    EquipmentItemFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'description' => 'Monitor de 24 pulgadas', 'kind' => 'computer']);
+    workIn($tenant);
+    $portal = '/portal/'.resolve(IssuePortalLink::class)->handle($teleworker->employee_id);
+
+    visit($portal)
+        ->assertSee('Equipo por confirmar')
+        ->assertSee('Monitor de 24 pulgadas')
+        ->click('Lo recibí')
+        ->assertDontSee('Monitor de 24 pulgadas')
+        ->assertSee('Silla con soporte lumbar')
+        ->click('No lo acepto')
+        ->press('Enviar mi negativa')
+        ->assertSee('Escriba el motivo')
+        ->fill('textarea[id^="reason-"]', 'No cabe en mi espacio.')
+        ->press('Enviar mi negativa')
+        ->assertSee('Nada pendiente por ahora')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    visit("{$url}/telework/teleworkers/{$teleworker->id}")
+        ->assertSee('Recibido')
+        ->assertSee('Rechazado')
+        ->assertSee('Motivo: No cabe en mi espacio.');
+
+    expect(EquipmentItem::query()->count())->toBe(2);
+});

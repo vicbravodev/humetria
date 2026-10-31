@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { Briefcase, Home, Percent } from 'lucide-react';
 import AddWorkplaceDialog from '@/components/telework/add-workplace-dialog';
+import EquipmentSection from '@/components/telework/equipment-section';
 import PortalLinkPanel from '@/components/telework/portal-link-panel';
 import RosterPanel from '@/components/telework/roster-panel';
 import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
@@ -52,6 +53,7 @@ export default function TeleworkerDetail({
                     newLink={newLink}
                 />
             )}
+            <EquipmentSection tenantSlug={tenantSlug} teleworker={teleworker} />
             <section className="grid gap-3" aria-labelledby="workplaces-title">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 id="workplaces-title" className="text-xl font-semibold">

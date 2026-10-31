@@ -133,7 +133,7 @@ it('opens for a person who does not telework, with nothing pending yet', functio
     $props = portalProps($this->token);
 
     expect($props['unavailable'])->toBeFalse()
-        ->and($props['pending'])->toBe(['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => []]);
+        ->and($props['pending'])->toBe(['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]);
 });
 
 it('answers an unknown, replaced or deactivated-employee token with the same page and status', function (): void {

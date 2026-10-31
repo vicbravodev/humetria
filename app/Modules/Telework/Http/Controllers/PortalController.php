@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Data\PendingChecklist;
 use App\Modules\Telework\Data\PendingDocument;
+use App\Modules\Telework\Data\PendingEquipment;
 use App\Modules\Telework\Data\PendingPhotoRequest;
 use App\Modules\Telework\Data\PendingVisit;
 use App\Modules\Telework\Exceptions\PortalUnavailable;
@@ -30,7 +31,7 @@ final class PortalController extends Controller
                 'token' => null,
                 'company' => null,
                 'name' => null,
-                'pending' => ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => []],
+                'pending' => ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []],
             ]);
         }
 
@@ -48,6 +49,7 @@ final class PortalController extends Controller
                 'photos' => array_map(fn (PendingPhotoRequest $item): array => ['id' => $item->id, 'workplace' => $item->workplace, 'note' => $item->note], $items->photos),
                 'visits' => array_map(fn (PendingVisit $item): array => ['id' => $item->id, 'workplace' => $item->workplace], $items->visits),
                 'documents' => array_map(fn (PendingDocument $item): array => ['id' => $item->id, 'title' => $item->title, 'publishedOn' => $item->publishedOn], $items->documents),
+                'equipment' => array_map(fn (PendingEquipment $item): array => ['id' => $item->id, 'title' => $item->title, 'kind' => $item->kind, 'deliveredOn' => $item->deliveredOn], $items->equipment),
             ],
         ]);
     }

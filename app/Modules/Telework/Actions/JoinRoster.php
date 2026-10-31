@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Telework\Data\RosterData;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Moves an aspirant into the roster (numerals 5.1 and 5.4): all the data of 5.1 and at least one workplace that is
- * validated and in force. The equipment (datum k) is, until its list exists, the reason for having none.
+ * validated and in force. The equipment (datum k) is the items registered for the person, or the reason for having none.
  */
 final readonly class JoinRoster
 {
@@ -31,7 +32,8 @@ final readonly class JoinRoster
             // Locked, so two joins at once cannot both pass the status check.
             $current = Teleworker::query()->lockForUpdate()->findOrFail($teleworker->id);
 
-            $errors = $this->missing($data);
+            $hasEquipment = EquipmentItem::query()->where('teleworker_id', $current->id)->exists();
+            $errors = $this->missing($data, $hasEquipment);
 
             if ($current->status !== TeleworkerStatus::Aspirant) {
                 $errors['teleworker'] = 'Esta persona ya está en el padrón o su periodo terminó.';
@@ -51,7 +53,7 @@ final readonly class JoinRoster
                 'activities' => $data->activities,
                 'job_profile' => $data->jobProfile,
                 'contact_phone' => $data->contactPhone,
-                'no_equipment_reason' => $data->noEquipmentReason,
+                'no_equipment_reason' => $data->noEquipmentReason === null || trim($data->noEquipmentReason) === '' ? null : trim($data->noEquipmentReason),
                 ...($home?->attributes() ?? []),
             ]);
 
@@ -64,7 +66,7 @@ final readonly class JoinRoster
     }
 
     /** @return array<string, string> */
-    private function missing(RosterData $data): array
+    private function missing(RosterData $data, bool $hasEquipment): array
     {
         $blank = fn (?string $value): bool => $value === null || trim($value) === '';
         $required = [
@@ -78,8 +80,7 @@ final readonly class JoinRoster
             'postal_code' => $blank($data->home?->postalCode),
             'municipality' => $blank($data->home?->municipality),
             'state' => $blank($data->home?->state),
-            // ponytail: no equipment table until Task 13, which relaxes this to "equipment registered or a reason".
-            'no_equipment_reason' => $blank($data->noEquipmentReason),
+            'no_equipment_reason' => ! $hasEquipment && $blank($data->noEquipmentReason),
         ];
 
         return array_map(fn (): string => 'Este dato es obligatorio.', array_filter($required));

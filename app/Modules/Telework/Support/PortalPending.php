@@ -6,11 +6,14 @@ namespace App\Modules\Telework\Support;
 
 use App\Modules\Telework\Data\PendingChecklist;
 use App\Modules\Telework\Data\PendingDocument;
+use App\Modules\Telework\Data\PendingEquipment;
 use App\Modules\Telework\Data\PendingPhotoRequest;
 use App\Modules\Telework\Data\PendingVisit;
 use App\Modules\Telework\Data\PortalPendingData;
+use App\Modules\Telework\Enums\EquipmentStatus;
 use App\Modules\Telework\Enums\EvidenceKind;
 use App\Modules\Telework\Models\Acknowledgement;
+use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\VisitAuthorization;
@@ -19,7 +22,7 @@ use App\Modules\Telework\Models\WorkplaceReview;
 
 /**
  * The pending items of a person's portal: the checklists of their workplaces, the photos the Comisión asked for and the
- * visits to authorize; documents and equipment join as those arrive. A sent checklist is only ever "En revisión de la
+ * visits to authorize; documents and equipment. A sent checklist is only ever "En revisión de la
  * Comisión" or "Revisada": the outcome is told by RH, not by the portal (criterio C-11, designer decision 7).
  */
 final readonly class PortalPending
@@ -33,6 +36,8 @@ final readonly class PortalPending
         if ($portal->teleworkerId === null) {
             return new PortalPendingData([], [], [], [], $documents);
         }
+
+        $equipment = $this->equipment($portal->teleworkerId);
 
         $workplaces = Workplace::query()->where('teleworker_id', $portal->teleworkerId)->whereNull('retired_at')->with('applications')->orderBy('created_at')->orderBy('id')->get();
         $lines = $workplaces->mapWithKeys(fn (Workplace $workplace): array => [$workplace->id => $this->address->line($workplace)])->all();
@@ -61,7 +66,15 @@ final readonly class PortalPending
             array_values($photos->map(fn (EvidenceRequest $request): PendingPhotoRequest => new PendingPhotoRequest($request->id, $lines[$request->workplace_id] ?? '', $request->note))->all()),
             array_values($visits->map(fn (VisitAuthorization $authorization): PendingVisit => new PendingVisit($authorization->id, $lines[$authorization->workplace_id] ?? ''))->all()),
             $documents,
+            $equipment,
         );
+    }
+
+    /** @return list<PendingEquipment> The items delivered to the person and not answered yet, oldest delivery first. */
+    private function equipment(string $teleworkerId): array
+    {
+        return array_values(EquipmentItem::query()->where('teleworker_id', $teleworkerId)->where('status', EquipmentStatus::Pending)->orderBy('delivered_on')->orderBy('id')->get()
+            ->map(fn (EquipmentItem $item): PendingEquipment => new PendingEquipment($item->id, $item->description, $item->kind->label(), $item->delivered_on->toDateString()))->all());
     }
 
     /** @return list<PendingDocument> The versions in force asked of the person and not confirmed yet, oldest request first. */

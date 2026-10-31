@@ -29,7 +29,7 @@ final class JoinRosterRequest extends FormRequest
             'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
             'activities' => ['required', 'string', 'max:2000'],
             'contact_phone' => ['required', 'string', 'max:30', 'regex:/\A[^\x00-\x1F\x7F]*\z/u'],
-            'no_equipment_reason' => ['required', 'string', 'max:1000'],
+            'no_equipment_reason' => ['nullable', 'string', 'max:1000'],
             ...AddressRules::for(),
         ];
     }

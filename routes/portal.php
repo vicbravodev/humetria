@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Telework\Http\Controllers\PortalChecklistController;
 use App\Modules\Telework\Http\Controllers\PortalController;
 use App\Modules\Telework\Http\Controllers\PortalDocumentController;
+use App\Modules\Telework\Http\Controllers\PortalEquipmentController;
 use App\Modules\Telework\Http\Controllers\PortalEvidenceController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +24,6 @@ Route::post('portal/{token}/visits/{authorization}/confirm', [PortalEvidenceCont
 // The documents the person was asked to confirm: read the PDF and confirm it once. Confirming is throttled per link.
 Route::get('portal/{token}/documents/{document}/file', [PortalDocumentController::class, 'file'])->whereUuid('document')->middleware('throttle:portal-views')->name('portal.documents.file');
 Route::post('portal/{token}/documents/{document}/acknowledge', [PortalDocumentController::class, 'acknowledge'])->whereUuid('document')->middleware('throttle:portal-actions')->name('portal.documents.acknowledge');
+
+// The equipment delivered to the person: they confirm they received each item, or refuse it with the reason, once.
+Route::post('portal/{token}/equipment/{item}/respond', [PortalEquipmentController::class, 'respond'])->whereUuid('item')->middleware('throttle:portal-actions')->name('portal.equipment.respond');

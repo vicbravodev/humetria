@@ -6,6 +6,7 @@ use App\Modules\Telework\Http\Controllers\AcknowledgementController;
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\DocumentController;
+use App\Modules\Telework\Http\Controllers\EquipmentController;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
 use App\Modules\Telework\Http\Controllers\PhotoController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
@@ -46,6 +47,9 @@ Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers', [Te
 Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.show');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
+// The equipment delivered to a person: registered by RH, answered by the person in their portal. No edit and no delete: a
+// registration is evidence (C-22, C-29); a mistaken one stays and the person refuses it with the reason.
+Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/equipment', [EquipmentController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.equipment.store');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/roster', [RosterController::class, 'join'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.join');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/end', [RosterController::class, 'end'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.end');
 

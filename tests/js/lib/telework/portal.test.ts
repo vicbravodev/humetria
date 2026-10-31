@@ -9,6 +9,7 @@ const empty: PortalPending = {
     photos: [],
     visits: [],
     documents: [],
+    equipment: [],
 };
 
 describe('nothingPending', () => {
