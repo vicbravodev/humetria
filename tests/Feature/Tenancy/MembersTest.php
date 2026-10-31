@@ -95,7 +95,7 @@ it('answers 404 to someone outside the company', function (): void {
         ->assertNotFound();
 });
 
-it('invites a person with a role and emails them the link', function (TenantRole $role, string $subject): void {
+it('invites a person with a role and emails them the link', function (TenantRole $role): void {
     Log::spy();
 
     $this->actingAs($this->owner)
@@ -110,6 +110,7 @@ it('invites a person with a role and emails them the link', function (TenantRole
         'tenant_id' => $this->tenant->id, 'role' => $role, 'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'invited_by' => $this->owner->id,
     ])->and($invitation->expires_at->toIso8601String())->toBe('2026-11-05T18:00:00+00:00');
 
+    $subject = Illuminate\Support\Str::before($this->owner->name, ' ').' te invitó a Acme en Humetría';
     Notification::assertSentOnDemand(InvitationEmail::class, function (InvitationEmail $email, array $channels, AnonymousNotifiable $notifiable) use ($invitation, $subject): bool {
         $mail = $email->toMail($notifiable);
 
@@ -125,19 +126,7 @@ it('invites a person with a role and emails them the link', function (TenantRole
     expect($entry->event)->toBe('tenant_invitation.sent')
         ->and($entry->metadata)->toEqual(['tenant_id' => $this->tenant->id, 'role' => $role->value])
         ->and(json_encode($entry->toArray()))->not->toContain('ana@acme.mx');
-})->with([
-    'hr' => [TenantRole::Hr, 'Te invitaron a Humetría como RH de Acme'],
-    'viewer' => [TenantRole::Viewer, 'Te invitaron a consultar Acme en Humetría'],
-]);
-
-it('writes what each role will do in the email', function (TenantRole $role, string $line): void {
-    $mail = (new InvitationEmail('Acme', 'Ana', 'tok', now()->addDays(7)->toImmutable(), $role))->toMail(new AnonymousNotifiable);
-
-    expect($mail->introLines)->toBe([$line]);
-})->with([
-    'hr' => [TenantRole::Hr, 'Vas a llevar sus centros de trabajo y su personal, y sus evaluaciones de NOM-035, NOM-037 y Ley Silla.'],
-    'viewer' => [TenantRole::Viewer, 'Vas a poder ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.'],
-]);
+})->with([TenantRole::Hr, TenantRole::Viewer]);
 
 it('validates the invitation', function (array $payload, string $field, string $message): void {
     TenantMembership::factory()->for($this->tenant)->for(User::factory()->create(['email' => 'beto@acme.mx']))->hr()->create();

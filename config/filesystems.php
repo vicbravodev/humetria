@@ -30,6 +30,12 @@ return [
     |
     */
 
+    /*
+    | The disk of the companies' logos. Emails load them from its public URL, so it must be reachable from the internet.
+    */
+
+    'tenant_logos' => env('TENANT_LOGOS_DISK', 'public'),
+
     'disks' => [
 
         'local' => [

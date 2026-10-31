@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
+use App\Support\RequestOrigin;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -68,7 +69,11 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
      */
     public function sendPasswordResetNotification(#[SensitiveParameter] $token): void
     {
-        $this->notify(new ResetPasswordNotification($token));
+        // Fortify asks for it while serving the request: where it came from is read now, before the queue.
+        $request = request();
+        $origin = resolve(RequestOrigin::class)->describe($request->userAgent() ?? '', $request->ip() ?? '', now());
+
+        $this->notify(new ResetPasswordNotification($token, $origin));
     }
 
     public function sendEmailVerificationNotification(): void

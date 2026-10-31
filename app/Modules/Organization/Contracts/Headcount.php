@@ -15,6 +15,11 @@ interface Headcount
     public function byWorkCenter(): array;
 
     /**
+     * How many active people a company has, from anywhere: the console works in no company.
+     */
+    public function ofCompany(string $tenantId): int;
+
+    /**
      * The areas of each of those work centers with their active people, the largest first and then by name.
      *
      * @param  list<string>  $workCenterIds

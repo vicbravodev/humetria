@@ -52,6 +52,12 @@ final class CampaignClock
         return max(0, self::daysBetween(self::today(), self::deadline($closesOn)->subDay()));
     }
 
+    /** How many days a campaign whose last day is `$closesOn` still takes answers, counting today: 1 on its last day. */
+    public static function daysToAnswer(CarbonInterface $closesOn): int
+    {
+        return self::daysLeft($closesOn) + 1;
+    }
+
     /**
      * How much of the days from the one `$start` falls on to the one `$end` falls on has gone by today, in percent
      * from 0 to 100, rounded down; 100 for a span of no days.

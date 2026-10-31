@@ -6,6 +6,7 @@ use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
+use App\Modules\Tenancy\Http\Controllers\TenantLogoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('admin/companies', [TenantConsoleController::class, 'index'])
@@ -19,6 +20,14 @@ Route::post('admin/companies', [TenantConsoleController::class, 'store'])
 Route::put('admin/companies/{tenant}', [TenantConsoleController::class, 'update'])
     ->middleware(['auth', 'verified'])
     ->name('companies.update');
+
+Route::post('admin/companies/{tenant}/logo', [TenantLogoController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.logo.update');
+
+Route::delete('admin/companies/{tenant}/logo', [TenantLogoController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.logo.destroy');
 
 Route::post('admin/companies/{tenant}/activate', [TenantConsoleController::class, 'activate'])
     ->middleware(['auth', 'verified'])

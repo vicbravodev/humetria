@@ -32,10 +32,13 @@ use Illuminate\Database\Query\Builder;
  * @property CarbonImmutable|null $trial_started_at
  * @property CarbonImmutable|null $active_until
  * @property CarbonImmutable|null $deactivated_at
+ * @property string|null $logo_path
+ * @property int|null $logo_width
+ * @property int|null $logo_height
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'trial_started_at', 'active_until', 'deactivated_at'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'trial_started_at', 'active_until', 'deactivated_at', 'logo_path', 'logo_width', 'logo_height'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantFactory::class)]
 final class Tenant extends Model
 {
@@ -149,6 +152,8 @@ final class Tenant extends Model
             'trial_started_at' => 'immutable_datetime',
             'active_until' => 'immutable_datetime',
             'deactivated_at' => 'immutable_datetime',
+            'logo_width' => 'integer',
+            'logo_height' => 'integer',
         ];
     }
 }

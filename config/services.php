@@ -30,6 +30,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    | DB-IP's free city database (CC BY 4.0), downloaded each month by `geoip:update`: the city an account email names.
+    */
+
+    'geoip' => [
+        'database' => env('GEOIP_DATABASE', storage_path('app/private/geoip/dbip-city-lite.mmdb')),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

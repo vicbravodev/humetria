@@ -13,6 +13,7 @@ final readonly class InstrumentDefinition
     /**
      * @param  list<array{value: string, label: string}>  $options
      * @param  list<SectionDefinition>  $sections
+     * @param  int  $minutes  About how long a person takes to answer it, to tell them before they start.
      */
     public function __construct(
         public string $key,
@@ -22,6 +23,7 @@ final readonly class InstrumentDefinition
         public bool $identified,
         public array $options,
         public array $sections,
+        public int $minutes,
     ) {}
 
     /**

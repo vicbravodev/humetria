@@ -94,10 +94,10 @@ it('emails a link that opens that person\'s survey, written as the survey speaks
         $mail = $notification->toMail($notifiable);
         $token = basename((string) $mail->actionUrl);
 
-        expect($mail->subject)->toBe('Autopartes del Bajío le invita a contestar una evaluación confidencial')
-            ->and($mail->actionText)->toBe('Contestar evaluación')
-            ->and((string) $mail->render())->toContain('¿El botón no abre? Copie este enlace en su navegador:')->not->toContain('Copia este enlace en tu navegador')
-            ->and(implode(' ', $mail->introLines))->toContain('NOM-035')->toContain('20 nov 2026')
+        expect($mail->subject)->toBe('Su opinión sobre su trabajo · evaluación confidencial')
+            ->and($mail->actionText)->toBe('Contestar la evaluación')
+            ->and((string) $mail->render())->toContain('Si el botón no funciona, copie este enlace en su navegador:')->not->toContain('copia este enlace en tu navegador')
+            ->toContain('Autopartes del Bajío aplica la evaluación')->toContain('NOM-035')->toContain('20 de noviembre')
             ->and(Participant::query()->withoutGlobalScopes()->where('token_hash', Participant::hashToken($token))->sole()->employee_id)->toBe($person->id);
 
         test()->get($mail->actionUrl)->assertOk()->assertInertia(fn ($page) => $page->where('unavailable', null)->where('company', 'Autopartes del Bajío'));

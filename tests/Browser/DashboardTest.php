@@ -6,6 +6,7 @@ use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -19,7 +20,7 @@ function panelCompany(): string
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
     $offices = WorkCenter::factory()->for($tenant)->create(['name' => 'Oficinas Monterrey']);
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
-    $active = Campaign::factory()->active(now()->addDays(11)->toDateString())->create(['tenant_id' => $tenant->id, 'work_center_id' => $offices->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'workers' => 60]);
+    $active = Campaign::factory()->active(CampaignClock::today()->addDays(11)->toDateString())->create(['tenant_id' => $tenant->id, 'work_center_id' => $offices->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'workers' => 60]);
     Campaign::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
     $closed = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
 

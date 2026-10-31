@@ -19,6 +19,8 @@ export type TenantRow = {
     trade_name: string;
     rfc: string;
     slug: string;
+    /** The logo its people see on their emails; null shows its name instead. */
+    logo_url: string | null;
     status:
         | 'not_started'
         | 'trial'

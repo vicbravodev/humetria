@@ -33,6 +33,8 @@ npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
 y el CI en verde, que además corre la mutación (score ≥ 85%). En local, `composer ci:check` corre todo lo de arriba en orden.
+El check obligatorio de `main` es el job `ci` (chequeos y navegador); la mutación no lo es: un PR se puede mergear antes de
+que termine, siempre que `composer ci:check` haya pasado en local.
 
 **La mutación no se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el
 usuario la pide, y siempre acotada a las clases que tocaste: `composer mutate -- --class='App\Modules\Tenancy\Actions\X'`
@@ -43,7 +45,7 @@ Ver `docs/testing.md`.
 El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
 (chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
 tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
-(`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
+(`--class`, de `scripts/mutation-classes.php`); el job `mutation-score` suma los shards y aplica `--min=85` al total
 (`scripts/mutation-score.php`). Así cada clase saca el mismo resultado que en una corrida completa. Si la mutación se vuelve
 el job más lento, se agrega un shard en el workflow; no se baja el umbral. En un PR se mutan solo las clases de los tests
 cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca lo que comparten (`database/`, `routes/`,
@@ -261,6 +263,7 @@ contra él.
   puerto 5433 (`FORWARD_DB_PORT`); `phpunit.xml` fija ese host y puerto, así que el `.env` puede apuntar a `pgsql`.
 - Primera vez: `composer install`, `cp .env.example .env`, `sail up -d`, `sail artisan key:generate`, `sail artisan migrate`.
   El primer superadmin: `sail artisan humetria:create-superadmin`.
+  La base de ciudades para los correos de cuenta: `sail artisan geoip:update` (luego la baja cada mes el scheduler).
 - El correo local va a mailtrap-local (bandeja en `http://localhost:3550`): ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
 - Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado;
