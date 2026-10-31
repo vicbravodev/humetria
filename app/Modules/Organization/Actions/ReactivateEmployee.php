@@ -20,7 +20,7 @@ final class ReactivateEmployee
         $employee->update(['deactivated_at' => null]);
 
         Log::info('employee.reactivated', ['employee_id' => $employee->id]);
-        event(new EmployeeReactivated($employee->tenant_id, $employee->id));
+        event(new EmployeeReactivated($employee->tenant_id, $employee->id, $employee->work_center_id));
 
         return $employee;
     }

@@ -55,7 +55,11 @@ it('announces that a person was deactivated, and reactivated', function (): void
 
     $this->actingAs($this->owner)->post(route('tenant.employees.reactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
 
-    Event::assertDispatched(EmployeeReactivated::class, fn (EmployeeReactivated $event): bool => $event->tenantId === $this->tenant->id && $event->employeeId === $this->employee->id);
+    Event::assertDispatchedTimes(EmployeeReactivated::class, 1);
+    Event::assertDispatched(EmployeeReactivated::class, fn (EmployeeReactivated $event): bool => $event->tenantId === $this->tenant->id
+        && $event->employeeId === $this->employee->id
+        && $event->workCenterId === $this->plant->id);
+    expect(new EmployeeReactivated('t', 'e', 'w'))->toBeInstanceOf(ShouldDispatchAfterCommit::class);
 });
 
 it('announces that a person moved to another work center', function (): void {

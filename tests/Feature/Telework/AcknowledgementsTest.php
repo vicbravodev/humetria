@@ -233,7 +233,7 @@ it('asks new, reactivated and moved-in staff for the policy in force of their ce
 
     match ($arrival) {
         'created' => $listener->handle(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id)),
-        'reactivated' => $listener->handle(new EmployeeReactivated($this->tenant->id, $newcomer->id)),
+        'reactivated' => $listener->handle(new EmployeeReactivated($this->tenant->id, $newcomer->id, $newcomer->work_center_id)),
         'moved' => $listener->handle(new EmployeeMoved($this->tenant->id, $newcomer->id, $this->other->id, $this->center->id)),
     };
 
@@ -248,7 +248,7 @@ it('asks newcomers from a queued listener after the commit, so an import of many
     $newcomer = staffer($this->center);
 
     Event::dispatch(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id));
-    Event::dispatch(new EmployeeReactivated($this->tenant->id, $newcomer->id));
+    Event::dispatch(new EmployeeReactivated($this->tenant->id, $newcomer->id, $newcomer->work_center_id));
     Event::dispatch(new EmployeeMoved($this->tenant->id, $newcomer->id, $this->other->id, $this->center->id));
 
     Queue::assertPushed(Illuminate\Events\CallQueuedListener::class, fn (Illuminate\Events\CallQueuedListener $job): bool => $job->class === RequestPolicyFromNewStaff::class && $job->data[0]->employeeId === $newcomer->id);
@@ -271,7 +271,7 @@ it('asks a newcomer once even if the arrival is announced twice, and nothing wit
     publishDocument(DocumentKind::Policy, $this->other);
     Acknowledgement::query()->delete();
     Event::dispatch(new EmployeeCreated($this->tenant->id, $lonely->id, $this->other->id));
-    Event::dispatch(new EmployeeReactivated($this->tenant->id, $lonely->id));
+    Event::dispatch(new EmployeeReactivated($this->tenant->id, $lonely->id, $lonely->work_center_id));
 
     expect(Acknowledgement::query()->count())->toBe(1);
 });
