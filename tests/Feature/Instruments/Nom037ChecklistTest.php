@@ -121,5 +121,55 @@ it('hands over the literal usage instructions, the 5.5 notice and the base conse
 
     expect($checklist->instructions())->toBe(trim($m[0]))
         ->and($checklist->responsibilityNotice())->toContain('no significa el traslado de la responsabilidad')
-        ->and($checklist->baseConsent())->toContain('La empresa es la responsable')->toContain('fotograf')->toContain('salud');
+        ->and($checklist->baseConsent())->toContain('La empresa es la responsable')->toContain('Usted puede no aceptar')->toContain('fotograf')->toContain('salud');
 });
+
+/** @return array<string, list<string>> the requirement each DOF question covers, by enum case name */
+function dofRequirements(): array
+{
+    return [
+        'Privacy' => ['S1-04', 'S1-13', 'S1-29', 'S2-17'],
+        'Lighting' => ['S1-16', 'S1-17', 'S1-18', 'S1-20', 'S2-04', 'S2-05', 'S2-07'],
+        'TemperatureVentilation' => ['S1-24', 'S1-25', 'S2-11', 'S2-12'],
+        'Noise' => ['S1-27', 'S1-28', 'S2-14', 'S2-15', 'S2-16'],
+        'CleanTidy' => ['S1-30', 'S2-20', 'S2-21', 'S2-22', 'S2-23', 'S2-24'],
+        'Electrical' => ['S1-34', 'S1-35', 'S1-36', 'S1-37', 'S1-38', 'S2-27', 'S2-28', 'S2-29', 'S2-30', 'S2-31', 'S2-32', 'S2-33', 'S2-35'],
+        'Chair' => ['S1-43', 'S2-40', 'S2-41', 'S2-42', 'S2-43', 'S2-44', 'S2-45', 'S2-46', 'S2-47'],
+        'WorkLifeBalance' => ['S1-46', 'S1-48', 'S2-59'],
+        'WorkSurface' => ['S2-18', 'S2-55', 'S2-56', 'S2-57', 'S2-58'],
+        'ErgonomicAids' => ['S2-19', 'S2-48', 'S2-49', 'S2-54'],
+        'Breaks' => ['S2-60'],
+    ];
+}
+
+it('pins the requirement of every DOF question and gives none to the rest', function (): void {
+    $expected = [];
+    foreach (dofRequirements() as $name => $codes) {
+        foreach ($codes as $code) {
+            $expected[$code] = constant(Requirement::class.'::'.$name);
+        }
+    }
+    $actual = [];
+    foreach (checklist() as $item) {
+        if ($item->fromDof) {
+            $actual[$item->code] = $item->requirement;
+        }
+    }
+
+    $actual = array_filter($actual);
+    ksort($actual);
+    ksort($expected);
+
+    expect($actual)->toBe($expected);
+});
+
+it('leaves to the Humetría questions what C-08 says the Apéndice does not ask', function (int $section, array $missing): void {
+    $dof = collect(checklist())->where('fromDof', true)->where('section', $section)->pluck('requirement')->filter();
+
+    foreach ($missing as $requirement) {
+        expect($dof->contains($requirement))->toBeFalse($requirement->value);
+    }
+})->with([
+    'section I' => [1, [Requirement::Connectivity, Requirement::WorkSurface, Requirement::ErgonomicAids, Requirement::FamilyViolenceChannel, Requirement::Breaks, Requirement::Disconnection]],
+    'section II' => [2, [Requirement::Connectivity, Requirement::FamilyViolenceChannel, Requirement::Disconnection]],
+]);
