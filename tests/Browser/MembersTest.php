@@ -89,7 +89,7 @@ it('shows the role being saved, and holds the field until it is', function (): v
 
     $page = visit('/admin/acme/members');
     // Every request waits 400 ms to leave, so the save is still under way when the field is read.
-    $page->script('() => { const send = XMLHttpRequest.prototype.send; XMLHttpRequest.prototype.send = function (...args) { setTimeout(() => send.apply(this, args), 400); }; }');
+    $page->script(SLOW_REQUESTS);
     $page->click('@member-role')->click('[role="option"]:has-text("Consulta")')
         ->assertSeeIn('@member-role', 'Consulta')
         ->assertAttribute('@member-role', 'aria-busy', 'true')

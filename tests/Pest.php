@@ -161,6 +161,9 @@ function cspViolations(): string
     })';
 }
 
+// A browser script that holds every request of the page 400 ms before it leaves, so a test can see the page mid-request.
+const SLOW_REQUESTS = '() => { const send = XMLHttpRequest.prototype.send; XMLHttpRequest.prototype.send = function (...args) { setTimeout(() => send.apply(this, args), 400); }; }';
+
 // English words the starter kit showed and that never appear in Spanish UI text: any of them on a page means untranslated text.
 const ENGLISH_STOPLIST = [
     'the', 'your', 'you', 'and', 'with', 'please', 'password', 'account', 'settings', 'profile', 'appearance',
