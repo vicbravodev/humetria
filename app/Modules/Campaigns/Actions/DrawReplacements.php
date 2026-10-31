@@ -54,7 +54,7 @@ final readonly class DrawReplacements
             }
 
             $this->queueInvitations->handle($campaign, $drawn);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
 
         Log::info('campaign.replacements_drawn', ['campaign_id' => $campaign->id, 'gender' => $gender, 'count' => $count]);
 

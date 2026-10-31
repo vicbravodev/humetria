@@ -7,6 +7,7 @@ namespace App\Modules\Campaigns\Actions;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\SurveyUnavailableReason;
 use App\Modules\Campaigns\Exceptions\SurveyUnavailable;
+use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Responses\Contracts\ResponseRecorder;
@@ -64,6 +65,6 @@ final readonly class SubmitSurvey
 
             $guide->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
             Log::info('campaign_participant.completed', ['participant_id' => $survey->participant->id, 'instrument' => $instrument]);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
     }
 }

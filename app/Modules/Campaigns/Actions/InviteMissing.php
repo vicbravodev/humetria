@@ -51,7 +51,7 @@ final readonly class InviteMissing
             }
 
             return $this->queueInvitations->handle($campaign, $owed);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
 
         Log::info('campaign.missing_invited', ['campaign_id' => $campaign->id, 'sent' => $sent]);
 

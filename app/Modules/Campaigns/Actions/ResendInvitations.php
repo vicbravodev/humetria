@@ -45,7 +45,7 @@ final readonly class ResendInvitations
             }
 
             return $this->queueInvitations->handle($campaign, $reached);
-        });
+        }, Campaign::DEADLOCK_ATTEMPTS);
 
         Log::info('campaign.invitations_resent', ['campaign_id' => $campaign->id, 'sent' => $sent]);
 

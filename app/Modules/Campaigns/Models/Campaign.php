@@ -48,6 +48,12 @@ final class Campaign extends Model
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
 
     /**
+     * How many times a transaction that locks a campaign and then its people runs before giving up on a deadlock.
+     * Every such writer locks the campaign first, so a deadlock is rare; the retries absorb the ones left.
+     */
+    public const int DEADLOCK_ATTEMPTS = 3;
+
+    /**
      * Re-reads the campaign under lock, inside the caller's transaction, so a state checked on a copy read earlier
      * cannot have changed meanwhile: two launches, a redraw racing a launch, or two closes, never both pass.
      *
