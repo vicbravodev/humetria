@@ -156,6 +156,16 @@ it('previews a work center with the state of the three tools', function (): void
         ->assertScript('() => ["nom_035", "nom_037", "ley_silla"].every((tool) => document.querySelector(`figure [data-test="preview-${tool}"] [role=progressbar]`) !== null)');
 });
 
+it('centers the preview arc when its tools drop below it on a phone', function (): void {
+    // Centered when the tools sit below it; beside them, it starts the row.
+    $layout = '() => { const card = document.querySelector("[data-test=hero-preview]").getBoundingClientRect(); const meter = document.querySelector("figure [data-slot=arc-meter]").getBoundingClientRect(); const tools = document.querySelector("figure ul").getBoundingClientRect(); const below = tools.top >= meter.bottom; return (below ? "below " : "beside ") + (Math.abs((meter.left + meter.right) / 2 - (card.left + card.right) / 2) <= 2 ? "centered" : "aside"); }';
+    $page = visitPage('landing', '/');
+
+    foreach ([375 => 'below centered', 1280 => 'beside aside'] as $width => $expected) {
+        resizeTo($page, $width)->assertScript($layout, $expected);
+    }
+});
+
 it('takes the header tools link to the tools section', function (): void {
     // The link shows from the md breakpoint up: on a phone the header only fits the logo and the two calls to action.
     // The section lands right under the 64 px sticky header (`scroll-mt-16`); the jump is instant, there is no smooth scroll.
