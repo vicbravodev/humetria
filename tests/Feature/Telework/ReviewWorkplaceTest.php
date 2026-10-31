@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Telework\Actions\RecordVisit;
 use App\Modules\Telework\Actions\ReviewWorkplace;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\ReviewMethod;
@@ -20,6 +21,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\VisitAuthorizationFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -237,14 +239,13 @@ it('keeps the remote check of a workplace behind the same gate', function (): vo
     expect(WorkplaceReview::query()->count())->toBe(0);
 });
 
-it('does not validate by remote check a workplace whose person answered no list, nor with a Sección II before any validation', function (ReviewDecision $decision): void {
+it('does not validate by remote check a never-reviewed workplace with no sent list (one being answered or cancelled does not count)', function (ReviewDecision $decision): void {
     $bare = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
     $remote = fn () => resolve(ReviewWorkplace::class)->handle($bare, null, $decision, 'Por videollamada.', 'Plan', CarbonImmutable::parse('2030-01-01'), $this->cora->id);
 
     expect(reviewRejected($remote))->toBe(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
 
     ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id]);
-    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id, 'section' => 2]);
     ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id, 'cancelled_at' => now()]);
 
     expect(reviewRejected($remote))->toHaveKey('application')
@@ -254,6 +255,20 @@ it('does not validate by remote check a workplace whose person answered no list,
 
     expect($remote()->method)->toBe(ReviewMethod::RemoteCheck);
 })->with([ReviewDecision::Valid, ReviewDecision::ValidWithPlan]);
+
+it('validates by remote check and by visit the new place of a moved active person, who was asked for a Sección II', function (): void {
+    $moved = fn () => tap(WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]), function (Workplace $place): void {
+        ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id, 'section' => 2]);
+    });
+
+    $remote = resolve(ReviewWorkplace::class)->handle($moved(), null, ReviewDecision::Valid, '', null, null, $this->cora->id);
+    $place = $moved();
+    $authorization = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
+    $visit = resolve(RecordVisit::class)->handle($place, $authorization, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id);
+
+    expect($remote->method)->toBe(ReviewMethod::RemoteCheck)->and($remote->application_id)->not->toBeNull()
+        ->and($visit->method)->toBe(ReviewMethod::Visit)->and($visit->application_id)->not->toBeNull();
+});
 
 it('does not validate again by remote check without a list sent after the previous review', function (): void {
     $this->application->update(['submitted_at' => '2026-03-09 18:00:00']);

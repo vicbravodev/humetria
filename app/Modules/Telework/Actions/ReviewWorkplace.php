@@ -8,7 +8,6 @@ use App\Actions\RecordAudit;
 use App\Modules\Telework\Enums\EvidenceKind;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\ReviewMethod;
-use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\VisitAuthorization;
@@ -161,15 +160,16 @@ final readonly class ReviewWorkplace
 
     /**
      * A visit or a remote check does not replace the list (criterios C-12 and C-14): the person answers it anyway. To
-     * validate without reviewing a list, the workplace needs a sent one nobody decided yet: a Sección I when it was never
-     * reviewed, and any list sent after the previous review otherwise. Finding it not valid needs none.
+     * validate without reviewing a list, the workplace needs a sent one nobody decided yet: the one it was asked for when it
+     * was never reviewed (a Sección I, or a Sección II for the new place of a moved active person), and one sent after the
+     * previous review otherwise. Finding it not valid needs none.
      *
      * @throws ValidationException
      */
     private function requireAnsweredList(Workplace $workplace, ?ChecklistApplication $list): void
     {
         $previous = WorkplaceReview::query()->where('workplace_id', $workplace->id)->orderByDesc('decided_at')->orderByDesc('id')->first();
-        $answered = $list?->submitted_at !== null && ($previous === null ? $list->section === Section::One : $list->submitted_at->greaterThan($previous->decided_at));
+        $answered = $list?->submitted_at !== null && ($previous === null || $list->submitted_at->greaterThan($previous->decided_at));
 
         if (! $answered) {
             throw ValidationException::withMessages(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
