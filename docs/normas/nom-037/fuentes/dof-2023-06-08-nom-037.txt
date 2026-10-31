@@ -1,0 +1,1832 @@
+NORMA Oficial Mexicana NOM-037-STPS-2023, Teletrabajo-Condiciones de seguridad y salud en el trabajo NORMA Oficial Mexicana NOM-037-STPS-2023, Teletrabajo-Condiciones de seguridad y salud en el trabajo.
+Al margen un sello con el Escudo Nacional, que dice: Estados Unidos Mexicanos.- Secretaría del Trabajo y Previsión Social.
+LUISA MARIA ALCALDE LUJAN, Secretaria del Trabajo y Previsión Social, con fundamento en los artículos 40, fracciones I y XI, de la Ley Orgánica de la Administración Pública Federal; 512, 523, fracción I, 524 y 527, último párrafo, 330-A, 330-B, 330-C, 330-D, 330-E, 330-F, 330-G,330-H, 330-I, 330-J, y 330-K, de la Ley Federal del Trabajo; 1, 3, fracción XI, 38, fracción II, 40, fracción VII, 41, 47, fracción IV, 51, primer párrafo, 10, fracción II, 24, 25, 27, 28, 30 y 34, 35 y 39 de la Ley de Infraestructura de la Calidad; 28 del Reglamento de la Ley Federal sobre Metrología y Normalización; 5, fracción III, 7, fracciones XI, XII, XVI y XVII; 8, fracciones I, III, V, VI, VII, VIII, y XI, del Reglamento Federal de Seguridad y Salud en el Trabajo; 22, fracción XIX y XXIII del Reglamento Interior de la Secretaría del Trabajo y Previsión Social, y
+CONSIDERANDO
+Que conforme a lo previsto por el artículo 35 de la Ley de Infraestructura de la Calidad, la Secretaría del Trabajo y Previsión Social presentó ante el Comité Consultivo Nacional de Normalización de Seguridad y Salud en el Trabajo, en su Segunda Sesión Ordinaria, celebrada el 14 de junio de 2022 el Proyecto de Norma Oficial Mexicana PROY-NOM-037-STPS-2022, Teletrabajo-Condiciones de seguridad y salud en el trabajo, para su aprobación, y que el citado Comité lo consideró procedente y acordó que se publicara como Proyecto en el Diario Oficial de la Federación;
+Que de acuerdo con lo que determinan los artículos 23, 25, 68, 69, 70 fracción I, 71 y 75, de la Ley General de Mejora Regulatoria, el Proyecto correspondiente fue sometido a la consideración de la Comisión Nacional de Mejora Regulatoria, quien dictaminó favorablemente en relación con el mismo;
+Que de conformidad con lo señalado por el artículo 34 de la Ley de Infraestructura de la Calidad y 33 del Reglamento de la Ley Federal sobre Metrología y Normalización, se publicó para consulta pública por sesenta días naturales en el Diario Oficial de la Federación el día 15 de julio de 2022, el Proyecto de Norma Oficial Mexicana PROY-NOM-037-STPS-2022, Teletrabajo-Condiciones de seguridad y salud en el trabajo, a efecto de que en dicho período los interesados presentaran sus comentarios al Comité Consultivo Nacional de Normalización de Seguridad y Salud en el Trabajo;
+Que de conformidad con lo previsto por el artículo 78 de la Ley General de Mejora Regulatoria, así como el artículo Quinto del Acuerdo que fija los lineamientos que deberán ser observados por las dependencias y organismos descentralizados de la Administración Pública Federal, en cuanto a la emisión de los actos administrativos de carácter general a los que les resulta aplicable el artículo 69-H de la Ley Federal de Procedimiento Administrativo, con la finalidad de reducir costos de cumplimiento para los particulares, se abrogará la Norma Oficial Mexicana NOM-101-STPS-1994, seguridad - Extintores a base de espuma química emitida por la Secretaría del Trabajo y Previsión Social, y publicada en el Diario Oficial de la Federación del 8 de enero de 1996, con lo que se beneficiará aproximadamente a 5.5 millones de centros de trabajo emitida por la Secretaría del Trabajo y Previsión Social y publicada en el Diario Oficial de la Federación el día 9 de marzo de 2001, con lo que se beneficiará aproximadamente a 5.4 millones de centros de trabajo de agricultores.
+Que habiendo recibido comentarios de 74 promoventes, el Comité referido procedió a su estudio y resolvió oportunamente sobre los mismos, por lo que esta dependencia publicó las respuestas respectivas en el Diario Oficial de la Federación el 15 de mayo de 2023, y solicitó se publicaran en la Plataforma Tecnológica Integral de Infraestructura de la Calidad, con base en lo que dispone el artículo 32, penúltimo párrafo, de la Ley de Infraestructura de la Calidad;
+Que derivado de la incorporación de los comentarios procedentes presentados al PROY-NOM-037-STPS-2022, Teletrabajo-Condiciones de seguridad y salud en el trabajo, así como de la revisión final del propio proyecto, se realizaron diversas modificaciones con el propósito de dar claridad, congruencia y certeza jurídica en cuanto a las disposiciones que aplican en los centros de trabajo, y
+Que en atención a las anteriores consideraciones, y toda vez que el Comité Consultivo Nacional de Normalización de Seguridad y Salud en el Trabajo, en su Primera Sesión Extraordinaria de 2023, celebrada el 6 de marzo de 2023, otorgó la aprobación respectiva, se expide la siguiente Norma Oficial Mexicana:
+NOM-037-STPS-2023, TELETRABAJO-CONDICIONES DE SEGURIDAD Y SALUD EN EL TRABAJO
+ÍNDICE DE CONTENIDO
+1. Objetivo
+2. Campo de aplicación
+3. Referencias
+4. Definiciones
+5. Obligaciones del patrón
+6. Obligaciones de las personas trabajadoras bajo la modalidad de Teletrabajo
+7. Condiciones de seguridad y salud en el trabajo
+8. Capacitación y adiestramiento
+9. Organismos de Evaluación de la Conformidad
+10. Procedimiento para la Evaluación de la Conformidad
+11. Vigilancia
+12. Bibliografía
+13. Concordancia con normas internacionales
+TRANSITORIOS
+Apéndice 1. Política de Teletrabajo (informativo)
+Apéndice 2. Selección de candidatos para el Teletrabajo (informativo)
+Apéndice 3. Lista de verificación de las condiciones de seguridad y salud en el lugar de trabajo (informativo)
+Apéndice 4. Recomendaciones de actividades previas a Teletrabajar (informativo)
+Apéndice 5. Recomendaciones para seleccionar una silla ergonómica (informativo)
+1. Objetivo.
+Establecer las condiciones de seguridad y salud en el trabajo en los lugares de trabajo en donde las personas trabajadoras bajo la modalidad de Teletrabajo realicen sus actividades, a fin de prevenir accidentes y enfermedades, así como promover un medioambiente seguro y saludable en su entorno laboral.
+2. Campo de aplicación.
+La presente Norma Oficial Mexicana rige en toda la República Mexicana y aplica a todos los centros de trabajo que cuenten con personas trabajadoras bajo la modalidad de Teletrabajo.
+3. Referencias.
+Para la correcta interpretación de la presente Norma se deberán consultar las siguientes normas oficiales mexicanas vigentes, o las que las sustituyan.
+3.1 NOM-019-STPS-2011, Constitución, integración, organización y funcionamiento de las comisiones de seguridad e higiene.
+3.2 NOM-030-STPS-2009, Servicios preventivos de seguridad y salud en el trabajo-Funciones y actividades.
+3.3 NOM-035-STPS-2018, factores de riesgo psicosocial en el trabajo - Identificación, análisis y prevención.
+4. Definiciones.
+Para efectos de esta Norma, se consideran las definiciones siguientes:
+4.1 Accidente de Trabajo: Es toda lesión orgánica o perturbación funcional, inmediata o posterior, la muerte o la desaparición derivada de un acto delincuencial, producida repentinamente en ejercicio o con motivo del trabajo cualesquiera que sean el lugar y el tiempo en que se preste. Quedan incluidos en la definición anterior los accidentes que se produzcan al trasladarse el trabajador directamente de su domicilio al lugar de trabajo y de éste a aquél.
+4.2 Acontecimiento traumático severo: Aquel experimentado durante o con motivo del trabajo que se caracteriza por la ocurrencia de la muerte o que representa un peligro real para la integridad física de una o varias personas y que puede generar trastorno de estrés postraumático para quien lo sufre o lo presencia. Algunos ejemplos son: explosiones, derrumbes, incendios de gran magnitud; accidentes graves o mortales, asaltos con violencia, secuestros y homicidios, entre otros.
+4.3 Actos Inseguros: Las acciones realizadas por la persona trabajadora bajo la modalidad de Teletrabajo que implican una omisión o violación a un método de trabajo o medida determinados como seguros.
+4.4 Agente: El elemento físico, químico, biológico o mecánico que, por ausencia o presencia en el lugar de trabajo puede afectar la vida, salud e integridad física de la persona trabajadora bajo la modalidad de Teletrabajo.
+4.5 Centro de Trabajo: El lugar o lugares, tales como edificios, locales, instalaciones y áreas, donde se realicen actividades de explotación, aprovechamiento, producción, comercialización, transporte y almacenamiento o prestación de servicios, en los que concurran personas que estén sujetas a una relación de trabajo.
+4.6 Carga de trabajo: Se refieren a las exigencias que el trabajo impone a la persona trabajadora bajo la modalidad de Teletrabajo y que exceden su capacidad. Pueden ser de diversa naturaleza, como cuantitativas, cognitivas o mentales, emocionales, de responsabilidad, así como cargas contradictorias o inconsistentes.
+4.7 Comisión mixta de capacitación, adiestramiento y productividad: Aquella integrada por igual número de representantes de los trabajadores y los patrones en las empresas que tengan más de 50 trabajadores, en cumplimiento de lo establecido en el artículo 153-E de la Ley Federal del Trabajo.
+4.8 Comisión de Seguridad e Higiene: La comisión o comisiones de seguridad e higiene constituidas en los centros de trabajo en cumplimiento de lo establecido en el artículo 509 de la Ley Federal del Trabajo y la NOM-019-STPS-2011, y que se compone por igual número de representantes de los trabajadores y del patrón, según exista contrato colectivo o reglamento interior de trabajo.
+4.9 Condiciones Inseguras: Aquéllas que derivan de la inobservancia o desatención de los procedimientos o medidas de seguridad establecidas en el Reglamento Federal de Seguridad y Salud en el Trabajo o en la normatividad de la materia, que pueden conllevar la ocurrencia de incidentes, accidentes y enfermedades de trabajo, o daños materiales en el lugar de trabajo.
+4.10 Condiciones Peligrosas: Aquellas características inherentes a las instalaciones, procesos, equipo (incluido el equipo de cómputo), herramientas y materiales, que pueden provocar un incidente, accidente, enfermedad de trabajo, o daño material en el lugar de trabajo.
+4.11 Desconexión: Derecho de un trabajador a apartarse del trabajo (incluida la desconexión de las TIC de manera digital) y abstenerse de participar en cualquier tipo de comunicación con el centro de trabajo al término de la jornada laboral, en los horarios no laborables, vacaciones, permisos y licencias.
+En horarios flexibles, la desconexión aplica también durante las pausas convenidas entre la persona trabajadora bajo la modalidad de Teletrabajo con el patrón y asentadas, según aplique, en el contrato colectivo de trabajo o reglamento interior.
+4.12 Factores de Riesgo Ergonómico: Aquéllos que pueden conllevar sobre esfuerzo físico, movimientos repetitivos o posturas forzadas en el trabajo desarrollado, con la consecuente fatiga, errores, accidentes y enfermedades de trabajo, derivado del equipo de cómputo, herramientas (incluidas las TIC´s) o puesto de trabajo.
+4.13 Factores de Riesgo Psicosocial: Aquéllos que pueden provocar trastornos de ansiedad, no orgánicos del ciclo sueño-vigilia y de estrés grave y de adaptación, derivado de la naturaleza de las funciones del puesto de trabajo, el tipo de jornada laboral y la exposición a acontecimientos traumáticos severos o a actos de violencia, por el trabajo desarrollado.
+4.14 Enfermedad de Trabajo: Todo estado patológico derivado de la acción continuada de una causa que tenga su origen o motivo en el trabajo o en el medio en que el trabajador se vea obligado a prestar sus servicios.
+4.15 Incidentes: Los acontecimientos que pueden o no ocasionar daños a las instalaciones, equipo de cómputo (incluida las TIC´s), herramientas y/o materiales utilizados, e interferir en los procesos y actividades, y que en circunstancias diferentes podrían haber derivado en lesiones a la persona trabajadora bajo la modalidad de Teletrabajo, por lo que requieren ser investigados para considerar la adopción de las medidas preventivas pertinentes.
+4.16 Ley: La Ley Federal del Trabajo.
+4.17 Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo: Herramienta elaborada por la Comisión de Seguridad e Higiene mediante la cual se evalúa si el lugar de trabajo cuenta o no con las condiciones seguras y saludables para el desempeño del Teletrabajo.
+4.18 Lugar de trabajo: Espacio físico fijo y privado, fuera del centro de trabajo y ajeno a éste, convenido con el patrón para llevar a cabo el Teletrabajo.
+4.19 Norma; Norma Oficial Mexicana: Regulación técnica de observancia obligatoria expedida por las Autoridades Normalizadoras competentes cuyo fin esencial es el fomento de la calidad para el desarrollo económico y la protección de los objetivos legítimos de interés público previstos en la Ley de Infraestructura de la Calidad, mediante el establecimiento de reglas, denominación, especificaciones o características aplicables a un bien, producto, proceso o servicio, así como aquéllas relativas a terminología, marcado o etiquetado y de información.
+4.20 Persona trabajadora bajo la modalidad de Teletrabajo: Persona trabajadora que presta su servicio personal, remunerado y subordinado en lugar(es) fijo(s), distinto(s) al centro de trabajo, y utiliza las tecnologías de la información y la comunicación para el desempeño de sus labores de Teletrabajo.
+4.21 Política de Teletrabajo: Conjunto de reglas que regulan los términos en los cuales debe desempeñarse el Teletrabajo de forma segura y saludable, a fin de evitar actos inseguros y/o condiciones inseguras o peligrosas, y prevenir riesgos a la salud y accidentes en el Teletrabajo por exposición a agentes físicos, químicos, biológicos o mecánicos, o a factores de riesgo psicosocial y ergonómicos, que además cumple con lo establecido en los artículos 330-C y 330-D de la Ley.
+4.22 Reversibilidad: El cambio en la modalidad de Teletrabajo al trabajo presencial, atendiendo a lo establecido en el artículo 330-G de la Ley Federal del Trabajo.
+4.23 Riesgos de Trabajo: Son los accidentes y enfermedades a que están expuestos los trabajadores en ejercicio o con motivo del trabajo.
+4.24 Sindicato: La representación de los trabajadores que tiene la titularidad del contrato colectivo de trabajo.
+4.25 Tecnologías de la Información y Comunicación (TIC): El conjunto de servicios, infraestructura, redes, software, aplicaciones informáticas y dispositivos proporcionados por el patrón, que tienen como propósito, en este caso, facilitar las tareas y funciones de las personas trabajadoras bajo la modalidad de Teletrabajo, así como las que se necesitan para la gestión y transformación de la información, en particular los componentes tecnológicos que permiten crear, modificar, almacenar, proteger y recuperar esa información.
+4.26 Teletrabajo: Forma de organización laboral subordinada que consiste en el desempeño de actividades remuneradas en lugares distintos al centro de trabajo, por lo que no se requiere la presencia física de la persona trabajadora bajo la modalidad de Teletrabajo en éste, utilizando las tecnologías de la información y comunicación para el contacto y mando entre la persona trabajadora bajo la modalidad de Teletrabajo y el patrón.
+4.27 Validación de la Lista de Verificación de las condiciones de seguridad y salud en el Teletrabajo: Confirmación de las condiciones de seguridad y salud en el trabajo del lugar de trabajo de la persona trabajadora bajo la modalidad de Teletrabajo, que realiza la Comisión de seguridad e higiene a las condiciones declaradas, evaluadas y evidenciadas a través de la "Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo" (y, en su caso, a través de evidencias fotográficas o de video) y que, en su caso, da por aceptables para su desarrollo.
+5. Obligaciones del Patrón.
+5.1 Contar con un listado actualizado de las personas trabajadoras bajo la modalidad de Teletrabajo con, al menos, la información siguiente:
+a) Nombre de las personas trabajadoras bajo la modalidad de Teletrabajo;
+b) Género;
+c) Estado civil
+d) Actividades a desarrollar;
+e) Nombre y perfil de puesto;
+f) Tiempo (en porcentaje) de la relación laboral que usa para realizar Teletrabajo;
+g) Número telefónico de contacto;
+h) Domicilio de las personas trabajadoras bajo la modalidad de Teletrabajo;
+i) Lugares de trabajo propuestos por las personas trabajadoras bajo la modalidad de Teletrabajo y convenidos con el patrón;
+j) Razón social y domicilio del centro de trabajo.
+k) Listado del equipo de cómputo y ergonómico otorgado a la persona trabajadora.
+Nota: La confidencialidad de los datos contenidos en el listado de personas trabajadoras bajo la modalidad de Teletrabajo estará bajo la responsabilidad del patrón.
+5.1.1 Los lugares de trabajo que la persona trabajadora bajo la modalidad de Teletrabajo proponga y acuerde con el patrón deberán cumplir con las condiciones siguientes:
+a) Disponer de conectividad para el uso y manejo de las Tecnologías de la Información y Comunicación, y
+b) Contar con condiciones de seguridad y salud en el trabajo, con énfasis en el buen estado de las instalaciones eléctrica; con iluminación, ventilación y condiciones ergonómicas.
+5.1.2 Los lugares de trabajo propuestos por un trabajador aspirante a la modalidad de Teletrabajo y convenidos con el patrón, conforme al contrato colectivo o al reglamento interior de trabajo, deben ser fijos, siempre que éstos garanticen que se cuenta con lo requerido en los incisos a) y b) del numeral 5.1.1 y cumplan con lo establecido en los numerales 7.1, 7.2 y 7.3, inciso a).
+5.2 Establecer, por escrito, implantar, mantener y difundir en el centro de trabajo y entre las personas trabajadoras bajo la modalidad de Teletrabajo una Política de Teletrabajo que cumpla con las disposiciones del contrato colectivo de trabajo o del reglamento interior de trabajo, según aplique, en cumplimiento a lo establecido en los artículos 330-C, 330-D y 330-E de la Ley Federal del Trabajo, y que:
+a) Promueva la cultura de la prevención de riesgos de trabajo a través de la seguridad y salud en el trabajo en personas trabajadoras bajo la modalidad de Teletrabajo;
+b) Instaure mecanismos de comunicación con las personas trabajadoras bajo la modalidad de Teletrabajo a través de reuniones presenciales en el centro de trabajo, o por medio de las TIC, con el fin de evitar el aislamiento social de éstas;
+c) Facilite los mecanismos de comunicación y difusión a distancia con los que cuente el centro de trabajo, incluyendo el correo electrónico y otros, para que las personas trabajadoras bajo la modalidad de Teletrabajo tengan conocimiento, entre otros, de los procedimientos a los que se refiere el artículo 330-C segundo párrafo de la Ley;
+d) Indique los mecanismos y reglas de contacto entre el centro de trabajo y las personas trabajadoras bajo la modalidad de Teletrabajo, siempre que se garantice el derecho a la privacidad de las personas trabajadoras bajo la modalidad de Teletrabajo, y que dichos mecanismos o reglas no interfieran en la relación trabajo-familia, y que sean proporcionales a su objetivo;
+e) Establezca la duración del horario de labores pactado, y/o la distribución convenida de los horarios de las jornadas de trabajo de éstas, siempre que no excedan los máximos legales y contractuales, incluyendo el derecho a las pausas para descanso y a la desconexión (incluida la desconexión de las TIC de manera digital) al término de la jornada laboral, en los horarios no laborables, vacaciones, permisos y licencias;
+f) Señale que los derechos de las personas trabajadoras bajo la modalidad de Teletrabajo no podrán ser inferiores a los que realicen trabajo presencial en el centro de trabajo;
+g) Promueva la perspectiva de género y permita conciliar la vida personal de las personas trabajadoras bajo la modalidad de Teletrabajo, y considere las disposiciones del protocolo al que se refiere el artículo 132 fracción XXXI de la Ley;
+h) Determine el horario dentro de la jornada laboral en el que, durante un máximo de seis meses, las madres trabajadoras bajo la modalidad de Teletrabajo en periodo de lactancia contarán con tiempo para alimentar a sus hijos e hijas, pudiendo elegir entre tomar dos reposos extraordinarios por día, de media hora cada uno, o bien reducir una hora su jornada laboral, en los términos establecidos por el artículo 170 de la Ley Federal del Trabajo;
+i) Indique la importancia de la promoción y vigilancia de la salud de las personas trabajadoras bajo la modalidad de Teletrabajo;
+j) Establezca las mecánicas para que las personas trabajadoras bajo la modalidad de Teletrabajo informen, en su caso, al patrón los cambios de domicilio del lugar de trabajo;
+k) Defina de manera precisa las responsabilidades y obligaciones para los patrones y para las personas trabajadoras que desempeñen sus actividades en la modalidad de Teletrabajo, en cumplimiento a lo previsto por el artículo 330-B de la Ley, incluyendo las establecidas en el contrato colectivo de trabajo o en su caso el reglamento interior de trabajo, y
+l) Establezca los mecanismos para aplicar, en su caso, la reversibilidad del Teletrabajo (inclusive de forma temporal), de acuerdo con lo previsto en el artículo 330-G de la Ley.
+En el Apéndice 1. Política de Teletrabajo se dan ejemplos relacionados con el contenido de la política de trabajo.
+5.3 Informar a las personas trabajadoras bajo la modalidad de Teletrabajo y a la comisión de seguridad e higiene del centro de trabajo, sobre los riesgos relacionados con el Teletrabajo, y de la posible exposición de las personas trabajadoras bajo la modalidad de Teletrabajo a agentes y a factores de riesgo (ergonómico y psicosocial).
+5.4 Contar con la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo, a fin de que se cumplan con las condiciones de seguridad y salud en el trabajo a que se refiere el Capítulo 7 de la presente Norma, así como cumplir con las medidas de seguridad e higiene en el lugar de trabajo que hayan sido establecidas por la Comisión Seguridad e Higiene, y que se contienen en la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo.
+5.5 Otorgar las facilidades para que la Comisión de Seguridad e Higiene realice la validación de la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo (incluidas las evidencias fotográficas o de video), a que se refiere el numeral 5.4 de la presente Norma, y la evaluación de los posibles riesgos, el patrón, pudiendo optar por:
+a) Realizar una visita al lugar de trabajo propuesto, donde se realizaría el Teletrabajo, previa autorización del trabajador aspirante a figurar como persona trabajadora bajo la modalidad de Teletrabajo y con las facilidades que éste proporcione, o gestione tratándose de lugares en renta (oficinas en renta), o
+b) En alternativa, al inciso a) de este numeral, proporcionar al trabajador aspirante a figurar como persona trabajadora bajo la modalidad de Teletrabajo la lista de verificación de las condiciones de seguridad y salud para el Teletrabajo, que a través de su autoaplicación permita conocer si se cuenta o no con las condiciones de seguridad y salud en el trabajo para desempeñar sus actividades de Teletrabajo.
+En su caso, para corroborar la información de la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo, la Comisión de seguridad e higiene podrá solicitar al trabajador aspirante, o a la persona trabajadora bajo la modalidad de Teletrabajo, según corresponda, una comprobación a distancia del sitio de trabajo, apoyándose con las TIC, o evidencias fotográficas o de video del lugar de trabajo.
+La autoaplicación de la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo no significa el traslado de la responsabilidad a las personas trabajadoras bajo la modalidad de Teletrabajo en la comprobación de las condiciones de seguridad y salud del lugar de trabajo, ni de la adecuación a cargo de su patrimonio.
+En caso de que el lugar de trabajo propuesto por el trabajador que aspira a figurar como persona trabajadora bajo la modalidad de Teletrabajo no contara con las condiciones propias de seguridad y salud en el Trabajo, no se podrá realizar Teletrabajo.
+5.5.1 Una segunda versión de la lista de verificación de las condiciones de seguridad y salud en el Teletrabajo deberá de servir para aplicarla periódicamente y constatar la continuidad de las condiciones en las que se realiza el Teletrabajo, en los términos de lo indicado en el numeral 5.5 de esta Norma.
+En el apéndice 3, "Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo" se muestran ejemplos de preguntas para integrar el contenido de la lista de verificación que aplicará el trabajador, como aspirante o como persona trabajadora bajo la modalidad de Teletrabajo.
+5.6 Establecer y documentar, en su caso, el proceso de implementación del Teletrabajo para el centro de trabajo que cambie de la modalidad presencial a Teletrabajo y viceversa, y que al menos contemple lo siguiente:
+a) La manera de mantener y establecer comunicación entre la persona trabajadora bajo la modalidad de Teletrabajo y el centro de trabajo;
+b) Los momentos, condiciones o causas en que la persona trabajadora bajo la modalidad de Teletrabajo asistirá al centro de trabajo;
+c) Indicar la forma en que se supervisará el desarrollo del Teletrabajo, y
+d) Establecer la manera en que se dará mantenimiento al equipo de cómputo o herramientas (incluidas las TIC´s) de trabajo utilizadas y/o asignadas para el Teletrabajo.
+5.7 Proporcionar a las personas trabajadoras bajo la modalidad de Teletrabajo para desarrollar sus actividades fuera del centro de trabajo, lo siguiente:
+a) Silla ergonómica o de otro tipo apropiada a las actividades a desarrollar;
+b) Los insumos necesarios para su adecuado desempeño, como por ejemplo para el envío de la información vía digital, o impresión de ésta, y
+c) En su caso, los aditamentos que garanticen condiciones ergonómicas o posturales, del trabajador en su jornada laboral.
+Nota: En caso de que el lugar de trabajo acordado bajo la modalidad de Teletrabajo sea un lugar distinto a un domicilio particular, ésta deberá contar con condiciones de seguridad e higiene, además de lo requerido en los numerales 7.1, 7.2 y 7.3, inciso a), de la presente Norma.
+5.8 Establecer y documentar programas, y la manera de proporcionar mantenimiento, en condiciones de seguridad a los equipos para el manejo de las TIC proporcionados a las personas trabajadoras bajo la modalidad de Teletrabajo para realizar sus actividades.
+5.9 Proporcionar, de acuerdo con lo dispuesto en el Capítulo 8 de la presente Norma, capacitación al menos una vez al año a los trabajadores bajo la modalidad de Teletrabajo, sobre las condiciones de seguridad y salud que deben tener y mantener en su lugar de trabajo.
+5.10 Establecer mecanismos para la reversibilidad de la modalidad de Teletrabajo a presencial, cuando la persona trabajadora bajo la modalidad de Teletrabajo informe al patrón de alguna condición, o alteración de las condiciones de seguridad y salud en el trabajo, que justifique el regreso al trabajo presencial, o porque así convenga a sus intereses laborales, de acuerdo con lo que al respecto se hubiere asentado por escrito en cumplimiento con lo previsto por el artículo 330-G de la Ley.
+5.11 Practicar los exámenes médicos que corresponda a las personas trabajadoras bajo la modalidad de Teletrabajo de conformidad con lo previsto por la NOM-030-STPS-2009, y dar seguimiento a los avisos de accidente de trabajo que, en su caso, le reporten las personas trabajadoras bajo la modalidad de Teletrabajo o sus familiares, cuando aquellas hayan sufrido un accidente en el lugar de trabajo, con motivo o en ejercicio de sus actividades de Teletrabajo, siempre observando los protocolos establecidos por las instituciones de seguridad social.
+5.12 Compartir la documentación que resulte del cumplimiento de la presente Norma a la Comisión de Seguridad e Higiene, incluyendo según aplique:
+a) La lista de verificación de las condiciones de seguridad y salud en el Teletrabajo;
+b) La validación de la lista de verificación de las condiciones de seguridad y salud en el Teletrabajo;
+c) La evidencia fotográfica o de video que en su caso se cuente de las condiciones de seguridad y salud en el Teletrabajo, y
+d) Los listados que comprueben los bienes y equipo de cómputo proporcionados a la persona trabajadora bajo la modalidad de Teletrabajo, a que se refiere el numeral 5.7 de esta NOM.
+5.13 Contar con mecanismos de atención para casos de violencia familiar que consideren, entre otras cosas, el retorno a la modalidad presencial de manera temporal o permanente.
+5.14 Brindar el apoyo y las facilidades necesarias para que, en su caso, las personas trabajadoras bajo la modalidad de Teletrabajo participen en la Comisión de Seguridad e Higiene o en la Comisión mixta de capacitación, adiestramiento y productividad.
+6. Obligaciones de las personas trabajadoras bajo la modalidad de Teletrabajo.
+6.1 Brindar a la Comisión de Seguridad e Higiene, si está de acuerdo el trabajador, las facilidades por escrito para una comprobación física de las condiciones de seguridad y salud en el trabajo en el lugar de trabajo, fuera del centro de trabajo, o como alternativa aplicar la lista de verificación sobre las condiciones de seguridad y salud en el lugar o lugares de trabajo para desempeñar sus actividades de Teletrabajo, antes de figurar como persona trabajadora bajo la modalidad de Teletrabajo, y después de serlo, con la periodicidad que corresponda.
+6.2 Cumplir con la Política de Teletrabajo.
+6.3 Informar al patrón y a la Comisión de Seguridad e Higiene cualquier alteración de las condiciones de seguridad y salud en el trabajo, o caso de fuerza mayor, que impidan el desarrollo del Teletrabajo, incluidos aquellos acontecimientos traumáticos severos que hubiere presenciado o sufrido, con motivo o en ejercicio de su trabajo. El escrito deberá contener al menos: la fecha de elaboración; el nombre de la persona trabajadora en la modalidad de Teletrabajo que elabora el escrito; la fecha de ocurrencia, y la descripción de las alteraciones o acontecimientos.
+6.4 Resguardar y conservar en buen estado los equipos (incluidos los de cómputo), materiales, útiles y mobiliario ergonómico que en su caso y de acuerdo con las necesidades de su puesto o actividad, les proporcione el patrón para realizar el Teletrabajo en su lugar de trabajo.
+6.5 Observar las disposiciones en materia de seguridad y salud en el trabajo, y someterse a los exámenes médicos, de acuerdo con lo que establezca la NOM-030-STPS-2009.
+6.6 Atender las políticas y mecanismos de protección de datos e información establecidos por el patrón en el desempeño de sus actividades como persona trabajadora bajo la modalidad de Teletrabajo, así como las restricciones sobre su uso y almacenamiento.
+6.7 Informar por escrito y con antelación al patrón de cualquier cambio de domicilio definitivo o temporal, al lugar de trabajo previamente acordado a fin de que, en su caso, se realicen las gestiones para comprobar que el nuevo lugar de trabajo propuesto satisface los requerimientos para que ahí se desarrolle Teletrabajo. El escrito deberá contener al menos: la fecha de elaboración; el nombre de la persona trabajadora en la modalidad de Teletrabajo que elabora el escrito; la fecha de ocurrencia, y la descripción del cambio de domicilio.
+6.8 Participar en los procesos de información de riesgos relacionados con sus actividades de Teletrabajo y de capacitación que le proporcione el patrón, así como en las reuniones presenciales o virtuales organizadas para evitar el aislamiento social, de acuerdo con lo que establece el Capítulo 8 de la presente Norma.
+6.9 Avisar al patrón y a la Comisión de Seguridad e Higiene de los riesgos de trabajo que sufra. El aviso deberá contener al menos: la fecha de elaboración; el nombre de la persona trabajadora en la modalidad de Teletrabajo que elabora el escrito; la fecha de ocurrencia, y la descripción del acontecimiento.
+7. Condiciones de seguridad y salud en el trabajo.
+7.1 Para evitar riesgos de trabajo provocados por agentes físicos:
+Disponer de un área de trabajo que se encuentre:
+a) Limpia y ordenada, sin materiales, objetos o equipos no necesarios en el lugar de trabajo, como un principio básico de seguridad, colocando cerca del lugar de uso los elementos más utilizados y alejados los de uso infrecuente u ocasional;
+b) Iluminada, por luz natural o artificial, que no provoque deslumbramiento debido al exceso de iluminación o por ubicación inadecuada de la fuente de iluminación, ni fatiga visual por iluminación deficiente;
+c) Con temperatura y ventilación que se perciba agradable para el tipo de actividad que realice en la jornada laboral, y
+d) Con un nivel de ruido que no le impida la concentración para realizar su trabajo, salvo el ruido ambiental que pudiera estar bajo el control de terceros.
+7.2 Para evitar riesgos de trabajo provocados por factores de riesgo ergonómico:
+Disponer de un lugar de trabajo que le permita a la persona trabajadora bajo la modalidad de Teletrabajo sentirse cómoda para realizar sus actividades, de tal manera que (por el mobiliario, o posiciones sedentarias prolongadas) evite que espalda, hombros o cuello acumulen tensiones. Ese lugar de trabajo al menos debe contar con:
+a) Escritorio, mesa o plano de trabajo donde la persona trabajadora bajo la modalidad de Teletrabajo, en su caso, pueda apoyar cómodamente los brazos (sentada y/o de pie) sin accesorios u obstáculos bajo el referido escritorio, mesa o plano de trabajo, que impidan la colocación incómoda de las piernas, y sin salientes o elementos que pudieran generar un riesgo de trabajo;
+b) Silla ergonómica o de otro tipo, apropiada a las actividades a desarrollar, y
+c) En su caso, aditamentos ergonómicos o posturales que apoyen el uso de equipos de cómputo.
+En el Apéndice 5 se muestran algunas características que pueden servir para identificar una silla ergonómica.
+7.3 Para evitar riesgos de trabajo provocados por factores de riesgo psicosocial, según aplique:
+a) Disponer de un espacio físico que, preferentemente, permita privacidad a la persona trabajadora bajo la modalidad de Teletrabajo cuando se encuentre en su jornada de trabajo, para evitar que cualquier persona ajena a las labores inherentes al Teletrabajo puedan interferir, interrumpir, o afectar sus actividades;
+b) Se observe una perspectiva de género que permita conciliar el trabajo con la vida familiar y personal, incluyendo la posibilidad de contar con jornadas flexibles para facilitar la atención de responsabilidades familiares;
+c) Se cuente con mecanismos de comunicación al patrón sobre casos de violencia familiar que afecten a la persona trabajadora bajo la modalidad de Teletrabajo, que realice Teletrabajo desde su propia casa;
+d) Se cuente con pausas y tiempos de descanso adecuados para las personas trabajadoras bajo la modalidad de Teletrabajo, y
+e) Se respete el derecho a la desconexión (incluida la desconexión de las TIC de manera digital) de las personas trabajadoras bajo la modalidad de Teletrabajo al término de la jornada laboral, durante las pausas convenidas en horarios flexibles, en los horarios no laborables, vacaciones, permisos y licencias.
+8. Capacitación y adiestramiento.
+8.1 La capacitación y adiestramiento proporcionados a las personas trabajadoras bajo la modalidad de Teletrabajo por el patrón, y en los casos aplicables con la participación de la Comisión mixta de capacitación, adiestramiento y productividad, deberá consistir, según aplique:
+a) En el reconocimiento de peligros en su lugar de trabajo, mediante la aplicación de la Lista de verificación de las condiciones de seguridad y salud en el trabajo, para:
+1) Los diferentes tipos de riesgos por condiciones peligrosas e inseguras posiblemente presentes en su lugar de trabajo;
+2) Los factores de riesgo ergonómico por posturas forzosas, movimientos repetitivos y sedestación prolongada y
+3) Los factores de riesgo psicosocial, haciendo énfasis a aquellos que pudieran estar presentes en modalidad de Teletrabajo, como la interferencia en la relación trabajo-familia, los ritmos de trabajo acelerado, la carga de trabajo, la comunicación entre trabajadores, el apoyo social y la violencia laboral, entre otros;
+b) La comprensión y aplicación de la Política de Teletrabajo;
+c) En los conocimientos necesarios para el manejo de las Tecnologías de la Información y Comunicación, para la modalidad de Teletrabajo:
+Nota: El proceso de capacitación o el adiestramiento podrá realizarse en modalidad remota, presencial o mixta, como parte de la jornada de trabajo.
+9. Organismos de evaluación de la conformidad.
+Organismos encargados de inspeccionar condiciones de seguridad y salud (no visitarán lugares de trabajo).
+9.1 El patrón tendrá la opción de contratar los servicios de una Unidad de Inspección acreditada y aprobada en los términos de la Ley de Infraestructura de la Calidad y su Reglamento, para evaluar la conformidad con esta Norma Oficial Mexicana.
+9.2 Las unidades de inspección que evalúen la conformidad con la presente NOM deberán aplicar los criterios de cumplimiento que prevé el procedimiento para la evaluación de la conformidad, de acuerdo con lo señalado en el Capítulo 10 de la misma.
+9.3 Las Unidades de Inspección acreditadas y aprobadas que evalúen el cumplimiento con esta Norma deberán emitir, cuando el centro de trabajo cumpla con lo previsto por la presente Norma un dictamen, el cual habrá de contener:
+a) Datos de identificación del centro verificado:
+1) El nombre, denominación o razón social;
+2) El Registro Federal de Contribuyentes;
+3) El domicilio completo;
+4) El teléfono;
+5) Correo electrónico, y
+6) Su actividad principal;
+b) Datos de identificación de la unidad de inspección:
+1) El nombre, denominación o razón social;
+2) El número de acreditación;
+3) El número de aprobación otorgado por la Secretaría del Trabajo y Previsión Social;
+4) Número de REPSE, y
+5) Su domicilio completo;
+c) Datos del dictamen:
+1) La clave y nombre de la norma;
+2) El nombre del verificador evaluado y aprobado;
+3) La fecha de verificación;
+4) El número de dictamen;
+5) La vigencia del dictamen;
+6) El lugar de emisión del dictamen;
+7) La fecha de emisión del dictamen, y
+8) El número de registro del dictamen emitido por la Secretaría del Trabajo y Previsión Social al rendirse el informe respectivo en módulo del portal de servicios electrónicos, o plataforma que la sustituya.
+9.4 La vigencia de los dictámenes emitidos por las unidades de inspección será de dos años, siempre y cuando no sean modificadas las condiciones que sirvieron para su emisión.
+10. Procedimiento para la Evaluación de la Conformidad.
+10.1 Este Procedimiento para la Evaluación de la Conformidad aplica tanto a las visitas de inspección desarrolladas por la autoridad laboral, como a los servicios prestados por las Unidades de Inspección contratados por el patrón.
+10.2 El dictamen de inspección vigente deberá estar a disposición de la autoridad laboral cuando ésta lo solicite
+Las Listas de Verificación de Seguridad y Salud en el Teletrabajo recibidas por el patrón deberán estar a disposición de la autoridad laboral cuando ésta lo solicite
+10.3 Los aspectos a verificar durante la evaluación de la conformidad con la presente Norma se realizarán en el domicilio del centro de trabajo, según aplique, mediante la constatación física, revisión documental, registros o entrevistas, de conformidad con lo siguiente:
+Disposición
+| Tipo de comprobación
+| Criterios de aceptación
+| Riesgo
+| 
+5.1
+| Documental
+| El patrón cumple cuando presenta evidencia de que:
+· Cuenta con un listado de las personas trabajadoras bajo la modalidad de Teletrabajo en su centro de trabajo;
+· El listado de las personas trabajadoras bajo la modalidad de Teletrabajo se encuentra actualizado, y
+· El listado de las personas trabajadoras bajo la modalidad de Teletrabajo contempla, al menos, la información siguiente por cada una de ellas:
+- El nombre de la persona trabajadora bajo la modalidad de Teletrabajo;
+- El género;
+- Su estado civil;
+- Las actividades a desarrollar;
+- El nombre y perfil de puesto;
+- El tiempo (en porcentaje) de la relación laboral que usa para realizar Teletrabajo;
+- El número telefónico de contacto;
+- El domicilio de la(s) persona(s) trabajadoras bajo la modalidad de Teletrabajo;
+- El (los) lugar(es) de trabajo propuestos por las personas trabajadoras bajo la modalidad de Teletrabajo y convenidos con el patrón;
+- La razón social y domicilio del centro de trabajo, y
+- El listado del equipo de cómputo y ergonómico, en su caso, otorgado a la persona trabajadora bajo la modalidad de teletrabajo, o la justificación correspondiente de lo contrario.
+| 
+| 
+Observaciones:
+El listado de las personas trabajadoras bajo la modalidad de Teletrabajo puede presentarse de manera impresa, o en archivos electrónicos de medios digitales.
+La actualización del listado de las personas trabajadoras bajo la modalidad de Teletrabajo se da cuando una nueva persona trabajadora se incorpora a esta modalidad, o cuando una de las que ya están en el listado deja de estarlo.
+Los nombres de las personas trabajadoras bajo la modalidad de Teletrabajo que se encuentren en el listado podrán ser compulsados con otros documentos que el patrón exhiba como, por ejemplo:
+· Listas de nómina;
+· Lista de trabajadores inscritos a la seguridad social que le corresponda al centro de trabajo, o
+· Lista de los trabajadores que cuenten en el contrato colectivo o individual de trabajo, según aplique.
+También es recomendable que durante el acto de evaluación de la conformidad con esta Norma Oficial Mexicana se encuentre presente, al menos, un número de las personas trabajadoras bajo la modalidad de Teletrabajo, representativas de las que laboran en la modalidad de Teletrabajo que le permita a la Autoridad Laboral o, en su caso, a la Unidad de Inspección, formular algunas preguntas o inquietudes que en ese momento tenga, y que le permita comprobar o no el contenido de la documentación que el patrón le esté proporcionando como evidencia de cumplimiento del contenido del listado a que se refiere el presente numeral.
+En el supuesto de que al listado de las personas trabajadoras bajo la modalidad de teletrabajo le haga falta la información de alguno de los incisos de este numeral al momento de la comprobación, ésta podría ser cumplimentada durante el desahogo de la diligencia, lo anterior a fin de que la información faltante no sea motivo de emplazamiento y eventual sanción por incumplimiento, esto último (la sanción) sólo en el caso de la autoridad laboral.
+Es válido que, para una sola persona trabajadoras bajo la modalidad de Teletrabajo, exista en el listado más de un domicilio acordado entre ésta y el patrón, en donde se lleve a cabo el Teletrabajo.
+| 
+5.1.1
+| Documental 
+| El patrón cumple cuando presenta evidencia de que:
+· Para cada una de las personas trabajadoras bajo la modalidad de Teletrabajo, el (los) lugar(es) de trabajo -que de común acuerdo se estableció- existe la conectividad para el uso y manejo de las Tecnologías de la Información y Comunicación, y
+Para cada una de las personas trabajadoras bajo la modalidad de Teletrabajo, el (los) lugar(es) de trabajo -que de común acuerdo se estableció- cuenta con condiciones de seguridad y salud en el trabajo, con énfasis en el buen estado de las instalaciones eléctricas, con iluminación, ventilación y condiciones ergonómicas.
+| 
+| 
+Observaciones:
+Es válido si el patrón presenta como evidencia de cumplimiento información con la que demuestre que en el domicilio en el que se encuentra ubicado el lugar de trabajo acordado con la persona trabajadora bajo la modalidad de Teletrabajo, se tiene un contrato, un recibo o cualquier otro documento que indique que en dicho lugar se cuenta con la conectividad de internet para los equipos de las TIC, y que se cuenta con condiciones de seguridad y salud en el trabajo, con énfasis en el buen estado de las instalaciones eléctricas, con iluminación, ventilación y condiciones ergonómicas.
+Cuando, para una persona trabajadora bajo la modalidad de Teletrabajo, el patrón hubiere acordado más de un lugar de trabajo, para cada uno de esos lugares el patrón deberá contar con las evidencias de que ahí existe la conectividad, y condiciones de seguridad y salud en el trabajo, con énfasis en el buen estado de las instalaciones eléctricas, con iluminación, ventilación y condiciones ergonómicas, como se menciona en el párrafo anterior.
+Asimismo, el patrón deberá demostrar que cuenta por escrito, en qué casos la persona trabajadora bajo la modalidad de Teletrabajo puede cambiar de uno a otro lugar de trabajo de los acordados, por ejemplo, por fallas en la conectividad: por problemas técnicos de las TIC; por apagones o suspensiones de energía eléctrica y de las redes de conectividad al internet, o por días y horarios preestablecidos entre el patrón y la persona trabajadora bajo la modalidad de Teletrabajo, entre otros.
+Las condiciones de seguridad de los lugares de trabajo de cada persona trabajadora bajo la modalidad de Teletrabajo se deberán establecer por escrito.
+La comisión de seguridad e higiene será quien revise (in situ sólo con el consentimiento del aspirante a ser persona trabajadora bajo la modalidad de Teletrabajo o con su intervención) o con la información asentada con motivo de la autoevaluación de la lista de verificación de las condiciones de seguridad y salud en el trabajo, en el que se compruebe que las condiciones de seguridad y salud del lugar(es) de trabajo, según aplique, en lo que hace a las instalaciones eléctricas, la iluminación, la ventilación y las condiciones ergonómicas y psicosociales en que se desarrolle el Teletrabajo son adecuadas y no generarán daños a la integridad física ni a la salud de la persona trabajadora bajo la modalidad de Teletrabajo.
+| 
+5.1.2
+| Documental
+| El patrón cumple cuando el (los) lugar(es) de trabajo propuestos por un trabajador aspirante a la modalidad de Teletrabajo y convenidos con el patrón, conforme al contrato colectivo o al reglamento interior de trabajo, son fijos, siempre que éstos garanticen que se cuenta con lo requerido en los incisos a) y b) del numeral 5.1.1 y cumplan con lo establecido en los numerales 7.1, 7.2 y 7.3, inciso a)
+| 
+| 
+Observaciones:
+Una persona trabajadora bajo la modalidad de Teletrabajo puede proponer al patrón más de un lugar fijo para ubicar en lugar de trabajo. En este caso, cada uno de los lugares de trabajo debe contar con la conectividad para el uso y manejo de las tecnologías de la información y comunicación, es decir con la conectividad para las TIC; con las condiciones de seguridad y salud en el trabajo, y con los requerimientos físicos para evitar riesgos de trabajo provocados por agentes físicos, por factores de riesgo ergonómico y por factores de riesgo psicosocial, este último en lo que hace al espacio físico.
+Es muy oportuno que si en el centro de trabajo existe contrato colectivo de trabajo o en reglamento interior en él se 
+| 
+asienten lo que este numeral requiere, con lo que también se da cumplimiento con lo que al respecto dispone la Ley Federal del Trabajo.
+| 
+5.2
+| Documental
+| El patrón cumple cuando presenta evidencia de que:
+· Establece, por escrito, en el centro de trabajo y entre las personas trabajadoras bajo la modalidad de Teletrabajo una Política de Teletrabajo;
+· Implanta en el centro de trabajo y entre las personas trabajadoras bajo la modalidad de Teletrabajo la Política de Teletrabajo;
+· Mantiene en el centro de trabajo y entre las personas trabajadoras bajo la modalidad de Teletrabajo la Política de Teletrabajo, y
+· Difunde en el centro de trabajo y entre las personas trabajadoras bajo la modalidad de Teletrabajo la Política de Teletrabajo.
+· La política de Teletrabajo escrita implantada, mantenida y difundida en el centro de trabajo y entre las personas trabajadoras bajo la modalidad de Teletrabajo cumple con las disposiciones del contrato colectivo de trabajo o del reglamento interior de trabajo, según aplique, en cumplimiento a lo establecido en los artículos 330-C, 330-D y 330-E de la Ley Federal del Trabajo.
+El patrón cumple cuando presenta evidencia de que la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, promueve la cultura de la prevención de riesgos de trabajo a través de la seguridad y salud en el trabajo en personas trabajadoras bajo la modalidad de Teletrabajo;
+El patrón cumple cuando presenta evidencia de que la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, instaura mecanismos de comunicación con las personas trabajadoras bajo la modalidad de Teletrabajo a través de reuniones presenciales en el centro de trabajo, o por medio de las TIC, con el fin de evitar el aislamiento social de éstas;
+El patrón cumple cuando presenta evidencia de que la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, facilita los mecanismos de comunicación y difusión a distancia con los que cuente el centro de trabajo, incluyendo el correo electrónico y otros, para que las personas trabajadoras bajo la modalidad de Teletrabajo tengan conocimiento, entre otros, de los procedimientos a los que se refiere el artículo 330-C segundo párrafo de la Ley;
+El patrón cumple cuando presenta evidencia de que la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, indica los mecanismos y reglas de contacto entre el centro de trabajo y las personas trabajadoras bajo la modalidad de Teletrabajo, siempre que se garantice el derecho a la privacidad de las personas trabajadoras bajo la modalidad de Teletrabajo, y que dichos mecanismos o reglas no interfieran en la relación trabajo-familia, y que sean proporcionales a su objetivo;
+El patrón cumple cuando presenta evidencia de que con los mecanismos y las reglas de contacto y de supervisión para el Teletrabajo de la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, establece la duración del horario de labores pactado, y/o la distribución convenida de los horarios de las jornadas de trabajo de éstas, siempre que no excedan los máximos legales y contractuales, incluyendo el derecho a las pausas para descanso y a la desconexión (incluida la desconexión de las TIC de manera digital) al término de la jornada laboral, en los horarios no laborables, vacaciones, permisos y licencias;
+El patrón cumple cuando presenta evidencia de que con los mecanismos y las reglas de contacto y de supervisión para el Teletrabajo de la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, señala que los derechos de las personas trabajadoras bajo la modalidad de Teletrabajo no podrán ser inferiores a los que realicen trabajo presencial en el centro de trabajo;
+El patrón cumple cuando presenta evidencia de que los mecanismos y las reglas de contacto y de supervisión para el Teletrabajo, de la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo promueve la perspectiva de género y permite conciliar la vida personal de las personas trabajadoras bajo la modalidad de Teletrabajo, y considera las disposiciones del protocolo al que se refiere el artículo 132 fracción XXXI de la Ley;
+El patrón cumple cuando presenta evidencia de que la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, determina el horario dentro de la jornada laboral en el que, durante un máximo de seis meses, las madres trabajadoras bajo la modalidad de Teletrabajo en periodo de lactancia contarán con tiempo para alimentar a sus hijos e hijas, pudiendo elegir entre tomar dos reposos extraordinarios por día, de media hora cada uno, o bien reducir una hora su jornada laboral, en los términos establecidos por el artículo 170 de la Ley Federal del Trabajo;
+El patrón cumple cuando presenta evidencia de que en la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, indica la importancia de la promoción y vigilancia de la salud de las personas trabajadoras bajo la modalidad de Teletrabajo;
+El patrón cumple cuando presenta evidencia de que en la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, establece las mecánicas para que las personas trabajadoras bajo la modalidad de Teletrabajo informen, en su caso, al patrón los cambios de domicilio del lugar de trabajo;
+El patrón cumple cuando presenta evidencia de que en la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, define de manera precisa las responsabilidades y obligaciones para los patrones y para las personas trabajadoras bajo la modalidad de Teletrabajo, en cumplimiento a lo previsto por el artículo 330-B de la Ley, incluyendo las establecidas en el contrato colectivo de trabajo o en su caso el reglamento interior de trabajo, y
+El patrón cumple cuando presenta evidencia de que en la política de Teletrabajo establecida por escrito, implantada, mantenida y difundida en el centro de trabajo, establece los mecanismos para aplicar, en su caso, la reversibilidad del Teletrabajo (inclusive de forma temporal), de acuerdo con lo previsto en el artículo 330-G de la Ley, y
+| 
+| 
+Observaciones:
+Es válido que el patrón presente la política de Teletrabajo de su centro de trabajo incorporada en un solo instrumento, en el que se conjugue con otro tipo de políticas que tenga implementada en el centro de trabajo, con temas concurrentes a la seguridad y la salud en el trabajo, o bien que la presente de manera independiente.
+Los mecanismos para implantar, mantener y difundir la política de Teletrabajo la deben conocer todos los trabajadores del centro de trabajo (incluidas las personas trabajadoras bajo la modalidad de teletrabajo) de tal manera que cualquiera de ellos pueda ser entrevistado para corroborar las evidencias documentales que el patrón presente para demostrar que cumple con la obligación de este numeral.
+Sería conveniente que durante las visitas que realice la Autoridad Laboral (o durante las actuaciones de las unidades de inspección) a los centros de trabajo, se encuentren presentes algunas personas trabajadoras bajo la modalidad de teletrabajo, a fin de que puedan ser entrevistadas sobre el conocimiento, entendimiento y aplicación de la política de Teletrabajo que se implanta, mantiene y difunde en el centro de trabajo.
+El patrón del centro de trabajo puede tomar como información de referencia, para la elaboración de la política de Teletrabajo el contenido del Apéndice I contenido en esta Norma Oficial Mexicana, pero no se considerará como incumplimiento si el patrón elaboró su propia política de Teletrabajo sin tomar en consideración el contenido de dicho Apéndice.
+| 
+5.3
+| Documental y entrevista
+| El patrón cumple cuando presenta evidencia de que:
+· informa a las personas trabajadoras bajo la modalidad de Teletrabajo sobre los riesgos relacionados con el Teletrabajo;
+· informa a la comisión de seguridad e higiene del centro de trabajo, sobre los riesgos relacionados con el Teletrabajo;
+· informa a las personas trabajadoras bajo la modalidad de Teletrabajo de la posible exposición a agentes y a factores de riesgo (ergonómico y psicosocial), e
+· informa a la comisión de seguridad e higiene del centro de trabajo, sobre la posible exposición de las personas trabajadoras bajo la modalidad de Teletrabajo a agentes y a factores de riesgo (ergonómico y psicosocial).
+| 
+| 
+Observaciones:
+Los agentes a que se refiere este numeral son fundamentalmente los agentes físicos (por ejemplo, vibraciones, iluminación, ventilación, o temperaturas) los agentes químicos (humos, vapores, rocíos o neblinas) y los agentes biológicos (virus, bacterias, hongos) a los que se puede exponer la persona trabajadora bajo la modalidad de Teletrabajo en el ejercicio o con motivo de su trabajo. Éstos pueden estar presentes o no en el lugar de trabajo de la persona trabajadora bajo la modalidad de Teletrabajo.
+El patrón, para demostrar que cumple con la obligación de este numeral puede presentar evidencias de que informa a las personas trabajadoras bajo la modalidad de Teletrabajo sobre lo requerido en este numeral, por ejemplo, a través de charlas (que en muchos centros de trabajo se aplican antes de iniciar las actividades) aprovechando las TIC, o que elabora y les proporciona material impreso o digital que puede compartir precisamente con las personas trabajadoras bajo la modalidad de Teletrabajo y con los integrantes de la comisión de seguridad e higiene del centro de trabajo.
+Asimismo, el patrón puede presentar evidencias de que a las personas trabajadoras bajo la modalidad de Teletrabajo y a los integrantes de las comisiones de seguridad e higiene les informa, por ejemplo, que los factores de riesgo ergonómico pueden desencadenarse en una persona por una mala posición, aun cuando ésta se encuentre sentada, y que puede repercutir en la salud musculoesquelética, aumentando considerablemente la probabilidad de que se produzca el daño. Lo anterior a través de charlas o información impresa o digital.
+El patrón también puede profundizar en este tema informando a las personas trabajadoras bajo la modalidad de Teletrabajo y a los integrantes de las comisiones de seguridad e higiene que es probable que también se realicen esfuerzos físicos y posturales involuntarios, como por ejemplo muchas horas frente a una computadora (sin cambiar de posición) o frente a cualquier otro tipo de equipo de las TIC por posición sentada y estática, sin apenas moverse, lo que puede provocar la exposición a factores de riesgo ergonómico presentes día con día.
+Asimismo, el patrón puede demostrar que informa a las personas trabajadoras bajo la modalidad de Teletrabajo y a los integrantes de las comisiones de seguridad e higiene sobre los riesgos a los que se expone quien realice Teletrabajo, si hace mención en sus pláticas o material sobre factores de riesgo ergonómico y factores de riesgo psicosocial, de esto último por ejemplo, que las cargas de trabajo excesivas pueden llevar a consecuencias nada agradables, que tienen que ver con el agotamiento físico y mental; una falta de concentración y de trastornos del sueño, o de fatiga confusión, depresión, ansiedad e inclusive, problemas cardiacos, por mencionar algunos elementos de dicha información. En ese sentido, el patrón puede hacer uso de bibliografía e investigaciones que tenga al alcance (publicaciones, artículos, estudios, entre otros) que le permita informar a las personas trabajadoras bajo la modalidad de Teletrabajo, por ejemplo, la importancia del equilibrio trabajo- familia, del no aislamiento social, del denominado tecnoestrés, de la falta de apoyo social, de flexibilidad en los horarios y del adecuado uso de las tecnologías de la información.
+| 
+5.4, y 7
+| Documental 
+| El patrón cumple cuando:
+· Presenta evidencia de que cuenta con la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo, a fin de que se cumplan con las condiciones de seguridad y salud en el trabajo a que se refiere el Capítulo 7 de la presente Norma, así como cumplir con las medidas de seguridad e higiene en el lugar de trabajo que hayan sido establecidas por la Comisión Seguridad e Higiene, y que se contienen en la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo para evitar riesgos de trabajo provocados por agentes físicos se precisa que se dispone de un área de trabajo que se encuentre limpia y ordenada, sin materiales, objetos o equipos no necesarios en el lugar de trabajo, como un principio básico de seguridad, colocando cerca del lugar de uso los elementos más utilizados y alejados los de uso infrecuente u ocasional;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo para evitar riesgos de trabajo provocados por agentes físicos se precisa que se dispone de un área de trabajo que se encuentra iluminada, por luz natural o artificial, que no provoca deslumbramiento debido al exceso de iluminación o por ubicación inadecuada de la fuente de iluminación, ni fatiga visual por iluminación deficiente;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo para evitar riesgos de trabajo provocados por agentes físicos se precisa que se dispone de un área de trabajo que se encuentre con temperatura y ventilación que se percibe agradable para el tipo de actividad que se realice en la jornada laboral;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo para evitar riesgos de trabajo provocados por agentes físicos se precisa que se dispone de un área de trabajo que se encuentra con un nivel de ruido que no impide la concentración para realizar el trabajo, salvo el ruido ambiental que pudiera estar bajo el control de terceros;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo se eviten riesgos de trabajo provocados por factores de riesgo ergonómico, se precisa que se dispone de un lugar de trabajo que permite a la persona trabajadora bajo la modalidad de Teletrabajo sentirse cómoda para realizar sus actividades, de tal manera que (por el mobiliario, o posiciones sedentarias prolongadas) evite que espalda, hombros o cuello acumulen tensiones, por lo que cuenta con:
+- Un escritorio, mesa o plano de trabajo donde la persona trabajadora bajo la modalidad de Teletrabajo, en su caso, puede apoyar cómodamente los brazos (sentada y/o de pie) sin accesorios u obstáculos bajo el referido escritorio, mesa o plano de trabajo, que impiden la colocación incómoda de las piernas, y sin salientes o elementos que pudieran generar un riesgo de trabajo;
+- Una silla ergonómica o de otro tipo, apropiada a las actividades a desarrollar, y
+- En su caso, aditamentos ergonómicos o posturales que apoyen el uso de equipos de cómputo.
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo se eviten riesgos de trabajo provocados por factores de riesgo psicosocial, se precisa que se dispone de un espacio físico que, preferentemente, permita privacidad a la persona trabajadora bajo la modalidad de Teletrabajo cuando se encuentre en su jornada de trabajo, para evitar que cualquier persona ajena a las labores inherentes al Teletrabajo puedan interferir, interrumpir, o afectar sus actividades;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo se eviten riesgos de trabajo provocados por factores de riesgo psicosocial, se precisa que se observa una perspectiva de género que permite conciliar el trabajo con la vida familiar y personal, incluyendo la posibilidad de contar con jornadas flexibles para facilitar la atención de responsabilidades familiares;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo se eviten riesgos de trabajo provocados por factores de riesgo psicosocial, se precisa que se cuenta con mecanismos de comunicación al patrón sobre casos de violencia familiar que afecten a la persona trabajadora bajo la modalidad de Teletrabajo, que realice Teletrabajo desde su propia casa;
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo se eviten riesgos de trabajo provocados por factores de riesgo psicosocial, se precisa que se cuenta con pausas y tiempos de descanso adecuados para las personas trabajadoras bajo la modalidad de Teletrabajo, y
+· Presenta evidencia de que en la lista de verificación que sirve (previo a que el trabajador figure como persona trabajadora bajo la modalidad de Teletrabajo) para evaluar y comprobar que en el lugar de trabajo se eviten riesgos de trabajo provocados por factores de riesgo psicosocial, se precisa que se respeta el derecho a la desconexión (incluida la desconexión de las TIC de manera digital) de las personas trabajadoras bajo la modalidad de Teletrabajo al término de la jornada laboral, durante las pausas convenidas en horarios flexibles, en los horarios no laborables, vacaciones, permisos y licencias.
+| 
+| 
+Observaciones:
+Es válido que el patrón presente, para demostrar el cumplimiento de este numeral, por cada una de las personas trabajadoras bajo la modalidad de Teletrabajo un documento de validación de las condiciones de seguridad y salud en el trabajo de su o sus lugares de trabajo, o que presente como evidencia de cumplimiento un solo documento, que se tenga contenido a todas las personas trabajadoras bajo la modalidad de Teletrabajo [y su(s) lugares de trabajo] por ejemplo una matriz de información, la validación de las condiciones de seguridad y salud en el trabajo de esos lugares de trabajo.
+En caso de que una o más personas trabajadoras bajo la modalidad de Teletrabajo hubieren acordado más de un lugar de trabajo con el patrón, para cada uno de esos lugares, se deberá de contar con la validación de las condiciones de seguridad y salud en el trabajo.
+Lo anterior, invariablemente aplica cuando la opción para validar las condiciones de seguridad y salud en el trabajo haya sido a través de la aplicación de la lista de verificación de las condiciones de seguridad y salud en el trabajo por la persona trabajadora bajo la modalidad de Teletrabajo, o durante la visita permitida por ésta última para que comprobar las condiciones de seguridad y salud en el trabajo en el lugar o lugares de trabajo.
+Todo lo indicado en este numeral, para verificar su cumplimiento, es aplicable también, como se verá más adelante, con la periodicidad que el patrón determine, para comprobar que las condiciones de seguridad y salud en el trabajo se mantienen en el lugar de trabajo después de la primera comprobación y validación por la comisión de seguridad e higiene del centro de trabajo, o por el propio patrón cuando no exista en el centro de trabajo comisión de seguridad e higiene debido a que por la cantidad de trabajadores de ese centro de trabajo no lo amerite.
+| 
+5.5
+| Documental 
+| El patrón cumple cuando presenta evidencia de que:
+· Otorga las facilidades a la Comisión de Seguridad e Higiene del centro de trabajo para que realice la validación de la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo (incluidas las evidencias fotográficas o de video), a que se refiere el numeral 5.4 de la presente Norma y la evaluación de los posibles riesgos el patrón;
+· La Comisión de Seguridad e Higiene del centro de trabajo realiza una visita al lugar de trabajo propuesto, donde se realizaría el Teletrabajo, previa autorización del trabajador aspirante a figurar como persona trabajadora bajo la modalidad de Teletrabajo, y con las facilidades que éste proporcione o gestione tratándose de lugares en renta (oficinas en renta);
+· En alternativa, al inciso a) del numeral 5.5 de la presente Norma (viñeta anterior) proporciona al trabajador aspirante a figurar como persona trabajadora bajo la modalidad de Teletrabajo la lista de verificación de las condiciones de seguridad y salud para el Teletrabajo que elabora la comisión de seguridad e higiene del centro de trabajo, que le permita conocer, a través de su autoaplicación, si se cuenta o no en el lugar de trabajo con las condiciones de seguridad y salud en el trabajo para desempeñar sus actividades de Teletrabajo;
+· En su caso, para corroborar la información de la Lista de verificación de las condiciones de seguridad y salud en el Teletrabajo, la Comisión de seguridad e higiene del centro de trabajo solicitó al trabajador aspirante, o a la persona trabajadora bajo la modalidad de Teletrabajo, según corresponda, una comprobación a distancia del sitio de trabajo, apoyándose con las TIC, o evidencias fotográficas o de video del lugar (es) de trabajo, y
+· En su caso, el (los) lugar(es) de trabajo propuesto(s) por el trabajador que aspiró a figurar como persona trabajadora bajo la modalidad de Teletrabajo, no contó con las condiciones propias de seguridad y salud en el trabajo, no se lleva a cabo el Teletrabajo en ese lugar.
+| 
+| 
+La lista de verificación de las condiciones de seguridad y salud en el trabajo, como se comenta más adelante, también se aplica, con la periodicidad que el patrón determine, para comprobar que las condiciones de seguridad y salud en el trabajo se mantienen en el lugar de trabajo, después de la primera comprobación y validación por la comisión de seguridad e higiene del centro de trabajo, o por el propio patrón cuando no exista en el centro de trabajo comisión de seguridad e higiene debido a que por la cantidad de trabajadores de ese centro de trabajo no lo amerite.
+| 
+5.5.1
+| Documental
+| El patrón cumple cuando presenta evidencias de que cuenta con una segunda versión de la lista de verificación de las condiciones de seguridad y salud para el Teletrabajo (o en una segunda sección de la lista de verificación de las condiciones de seguridad y salud en el trabajo como se presenta el ejemplo del Apéndice correspondiente de esta Norma, que sirve para auto aplicarla por las personas trabajadoras bajo la modalidad de teletrabajo periódicamente y constatar la continuidad de las condiciones en las que se realiza el Teletrabajo, en los términos de lo indicado en el numeral 5.5 de esta Norma (viñeta anterior).
+| 
+| 
+5.6
+| Documental
+| El patrón cumple cuando presenta evidencias de que:
+· Establece y documenta, en su caso, el proceso de implementación del Teletrabajo para el centro de trabajo que cambie de la modalidad presencial a Teletrabajo y viceversa;
+· Para establecer y documentar, en su caso, el proceso de implementación del Teletrabajo para el centro de trabajo que cambie de la modalidad presencial a Teletrabajo y viceversa, contempla al menos:
+- La manera de mantener y establecer comunicación entre la persona trabajadora bajo la modalidad de Teletrabajo y el centro de trabajo;
+- Los momentos, condiciones o causas en que la persona trabajadora bajo la modalidad de Teletrabajo asistirá al centro de trabajo;
+- Las indicaciones sobre la forma en que se supervisará el desarrollo del Teletrabajo, y
+- El establecimiento de la manera en que se dará mantenimiento al equipo de cómputo o herramientas (incluidas las TIC´s) de trabajo utilizadas y/o asignadas para el Teletrabajo.
+| 
+| 
+Observaciones:
+Invariablemente el patrón que tenga en su centro de trabajo personas trabajadoras bajo la modalidad de Teletrabajo, tiene la obligación de establecer un proceso para el cambio de la modalidad de teletrabajo a trabajo presencial y viceversa.
+| 
+5.7
+| Documental 
+| El patrón cumple cuando presenta evidencias de que, a las personas trabajadoras bajo la modalidad de Teletrabajo para desarrollar sus actividades fuera del centro de trabajo, les proporciona:
+· Silla ergonómica o de otro tipo, apropiada a las actividades a desarrollar:
+· Los insumos necesarios para su adecuado desempeño, como por ejemplo para el envío de la información vía digital, o impresión de ésta, y
+· En su caso, los aditamentos que garanticen condiciones ergonómicas o posturales, del trabajador en su jornada laboral.
+| 
+| 
+Observaciones:
+Es válido que el patrón presente para el cumplimiento de este numeral un documento en el que figure el listado de equipo proporcionado -para resguardo de la persona trabajadora bajo la modalidad de Teletrabajo-firmado por ésta como evidencia de recibido.
+En el caso de que la persona trabajadora bajo la modalidad de Teletrabajo se negare a recibir las silla, insumos o aditamentos a que se refiere el numeral 5.7 de la presente Norma, deberá firmar dicha negativa en el documento en el que figure el listado de equipo antes citado, justificando los motivos de su decisión.
+| 
+5.8
+| Documental 
+| El patrón cumple cuando presenta evidencias de que:
+· Establece y documenta programas, y la manera de proporcionar mantenimiento, en condiciones de seguridad a los equipos para el manejo de las TIC proporcionados las personas trabajadoras bajo la modalidad de Teletrabajo para realizar sus actividades.
+| 
+| 
+Observaciones:
+Toda vez que el Decreto por el que se reforma el artículo 311 y se adiciona el Capítulo XII de la Ley Federal del Trabajo, en materia de Teletrabajo, establece que las condiciones de trabajo se harán constar por escrito mediante un contrato, entre las que contempla el equipo e insumos de trabajo, incluyendo el relacionado con las condiciones de seguridad y salud que se entregan a la persona trabajadora en la modalidad de Teletrabajo, y tratándose de patrones que no cuenten con un contrato colectivo de trabajo, para demostrar el cumplimiento de este numeral pueden incluir el Teletrabajo en su Reglamento Interior de Trabajo; la entrega de los equipos para el manejo de las TIC, así como la manera en que le proporcionará mantenimiento, es decir, dado que como obligaciones especiales que se establecen para el patrón, están las de cómo proporcionar, instalar y encargarse del mantenimiento de los equipos necesarios para el Teletrabajo, como equipo de cómputo, sillas ergonómicas, impresoras entre otros, el patrón puede presentar como evidencias de cumplimiento de esta disposición copia del contrato colectivo o del Reglamento Interior en el que se establezca este compromiso.
+Será válido que el patrón presente programas que establezcan las fechas y el tipo de actividades a desarrollar en el mantenimiento a los equipos proporcionados a la persona trabajadora bajo la modalidad de Teletrabajo para realizar sus actividades (en condiciones de seguridad) para el manejo de las TIC.
+De común acuerdo con la persona trabajadora bajo la modalidad de Teletrabajo se pueden acordar las fechas en que se realizará el mantenimiento, entendiéndose a éste como las acciones que tienen como objetivo preservar a los equipos o restaurarlos, cuando así se requiera, a un estado en el cual pueda llevar a cabo alguna función requerida.
+| 
+| 
+5.9 y 8
+| Documental 
+| El patrón cumple cuando presenta evidencias de que:
+· Proporciona capacitación a los trabajadores bajo la modalidad de Teletrabajo;
+· La capacitación proporcionada a las personas trabajadoras bajo la modalidad de Teletrabajo es al menos una vez al año;
+· La capacitación proporcionada a las personas trabajadoras bajo la modalidad de Teletrabajo es sobre las condiciones de seguridad y salud que deben tener y mantener en su lugar de trabajo;
+· La capacitación y adiestramiento proporcionados a las personas trabajadoras bajo la modalidad de Teletrabajo, en los casos aplicables, es con la participación de la Comisión mixta de capacitación, adiestramiento y productividad;
+· La capacitación y adiestramiento proporcionados a las personas trabajadoras bajo la modalidad de Teletrabajo, consiste, según aplique:
+-En el reconocimiento de peligros en su lugar de trabajo, mediante la aplicación de la lista de verificación de las condiciones de seguridad y salud en el trabajo para:
+· Los diferentes tipos de riesgos por condiciones peligrosas e inseguras posiblemente presentes en su lugar de trabajo;
+· Los factores de riesgo ergonómico por posturas forzosas;
+· Los factores de riesgo ergonómico por movimientos repetitivos;
+· Los factores de riesgo ergonómico por sedestación prolongada;
+· Los factores de riesgo psicosocial, haciendo énfasis a aquellos que pudieran estar presentes en modalidad de Teletrabajo, como la interferencia en la relación trabajo-familia, los ritmos de trabajo, la carga de trabajo, la comunicación entre trabajadores, el apoyo social y la violencia laboral, entre otros;
+- En la comprensión de la Política de Teletrabajo;
+- En la aplicación de la Política de Teletrabajo;
+- En los conocimientos necesarios para el manejo de las Tecnologías de la Información y Comunicación, para la modalidad de Teletrabajo.
+| 
+| 
+Observaciones:
+El proceso de capacitación o el adiestramiento puede realizarse en modalidad remota, presencial o mixta.
+En los propios programas de capacitación que el centro de trabajo elabora y aplica para los trabajadores que laboran de forma presencial, puede incluirse los temas, fechas, tiempos y demás información relacionada con la capacitación para las personas trabajadoras bajo la modalidad de Teletrabajo.
+| 
+5.10
+| Documental
+| El patrón cumple cuando presenta evidencias, de acuerdo con lo que al respecto se hubiere asentado por escrito en cumplimiento con lo previsto por el artículo 330-G de la Ley, de que:
+- Establece mecanismos para la reversibilidad de la modalidad de Teletrabajo a presencial, cuando:
+· La persona trabajadora bajo la modalidad de Teletrabajo informe al patrón de alguna condición, o alteración de las condiciones de seguridad y salud en el trabajo, que justifique el regreso al trabajo presencial, o
+· Así convenga a los intereses laborales de la persona trabajadora bajo la modalidad de Teletrabajo.
+| 
+| 
+Observaciones:
+Es válido que el patrón presente como evidencia de cumplimiento de este numeral la copia del contrato colectivo de trabajo; del reglamento interior, o de cualquier otro documento convenido entre ambas partes, según aplique, en el que se prevea el regreso al trabajo presencial de aquellas personas trabajadoras bajo la modalidad de Teletrabajo que cambiaron a esta modalidad a partir del trabajo presencial, siempre que se considere que sea voluntario el cambio, salvo casos de fuerza mayor debidamente acreditada
+| 
+5.11
+| Documental 
+| El patrón cumple cuando presenta evidencias de que:
+· Practica los exámenes médicos que corresponda a las personas trabajadoras bajo la modalidad de Teletrabajo de conformidad con lo previsto por la NOM-030-STPS-2009, y
+· Da seguimiento a los avisos de accidente de trabajo que, en su caso, le reporten las personas trabajadoras bajo la modalidad de Teletrabajo o sus familiares, cuando aquellas hayan sufrido un accidente en el lugar de trabajo, con motivo o en ejercicio de sus actividades de Teletrabajo, siempre observando los protocolos establecidos por las instituciones de seguridad social.
+| 
+| 
+Observaciones:
+En cualquiera de los tipos de comprobación de las obligaciones a que se refiere la presente Norma Oficial Mexicana, la autoridad laboral puede recurrir a la entrevista de las personas trabajadoras bajo la modalidad de Teletrabajo, para reforzar el cumplimiento o no de las obligaciones del patrón 
+| 
+5.12
+| Documental
+| El patrón cumple cuando presenta evidencias de que:
+· Comparte la documentación que resulte del cumplimiento de la presente Norma a la Comisión de Seguridad e Higiene;
+· La documentación que comparte a la Comisión de Seguridad e Higiene incluye, según aplique:
+- La lista de verificación de las condiciones de seguridad y salud en el Teletrabajo;
+- La validación de la lista de verificación de las condiciones de seguridad y salud en el Teletrabajo;
+- La evidencia fotográfica o de video que en su caso se cuente de las condiciones de seguridad y salud en el Teletrabajo, y
+- Los listados que comprueben los bienes y equipo de cómputo proporcionados a la persona trabajadora bajo la modalidad de Teletrabajo, a que se refiere el numeral 5.7 de esta NOM.
+| 
+| 
+Observaciones:
+El patrón puede utilizar los medios de comunicación que ya tenga establecidos con la comisión de seguridad e higiene del centro de trabajo para compartir la información a que se refiere el presente numeral.
+| 
+5.13
+| Documental
+| El patrón cumple cuando presenta evidencias de que cuenta con mecanismos de atención para casos de violencia familiar que consideren, entre otras cosas, el retorno a la modalidad presencial de manera temporal o permanente.
+| 
+| 
+Observaciones:
+Los mecanismos de atención que el patrón establezca para dar atención a los casos de violencia que tenga identificados por la propia persona trabajadora o por cualquier otro medio por el que se entere y que corrobore de su existencia, podrán estar instrumentados por la aplicación de criterios, lineamientos, procedimientos o protocolos u otro con que cuente el centro de trabajo que permitan instrumentar el contenido de las políticas de Teletrabajo y en caso, canalizar a la persona trabajadora violentada a la atención institucional especializada.
+| 
+5.14
+| Documental
+| El patrón cumple cuando presenta evidencias de que brinda el apoyo y las facilidades necesarias para que, en su caso, las personas trabajadoras bajo la modalidad de Teletrabajo participen en la Comisión de Seguridad e Higiene o en la Comisión mixta de capacitación, adiestramiento y productividad.
+| 
+| 
+10.4 Las evidencias de tipo documental o los registros a que alude esta Norma podrán exhibirse de manera impresa o en medios informáticos o digitales, y se deberán conservar al menos durante un año.
+11. Vigilancia.
+La vigilancia del cumplimiento de la presente Norma Oficial Mexicana corresponde a la Secretaría del Trabajo y Previsión Social.
+12. Bibliografía.
+12.1 DECRETO por el que se reforma el artículo 311 y se adiciona el capítulo XII Bis de la Ley Federal del Trabajo, en materia de Teletrabajo (DOF 11 de enero de 2021)
+12.2 Decreto Supremo 4218: Teletrabajo, 2020. https://boliviaemprende.com/noticias/decreto-supremo-4218-teletrabajo#::text=ART%C3%8DCULO%201.,los%20sectores%20p%C3%BAblico%20y%20privado.
+12.3 Ley 21220. Modificación al código de trabajo en materia de trabajo a distancia 2020, https://www.bcn.cl/leychile/navegar?idNorma=1143741
+12.4 Teletrabajo y trabajo a distancia 2020, https://www.santiago.gob.cu/images/pdf/Notilex_Teletrabajo_y_trabajo_a_distancia.pdf
+12.5 Acuerdo Ministerial No. MDT-2016-190. Normas que regulan el teletrabajo en el sector privado. 2016. http://www.trabajo.gob.ec/wp-content/uploads/2016/10/Acuerdo_Teletrabajo_WEB.pdf
+12.6 Acuerdo Ministerial No. MDT-2020-181. Directrices para la aplicación del Teletrabajo en el Código de Trabajo, conforme a lo establecido en la Ley Orgánica de Apoyo Humanitaria para combatir la crisis sanitaria derivado del COVID-19. 2020. http://www.trabajo.gob.ec/wp-content/uploads/2020/09/AM-MDT-2020-181-TELETRABAJO-14.09.2020-signed.pdf
+12.7 Decreto 600. Ley de Regulación del Teletrabajo. 2020. https://www.asamblea.gob.sv/sites/default/files/documents/decretos/384052FA-7820-4835-A5F9-AF8150684D71.pdf
+12.8 Real Decreto - Ley 28/2020. Trabajo a Distancia. 2020. https://www.boe.es/buscar/pdf/2020/BOE-A-2020-11043-consolidado.pdf
+12.9 INICIATIVA DE LEY. QUE DISPONE APROBAR LEY DE TELETRABAJO 2020. https://www.congreso.gob.gt/assets/uploads/info_legislativo/iniciativas/c1a97-5764.pdf
+12.10 Ley 126. Que establece y regula el Teletrabajo en la República de Panamá. 2020. https://www.gacetaoficial.gob.pa/pdfTemp/28965_A/GacetaNo_28965a_20200219.pdf
+12.11 Ley No. 30036. Ley que regula el Teletrabajo. 2013. http://www2.congreso.gob.pe/sicr/cendocbib/con4_uibd.nsf/DD7DF93E4B76742105257EF4000325BA/$FILE/30036.pdf
+12.12 Decreto Supremo No. 017-2015-TR que aprueba el Reglamento de la Ley No. 30036 que regula el teletrabajo. 2015. http://www.aprodeh.org.pe/documentos/marco-normativo/discapacidad/Decreto_Supremo_017-2015-TR_aprueba_Reglamento_Ley_de_Teletrabajo.pdf
+12.13 Decreto de Urgencia No. 026-2020, desarrollado por el Decreto No. 010-2020-TR, se ha creado la figura del "Trabajo Remoto". 2020. https://cdn.www.gob.pe/uploads/document/file/569726/1865130-2.pdf
+12.14 Guía para la aplicación del trabajo remoto. 2020. https://cdn.www.gob.pe/uploads/document/file/662676/GUIA_PARA_LA_APLICACION_DEL_TRABAJO_REMOTO.pdf
+12.15 Ley No. 36 de 2020. Ley de Trabajo a Distancia. LA IMPLEMENTACIÓN DE LA LEY SERÁ A PARTIR DEL AÑO FISCAL 2020-2021. 2020. http://www.lexjuris.com/lexlex/Leyes2020/lexl2020036.htm
+12.16 Resolución Núm. 23/2020 Sobre la Regulación de Teletrabajo como modalidad especial de trabajo. AUN NO ESTÁ VIGENTE. 2020. https://www.mt.gob.do/images/documentos/RESOLUCION%2023-2020%20SOBRE%20REGULACION%20DEL%20TELETRABAJO%20COMO%20MODALIDAD%20ESPECIAL%20DE%20TRABAJO.pdf
+13. Concordancia con normas internacionales.
+Esta Norma Oficial Mexicana no es equivalente con ninguna norma internacional por no existir alguna al momento de elaboración.
+TRANSITORIOS.
+PRIMERO. La presente Norma Oficial Mexicana entrará a los 180 días naturales posteriores a su publicación en el Diario Oficial de la Federación.
+Ciudad de México, a los 1 días del mes de junio de dos mil veintitrés.- La Secretaria del Trabajo y Previsión Social, Luisa María Alcalde Luján.- Rúbrica.
+Apéndice 1, Política de Teletrabajo (informativo)
+El presente Apéndice es de carácter informativo y no es de cumplimiento obligatorio
+En el presente Apéndice se muestran algunos ejemplos que el patrón puede tomar en consideración para elaborar la política de Teletrabajo de su centro de trabajo.
+La inspección del trabajo, y en su caso las unidades de inspección no pueden marcar como incumplimiento a esta NOM, si no se siguen o no se adoptan los ejemplos de medidas, condiciones o recomendaciones presentadas en el presente Apéndice.
+Generalidades
+Para redactar una política de Teletrabajo del centro de trabajo es recomendable tomar en consideración lo siguiente:
+- Establecer las horas en que las personas trabajadoras bajo la modalidad de Teletrabajo deben estar disponibles a través de las Tecnologías de la Información y Comunicación.
+- Especificar claramente a qué hora debe comenzar y terminar la jornada laboral de las personas trabajadoras bajo la modalidad de Teletrabajo.
+- En su caso, indicar si el patrón acuerda con las personas trabajadoras bajo la modalidad de Teletrabajo que se adoptarán horarios flexibles (por ejemplo, horarios escalonados durante el día para cumplir con la jornada laboral).
+- Describir los procedimientos para informar sobre las horas de trabajo y las tareas realizadas previamente programadas con las personas trabajadoras bajo la modalidad de Teletrabajo.
+- Describir la manera de calificar la calidad del trabajo y los procesos de revisión que se instrumentarán para garantizar mismas condiciones y cargas de trabajo, sin importar el género de las personas 
+trabajadoras bajo la modalidad de Teletrabajo.
+- Contemplar condiciones o eventualidades, para que personas trabajadoras bajo la modalidad de Teletrabajo sepan qué hacer si tienen problemas con su WiFi, su computadora (ordenador) o las herramientas de software, por ejemplo.
+- Solicitar opinión a las personas trabajadoras bajo la modalidad de Teletrabajo sobre el contenido de la política de Teletrabajo, ya que pueden perderse matices importantes de determinados puestos que deben cubrirse.
+- Difundir en el centro de trabajo la política de Teletrabajo, y revisarla al menos cada trimestre, o cuando ocurran sucesos importantes dentro o fuera del centro de trabajo, para asegurar que ésta siga siendo vigente.
+- Proporcionar directrices de protección de datos y enlaces a todas las herramientas de seguridad de los dispositivos que puedan necesitar las personas trabajadoras bajo la modalidad de Teletrabajo.
+- Elaborar un listado detallado de las erogaciones que asumirá el centro de trabajo para gastos imprevistos por las personas trabajadoras bajo la modalidad de Teletrabajo (por ejemplo, consumo de energía eléctrica y costos por el consumo de señal para el uso de la Tecnología de la Información y Telecomunicaciones).
+- Informar a las personas trabajadoras bajo la modalidad de Teletrabajo sobre cómo pueden utilizar, en su caso, los días de baja por enfermedad y las vacaciones mientras teletrabajan.
+Ejemplo de redacción de la Política de Teletrabajo (no limitativa)
+En este centro de trabajo (Indicar La Razón Social) para el Teletrabajo se asumen los compromisos siguientes:
+A) El centro de trabajo reconoce que las personas trabajadoras bajo la modalidad de teletrabajo, están expuestas a riesgos por motivo de su trabajo, por lo que se compromete a informar de manera periódica sobre dichos riesgos con el fin de que exista una cultura de prevención de riesgos o accidentes por la exposición a agentes físicos, químicos, biológicos o mecánicos, o a factores de riesgo psicosociales y ergonómicos, así como otros riesgos que pudieran causar efectos adversos para la vida, integridad física o salud de las personas trabajadoras.
+B) Con el fin de evitar el aislamiento, las personas trabajadoras bajo la modalidad de teletrabajo deberán asistir a reuniones presenciales o virtuales que organice el centro de trabajo, mismas que serán convocadas con suficiente anticipación. Asimismo, con el fin de facilitar la comunicación entre las personas trabajadoras, el centro de trabajo elaborará y difundirá un directorio actualizado de las personas que laboran bajo la modalidad presencial y de teletrabajo.
+C) Las personas trabajadoras bajo la modalidad de teletrabajo deberán utilizar las herramientas de comunicación y mensajería (software), proporcionada por el centro trabajo, mismas que serán los mecanismos oficiales de comunicación entre el centro de trabajo y las personas que teletrabajen.
+D) El centro de trabajo respetará la privacidad de las personas trabajadoras bajo la modalidad de teletrabajo, y no se podrán utilizar mecanismos invasivos para verificar la disponibilidad o conexión de las personas trabajadoras. Las cámaras, micrófonos o mecanismos de localización, sólo serán de uso obligatorio para reuniones, videoconferencias, capacitaciones y obligaciones relacionadas con seguridad e higiene en el lugar de trabajo.
+Las personas trabajadoras bajo la modalidad de teletrabajo tendrán el derecho a la desconexión de las herramientas de comunicación, mensajería u otros mecanismos de contacto durante las pausas para alimentos, lactancia, término de la jornada laboral, en los horarios no laborables, vacaciones, permisos y licencias. El centro de trabajo no podrá comunicarse con las personas trabajadoras bajo la modalidad de Teletrabajo durante dichas pausas, salvo casos de fuerza mayor debidamente justificados.
+E) Las personas trabajadoras bajo modalidad de teletrabajo deberán cumplir con la totalidad de su jornada laboral establecida en el contrato, por lo que el centro de trabajo podrá mantener contacto y mando en cualquier momento, con excepción de las pausas para alimentos o lactancia, el término de la jornada laboral, en los horarios no laborables, vacaciones, permisos y licencias.
+El centro de trabajo podrá establecer horarios continuos o discontinuos para las personas en la modalidad de teletrabajo. Para el caso de los horarios continuos, las personas trabajadoras bajo la modalidad de Teletrabajo deberán estar disponibles para cualquier comunicación durante el transcurso de la jornada laboral, salvo por las pausas para alimentos o lactancia. En el caso de los horarios discontinuos, el centro de trabajo acordará previamente con cada persona teletrabajadora la distribución de horarios en la jornada laboral.
+F) Las personas trabajadoras bajo la modalidad de Teletrabajo del centro de trabajo gozarán del mismo trato que el personal en la modalidad presencial, por lo que todas las prestaciones y beneficios otorgados a estos serán también conferidos a las personas que teletrabajen.
+G) Las personas trabajadoras bajo la modalidad de Teletrabajo podrán solicitar horarios escalonados que les permitan distribuir de mejor manera las responsabilidades del hogar, así como mejorar el balance trabajo - vida privada. El establecimiento de dichos horarios será de común acuerdo con el centro de trabajo.
+H) Las madres en modalidad de teletrabajo y en período de lactancia, tendrán derecho por seis meses a dos reposos extraordinarios por día, de media hora cada uno, o bien reducir una hora su jornada laboral para alimentar a sus hijos. La distribución de los reposos o la reducción de jornada laboral será acordada conforme a los requerimientos de la persona teletrabajadora.
+I) El centro de trabajo se compromete a entregar una silla de tipo ergonómico para cada persona teletrabajadora, en caso de ser necesario y previo dictamen médico, se otorgarán también los útiles y mobiliarios necesarios que garanticen condiciones ergonómicas y posturales de la persona teletrabajadora.
+J) El cambio o adición de un nuevo lugar de trabajo para las personas que trabajen en la modalidad de teletrabajo deberá ser solicitado por la persona teletrabajadora al menos con quince días de anticipación, con el fin de que se lleven a cabo los procesos necesarios para validar que dicho lugar cumple con las condiciones de seguridad y salud necesarias para el óptimo desempeño del teletrabajo.
+K) El centro trabajo se compromete a otorgar el equipo de cómputo y/o dispositivos tecnológicos necesarios para el desarrollo del teletrabajo, así como a brindar la asistencia y capacitación necesarias para la instalación y correcto uso de estos.
+Las personas trabajadoras bajo la modalidad de Teletrabajo se obligan a tener el mayor cuidado en la guarda y conservación de los equipos, materiales, útiles o mobiliario ergonómico que reciban del centro de trabajo, y deberán firmar la carta responsiva que se les otorgue para cada uno de dichos objetos.
+El centro de trabajo se compromete a realizar un pago mensual a cada persona teletrabajadora por concepto de costos derivados del teletrabajo, dicho pago contemplará el servicio de internet y la parte proporcional de la energía eléctrica. Para el cálculo de dicho pago, se computará el costo del servicio de internet y/o el incremento de velocidad o mejora del servicio requerido para el correcto desempeño del teletrabajo, así como el consumo mensual de energía eléctrica de los equipos informáticos y/o dispositivos electrónicos y, en su caso, el costo diferencial en periodos de invierno y verano.
+L) El cambio en la modalidad presencial a teletrabajo o viceversa deberá darse de mutuo acuerdo entre las personas trabajadoras bajo la modalidad de Teletrabajo y el centro de trabajo. Dicha solicitud deberá ser realizada al menos con 20 días de anticipación, con el fin de validar su viabilidad dependiendo de las funciones que realice la persona teletrabajadora y previo análisis de las condiciones de seguridad y salud del lugar de trabajo propuesto. En todo caso, con el fin de facilitar el derecho de reversibilidad a la modalidad presencial, el centro de trabajo y las personas trabajadoras bajo la modalidad de Teletrabajo harán su máximo esfuerzo para garantizar el pleno ejercicio de dicho derecho.
+Las personas trabajadoras bajo la modalidad de Teletrabajo tendrán el derecho de solicitar el cambio inmediato del lugar de trabajo, e inclusive el cambio a la modalidad presencial, cuando existan casos de violencia doméstica. El centro de trabajo se compromete a establecer un mecanismo dedicado para atender los casos y dar un tratamiento expedito, discreto, con perspectiva de género y no revictimizar a las personas trabajadoras que pongan a consideración una solicitud de esta naturaleza.
+Apéndice 2. Selección de candidatos para el Teletrabajo. (informativo)
+El presente Apéndice es de carácter informativo y no es de cumplimiento obligatorio.
+En el presente Apéndice se presenta una orientación para que el patrón determine si los trabajadores de su centro de trabajo son candidatos para trabajar como personas trabajadoras bajo la modalidad de Teletrabajo.
+Generalidades.
+El Teletrabajo puede aplicarse siempre que sea posible, ya que representa una buena medida preventiva, especialmente para los trabajadores de alto riesgo (trabajadores con enfermedades crónicas, trabajadores mayores).
+NOTA: Lo anterior no aplica para contratación de nuevos trabajadores, para que laboren como personas 
+trabajadoras bajo la modalidad de Teletrabajo.
+Requisitos indispensables para poder ser persona trabajadora en la modalidad de Teletrabajo es que se cumpla con lo siguiente:
+a) Que los trabajadores que estén dispuestos a realizar su trabajo en más del 40 por ciento su jornada laboral semanal, desde un lugar fuera del centro de trabajo, son aspirantes a ser seleccionados por el patrón;
+b) Que el Teletrabajo se realice exclusivamente con el uso de las Tecnologías de la Información y Comunicación, y
+c) No será considerado Teletrabajo aquel que se realice de forma ocasional o esporádica, es decir con menos del 40 por ciento de la jornada laboral contenida en el contrato de la persona trabajadora en la modalidad de Teletrabajo.
+Los trabajadores aspirantes para incursionar como personas trabajadoras bajo la modalidad de Teletrabajo deben seleccionar un "lugar de trabajo" en una zona en donde exista garantías de conectividad para desarrollar trabajos con Tecnologías de la Información y Comunicación. Lo anterior, independientemente de tener conocimientos elementales o avanzados en el manejo de las TIC (depende de las necesidades del centro de trabajo).
+Una vez que el patrón tenga posibles aspirantes, debe estar seguro de que en materia de seguridad y salud en el trabajo, cumplen los lugares de trabajo que seleccione el aspirante (y que el patrón esté de acuerdo) para realizar Teletrabajo. Para lo anterior el patrón deberá elaborar y proporcionar a los aspirantes (y posteriormente a los que ya sean personas trabajadoras bajo la modalidad de Teletrabajo) una lista de verificación para comprobar las condiciones de seguridad y salud en el trabajo del lugar de trabajo.
+La información que se asiente en la lista de verificación de las condiciones de seguridad y salud en el trabajo que el patrón le proporcione a cada trabajador aspirante a ser persona trabajadora en la modalidad de Teletrabajo, servirá como evidencias para evaluar y determinar si se valida o se rechaza al aspirante. Para lo anterior la comisión de seguridad e higiene del centro de trabajo apoyará al patrón en la evaluación de las condiciones de seguridad y salud en el trabajo.
+Existe la opción (para comprobar que las condiciones de seguridad y salud en el trabajo son adecuadas para llevar a cabo Teletrabajo) mediante una visita al lugar de trabajo, -sólo si el aspirante a figurar como persona trabajadora en la modalidad de Teletrabajo está de acuerdo- y, en su caso, dicho aspirante proporcione las facilidades para la comprobación de manera física y presencial por el patrón o por quien éste determine.
+Es recomendable considerar que la comisión de seguridad e higiene del centro de trabajo pueda apoyar al patrón, a:
+· Seleccionar los puestos de trabajo de los trabajadores que pudieran tener prioridad para ser candidatos para figurar como personas trabajadoras bajo la modalidad de Teletrabajo;
+· Solicitar la opinión del sindicato, en caso de que en el centro de trabajo exista esta representación, respecto de la selección realizada de los trabajadores precandidatos a realizar el Teletrabajo.
+· Detectar las necesidades familiares de los aspirantes (por ejemplo, los trabajadores con hijos o el cuidado de personas mayores u otros familiares de alto riesgo) que también podrían considerarse candidatos para el Teletrabajo.
+· Elaborar las preguntas de la lista de verificación de las condiciones de seguridad y salud en el trabajo, y
+· Revisar, analizar la información de las listas de verificación de las condiciones de seguridad y salud en el trabajo proporcionada por los aspirantes a realizar Teletrabajo, y dictaminar si se satisfacen las condiciones para los lugares de trabajo.
+El Teletrabajo como una opción emergente de organización del trabajo, incluso en entornos no pandémicos cuenta con beneficios para los trabajadores incluyen una reducción en el tiempo de viaje, una mayor autonomía del tiempo de trabajo que conduce a una mayor flexibilidad en términos de organización del tiempo de trabajo, un mejor equilibrio general entre el trabajo y la vida y una mayor productividad.
+Las personas trabajadoras bajo la modalidad de Teletrabajo pueden beneficiarse al mejorar el equilibrio entre el trabajo y la familia, lo que puede conducir a una mayor motivación y una menor rotación, así como a una mayor productividad y beneficios tanto para la persona trabajadora bajo la modalidad de Teletrabajo como para el patrón, y una reducción en la necesidad de espacio de oficina y los costos asociados.
+Para ser eficaz, el Teletrabajo debe basarse en el diálogo y la cooperación entre el patrón y los trabajadores. Es esencial proporcionar a las personas trabajadoras bajo la modalidad de Teletrabajo los equipos y sistemas apropiados (software y hardware), soporte técnico y capacitación, para mejores resultados.
+No menos importante es la necesidad de garantizar un ambiente de trabajo seguro, que incluya proporcionar las medidas apropiadas para las personas con discapacidad y para evitar el acoso cibernético y evitar la interferencia trabajo-familia.
+Los posibles desafíos que plantea el Teletrabajo (aislamiento, falta de interacción en persona con compañeros de trabajo, gerentes y público) deben considerarse adecuadamente.
+Apéndice 3 (informativo)
+Lista de verificación de las condiciones de seguridad y salud en el lugar de trabajo.
+El presente Apéndice es informativo y no es de cumplimiento obligatorio.
+En el presente Apéndice se presentan ejemplos de las preguntas que el patrón puede incluir en la lista de verificación de las condiciones de seguridad y salud que le proporcione a las personas trabajadoras bajo la modalidad de Teletrabajo, ya sea en la etapa de selección de los aspirantes, o tiempo después de que la persona trabajadora bajo la modalidad de Teletrabajo ya esté en esta modalidad (etapa de comprobación periódica).
+El patrón puede adicionar, eliminar o modificar las preguntas del presente Apéndice que considere conveniente, o adecuadas, que le sirvan para evaluar si los lugares de trabajo que proponen los trabajadores antes de incursionar a la modalidad de Teletrabajo cumplen con las condiciones de seguridad y salud, así como también puede hacer lo propio con las preguntas que responderán las personas trabajadoras bajo la modalidad de Teletrabajo que ya se encuentran en esta modalidad, para comprobar, después de algún tiempo, que las condiciones de seguridad y salud para realizar el Teletrabajo se mantienen.
+Instrucciones de uso:
+1.- Para cada uno de los conceptos de la presente lista de verificación de las condiciones de seguridad y salud (en ambas secciones) se encontrará preguntas que servirán para conocer si el lugar de trabajo seleccionado cuenta o no con las condiciones de seguridad y salud en el trabajo para el desarrollo de tareas de Teletrabajo.
+2.- De cada pregunta, la persona trabajadora en la modalidad de Teletrabajo (incluido el aspirante) realizará una anotación, con una "X", en el recuadro (casilla o celda) que corresponda a la fila en donde se formula la pregunta.
+3.- La persona trabajadora en la modalidad de Teletrabajo solamente puede optar por una anotación ("X") en la celda ("SI", "NO" o "NO APLICA)".
+En caso de que la respuesta infiera una condición desfavorable para realizar actividades de Teletrabajo (condiciones que puedan provocar algún tipo de afectación a su salud o lesión física) deberá documentar el tipo de riesgo identificado y, en su caso, el patrón podrá acordar un plan de acción para poder eliminarla. Lo mínimo que debe tener esta notificación es evidencia documental (de ser posible evidencia fotográfica) de la evaluación realizada.
+En caso de ser necesario, la persona trabajadora en la modalidad de Teletrabajo podrá consultar, si es el caso, el manual, la guía o instructivo elaborado, establecido o implementado por el patrón, con el apoyo de la comisión de seguridad e higiene del centro de trabajo, tanto para responder a las preguntas, como para realizar acciones que le permitan contar con condiciones favorables para realizar el Teletrabajo.
+4.- Una vez concluido el llenado de la lista de verificación de las condiciones de seguridad y salud en el lugar de trabajo, la persona trabajadora bajo la modalidad de Teletrabajo (o la persona aspirante que se vaya a contratar en esta modalidad) entregará la lista de verificación de las condiciones de seguridad y salud en el lugar de trabajo, al patrón (ver definición de lugar de trabajo).
+Lista de verificación de las condiciones de seguridad y salud en el lugar de trabajo
+Sección I
+| 
+Preguntas para el (la) aspirante a ser considerado (a) como persona trabajadora en la modalidad de Teletrabajo (puede ser una persona trabajadora que ya labore en el centro de trabajo de manera presencial, o una persona trabajadora que se pretenda contratar en la modalidad de Teletrabajo)
+| 
+Favor de responder lo siguiente de la manera más honesta y objetiva posible
+| 
+Nombre:
+| 
+Actividad que desarrolla actualmente en el centro de trabajo:
+| 
+Edad:
+| 
+Días de la semana
+| L
+| M
+| M
+| J
+| V
+| S
+| D
+| 
+Marque los días de la semana que actualmente trabaja presencialmente en el centro de trabajo
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+Marque los días de la semana que le gustaría trabajar en la modalidad de Teletrabajo
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+Conceptos elementales para seleccionar a las personas trabajadoras bajo la modalidad de Teletrabajo
+| Si
+| No
+| No Aplica
+| 
+¿Usted trabajaría en la modalidad de Teletrabajo de forma voluntaria?
+| 
+| 
+| 
+| 
+¿Usted se incorporaría a la modalidad de Teletrabajo por imposición del patrón?
+| 
+| 
+| 
+| 
+¿Ha pensado Usted en algún lugar que pudiera seleccionar como lugar de trabajo para realizar Teletrabajo?
+| 
+| 
+| 
+| 
+¿El lugar que usted pudiera tener en mente como lugar de trabajo para realizar Teletrabajo es privado?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que usted ocuparía para realizar el Teletrabajo, existen menores de edad, o adultos mayores, o personas con alguna discapacidad que requieran de su atención?
+| 
+| 
+| 
+| 
+¿Para realizar su trabajo solamente utiliza las TIC´s [Tecnologías de la Información y Comunicación, como por ejemplo computadoras o tabletas electrónicas]?
+| 
+| 
+| 
+| 
+¿El porcentaje de tiempo de su jornada laboral contenida en su contrato de trabajo, que desearía trabajar en la modalidad Teletrabajo, es mayor a 40%? 
+| 
+| 
+| 
+| 
+En el supuesto de que se incorpore a la lista de personas trabajadoras bajo la modalidad de Teletrabajo ¿estaría disponible a asistir al centro de trabajo en los días considerados en la modalidad de Teletrabajo?
+| 
+| 
+| 
+| 
+¿Considera que podría encontrarse laborando en la modalidad de Teletrabajo con supervisión mínima de su trabajo y tiempo de la jornada laboral?
+| 
+| 
+| 
+| 
+¿Para incursionar en la modalidad de Teletrabajo requiere necesariamente que el patrón le proporcione mobiliario que establece la Ley?
+| 
+| 
+| 
+| 
+¿Para incursionar en la modalidad de Teletrabajo requiere necesariamente que el patrón le proporcione equipo (software) que establece la Ley?
+| 
+| 
+| 
+| 
+¿Para incursionar en la modalidad de Teletrabajo requiere necesariamente que el patrón le proporcione equipo (hardware) que establece la Ley?
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+Organización para el trabajo
+| 
+¿Al estar en la modalidad de trabajo, considera que podría cumplir con sus metas y proyectos de trabajo al estar expuesto durante su jornada laboral a interrupciones por familiares o por otras personas ajenas a su trabajo?
+| 
+| 
+| 
+| 
+| 
+Para agentes físicos en el lugar de trabajo
+| 
+Espacio físico (general)
+| 
+¿El lugar de trabajo seleccionado para realizar Teletrabajo dispone de un espacio físico de al menos 2 metros cuadrados para ser utilizarlo como plano de trabajo, y una altura de al menos 2,5 metros?
+| 
+| 
+| 
+| 
+¿El lugar de trabajo seleccionado para realizar Teletrabajo dispone de un espacio físico de una altura de al menos 2,5 metros?
+| 
+| 
+| 
+| 
+Iluminación
+| 
+¿El lugar de trabajo que usted destinaría para el Teletrabajo cuenta con iluminación natural (luz del sol) o artificial (lámparas, luminarias o focos) para la jornada de trabajo?
+| 
+| 
+| 
+| 
+¿Considera que la luz natural en el lugar de trabajo, con la que realizaría Teletrabajo, podría ser molesta para su visión?
+| 
+| 
+| 
+| 
+¿La posición de las lámparas, focos o luminarias del lugar de trabajo en las que realizaría Teletrabajo podrían producirle reflejos molestos para su visión?
+| 
+| 
+| 
+| 
+¿El lugar de trabajo que usted utilizaría para realizar el Teletrabajo cuenta con lámparas de LED?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo, donde colocaría los equipos de las TIC, se evitaría el deslumbramiento de la luz que entra por la ventana u por otra fuente de iluminación?
+| 
+| 
+| 
+| 
+Ventilación
+| 
+¿El lugar de trabajo en donde realizaría el Teletrabajo cuenta con ventanas cerca del plano de trabajo (escritorio o mesa de trabajo)?
+| 
+| 
+| 
+| 
+¿En caso de que cuente con ventanas el lugar de trabajo en donde realizaría el Teletrabajo, éstas se encuentran normalmente cerradas?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo en el que realizaría Teletrabajo cuenta con aire acondicionado?
+| 
+| 
+| 
+| 
+Temperatura
+| 
+¿La temperatura del lugar de trabajo que utilizaría para realizar Teletrabajo le parece muy fría como para requerir del uso de ropa de abrigo? 
+| 
+| 
+| 
+| 
+¿Considera que la temperatura de lugar de trabajo que destinaría para realizar Teletrabajo es alta como para requerir de ventilación adicional con un ventilador o aire acondicionado?
+| 
+| 
+| 
+| 
+¿La altura del lugar de trabajo que utilizaría para el Teletrabajo es de más de dos metros y medio?
+| 
+| 
+| 
+| 
+Ruido
+| 
+¿En el lugar de trabajo que ocuparía para realizar Teletrabajo se percibe ruido de la calle, de patio o de otro lugar cercano que le impida concentrarse en el Teletrabajo?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que utilizaría para el Teletrabajo se percibe un volumen alto de los aparatos de sonido como la televisión, la radio, o la música de tal manera que no pudiera concentrarse en sus tareas?
+| 
+| 
+| 
+| 
+Para agentes mecánicos
+| 
+¿El área de trabajo que destinaría como lugar de trabajo está separada de otras áreas por elementos físicos como paredes, puertas, ventanas, canceles o elementos similares?
+| 
+| 
+| 
+| 
+¿Los pisos del lugar de trabajo que destinaría al Teletrabajo están despejados y libres de elementos (sillas, bancos, cajas u otro tipo de artículos) que le pudieran generar tropiezo o caída?
+| 
+| 
+| 
+| 
+¿Dispondría usted de un botiquín de primeros auxilios cerca al lugar de trabajo donde realizaría el Teletrabajo?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que usaría para realizar Teletrabajo existe mobiliario con esquinas o bordes afilados o salientes que le pudieran provocar que se golpeara, raspara o cortara en manos o pies?
+| 
+| 
+| 
+| 
+¿Dispone cerca del lugar de trabajo de un directorio telefónico de números de emergencia?
+| 
+| 
+| 
+| 
+¿Dispone de instalaciones eléctricas (contactos eléctricos) en el lugar de trabajo que utilizaría para conectar los equipos de las TIC?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que destinaría para el Teletrabajo utilizaría multicontactos para conectar el equipo TIC? 
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que utilizaría para realizar Teletrabajo las instalaciones eléctricas tiene cables expuestos, es decir los cables se encuentran por ejemplo fuera de la caja de los contactos eléctricos?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que ocuparía para el Teletrabajo, el equipo de las TIC se conectaría a un contacto eléctrico a una distancia mayor de un metro?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que destinaría para realizar el Teletrabajo, sabe si el contacto eléctrico que utilizaría para alimentar el equipo de las TIC cuenta con conexión a tierra física?
+| 
+| 
+| 
+| 
+¿Dispone de un extintor disponible cerca de su lugar de trabajo que destinaría para realizar el Teletrabajo?
+| 
+| 
+| 
+| 
+Para agentes químicos
+| 
+¿En el espacio físico que destinaría como lugar de trabajo, se perciben olores de sustancias químicas (solventes, pinturas, humo de cigarro o polvos de aserrín) que le parezcan desagradables? 
+| 
+| 
+| 
+| 
+¿Usted o alguien más fuma dentro del lugar de trabajo que utilizaría para realizar el Teletrabajo?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que usted ocuparía para realizar el Teletrabajo, se concentran los olores de la cocción de alimentos como asados de carne, chiles toreados, entre otros? 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+Para factores de riesgo ergonómico
+| 
+¿Cuenta en el lugar de trabajo que destinaría para el Teletrabajo con alguna silla o asiento disponible para realizar estas actividades?
+| 
+| 
+| 
+| 
+¿La mesa, escritorio o superficie del lugar de trabajo que ocuparía para el Teletrabajo tiene una altura entre 72 cm y 76 cm
+| 
+| 
+| 
+| 
+Para factores de riesgo psicosocial
+| 
+¿Usted estaría dispuesto a realizar Teletrabajo para su patrón?
+| 
+| 
+| 
+| 
+¿En caso de que usted realizara Teletrabajo, tendría inconvenientes para llevarlo a cabo sin que para ello la familia fuese un obstáculo? 
+| 
+| 
+| 
+| 
+¿En el supuesto de que usted realizara Teletrabajo, considera que se sentiría apartado y degradado de su centro de trabajo?
+| 
+| 
+| 
+| 
+¿Usted considera que si, incursiona en la modalidad de Teletrabajo, éste podría interferir con los tiempos para la atención de las actividades del trabajo y los tiempos para la familia?
+| 
+| 
+| 
+| 
+Sección II
+Preguntas para la persona trabajadora en la modalidad de Teletrabajo que refrenda sus condiciones de seguridad y salud en el trabajo
+| 
+Para agentes físicos
+| 
+Iluminación
+| 
+¿El lugar de trabajo que usted determinó para el Teletrabajo tiene iluminación natural? (luz del sol)
+| 
+| 
+| 
+| 
+¿El lugar de trabajo que usted utiliza para realizar el Teletrabajo cuenta con lámparas incandescentes? (focos de filamento)
+| 
+| 
+| 
+| 
+¿El lugar de trabajo que usted destinó para realizar el Teletrabajo cuenta con lámparas de fluorescentes? (luminarias)
+| 
+| 
+| 
+| 
+¿Considera que la luz con la que realiza Teletrabajo en su lugar de trabajo es molesta para su visión?
+| 
+| 
+| 
+| 
+¿La posición de las lámparas, focos o luminarias del lugar de trabajo en las que realiza Teletrabajo le producen reflejos molestos para su visión?
+| 
+| 
+| 
+| 
+¿El lugar de trabajo que usted utiliza para el Teletrabajo tiene lámparas de LED?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo, donde coloca los equipos de las TIC, evita el deslumbramiento de la luz que entra por la ventana u por otra fuente de iluminación?
+| 
+| 
+| 
+| 
+Ventilación
+| 
+¿El lugar de trabajo en donde lleva a cabo el Teletrabajo cuenta con ventanas cerca?
+| 
+| 
+| 
+| 
+¿En caso de que cuente con ventanas el lugar de trabajo en donde realiza Teletrabajo, éstas se encuentran normalmente cerradas?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo en el que desarrolla Teletrabajo cuenta con aire acondicionado?
+| 
+| 
+| 
+| 
+Temperatura
+| 
+¿La temperatura del lugar de trabajo que emplea para el Teletrabajo le parece muy fría como para requerir del uso de ropa de abrigo? 
+| 
+| 
+| 
+| 
+¿Considera que la temperatura de lugar de trabajo que utiliza para el Teletrabajo es alta como para requerir de ventilación adicional con un ventilador o aire acondicionado?
+| 
+| 
+| 
+| 
+¿La altura del lugar de trabajo que emplea para el Teletrabajo es de más de dos metros y medio?
+| 
+| 
+| 
+| 
+Ruido
+| 
+¿En el lugar de trabajo que ocupa para realizar Teletrabajo se percibe ruido de la calle, de patio o de otro lugar cercano que le impida concentrarse en el Teletrabajo?
+| 
+| 
+| 
+| 
+¿El espacio destinado al Teletrabajo está alejado del ruido o de otras distracciones que pudieran interferir con las actividades del Teletrabajo?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que escogió para realizar el Teletrabajo se percibe un volumen alto de los aparatos de sonido como la televisión, la radio, o la música de ese lugar o de predios o lugares cercanos, de tal manera que no le permiten concentrarse en sus tareas?
+| 
+| 
+| 
+| 
+Para agentes mecánicos
+| 
+¿El área que destinó como lugar de trabajo está separada de otras áreas por elementos físicos como paredes, puertas, ventanas, canceles o elementos similares?
+| 
+| 
+| 
+| 
+¿La superficie de su plano de trabajo (mesa, escritorio, barra u otro elemento similar) le permite realizar sus actividades de Teletrabajo de manera similar al realizado en el centro de trabajo?
+| 
+| 
+| 
+| 
+¿En caso de que sus tareas de Teletrabajo, requiera de transcripción de documentos impresos a los equipos de las TIC dispone de un soporte para documentos que le faciliten estas tareas en el lugar de trabajo?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo los elementos de uso más frecuente como teléfono, documentos o accesorios de escritorio (engrapadora, caja de lápices o clips entre otros) están al alcance de las actividades del Teletrabajo que realiza?
+| 
+| 
+| 
+| 
+¿Los pasillos y las puertas de su lugar de trabajo se encuentran permanentemente despejados de objetos que interfieran a su libre desplazamiento?
+| 
+| 
+| 
+| 
+¿El espacio de trabajo se mantiene generalmente libre de basura, desorden y líquidos inflamables?
+| 
+| 
+| 
+| 
+¿Los pisos del lugar de trabajo que determinó para el Teletrabajo están despejados y libres de elementos (sillas, bancos, cajas u otro tipo de artículos) que le pudieran generar tropiezo o caída?
+| 
+| 
+| 
+| 
+¿En su caso, los cables que alimentan los equipos de las TIC se encuentran en el camino de acceso como pasillos al lugar de trabajo, que puedan convierten en obstrucciones para el libre acceso de entrada o salida?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo que ocupa para realizar Teletrabajo existe mobiliario con esquinas o bordes afilados o salientes que le pudieran provocar que se golpeara, raspara o cortara en manos o pies?
+| 
+| 
+| 
+| 
+¿Cuenta con un directorio telefónico de números de emergencia cerca de su lugar de trabajo?
+| 
+| 
+| 
+| 
+¿Dispone en su lugar de trabajo de instalaciones eléctricas (contactos eléctricos) para conectar los equipos de las TIC?
+| 
+| 
+| 
+| 
+¿En su lugar de trabajo para el Teletrabajo utiliza multicontactos para conectar el equipo TIC? 
+| 
+| 
+| 
+| 
+¿Las instalaciones eléctricas de su lugar de trabajo para realizar Teletrabajo en tiene cables expuestos, es decir los cables se encuentran por ejemplo fuera de la caja de los contactos eléctricos?
+| 
+| 
+| 
+| 
+¿Los equipos utilizados para el Teletrabajo se conectan a un contacto eléctrico a una distancia mayor de un metro?
+| 
+| 
+| 
+| 
+¿Sabe usted si el contacto eléctrico que emplea para alimentar el equipo de las TIC en su lugar de trabajo para realizar el Teletrabajo cuenta con conexión a tierra física?
+| 
+| 
+| 
+| 
+¿Los contactos eléctricos de su lugar de trabajo se encuentran dañados, en malas condiciones a simple vista, como sucios rotos, flojos, o sin cubierta?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo donde realiza el Teletrabajo, requiere del uso de cables conocidos como extensión para alimentar a los equipos de las TIC?
+| 
+| 
+| 
+| 
+¿Cuando no está en uso el equipo que usa para realizar el Teletrabajo, lo mantiene apagado o en modo de espera (suspender)?
+| 
+| 
+| 
+| 
+¿Dispone en el lugar de trabajo de un regulador contra sobretensiones eléctricas para proteger el equipo de TIC equipo con el que realiza Teletrabajo?
+| 
+| 
+| 
+| 
+¿En el espacio físico que dispone como lugar de trabajo para realizar Teletrabajo se perciben olores de sustancias químicas (solventes, pinturas, humo de cigarro o polvos de aserrín) que le parezcan desagradables? 
+| 
+| 
+| 
+| 
+¿Usted o alguien más fuma dentro del lugar de trabajo que tiene destinado como lugar de trabajo para el Teletrabajo?
+| 
+| 
+| 
+| 
+¿El lugar de trabajo está ubicado en un ambiente libre de humo?
+| 
+| 
+| 
+| 
+Para factores de riesgo ergonómico
+| 
+¿La mesa, escritorio o superficie del lugar de trabajo que utiliza para el Teletrabajo tiene una altura entre 72 cm y 76 cm
+| 
+| 
+| 
+| 
+¿La silla que utiliza en su lugar de trabajo cuenta con cinco ruedas?
+| 
+| 
+| 
+| 
+¿Es posible ajustar la altura del asiento de su silla con respecto al piso? 
+| 
+| 
+| 
+| 
+¿Si es posible ajustar la altura del asiento de su silla con respecto al piso, al hacerlo las plantas del píe le permiten descansarlos completamente en el piso?
+| 
+| 
+| 
+| 
+¿Su espalda queda completamente apoyada en el respaldo de la silla?
+| 
+| 
+| 
+| 
+¿Es posible ajustar el respaldo de su silla para apoyar completamente la espalda?
+| 
+| 
+| 
+| 
+¿El respaldo de la silla es capaz de soportar la curva lumbar de la espalda? (curva lumbar o espalda baja)
+| 
+| 
+| 
+| 
+¿La silla del lugar de trabajo en donde realiza el Teletrabajo cuenta con descansabrazos?
+| 
+| 
+| 
+| 
+¿En caso de que la silla del lugar de trabajo en donde realiza el Teletrabajo tenga descansabrazos, éstos son ajustables?
+| 
+| 
+| 
+| 
+¿Cuando está sentado la silla, en su lugar de trabajo, requiere de un reposapiés para apoyar las plantas de los pies?
+| 
+| 
+| 
+| 
+¿Considera usted que requiere de un apoyo lumbar en la silla del lugar de trabajo, es decir que requiere de algún elemento de soporte como un cojín en la espalda? 
+| 
+| 
+| 
+| 
+¿Cuando realiza trabajos con equipos de TIC tiene posturas prolongadas en la misma posición, por ejemplo, permanece sentado en el mismo lugar, sin movimiento, por más de 60 minutos de forma continua?
+| 
+| 
+| 
+| 
+¿El lugar de trabajo se adapta al espacio físico, al equipo y al material relacionado con el Teletrabajo?
+| 
+| 
+| 
+| 
+¿La brillantez que emiten los equipos para el manejo de las TIC le fatiga la vista al realizar las tareas de Teletrabajo?
+| 
+| 
+| 
+| 
+¿Al momento de teletrabajar en el lugar de trabajo, la distancia entre el monitor del equipo de las TIC y su cara (cuando tiene computadora de escritorio) se encuentra a una distancia de entre 30 y 50 cm.?
+| 
+| 
+| 
+| 
+¿De acuerdo con las tareas a realizar en el lugar de trabajo, cuenta con un ratón o mouse indicador en el equipo de las TIC?
+| 
+| 
+| 
+| 
+¿En el lugar de trabajo la distancia entre el teclado y los codos es insuficiente, de tal manera que le incomoda al teclear?
+| 
+| 
+| 
+| 
+¿El lugar de trabajo es suficientemente amplio para que realice movimientos en el Teletrabajo sin que pueda tener una postura forzada que le produzca tensión o lesión musculares?
+| 
+| 
+| 
+| 
+¿Tiene suficiente espacio debajo de la mesa de trabajo para evitar que las piernas se golpeen?
+| 
+| 
+| 
+| 
+¿Hay espacio en su lugar de trabajo para descansar los brazos cuando no teclea?
+| 
+| 
+| 
+| 
+Para factores de riesgo psicosocial
+| 
+¿Al realizar Teletrabajo, tiene inconvenientes para desarrollarlo sin que ello afecte o interfiera con las actividades de la familia? 
+| 
+| 
+| 
+| 
+¿Conoce algo sobre los ciclos de descanso de acuerdo con su actividad en el Teletrabajo?
+| 
+| 
+| 
+| 
+Considera usted que el Teletrabajo le genera ansiedad, irritabilidad, estados depresivos, o fatiga mental
+| 
+| 
+| 
+| 
+Mencione al patrón, al final de esta lista de verificación de las condiciones de seguridad en el lugar de trabajo, cualquier necesidad especial que requiera para garantizar su salud al realizar Teletrabajo, a fin de que pueda ser subsanada (por ejemplo, si hay alguna lesión, enfermedad o dolencia preexistente que podría acelerarse, exacerbarse, agravarse, volver a ocurrir o deteriorarse en el cumplimiento de los requisitos inherentes al Teletrabajo.
+| 
+Comunique al patrón cualquier incidente de seguridad que se presente en el lugar de trabajo, mediante el procedimiento o mecanismo que, en su caso, tenga el patrón establecido.
+| 
+Si está de acuerdo, adjunte a esta lista de verificación de las condiciones de seguridad y salud del lugar de trabajo fotografías del lugar trabajo que le permita al patrón conocer la distribución de su lugar de trabajo (por ejemplo, mesa de trabajo o escritorio utilizado en el Teletrabajo, contactos, extintor, pasillos, silla, equipo de TIC).
+| 
+Apéndice de referencia 4 Recomendaciones de actividades previas a Teletrabajar
+El presente Apéndice es informativo y no es de cumplimiento obligatorio.
+En el presente Apéndice se presentan ejemplos de actividades que las personas trabajadoras bajo la modalidad de Teletrabajo pueden realizar antes - durante y después de su jornada de trabajo.
+Ø Antes de iniciar la jornada laboral, realizar unos minutos de ejercicio, estiramiento o relajación;
+Ø Vestirse adecuadamente, como si fuera a ir al centro de trabajo;
+Ø Hacer pausas durante su jornada laboral para el descanso de las articulaciones y de la visión;
+Ø Cuidar la postura física al Teletrabajar;
+Ø Establecer objetivos y prioridades para la jornada de trabajo, para mejorar sus resultados, y
+Ø Mantener hábitos de alimentación (nutrición) y sueños saludables.
+Ejercicios complementarios recomendados
+De las manos (con repeticiones, al menos tres veces)
+· Agitar y estirar los dedos
+· Apretar los dedos con la mano empuñada (cerrar el puño)
+· Estirar las manos
+De la cabeza y cuello
+· Mover la cabeza hacia ambos lados (laterales) con cadencia lenta (evitar movimientos bruscos) ayudándonos con cada una de las manos
+· Mover la cabeza hacia atrás y hacia adelante
+· Mover la cabeza de manera circular en el sentido de las manecillas del reloj y en sentido contrario
+Del tronco (entre otras)
+Sentado con la espalda recta, estirar ambas manos (con las manos unidas) hacia el frente, hacia arriba y hacia cada uno de los castados.
+Estirar un brazo por vez extendido hacia arriba al costado de la cabeza (hacer al menos cinco repeticiones)
+Girar el tronco lentamente hacia un costado y el otro, acompañándolo de con movimiento de la cabeza
+Colocar el brazo opuesto sobre la rodilla y las piernas cruzadas. Estirar la espalda separándola de la silla y sosteniendo la cintura con las manos a ambos lados.
+Extender ambos brazos al costado de la cabeza sosteniendo las manos unidas. Con los brazos entrelazados detrás de la cabeza, girar el tronco hacia un lado. Repetir la acción para el lado opuesto. Con la espalda erguida, unir las manos (manos hacia arriba). Luego repetir el ejercicio con las manos hacia abajo.
+Sacudir las manos manteniendo los brazos estirados al costado del cuerpo.
+Estirar la pierna izquierda y hacer pequeños círculos con el tobillo. Repetir lo mismo con la derecha. Hacer masajes circulares en la palma de la mano con el pulgar contrario
+Apéndice 5
+Recomendaciones para seleccionar una silla ergonómica.
+Generalidades
+- Una silla de oficina debe proporcionar al cuerpo un apoyo estable, permitiendo al trabajador adoptar una postura cómoda durante un periodo de tiempo determinado, de manera que se pueda realizar la tarea o actividad de forma adecuada. Para ello:
+- Es imprescindible que la silla permita adoptar posturas adecuadas y realizar cambios de postura.
+- Debe proporcionar un apoyo suficiente para la columna vertebral y en especial para la zona lumbar.
+- El asiento debe permitir que el flujo de sangre que circule por las extremidades inferiores sea adecuado. No debe generar una compresión en ningún punto que impida esta circulación.
+- La superficie del asiento debe disponer de un nivel suficiente de fricción para evitar un deslizamiento sobre la misma.
+- Para mayor comodidad, las partes en contacto con zonas corporales como las nalgas o la espalda deberían estar fabricadas con una superficie transpirable.
+- Un asiento para el Teletrabajo se recomienda que sea capaz de regular la altura, de tal manera que los pies y la columna vertebral se sientan cómodos.
+- Otro aspecto que se recomienda tener en consideración es que la profundidad del asiento pueda regularse, para que exista un espacio entre la parte posterior de la rodilla con respecto al borde de la superficie frontal del asiento, a fin de que la circulación de la sangre en ese lugar se dé sin problemas.
+- El diseño del largo de asiento es recomendable que se encuentre dentro de las distancias para el 5 percentil. Es lo mínimo para que todas las personas se sienten y genera poca presión en el Hueco Poplíteo.
+- Dentro de los deseables, existen también mesas de trabajo que permiten hacer ajustes mecánicos o eléctricos para el ajuste de altura con respecto al piso y trabajar en posición sentada o de pie.
+- No menos importante en una silla, es que cumpla con la función de protección ergonómica, lo que significa que el respaldo se pueda inclinar a discreción para el descanso a voluntad de la espalda, en caso de así considerarlo.
+- Cada espalda es diferente, por lo que es recomendable el uso de cojines como accesorio que realizar el ajuste necesario entre la espalda y la región lumbar, ya que cuando la columna vertebral no se amolda al diseño del respaldo de la silla existe un apoyo inestable y la espalda no se ajusta a una posición natural.
+Selección de una silla ergonómica
+Por lo antes expuesto, una silla ergonómica recomendable es la que satisface con lo siguiente:
+a) Que tenga un asiento regulable en altura (la base del asiento regulable en altura);
+b) Que disponga de un asiento regulable en profundidad;
+c) Que cuente con un respaldo reclinable y sin posición de balanceo.
+d) Que el diseño sea adaptable a las formas del cuerpo.
+e) Que los materiales de acople con el cuerpo favorezcan la transpiración.
+f) Que los materiales de fabricación del asiento y respaldo no tengan memoria, es decir que no se mantengan en la posición deformada al momento de usarla y que regresen a su posición original cuando no se usa.
+g) Que el borde delantero del asiento tenga una ligera inclinación para evitar la presión sobre las piernas, de tal manera que se favorezca la circulación de la sangre en la parte posterior del muslo, y
+h) Que la silla que cuente con ruedas para su desplazamiento.
+Las siguientes recomendaciones y criterios - perfectamente consistentes con el método ROSA (desarrollado en Canadá por Michael Sonne, Dino L. Villalta y David M. Andrews)(1) se ciñen a la postura adoptada por el trabajador al utilizar e interaccionar con algunos de los elementos más frecuentes en un puesto de trabajo de oficina.
+Para determinar el valor asignado a una postura, se considera la contribución de 5 elementos del puesto de trabajo:
+Silla, desglosada en las características del asiento (considerando la altura y la profundidad), y el conjunto formado por el soporte dorsal y los reposabrazos.
+Teléfono.
+Pantalla.
+Ratón.
+Teclado.
+La postura de la persona trabajadora se evalúa en relación con la desviación, respecto de la postura neutra o ideal, resultante de la interacción con los equipos y elementos que conforman el puesto de trabajo con pantallas.
+La postura de referencia (postura neutra) corresponde a la primera columna de las tablas y siempre tiene asignada una puntuación de "1", que es el valor mínimo. El resto de las posturas se presentan con valores crecientes en función de la desviación respecto de la postura de referencia. Por otra parte, bajo la sección de "Criterios adicionales" se incluyen situaciones cuya puntuación, en el caso de darse o estar presentes, deberá sumarse a la determinada en la sección "Desviación respecto de la postura de referencia".
+Los factores que se tienen en cuenta están agrupados en diferentes categorías tal y como se muestra en la siguiente figura, cuyas posturas de referencia son las siguientes:
+1. Silla. La silla de trabajo se subdivide en los 4 subapartados siguientes:
+a. Altura del asiento. Debe ser regulable de forma que los pies se apoyen en el suelo y las rodillas estén flexionadas a 90°.
+b. Profundidad del asiento. La profundidad del asiento debe ser regulable de manera que existan 8 cm entre el borde externo de la silla y la fosa poplítea.
+c. Reposabrazos. Deben ser regulables de modo que los codos estén flexionados a 90° y los hombros relajados (sin estar encogidos).
+d. Respaldo. Debe ser regulable y proporcionar apoyo lumbar de tal forma que la inclinación de la espalda esté comprendida entre 95° y 110°.
+2. Periféricos. Dentro de esta categoría se incluyen el resto de los equipos que forman parte del entorno de trabajo.
+a. Teléfono. Debe estar situado a 30 cm de la persona trabajadora y, o bien utilizarse con una mano, o bien utilizar un dispositivo de manos libres.
+b. Pantalla. Debe estar situada entre 40 y 75 cm (aproximadamente la distancia del brazo extendido).
+c. Ratón. Situado a una distancia similar a la del teclado y sin que existan presiones por agarre, desviaciones ni extensiones de muñeca.
+d. Teclado. Situado de forma que los codos estén flexionados a 90° aproximadamente, los hombros relajados y las muñecas en posición recta sin elevación de hombros ni de brazos. No debe haber desviaciones extremas de la muñeca ni superficies duras que causen presión en el área del túnel carpiano. Finalmente, el tiempo de uso diario es un factor transversal que se considera como puntuación adicional en cada uno de los factores anteriores, empleando un criterio idéntico en todos ellos.
+Para la obtención de la puntuación final es necesario, primero, determinar las puntuaciones parciales de los factores evaluados, empleando 5 tablas (A, B, C, D, y E), cuyo uso se detalla a continuación.
+TABLA A: SILLA DE TRABAJO
+La puntuación de la tabla A, relativa a la silla de trabajo, es la suma de la puntuación correspondiente a la altura del asiento (Tabla A-1) más la correspondiente a la profundidad del asiento (Tabla A-2). < continuación, debe obtenerse la suma de la puntuación correspondiente al reposabrazos y al respaldo mediante las tablas A-3 y A-4. Con estos dos valores, se obtiene la puntuación inicial de la silla de trabajo introduciendo ambos datos en la tabla A y leyendo el valor correspondiente.
+La justificación ergonómica de las puntuaciones en las tablas anteriores se basa en que, por una parte, un asiento demasiado alto podría causar una compresión de los vasos sanguíneos, una tendencia a sentarse en el borde de la silla y un aumento de la actividad de los músculos de la parte baja de la espalda, así como disminuir el apoyo de los pies en el suelo. Por la otra, un asiento demasiado bajo podría causar una presión excesiva bajo los glúteos, así como una rotación espinal y pélvica que afecte a la curvatura de la columna lumbar.
+Respecto a la profundidad del asiento, la distancia recomendada entre el borde de la silla y la pierna es de 5 a 9 cm (en la tabla A-2 se indica de una media con valor de 8 cm). Una distancia inferior puede causar presión en la parte posterior de los muslos y una compresión de los vasos sanguíneos y los nervios; mientras que una distancia superior podría disminuir el apoyo dorsal y conllevar una curvatura de la columna vertebral.
+Los reposabrazos contribuyen al confort de los usuarios y favorecen la disminución de la carga estática en los hombros y en los brazos. Si bien los autores del método consideran la existencia de reposabrazos como postura de referencia en la tabla A-3 no obliga a su uso. Por ello, cuando la silla no disponga de reposabrazos, podría considerarse equivalente, según los criterios de la tabla A-3, al considerar "codos sin apoyar" y, por lo tanto, asignarle una puntuación inicial igual a 2.
+En relación con el respaldo de la silla, el apoyo lumbar ayuda a mantener la curva lordótica natural. La ausencia de éste podría favorecer un aumento en la tensión de los ligamentos, los tendones y los músculos de la espalda.
+| REPOSABRAZOS + RESPALDO (A3+A4)
+| 
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 
+ASIENTO:
+ALTURA + PROFUNDIDAD
+(A1 +A2)
+| 2
+| 2
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 
+3
+| 2
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 
+4
+| 3
+| 3
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 
+5
+| 4
+| 4
+| 4
+| 4
+| 5
+| 6
+| 7
+| 8
+| 
+6
+| 5
+| 5
+| 5
+| 5
+| 6
+| 7
+| 8
+| 9
+| 
+7
+| 6
+| 6
+| 6
+| 7
+| 7
+| 8
+| 8
+| 9
+| 
+8
+| 7
+| 7
+| 7
+| 8
+| 8
+| 9
+| 9
+| 9
+| 
+Finalmente, debe tenerse en cuenta el tiempo de uso diario conforme a los criterios de la tabla F. Estos criterios son los mismos para el resto de factores pero en esos casos, el factor tiempo se contempla en las tablas previas (B-1, B-2, C-1 y C-2) como si se tratase de un "Criterio adicional".
+Tiempo de uso diario
+| Puntuación
+| 
+Uso continuo durante más de una hora, o durante más de 4 horas diarias.
+| +1
+| 
+Uso continuo durante menos de 30 minutos, o menos de una hora de trabajo diario.
+| -1
+| 
+TABLAS B: TELÉFONO Y PANTALLA
+La pantalla y el teléfono se valoran a través de la tabla B. La puntuación del teléfono se obtiene mediante la tabla B-1, mientras que la puntuación de la pantalla viene dada a través de la tabla B-2. Para cada uno de estos equipos debe tenerse en cuenta el tiempo de uso del mismo conforme al criterio de la tabla F, tal y como se indica en el criterio adicional de las tablas B-1 y B-2.
+Para obtener la puntuación conjunta de teléfono y pantalla, el valor relativo al teléfono (tabla B-1) es la cantidad a considerar en la primera columna de la tabla B, mientras que la puntuación correspondiente a la pantalla (tabla B-2) se utiliza en la primera fila de la tabla B.
+La justificación de las puntuaciones asignadas por las tablas anteriores, desde un punto de vista ergonómico, es que el uso de dispositivos de manos libres (como por ejemplo auriculares, altavoz del teléfono u otros dispositivos similares) facilita que el cuello permanezca en una postura neutra y se evite la contracción estática de sus músculos. En relación con la pantalla, las situaciones en las que su borde superior está situado tanto por encima como por debajo de la línea de visión horizontal suelen asociarse a una mayor actividad muscular del cuello, debido a la extensión y a la flexión que, respectivamente, éstas implican.
+| PANTALLA (B-2)
+| 
+| 0
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 
+TELÉFONO
+(B-1)
+| 0
+| 1
+| 1
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 
+1
+| 1
+| 1
+| 2
+| 2
+| 3
+| 4
+| 5
+| 6
+| 6
+| 
+2
+| 1
+| 2
+| 2
+| 3
+| 3
+| 4
+| 6
+| 7
+| 7
+| 
+3
+| 2
+| 2
+| 3
+| 3
+| 4
+| 5
+| 6
+| 8
+| 8
+| 
+4
+| 3
+| 3
+| 4
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 
+5
+| 4
+| 4
+| 5
+| 5
+| 6
+| 7
+| 8
+| 9
+| 9
+| 
+6
+| 5
+| 5
+| 6
+| 7
+| 8
+| 8
+| 9
+| 9
+| 9
+| 
+TABLAS C: RATÓN Y TECLADO
+La puntuación para el conjunto del ratón y teclado se obtiene a través de la tabla C. De forma análoga a los casos anteriores, primero se determina el valor del ratón por medio de la tabla C-1 y luego la puntuación del teclado mediante la tabla C-2. Estos valores constituyen, respectivamente, la primera columna y la primera fila de la tabla C.
+Desde un punto de vista ergonómico, el ratón debería estar ubicado en el mismo plano horizontal que el teclado y alineado con el hombro para, de esta forma, evitar tensiones en el hombro y elevaciones del brazo. Análogamente, también deben evitarse puntos de presión o de tensión en el agarre del ratón. Cabe mencionar que, si bien la situación relativa a alcanzar objetos situados por encima de la cabeza no implica el uso del teclado, ésta se incluye en esta tabla por tratarse de un factor de riesgo que afecta, principalmente, a las extremidades superiores.
+| Teclado (C-2)
+| 
+| 0
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 
+Ratón (C-1)
+| 0
+| 1
+| 1
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 
+1
+| 1
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 
+2
+| 1
+| 2
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 
+3
+| 2
+| 3
+| 3
+| 3
+| 5
+| 6
+| 7
+| 8
+| 
+4
+| 3
+| 4
+| 4
+| 5
+| 5
+| 6
+| 7
+| 8
+| 
+5
+| 4
+| 5
+| 5
+| 6
+| 6
+| 7
+| 8
+| 9
+| 
+6
+| 5
+| 6
+| 6
+| 7
+| 7
+| 8
+| 8
+| 9
+| 
+7
+| 6
+| 7
+| 7
+| 8
+| 8
+| 9
+| 9
+| 9
+| 
+Tabla C. Puntuación de ratón y teclado.
+TABLA D: PANTALLA Y PERIFÉRICOS
+La puntuación obtenida en la tabla B, junto con la de la tabla C, constituyen los datos de entrada de la tabla D para obtener la puntuación total relativa a la pantalla y los periféricos.
+| Tabla C (ratón y teclado)
+| 
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 
+Tabla B
+Teléfono y pantalla
+| 1
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+2
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+3
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+4
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+5
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+6
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+7
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+8
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+9
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+Tabla D. Puntuación de pantalla y periféricos.
+TABLA E: PUNTUACIÓN FINAL
+La puntuación final del método ROSA se obtiene a través de la tabla E partiendo de la puntación final de la silla (tabla A con el ajuste adicional del tiempo de uso diario) y la puntuación final de los periféricos (tabla D).
+| Tabla D (Pantalla y periféricos)
+| 
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+Tabla A
+(silla) con factor
+tiempo
+| 1
+| 1
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+2
+| 2
+| 2
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+3
+| 3
+| 3
+| 3
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+4
+| 4
+| 4
+| 4
+| 4
+| 5
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+5
+| 5
+| 5
+| 5
+| 5
+| 5
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+6
+| 6
+| 6
+| 6
+| 6
+| 6
+| 6
+| 7
+| 8
+| 9
+| 10
+| 
+7
+| 7
+| 7
+| 7
+| 7
+| 7
+| 7
+| 7
+| 8
+| 9
+| 10
+| 
+8
+| 8
+| 8
+| 8
+| 8
+| 8
+| 8
+| 8
+| 8
+| 9
+| 10
+| 
+9
+| 9
+| 9
+| 9
+| 9
+| 9
+| 9
+| 9
+| 9
+| 9
+| 10
+| 
+10
+| 10
+| 10
+| 10
+| 10
+| 10
+| 10
+| 10
+| 10
+| 10
+| 10
+| 
+Tabla E. Puntuación final. Las casillas sombreadas corresponden al nivel de acción que requiere actuación.
+Las casillas sombreadas de la tabla E corresponden al nivel de acción, relativo a la necesidad de realizar cambios en el puesto, y que debe interpretarse según el criterio que se expone en el siguiente apartado. Por otra parte, cabe destacar el carácter simétrico de esta tabla a lo largo de una de sus diagonales. Esta característica se refleja en el hecho de que cuando, bien la puntuación final de la silla (tabla A más el factor de uso diario) o bien la puntuación de la pantalla y periféricos (tabla D) sea igual o superior a 5, entonces la puntuación final será también superior a 5. Es decir, solo es posible obtener puntuaciones finales inferiores a 5 cuando el resultado de la tabla A (más el factor de uso) o el resultado de la tabla D sean también inferiores a 5. De hecho, el resultado de la tabla E es directamente el mayor de ambos valores, de forma que matemáticamente es posible expresar la puntuación final:
+Puntuación = máx /Tabla A (+tiempo de uso), Tabla D)
+3. INTERPRETACIÓN DEL NIVEL DE ACCIÓN Según los autores del método, la puntuación final obtenida a partir de la tabla E presenta una correlación directa con el nivel de «disconfort (malestar) musculoesquelético» percibido por los trabajadores.
+Este malestar ha sido obtenido mediante el cuestionario de la Universidad de Cornell (Hedge et al. 1999) y es similar al cuestionario nórdico de Kuorinka (1987), en el sentido de que dicho cuestionario presenta al usuario un dibujo esquemático del cuerpo humano para identificar y puntuar el malestar en diferentes zonas corporales. De esta forma, el método ROSA establece que las puntuaciones finales iguales o mayores que 5 están asociadas con un aumento significativo del malestar del trabajador y podría indicar un mayor riesgo de sufrir lesiones. Por todo ello, los autores del método establecen el valor igual a 5 o superior (casillas sombreadas en la tabla E) como nivel de acción, que indica la necesidad de realizar cambios inmediatos en el puesto de trabajo. En ningún caso el método sugiere que no exista riego alguno cuando la puntuación es inferior a 5, sino que el riesgo es menor. Este nivel de acción puede resultar útil en la planificación de la actividad preventiva correspondiente, de forma que debería priorizarse la intervención ergonómica (realización de análisis y estudios más detallados, aplicación de medidas y realización de cambios en el puesto de trabajo, etc.) en aquellos casos con una puntuación de 5 o super.
+_______________________________
+1 Modelo para la evaluación de puestos de trabajo en oficina: método ROSA (Rapid Office Strain Assessment)
+https://www.insst.es/documents/94886/566858/NTP+1173+Modelo+para+la+evaluaci%C3%B3n+de+puestos+de+trabajo+e
+n+oficina.+M%C3%A9todo+ROSA.pdf
