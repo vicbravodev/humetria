@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Actions;
 
 use App\Modules\Organization\Data\EmployeeImportPlan;
+use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
@@ -33,7 +34,8 @@ final readonly class ImportEmployees
                 $attributes = EmployeeAttributes::from($row->data, $area);
 
                 if ($row->existingId === null) {
-                    Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
+                    $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
+                    event(new EmployeeCreated($created->tenant_id, $created->id, $created->work_center_id));
                 } else {
                     $employee = Employee::query()->findOrFail($row->existingId);
                     $from = $employee->work_center_id;
