@@ -217,3 +217,31 @@ export type ReviewDetail = {
     evidence: ReviewEvidence[];
     authorizations: ReviewAuthorization[];
 };
+
+export type DocumentItem = { value: string; label: string };
+
+/** A kind of NOM-037 document, with the items of the norm it can cover (only the policy and the process have any). */
+export type DocumentKindOption = {
+    value: string;
+    label: string;
+    /** The numeral of the norm it answers to, when it has one. */
+    numeral: string | null;
+    items: DocumentItem[];
+};
+
+/** One version of a document in one work center. `missingItems` are the letters the version does not cover. */
+export type DocumentRow = {
+    id: string;
+    kind: string;
+    workCenter: { id: string; name: string };
+    version: number;
+    /** Y-m-d in the company's time zone. */
+    publishedOn: string;
+    coveredItems: string[];
+    missingItems: string[];
+};
+
+export type DocumentFilters = {
+    center: { value: string; label: string } | null;
+    versions: 'latest' | 'all';
+};

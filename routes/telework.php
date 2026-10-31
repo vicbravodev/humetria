@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
+use App\Modules\Telework\Http\Controllers\DocumentController;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
 use App\Modules\Telework\Http\Controllers\PhotoController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
@@ -67,3 +68,9 @@ Route::get('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/do
 
 // A visit request nobody gave can be cancelled (marked, never deleted) by RH or the assigned Comisión.
 Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/cancel', [VisitController::class, 'cancel'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.cancel');
+
+// The company's NOM-037 documents (PDF): every upload is a new version per center; nothing is replaced or deleted, so
+// there is no PUT or DELETE here. The file goes out through an authorized route, never a public URL.
+Route::get('admin/{tenant:slug}/telework/documents', [DocumentController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.documents.index');
+Route::post('admin/{tenant:slug}/telework/documents', [DocumentController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.documents.store');
+Route::get('admin/{tenant:slug}/telework/documents/{document}/file', [DocumentController::class, 'file'])->where('tenant', $notReserved)->name('tenant.telework.documents.file');

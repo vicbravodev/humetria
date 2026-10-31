@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\PublishChecklist;
 use App\Modules\Telework\Actions\RegisterCommittee;
+use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistAnswer;
 use App\Modules\Telework\Models\ChecklistApplication;
@@ -14,6 +15,7 @@ use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\SafetyCommittee;
+use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
@@ -531,4 +533,48 @@ it('shows an ended period as history, without the actions that no longer work', 
         ->assertDontSee('Vence el')
         ->assertDontSee('Agregar lugar')
         ->assertDontSee('Enlace a su portal');
+});
+
+it('shows the NOM-037 documents with what each version covers and leaves out', function (bool $dark, bool $mobile): void {
+    [$url, $center] = committeeCenter();
+    TeleworkDocument::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy, 'version' => 2, 'covered_items' => ['a', 'b']]);
+
+    visitPage('telework/documents', "{$url}/telework/documents", $dark, $mobile)
+        ->assertSee('Documentos de NOM-037')
+        ->assertSee('Paso 1 · Tipo de documento')
+        ->assertSee('Política de Teletrabajo · versión 2')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('2 de 12 incisos')
+        ->assertSee('Incisos que faltan')
+        ->assertSee('c) Comunicación y difusión a distancia de los procedimientos');
+})->with($looks);
+
+it('publishes a document from the page, in steps, to the chosen center', function (): void {
+    [$url, $center] = committeeCenter();
+
+    visit("{$url}/telework/documents")
+        ->click('input[name="kind"][value="policy"]')
+        ->attach('document', __DIR__.'/../Fixtures/policy.pdf')
+        ->click('Todos los centros de trabajo')
+        ->click('#document-item-a')
+        ->click('#document-item-l')
+        ->press('Publicar documento')
+        ->assertSee('Documento publicado.')
+        ->assertSee('Política de Teletrabajo · versión 1')
+        ->assertSee('2 de 12 incisos')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
+    expect(TeleworkDocument::query()->sole()->work_center_id)->toBe($center->id);
+});
+
+it('asks for the missing steps when publishing', function (): void {
+    [$url] = committeeCenter();
+
+    visit("{$url}/telework/documents")
+        ->press('Publicar documento')
+        ->assertSee('El campo tipo de documento es obligatorio.')
+        ->assertSee('El campo documento es obligatorio.')
+        ->assertSee('Elige al menos un centro de trabajo.');
 });
