@@ -185,3 +185,9 @@ export type ReplacementPool = {
     label: string;
     available: number;
 };
+
+/** What «Invitar a quien falte» would do now: who it brings up to date, and who of them gets a link. */
+export type InviteMissingCount = {
+    people: number;
+    links: number;
+};

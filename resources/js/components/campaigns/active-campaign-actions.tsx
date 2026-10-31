@@ -7,7 +7,12 @@ import InviteMissingDialog from '@/components/campaigns/invite-missing-dialog';
 import ReplacementsDialog from '@/components/campaigns/replacements-dialog';
 import ResendFilteredDialog from '@/components/campaigns/resend-filtered-dialog';
 import { Button } from '@/components/ui/button';
-import type { CampaignDetail, CampaignDialog, ReplacementPool } from '@/types';
+import type {
+    CampaignDetail,
+    CampaignDialog,
+    InviteMissingCount,
+    ReplacementPool,
+} from '@/types';
 
 const PENDING = { status: 'pending', guide: null, area: null, q: '' };
 
@@ -31,7 +36,7 @@ export default function ActiveCampaignActions({
     /** People waiting with a link sent: who "Recordar" reaches. */
     pending: number;
     /** Who «Invitar a quien falte» sends a link to. */
-    missing: number;
+    missing: InviteMissingCount;
 }) {
     const [dialog, setDialog] = useState<CampaignDialog | null>(null);
     const toggle = (name: CampaignDialog) => (open: boolean) =>
@@ -74,7 +79,7 @@ export default function ActiveCampaignActions({
             />
             <InviteMissingDialog
                 route={[tenantSlug, campaign.id]}
-                count={missing}
+                missing={missing}
                 open={dialog === 'invite'}
                 onOpenChange={toggle('invite')}
             />

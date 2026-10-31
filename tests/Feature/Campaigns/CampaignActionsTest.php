@@ -200,13 +200,25 @@ it('keeps the link of someone who returned without an email: it works again, so 
     ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $returned->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
     $people[1]->update(['email' => null, 'mobile' => '5512345678']);
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]));
+    $this->actingAs($this->hr)
+        ->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Se puso al día a 1 persona, sin enviar enlace: no tiene correo.']]);
 
     $returned = participantOf($campaign, $people[1]);
     expect(guidesOf($returned))->toBe(['nom035.guide-i' => 'pending', 'nom035.guide-ii' => 'pending'])
         ->and($returned->token_hash)->toBe($link)
         ->and($returned->invitation_status)->toBe(App\Modules\Campaigns\Enums\InvitationStatus::Sent);
     Notification::assertNothingSent();
+});
+
+it('says who was brought up to date and who of them got a link, when someone has no email', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    staffOf($this->tenant, $this->plant, 2);
+    staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '5512345678']);
+
+    $this->actingAs($this->hr)
+        ->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Se puso al día a 3 personas y se envió enlace a 2.']]);
 });
 
 it('says when there is nobody to invite', function (): void {
@@ -217,27 +229,27 @@ it('says when there is nobody to invite', function (): void {
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'info', 'message' => 'No falta nadie por invitar.']]);
 });
 
-it('tells the page how many people inviting the missing sends a link to, exactly as many as it then sends', function (Closure $change, int $missing): void {
+it('tells the page how many people inviting the missing brings up to date and how many get a link, exactly as it then does', function (Closure $change, int $updated, int $links): void {
     $people = staffOf($this->tenant, $this->plant, 18)->values();
     $people[0]->update(['email' => null, 'mobile' => '5512345678']);
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
     $change->call($this, $campaign, $people);
     $show = fn () => $this->actingAs($this->hr)->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]));
 
-    $show()->assertInertia(fn (Assert $page) => $page->where('missing', $missing));
+    $show()->assertInertia(fn (Assert $page) => $page->where('missing', ['people' => $updated, 'links' => $links]));
 
-    expect(resolve(InviteMissing::class)->handle($campaign))->toBe($missing);
-    $show()->assertInertia(fn (Assert $page) => $page->where('missing', 0));
+    expect(resolve(InviteMissing::class)->handle($campaign))->toBe(['people' => $updated, 'links' => $links]);
+    $show()->assertInertia(fn (Assert $page) => $page->where('missing', ['people' => 0, 'links' => 0]));
 })->with([
-    'nobody' => [fn (Campaign $campaign) => null, 0],
-    'hired, with an email' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 2), 2],
-    'hired, without one' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '5512345678']), 0],
-    'got an email after the launch' => [fn (Campaign $campaign, $people) => $people[0]->update(['email' => 'ana@acme.mx']), 1],
-    'returned, with an email' => [fn (Campaign $campaign, $people) => ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]), 1],
+    'nobody' => [fn (Campaign $campaign) => null, 0, 0],
+    'hired, with an email' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 2), 2, 2],
+    'hired, without one' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '5512345678']), 1, 0],
+    'got an email after the launch' => [fn (Campaign $campaign, $people) => $people[0]->update(['email' => 'ana@acme.mx']), 1, 1],
+    'returned, with an email' => [fn (Campaign $campaign, $people) => ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]), 1, 1],
     'returned, with a link but no email now' => [function (Campaign $campaign, $people): void {
         ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
         $people[1]->update(['email' => null, 'mobile' => '5512345678']);
-    }, 0],
+    }, 1, 0],
 ]);
 
 it('gives the count only to who may invite, while an evaluation runs', function (): void {

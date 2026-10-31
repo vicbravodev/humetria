@@ -4,7 +4,11 @@ import ActiveCampaignActions from '@/components/campaigns/active-campaign-action
 import DeleteDraftDialog from '@/components/campaigns/delete-draft-dialog';
 import { Button } from '@/components/ui/button';
 import { report, results } from '@/routes/tenant/campaigns';
-import type { CampaignDetail, ReplacementPool } from '@/types';
+import type {
+    CampaignDetail,
+    InviteMissingCount,
+    ReplacementPool,
+} from '@/types';
 
 /**
  * The actions at the right of the evaluation's header, by its state: throw the draft away; remind, extend and the rest
@@ -25,7 +29,7 @@ export default function CampaignHeaderActions({
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
     pending: number;
-    missing: number;
+    missing: InviteMissingCount;
 }) {
     const route: [string, string] = [tenantSlug, campaign.id];
 

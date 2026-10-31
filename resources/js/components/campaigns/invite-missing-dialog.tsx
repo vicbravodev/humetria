@@ -9,22 +9,24 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { inviteMissingSummary } from '@/lib/campaigns';
 import { inviteMissing } from '@/routes/tenant/campaigns';
+import type { InviteMissingCount } from '@/types';
 
 /**
  * Brings the evaluation up to date with the work center's people (criterio C-24), opened from the page's menu: it says
- * who gets a link, and how many, before any goes out. With nobody to invite there is nothing to confirm.
+ * who it brings up to date and how many get a link, before any goes out. With nobody to invite there is nothing to confirm.
  */
 export default function InviteMissingDialog({
     route,
-    count,
+    missing,
     open,
     onOpenChange,
 }: {
     /** The company's slug and the campaign's id. */
     route: [string, string];
-    /** How many people get a link. */
-    count: number;
+    /** Who it brings up to date, and who of them gets a link. */
+    missing: InviteMissingCount;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
@@ -39,9 +41,7 @@ export default function InviteMissingDialog({
                     nada.
                 </DialogDescription>
                 <p className="text-sm font-medium">
-                    {count === 0
-                        ? 'No falta nadie por invitar.'
-                        : `Se enviará un enlace a ${count} ${count === 1 ? 'persona' : 'personas'}.`}
+                    {inviteMissingSummary(missing)}
                 </p>
                 <Form
                     {...inviteMissing.form(route)}
@@ -55,7 +55,7 @@ export default function InviteMissingDialog({
                             </DialogClose>
                             <Button
                                 type="submit"
-                                disabled={processing || count === 0}
+                                disabled={processing || missing.people === 0}
                             >
                                 {processing && <Spinner />}
                                 Invitar

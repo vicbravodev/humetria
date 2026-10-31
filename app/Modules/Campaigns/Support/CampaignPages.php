@@ -164,7 +164,7 @@ final readonly class CampaignPages
             'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
                 ? $this->replacementPool($campaign)
                 : null,
-            // How many people «Invitar a quien falte» sends a link to now.
+            // How many people «Invitar a quien falte» brings up to date now, and how many of them get a link.
             'missing' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->kind === CampaignKind::Nom035Evaluation
                 ? $this->inviteMissing->count($campaign)
                 : null,

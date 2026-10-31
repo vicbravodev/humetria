@@ -16,6 +16,7 @@ import type {
     CampaignSending,
     DraftContact,
     InstrumentProgress,
+    InviteMissingCount,
     Paginated,
     PeopleFilters,
     ReplacementPool,
@@ -37,7 +38,7 @@ export default function Campaign(props: {
     launch: { min: string; suggested: string } | null;
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
-    missing: number | null;
+    missing: InviteMissingCount | null;
 }) {
     const { campaign, instruments } = props;
     const { route, company, canManage, canSeeGuideI } = useCampaignAccess(
@@ -63,7 +64,7 @@ export default function Campaign(props: {
                         canManage={canManage}
                         minDeadline={props.minDeadline}
                         replacementPool={props.replacementPool}
-                        missing={props.missing ?? 0}
+                        missing={props.missing ?? { people: 0, links: 0 }}
                         pending={pendingTotal(props.areas)}
                     />
                 </CampaignPageHeader>
