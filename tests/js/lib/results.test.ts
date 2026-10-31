@@ -146,7 +146,7 @@ describe('rankItems', () => {
             {
                 number: 2,
                 text: 'b',
-                answered: 10,
+                answered: null,
                 counts: null,
                 unfavorable: null,
             },

@@ -6,13 +6,8 @@ use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
@@ -31,7 +26,7 @@ Artisan::command('telework:send-digests', function (SendTeleworkDigests $sendDig
 })->purpose('Email the owner and each Comisión member what waits for them in NOM-037');
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
-Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone('America/Mexico_City')->onOneServer();
+Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
 Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone('America/Mexico_City')->onOneServer()->withoutOverlapping();
 Schedule::command('telework:send-digests')->dailyAt('08:00')->timezone('America/Mexico_City')->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();

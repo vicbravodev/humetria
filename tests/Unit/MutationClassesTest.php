@@ -72,7 +72,7 @@ it('follows Pest in mutating, for a class, every class of its namespace that sta
 it('mutates nothing when the diff touches no mutated class', function (array $changed): void {
     expect(mutatedClassesFor($changed))->toBe('');
 })->with([
-    'frontend and docs' => [['resources/js/pages/landing.tsx', 'docs/notes.md', 'lang/es/validation.php']],
+    'frontend and docs' => [['resources/js/pages/landing.tsx', 'docs/notes.md']],
     'a class no test mutates' => [['app/Modules/Shop/Support/Money.php']],
     'a test without mutates()' => [['tests/Fixtures/MutationSelection/Unit/PlainTest.php']],
     'a fixture of another test' => [['tests/Fixtures/MutationSelection/Fixtures/IgnoredTest.php']],
@@ -93,6 +93,11 @@ it('mutates every class when the diff touches what every test depends on', funct
     'the PHPUnit configuration' => 'phpunit.xml',
     'a config file' => 'config/app.php',
     'a route file' => 'routes/web.php',
+    'a translation' => 'lang/es/validation.php',
+    'a Blade view' => 'resources/views/app.blade.php',
+    'the npm dependencies' => 'package.json',
+    'the npm lockfile' => 'package-lock.json',
+    'a script' => 'scripts/mutation-score.php',
 ]);
 
 it('keeps in one shard the classes Pest mutates together, balanced by the size of what it mutates', function (): void {

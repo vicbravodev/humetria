@@ -43,13 +43,13 @@ export default function ItemsResults({
                             />
                         </span>
                     </summary>
-                    <ol className="mt-4 divide-y border-t pt-3">
+                    <ol className="@container mt-4 divide-y border-t pt-3">
                         {rankItems(section.items).map((item) => (
                             <ItemRow key={item.number} item={item} />
                         ))}
                     </ol>
                     <details className="group/table mt-4">
-                        <summary className="w-fit cursor-pointer list-none text-sm font-medium text-primary underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
+                        <summary className="touch-hit w-fit cursor-pointer list-none text-sm font-medium text-primary underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
                             <span className="group-open/table:hidden">
                                 Ver los conteos por opción
                             </span>

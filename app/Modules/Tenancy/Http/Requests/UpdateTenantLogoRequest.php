@@ -26,7 +26,7 @@ final class UpdateTenantLogoRequest extends FormRequest
     {
         // No SVG: mail clients do not show it, and it can carry a script.
         return [
-            'logo' => ['required', 'file', 'mimes:png,jpg,jpeg,webp', 'max:2048', Rule::dimensions()->minHeight(40)],
+            'logo' => ['required', 'file', 'mimes:png,jpg,jpeg,webp', 'max:2048', Rule::dimensions()->minHeight(40)->maxWidth(4000)->maxHeight(4000)],
         ];
     }
 

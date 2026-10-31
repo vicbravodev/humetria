@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Log;
 
 final class ReactivateEmployee
 {
+    /**
+     * The person works here again. Their evaluations are left as they are: HR invites them back from the evaluation,
+     * which gives back the guides cancelled while they were away (criterio C-24). NOM-037 asks them to acknowledge the
+     * policy in force (criterio C-20), on EmployeeReactivated.
+     */
     public function handle(Employee $employee): Employee
     {
         $employee->update(['deactivated_at' => null]);

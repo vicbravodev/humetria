@@ -1,5 +1,6 @@
 import GateStep from '@/components/campaigns/survey/gate-step';
 import SurveyQuestion from '@/components/campaigns/survey/survey-question';
+import { focusOnMount } from '@/lib/focus';
 import type { Answers, Step } from '@/lib/survey';
 import type { SurveyInstrument } from '@/types';
 
@@ -33,7 +34,11 @@ export default function SurveyStep({
 
     return (
         <div className="flex flex-col gap-5 md:gap-0">
-            <div className="flex flex-col gap-1 rounded-xl bg-accent px-4 py-3.5 text-[17px] leading-[26px] text-accent-foreground md:mb-2 md:px-[18px] md:py-4 md:text-lg md:leading-7">
+            <div
+                ref={focusOnMount}
+                tabIndex={-1}
+                className="flex flex-col gap-1 rounded-xl bg-accent px-4 py-3.5 text-[17px] leading-[26px] text-accent-foreground focus:outline-none md:mb-2 md:px-[18px] md:py-4 md:text-lg md:leading-7"
+            >
                 {section.title !== null && (
                     <p className="font-semibold">{section.title}</p>
                 )}

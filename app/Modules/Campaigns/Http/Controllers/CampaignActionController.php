@@ -88,9 +88,19 @@ final class CampaignActionController extends Controller
         Gate::authorize('manage-campaigns');
         $active = CampaignController::find($campaign, CampaignStatus::Active);
         abort_if($active->kind !== CampaignKind::Nom035Evaluation, 409);
-        $sent = $inviteMissing->handle($active);
+        ['people' => $people, 'links' => $links] = $inviteMissing->handle($active);
 
-        return $this->done($sent, 'No falta nadie por invitar.', 'Se invitó a 1 persona.', "Se invitó a {$sent} personas.");
+        if ($people === $links) {
+            return $this->done($links, 'No falta nadie por invitar.', 'Se invitó a 1 persona.', "Se invitó a {$links} personas.");
+        }
+
+        $updated = $people === 1 ? '1 persona' : "{$people} personas";
+        Inertia::flash('toast', ['type' => 'success', 'message' => match ($links) {
+            0 => "Se puso al día a {$updated}, sin enviar enlace: ".($people === 1 ? 'no tiene correo.' : 'no tienen correo.'),
+            default => "Se puso al día a {$updated} y se envió enlace a {$links}.",
+        }]);
+
+        return back();
     }
 
     public function replacements(ReplacementsRequest $request, mixed $tenant, string $campaign, DrawReplacements $drawReplacements): RedirectResponse

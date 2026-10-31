@@ -27,16 +27,21 @@ final readonly class OpenSurvey
     public function handle(string $token, bool $forUpdate = false): OpenedSurvey
     {
         // Read past the company scope: until the link is known, no company is.
-        $query = Participant::query()->withoutGlobalScopes()->where('token_hash', Participant::hashToken($token));
-        $participant = ($forUpdate ? $query->lockForUpdate() : $query)->first();
+        $participant = Participant::query()->withoutGlobalScopes()->where('token_hash', Participant::hashToken($token))->first();
 
         if ($participant === null) {
             throw new SurveyUnavailable(SurveyUnavailableReason::Invalid);
         }
 
         $company = $this->companies->enter($participant->tenant_id);
-        // Sending an answer holds the campaign with a shared lock, so closing it waits until the answer is in.
+        // Sending an answer holds the campaign with a shared lock, so closing it waits until the answer is in, and then
+        // the person, so two answers of the same guide wait on each other. Campaign first: the order every writer of a
+        // campaign takes its locks in, so none deadlocks with another.
         $campaign = ($forUpdate ? $participant->campaign()->sharedLock() : $participant->campaign())->firstOrFail();
+
+        if ($forUpdate) {
+            $participant = Participant::query()->lockForUpdate()->findOrFail($participant->id);
+        }
 
         if ($company->blocked) {
             throw new SurveyUnavailable(SurveyUnavailableReason::Suspended, $company->tradeName);

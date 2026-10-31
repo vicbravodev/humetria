@@ -50,7 +50,7 @@ export default function GroupBars({
                 </div>
             </div>
             <details className="group">
-                <summary className="w-fit cursor-pointer list-none rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+                <summary className="touch-hit w-fit cursor-pointer list-none rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
                     <span className="group-open:hidden">Ver los conteos</span>
                     <span className="hidden group-open:inline">
                         Ocultar los conteos

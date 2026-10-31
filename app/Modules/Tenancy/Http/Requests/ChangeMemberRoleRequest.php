@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Http\Requests;
 
 use App\Modules\Tenancy\Enums\TenantRole;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\In;
 
 /**
@@ -13,6 +14,11 @@ use Illuminate\Validation\Rules\In;
  */
 final class ChangeMemberRoleRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-members');
+    }
+
     /**
      * @return array<string, list<In|string>>
      */

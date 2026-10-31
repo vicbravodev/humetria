@@ -33,7 +33,7 @@ final readonly class ReportBuilder
     {
         $profile = $this->workCenters->profile($campaign->workCenterId);
         $details = ReportDetails::query()->where('campaign_id', $campaign->id)->first();
-        $risk = $this->pages->risk($campaign, $guide, null);
+        $risk = $this->pages->risk($campaign, $guide, null, withItems: false);
 
         return [
             'center' => [

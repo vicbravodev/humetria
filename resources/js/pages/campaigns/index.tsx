@@ -1,15 +1,13 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { Building2, LifeBuoy, Plus } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { Building2 } from 'lucide-react';
+import CampaignActions from '@/components/campaigns/campaign-actions';
 import CampaignHistory from '@/components/campaigns/campaign-history';
 import GuideSizes from '@/components/campaigns/guide-sizes';
-import NewEvaluationDialog from '@/components/campaigns/new-evaluation-dialog';
 import TraumaEventsSection from '@/components/campaigns/trauma-events-section';
 import WorkCenterCard from '@/components/campaigns/work-center-card';
 import ConsolePagination from '@/components/console-pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { create as createTrauma } from '@/routes/tenant/campaigns/trauma';
 import type {
     CampaignSummary,
     CentersBySize,
@@ -51,23 +49,10 @@ export default function Campaigns({
                     }
                 >
                     {canManage && (
-                        <>
-                            <Button variant="outline" asChild>
-                                <Link href={createTrauma(tenantSlug)}>
-                                    <LifeBuoy aria-hidden />
-                                    Guía I por acontecimiento
-                                </Link>
-                            </Button>
-                            <NewEvaluationDialog
-                                tenantSlug={tenantSlug}
-                                minGroup={minGroup}
-                            >
-                                <Button>
-                                    <Plus aria-hidden />
-                                    Nueva evaluación
-                                </Button>
-                            </NewEvaluationDialog>
-                        </>
+                        <CampaignActions
+                            tenantSlug={tenantSlug}
+                            minGroup={minGroup}
+                        />
                     )}
                 </PageHeader>
                 <section

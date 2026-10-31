@@ -257,6 +257,7 @@ it('never gives the pages an answer', function (): void {
     foreach ([route('tenant.campaigns.index', $this->tenant), route('tenant.campaigns.show', [$this->tenant, $campaign->id])] as $url) {
         $this->actingAs($this->hr)->get($url)->assertInertia(function (Assert $page): void {
             expect(hasKeyDeep($page->toArray()['props'], 'answers'))->toBeFalse();
+            expectNoIndividualResponses($page->toArray()['props']);
         });
     }
 });
@@ -384,8 +385,8 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $url = route('tenant.campaigns.show', [$this->tenant, $campaign->id]);
     $this->get($url);
 
-    // The same with 3 or 30 people: nothing is read person by person.
-    $this->expectsDatabaseQueryCount(23);
+    // The same with 3 or 30 people: nothing is read person by person. Four of them count who «Invitar a quien falte» reaches.
+    $this->expectsDatabaseQueryCount(27);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);
@@ -523,4 +524,14 @@ it('counts the people who finished each day from launch to the last day, once en
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get($url)
         ->assertInertia(fn (Assert $page) => $page->where('answersByDay', null));
+});
+
+it('offers no extension once the last day has passed, even before the hourly close runs', function (): void {
+    $campaign = Campaign::factory()->active()->create([
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'closes_on' => now()->subDays(2)->toDateString(),
+    ]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('minDeadline', null));
 });

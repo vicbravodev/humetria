@@ -95,6 +95,9 @@ it('takes only a PNG, JPG or WebP image of up to 2 MB and at least 40 px tall', 
     'a PDF' => [fn (): UploadedFile => UploadedFile::fake()->create('logo.pdf', 10, 'application/pdf')],
     'over 2 MB' => [fn (): UploadedFile => UploadedFile::fake()->image('logo.png', 400, 100)->size(2049)],
     'under 40 px tall' => [fn (): UploadedFile => UploadedFile::fake()->image('logo.png', 200, 39)],
+    // A small file can decode into a huge bitmap: past 4000 px a side it is refused before anything decodes it.
+    'over 4000 px wide' => [fn (): UploadedFile => UploadedFile::fake()->image('logo.png', 4001, 40)],
+    'over 4000 px tall' => [fn (): UploadedFile => UploadedFile::fake()->image('logo.png', 40, 4001)],
     'nothing' => [fn (): string => ''],
 ]);
 

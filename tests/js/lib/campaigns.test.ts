@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     campaignMeta,
+    inviteMissingSummary,
     guideBreakdown,
     instrumentsText,
     peoplePage,
@@ -201,5 +202,37 @@ describe('guideBreakdown', () => {
             '1 pendiente · 1 sin correo · 1 cancelada por bajas o cambios de centro',
         );
         expect(guideBreakdown(guide)).toBe('Nadie pendiente');
+    });
+});
+
+describe('inviteMissingSummary', () => {
+    it('says there is nobody when nothing would change', () => {
+        expect(inviteMissingSummary({ people: 0, links: 0 })).toBe(
+            'No falta nadie por invitar.',
+        );
+    });
+
+    it('counts the links when everyone gets one', () => {
+        expect(inviteMissingSummary({ people: 1, links: 1 })).toBe(
+            'Se enviará un enlace a 1 persona.',
+        );
+        expect(inviteMissingSummary({ people: 3, links: 3 })).toBe(
+            'Se enviará un enlace a 3 personas.',
+        );
+    });
+
+    it('says who is brought up to date without a link, for lack of an email', () => {
+        expect(inviteMissingSummary({ people: 1, links: 0 })).toBe(
+            'Se pondrá al día a 1 persona. No recibe enlace porque no tiene correo.',
+        );
+        expect(inviteMissingSummary({ people: 2, links: 0 })).toBe(
+            'Se pondrá al día a 2 personas. No reciben enlace porque no tienen correo.',
+        );
+        expect(inviteMissingSummary({ people: 3, links: 1 })).toBe(
+            'Se pondrá al día a 3 personas. Se enviará un enlace a 1 persona; las demás no tienen correo.',
+        );
+        expect(inviteMissingSummary({ people: 4, links: 2 })).toBe(
+            'Se pondrá al día a 4 personas. Se enviará un enlace a 2 personas; las demás no tienen correo.',
+        );
     });
 });

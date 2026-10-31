@@ -23,7 +23,7 @@ export function ImpersonationBanner() {
                 as="button"
                 onClick={() => router.flushAll()}
                 data-test="stop-impersonation"
-                className="cursor-pointer rounded-sm font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground"
+                className="touch-hit cursor-pointer rounded-sm font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground"
             >
                 Salir
             </Link>

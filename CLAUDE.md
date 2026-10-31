@@ -45,7 +45,7 @@ Ver `docs/testing.md`.
 El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
 (chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
 tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
-(`--class`, de `scripts/mutation-classes.php`); el job `mutation-score` suma los shards y aplica `--min=85` al total
+(`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
 (`scripts/mutation-score.php`). Así cada clase saca el mismo resultado que en una corrida completa. Si la mutación se vuelve
 el job más lento, se agrega un shard en el workflow; no se baja el umbral. En un PR se mutan solo las clases de los tests
 cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca lo que comparten (`database/`, `routes/`,
@@ -117,7 +117,9 @@ layouts/  hooks/  lib/  types/
 
 ## Multi-tenancy
 
-- Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo aplica un global scope por tenant.
+- Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo aplica un global scope por tenant
+  (`BelongsToCurrentTenant`). `tests/Feature/TenantScopedModelsTest.php` lo exige; las únicas excepciones, cada una con su
+  razón, son las que se leen entre empresas: `TenantMembership`, `TenantInvitation` y `AuditEntry`.
 - Cada modelo con tenant tiene un test que prueba que la empresa A no puede leer ni modificar datos de B,
   tanto por consulta directa como por URL (route model binding debe dar 404, no 403 que delate existencia).
 - Nunca se confía en un `tenant_id` que venga del request.

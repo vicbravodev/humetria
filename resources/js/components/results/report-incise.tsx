@@ -13,7 +13,8 @@ export default function ReportIncise({
     children: ReactNode;
 }) {
     return (
-        <div className="grid break-inside-avoid grid-cols-[56px_minmax(0,1fr)] gap-x-4 border-b px-6 py-5 last:border-b-0">
+        // On a phone the code goes above the text, which keeps the whole width to read.
+        <div className="grid break-inside-avoid gap-x-4 gap-y-1 border-b px-4 py-5 last:border-b-0 sm:grid-cols-[56px_minmax(0,1fr)] sm:px-6">
             <span className="pt-0.5 text-sm font-semibold text-muted-foreground">
                 7.7 {code}
             </span>

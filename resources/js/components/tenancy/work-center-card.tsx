@@ -66,7 +66,7 @@ export default function WorkCenterCard({
                             query: { work_center: workCenter.id },
                         })}
                         aria-label={`Ver personas de ${workCenter.name}`}
-                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="touch-hit text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >
                         Ver personas
                     </Link>

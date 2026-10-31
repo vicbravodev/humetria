@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Ellipsis } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,8 +8,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { inviteMissing, results } from '@/routes/tenant/campaigns';
-import type { CampaignKind } from '@/types';
+import { results } from '@/routes/tenant/campaigns';
+import type { CampaignDialog, CampaignKind } from '@/types';
 
 /** The "⋯" of a running evaluation: what is done now and then, so the header keeps only the usual. */
 export default function CampaignMoreMenu({
@@ -22,7 +22,7 @@ export default function CampaignMoreMenu({
     route: [string, string];
     kind: CampaignKind;
     canReplace: boolean;
-    onOpen: (dialog: 'close' | 'replacements') => void;
+    onOpen: (dialog: CampaignDialog) => void;
 }) {
     return (
         <DropdownMenu modal={false}>
@@ -36,15 +36,7 @@ export default function CampaignMoreMenu({
                     <Link href={results(route)}>Ver resultados</Link>
                 </DropdownMenuItem>
                 {kind === 'nom035_evaluation' && (
-                    <DropdownMenuItem
-                        onSelect={() =>
-                            router.post(
-                                inviteMissing.url(route),
-                                {},
-                                { preserveScroll: true },
-                            )
-                        }
-                    >
+                    <DropdownMenuItem onSelect={() => onOpen('invite')}>
                         Invitar a quien falte
                     </DropdownMenuItem>
                 )}

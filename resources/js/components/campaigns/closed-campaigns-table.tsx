@@ -67,7 +67,7 @@ export default function ClosedCampaignsTable({
                                         ? show([tenantSlug, campaign.id])
                                         : results([tenantSlug, campaign.id])
                                 }
-                                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                                className="touch-hit text-sm font-medium text-primary underline-offset-4 hover:underline"
                             >
                                 Resultados
                                 <span className="sr-only">

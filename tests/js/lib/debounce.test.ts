@@ -45,4 +45,20 @@ describe('debounce', () => {
 
         expect(run).not.toHaveBeenCalled();
     });
+
+    it('says whether cancel dropped a call that was still waiting', () => {
+        const debounced = debounce(vi.fn(), 300);
+
+        expect(debounced.cancel()).toBe(false);
+
+        debounced.call('a');
+
+        expect(debounced.cancel()).toBe(true);
+        expect(debounced.cancel()).toBe(false);
+
+        debounced.call('a');
+        vi.advanceTimersByTime(300);
+
+        expect(debounced.cancel()).toBe(false);
+    });
 });

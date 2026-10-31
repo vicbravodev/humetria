@@ -14,6 +14,6 @@ final class ListDemoRequests
      */
     public function handle(): LengthAwarePaginator
     {
-        return DemoRequest::query()->latest()->paginate(25);
+        return DemoRequest::query()->latest()->paginate(25)->withQueryString();
     }
 }

@@ -1,4 +1,5 @@
 import { Mail, MessageCircle } from 'lucide-react';
+import type { Ref } from 'react';
 import Initials from '@/components/humetria/initials';
 import { Button } from '@/components/ui/button';
 import { toolsText } from '@/lib/demo-requests';
@@ -7,8 +8,11 @@ import type { DemoRequestRow } from '@/types';
 
 /** One request in full: who asked, how to reach them, what they want and what they wrote. */
 export default function DemoRequestDetail({
+    ref,
     request,
 }: {
+    /** Takes the focus when a request is chosen on a phone. */
+    ref?: Ref<HTMLElement>;
     request: DemoRequestRow;
 }) {
     const facts = [
@@ -19,8 +23,10 @@ export default function DemoRequestDetail({
 
     return (
         <article
+            ref={ref}
+            tabIndex={-1}
             data-test="demo-request-detail"
-            className="flex min-w-0 flex-[999_1_400px] flex-col gap-[22px] px-5 py-6 md:px-7"
+            className="flex min-w-0 flex-[999_1_400px] flex-col gap-[22px] px-5 py-6 focus:outline-none md:px-7"
         >
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">

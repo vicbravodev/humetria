@@ -215,7 +215,7 @@ que lleva a la lista de campañas de NOM-035 (`lib/app-navigation.ts` ya deja el
   aviso mientras no se alcance.
 - Lista de personas (no para viewer): nombre, área, si le toca la II/III, estado por guía (Pendiente, Contestó, Sin
   correo, Cancelada), con búsqueda. **Nunca** respuestas, puntajes ni progreso dentro del cuestionario.
-- Acciones (activa): reenviar a una persona o a todos los pendientes (rota el token: el enlace anterior muere);
+- Acciones (activa): reenviar a una persona o a todos los pendientes (el mismo enlace: quien va a la mitad no lo pierde);
   **invitar a quien falte** (personas activas del centro que no son participantes, por ejemplo altas recientes: solo
   Guía I, más la II si la campaña es de Guía II; nunca entran a una muestra fuera del sorteo); **sortear reemplazos**
   con muestra (agrega `k` personas al azar del mismo estrato entre las que no están en la muestra, para cubrir a quien

@@ -213,6 +213,20 @@
 }
 
 /*
+ * A small link or control that stands alone ("Ver centros de trabajo", "Salir") keeps its look but takes a touch
+ * 44 px tall: an invisible area grows around it (WCAG 2.5.5). Inside a sentence a link needs none.
+ */
+@utility touch-hit {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: min(0px, calc(50% - 22px)) 0;
+    }
+}
+
+/*
  * Page changes (lib/page-transition.ts): the sidebar stays put and only the panel's content cross-fades,
  * the new page rising 4 px. Fast exit, slightly longer entry.
  */

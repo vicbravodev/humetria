@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Actions\DrawReplacements;
+use App\Modules\Campaigns\Actions\InviteMissing;
 use App\Modules\Campaigns\Data\PeopleFilter;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
@@ -13,6 +14,7 @@ use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Organization\Contracts\Areas;
@@ -51,6 +53,7 @@ final readonly class CampaignPages
         private DrawReplacements $replacements,
         private CampaignPeople $people,
         private Areas $areas,
+        private InviteMissing $inviteMissing,
     ) {}
 
     /**
@@ -157,9 +160,13 @@ final readonly class CampaignPages
                 ? ['min' => CampaignClock::today()->addDay()->format('Y-m-d'), 'suggested' => CampaignClock::today()->addWeeks(2)->format('Y-m-d')]
                 : null,
             // The earliest last day it can be extended to, while it runs.
-            'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
+            'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null && ! CampaignClock::hasPassed($campaign->closes_on) ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
             'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
                 ? $this->replacementPool($campaign)
+                : null,
+            // How many people «Invitar a quien falte» brings up to date now, and how many of them get a link.
+            'missing' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->kind === CampaignKind::Nom035Evaluation
+                ? $this->inviteMissing->count($campaign)
                 : null,
         ];
     }
@@ -251,7 +258,7 @@ final readonly class CampaignPages
     private function contact(Campaign $campaign): array
     {
         $people = $this->roster->activeIn($campaign->work_center_id);
-        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => $person->email !== null));
+        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => SurveyInvitation::routes($person) !== []));
 
         return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable];
     }

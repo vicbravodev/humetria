@@ -6,6 +6,7 @@ namespace App\Modules\Campaigns\Http\Requests;
 
 use App\Modules\Campaigns\Enums\Population;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -14,6 +15,11 @@ use Illuminate\Validation\Rule;
  */
 final class CreateEvaluationRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-campaigns');
+    }
+
     /**
      * @return array<string, mixed>
      */

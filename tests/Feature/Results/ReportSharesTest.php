@@ -126,6 +126,7 @@ it('opens the report from the link, with no account, and records each opening', 
 
     expect($response->headers->get('Cache-Control'))->toContain('no-store');
     $props = json_encode($response->viewData('page')['props'], JSON_THROW_ON_ERROR);
+    expectNoIndividualResponses($response->viewData('page')['props']);
     expect($props)->not->toContain('trauma')->not->toContain('requiring')->not->toContain('"answers"')->not->toContain('"items"');
     expect(AuditEntry::query()->where('event', 'results.share_opened')->sole())
         ->tenant_id->toBe($this->tenant->id)

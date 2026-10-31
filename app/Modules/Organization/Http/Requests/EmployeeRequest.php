@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
@@ -20,6 +21,11 @@ use Illuminate\Validation\Rules\In;
  */
 final class EmployeeRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Gate::allows('manage-organization');
+    }
+
     /** Valid UTF-8 without control characters, as every single-line field of the app. */
     private const string SINGLE_LINE = 'regex:/\A[^\x00-\x1F\x7F]*\z/u';
 

@@ -37,6 +37,13 @@ final class CompanyWorkCenters implements WorkCenters
         return $workCenter === null ? null : $this->summary($workCenter);
     }
 
+    public function lockActive(string $id): ?WorkCenterSummary
+    {
+        $workCenter = WorkCenter::query()->lockForUpdate()->find($id, ['id', 'name', 'archived_at', 'main_activity']);
+
+        return $workCenter === null || $workCenter->archived_at !== null ? null : $this->summary($workCenter);
+    }
+
     public function profile(string $id): ?WorkCenterProfile
     {
         $workCenter = WorkCenter::query()->find($id);

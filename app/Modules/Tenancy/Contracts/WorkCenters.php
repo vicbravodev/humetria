@@ -30,6 +30,12 @@ interface WorkCenters
     /** A work center in use (not archived) by id; null when archived or outside the company. */
     public function findActive(string $id): ?WorkCenterSummary;
 
+    /**
+     * Like findActive(), holding the work center's row until the caller's transaction ends, so archiving it and
+     * starting an evaluation of it never both pass their checks.
+     */
+    public function lockActive(string $id): ?WorkCenterSummary;
+
     /** A work center by id, archived ones included, as a report names it; null outside the company. */
     public function profile(string $id): ?WorkCenterProfile;
 

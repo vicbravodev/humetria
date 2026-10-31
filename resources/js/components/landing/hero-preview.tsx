@@ -17,7 +17,7 @@ export default function HeroPreview() {
     return (
         <figure
             data-test="hero-preview"
-            className="flex w-full max-w-[460px] flex-col gap-[18px] rounded-lg border bg-card p-[22px] shadow-float"
+            className="@container flex w-full max-w-[460px] flex-col gap-[18px] rounded-lg border bg-card p-[22px] shadow-float"
         >
             <figcaption className="sr-only">
                 Ejemplo del tablero de un centro de trabajo en Humetría
@@ -31,7 +31,7 @@ export default function HeroPreview() {
                 </div>
                 <Badge>En curso</Badge>
             </div>
-            <div className="flex flex-wrap items-end gap-6">
+            <div className="flex flex-col items-center gap-6 @[22rem]:flex-row @[22rem]:items-end">
                 <ArcMeter
                     value={89}
                     max={120}
@@ -45,7 +45,7 @@ export default function HeroPreview() {
                         de 120 contestaron
                     </span>
                 </ArcMeter>
-                <ul className="flex min-w-40 flex-1 flex-col gap-3 pb-1">
+                <ul className="flex w-full flex-col gap-3 pb-1 @[22rem]:w-auto @[22rem]:min-w-0 @[22rem]:flex-1">
                     {TOOLS.map((tool) => (
                         <li
                             key={tool.key}

@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Actions\Fortify\ResetUserPassword;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyHas(Features::resetPasswords());
+    $this->assertFortifyHas(Features::resetPasswords());
 });
 
 test('reset password link screen can be rendered', function () {
@@ -91,4 +93,13 @@ test('the reset link goes out through the queue, encrypted so the token is not r
     Queue::assertPushed(SendQueuedNotifications::class, fn (SendQueuedNotifications $job): bool => $job->notification instanceof ResetPasswordNotification
         && $job->shouldBeEncrypted
         && $job->notifiables->sole()->is($user));
+});
+
+test('a password reset writes a log line naming the user, never the password', function () {
+    $user = User::factory()->create();
+    Log::spy();
+
+    app(ResetUserPassword::class)->reset($user, ['password' => 'new-password', 'password_confirmation' => 'new-password']);
+
+    Log::shouldHaveReceived('info')->once()->with('user.password_reset', ['user_id' => $user->id]);
 });

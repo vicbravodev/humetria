@@ -39,7 +39,7 @@ export default function ChosenPeopleField({
                 placeholder="Busca por nombre o número"
                 value={search}
                 onChange={(event) => onSearch(event.target.value)}
-                className="h-8 min-w-0 flex-[1_1_160px] bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground"
+                className="h-11 min-w-0 flex-[1_1_160px] bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground"
             />
         </div>
     );

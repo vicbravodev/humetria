@@ -9,6 +9,11 @@ declare module 'react' {
     interface InputHTMLAttributes<T> {
         passwordrules?: string;
     }
+
+    // Custom properties (`--sidebar-width`) are valid inline styles: typed here, never asserted.
+    interface CSSProperties {
+        [variable: `--${string}`]: string | number | undefined;
+    }
 }
 
 declare module '@inertiajs/core' {
