@@ -128,12 +128,23 @@ final readonly class SendTeleworkDigests
                 return 0;
             }
 
-            // ponytail: the owner has no center dashboard yet; Task 15 replaces this link with it.
-            $center = $centers[0] ?? Teleworker::query()->orderBy('created_at')->orderBy('id')->first(['work_center_id'])?->work_center_id;
-            Notification::route('mail', $email)->notify(new TeleworkDigest($company, $name, $lines, $center === null ? route('tenant.telework.documents.index', $slug) : route('tenant.telework.reviews.index', [$slug, $center])));
+            Notification::route('mail', $email)->notify(new TeleworkDigest($company, $name, $lines, $this->link($slug, $centers)));
 
             return 1;
         });
+    }
+
+    /**
+     * Where the digest leads: the dashboard of the one center it is about, or the list of centers when there are several.
+     * The owner's centers are those with people in telework.
+     *
+     * @param  list<string>|null  $centers  null: every center of the company.
+     */
+    private function link(string $slug, ?array $centers): string
+    {
+        $centers ??= array_values(Teleworker::query()->distinct()->get(['work_center_id'])->map(fn (Teleworker $teleworker): string => $teleworker->work_center_id)->all());
+
+        return count($centers) === 1 ? route('tenant.telework.center', [$slug, $centers[0]]) : route('tenant.telework.index', $slug);
     }
 
     /**

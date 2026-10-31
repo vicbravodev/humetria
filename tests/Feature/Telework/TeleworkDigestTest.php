@@ -196,3 +196,46 @@ it('keeps the delivery record inside its company', function (): void {
     workIn($other);
     expect(DigestDelivery::query()->count())->toBe(1)->and(DigestDelivery::query()->sole()->tenant_id)->toBe($other->id);
 });
+
+/** The address the digest sent to `$email` opens. */
+function digestUrlFor(string $email): string
+{
+    $url = '';
+    Notification::assertSentOnDemand(TeleworkDigest::class, function (TeleworkDigest $notification, array $channels, AnonymousNotifiable $notifiable) use ($email, &$url): bool {
+        $url = $notification->toMail($notifiable)->actionUrl ?? '';
+
+        return $notifiable->routes['mail'] === $email;
+    });
+
+    return $url;
+}
+
+it('links the owner to the dashboard of the only center with people, or to the list when there are several', function (): void {
+    digestWorkplace($this->center, '2025-12-16 18:00:00');
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestUrlFor($this->owner->email))->toBe(route('tenant.telework.center', [$this->tenant, $this->center->id]));
+
+    Notification::fake();
+    DigestDelivery::query()->delete();
+    digestWorkplace($this->other, '2025-12-16 18:00:00');
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestUrlFor($this->owner->email))->toBe(route('tenant.telework.index', $this->tenant));
+});
+
+it('links a Comisión member to the dashboard of its only center, or to the list when it sits on several', function (): void {
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    digestWorkplace($this->center, '2025-12-16 18:00:00');
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestUrlFor($cora->email))->toBe(route('tenant.telework.center', [$this->tenant, $this->center->id]));
+
+    Notification::fake();
+    DigestDelivery::query()->delete();
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->other->id, 'user_id' => $cora->id]);
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestUrlFor($cora->email))->toBe(route('tenant.telework.index', $this->tenant));
+});
