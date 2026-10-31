@@ -385,8 +385,8 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $url = route('tenant.campaigns.show', [$this->tenant, $campaign->id]);
     $this->get($url);
 
-    // The same with 3 or 30 people: nothing is read person by person.
-    $this->expectsDatabaseQueryCount(23);
+    // The same with 3 or 30 people: nothing is read person by person. Four of them count who «Invitar a quien falte» reaches.
+    $this->expectsDatabaseQueryCount(27);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);

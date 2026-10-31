@@ -21,6 +21,7 @@ export default function ActiveCampaignActions({
     minDeadline,
     replacementPool,
     pending,
+    missing,
 }: {
     tenantSlug: string;
     campaign: CampaignDetail;
@@ -29,6 +30,8 @@ export default function ActiveCampaignActions({
     replacementPool: ReplacementPool[] | null;
     /** People waiting with a link sent: who "Recordar" reaches. */
     pending: number;
+    /** Who «Invitar a quien falte» sends a link to. */
+    missing: number;
 }) {
     const [dialog, setDialog] = useState<CampaignDialog | null>(null);
     const toggle = (name: CampaignDialog) => (open: boolean) =>
@@ -71,6 +74,7 @@ export default function ActiveCampaignActions({
             />
             <InviteMissingDialog
                 route={[tenantSlug, campaign.id]}
+                count={missing}
                 open={dialog === 'invite'}
                 onOpenChange={toggle('invite')}
             />

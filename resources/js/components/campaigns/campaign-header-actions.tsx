@@ -17,6 +17,7 @@ export default function CampaignHeaderActions({
     minDeadline,
     replacementPool,
     pending,
+    missing,
 }: {
     tenantSlug: string;
     campaign: CampaignDetail;
@@ -24,6 +25,7 @@ export default function CampaignHeaderActions({
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
     pending: number;
+    missing: number;
 }) {
     const route: [string, string] = [tenantSlug, campaign.id];
 
@@ -44,6 +46,7 @@ export default function CampaignHeaderActions({
                 minDeadline={minDeadline}
                 replacementPool={replacementPool}
                 pending={pending}
+                missing={missing}
             />
         );
     }

@@ -277,8 +277,15 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
         // Nothing goes out before confirming: it says who gets a link.
         ->assertSee('¿Invitar a quien falte?')
         ->assertSee('quienes entraron al centro de trabajo después del lanzamiento')
+        ->assertSeeIn('[role=dialog]', 'Se enviará un enlace a 1 persona.')
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Se invitó a 1 persona.')
+        // Once everyone has their link, there is nobody left to invite.
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
+        ->assertSeeIn('[role=dialog]', 'No falta nadie por invitar.')
+        ->assertScript('document.querySelector("[role=dialog] button[type=submit]").disabled', true)
+        ->click('[role=dialog] button:has-text("Cancelar")')
         ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '61')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Sortear reemplazos")')

@@ -37,17 +37,11 @@ final readonly class InviteMissing
         $sent = DB::transaction(function () use ($campaign): int {
             // Under lock: closing it meanwhile waits here, or this finds it closed.
             $campaign = Campaign::lockIn($campaign, CampaignStatus::Active);
-            $people = $this->roster->activeIn($campaign->work_center_id);
-            $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
             $owed = [];
 
-            foreach ($people as $person) {
-                $participant = $participants->get($person->id);
-                $joined = $participant === null ? $this->join($campaign, $person) : $this->catchUp($participant);
-
-                if ($joined !== null) {
-                    $owed[$joined->id] = SurveyInvitation::routes($person) !== [];
-                }
+            foreach ($this->owed($campaign) as [$person, $participant]) {
+                $participant = $participant === null ? $this->join($campaign, $person) : $this->restore($participant);
+                $owed[$participant->id] = SurveyInvitation::routes($person) !== [];
             }
 
             return $this->queueInvitations->handle($campaign, $owed);
@@ -56,6 +50,40 @@ final readonly class InviteMissing
         Log::info('campaign.missing_invited', ['campaign_id' => $campaign->id, 'sent' => $sent]);
 
         return $sent;
+    }
+
+    /**
+     * How many people handle() would send a link to now, changing nothing.
+     */
+    public function count(Campaign $campaign): int
+    {
+        return count(array_filter($this->owed($campaign), fn (array $owed): bool => SurveyInvitation::routes($owed[0]) !== []));
+    }
+
+    /**
+     * The active people of the work center owed a link, with their place in the campaign (null for someone hired after
+     * the launch): someone who returned, with guides cancelled while away, and whoever has a guide pending and never got
+     * a link.
+     *
+     * @return list<array{RosterEntry, ?Participant}>
+     */
+    private function owed(Campaign $campaign): array
+    {
+        $participants = $campaign->participants()->with('instruments')->get()->keyBy('employee_id');
+        $owed = [];
+
+        foreach ($this->roster->activeIn($campaign->work_center_id) as $person) {
+            $participant = $participants->get($person->id);
+            $returned = $participant?->instruments->contains('status', InstrumentStatus::Cancelled) ?? false;
+            $neverInvited = $participant !== null && in_array($participant->invitation_status, [null, InvitationStatus::NoEmail], true)
+                && $participant->instruments->contains('status', InstrumentStatus::Pending);
+
+            if ($participant === null || $returned || $neverInvited) {
+                $owed[] = [$person, $participant];
+            }
+        }
+
+        return $owed;
     }
 
     private function join(Campaign $campaign, RosterEntry $person): Participant
@@ -67,15 +95,14 @@ final readonly class InviteMissing
     }
 
     /**
-     * Gives back the guides cancelled while the person was away. Returns them when they are owed a link.
+     * Gives back the guides cancelled while the person was away.
      */
-    private function catchUp(Participant $participant): ?Participant
+    private function restore(Participant $participant): Participant
     {
-        $restored = $participant->instruments()
+        $participant->instruments()
             ->where('status', InstrumentStatus::Cancelled)
             ->update(['status' => InstrumentStatus::Pending, 'cancelled_at' => null]);
-        $neverInvited = in_array($participant->invitation_status, [null, InvitationStatus::NoEmail], true) && $participant->instruments->contains('status', InstrumentStatus::Pending);
 
-        return $restored > 0 || $neverInvited ? $participant : null;
+        return $participant;
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Actions\DrawReplacements;
+use App\Modules\Campaigns\Actions\InviteMissing;
 use App\Modules\Campaigns\Data\PeopleFilter;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
@@ -52,6 +53,7 @@ final readonly class CampaignPages
         private DrawReplacements $replacements,
         private CampaignPeople $people,
         private Areas $areas,
+        private InviteMissing $inviteMissing,
     ) {}
 
     /**
@@ -161,6 +163,10 @@ final readonly class CampaignPages
             'minDeadline' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null && ! CampaignClock::hasPassed($campaign->closes_on) ? CampaignClock::today()->addDay()->format('Y-m-d') : null,
             'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
                 ? $this->replacementPool($campaign)
+                : null,
+            // How many people «Invitar a quien falte» sends a link to now.
+            'missing' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->kind === CampaignKind::Nom035Evaluation
+                ? $this->inviteMissing->count($campaign)
                 : null,
         ];
     }

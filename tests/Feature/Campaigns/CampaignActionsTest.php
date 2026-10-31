@@ -18,6 +18,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(ResendInvitations::class, InviteMissing::class, DrawReplacements::class, CampaignActionController::class);
 
@@ -214,6 +215,41 @@ it('says when there is nobody to invite', function (): void {
     $this->actingAs($this->hr)
         ->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]))
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'info', 'message' => 'No falta nadie por invitar.']]);
+});
+
+it('tells the page how many people inviting the missing sends a link to, exactly as many as it then sends', function (Closure $change, int $missing): void {
+    $people = staffOf($this->tenant, $this->plant, 18)->values();
+    $people[0]->update(['email' => null, 'mobile' => '5512345678']);
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
+    $change->call($this, $campaign, $people);
+    $show = fn () => $this->actingAs($this->hr)->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]));
+
+    $show()->assertInertia(fn (Assert $page) => $page->where('missing', $missing));
+
+    expect(resolve(InviteMissing::class)->handle($campaign))->toBe($missing);
+    $show()->assertInertia(fn (Assert $page) => $page->where('missing', 0));
+})->with([
+    'nobody' => [fn (Campaign $campaign) => null, 0],
+    'hired, with an email' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 2), 2],
+    'hired, without one' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '5512345678']), 0],
+    'got an email after the launch' => [fn (Campaign $campaign, $people) => $people[0]->update(['email' => 'ana@acme.mx']), 1],
+    'returned, with an email' => [fn (Campaign $campaign, $people) => ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]), 1],
+    'returned, with a link but no email now' => [function (Campaign $campaign, $people): void {
+        ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
+        $people[1]->update(['email' => null, 'mobile' => '5512345678']);
+    }, 0],
+]);
+
+it('gives the count only to who may invite, while an evaluation runs', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $trauma = Campaign::factory()->trauma()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))->assertInertia(fn (Assert $page) => $page->where('missing', null));
+
+    foreach ([$trauma, $closed] as $other) {
+        $this->actingAs($this->hr)->get(route('tenant.campaigns.show', [$this->tenant, $other->id]))->assertInertia(fn (Assert $page) => $page->where('missing', null));
+    }
 });
 
 it('draws replacements of the gender of who will not answer, from people outside the sample', function (string $gender): void {

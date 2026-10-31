@@ -13,15 +13,18 @@ import { inviteMissing } from '@/routes/tenant/campaigns';
 
 /**
  * Brings the evaluation up to date with the work center's people (criterio C-24), opened from the page's menu: it says
- * who gets a link before any goes out. How many is only known once it runs; the toast says it.
+ * who gets a link, and how many, before any goes out. With nobody to invite there is nothing to confirm.
  */
 export default function InviteMissingDialog({
     route,
+    count,
     open,
     onOpenChange,
 }: {
     /** The company's slug and the campaign's id. */
     route: [string, string];
+    /** How many people get a link. */
+    count: number;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
@@ -35,6 +38,11 @@ export default function InviteMissingDialog({
                     recibieron por no tener correo. A los demás no les llega
                     nada.
                 </DialogDescription>
+                <p className="text-sm font-medium">
+                    {count === 0
+                        ? 'No falta nadie por invitar.'
+                        : `Se enviará un enlace a ${count} ${count === 1 ? 'persona' : 'personas'}.`}
+                </p>
                 <Form
                     {...inviteMissing.form(route)}
                     options={{ preserveScroll: true }}
@@ -45,7 +53,10 @@ export default function InviteMissingDialog({
                             <DialogClose asChild>
                                 <Button variant="outline">Cancelar</Button>
                             </DialogClose>
-                            <Button type="submit" disabled={processing}>
+                            <Button
+                                type="submit"
+                                disabled={processing || count === 0}
+                            >
                                 {processing && <Spinner />}
                                 Invitar
                             </Button>

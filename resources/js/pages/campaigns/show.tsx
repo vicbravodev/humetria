@@ -37,6 +37,7 @@ export default function Campaign(props: {
     launch: { min: string; suggested: string } | null;
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
+    missing: number | null;
 }) {
     const { campaign, instruments } = props;
     const { route, company, canManage, canSeeGuideI } = useCampaignAccess(
@@ -62,6 +63,7 @@ export default function Campaign(props: {
                         canManage={canManage}
                         minDeadline={props.minDeadline}
                         replacementPool={props.replacementPool}
+                        missing={props.missing ?? 0}
                         pending={pendingTotal(props.areas)}
                     />
                 </CampaignPageHeader>
