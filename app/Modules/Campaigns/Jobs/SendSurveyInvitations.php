@@ -79,9 +79,10 @@ final class SendSurveyInvitations implements ShouldQueue
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
 
         foreach ($waiting as $participant) {
-            $email = $people[$participant->employee_id]->email ?? null;
+            $person = $people[$participant->employee_id] ?? null;
+            $routes = $person === null ? [] : SurveyInvitation::routes($person);
 
-            if ($email === null) {
+            if ($person === null || $routes === []) {
                 $participant->update(['invitation_status' => InvitationStatus::NoEmail]);
 
                 continue;
@@ -102,8 +103,8 @@ final class SendSurveyInvitations implements ShouldQueue
             };
             $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
-            Notification::route('mail', $email)->notify(new SurveyInvitation(
-                $kind, $token, $people[$participant->employee_id]->name ?? '', $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant),
+            Notification::routes($routes)->notify(new SurveyInvitation(
+                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant),
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }

@@ -13,6 +13,7 @@ use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Organization\Contracts\Areas;
@@ -251,7 +252,7 @@ final readonly class CampaignPages
     private function contact(Campaign $campaign): array
     {
         $people = $this->roster->activeIn($campaign->work_center_id);
-        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => $person->email !== null));
+        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => SurveyInvitation::routes($person) !== []));
 
         return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable];
     }

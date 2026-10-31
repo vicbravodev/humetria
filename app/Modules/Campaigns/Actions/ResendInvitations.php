@@ -9,6 +9,7 @@ use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Organization\Contracts\Roster;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,9 @@ final readonly class ResendInvitations
             $reached = [];
 
             foreach ($participants as $participant) {
-                if (($people[$participant->employee_id]->email ?? null) !== null) {
+                $person = $people[$participant->employee_id] ?? null;
+
+                if ($person !== null && SurveyInvitation::routes($person) !== []) {
                     $reached[$participant->id] = true;
                 }
             }

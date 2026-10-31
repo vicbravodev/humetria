@@ -10,6 +10,7 @@ use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -46,7 +47,7 @@ final readonly class InviteMissing
                 $joined = $participant === null ? $this->join($campaign, $person) : $this->catchUp($participant);
 
                 if ($joined !== null) {
-                    $owed[$joined->id] = $person->email !== null;
+                    $owed[$joined->id] = SurveyInvitation::routes($person) !== [];
                 }
             }
 

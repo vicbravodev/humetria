@@ -6,8 +6,10 @@ namespace App\Modules\Campaigns\Notifications;
 
 use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Support\CampaignClock;
+use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -29,11 +31,24 @@ final class SurveyInvitation extends Notification
     ) {}
 
     /**
+     * How a person can be reached, by channel: one route for each contact of theirs a channel takes. Another channel
+     * (SMS, WhatsApp) is one more route here and its to*() method; who sends, and who counts the unreachable, follow.
+     *
+     * @return array<string, string>
+     */
+    public static function routes(RosterEntry $person): array
+    {
+        return array_filter(['mail' => $person->email], fn (?string $contact): bool => $contact !== null);
+    }
+
+    /**
+     * Every channel the person was routed on (see routes()).
+     *
      * @return list<string>
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return $notifiable instanceof AnonymousNotifiable ? array_values(array_filter(array_keys($notifiable->routes), is_string(...))) : [];
     }
 
     public function toMail(object $notifiable): MailMessage

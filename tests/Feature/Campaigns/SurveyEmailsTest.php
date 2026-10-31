@@ -105,6 +105,23 @@ it('says how long the guides of the evaluation take together', function (int $pe
     'Guías I and III' => [51, 'Unos 20 minutos'],
 ]);
 
+it('sends the link by each channel the person can be reached on, today their email', function (): void {
+    sentEvaluation($this->tenant, $this->plant, $this->hr, 20);
+    $email = Employee::query()->withoutGlobalScopes()->where('name', 'Aaron Pérez')->sole()->email;
+    $invitation = null;
+
+    Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use ($email, &$invitation): bool {
+        if ($notifiable->routes === ['mail' => $email]) {
+            $invitation = $notification;
+        }
+
+        return $channels === ['mail'];
+    });
+
+    expect($invitation?->via(Notification::routes(['mail' => $email])))->toBe(['mail'])
+        ->and($invitation?->via(Notification::routes([])))->toBe([]);
+});
+
 it('counts only the guides the person has left when reminding them', function (): void {
     $campaign = sentEvaluation($this->tenant, $this->plant, $this->hr, 20);
     $aaron = Employee::query()->withoutGlobalScopes()->where('name', 'Aaron Pérez')->sole();
