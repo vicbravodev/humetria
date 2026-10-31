@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\OpenPortal;
+use App\Modules\Telework\Actions\ReviewNotice;
 use App\Modules\Telework\Actions\ReviewWorkplace;
 use App\Modules\Telework\Actions\SubmitNotice;
 use App\Modules\Telework\Data\AddressData;
@@ -11,8 +13,10 @@ use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Events\TraumaticEventReported;
+use App\Modules\Telework\Http\Controllers\NoticeController;
 use App\Modules\Telework\Http\Controllers\PortalNoticeController;
 use App\Modules\Telework\Models\ChecklistApplication;
+use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -31,7 +35,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SubmitNotice::class, PortalNoticeController::class, ReviewWorkplace::class);
+mutates(SubmitNotice::class, PortalNoticeController::class, ReviewWorkplace::class, ReviewNotice::class, NoticeController::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');
@@ -333,5 +337,150 @@ describe('a change of address (6.7)', function (): void {
         validateWorkplace($other);
 
         expect($this->old->refresh()->retired_at)->toBeNull();
+    });
+});
+
+describe('the review of a notice', function (): void {
+    beforeEach(function (): void {
+        $this->cora = memberOf($this->tenant, TenantRole::Committee);
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
+        $this->notice = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'description' => 'Descripcion-privada']);
+    });
+
+    function reviewNoticeUrl(?WorkerNotice $notice = null): string
+    {
+        return route('tenant.telework.notices.review', [test()->tenant, ($notice ?? test()->notice)->id]);
+    }
+
+    it('lets a member of the Comisión of the center review it with a note', function (): void {
+        Log::spy();
+
+        $this->actingAs($this->cora)->post(reviewNoticeUrl(), ['note' => '  Se dará seguimiento.  '])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->notice->refresh();
+        expect($this->notice->reviewed_by)->toBe($this->cora->id)
+            ->and($this->notice->reviewed_at?->toIso8601String())->toBe('2026-03-01T12:00:00+00:00')
+            ->and($this->notice->review_note)->toBe('Se dará seguimiento.');
+        $audit = AuditEntry::query()->where('event', 'telework.notice_reviewed')->sole();
+        expect($audit->subject_id)->toBe($this->notice->id)
+            ->and(json_encode($audit->metadata))->not->toContain('seguimiento')->not->toContain('Descripcion');
+        Log::shouldHaveReceived('info')->with('telework.notice_reviewed', ['notice_id' => $this->notice->id, 'teleworker_id' => $this->teleworker->id, 'kind' => 'work_risk'])->once();
+        Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'seguimiento'));
+    });
+
+    it('lets RH review it without sitting on the Comisión', function (): void {
+        $this->actingAs($this->hr)->post(reviewNoticeUrl(), ['note' => 'Visto por RH.'])->assertSessionHasNoErrors();
+
+        expect($this->notice->refresh()->reviewed_by)->toBe($this->hr->id);
+    });
+
+    it('needs a note and reviews only once', function (): void {
+        foreach (['', '   '] as $blank) {
+            $this->actingAs($this->hr)->post(reviewNoticeUrl(), ['note' => $blank])->assertSessionHasErrors('note');
+        }
+        expect($this->notice->refresh()->reviewed_at)->toBeNull();
+
+        $this->actingAs($this->hr)->post(reviewNoticeUrl(), ['note' => 'Primera.'])->assertSessionHasNoErrors();
+        $this->travelTo('2026-03-02 12:00:00');
+        $this->actingAs($this->cora)->post(reviewNoticeUrl(), ['note' => 'Segunda.'])->assertSessionHasErrors('notice');
+
+        expect($this->notice->refresh()->review_note)->toBe('Primera.')->and($this->notice->reviewed_by)->toBe($this->hr->id)
+            ->and(AuditEntry::query()->where('event', 'telework.notice_reviewed')->count())->toBe(1);
+    });
+
+    it('does not let the Comisión of another center, a viewer or another company review it', function (): void {
+        $otherCenter = WorkCenter::factory()->for($this->tenant)->create();
+        $elsewhere = memberOf($this->tenant, TenantRole::Committee);
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $otherCenter->id, 'user_id' => $elsewhere->id]);
+
+        $this->actingAs($elsewhere)->post(reviewNoticeUrl(), ['note' => 'x'])->assertNotFound();
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(reviewNoticeUrl(), ['note' => 'x'])->assertNotFound();
+        $foreign = WorkerNoticeFactory::new()->create();
+        $this->actingAs($this->hr)->post(reviewNoticeUrl($foreign), ['note' => 'x'])->assertNotFound();
+        $this->actingAs($this->hr)->post(route('tenant.telework.notices.review', [$this->tenant, 'not-a-uuid']), ['note' => 'x'])->assertNotFound();
+
+        expect($this->notice->refresh()->reviewed_at)->toBeNull();
+    });
+
+    it('rejects a blank note and a second review in the action itself', function (): void {
+        expect(fn () => resolve(ReviewNotice::class)->handle($this->notice, ' ', $this->hr->id))->toThrow(ValidationException::class);
+        resolve(ReviewNotice::class)->handle($this->notice, 'Hecho', $this->hr->id);
+
+        expect(fn () => resolve(ReviewNotice::class)->handle($this->notice, 'Otra', $this->hr->id))->toThrow(ValidationException::class);
+        expect($this->notice->refresh()->review_note)->toBe('Hecho');
+    });
+});
+
+describe('the notices page', function (): void {
+    beforeEach(function (): void {
+        $this->cora = memberOf($this->tenant, TenantRole::Committee);
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
+        $this->reviewed = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'submitted_at' => '2026-02-28 10:00:00', 'reviewed_by' => $this->hr->id, 'reviewed_at' => '2026-02-28 12:00:00', 'review_note' => 'Atendido']);
+        $this->pending = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'kind' => 'condition_change', 'traumatic_event' => true, 'description' => 'Presencié un asalto', 'submitted_at' => '2026-02-27 10:00:00']);
+        $this->otherCenter = WorkCenter::factory()->for($this->tenant)->create();
+        $this->otherEmployee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->otherCenter->id, 'name' => 'Luis Mora']);
+        $this->elsewhere = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->otherEmployee->id])->id]);
+    });
+
+    it('lists the company\'s notices, the ones nobody reviewed first, a page at a time', function (): void {
+        $this->actingAs($this->hr)->get(route('tenant.telework.notices.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+            ->component('telework/notices')
+            ->where('notices.total', 3)
+            ->where('notices.data.0.id', $this->pending->id)
+            ->where('notices.data.0.person', 'Ana Ruiz')
+            ->where('notices.data.0.kindValue', 'condition_change')
+            ->where('notices.data.0.description', 'Presencié un asalto')
+            ->where('notices.data.0.traumaticEvent', true)
+            ->where('notices.data.0.reviewedOn', null)
+            ->where('notices.data.0.canReview', true)
+            ->where('notices.data.0.writtenOn', '2026-02-27')
+            ->where('notices.data.0.occurredOn', '2026-02-25')
+            ->where('notices.data.2.id', $this->reviewed->id)
+            ->where('notices.data.2.reviewedOn', '2026-02-28')
+            ->where('notices.data.2.reviewNote', 'Atendido')
+            ->where('filters', ['center' => null]));
+    });
+
+    it('filters by center, and the Comisión sees only the centers it sits on', function (): void {
+        $this->actingAs($this->hr)->get(route('tenant.telework.notices.index', [$this->tenant, 'center' => $this->otherCenter->id]))
+            ->assertInertia(fn (Assert $page) => $page->where('notices.total', 1)->where('notices.data.0.id', $this->elsewhere->id)->where('notices.data.0.person', 'Luis Mora')
+                ->where('filters.center', ['value' => $this->otherCenter->id, 'label' => $this->otherCenter->name]));
+
+        $this->actingAs($this->cora)->get(route('tenant.telework.notices.index', $this->tenant))
+            ->assertInertia(fn (Assert $page) => $page->where('notices.total', 2)->where('notices.data.0.canReview', true));
+        $this->actingAs($this->cora)->get(route('tenant.telework.notices.index', [$this->tenant, 'center' => $this->otherCenter->id]))->assertNotFound();
+    });
+
+    it('offers the Guía I link only to who can launch it, for a traumatic event', function (): void {
+        $link = ['workCenter' => $this->center->id, 'employee' => $this->employee->id];
+
+        $this->actingAs($this->hr)->get(route('tenant.telework.notices.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+            ->where('notices.data.0.trauma', $link)->where('notices.data.1.trauma', null)->where('notices.data.2.trauma', null));
+        $this->actingAs($this->cora)->get(route('tenant.telework.notices.index', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('notices.data.0.trauma', null));
+    });
+
+    it('shows the new address of an address change', function (): void {
+        $workplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'street' => 'Calle Nueva']);
+        WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'kind' => 'address_change', 'temporary' => true, 'new_workplace_id' => $workplace->id, 'submitted_at' => '2026-02-26 10:00:00']);
+
+        $this->actingAs($this->hr)->get(route('tenant.telework.notices.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+            ->where('notices.data.0.kindValue', 'address_change')
+            ->where('notices.data.0.newAddress', fn ($line): bool => str_contains((string) $line, 'Calle Nueva'))
+            ->where('notices.data.0.temporary', true)
+            ->where('notices.data.1.newAddress', null));
+    });
+
+    it('is closed to a viewer and to a user outside the company', function (): void {
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get(route('tenant.telework.notices.index', $this->tenant))->assertForbidden();
+        $this->actingAs(memberOf(Tenant::factory()->create(), TenantRole::Hr))->get(route('tenant.telework.notices.index', $this->tenant))->assertNotFound();
+    });
+
+    it('shows the person\'s notices on their page', function (): void {
+        $this->actingAs($this->hr)->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))->assertInertia(fn (Assert $page) => $page
+            ->has('teleworker.notices', 2)
+            ->where('teleworker.notices.0.id', $this->pending->id)
+            ->where('teleworker.notices.0.status', 'Recibido')
+            ->where('teleworker.notices.1.status', 'Revisado')
+            ->where('teleworker.notices.1.reviewedOn', '2026-02-28'));
     });
 });

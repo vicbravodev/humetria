@@ -18,6 +18,7 @@ use App\Modules\Telework\Http\Requests\WorkplaceRequest;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Telework\Support\WorkplaceStanding;
@@ -145,6 +146,7 @@ final class TeleworkerController extends Controller
             'endedOn' => $teleworker->ended_at?->setTimezone($zone)->toDateString(),
             'endNote' => $teleworker->end_note,
             'equipment' => $this->equipment($teleworker, $zone),
+            'notices' => $this->notices($teleworker, $zone),
             'workplaces' => $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended))->all(),
         ];
     }
@@ -166,6 +168,25 @@ final class TeleworkerController extends Controller
                 'statusLabel' => $item->status->label(),
                 'refusalReason' => $item->refusal_reason,
                 'respondedOn' => $item->responded_at?->setTimezone($zone)->toDateString(),
+            ])->all());
+    }
+
+    /**
+     * The person's written notices, the ones nobody reviewed first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function notices(Teleworker $teleworker, string $zone): array
+    {
+        return array_values(WorkerNotice::query()->where('teleworker_id', $teleworker->id)->orderByRaw('reviewed_at IS NOT NULL')->orderByDesc('submitted_at')->orderBy('id')->get()
+            ->map(fn (WorkerNotice $notice): array => [
+                'id' => $notice->id,
+                'kind' => $notice->kind->label(),
+                'writtenOn' => $notice->written_on->toDateString(),
+                'occurredOn' => $notice->occurred_on->toDateString(),
+                'description' => $notice->description,
+                'status' => $notice->reviewed_at === null ? 'Recibido' : 'Revisado',
+                'reviewedOn' => $notice->reviewed_at?->setTimezone($zone)->toDateString(),
             ])->all());
     }
 

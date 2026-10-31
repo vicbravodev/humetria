@@ -1,4 +1,5 @@
 import type { PortalDocument } from './telework-documents';
+import type { TeleworkerNotice } from './telework-notices';
 
 /** Someone who can sit on a work center's Comisión, with the role they hold in the company. */
 export type CommitteePerson = {
@@ -128,6 +129,7 @@ export type TeleworkerSummary = {
     startedOn: string | null;
     noEquipmentReason: string | null;
     equipment: EquipmentRow[];
+    notices: TeleworkerNotice[];
     /** How it ended, already worded; null while the period is open. */
     endReason: string | null;
     endedOn: string | null;
@@ -246,19 +248,4 @@ export type ReviewDetail = {
     canDecide: boolean;
     evidence: ReviewEvidence[];
     authorizations: ReviewAuthorization[];
-};
-
-export type NoticeKindValue =
-    | 'condition_change'
-    | 'address_change'
-    | 'work_risk';
-
-/** A notice the person sent, as their portal lists it: only that it was received, or reviewed. */
-export type PortalNotice = {
-    id: string;
-    /** The kind, worded. */
-    kind: string;
-    /** Y-m-d. */
-    writtenOn: string;
-    status: 'Recibido' | 'Revisado';
 };

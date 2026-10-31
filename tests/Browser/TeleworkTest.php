@@ -36,6 +36,7 @@ use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\TrainingFactory;
 use Database\Factories\Telework\VisitAuthorizationFactory;
+use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
 use Illuminate\Support\Str;
@@ -820,4 +821,54 @@ it('lets the person write a work risk notice, and shows it received', function (
         ->assertScript(cspViolations(), '[]');
 
     expect(App\Modules\Telework\Models\WorkerNotice::query()->withoutGlobalScopes()->sole()->kind->value)->toBe('work_risk');
+});
+
+function noticesCenter(): array
+{
+    [$url, $center, $tenant] = teleworkerCenter();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    $teleworker = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'kind' => 'condition_change', 'traumatic_event' => true, 'description' => 'Presencié un asalto camino a casa.']);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'description' => 'Me lastimé la espalda.', 'reviewed_by' => User::factory()->create()->id, 'reviewed_at' => now(), 'review_note' => 'Se envió a revisión médica.']);
+
+    return [$url, $teleworker];
+}
+
+it('shows the notices to review, the traumatic event with its way into Guía I', function (bool $dark, bool $mobile): void {
+    [$url] = noticesCenter();
+
+    visitPage('telework/notices', "{$url}/telework/notices", $dark, $mobile)
+        ->assertSee('Avisos de teletrabajo')
+        ->assertSee('Presencié un asalto camino a casa.')
+        ->assertSee('Acontecimiento traumático severo')
+        ->assertSee('Lanzar Guía I')
+        ->assertSee('Se envió a revisión médica.')
+        ->assertSee('Por revisar');
+})->with($looks);
+
+it('shows the notices page before there is any notice', function (): void {
+    $url = signInToPanel();
+
+    visitPage('telework/notices', "{$url}/telework/notices")->assertSee('Aún no hay avisos');
+});
+
+it('lets RH review a notice with a note and goes on to Guía I with the person ticked', function (): void {
+    [$url, $teleworker] = noticesCenter();
+
+    visit("{$url}/telework/notices")
+        ->press('Revisar')
+        ->press('[role="dialog"] button[type="submit"]')
+        ->assertSee('nota es obligatorio')
+        ->fill('[role="dialog"] textarea', 'Se dará seguimiento con la Comisión.')
+        ->press('[role="dialog"] button[type="submit"]')
+        ->assertSee('Se dará seguimiento con la Comisión.')
+        ->assertSee('Revisión registrada')
+        ->click('Lanzar Guía I')
+        ->assertSee('(1 elegidas)')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    visit("{$url}/telework/teleworkers/{$teleworker->id}")
+        ->assertSee('Avisos de la persona')
+        ->assertSee('Presencié un asalto camino a casa.');
 });

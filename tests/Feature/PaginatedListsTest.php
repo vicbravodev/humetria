@@ -91,6 +91,12 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.telework.trainings.index', $tenant);
     }, ['trainings', 'people']],
+    'NOM-037 notices to review' => ['telework/notices', function () {
+        [$tenant] = listsCompany();
+        Database\Factories\Telework\WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.telework.notices.index', $tenant);
+    }, ['notices']],
     'notices a person sent' => ['telework/portal-notices', function () {
         [$tenant] = listsCompany();
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);

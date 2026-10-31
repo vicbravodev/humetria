@@ -8,6 +8,7 @@ use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\DocumentController;
 use App\Modules\Telework\Http\Controllers\EquipmentController;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
+use App\Modules\Telework\Http\Controllers\NoticeController;
 use App\Modules\Telework\Http\Controllers\PhotoController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
 use App\Modules\Telework\Http\Controllers\RosterController;
@@ -93,6 +94,11 @@ Route::post('admin/{tenant:slug}/telework/documents/{document}/acknowledge', [Ac
 Route::get('admin/{tenant:slug}/telework/trainings', [TrainingController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.trainings.index');
 Route::post('admin/{tenant:slug}/telework/trainings', [TrainingController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.trainings.store');
 Route::get('admin/{tenant:slug}/telework/trainings/{training}/evidence', [TrainingController::class, 'evidence'])->where('tenant', $notReserved)->name('tenant.telework.trainings.evidence');
+
+// The written notices of the teleworkers (6.3, 6.7, 6.9): RH and the Comisión read them and review each once. A notice is
+// evidence, so there is no PUT or DELETE.
+Route::get('admin/{tenant:slug}/telework/notices', [NoticeController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.notices.index');
+Route::post('admin/{tenant:slug}/telework/notices/{notice}/review', [NoticeController::class, 'review'])->where('tenant', $notReserved)->name('tenant.telework.notices.review');
 
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');
