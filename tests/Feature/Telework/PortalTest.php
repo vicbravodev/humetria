@@ -81,6 +81,28 @@ it('derives the link from the company, the employee and the version with the app
         ->and(PortalLink::tokenFor($this->tenant->id, $this->employee->id, 1, 'base64:'.base64_encode(random_bytes(32))))->not->toBe($this->token);
 });
 
+it('keeps opening a link derived with a previous app key while APP_PREVIOUS_KEYS keeps it, and issues it again unchanged', function (): void {
+    $old = config()->string('app.key');
+    config()->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+    config()->set('app.previous_keys', [$old]);
+
+    expect(portalProps($this->token)['unavailable'])->toBeFalse()
+        ->and(resolve(IssuePortalLink::class)->handle($this->employee->id))->toBe($this->token);
+});
+
+it('revokes a link whose key was dropped from APP_PREVIOUS_KEYS, and issues a new one with the current key', function (): void {
+    config()->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+    config()->set('app.previous_keys', []);
+
+    expect(portalProps($this->token))->toBe(portalProps('not-a-token'));
+
+    $fresh = resolve(IssuePortalLink::class)->handle($this->employee->id);
+
+    expect($fresh)->not->toBe($this->token)
+        ->and($fresh)->toBe(PortalLink::tokenFor($this->tenant->id, $this->employee->id, 1, config()->string('app.key')))
+        ->and(portalProps($fresh)['unavailable'])->toBeFalse();
+});
+
 it('revokes the link at once when RH asks for a new one, which reminders then keep', function (): void {
     Log::spy();
     $old = $this->token;

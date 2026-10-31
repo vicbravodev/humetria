@@ -54,7 +54,7 @@ final class PortalLink extends Model
      */
     public static function keys(): array
     {
-        return [config()->string('app.key')];
+        return array_values(array_filter([config()->string('app.key'), ...config()->array('app.previous_keys')], is_string(...)));
     }
 
     /** The token this row was issued with, if a key still kept derives it; null once its key was dropped. */
