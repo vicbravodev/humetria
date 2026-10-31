@@ -232,7 +232,21 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
 function resizeTo(AwaitableWebpage $page, int $width, int $height = 900): AwaitableWebpage
 {
     $page->resize($width, $height)
-        ->assertScript('() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))).then(() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished))).then(() => true)');
+        // Settled once the page keeps the same width and nothing is in transition for five frames in a row.
+        ->assertScript(<<<'JS'
+            () => new Promise((resolve) => {
+                let last = '';
+                let still = 0;
+                const frame = () => {
+                    const now = Array.from(document.querySelectorAll('[data-slot="sidebar-inset"], main')).map((box) => box.getBoundingClientRect().width).join();
+                    const moving = document.getAnimations().some((animation) => animation.playState === 'running' && animation.effect?.getTiming().iterations !== Infinity);
+                    still = now === last && ! moving ? still + 1 : 0;
+                    last = now;
+                    still >= 5 ? resolve(true) : requestAnimationFrame(frame);
+                };
+                requestAnimationFrame(frame);
+            })
+            JS);
 
     return $page;
 }

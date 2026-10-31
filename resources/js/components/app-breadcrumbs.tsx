@@ -56,8 +56,8 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                         <li
                             className={
                                 index === trail.length - 1
-                                    ? 'min-w-0 truncate font-medium'
-                                    : 'hidden min-w-0 shrink-[3] truncate text-muted-foreground sm:block'
+                                    ? 'max-w-full shrink-0 truncate font-medium'
+                                    : 'hidden min-w-0 truncate text-muted-foreground sm:block'
                             }
                             aria-current={
                                 index === trail.length - 1 ? 'page' : undefined

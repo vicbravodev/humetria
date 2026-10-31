@@ -110,12 +110,15 @@ it('centers the arc over its figures on a phone and sets them beside it on a des
     }
 })->with(['light' => false, 'dark' => true]);
 
-it('keeps the whole trail readable in the top bar at every width', function (): void {
-    $page = visitPage('dashboard', panelCompany());
+it('keeps the page name whole in the top bar at every width, shortening a long company name first', function (): void {
+    $url = panelCompany();
+    Tenant::query()->where('slug', 'acme')->update(['trade_name' => 'Martínez, Aponte y Galarza e Hija']);
+    $page = visitPage('dashboard', $url);
+    // The crumbs that do not fit whole: the page's own always does, a company's name gives way with an ellipsis.
+    $cut = '() => Array.from(document.querySelectorAll(\'nav[aria-label="Ruta"] li\')).filter((crumb) => crumb.offsetWidth > 0 && crumb.scrollWidth > crumb.clientWidth).map((crumb) => crumb.textContent).join()';
 
-    foreach ([375, 768, 1024, 1280] as $width) {
-        // How many shown crumbs are cut short.
-        resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'nav[aria-label="Ruta"] li\')).filter((crumb) => crumb.offsetWidth > 0 && crumb.scrollWidth > crumb.clientWidth).length', 0);
+    foreach ([375 => '', 768 => 'Martínez, Aponte y Galarza e Hija', 1024 => 'Martínez, Aponte y Galarza e Hija', 1280 => ''] as $width => $shortened) {
+        resizeTo($page, $width)->assertScript($cut, $shortened);
     }
 });
 
