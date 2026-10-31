@@ -136,6 +136,21 @@ it('refuses a second open evaluation of a work center', function (CampaignStatus
         ->assertSessionHasErrors(['work_center_id' => 'Este centro ya tiene una evaluación en curso o en borrador.']);
 })->with([CampaignStatus::Draft, CampaignStatus::Active]);
 
+it('locks the work center before checking it has no open evaluation, so an archive at the same time waits', function (): void {
+    staffOf($this->tenant, $this->plant, 20);
+    $queries = [];
+    Illuminate\Support\Facades\DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.store', $this->tenant), ['work_center_id' => $this->plant->id])->assertSessionHasNoErrors();
+
+    $lock = collect($queries)->search(fn (string $sql): bool => str_contains($sql, 'from "work_centers"') && str_ends_with($sql, 'for update'));
+    $check = collect($queries)->search(fn (string $sql): bool => str_starts_with($sql, 'select exists') && str_contains($sql, 'from "campaigns"'));
+
+    expect($lock)->toBeInt()->and($check)->toBeInt()->and($lock)->toBeLessThan($check);
+});
+
 it('refuses a work center that is archived, empty, or another company\'s', function (Closure $workCenter, string $message): void {
     $this->actingAs($this->hr)
         ->post(route('tenant.campaigns.store', $this->tenant), ['work_center_id' => $workCenter($this->tenant)->id])
