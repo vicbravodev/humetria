@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use App\Modules\Telework\Actions\PublishChecklist;
 use App\Modules\Telework\Actions\RegisterCommittee;
+use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
@@ -121,10 +124,33 @@ it('edits a question, sees it become modified, and publishes', function (): void
         ->press('Guardar pregunta')
         ->assertSee('Pregunta propia de la Comisión')
         ->assertSee('Apéndice 3 modificada')
+        ->click('[aria-label="Quitar S1-02"]')
+        ->assertSee('¿Quitar S1-02 del borrador?')
+        ->press('Quitar pregunta')
+        ->assertDontSee('S1-02')
         ->press('Publicar versión 1')
+        ->assertSee('¿Publicar la versión 1?')
+        ->press('Publicar')
         ->assertSee('Versión 1 publicada')
         ->assertSee('Versión 1 · publicada')
         ->assertSee('Iniciar borrador nuevo')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('tells a stale editor that the version was published meanwhile', function (): void {
+    [$url, $center] = checklistCenter();
+    $page = visit("{$url}/telework/centers/{$center->id}/checklist")->assertSee('Versión 1 · borrador');
+
+    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
+    resolve(PublishChecklist::class)->handle(Checklist::query()->sole()->id, User::query()->firstOrFail()->id);
+
+    $page->click('[aria-label="Editar S1-01"]')
+        ->fill('#edit-'.ChecklistQuestion::query()->where('code', 'S1-01')->firstOrFail()->id.'-text', 'Tarde')
+        ->press('Guardar pregunta')
+        ->assertSee('Esta versión ya está publicada')
+        ->assertSee('No se pudo guardar el cambio')
+        ->assertSee('Versión 1 · publicada')
+        ->assertMissing('[aria-label="Quitar S1-02"]')
+        ->assertNoJavaScriptErrors();
 });
