@@ -27,6 +27,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        // NOT VALID: new writes are checked again, but confirmations stored without an address since `up()` are kept.
+        DB::statement('ALTER TABLE visit_authorizations ADD CONSTRAINT visit_authorizations_confirmation_pair CHECK ((confirmed_at IS NULL) = (confirmed_ip IS NULL)) NOT VALID');
         DB::statement('ALTER TABLE visit_authorizations DROP CONSTRAINT visit_authorizations_cancellation_pair');
         DB::statement('ALTER TABLE visit_authorizations DROP CONSTRAINT visit_authorizations_ip_needs_confirmation');
         Schema::table('visit_authorizations', function (Blueprint $table) {
