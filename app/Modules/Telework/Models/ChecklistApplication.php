@@ -26,13 +26,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Section $section
  * @property CarbonImmutable $requested_at
  * @property CarbonImmutable|null $submitted_at
+ * @property CarbonImmutable|null $cancelled_at
  * @property string|null $consent_id
  * @property CarbonImmutable|null $consent_accepted_at
  * @property string|null $special_needs
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'workplace_id', 'checklist_id', 'section', 'requested_at', 'submitted_at', 'consent_id', 'consent_accepted_at', 'special_needs'])]
+#[Fillable(['tenant_id', 'workplace_id', 'checklist_id', 'section', 'requested_at', 'submitted_at', 'cancelled_at', 'consent_id', 'consent_accepted_at', 'special_needs'])]
 #[UseFactory(ChecklistApplicationFactory::class)]
 final class ChecklistApplication extends Model
 {
@@ -40,13 +41,13 @@ final class ChecklistApplication extends Model
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
 
     /**
-     * The applications of a teleworker's workplaces still in use: the only ones their portal may open.
+     * The applications of a teleworker's workplaces still in use and not cancelled: the only ones their portal may open.
      *
      * @param  Builder<ChecklistApplication>  $query
      */
     protected function scopeOwnedBy(Builder $query, string $teleworkerId): void
     {
-        $query->whereHas('workplace', fn (Builder $workplaces) => $workplaces->where('teleworker_id', $teleworkerId)->whereNull('retired_at'));
+        $query->whereNull('cancelled_at')->whereHas('workplace', fn (Builder $workplaces) => $workplaces->where('teleworker_id', $teleworkerId)->whereNull('retired_at'));
     }
 
     /**
@@ -66,6 +67,7 @@ final class ChecklistApplication extends Model
             'section' => Section::class,
             'requested_at' => 'immutable_datetime',
             'submitted_at' => 'immutable_datetime',
+            'cancelled_at' => 'immutable_datetime',
             'consent_accepted_at' => 'immutable_datetime',
         ];
     }

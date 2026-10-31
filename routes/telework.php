@@ -44,6 +44,7 @@ Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerC
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/roster', [RosterController::class, 'join'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.join');
+Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/end', [RosterController::class, 'end'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.end');
 
 // The Comisión's review of a center's workplaces: only its assigned members. A decision is never edited or deleted;
 // a later review replaces it as the current one.

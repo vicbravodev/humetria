@@ -6,8 +6,10 @@ namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Actions\EndTelework;
 use App\Modules\Telework\Actions\JoinRoster;
 use App\Modules\Telework\Data\RosterData;
+use App\Modules\Telework\Http\Requests\EndTeleworkRequest;
 use App\Modules\Telework\Http\Requests\JoinRosterRequest;
 use App\Modules\Telework\Models\Teleworker;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +37,17 @@ final class RosterController extends Controller
             $request->string('no_equipment_reason')->toString(),
         ), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Persona en el padrón de teletrabajo.']);
+
+        return redirect()->route('tenant.telework.teleworkers.show', [$tenant, $period->id]);
+    }
+
+    public function end(EndTeleworkRequest $request, mixed $tenant, string $teleworker, EndTelework $end): RedirectResponse
+    {
+        $period = $this->teleworker($teleworker);
+        abort_if($request->user() === null, 403);
+
+        $end->handle($period, $request->reason(), $request->endedAt(), $request->note(), $request->user()->id);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Teletrabajo terminado. Queda en el historial.']);
 
         return redirect()->route('tenant.telework.teleworkers.show', [$tenant, $period->id]);
     }

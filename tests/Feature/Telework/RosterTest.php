@@ -3,17 +3,27 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Telework\Actions\EndTelework;
 use App\Modules\Telework\Actions\JoinRoster;
+use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Data\RosterData;
+use App\Modules\Telework\Enums\EndReason;
 use App\Modules\Telework\Enums\MaritalStatus;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Http\Controllers\RosterController;
+use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Support\OpenedPortal;
+use App\Modules\Telework\Support\PortalPending;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\ChecklistApplicationFactory;
+use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
@@ -22,7 +32,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-mutates(JoinRoster::class, RosterController::class);
+mutates(JoinRoster::class, EndTelework::class, RosterController::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');
@@ -253,4 +263,144 @@ it('answers 404, not 403, for a period of another company or one that does not e
 it('refuses in the database an active period without the data of 5.1', function (): void {
     expect(fn () => DB::transaction(fn () => TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'status' => TeleworkerStatus::Active, 'started_at' => now()])))
         ->toThrow(QueryException::class);
+});
+
+function endUrl(?Teleworker $teleworker = null): string
+{
+    return route('tenant.telework.teleworkers.end', [test()->tenant, ($teleworker ?? test()->teleworker)->id]);
+}
+
+/** @return Teleworker An active period of the test's employee. */
+function activePeriod(): Teleworker
+{
+    // The employee has one open period: the aspirant of beforeEach makes room.
+    test()->workplace->delete();
+    test()->teleworker->delete();
+
+    return TeleworkerFactory::new()->active()->create(['tenant_id' => test()->tenant->id, 'employee_id' => test()->employee->id, 'work_center_id' => test()->center->id, 'started_at' => '2026-02-01 12:00:00']);
+}
+
+it('ends a period with a date, a reason and a note, keeping its workplaces as history', function (EndReason $reason): void {
+    $period = activePeriod();
+    $place = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $period->id]);
+
+    $this->post(endUrl($period), ['reason' => $reason->value, 'ended_on' => '2026-02-20', 'note' => 'Regresa a la oficina.'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('tenant.telework.teleworkers.show', [$this->tenant, $period->id]));
+
+    workIn($this->tenant);
+    $ended = Teleworker::query()->findOrFail($period->id);
+
+    expect($ended->status)->toBe(TeleworkerStatus::Ended)
+        ->and($ended->end_reason)->toBe($reason)
+        ->and($ended->end_note)->toBe('Regresa a la oficina.')
+        ->and($ended->ended_at?->setTimezone('America/Mexico_City')->toDateString())->toBe('2026-02-20')
+        ->and(Workplace::query()->findOrFail($place->id)->retired_at)->toBeNull();
+})->with(EndReason::cases());
+
+it('ends an aspirant who never joined', function (): void {
+    $this->post(endUrl(), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertSessionHasNoErrors();
+
+    expect(joined()->status)->toBe(TeleworkerStatus::Ended)->and(joined()->end_note)->toBeNull();
+});
+
+it('ends today at the moment it is asked, and an earlier day at its start', function (): void {
+    $this->post(endUrl(), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertSessionHasNoErrors();
+
+    expect(joined()->ended_at?->toIso8601String())->toBe('2026-03-01T12:00:00+00:00');
+});
+
+it('keeps the history: an ended period stays and the person can start a new one', function (): void {
+    $period = activePeriod();
+    $this->post(endUrl($period), ['reason' => 'reversibility', 'ended_on' => '2026-03-01'])->assertSessionHasNoErrors();
+    resolve(App\Modules\Tenancy\Contracts\Companies::class)->enter($this->tenant->id);
+    ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+
+    $again = resolve(RegisterAspirant::class)->handle($this->employee->id, 60, [new AddressData('Calle Nueva', '1', null, 'Centro', '76000', 'Querétaro', 'QUE')], $this->hr->id);
+
+    expect(Teleworker::query()->where('employee_id', $this->employee->id)->count())->toBe(2)
+        ->and(Teleworker::query()->findOrFail($period->id)->status)->toBe(TeleworkerStatus::Ended)
+        ->and($again->status)->toBe(TeleworkerStatus::Aspirant);
+});
+
+it('does not end a period twice', function (): void {
+    $period = TeleworkerFactory::new()->ended(EndReason::Transfer)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+
+    $this->post(endUrl($period), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertSessionHasErrors('teleworker');
+
+    workIn($this->tenant);
+    expect(Teleworker::query()->findOrFail($period->id)->end_reason)->toBe(EndReason::Transfer);
+});
+
+it('validates the reason, the date and the note', function (array $input, string $field): void {
+    $period = activePeriod();
+
+    $this->post(endUrl($period), $input)->assertSessionHasErrors($field);
+
+    workIn($this->tenant);
+    expect(Teleworker::query()->findOrFail($period->id)->status)->toBe(TeleworkerStatus::Active);
+})->with([
+    'no reason' => [['ended_on' => '2026-03-01'], 'reason'],
+    'unknown reason' => [['reason' => 'fired', 'ended_on' => '2026-03-01'], 'reason'],
+    'no date' => [['reason' => 'other'], 'ended_on'],
+    'not a date' => [['reason' => 'other', 'ended_on' => 'tomorrow-ish'], 'ended_on'],
+    'in the future' => [['reason' => 'other', 'ended_on' => '2026-03-02'], 'ended_on'],
+    'before it started' => [['reason' => 'other', 'ended_on' => '2026-01-31'], 'ended_on'],
+    'too long a note' => [['reason' => 'other', 'ended_on' => '2026-03-01', 'note' => str_repeat('a', 1001)], 'note'],
+]);
+
+it('cancels the checklists still waiting when a period ends, and leaves the sent ones', function (): void {
+    $pending = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $sent = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'section' => 2]);
+
+    $this->post(endUrl(), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertSessionHasNoErrors();
+
+    workIn($this->tenant);
+    expect(ChecklistApplication::query()->findOrFail($pending->id)->cancelled_at?->toIso8601String())->toBe('2026-03-01T12:00:00+00:00')
+        ->and(ChecklistApplication::query()->findOrFail($sent->id)->cancelled_at)->toBeNull();
+});
+
+it('does not show a cancelled checklist as pending in the portal, nor let it be opened', function (): void {
+    workIn($this->tenant);
+    $application = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $portal = new OpenedPortal($this->tenant->id, $this->employee->id, $this->teleworker->id, 'Acme', 'Ana Ruiz');
+
+    expect(resolve(PortalPending::class)->for($portal)->checklists)->toHaveCount(1);
+
+    $application->update(['cancelled_at' => now()]);
+
+    expect(resolve(PortalPending::class)->for($portal)->checklists)->toBe([])
+        ->and(ChecklistApplication::query()->ownedBy($this->teleworker->id)->count())->toBe(0);
+});
+
+it('logs telework.teleworker_ended with ids and the reason, never the note, and audits it', function (): void {
+    Log::spy();
+
+    $this->post(endUrl(), ['reason' => 'reversibility', 'ended_on' => '2026-03-01', 'note' => 'Motivo privado de Ana.'])->assertSessionHasNoErrors();
+
+    $expected = ['teleworker_id' => $this->teleworker->id, 'employee_id' => $this->employee->id, 'work_center_id' => $this->center->id, 'reason' => 'reversibility'];
+    Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context = []): bool => $message === 'telework.teleworker_ended' && $context === $expected)->once();
+    $entry = AuditEntry::query()->where('event', 'telework.teleworker_ended')->sole();
+
+    expect($entry->subject_id)->toBe($this->teleworker->id)->and($entry->metadata)->toEqual([...$expected, 'ended_by' => $this->hr->id]);
+    expect(json_encode($entry->metadata, JSON_THROW_ON_ERROR))->not->toContain('privado');
+});
+
+it('records no user when the system ends a period', function (): void {
+    workIn($this->tenant);
+
+    resolve(EndTelework::class)->handle($this->teleworker->refresh(), EndReason::LeftCompany, CarbonImmutable::now(), null, null);
+
+    $entry = AuditEntry::query()->where('event', 'telework.teleworker_ended')->sole();
+    expect($entry->metadata)->toHaveKey('ended_by', null)->and(joined()->end_reason)->toBe(EndReason::LeftCompany);
+});
+
+it('lets only whoever manages Telework end a period, and answers 404 for another company', function (): void {
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(endUrl(), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertForbidden();
+
+    $other = Tenant::factory()->create();
+    $this->actingAs(memberOf($other, TenantRole::Hr))->post(route('tenant.telework.teleworkers.end', [$other, $this->teleworker->id]), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertNotFound();
+    $this->actingAs($this->hr)->post(route('tenant.telework.teleworkers.end', [$this->tenant, 'not-a-uuid']), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertNotFound();
+
+    expect(joined()->status)->toBe(TeleworkerStatus::Aspirant);
 });
