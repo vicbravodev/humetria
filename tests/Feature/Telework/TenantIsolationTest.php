@@ -231,3 +231,25 @@ it('answers 404, never 403, to the id of a row of another company', function (st
         $this->actingAs($this->owner)->call($method, $url, $route[2] ?? [], [], $route[3] ?? [])->assertNotFound("{$method} {$url}");
     }
 })->with(fn (): array => array_combine(array_map(class_basename(...), teleworkModels()), array_map(fn (string $model): array => [$model], teleworkModels())));
+
+it('answers company A\'s own row, so the 404 above comes from the company and not from a broken route', function (string $model): void {
+    Illuminate\Support\Facades\Storage::fake('telework_files');
+    config()->set('filesystems.telework_files', 'telework_files');
+    $mine = $this->alphaWorld;
+    $mine[Training::class]->update(['evidence_path' => 'trainings/evidence.pdf']);
+
+    foreach ([$mine[ChecklistPhoto::class]->path, $mine[EvidencePhoto::class]->path, $mine[TeleworkDocument::class]->path, 'trainings/evidence.pdf'] as $path) {
+        Illuminate\Support\Facades\Storage::disk('telework_files')->put($path, 'contenido');
+    }
+
+    // The first route of each model, with A's own ids: allowed or refused, but found (a model without routes has none).
+    $route = isolationRoutes($this->alpha, $mine, $this->owner->id)[$model][0] ?? null;
+
+    if ($route !== null) {
+        [$method, $url] = $route;
+        $status = $this->actingAs($this->owner)->call($method, $url, $route[2] ?? [], [], $route[3] ?? [])->getStatusCode();
+        expect($status)->not->toBe(404, "{$method} {$url}")->toBeLessThan(500, "{$method} {$url}");
+    } else {
+        expect(isolationRoutes($this->alpha, $mine, $this->owner->id)[$model])->toBe([]);
+    }
+})->with(fn (): array => array_combine(array_map(class_basename(...), teleworkModels()), array_map(fn (string $model): array => [$model], teleworkModels())));
