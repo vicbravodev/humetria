@@ -279,7 +279,7 @@ it('sends an Inertia submit over the limit back to the form with a toast', funct
     $this->assertGuest();
 });
 
-it('shows a plain visit over the limit a page in Spanish, and a JSON request the usual answer', function (): void {
+it('shows a plain visit over the limit the app\'s error page in Spanish, and a JSON request the usual answer', function (): void {
     foreach (range(1, 60) as $attempt) {
         $this->get(route('invitations.show', Str::random(64)))->assertOk();
     }
@@ -287,9 +287,8 @@ it('shows a plain visit over the limit a page in Spanish, and a JSON request the
     $this->get(route('invitations.show', Str::random(64)))
         ->assertTooManyRequests()
         ->assertHeader('Retry-After', '60')
-        ->assertSee('<html lang="es">', escape: false)
-        ->assertSee('<title>Demasiados intentos</title>', escape: false)
-        ->assertSee('Espera un minuto y vuelve a intentarlo.');
+        ->assertSee('<html lang="es"', escape: false)
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->component('error')->where('status', 429));
 
     $this->getJson(route('invitations.show', Str::random(64)))
         ->assertTooManyRequests()
@@ -305,5 +304,6 @@ it('answers an Inertia visit to the page over the limit with the 429 page instea
     $this->from(route('invitations.show', $this->token))
         ->get(route('invitations.show', $this->token), ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion()])
         ->assertTooManyRequests()
-        ->assertSee('Espera un minuto y vuelve a intentarlo.');
+        ->assertJsonPath('component', 'error')
+        ->assertJsonPath('props.status', 429);
 });

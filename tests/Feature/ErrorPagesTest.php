@@ -30,8 +30,29 @@ it('shows its own page for the errors a person can meet, each with its status', 
 
     $this->get('/test/abort')
         ->assertStatus($status)
-        ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', $status));
-})->with([403, 404, 419, 500, 503]);
+        ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', $status)->where('survey', false));
+})->with([403, 404, 419, 429, 500, 503]);
+
+it('keeps saying when to try again on its page for too many attempts', function (): void {
+    Route::middleware(['web', 'throttle:1,1'])->get('/test/limited', fn () => 'ok');
+
+    $this->get('/test/limited')->assertOk();
+    $this->get('/test/limited')
+        ->assertTooManyRequests()
+        ->assertHeader('Retry-After', '60')
+        ->assertHeader('X-RateLimit-Limit', '1')
+        ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', 429));
+});
+
+it('tells the error page it speaks to someone answering the survey, in "usted"', function (): void {
+    foreach (range(1, 30) as $attempt) {
+        $this->get(route('survey.show', 'the-token'))->assertOk();
+    }
+
+    $this->get(route('survey.show', 'the-token'))
+        ->assertTooManyRequests()
+        ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', 429)->where('survey', true));
+});
 
 it('answers an Inertia visit with the page too, so it replaces the screen instead of a modal', function (): void {
     Route::middleware('web')->get('/test/forbidden', fn () => abort(403));

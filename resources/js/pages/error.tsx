@@ -7,32 +7,46 @@ import {
     Wrench,
     type LucideIcon,
 } from 'lucide-react';
+import ErrorPageAction from '@/components/error-page-action';
 import Logo from '@/components/humetria/logo';
 import StatusMessage from '@/components/humetria/status-message';
-import { Button } from '@/components/ui/button';
 import { errorMessage, roleLimit } from '@/lib/error-page';
-import { dashboard, home } from '@/routes';
+import { home } from '@/routes';
 
 const ICONS: Record<number, LucideIcon> = {
     403: Lock,
     404: Search,
     419: Clock,
+    429: Clock,
     503: Wrench,
 };
 
-/** The app's own page for an error status (pantallas: Error-403, Error-404); the status code stays the server's. */
-export default function ErrorPage({ status }: { status: number }) {
-    const { auth, tenant } = usePage().props;
-    const message = errorMessage(status);
+/**
+ * The app's own page for an error status (pantallas: Error-403, Error-404); the status code stays the server's. On the
+ * survey it speaks "usted" and Humetría is only the logo, as in the survey's own frame.
+ */
+export default function ErrorPage({
+    status,
+    survey,
+}: {
+    status: number;
+    survey: boolean;
+}) {
+    const { tenant } = usePage().props;
+    const message = errorMessage(status, survey);
     const limit = roleLimit(status, tenant);
 
     return (
         <div className="flex min-h-dvh flex-col bg-background">
             <Head title={message.title} />
             <header className="px-4 py-7 sm:px-10">
-                <Link href={home()} className="inline-block rounded-md">
+                {survey ? (
                     <Logo className="h-[26px]" />
-                </Link>
+                ) : (
+                    <Link href={home()} className="inline-block rounded-md">
+                        <Logo className="h-[26px]" />
+                    </Link>
+                )}
             </header>
             <main className="flex flex-1 items-center justify-center px-6 pt-6 pb-30">
                 <StatusMessage
@@ -43,15 +57,7 @@ export default function ErrorPage({ status }: { status: number }) {
                             ? message.title
                             : 'Esta sección no está en tu rol'
                     }
-                    actions={
-                        <Button asChild>
-                            {auth.user === null ? (
-                                <Link href={home()}>Ir al inicio</Link>
-                            ) : (
-                                <Link href={dashboard()}>Volver al panel</Link>
-                            )}
-                        </Button>
-                    }
+                    actions={<ErrorPageAction survey={survey} />}
                 >
                     {limit === null ? (
                         message.body
