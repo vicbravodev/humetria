@@ -70,9 +70,11 @@ final class NoticeController extends Controller
         $workplaces = Workplace::query()->whereIn('id', array_values(array_filter(array_map(fn (WorkerNotice $notice): ?string => $notice->new_workplace_id, $page->items()))))->get()->keyBy('id');
         $zone = config()->string('app.display_timezone');
         $canLaunch = Gate::allows('manage-campaigns');
+        // Once per request: RH reviews everywhere, the Comisión only in the centers it sits on (already read as the limit).
+        $manages = Gate::allows('manage-telework');
 
         return Inertia::render('telework/notices', [
-            'notices' => $page->through(function (WorkerNotice $notice) use ($teleworkers, $people, $workplaces, $centers, $zone, $canLaunch, $user): array {
+            'notices' => $page->through(function (WorkerNotice $notice) use ($teleworkers, $people, $workplaces, $centers, $zone, $canLaunch, $manages, $limit): array {
                 $teleworker = $teleworkers->get($notice->teleworker_id);
                 $person = $teleworker === null ? null : ($people[$teleworker->employee_id] ?? null);
                 $centerId = $teleworker === null ? '' : $teleworker->work_center_id;
@@ -94,7 +96,7 @@ final class NoticeController extends Controller
                     'submittedOn' => $notice->submitted_at->setTimezone($zone)->toDateString(),
                     'reviewedOn' => $notice->reviewed_at?->setTimezone($zone)->toDateString(),
                     'reviewNote' => $notice->review_note,
-                    'canReview' => $this->access->canReview($user->id, $centerId),
+                    'canReview' => $manages || ($limit !== null && in_array($centerId, $limit, true)),
                     // The Guía I is launched from the NOM-035 area: only who may open campaigns gets the way in.
                     'trauma' => $canLaunch && $notice->traumatic_event && $teleworker !== null ? ['workCenter' => $centerId, 'employee' => $teleworker->employee_id] : null,
                 ];

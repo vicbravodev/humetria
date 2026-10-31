@@ -151,21 +151,27 @@ final readonly class ReviewWorkplace
     }
 
     /**
-     * The new workplace of a permanent change of address (criterio C-14), once validated, replaces the person's others:
-     * they are retired, kept as history. A temporary change retires nothing, and neither does a workplace no notice named.
+     * The new workplace of a permanent change of address (criterio C-14), once validated, replaces the places the person
+     * already had when they wrote the notice: they are retired, kept as history. It happens once per notice. A temporary
+     * change retires nothing, nor does a workplace no notice named, nor does one added after the notice.
      */
     private function retireReplaced(Workplace $workplace): void
     {
-        $notice = WorkerNotice::query()->where('new_workplace_id', $workplace->id)->where('temporary', false)->first(['id']);
+        $notice = WorkerNotice::query()->where('new_workplace_id', $workplace->id)->where('temporary', false)->whereNull('replaced_at')->lockForUpdate()->first();
 
         if ($notice === null) {
             return;
         }
 
-        foreach (Workplace::query()->where('teleworker_id', $workplace->teleworker_id)->whereKeyNot($workplace->id)->whereNull('retired_at')->get() as $old) {
-            $old->update(['retired_at' => now()]);
-            Log::info('telework.workplace_retired', ['workplace_id' => $old->id, 'replaced_by' => $workplace->id, 'notice_id' => $notice->id]);
+        $old = Workplace::query()->where('teleworker_id', $workplace->teleworker_id)->whereKeyNot($workplace->id)->whereNull('retired_at')
+            ->where('created_at', '<', $notice->submitted_at)->lockForUpdate()->get();
+
+        foreach ($old as $place) {
+            $place->update(['retired_at' => now()]);
+            Log::info('telework.workplace_retired', ['workplace_id' => $place->id, 'replaced_by' => $workplace->id, 'notice_id' => $notice->id]);
         }
+
+        $notice->update(['replaced_at' => now()]);
     }
 
     /** A remote check the Comisión had asked for is done by recording it. */

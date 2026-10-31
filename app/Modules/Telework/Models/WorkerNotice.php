@@ -33,10 +33,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $reviewed_by
  * @property CarbonImmutable|null $reviewed_at
  * @property string|null $review_note
+ * @property CarbonImmutable|null $replaced_at
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'teleworker_id', 'kind', 'written_on', 'occurred_on', 'description', 'traumatic_event', 'temporary', 'new_workplace_id', 'submitted_at', 'ip', 'reviewed_by', 'reviewed_at', 'review_note'])]
+#[Fillable(['tenant_id', 'teleworker_id', 'kind', 'written_on', 'occurred_on', 'description', 'traumatic_event', 'temporary', 'new_workplace_id', 'submitted_at', 'ip', 'reviewed_by', 'reviewed_at', 'review_note', 'replaced_at'])]
 #[UseFactory(WorkerNoticeFactory::class)]
 final class WorkerNotice extends Model
 {
@@ -56,6 +57,7 @@ final class WorkerNotice extends Model
             'temporary' => 'boolean',
             'submitted_at' => 'immutable_datetime',
             'reviewed_at' => 'immutable_datetime',
+            'replaced_at' => 'immutable_datetime',
         ];
     }
 }

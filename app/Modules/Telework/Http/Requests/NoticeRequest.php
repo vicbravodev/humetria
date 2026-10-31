@@ -9,6 +9,7 @@ use App\Modules\Telework\Enums\NoticeKind;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use UnexpectedValueException;
 
 /**
  * A notice as the person writes it in their portal (numerals 6.3, 6.7, 6.9): kind, written date, date it happened and
@@ -82,6 +83,6 @@ final class NoticeRequest extends FormRequest
 
     private function day(string $key): CarbonImmutable
     {
-        return CarbonImmutable::createFromFormat('Y-m-d', $this->string($key)->toString())?->startOfDay() ?? CarbonImmutable::now();
+        return CarbonImmutable::createFromFormat('Y-m-d', $this->string($key)->toString())?->startOfDay() ?? throw new UnexpectedValueException("The {$key} date passed validation but cannot be read.");
     }
 }

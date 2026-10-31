@@ -228,7 +228,7 @@ describe('a severe traumatic event (6.3, C-27)', function (): void {
 describe('a change of address (6.7)', function (): void {
     beforeEach(function (): void {
         ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
-        $this->old = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id]);
+        $this->old = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'created_at' => '2026-02-01 00:00:00']);
     });
 
     /** @return array<string, mixed> */
@@ -321,6 +321,43 @@ describe('a change of address (6.7)', function (): void {
             ->and($other->refresh()->retired_at)->toBeNull();
         Log::shouldHaveReceived('info')->with('telework.workplace_retired', ['workplace_id' => $this->old->id, 'replaced_by' => $new->id, 'notice_id' => $notice->id])->once();
     })->with([ReviewDecision::Valid, ReviewDecision::ValidWithPlan]);
+
+    it('retires only the places that predate the notice, and only once', function (): void {
+        $notice = moveNotice();
+        $new = Workplace::query()->findOrFail($notice->new_workplace_id);
+        $later = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'created_at' => '2026-03-01 13:00:00']);
+
+        validateWorkplace($new);
+
+        expect($this->old->refresh()->retired_at)->not->toBeNull()
+            ->and($later->refresh()->retired_at)->toBeNull()
+            ->and($notice->refresh()->replaced_at?->toIso8601String())->toBe('2026-03-01T12:00:00+00:00');
+
+        // The next periodic review of the same place retires nothing, not even a place that predates the notice.
+        $predating = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'created_at' => '2026-02-15 00:00:00']);
+        $second = ChecklistApplication::factory()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $new->id, 'section' => Section::Two]);
+        resolve(ReviewWorkplace::class)->handle($new, $second, ReviewDecision::Valid, '', null, null, $this->hr->id);
+
+        expect($predating->refresh()->retired_at)->toBeNull()->and($later->refresh()->retired_at)->toBeNull();
+    });
+
+    it('does not let two permanent changes retire each other\'s new place', function (): void {
+        $first = moveNotice();
+        $this->travelTo('2026-03-01 12:05:00');
+        $second = moveNotice();
+        $firstPlace = Workplace::query()->findOrFail($first->new_workplace_id);
+        $secondPlace = Workplace::query()->findOrFail($second->new_workplace_id);
+
+        validateWorkplace($firstPlace);
+
+        expect($this->old->refresh()->retired_at)->not->toBeNull()
+            ->and($secondPlace->refresh()->retired_at)->toBeNull();
+
+        validateWorkplace($secondPlace);
+
+        expect($firstPlace->refresh()->retired_at)->not->toBeNull()
+            ->and($secondPlace->refresh()->retired_at)->toBeNull();
+    });
 
     it('does not retire anything when the new workplace is not validated', function (): void {
         $notice = moveNotice();
@@ -450,6 +487,16 @@ describe('the notices page', function (): void {
             ->assertInertia(fn (Assert $page) => $page->where('notices.total', 2)->where('notices.data.0.canReview', true));
         $this->actingAs($this->cora)->get(route('tenant.telework.notices.index', [$this->tenant, 'center' => $this->otherCenter->id]))->assertNotFound();
     });
+
+    it('reads the page in a fixed number of queries, however many notices there are', function (string $who, int $queries): void {
+        foreach (range(1, 6) as $i) {
+            WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'submitted_at' => "2026-02-1{$i} 10:00:00"]);
+        }
+        $this->actingAs($who === 'owner' ? $this->hr : $this->cora);
+
+        $this->expectsDatabaseQueryCount($queries);
+        $this->get(route('tenant.telework.notices.index', $this->tenant))->assertOk();
+    })->with(['owner' => ['owner', 18], 'committee' => ['committee', 23]]);
 
     it('offers the Guía I link only to who can launch it, for a traumatic event', function (): void {
         $link = ['workCenter' => $this->center->id, 'employee' => $this->employee->id];
