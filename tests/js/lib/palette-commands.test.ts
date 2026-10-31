@@ -16,6 +16,7 @@ describe('paletteCommands', () => {
             isSuperadmin: false,
             tenant: {
                 slug: 'acme',
+                role: 'owner',
                 can: {
                     manage_organization: true,
                     manage_members: true,
@@ -103,6 +104,7 @@ describe('paletteCommands inside a company', () => {
                 isSuperadmin: false,
                 tenant: {
                     slug: 'acme',
+                    role: 'owner',
                     can: {
                         manage_organization: manage,
                         manage_members: manage,

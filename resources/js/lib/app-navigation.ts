@@ -22,7 +22,7 @@ import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, CurrentTenant, InCourse, NavItem } from '@/types';
 
 /** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
-export type NavTenant = Pick<CurrentTenant, 'slug' | 'can'>;
+export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'>;
 
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
@@ -33,6 +33,11 @@ export const mainNavItems = (
     tenant: NavTenant | null,
     isSuperadmin: boolean,
 ): NavItem[] => {
+    // The committee's only page is NOM-037 (which has no route to link yet), so its sidebar has nothing else.
+    if (tenant?.role === 'committee') {
+        return [];
+    }
+
     if (tenant === null) {
         return isSuperadmin
             ? []
@@ -74,7 +79,7 @@ export const complianceNavItems = (
     tenant: NavTenant | null,
     inCourse = 0,
 ): NavItem[] =>
-    tenant === null
+    tenant === null || tenant.role === 'committee'
         ? []
         : [
               {

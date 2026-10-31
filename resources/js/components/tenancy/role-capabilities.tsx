@@ -25,6 +25,11 @@ const ROLES = [
         summary: 'Solo consulta, sin cambiar nada.',
         can: ['Centros de trabajo', 'Avance y resultados'],
     },
+    {
+        name: 'Comisión de seguridad e higiene',
+        summary: 'Solo ve la NOM-037, nada más.',
+        can: ['Lugares de teletrabajo', 'Validar la lista de verificación'],
+    },
 ];
 
 /** What each company role allows, under the people with access (pantallas: Usuarios). */

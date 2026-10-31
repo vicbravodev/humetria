@@ -10,5 +10,8 @@ describe('roleSummary', () => {
             'opera evaluaciones, centros y empleados',
         );
         expect(roleSummary('viewer')).toBe('ve resultados e informes');
+        expect(roleSummary('committee')).toBe(
+            'revisa y valida los lugares de teletrabajo',
+        );
     });
 });

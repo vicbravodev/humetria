@@ -16,8 +16,13 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_campaigns: manage_organization,
     view_trauma_screenings: manage_organization,
 });
-const acme = (manageOrganization = true, manageMembers = true) => ({
+const acme = (
+    manageOrganization = true,
+    manageMembers = true,
+    role: 'owner' | 'hr' | 'viewer' | 'committee' = 'owner',
+) => ({
     slug: 'acme',
+    role,
     can: can(manageOrganization, manageMembers),
 });
 const titles = (tenant: ReturnType<typeof acme> | null) =>
@@ -81,6 +86,12 @@ describe('mainNavItems', () => {
     });
 });
 
+describe('mainNavItems for the committee', () => {
+    it('shows nothing: its only page is NOM-037', () => {
+        expect(titles(acme(false, false, 'committee'))).toEqual([]);
+    });
+});
+
 describe('complianceNavItems', () => {
     it('offers NOM-035 inside a company, to every role', () => {
         expect(
@@ -93,6 +104,10 @@ describe('complianceNavItems', () => {
 
     it('offers nothing outside a company', () => {
         expect(complianceNavItems(null)).toEqual([]);
+    });
+
+    it('offers the committee nothing yet: NOM-037 has no page', () => {
+        expect(complianceNavItems(acme(false, false, 'committee'))).toEqual([]);
     });
 
     it('counts the evaluations in course on NOM-035', () => {

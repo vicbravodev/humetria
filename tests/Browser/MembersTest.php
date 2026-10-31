@@ -73,6 +73,22 @@ it('invites someone as a viewer', function (): void {
     expect(TenantInvitation::query()->where('email', 'diego@acme.mx')->sole()->role)->toBe(TenantRole::Viewer);
 });
 
+it('invites someone to the Comisión de seguridad e higiene', function (): void {
+    acmeWithPeople();
+
+    visit('/admin/acme/members')
+        ->click('Invitar')
+        ->type('name', 'Cora Comisión')
+        ->type('email', 'cora@acme.mx')
+        ->radio('role', 'committee')
+        ->press('Enviar invitación')
+        ->assertSee('Invitación enviada.')
+        ->assertSee('Cora Comisión')
+        ->assertNoJavaScriptErrors();
+
+    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role)->toBe(TenantRole::Committee);
+});
+
 it('says when the person already has access', function (): void {
     acmeWithPeople();
 
