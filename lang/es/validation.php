@@ -222,6 +222,7 @@ return [
         'employee_id' => 'persona',
         'date' => 'fecha',
         'employee_ids' => 'personas',
+        'all_matching' => 'personas elegidas',
         'employee_number' => 'número de empleado',
         'exterior_number' => 'número exterior',
         'gender' => 'género',

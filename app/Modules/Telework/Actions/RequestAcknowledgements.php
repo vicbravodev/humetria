@@ -11,17 +11,22 @@ use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\AckAudience;
+use App\Modules\Telework\Support\AckAudienceIds;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Asks the people a document is for to acknowledge it (criterio C-20): a request row each, and an email to those who can
- * be reached. A version asks once per person (an index keeps it), so asking again, or asking the people who arrive
- * later, only adds those still missing. Acknowledgement is per version: older versions' rows stay.
+ * be reached. A version asks once per person (a unique index keeps it, and the rows go in by chunks that ignore the ones
+ * already there), so asking again, or asking the people who arrive later, only adds those still missing. Acknowledgement
+ * is per version: older versions' rows stay.
  */
 final readonly class RequestAcknowledgements
 {
+    private const int CHUNK = 500;
+
     public function __construct(private CurrentTenant $tenant, private AckAudience $audience, private Roster $roster) {}
 
     /**
@@ -30,43 +35,50 @@ final readonly class RequestAcknowledgements
      */
     public function handle(array $documentIds): int
     {
-        $documents = TeleworkDocument::query()->whereIn('id', $documentIds)->get();
+        $documents = array_values(TeleworkDocument::query()->whereIn('id', $documentIds)->get()->all());
 
-        return $this->ask(array_values($documents->all()), fn (TeleworkDocument $document): array => [$this->audience->employeeIds($document), $this->audience->userIds($document)]);
+        return $this->ask($documents, fn (TeleworkDocument $document): AckAudienceIds => $this->audience->of($document));
     }
 
     /** Asks one employee for the version in force of a kind in their work center: someone who arrived after it was published. */
     public function forEmployee(string $employeeId, string $workCenterId, DocumentKind $kind): int
     {
-        $document = TeleworkDocument::query()->where('work_center_id', $workCenterId)->where('kind', $kind)->orderByDesc('version')->first();
+        $document = $this->inForce($workCenterId, $kind);
 
-        return $document === null ? 0 : $this->ask([$document], fn (): array => [[$employeeId], []]);
+        return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([$employeeId], []));
+    }
+
+    /** Asks a Comisión member seated after the risk information was published, for the version in force of the center. */
+    public function forUser(int $userId, string $workCenterId): int
+    {
+        $document = $this->inForce($workCenterId, DocumentKind::RiskInformation);
+
+        return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([], [$userId]));
+    }
+
+    private function inForce(string $workCenterId, DocumentKind $kind): ?TeleworkDocument
+    {
+        return TeleworkDocument::query()->where('work_center_id', $workCenterId)->where('kind', $kind)->orderByDesc('version')->first();
     }
 
     /**
      * @param  list<TeleworkDocument>  $documents
-     * @param  callable(TeleworkDocument): array{0: list<string>, 1: list<int>}  $audience
+     * @param  callable(TeleworkDocument): AckAudienceIds  $audience
      */
     private function ask(array $documents, callable $audience): int
     {
-        $asked = DB::transaction(function () use ($documents, $audience): array {
+        [$employees, $users] = DB::transaction(function () use ($documents, $audience): array {
             $employees = [];
             $users = [];
 
             foreach ($documents as $document) {
-                [$employeeIds, $userIds] = $audience($document);
-
-                foreach ($employeeIds as $id) {
-                    $employees[] = $this->request($document, ['employee_id' => $id]) ? $id : null;
-                }
-                foreach ($userIds as $id) {
-                    $users[] = $this->request($document, ['user_id' => $id]) ? $id : null;
-                }
+                $ids = $audience($document);
+                $employees = [...$employees, ...$this->insertMissing($document, 'employee_id', $ids->employeeIds)];
+                $users = [...$users, ...$this->insertMissing($document, 'user_id', $ids->userIds)];
             }
 
-            return [array_values(array_unique(array_filter($employees))), array_values(array_unique(array_filter($users)))];
+            return [array_values(array_unique($employees)), array_values(array_unique($users))];
         });
-        [$employees, $users] = $asked;
 
         if ($employees === [] && $users === []) {
             return 0;
@@ -74,20 +86,47 @@ final readonly class RequestAcknowledgements
 
         $tenantId = $this->tenant->id();
         // Those without an email are not mailed: RH records their paper acknowledgements.
-        $reachable = array_keys(array_filter($this->roster->findMany($employees), fn (RosterEntry $person): bool => $person->email !== null));
-        array_map(fn (string $id) => SendAcknowledgementRequest::dispatch($tenantId, $id, null), $reachable);
-        array_map(fn (int $id) => SendAcknowledgementRequest::dispatch($tenantId, null, $id), $users);
+        foreach (array_chunk($employees, self::CHUNK) as $chunk) {
+            $reachable = array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null));
+            array_map(fn (string $id) => SendAcknowledgementRequest::dispatch($tenantId, $id, null)->delay(SendAcknowledgementRequest::DELAY), $reachable);
+        }
+        array_map(fn (int $id) => SendAcknowledgementRequest::dispatch($tenantId, null, $id)->delay(SendAcknowledgementRequest::DELAY), $users);
         Log::info('telework.acknowledgement_requested', ['document_ids' => array_map(fn (TeleworkDocument $document): string => $document->id, $documents), 'employees' => count($employees), 'users' => count($users)]);
 
         return count($employees) + count($users);
     }
 
-    /** @param array{employee_id: string}|array{user_id: int} $person */
-    private function request(TeleworkDocument $document, array $person): bool
+    /**
+     * Inserts, by chunks, a request for each person who has none yet for the document, and says who they were.
+     *
+     * @template T of string|int
+     *
+     * @param  'employee_id'|'user_id'  $column
+     * @param  list<T>  $people
+     * @return list<T>
+     */
+    private function insertMissing(TeleworkDocument $document, string $column, array $people): array
     {
-        return Acknowledgement::query()->firstOrCreate(
-            ['document_id' => $document->id, ...$person],
-            ['tenant_id' => $document->tenant_id, 'requested_at' => now()],
-        )->wasRecentlyCreated;
+        $made = [];
+
+        foreach (array_chunk($people, self::CHUNK) as $chunk) {
+            $have = Acknowledgement::query()->where('document_id', $document->id)->whereIn($column, $chunk)->pluck($column)->all();
+            $missing = array_values(array_filter($chunk, fn (string|int $person): bool => ! in_array($person, $have, false)));
+            $now = now();
+
+            // The unique indexes make a race harmless: the row another request just made is skipped.
+            DB::table('acknowledgements')->insertOrIgnore(array_map(fn (string|int $person): array => [
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $document->tenant_id,
+                'document_id' => $document->id,
+                $column => $person,
+                'requested_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ], $missing));
+            $made = [...$made, ...$missing];
+        }
+
+        return $made;
     }
 }

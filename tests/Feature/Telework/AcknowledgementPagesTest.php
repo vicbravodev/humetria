@@ -25,9 +25,13 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
+const QUERIES_DOCUMENTS = 20;
+const QUERIES_ACKNOWLEDGEMENTS = 22;
+
 mutates(AckProgress::class, AckAudience::class, RecordManualAcknowledgements::class, AcknowledgementController::class);
 
 beforeEach(function (): void {
+    $this->travelTo('2026-05-10 18:00:00');
     Queue::fake();
     Storage::fake(config()->string('filesystems.telework_files'));
     $this->tenant = Tenant::factory()->create();
@@ -47,7 +51,11 @@ function published(DocumentKind $kind = DocumentKind::Policy, ?WorkCenter $cente
     $path = tempnam(sys_get_temp_dir(), 'doc');
     file_put_contents($path, "%PDF-1.4\n%%EOF\n");
 
-    return resolve(App\Modules\Telework\Actions\PublishDocument::class)->handle($kind, $path, [($center ?? test()->center)->id], [], test()->hr->id)[0];
+    $document = resolve(App\Modules\Telework\Actions\PublishDocument::class)->handle($kind, $path, [($center ?? test()->center)->id], [], test()->hr->id)[0];
+    // The requests are made by a queued listener: asked again here, so a faked queue sees them too (a second ask is a no-op).
+    resolve(App\Modules\Telework\Actions\RequestAcknowledgements::class)->handle([$document->id]);
+
+    return $document;
 }
 
 function confirm(TeleworkDocument $document, Employee $employee): void
@@ -156,15 +164,115 @@ it('lists who confirmed and who is pending, a page at a time, with a status filt
     $this->get($url(['status' => 'bogus']))->assertInertia(fn (Assert $page) => $page->where('filters.status', 'all'));
 });
 
-it('hands over the pending people the search found only when asked, to tick them all', function (): void {
-    worker('Ana Ruiz');
-    $beto = worker('Beto Soto');
+it('records the pending people the search found, however many, resolved on the server', function (): void {
+    $area = Database\Factories\Organization\AreaFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    EmployeeFactory::new()->count(1100)->sequence(fn ($sequence) => ['name' => 'Persona '.$sequence->index])->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'area_id' => $area->id]);
+    worker('Zeta Uno');
+    worker('Zeta Dos');
     $document = published();
-    confirm($document, $beto);
+    $this->actingAs($this->hr);
+    $url = route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]);
+
+    $this->post($url, ['all_matching' => '1', 'q' => 'zeta', 'date' => '2026-05-10', 'note' => 'Hoja'])->assertSessionHasNoErrors();
+    expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(2);
+
+    $this->post($url, ['all_matching' => '1', 'date' => '2026-05-10', 'note' => 'Hoja'])->assertSessionHasNoErrors();
+    expect(Acknowledgement::query()->whereNull('acknowledged_at')->count())->toBe(0)
+        ->and(Acknowledgement::query()->where('channel', 'manual')->count())->toBe(1102);
+});
+
+it('needs people or the all-matching flag to record paper acknowledgements', function (): void {
+    $document = published();
     $this->actingAs($this->hr);
 
-    $this->get(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $document->id, 'status' => 'pending']))
-        ->assertInertia(fn (Assert $page) => $page->reloadOnly('matching', fn (Assert $reload) => $reload->where('matching', [Employee::query()->where('name', 'Ana Ruiz')->value('id')])));
+    $this->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]), ['date' => '2026-05-10', 'note' => 'Hoja'])->assertSessionHasErrors('employee_ids');
+});
+
+it('refuses a paper date before the document was published', function (): void {
+    $ana = worker('Ana');
+    $document = published();
+    $this->actingAs($this->hr);
+    $url = route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]);
+
+    $this->post($url, ['employee_ids' => [$ana->id], 'date' => '2026-05-09', 'note' => 'Hoja'])->assertSessionHasErrors('date');
+    expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
+
+    $this->post($url, ['employee_ids' => [$ana->id], 'date' => '2026-05-10', 'note' => 'Hoja'])->assertSessionHasNoErrors();
+    expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(1);
+});
+
+it('refuses to confirm a superseded version from the portal, the panel and on paper', function (): void {
+    $ana = worker('Ana');
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    $oldPolicy = published();
+    $oldRisk = published(DocumentKind::RiskInformation);
+    published();
+    published(DocumentKind::RiskInformation);
+    $portal = resolve(App\Modules\Telework\Actions\OpenPortal::class)->handle(resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($ana->id));
+
+    expect(fn () => resolve(Acknowledge::class)->handle($portal, $oldPolicy->id, null))->toThrow(Illuminate\Validation\ValidationException::class)
+        ->and(fn () => resolve(Acknowledge::class)->inPanel($cora->id, $oldRisk->id, null))->toThrow(Illuminate\Validation\ValidationException::class)
+        ->and(fn () => resolve(RecordManualAcknowledgements::class)->handle($oldPolicy->id, [$ana->id], CarbonImmutable::now(), 'Hoja', $this->hr->id))->toThrow(Illuminate\Validation\ValidationException::class);
+    expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
+});
+
+it('seats a Comisión member after publication, who then confirms in the panel and completes the progress', function (): void {
+    $onRoster = worker('Rosa');
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $onRoster->id]);
+    $document = published(DocumentKind::RiskInformation);
+    confirm($document, $onRoster);
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    expect(resolve(AckProgress::class)->of($document))->toBe(['acknowledged' => 1, 'expected' => 1]);
+
+    resolve(App\Modules\Telework\Actions\AssignCommitteeMember::class)->handle($this->center->id, $cora->id);
+
+    expect(resolve(AckProgress::class)->of($document))->toBe(['acknowledged' => 1, 'expected' => 2]);
+    Queue::assertPushed(App\Modules\Telework\Jobs\SendAcknowledgementRequest::class, fn ($job): bool => $job->userId === $cora->id);
+    $this->actingAs($cora)->post(route('tenant.telework.documents.acknowledge', [$this->tenant, $document->id]))->assertSessionHasNoErrors();
+    expect(resolve(AckProgress::class)->of($document))->toBe(['acknowledged' => 2, 'expected' => 2]);
+});
+
+it('asks nothing of a member seated before any risk information exists, and asks once when seated twice', function (): void {
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    resolve(App\Modules\Telework\Actions\AssignCommitteeMember::class)->handle($this->center->id, $cora->id);
+    expect(Acknowledgement::query()->count())->toBe(0);
+
+    $document = published(DocumentKind::RiskInformation);
+    resolve(App\Modules\Telework\Actions\AssignCommitteeMember::class)->handle($this->center->id, $cora->id);
+
+    expect(Acknowledgement::query()->where('document_id', $document->id)->where('user_id', $cora->id)->count())->toBe(1);
+});
+
+/** A center with people and a policy and the risk information published for it, and RH on the page's route. */
+function queryCountSetup(): TeleworkDocument
+{
+    foreach (['Ana', 'Beto', 'Carla'] as $name) {
+        worker($name);
+    }
+    $document = published();
+    published(DocumentKind::RiskInformation);
+    test()->actingAs(test()->hr);
+    // The first request warms what is cached per process (permissions, the vite manifest).
+    test()->get(route('tenant.telework.documents.index', test()->tenant));
+
+    return $document;
+}
+
+it('answers the documents page with a fixed number of queries', function (): void {
+    queryCountSetup();
+
+    $this->expectsDatabaseQueryCount(QUERIES_DOCUMENTS);
+
+    $this->get(route('tenant.telework.documents.index', $this->tenant))->assertOk();
+});
+
+it('answers the acknowledgements page with a fixed number of queries', function (): void {
+    $document = queryCountSetup();
+
+    $this->expectsDatabaseQueryCount(QUERIES_ACKNOWLEDGEMENTS);
+
+    $this->get(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $document->id]))->assertOk();
 });
 
 it('never puts the address, the note or the channel of someone else in the props beyond the channel', function (): void {
@@ -241,10 +349,10 @@ it('records paper acknowledgements from the page', function (): void {
     $this->actingAs($this->hr);
     $url = route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]);
 
-    $this->post($url, ['employee_ids' => [$ana->id], 'date' => '2026-05-04', 'note' => 'Hoja firmada'])->assertSessionHasNoErrors()
+    $this->post($url, ['employee_ids' => [$ana->id], 'date' => '2026-05-10', 'note' => 'Hoja firmada'])->assertSessionHasNoErrors()
         ->assertRedirect(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $document->id]));
 
-    expect(Acknowledgement::query()->where('employee_id', $ana->id)->sole()->acknowledged_at?->toIso8601String())->toBe('2026-05-04T06:00:00+00:00')
+    expect(Acknowledgement::query()->where('employee_id', $ana->id)->sole()->acknowledged_at?->toIso8601String())->toBe('2026-05-10T06:00:00+00:00')
         ->and(Acknowledgement::query()->where('employee_id', $bea->id)->sole()->acknowledged_at)->toBeNull();
 });
 
@@ -252,7 +360,7 @@ it('refuses a paper record without people, a date or a note, or with a future da
     $ana = worker('Ana');
     $document = published();
     $this->actingAs($this->hr);
-    $valid = ['employee_ids' => [$ana->id], 'date' => '2026-05-04', 'note' => 'Hoja'];
+    $valid = ['employee_ids' => [$ana->id], 'date' => '2026-05-10', 'note' => 'Hoja'];
 
     $this->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]), [...$valid, ...$form])->assertSessionHasErrors($field);
 
@@ -271,7 +379,7 @@ it('lets only whoever manages Telework record paper acknowledgements', function 
     $document = published();
     $this->actingAs(memberOf($this->tenant, $role));
 
-    $this->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]), ['employee_ids' => [$ana->id], 'date' => '2026-05-04', 'note' => 'Hoja'])->assertForbidden();
+    $this->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]), ['employee_ids' => [$ana->id], 'date' => '2026-05-10', 'note' => 'Hoja'])->assertForbidden();
 
     expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
 })->with([TenantRole::Viewer, TenantRole::Committee]);

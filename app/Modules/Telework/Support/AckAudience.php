@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Acknowledgement;
@@ -18,34 +18,16 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Who has to acknowledge a document today (criterio C-20): the policy, every active employee of its center; the risk
- * information, the roster (padrón) of the center and its Comisión; the other kinds nobody.
+ * information, the roster (padrón) of the center and its Comisión; the other kinds nobody. Worked out once per document
+ * (`of`) and handed to whoever needs it.
  */
 final readonly class AckAudience
 {
     public function __construct(private Roster $roster, private Members $members) {}
 
-    /** @return list<string> */
-    public function employeeIds(TeleworkDocument $document): array
+    public function of(TeleworkDocument $document): AckAudienceIds
     {
-        return match ($document->kind) {
-            DocumentKind::Policy => array_map(fn (RosterEntry $person): string => $person->id, $this->roster->activeIn($document->work_center_id)),
-            DocumentKind::RiskInformation => array_values(array_map(fn (Teleworker $period): string => $period->employee_id, Teleworker::query()
-                ->where('work_center_id', $document->work_center_id)->where('status', TeleworkerStatus::Active)->get(['employee_id'])->all())),
-            default => [],
-        };
-    }
-
-    /** @return list<int> */
-    public function userIds(TeleworkDocument $document): array
-    {
-        if ($document->kind !== DocumentKind::RiskInformation) {
-            return [];
-        }
-
-        $reviewers = array_map(fn (MemberSummary $member): int => $member->userId, $this->members->reviewers());
-
-        return array_values(array_map(fn (CommitteeAssignment $seat): int => $seat->user_id, CommitteeAssignment::query()
-            ->where('work_center_id', $document->work_center_id)->whereIn('user_id', $reviewers)->get(['user_id'])->all()));
+        return new AckAudienceIds($this->employeeIds($document), $this->userIds($document));
     }
 
     /**
@@ -53,12 +35,46 @@ final readonly class AckAudience
      *
      * @return Builder<Acknowledgement>
      */
-    public function requests(TeleworkDocument $document): Builder
+    public function requests(TeleworkDocument $document, AckAudienceIds $audience): Builder
     {
-        $employees = $this->employeeIds($document);
-        $users = $this->userIds($document);
-
         return Acknowledgement::query()->where('document_id', $document->id)
-            ->where(fn (Builder $query) => $query->whereIn('employee_id', $employees)->orWhereIn('user_id', $users));
+            ->where(fn (Builder $query) => $query->whereIn('employee_id', $audience->employeeIds)->orWhereIn('user_id', $audience->userIds));
+    }
+
+    /**
+     * The employees still pending who match a search (name, email or number), by name: what "all the pending ones I found"
+     * means, resolved here so it holds for any number of people.
+     *
+     * @return list<string>
+     */
+    public function pendingMatching(TeleworkDocument $document, AckAudienceIds $audience, string $search): array
+    {
+        $pending = array_values(array_filter($this->requests($document, $audience)->whereNull('acknowledged_at')->whereNotNull('employee_id')->get(['employee_id'])->map(fn (Acknowledgement $ack): ?string => $ack->employee_id)->all(), is_string(...)));
+
+        return $this->roster->matchingIds(new RosterQuery(employeeIds: $pending, search: $search));
+    }
+
+    /** @return list<string> */
+    private function employeeIds(TeleworkDocument $document): array
+    {
+        return match ($document->kind) {
+            DocumentKind::Policy => $this->roster->activeIdsIn($document->work_center_id),
+            DocumentKind::RiskInformation => array_values(Teleworker::query()
+                ->where('work_center_id', $document->work_center_id)->where('status', TeleworkerStatus::Active)->get(['employee_id'])->map(fn (Teleworker $period): string => $period->employee_id)->all()),
+            default => [],
+        };
+    }
+
+    /** @return list<int> */
+    private function userIds(TeleworkDocument $document): array
+    {
+        if ($document->kind !== DocumentKind::RiskInformation) {
+            return [];
+        }
+
+        $reviewers = array_map(fn (MemberSummary $member): int => $member->userId, $this->members->reviewers());
+
+        return array_values(CommitteeAssignment::query()
+            ->where('work_center_id', $document->work_center_id)->whereIn('user_id', $reviewers)->get(['user_id'])->map(fn (CommitteeAssignment $seat): int => $seat->user_id)->all());
     }
 }

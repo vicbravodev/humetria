@@ -36,6 +36,17 @@ it('lists the active people of a work center by name, with their area, gender an
     ]);
 });
 
+it('lists only the ids of the active people of a work center', function (): void {
+    $kept = rosterEmployee($this->tenant, $this->plant, $this->production);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['deactivated_at' => now()]);
+    rosterEmployee($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), $this->production);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->activeIdsIn($this->plant->id))->toBe([$kept->id]);
+    workIn(Tenant::factory()->create());
+    expect(resolve(Roster::class)->activeIdsIn($this->plant->id))->toBe([]);
+});
+
 it('leaves out deactivated people and other work centers', function (): void {
     rosterEmployee($this->tenant, $this->plant, $this->production, ['deactivated_at' => now()]);
     rosterEmployee($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), $this->production);

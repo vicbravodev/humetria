@@ -20,6 +20,13 @@ interface Roster
      */
     public function activeIn(string $workCenterId): array;
 
+    /**
+     * Only the ids of the active people of a work center: for counting and asking without hydrating each one.
+     *
+     * @return list<string>
+     */
+    public function activeIdsIn(string $workCenterId): array;
+
     /** A person by id, deactivated ones included; null outside the company. */
     public function find(string $employeeId): ?RosterEntry;
 

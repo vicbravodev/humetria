@@ -14,6 +14,7 @@ use App\Modules\Telework\Http\Requests\ManualAcknowledgementsRequest;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\AckAudience;
+use App\Modules\Telework\Support\AckAudienceIds;
 use App\Modules\Telework\Support\AckProgress;
 use App\Modules\Telework\Support\VisibleCenters;
 use App\Modules\Tenancy\Contracts\Members;
@@ -45,7 +46,8 @@ final class AcknowledgementController extends Controller
         $status = in_array($request->string('status')->toString(), self::STATUSES, true) ? $request->string('status')->toString() : 'all';
         $search = $request->string('q')->trim()->toString();
 
-        $requests = $this->audience->requests($found)
+        $audience = $this->audience->of($found);
+        $requests = $this->audience->requests($found, $audience)
             ->when($status === 'pending', fn ($query) => $query->whereNull('acknowledged_at'))
             ->when($status === 'acknowledged', fn ($query) => $query->whereNotNull('acknowledged_at'));
         $employeeIds = array_values(array_filter($requests->pluck('employee_id')->all(), is_string(...)));
@@ -64,7 +66,7 @@ final class AcknowledgementController extends Controller
                 'workCenter' => $workCenters->profile($found->work_center_id)->name ?? '',
                 'publishedOn' => $date($found->created_at),
             ],
-            'progress' => $progress->of($found),
+            'progress' => $progress->of($found, $audience),
             'people' => $people->through(function (RosterEntry $person) use ($given, $date): array {
                 $ack = $given->get($person->id);
 
@@ -79,11 +81,8 @@ final class AcknowledgementController extends Controller
                     'acknowledgedOn' => $date($ack?->acknowledged_at),
                 ];
             }),
-            'committee' => $this->committee($found, $members, $status, $search, $date),
-            'matching' => Inertia::optional(fn (): array => $this->roster->matchingIds(new RosterQuery(
-                employeeIds: array_values(array_filter($this->audience->requests($found)->whereNull('acknowledged_at')->pluck('employee_id')->all(), is_string(...))), search: $search,
-            ))),
-            'counts' => $this->counts($found),
+            'committee' => $this->committee($found, $audience, $members, $status, $search, $date),
+            'counts' => $this->counts($found, $audience),
             'filters' => ['status' => $status, 'q' => $search],
             'canManage' => Gate::allows('manage-telework'),
             'canAcknowledge' => Acknowledgement::query()->where('document_id', $found->id)->where('user_id', $request->user()->id)->whereNull('acknowledged_at')->exists(),
@@ -103,9 +102,12 @@ final class AcknowledgementController extends Controller
 
     public function store(ManualAcknowledgementsRequest $request, mixed $tenant, string $document, RecordManualAcknowledgements $record): RedirectResponse
     {
-        abort_if($request->user() === null || ! Str::isUuid($document) || TeleworkDocument::query()->find($document) === null, 404);
+        $found = Str::isUuid($document) ? TeleworkDocument::query()->find($document) : null;
+        abort_if($request->user() === null || $found === null, 404);
 
-        $count = $record->handle($document, $request->employeeIds(), $request->signedOn(), $request->note(), $request->user()->id);
+        // "All the pending ones the search found" is worked out here, so it holds above the cap on ticked ids.
+        $ids = $request->allMatching() ? $this->audience->pendingMatching($found, $this->audience->of($found), $request->search()) : $request->employeeIds();
+        $count = $record->handle($document, $ids, $request->signedOn(), $request->note(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => $count === 1 ? 'Se registró 1 acuse.' : "Se registraron {$count} acuses."]);
 
         return redirect()->route('tenant.telework.documents.acknowledgements.index', [$tenant, $document]);
@@ -117,12 +119,12 @@ final class AcknowledgementController extends Controller
      * @param  callable(?CarbonImmutable): ?string  $date
      * @return list<array{name: string, status: string, acknowledgedOn: string|null}>
      */
-    private function committee(TeleworkDocument $document, Members $members, string $status, string $search, callable $date): array
+    private function committee(TeleworkDocument $document, AckAudienceIds $audience, Members $members, string $status, string $search, callable $date): array
     {
         $needle = Str::lower(Str::ascii($search));
         $rows = [];
 
-        foreach ($this->audience->requests($document)->whereNotNull('user_id')->get() as $ack) {
+        foreach ($this->audience->requests($document, $audience)->whereNotNull('user_id')->get() as $ack) {
             $member = $ack->user_id === null ? null : $members->find($ack->user_id);
             $state = $ack->acknowledged_at === null ? 'pending' : 'acknowledged';
 
@@ -137,10 +139,10 @@ final class AcknowledgementController extends Controller
     }
 
     /** @return array{all: int, pending: int, acknowledged: int} The employees' requests by state, for the tabs. */
-    private function counts(TeleworkDocument $document): array
+    private function counts(TeleworkDocument $document, AckAudienceIds $audience): array
     {
-        $all = $this->audience->requests($document)->whereNotNull('employee_id')->count();
-        $done = $this->audience->requests($document)->whereNotNull('employee_id')->whereNotNull('acknowledged_at')->count();
+        $all = $this->audience->requests($document, $audience)->whereNotNull('employee_id')->count();
+        $done = $this->audience->requests($document, $audience)->whereNotNull('employee_id')->whereNotNull('acknowledged_at')->count();
 
         return ['all' => $all, 'pending' => $all - $done, 'acknowledged' => $done];
     }

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Http\Requests;
 
+use App\Modules\Telework\Models\TeleworkDocument;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * Paper acknowledgements recorded in bulk: who, the day they signed (not in the future) and a note about the sheet.
@@ -23,12 +26,29 @@ final class ManualAcknowledgementsRequest extends FormRequest
      */
     public function rules(): array
     {
+        $zone = config()->string('app.display_timezone');
+        $id = $this->route('document');
+        $published = is_string($id) && Str::isUuid($id) ? TeleworkDocument::query()->find($id)?->created_at : null;
+
         return [
-            'employee_ids' => ['required', 'array', 'min:1', 'max:1000'],
+            'all_matching' => ['sometimes', 'boolean'],
+            'q' => ['nullable', 'string', 'max:100'],
+            'employee_ids' => [Rule::requiredIf(! $this->allMatching()), 'nullable', 'array', 'max:1000'],
             'employee_ids.*' => ['uuid'],
-            'date' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()],
+            'date' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now($zone)->toDateString(), ...($published === null ? [] : ['after_or_equal:'.$published->setTimezone($zone)->toDateString()])],
             'note' => ['required', 'string', 'max:500'],
         ];
+    }
+
+    /** RH asked for every pending person the search found, not for the ones ticked. */
+    public function allMatching(): bool
+    {
+        return $this->boolean('all_matching');
+    }
+
+    public function search(): string
+    {
+        return $this->string('q')->trim()->toString();
     }
 
     /** @return list<string> */

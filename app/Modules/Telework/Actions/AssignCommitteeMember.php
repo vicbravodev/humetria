@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class AssignCommitteeMember
 {
-    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit, private RequestAcknowledgements $acknowledgements) {}
 
     public function handle(string $workCenterId, int $memberId): void
     {
@@ -30,5 +30,7 @@ final readonly class AssignCommitteeMember
         $record = ['work_center_id' => $workCenterId, 'user_id' => $memberId];
         $this->audit->handle('telework.committee_member_assigned', $assignment, $record);
         Log::info('telework.committee_member_assigned', $record);
+        // Seated after the risk information was published: they still have to confirm it.
+        $this->acknowledgements->forUser($memberId, $workCenterId);
     }
 }

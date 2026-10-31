@@ -15,11 +15,13 @@ final readonly class AckProgress
     public function __construct(private AckAudience $audience) {}
 
     /** @return array{acknowledged: int, expected: int} */
-    public function of(TeleworkDocument $document): array
+    public function of(TeleworkDocument $document, ?AckAudienceIds $audience = null): array
     {
+        $ids = $audience ?? $this->audience->of($document);
+
         return [
-            'acknowledged' => $this->audience->requests($document)->whereNotNull('acknowledged_at')->count(),
-            'expected' => count($this->audience->employeeIds($document)) + count($this->audience->userIds($document)),
+            'acknowledged' => $this->audience->requests($document, $ids)->whereNotNull('acknowledged_at')->count(),
+            'expected' => $ids->expected(),
         ];
     }
 }

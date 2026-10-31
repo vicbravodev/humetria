@@ -59,7 +59,11 @@ function publishDocument(DocumentKind $kind, WorkCenter ...$centers): array
     $path = tempnam(sys_get_temp_dir(), 'doc');
     file_put_contents($path, "%PDF-1.4\n%%EOF\n");
 
-    return resolve(PublishDocument::class)->handle($kind, $path, array_map(fn (WorkCenter $center): string => $center->id, $centers), [], test()->hr->id);
+    $documents = resolve(PublishDocument::class)->handle($kind, $path, array_map(fn (WorkCenter $center): string => $center->id, $centers), [], test()->hr->id);
+    // The requests are made by a queued listener: asked again here, so a faked queue sees them too (a second ask is a no-op).
+    resolve(RequestAcknowledgements::class)->handle(array_map(fn (TeleworkDocument $document): string => $document->id, $documents));
+
+    return $documents;
 }
 
 it('asks every active employee of the center to acknowledge a published policy', function (): void {
@@ -344,4 +348,75 @@ it('answers 404 when a dead link tries to acknowledge, and shows a validation er
     $this->post(route('portal.documents.acknowledge', ['dead', $document->id]))->assertNotFound();
     $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasNoErrors();
     $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasErrors('document');
+});
+
+it('publishes without making the requests inline: a queued listener does it after the commit', function (): void {
+    Queue::fake();
+    staffer($this->center);
+
+    [$document] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    Queue::assertPushed(Illuminate\Events\CallQueuedListener::class, fn (Illuminate\Events\CallQueuedListener $job): bool => $job->class === RequestOnPublication::class);
+    expect(is_subclass_of(RequestOnPublication::class, ShouldQueueAfterCommit::class))->toBeTrue()
+        ->and(Acknowledgement::query()->count())->toBe(0);
+
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$document->id]));
+    expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(1);
+});
+
+it('asks a big center with the same queries as a small one, counting only by chunks', function (): void {
+    Queue::fake();
+    $area = Database\Factories\Organization\AreaFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $count = function (int $people, WorkCenter $center) use ($area): int {
+        EmployeeFactory::new()->count($people)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'area_id' => $area->id]);
+        $document = TeleworkDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy]);
+        Illuminate\Support\Facades\DB::enableQueryLog();
+        resolve(RequestAcknowledgements::class)->handle([$document->id]);
+        $queries = count(Illuminate\Support\Facades\DB::getQueryLog());
+        Illuminate\Support\Facades\DB::flushQueryLog();
+        Illuminate\Support\Facades\DB::disableQueryLog();
+
+        return $queries;
+    };
+
+    $small = $count(20, $this->other);
+    $big = $count(400, $this->center);
+
+    expect($big)->toBe($small)
+        ->and(Acknowledgement::query()->count())->toBe(420);
+});
+
+it('waits two minutes and keeps one waiting email per person, listing everything pending', function (): void {
+    Notification::fake();
+    Queue::fake();
+    $ana = staffer($this->center, ['name' => 'Ana Ruiz']);
+    publishDocument(DocumentKind::Policy, $this->center);
+    publishDocument(DocumentKind::Policy, $this->center);
+
+    Queue::assertPushed(SendAcknowledgementRequest::class, fn (SendAcknowledgementRequest $job): bool => $job->delay === 120);
+    $job = new SendAcknowledgementRequest($this->tenant->id, $ana->id, null);
+    expect($job)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUnique::class)
+        ->and($job->uniqueFor)->toBe(600)
+        ->and($job->uniqueId())->toBe("{$this->tenant->id}:{$ana->id}")
+        ->and((new SendAcknowledgementRequest($this->tenant->id, null, 7))->uniqueId())->toBe("{$this->tenant->id}:user-7");
+
+    app()->call($job->handle(...));
+
+    Notification::assertSentOnDemand(DocumentsToConfirm::class, function (DocumentsToConfirm $notification, array $channels, AnonymousNotifiable $notifiable): bool {
+        $lines = collect($notification->toMail($notifiable)->introLines);
+
+        // The first version was superseded: only the one in force is listed.
+        return $lines->contains('- Política de Teletrabajo · versión 2') && ! $lines->contains('- Política de Teletrabajo · versión 1');
+    });
+});
+
+it('writes the Comisión email in the panel voice, without the personal link sentence', function (): void {
+    $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', 'Acme', ['Información sobre riesgos del Teletrabajo · versión 1'], false))->toMail(new AnonymousNotifiable);
+    $person = (new DocumentsToConfirm('https://x.test/portal/t', 'Ana', 'Acme', ['Política de Teletrabajo · versión 1'], true))->toMail(new AnonymousNotifiable);
+
+    expect($member->subject)->toBe('Tienes documentos por confirmar')
+        ->and(implode(' ', $member->introLines))->toContain('debes leer y confirmar en el panel')
+        ->and($member->outroLines)->toBe([])
+        ->and($person->subject)->toBe('Tiene documentos por confirmar')
+        ->and(implode(' ', $person->outroLines))->toContain('no lo comparta');
 });
