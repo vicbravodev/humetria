@@ -100,3 +100,40 @@ foreach (modules() as $module) {
         }
     }
 }
+
+/*
+ * Telework (NOM-037) holds the most personal data of the platform, so its boundaries are spelled out on their own: the
+ * loop above already covers every module, and these rules fail loudly if Telework or one of its namespaces goes missing.
+ */
+$teleworkInternals = internalNamespacesOf('Telework');
+$otherModules = array_values(array_diff(modules(), ['Telework']));
+
+it('has the Telework namespaces the architecture rules target', function () use ($teleworkInternals): void {
+    expect($teleworkInternals)->toContain('App\Modules\Telework\Actions', 'App\Modules\Telework\Models', 'App\Modules\Telework\Support', 'App\Modules\Telework\Http');
+});
+
+foreach (['Actions', 'Models'] as $layer) {
+    arch("Telework {$layer} do not depend on HTTP")
+        ->expect("App\\Modules\\Telework\\{$layer}")
+        ->not->toUse(['Illuminate\Http', 'Inertia', 'request', 'session', 'auth']);
+}
+
+foreach ($otherModules as $other) {
+    foreach (internalNamespacesOf($other) as $internal) {
+        arch("Telework does not use {$internal}")
+            ->expect('App\Modules\Telework')
+            ->not->toUse($internal);
+    }
+
+    foreach ($teleworkInternals as $internal) {
+        arch("{$other} does not use {$internal}")
+            ->expect("App\\Modules\\{$other}")
+            ->not->toUse($internal);
+    }
+}
+
+foreach (['Actions', 'Models', 'Support'] as $layer) {
+    arch("Telework {$layer} are not used by the shared kernel")
+        ->expect("App\\Modules\\Telework\\{$layer}")
+        ->toOnlyBeUsedIn(['App\Modules\Telework', 'Database\Factories\Telework']);
+}
