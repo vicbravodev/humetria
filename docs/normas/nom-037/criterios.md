@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-037-STPS-2023 en Humetría
 
-Versión 1 · 30 de octubre de 2026 · Norma base: NOM-037-STPS-2023, DOF del 8 de junio de
+Versión 1.1 · 30 de octubre de 2026 · Norma base: NOM-037-STPS-2023, DOF del 8 de junio de
 2023, en vigor desde el 5 de diciembre de 2023 (versión de la lista de verificación en el sistema: `dof-2023-06-08`).
 
 Este documento explica **cómo aplica Humetría la NOM-037 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -413,8 +413,8 @@ estaría en incumplimiento» [RC, promovente 58, l. 3528].
 
 ### C-23. Informar los riesgos a las personas y a la Comisión · Norma
 
-**Qué hacemos.** La empresa publica su material sobre riesgos del teletrabajo (agentes físicos, químicos y biológicos;
-factores ergonómicos y psicosociales). Humetría ofrece un texto base y registra el acuse de cada persona
+**Qué hacemos.** La empresa sube en PDF su material sobre riesgos del teletrabajo (agentes físicos, químicos y
+biológicos; factores ergonómicos y psicosociales), igual que la política. Humetría registra el acuse de cada persona
 teletrabajadora y de cada integrante de la Comisión.
 
 **Qué dice la norma.** [DOF, 5.3] y la tabla 10.3, que lo verifica como «Documental y entrevista» y acepta «charlas» o
@@ -693,6 +693,7 @@ marca en ningún caso. «No aplica» nunca marca. Los criterios usados:
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 1.1 | 2026-10-30 | C-23: la información de riesgos es un PDF de la empresa, como la política (sin texto base). |
 | 1 | 2026-10-30 | Aprobado: el usuario aprueba la tabla del anexo como valor inicial de la respuesta favorable. |
 | 0.2 | 2026-10-30 | Decisiones del usuario: lista editable desde el principio con versiones (C-07, C-10), periodicidad predefinida o propia con 12 meses por defecto (C-14), rol de la Comisión (C-17), política en PDF (C-19, C-21), solo registro de capacitación (C-24), consentimiento base (C-25). Un solo PR para toda la NOM-037. Queda por aprobar el anexo. |
 | 0.1 | 2026-10-30 | Borrador con base en el DOF del 08/06/2023, las respuestas a los comentarios (DOF 15/05/2023), la LFT vigente, la NOM-019 y la LFPDPPP. Pendiente de aprobación de los criterios marcados ⚑. |
