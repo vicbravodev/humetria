@@ -11,6 +11,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { destroy } from '@/routes/tenant/telework/committee/members';
+import { cn } from '@/lib/utils';
 import type { CommitteePerson } from '@/types';
 
 /** Who sits on the Comisión of the center, with a way to take a seat away (pantallas: Usuarios). */
@@ -55,7 +56,14 @@ export default function CommitteeMembersTable({
                                 </div>
                             </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell
+                            className={cn(
+                                'text-sm whitespace-normal',
+                                member.active
+                                    ? 'text-muted-foreground'
+                                    : 'text-destructive',
+                            )}
+                        >
                             {member.role}
                         </TableCell>
                         <TableCell className="w-px text-right">

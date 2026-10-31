@@ -256,7 +256,7 @@ it('shows the page of a center with and without committee', function (): void {
             ->where('committee.constitutedOn', '2026-09-15')
             ->where('committee.hasAct', true)
             ->has('committee.members', 1)
-            ->where('committee.members.0', ['id' => $this->cora->id, 'name' => $this->cora->name, 'email' => $this->cora->email, 'role' => 'Comisión de seguridad e higiene'])
+            ->where('committee.members.0', ['id' => $this->cora->id, 'name' => $this->cora->name, 'email' => $this->cora->email, 'role' => 'Comisión de seguridad e higiene', 'active' => true])
             ->has('candidates', 1));
 });
 
@@ -384,4 +384,54 @@ it('refuses in the database a second committee per center, a repeated assignment
         // A savepoint each: a refused statement aborts the transaction the test runs in.
         expect(fn () => DB::transaction($attempt))->toThrow(QueryException::class, $constraint);
     }
+});
+
+it('stops a demoted or removed member from being on the committee, yet shows the seat to RH so it can end it', function (): void {
+    registerCommittee()->assertSessionHasNoErrors();
+    $gone = memberOf($this->tenant, TenantRole::Committee);
+    $this->post(route('tenant.telework.committee.members.store', [$this->tenant, $this->center->id]), ['user_id' => $gone->id])->assertSessionHasNoErrors();
+    workIn($this->tenant);
+    $roles = resolve(App\Modules\Tenancy\Support\CompanyRoles::class);
+    $gate = resolve(CommitteeGate::class);
+    expect($gate->isMember($this->cora->id, $this->center->id))->toBeTrue();
+
+    // Cora is demoted to viewer; the other one is taken out of the company.
+    $roles->assign($this->cora, $this->tenant, TenantRole::Viewer);
+    $roles->remove($gone, $this->tenant);
+
+    expect($gate->isMember($this->cora->id, $this->center->id))->toBeFalse()
+        ->and($gate->workCenterIds($this->cora->id))->toBe([])
+        ->and($gate->isMember($gone->id, $this->center->id))->toBeFalse()
+        ->and($gate->workCenterIds($gone->id))->toBe([]);
+
+    $this->actingAs($this->cora)->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))->assertNotFound();
+
+    $this->actingAs($this->hr)->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('committee.members', 2)
+            ->where('committee.members', fn ($members): bool => collect($members)->every(fn (array $member): bool => $member['active'] === false && $member['role'] === 'Sin acceso: ya no tiene un rol de la Comisión')
+                && collect($members)->pluck('id')->sort()->values()->all() === collect([$this->cora->id, $gone->id])->sort()->values()->all()));
+
+    $this->delete(route('tenant.telework.committee.members.destroy', [$this->tenant, $this->center->id, $this->cora->id]))->assertSessionHasNoErrors();
+    $this->delete(route('tenant.telework.committee.members.destroy', [$this->tenant, $this->center->id, $gone->id]))->assertSessionHasNoErrors();
+    expect(CommitteeAssignment::query()->count())->toBe(0);
+});
+
+it('does not send the company people to a committee member', function (): void {
+    registerCommittee()->assertSessionHasNoErrors();
+
+    $this->actingAs($this->cora)->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->missing('candidates')->where('canManage', false));
+});
+
+it('removes the act file when registering fails after storing it', function (): void {
+    Storage::fake('local');
+    workIn($this->tenant);
+    Log::partialMock()->shouldReceive('info')->with('telework.committee_registered', Mockery::any())->andThrow(new RuntimeException('boom'));
+
+    expect(fn () => resolve(RegisterCommittee::class)->handle($this->center->id, Carbon\CarbonImmutable::parse('2026-09-15'), pdf()->getPathname(), [$this->cora->id], $this->hr->id))
+        ->toThrow(RuntimeException::class, 'boom');
+
+    expect(Storage::disk('local')->allFiles())->toBe([])->and(SafetyCommittee::query()->count())->toBe(0);
 });

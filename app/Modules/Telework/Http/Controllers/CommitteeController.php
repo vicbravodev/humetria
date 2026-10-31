@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Telework\Actions\AssignCommitteeMember;
 use App\Modules\Telework\Actions\RegisterCommittee;
 use App\Modules\Telework\Actions\UnassignCommitteeMember;
@@ -39,19 +40,41 @@ final class CommitteeController extends Controller
         abort_unless($user !== null && ($canManage || $gate->isMember($user->id, $center->id)), 404);
 
         $committee = SafetyCommittee::query()->where('work_center_id', $center->id)->first();
-        $assigned = CommitteeAssignment::query()->where('work_center_id', $center->id)->pluck('user_id')->all();
-        $row = fn (MemberSummary $member): array => ['id' => $member->userId, 'name' => $member->name, 'email' => $member->email, 'role' => $member->role->label()];
+        $assigned = array_values(CommitteeAssignment::query()->where('work_center_id', $center->id)->get(['user_id'])->map(fn (CommitteeAssignment $assignment): int => $assignment->user_id)->all());
+        $reviewers = $members->reviewers();
+        $row = fn (MemberSummary $member): array => ['id' => $member->userId, 'name' => $member->name, 'email' => $member->email, 'role' => $member->role->label(), 'active' => true];
 
         return Inertia::render('telework/committee', [
             'workCenter' => ['id' => $center->id, 'name' => $center->name],
             'committee' => $committee === null ? null : [
                 'constitutedOn' => $committee->constituted_on->toDateString(),
                 'hasAct' => $committee->act_path !== null,
-                'members' => array_values(array_map($row, array_filter($members->reviewers(), fn (MemberSummary $member): bool => in_array($member->userId, $assigned, true)))),
+                'members' => [
+                    ...array_map($row, array_values(array_filter($reviewers, fn (MemberSummary $member): bool => in_array($member->userId, $assigned, true)))),
+                    ...$this->withoutAccess($assigned, $reviewers),
+                ],
             ],
-            'candidates' => array_values(array_map($row, array_filter($members->reviewers(), fn (MemberSummary $member): bool => ! in_array($member->userId, $assigned, true)))),
+            // The company's people are for whoever manages the committee; the committee role does not see its users.
+            'candidates' => $canManage ? array_map($row, array_values(array_filter($reviewers, fn (MemberSummary $member): bool => ! in_array($member->userId, $assigned, true)))) : Inertia::optional(fn (): array => []),
             'canManage' => $canManage,
         ]);
+    }
+
+    /**
+     * Assigned users who no longer hold a reviewing role (demoted, or no longer in the company): kept in the list, marked,
+     * so the manager can take their seat away.
+     *
+     * @param  list<int>  $assigned
+     * @param  list<MemberSummary>  $reviewers
+     * @return list<array{id: int, name: string, email: string, role: string, active: bool}>
+     */
+    private function withoutAccess(array $assigned, array $reviewers): array
+    {
+        $active = array_map(fn (MemberSummary $member): int => $member->userId, $reviewers);
+
+        return array_values(User::query()->whereIn('id', array_diff($assigned, $active))->orderBy('name')->orderBy('id')->get(['id', 'name', 'email'])
+            ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => 'Sin acceso: ya no tiene un rol de la Comisión', 'active' => false])
+            ->all());
     }
 
     public function store(CommitteeRequest $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, RegisterCommittee $register): RedirectResponse

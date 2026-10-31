@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
+use Throwable;
 
 /**
  * Registers the Comisión of a work center (criterio C-17) and, with it, the first draft of the center's checklist: the
@@ -40,36 +41,45 @@ final readonly class RegisterCommittee
         $tenantId = $this->tenant->id();
         $path = $actFile === null ? null : "committees/{$tenantId}/{$workCenterId}/act-".Str::uuid().'.pdf';
 
-        return DB::transaction(function () use ($tenantId, $workCenterId, $constitutedOn, $actFile, $path, $memberIds, $userId): SafetyCommittee {
-            try {
-                $committee = SafetyCommittee::query()->create([
-                    'tenant_id' => $tenantId,
-                    'work_center_id' => $workCenterId,
-                    'constituted_on' => $constitutedOn,
-                    'act_path' => $path,
-                    'created_by' => $userId,
-                ]);
-            } catch (UniqueConstraintViolationException) {
-                throw ValidationException::withMessages(['work_center' => 'Este centro ya tiene registrada su Comisión.']);
+        try {
+            return DB::transaction(function () use ($tenantId, $workCenterId, $constitutedOn, $actFile, $path, $memberIds, $userId): SafetyCommittee {
+                try {
+                    $committee = SafetyCommittee::query()->create([
+                        'tenant_id' => $tenantId,
+                        'work_center_id' => $workCenterId,
+                        'constituted_on' => $constitutedOn,
+                        'act_path' => $path,
+                        'created_by' => $userId,
+                    ]);
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages(['work_center' => 'Este centro ya tiene registrada su Comisión.']);
+                }
+
+                foreach ($memberIds as $memberId) {
+                    CommitteeAssignment::query()->create(['tenant_id' => $tenantId, 'work_center_id' => $workCenterId, 'user_id' => $memberId]);
+                }
+
+                $this->seedDraft($tenantId, $workCenterId);
+
+                // Last, so a failure above leaves no file behind.
+                if ($actFile !== null && $path !== null) {
+                    $this->store($actFile, $path);
+                }
+
+                $record = ['work_center_id' => $workCenterId, 'member_ids' => $memberIds];
+                $this->audit->handle('telework.committee_registered', $committee, $record);
+                Log::info('telework.committee_registered', $record);
+
+                return $committee;
+            });
+        } catch (Throwable $failure) {
+            // The file went in before the commit: a failed registration must not leave it behind.
+            if ($path !== null) {
+                Storage::disk(config()->string('filesystems.telework_files'))->delete($path);
             }
 
-            foreach ($memberIds as $memberId) {
-                CommitteeAssignment::query()->create(['tenant_id' => $tenantId, 'work_center_id' => $workCenterId, 'user_id' => $memberId]);
-            }
-
-            $this->seedDraft($tenantId, $workCenterId);
-
-            // Last, so a failure above leaves no file behind.
-            if ($actFile !== null && $path !== null) {
-                $this->store($actFile, $path);
-            }
-
-            $record = ['work_center_id' => $workCenterId, 'member_ids' => $memberIds];
-            $this->audit->handle('telework.committee_registered', $committee, $record);
-            Log::info('telework.committee_registered', $record);
-
-            return $committee;
-        });
+            throw $failure;
+        }
     }
 
     private function store(string $file, string $path): void

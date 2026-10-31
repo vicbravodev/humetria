@@ -29,12 +29,13 @@ function committeeFacts(committee: Committee | null): PageFact[] {
 export default function CommitteePage({
     workCenter,
     committee,
-    candidates,
+    candidates = [],
     canManage,
 }: {
     workCenter: { id: string; name: string };
     committee: Committee | null;
-    candidates: CommitteePerson[];
+    /** Only for whoever manages the committee. */
+    candidates?: CommitteePerson[];
     canManage: boolean;
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';

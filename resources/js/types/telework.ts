@@ -4,6 +4,8 @@ export type CommitteePerson = {
     name: string;
     email: string;
     role: string;
+    /** False when they no longer hold a reviewing role: the seat is kept so RH can take it away. */
+    active: boolean;
 };
 
 export type Committee = {
