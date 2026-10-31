@@ -110,6 +110,17 @@ it('shows no risk level below the minimum group, only the participation', functi
         ->not->toContain('valoración clínica');
 });
 
+it('still says who needs a clinical assessment when the risk levels stay hidden under the minimum', function (): void {
+    guideTwoBy($this->campaign, $this->area, 4, 'always');
+    TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true]);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]));
+
+    expect((string) closingSummaryTo('olga@autopartes.mx')->render())
+        ->toContain('Con menos de 5 cuestionarios no se muestran niveles de riesgo, para cuidar el anonimato.')
+        ->toContain('2 personas requieren valoración clínica (Guía I)');
+});
+
 it('closes a Guía I campaign with its participation and who needs a clinical assessment', function (): void {
     $trauma = Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     ParticipantInstrument::factory()->count(3)->create(['participant_id' => fn () => Participant::factory()->create(['campaign_id' => $trauma->id])->id, 'instrument' => 'nom035.guide-i', 'status' => InstrumentStatus::Completed, 'completed_at' => now()]);
