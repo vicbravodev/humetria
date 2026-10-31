@@ -47,14 +47,15 @@ final class ChecklistOrder
 
     /**
      * Renumbers the checklist 1..n following `$ids`. Two phases, so the unique (checklist, position) never meets a duplicate
-     * halfway: first every row moves out of the way, then each lands on its final place.
+     * halfway: first every row goes negative (out of the way of every final place), then each lands on its final place.
      *
      * @param  list<string>  $ids
      */
     public static function renumber(Checklist $checklist, array $ids): void
     {
+        // Phase 1 needs negative positions: the check is `position <> 0`, see the migration that relaxed it.
         // ponytail: one UPDATE per question (about 120); a CASE statement if lists ever grow into the thousands.
-        ChecklistQuestion::query()->where('checklist_id', $checklist->id)->update(['position' => DB::raw('position + 10000')]);
+        ChecklistQuestion::query()->where('checklist_id', $checklist->id)->update(['position' => DB::raw('-position')]);
 
         foreach ($ids as $index => $id) {
             ChecklistQuestion::query()->where('checklist_id', $checklist->id)->where('id', $id)->update(['position' => $index + 1]);

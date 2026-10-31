@@ -20,6 +20,7 @@ use App\Modules\Telework\Support\Coverage;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -293,4 +294,72 @@ it('writes a log line without the question texts when editing', function (): voi
     $this->put(qUrl('questions.update', question('S1-01')->id), ['text' => 'Texto secreto', 'favorable' => 'yes', 'sensitive' => false, 'requirement' => null]);
 
     Log::shouldHaveReceived('info')->with('telework.question_updated', Mockery::on(fn (array $context): bool => ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'Texto secreto')));
+});
+
+it('answers 404 for a question of another center of the same company, and leaves it untouched', function (): void {
+    $other = WorkCenter::factory()->for($this->tenant)->create();
+    $stranger = memberOf($this->tenant, TenantRole::Committee);
+    $this->actingAs($this->hr)->post(route('tenant.telework.committee.store', [$this->tenant, $other->id]), ['constituted_on' => '2026-09-15', 'member_ids' => [$stranger->id]])->assertSessionHasNoErrors();
+    workIn($this->tenant);
+    $theirs = Checklist::query()->where('work_center_id', $other->id)->sole();
+    $foreign = ChecklistQuestion::query()->where('checklist_id', $theirs->id)->where('code', 'S1-01')->sole();
+    $before = $foreign->only(['text', 'position', 'origin']);
+    $this->actingAs($this->cora);
+
+    $this->put(qUrl('questions.update', $foreign->id), ['text' => 'Intrusa', 'favorable' => 'yes', 'sensitive' => false, 'requirement' => null])->assertNotFound();
+    $this->delete(qUrl('questions.destroy', $foreign->id))->assertNotFound();
+    $this->post(qUrl('questions.move', $foreign->id), ['direction' => 'down'])->assertNotFound();
+
+    workIn($this->tenant);
+    expect(ChecklistQuestion::query()->findOrFail($foreign->id)->only(['text', 'position', 'origin']))->toBe($before)
+        ->and(ChecklistQuestion::query()->where('checklist_id', $theirs->id)->count())->toBe(122);
+});
+
+it('never reuses a Comisión code of the center', function (): void {
+    $body = ['section' => 1, 'heading' => 'Mi tema', 'text' => '¿Algo?', 'favorable' => 'yes', 'sensitive' => false];
+
+    $this->post(qUrl('questions.store'), $body);
+    $this->post(qUrl('questions.store'), $body);
+    $this->post(qUrl('questions.store'), $body);
+
+    // Across versions: a code that only an older version carries is not free either.
+    $first = draft();
+    $this->post(qUrl('publish'))->assertSessionHasNoErrors();
+    $this->post(qUrl('draft'));
+    $this->delete(qUrl('questions.destroy', question('C1-03')->id));
+    $this->post(qUrl('questions.store'), $body);
+    expect(codes())->toContain('C1-04')->and(codes())->not->toContain('C1-03')->and(codes($first))->toContain('C1-03');
+});
+
+it('renumbers whatever the positions were, even near the column limit', function (): void {
+    workIn($this->tenant);
+    ChecklistQuestion::query()->where('checklist_id', draft()->id)->where('code', 'S2-01')->update(['position' => 32000]);
+
+    $this->post(qUrl('questions.move', question('S1-02')->id), ['direction' => 'up'])->assertSessionHasNoErrors();
+
+    workIn($this->tenant);
+    expect(ChecklistQuestion::query()->where('checklist_id', draft()->id)->orderBy('position')->pluck('position')->all())->toBe(range(1, 122));
+});
+
+it('returns, with the published version, the gaps it audited', function (): void {
+    workIn($this->tenant);
+    ChecklistQuestion::query()->where('checklist_id', draft()->id)->where('section', 2)->where('requirement', Requirement::Noise->value)->update(['requirement' => null]);
+
+    $result = resolve(PublishChecklist::class)->handle(draft()->id, $this->cora->id);
+
+    expect($result['checklist']->status)->toBe(ChecklistStatus::Published)->and($result['missing'])->toBe([1 => [], 2 => [Requirement::Noise]]);
+});
+
+it('locks the published version while starting a draft, so two starts at once cannot collide', function (): void {
+    $this->post(qUrl('publish'))->assertSessionHasNoErrors();
+    workIn($this->tenant);
+    $statements = [];
+    DB::listen(function ($query) use (&$statements): void {
+        $statements[] = $query->sql;
+    });
+
+    resolve(StartChecklistDraft::class)->handle($this->center->id);
+
+    $locks = array_filter($statements, fn (string $sql): bool => str_contains($sql, 'from "checklists"') && str_contains($sql, 'for update'));
+    expect($locks)->toHaveCount(2)->and(array_values(array_filter($locks, fn (string $sql): bool => str_contains($sql, 'order by "version" desc'))))->toHaveCount(1);
 });

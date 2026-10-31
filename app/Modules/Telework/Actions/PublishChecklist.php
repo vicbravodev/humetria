@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Actions;
 
 use App\Actions\RecordAudit;
+use App\Modules\Instruments\Data\Requirement;
 use App\Modules\Telework\Enums\ChecklistStatus;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Support\ChecklistOrder;
@@ -20,10 +21,14 @@ final readonly class PublishChecklist
 {
     public function __construct(private Coverage $coverage, private RecordAudit $audit) {}
 
-    /** @throws ValidationException when the checklist is already published. */
-    public function handle(string $checklistId, int $userId): Checklist
+    /**
+     * @return array{checklist: Checklist, missing: array<int, list<Requirement>>} The published version and the gaps the audit recorded.
+     *
+     * @throws ValidationException when the checklist is already published.
+     */
+    public function handle(string $checklistId, int $userId): array
     {
-        return ChecklistOrder::editing($checklistId, function (Checklist $checklist) use ($userId): Checklist {
+        return ChecklistOrder::editing($checklistId, function (Checklist $checklist) use ($userId): array {
             $checklist->update(['status' => ChecklistStatus::Published, 'published_at' => now(), 'published_by' => $userId]);
             $missing = $this->coverage->missing($checklist);
             $record = [
@@ -36,7 +41,7 @@ final readonly class PublishChecklist
             $this->audit->handle('telework.checklist_published', $checklist, $record);
             Log::info('telework.checklist_published', $record);
 
-            return $checklist;
+            return ['checklist' => $checklist, 'missing' => $missing];
         });
     }
 }

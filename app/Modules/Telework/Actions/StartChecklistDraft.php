@@ -25,14 +25,16 @@ final readonly class StartChecklistDraft
     public function handle(string $workCenterId): Checklist
     {
         return DB::transaction(function () use ($workCenterId): Checklist {
+            // Locking the newest published row serializes two starts at once: the second waits, then finds the first one's draft
+            // instead of hitting the one-draft-per-center index.
+            $latest = Checklist::query()->where('work_center_id', $workCenterId)->where('status', ChecklistStatus::Published)->orderByDesc('version')->lockForUpdate()->first();
             $draft = Checklist::query()->where('work_center_id', $workCenterId)->where('status', ChecklistStatus::Draft)->lockForUpdate()->first();
 
             if ($draft !== null) {
                 return $draft;
             }
 
-            $latest = Checklist::latestPublished($workCenterId)
-                ?? throw ValidationException::withMessages(['checklist' => 'Este centro aún no tiene una lista publicada que copiar.']);
+            $latest ??= throw ValidationException::withMessages(['checklist' => 'Este centro aún no tiene una lista publicada que copiar.']);
 
             $draft = Checklist::query()->create([
                 'tenant_id' => $this->tenant->id(),

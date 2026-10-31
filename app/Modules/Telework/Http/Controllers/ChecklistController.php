@@ -114,12 +114,11 @@ final class ChecklistController extends Controller
         return $this->back($tenant, $workCenter);
     }
 
-    public function publish(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, Coverage $coverage, PublishChecklist $publish): RedirectResponse
+    public function publish(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, PublishChecklist $publish): RedirectResponse
     {
         $draft = $this->draftOf($this->editableCenter($request, $workCenters, $gate, $workCenter));
-        $missing = $coverage->missing($draft);
 
-        $published = $publish->handle($draft->id, $this->userId($request));
+        ['checklist' => $published, 'missing' => $missing] = $publish->handle($draft->id, $this->userId($request));
         $gaps = array_map(fn (Requirement $requirement): string => $requirement->label(), [...$missing[1], ...$missing[2]]);
         Inertia::flash('toast', [
             'type' => $gaps === [] ? 'success' : 'warning',

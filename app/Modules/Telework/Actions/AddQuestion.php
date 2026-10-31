@@ -10,6 +10,7 @@ use App\Modules\Telework\Enums\QuestionOrigin;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Support\ChecklistOrder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -25,7 +26,10 @@ final readonly class AddQuestion
         return ChecklistOrder::editing($checklistId, function (Checklist $checklist) use ($section, $heading, $text, $favorable, $requirement, $sensitive): ChecklistQuestion {
             $questions = ChecklistQuestion::query()->where('checklist_id', $checklist->id)->orderBy('position')->get(['id', 'section', 'position', 'code']);
             $prefix = "C{$section}-";
-            $last = $questions->filter(fn (ChecklistQuestion $question): bool => str_starts_with($question->code, $prefix))
+            // Never reuse a code of the center's lineage: older versions (and a question taken out of this draft) keep theirs.
+            $last = ChecklistQuestion::query()
+                ->whereHas('checklist', fn (Builder $checklists) => $checklists->where('work_center_id', $checklist->work_center_id))
+                ->where('code', 'like', $prefix.'%')->get(['code'])
                 ->map(fn (ChecklistQuestion $question): int => (int) substr($question->code, strlen($prefix)))->max() ?? 0;
 
             $added = ChecklistQuestion::query()->create([
