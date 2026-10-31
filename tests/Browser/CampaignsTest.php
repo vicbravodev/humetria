@@ -417,6 +417,20 @@ it('shows the results of a closed evaluation by risk level, and filters them by 
         ->assertSee('Guía I · acontecimientos traumáticos');
 })->with($looks);
 
+it('gives each question and each level of the norm room to read at every width', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(6)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+    $page = visitPage('results/show', "/admin/acme/campaigns/{$campaign->id}/results");
+    // The narrowest column of words among the questions and the levels' actions, in px.
+    $narrowest = '() => Math.min(...Array.from(document.querySelectorAll(\'ol > li > p:first-child, dl dd\')).filter((text) => text.offsetWidth > 0).map((text) => text.getBoundingClientRect().width)) >= 240';
+
+    foreach ([375, 768, 1024, 1280] as $width) {
+        resizeTo($page, $width)->assertScript($narrowest);
+    }
+});
+
 it('narrows the results to one area, and reaches them from the evaluation', function (): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);

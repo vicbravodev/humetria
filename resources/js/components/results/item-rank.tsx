@@ -19,7 +19,7 @@ export default function ItemRank({ sections }: { sections: ItemSection[] }) {
             <h3 className="font-semibold">
                 Las {worst.length} preguntas con más respuestas desfavorables
             </h3>
-            <ol className="divide-y rounded-xl border bg-card p-4 sm:p-5">
+            <ol className="@container divide-y rounded-xl border bg-card p-4 sm:p-5">
                 {worst.map((item) => (
                     <ItemRow key={item.number} item={item} />
                 ))}
