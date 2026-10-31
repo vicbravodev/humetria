@@ -226,6 +226,18 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
 }
 
 /**
+ * Resizes the window and waits until React has re-rendered for the new width (the sidebar becomes a sheet below
+ * 768 px), so what the next assertion measures is the layout at that width, not the one before.
+ */
+function resizeTo(AwaitableWebpage $page, int $width, int $height = 900): AwaitableWebpage
+{
+    $page->resize($width, $height)
+        ->assertScript('() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))');
+
+    return $page;
+}
+
+/**
  * A complete NOM-035 Guía II or III with every item answered `$value`, and its two gates answered as given: a "no"
  * leaves the block's items out, as the survey does.
  *

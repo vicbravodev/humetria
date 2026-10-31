@@ -15,7 +15,7 @@ export default function DashboardCycle({
     return (
         <section
             aria-labelledby="cycle"
-            className="overflow-hidden rounded-xl border bg-card"
+            className="@container/cycle overflow-hidden rounded-xl border bg-card"
         >
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 pt-5 pb-4">
                 <div className="flex flex-col gap-0.5">

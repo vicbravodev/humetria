@@ -103,11 +103,18 @@ function activeCardLayout(): string
 }
 
 it('centers the arc over its figures on a phone and sets them beside it on a desktop', function (bool $dark): void {
-    visitPage('dashboard', panelCompany(), $dark)
-        ->resize(375, 800)
-        ->assertScript(activeCardLayout(), 'centered below')
-        ->resize(768, 900)
-        ->assertScript(activeCardLayout(), 'centered below')
-        ->resize(1280, 900)
-        ->assertScript(activeCardLayout(), 'aside beside');
+    $page = visitPage('dashboard', panelCompany(), $dark);
+
+    foreach ([375 => 'centered below', 768 => 'centered below', 1280 => 'aside beside'] as $width => $layout) {
+        resizeTo($page, $width)->assertScript(activeCardLayout(), $layout);
+    }
 })->with(['light' => false, 'dark' => true]);
+
+it('fits each work center of the cycle inside its card at every width', function (): void {
+    $page = visitPage('dashboard', panelCompany());
+
+    foreach ([375, 768, 1024, 1280] as $width) {
+        // How many rows spill past their card's edge.
+        resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="cycle"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
+    }
+});
