@@ -89,7 +89,8 @@ it('shows the Comisión of a center with its people and with none', function (bo
 
     visitPage('telework/committee', "{$url}/telework/centers/{$center->id}/committee", $dark, $mobile)
         ->assertSee($cora->name)
-        ->assertSee('1 integrante');
+        ->assertSee('1 integrante')
+        ->assertSee('Documentos');
 })->with($looks);
 
 it('registers the Comisión from the page and then lets the last member go', function (): void {

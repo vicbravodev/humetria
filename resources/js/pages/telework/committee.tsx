@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import {
     CalendarCheck,
     ClipboardCheck,
+    FileText,
     ListChecks,
     UserPlus,
     Users,
@@ -12,6 +13,7 @@ import type { PageFact } from '@/components/page-header';
 import CommitteePanel from '@/components/telework/committee-panel';
 import { describeDate } from '@/lib/calendar-date';
 import { show } from '@/routes/tenant/telework/checklist';
+import { index as documentsIndex } from '@/routes/tenant/telework/documents';
 import { index as reviewsIndex } from '@/routes/tenant/telework/reviews';
 import { create } from '@/routes/tenant/telework/teleworkers';
 import type { Committee, CommitteePerson } from '@/types';
@@ -82,6 +84,12 @@ export default function CommitteePage({
                             </Link>
                         </Button>
                     )}
+                    <Button variant="outline" asChild>
+                        <Link href={documentsIndex(tenantSlug)}>
+                            <FileText aria-hidden />
+                            Documentos
+                        </Link>
+                    </Button>
                     {canReview && (
                         <Button variant="outline" asChild>
                             <Link
