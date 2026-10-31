@@ -19,6 +19,8 @@ use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\TeleworkDocument;
+use App\Modules\Telework\Models\Training;
+use App\Modules\Telework\Models\TrainingAttendee;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
@@ -32,6 +34,7 @@ use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\EquipmentItemFactory;
 use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\TrainingFactory;
 use Database\Factories\Telework\VisitAuthorizationFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
@@ -738,4 +741,57 @@ it('lets RH register equipment and the person confirm one item and refuse anothe
         ->assertSee('Motivo: No cabe en mi espacio.');
 
     expect(EquipmentItem::query()->count())->toBe(2);
+});
+
+it('shows the trainings with who is due and the topics not covered', function (bool $dark, bool $mobile): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'started_at' => now()->subYear()->subDays(10)]);
+    $training = TrainingFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'held_on' => now()->subMonths(2)->toDateString(), 'topics' => ['hazards', 'ict']]);
+    TrainingAttendee::query()->create(['tenant_id' => $tenant->id, 'training_id' => $training->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id])->id]);
+
+    visitPage('telework/trainings', "{$url}/telework/trainings?center={$center->id}", $dark, $mobile)
+        ->assertSee('Capacitación de NOM-037')
+        ->assertSee('Quién toca capacitar')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Vencida')
+        ->assertSee('Temas del 8.1 sin cubrir')
+        ->assertSee('Riesgo ergonómico por posturas forzosas')
+        ->assertSee('Capacitaciones registradas')
+        ->assertSee('1 persona');
+})->with($looks);
+
+it('shows the trainings page before there is anything to show', function (): void {
+    $url = signInToPanel();
+
+    visitPage('telework/trainings', "{$url}/telework/trainings")
+        ->assertSee('Aún no hay personas en el padrón')
+        ->assertSee('Aún no hay capacitaciones')
+        ->assertSee('Elige un centro de trabajo para ver');
+});
+
+it('registers a training from the page', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+
+    visit("{$url}/telework/trainings")
+        ->press('Registrar capacitación')
+        ->click('#training-center')
+        ->type('[role="combobox"][aria-controls="training-center-options"]', 'Querétaro')
+        ->click('[role="option"]')
+        ->click('Remota')
+        ->click('#training-topic-hazards')
+        ->click('#training-topic-ict')
+        ->click('#training-attendee')
+        ->type('[role="combobox"][aria-controls="training-attendee-options"]', 'Ana')
+        ->click('[role="option"]')
+        ->assertScript('document.querySelectorAll(\'input[name="employee_ids[]"]\').length', 1)
+        ->press('[role="dialog"] button[type="submit"]')
+        ->assertSee('Capacitación registrada')
+        ->assertSee('1 persona')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(Training::query()->sole()->topics)->toHaveCount(2)
+        ->and(TrainingAttendee::query()->count())->toBe(1);
 });

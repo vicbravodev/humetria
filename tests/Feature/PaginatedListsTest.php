@@ -86,6 +86,11 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.telework.documents.acknowledgements.index', [$tenant, $document->id]);
     }, ['people']],
+    'NOM-037 trainings and who is due' => ['telework/trainings', function () {
+        [$tenant] = listsCompany();
+
+        return route('tenant.telework.trainings.index', $tenant);
+    }, ['trainings', 'people']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

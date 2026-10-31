@@ -13,6 +13,7 @@ use App\Modules\Telework\Http\Controllers\ReviewController;
 use App\Modules\Telework\Http\Controllers\RosterController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
+use App\Modules\Telework\Http\Controllers\TrainingController;
 use App\Modules\Telework\Http\Controllers\VisitController;
 use App\Modules\Telework\Http\Controllers\WorkCenterOptionsController;
 use Illuminate\Support\Facades\Route;
@@ -86,6 +87,12 @@ Route::get('admin/{tenant:slug}/telework/documents/{document}/file', [DocumentCo
 Route::get('admin/{tenant:slug}/telework/documents/{document}/acknowledgements', [AcknowledgementController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.documents.acknowledgements.index');
 Route::post('admin/{tenant:slug}/telework/documents/{document}/acknowledgements', [AcknowledgementController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.documents.acknowledgements.store');
 Route::post('admin/{tenant:slug}/telework/documents/{document}/acknowledge', [AcknowledgementController::class, 'acknowledge'])->where('tenant', $notReserved)->name('tenant.telework.documents.acknowledge');
+
+// The trainings given (8.1) and when each person of the roster is due for theirs (5.9). A training is evidence: there is no
+// PUT or DELETE. Its list of attendance (PDF) goes out through an authorized route, never a public URL.
+Route::get('admin/{tenant:slug}/telework/trainings', [TrainingController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.trainings.index');
+Route::post('admin/{tenant:slug}/telework/trainings', [TrainingController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.trainings.store');
+Route::get('admin/{tenant:slug}/telework/trainings/{training}/evidence', [TrainingController::class, 'evidence'])->where('tenant', $notReserved)->name('tenant.telework.trainings.evidence');
 
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');

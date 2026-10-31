@@ -215,12 +215,15 @@ it('gives a 404 for the equipment of another person, an unknown link or a malfor
 });
 
 it('refuses in the database a refusal without reason and a pending item that was answered', function (): void {
-    $broken = fn (array $state) => fn () => pendingItem($state);
+    // Each attempt in its own savepoint: a failed statement would otherwise poison the test's transaction.
+    $blocked = fn (array $state) => expect(fn () => DB::transaction(fn () => pendingItem($state)))->toThrow(QueryException::class);
 
-    expect($broken(['status' => 'refused', 'responded_at' => now()]))->toThrow(QueryException::class)
-        ->and($broken(['status' => 'received', 'responded_at' => now(), 'refusal_reason' => 'x']))->toThrow(QueryException::class)
-        ->and($broken(['status' => 'pending', 'responded_at' => now()]))->toThrow(QueryException::class)
-        ->and($broken(['status' => 'received']))->toThrow(QueryException::class);
+    $blocked(['status' => 'refused', 'responded_at' => now()]);
+    $blocked(['status' => 'refused', 'responded_at' => now(), 'refusal_reason' => '  ']);
+    $blocked(['status' => 'received', 'responded_at' => now(), 'refusal_reason' => 'x']);
+    $blocked(['status' => 'pending', 'responded_at' => now()]);
+    $blocked(['status' => 'received']);
+    expect(EquipmentItem::query()->count())->toBe(0);
 });
 
 it('shows the equipment on the person\'s page', function (): void {

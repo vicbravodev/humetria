@@ -9,3 +9,4 @@ export type * from './ui';
 export type * from './results';
 export type * from './telework';
 export type * from './telework-documents';
+export type * from './telework-training';
