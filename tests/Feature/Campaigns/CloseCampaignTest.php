@@ -57,14 +57,14 @@ it('never moves the last day earlier, nor to today or before', function (string 
     'today' => ['2026-11-10', 'La fecha de cierre debe ser a partir de mañana.'],
 ]);
 
-it('reopens a late evaluation that has not been closed yet, by extending it', function (): void {
+it('does not reopen an evaluation past its last day, even before the hourly close has run', function (): void {
     Carbon::setTestNow('2026-11-15 12:00:00');
 
     $this->actingAs($this->hr)
         ->post(route('tenant.campaigns.extend', [$this->tenant, $this->campaign->id]), ['closes_on' => '2026-11-18'])
-        ->assertSessionHasNoErrors();
+        ->assertSessionHasErrors(['closes_on' => 'Su último día ya pasó: ya no se puede extender.']);
 
-    expect($this->campaign->refresh()->closes_on?->toDateString())->toBe('2026-11-18');
+    expect($this->campaign->refresh()->closes_on?->toDateString())->toBe('2026-11-14');
 });
 
 it('closes an evaluation: the links stop and the audit trail records how many answered', function (): void {
