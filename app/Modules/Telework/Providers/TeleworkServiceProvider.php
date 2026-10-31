@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Providers;
 
+use App\Modules\Organization\Events\EmployeeDeactivated;
+use App\Modules\Organization\Events\EmployeeMoved;
+use App\Modules\Telework\Listeners\EndOnDeactivation;
+use App\Modules\Telework\Listeners\EndOnMove;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,5 +37,8 @@ final class TeleworkServiceProvider extends ServiceProvider
             Limit::perMinute(10)->by($link($request)),
             Limit::perMinute(300)->by('portal-actions-address:'.$request->ip()),
         ]);
+
+        Event::listen(EmployeeDeactivated::class, EndOnDeactivation::class);
+        Event::listen(EmployeeMoved::class, EndOnMove::class);
     }
 }
