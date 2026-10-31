@@ -102,7 +102,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect()->route('survey.show', Arr::only($request->route()?->parameters() ?? [], 'token'));
         });
 
-        $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request));
+        $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request, $exception));
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

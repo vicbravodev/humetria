@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http;
 
 use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 /**
  * The app's own page for the errors a person can meet (pantallas: Error-403, Error-404), in place of the framework's
@@ -24,11 +26,15 @@ final class ErrorPage
 
     public function __construct(private HandleInertiaRequests $inertia) {}
 
-    public function respond(Response $response, Request $request): Response
+    public function respond(Response $response, Request $request, Throwable $exception): Response
     {
         $status = $response->getStatusCode();
 
-        if (! in_array($status, self::SHOWN, true) || $request->expectsJson() || ($status >= 500 && config('app.debug') === true)) {
+        // A response someone built on purpose (a limiter's own words) is kept as it is.
+        if ($exception instanceof HttpResponseException
+            || ! in_array($status, self::SHOWN, true)
+            || $request->expectsJson()
+            || ($status >= 500 && config('app.debug') === true)) {
             return $response;
         }
 

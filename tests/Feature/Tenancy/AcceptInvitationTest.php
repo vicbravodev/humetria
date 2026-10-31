@@ -288,7 +288,7 @@ it('shows a plain visit over the limit the app\'s error page in Spanish, and a J
         ->assertTooManyRequests()
         ->assertHeader('Retry-After', '60')
         ->assertSee('<html lang="es"', escape: false)
-        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->component('error')->where('status', 429));
+        ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', 429));
 
     $this->getJson(route('invitations.show', Str::random(64)))
         ->assertTooManyRequests()
