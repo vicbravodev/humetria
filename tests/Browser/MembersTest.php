@@ -84,6 +84,21 @@ it('says when the person already has access', function (): void {
         ->assertSee('Esa persona ya tiene acceso a esta empresa.');
 });
 
+it('shows the role being saved, and holds the field until it is', function (): void {
+    acmeWithPeople();
+
+    $page = visit('/admin/acme/members');
+    // Every request waits 400 ms to leave, so the save is still under way when the field is read.
+    $page->script('() => { const send = XMLHttpRequest.prototype.send; XMLHttpRequest.prototype.send = function (...args) { setTimeout(() => send.apply(this, args), 400); }; }');
+    $page->click('@member-role')->click('[role="option"]:has-text("Consulta")')
+        ->assertSeeIn('@member-role', 'Consulta')
+        ->assertAttribute('@member-role', 'aria-busy', 'true')
+        ->assertScript('() => document.querySelector(\'[data-test="member-role"]\').disabled', true)
+        ->assertSee('Rol actualizado.')
+        ->assertScript('() => document.querySelector(\'[data-test="member-role"]\').disabled', false)
+        ->assertNoJavaScriptErrors();
+});
+
 it('changes a role and takes access away', function (): void {
     $tenant = acmeWithPeople();
 

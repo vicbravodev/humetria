@@ -150,7 +150,7 @@ it('asks up to three questions of a section per screen on a computer, and never 
         ->assertSee('Pregunta 4 de 5');
 });
 
-it('keeps what was answered on the device after a reload', function (): void {
+it('keeps what was answered on the device after a reload, and picks up at the first unanswered question', function (): void {
     invitedPerson(['nom035.guide-iii']);
 
     $page = visit('/survey/the-token')->click('Comenzar')->click('Empezar');
@@ -162,7 +162,78 @@ it('keeps what was answered on the device after a reload', function (): void {
         ->click('Empezar')
         ->assertSee('Sección 1 de 14')
         ->assertSee('3 de 5 respondidas')
+        ->assertSee('Pregunta 4 de 5')
+        ->assertDontSee('Pregunta 1 de 5')
+        ->assertButtonDisabled('Siguiente')
+        // What was answered is still there, one screen back.
+        ->click('Anterior')
+        ->assertSee('Pregunta 1 de 5')
         ->assertButtonEnabled('Siguiente');
+});
+
+it('picks up at the first unanswered question on a phone too', function (): void {
+    invitedPerson(['nom035.guide-iii']);
+
+    $page = visit('/survey/the-token')->on()->mobile()->click('Comenzar')->click('Empezar');
+
+    foreach (range(1, 2) as $screen) {
+        $page->script(ANSWER_SCREEN);
+        $page->click('Siguiente');
+    }
+
+    $page->assertSee('Pregunta 3 de 5')
+        ->refresh()
+        ->click('Comenzar')
+        ->click('Empezar')
+        ->assertSee('Pregunta 3 de 5')
+        ->assertSee('2 de 5 respondidas')
+        ->assertButtonDisabled('Siguiente');
+});
+
+it('stays on the same question when the screen narrows to a phone', function (): void {
+    invitedPerson(['nom035.guide-iii']);
+
+    $page = visit('/survey/the-token')->click('Comenzar')->click('Empezar');
+    $page->script(ANSWER_SCREEN);
+    $page->click('Siguiente')->assertSee('Pregunta 4 de 5');
+
+    $page->resize(375, 812)
+        ->assertSee('Pregunta 4 de 5')
+        ->assertDontSee('Pregunta 2 de 5');
+});
+
+it('moves the focus to each new screen, so a screen reader announces it', function (bool $mobile): void {
+    invitedPerson(['nom035.guide-ii']);
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', mobile: $mobile, reach: fn ($page) => $page->click('Comenzar')->click('Empezar'))
+        ->assertScript('() => document.activeElement.textContent.includes("Para responder las preguntas siguientes")');
+
+    $page->script(ANSWER_SCREEN);
+    $page->click('Siguiente')
+        ->assertScript('() => document.activeElement.getAttribute("tabindex") === "-1" && document.activeElement.closest("main") !== null');
+})->with(['desktop' => false, 'mobile' => true]);
+
+it('goes back from the first question of a guide to its introduction', function (): void {
+    invitedPerson(['nom035.guide-iii']);
+
+    visit('/survey/the-token')->on()->mobile()
+        ->click('Comenzar')
+        ->click('Empezar')
+        ->assertSee('Pregunta 1 de 5')
+        ->assertButtonEnabled('Anterior')
+        ->click('Anterior')
+        ->assertSee('Empezar')
+        ->assertDontSee('Pregunta 1 de 5');
+});
+
+it('keeps a long company name inside the header on a phone', function (): void {
+    invitedPerson(['nom035.guide-iii']);
+    Tenant::query()->update(['trade_name' => 'Autopartes, Componentes y Refacciones Automotrices del Bajío Occidental de México']);
+
+    visit('/survey/the-token')->on()->mobile()
+        ->assertSee('Confidencial')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth')
+        ->assertScript('() => { const header = document.querySelector("header"); const box = header.getBoundingClientRect(); return [...header.querySelectorAll("p")].every((part) => { const it = part.getBoundingClientRect(); return it.top >= box.top && it.bottom <= box.bottom && it.right <= box.right; }); }');
 });
 
 it('says there is nothing left when the used link is opened again', function (bool $dark, bool $mobile): void {

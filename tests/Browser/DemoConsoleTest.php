@@ -78,6 +78,20 @@ it('links the console from the sidebar only for the superadmin', function (): vo
     visit('/admin')->assertDontSee('Solicitudes de demo');
 });
 
+it('takes a phone to the request chosen, below the list', function (): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->create(['name' => 'Ana López', 'created_at' => now()]);
+    DemoRequest::factory()->count(6)->create(['created_at' => now()->subDays(2)]);
+    DemoRequest::factory()->create(['name' => 'Rosa Medina', 'message' => 'Después', 'created_at' => now()->subDays(3)]);
+
+    visit('/admin/demo-requests')->on()->mobile()
+        ->click('Rosa Medina')
+        ->assertSeeIn('@demo-request-detail', 'Rosa Medina')
+        ->assertScript('() => document.activeElement.getAttribute("data-test")', 'demo-request-detail')
+        ->assertScript('() => { const box = document.querySelector(\'[data-test="demo-request-detail"]\').getBoundingClientRect(); return box.top >= 0 && box.top < window.innerHeight; }')
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens the newest request and shows another one when chosen from the list', function (): void {
     signInAsSuperadmin();
     DemoRequest::factory()->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo', 'message' => 'Primero', 'created_at' => now()]);

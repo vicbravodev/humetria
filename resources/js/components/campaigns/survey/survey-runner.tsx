@@ -75,6 +75,8 @@ export default function SurveyRunner({
                 )}
                 {steps.step !== undefined && (
                     <SurveyStep
+                        // A new screen is a new element: its heading takes the focus as it mounts.
+                        key={steps.step.keys[0]}
                         instrument={instrument}
                         step={steps.step}
                         answers={answers}
@@ -82,11 +84,12 @@ export default function SurveyRunner({
                     />
                 )}
                 <SurveyNavigation
-                    isFirst={steps.isFirst}
                     isLast={steps.isLast}
                     canAdvance={steps.canAdvance}
                     sending={sending}
-                    onBack={steps.back}
+                    onBack={
+                        steps.isFirst ? () => setStarted(false) : steps.back
+                    }
                     onNext={steps.isLast ? send : steps.next}
                 />
                 <p className="pt-2 text-center text-base text-muted-foreground">

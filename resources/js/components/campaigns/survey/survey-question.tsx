@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { cn } from '@/lib/utils';
 import type { SurveyOption } from '@/types';
 
@@ -13,6 +14,7 @@ export default function SurveyQuestion({
     options,
     value,
     onChange,
+    legendRef,
 }: {
     name: string;
     caption?: string;
@@ -20,12 +22,18 @@ export default function SurveyQuestion({
     options: SurveyOption[];
     value: string | undefined;
     onChange: (value: string) => void;
+    /** For the question a screen opens with alone (a gate): its legend takes the focus. */
+    legendRef?: Ref<HTMLLegendElement>;
 }) {
     return (
         // The separator sits on a wrapper: on the fieldset itself the legend would cut it.
         <div className="md:py-6 md:[&+&]:border-t">
             <fieldset className="flex flex-col gap-2.5 md:gap-3.5">
-                <legend className="mb-3.5 flex flex-col gap-2">
+                <legend
+                    ref={legendRef}
+                    tabIndex={legendRef === undefined ? undefined : -1}
+                    className="mb-3.5 flex flex-col gap-2 focus:outline-none"
+                >
                     {caption !== undefined && (
                         <span className="text-base text-muted-foreground">
                             {caption}

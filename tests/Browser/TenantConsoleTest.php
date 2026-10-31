@@ -10,6 +10,9 @@ use App\Modules\Tenancy\Models\TenantMembership;
 // The labels of the open row menu, in order.
 const MENU_ITEMS = '() => [...document.querySelectorAll(\'[role="menuitem"]\')].map((item) => item.textContent).join(", ")';
 
+// Holds every request of the page 400 ms before it leaves.
+const SLOW_REQUESTS = '() => { const send = XMLHttpRequest.prototype.send; XMLHttpRequest.prototype.send = function (...args) { setTimeout(() => send.apply(this, args), 400); }; }';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -486,6 +489,40 @@ it('narrows the companies by name or RFC and by status', function (): void {
         ->assertSee('Autopartes Querétaro')
         ->assertQueryStringHas('q', 'queretaro')
         ->click('a[href*="status=trial"]')
+        ->assertSee('Ninguna empresa coincide')
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps every letter typed while the last search is still answering', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    $page = visit('/admin/companies');
+    // Every request waits 400 ms to leave, so the first search is still answering while more is typed.
+    $page->script(SLOW_REQUESTS);
+    $page->type('input[type="search"]', 'Gru');
+    $page->wait(0.5);
+    $page->keys('input[type="search"]', ['p', 'o', ' ', 'E']);
+    $page->wait(2);
+
+    $page->assertQueryStringHas('q', 'Grupo E')
+        ->assertValue('input[type="search"]', 'Grupo E')
+        ->assertNoJavaScriptErrors();
+});
+
+it('does not undo a status tab clicked while a search waits to go out', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    $page = visit('/admin/companies');
+    $page->script(SLOW_REQUESTS);
+    $page->type('input[type="search"]', 'Gru');
+    $page->click('a[href*="status=deactivated"]');
+    $page->wait(2);
+
+    // The box says what the list is narrowed by: the search that never went out is dropped.
+    $page->assertQueryStringHas('status', 'deactivated')
+        ->assertValue('input[type="search"]', '')
         ->assertSee('Ninguna empresa coincide')
         ->assertNoJavaScriptErrors();
 });
