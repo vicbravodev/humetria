@@ -128,6 +128,7 @@ final readonly class SendTeleworkDigests
                 return 0;
             }
 
+            // ponytail: the owner has no center dashboard yet; Task 15 replaces this link with it.
             $center = $centers[0] ?? Teleworker::query()->orderBy('created_at')->orderBy('id')->first(['work_center_id'])?->work_center_id;
             Notification::route('mail', $email)->notify(new TeleworkDigest($company, $name, $lines, $center === null ? route('tenant.telework.documents.index', $slug) : route('tenant.telework.reviews.index', [$slug, $center])));
 
@@ -187,11 +188,17 @@ final readonly class SendTeleworkDigests
     {
         $workplaces = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', $this->teleworkers($centers)->where('status', TeleworkerStatus::Active)->select('id'))->get();
 
-        return $workplaces->filter(function (Workplace $workplace) use ($since, $now): bool {
-            $expires = $this->standing->expiresOn($workplace);
+        $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all()));
 
-            return $expires !== null && $expires->greaterThan($since) && $expires->lessThanOrEqualTo($now);
-        })->count();
+        return count(array_filter($reviews, function (WorkplaceReview $review) use ($since, $now): bool {
+            if (! $review->decision->validates()) {
+                return false;
+            }
+
+            $expires = $this->standing->expiry($review);
+
+            return $expires->greaterThan($since) && $expires->lessThanOrEqualTo($now);
+        }));
     }
 
     /**

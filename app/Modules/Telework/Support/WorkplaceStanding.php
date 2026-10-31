@@ -61,6 +61,29 @@ final readonly class WorkplaceStanding
         return $review === null || ! $review->decision->validates() ? null : $this->expiry($review);
     }
 
+    /**
+     * The latest review of each workplace, in one query per thousand: what a pass over many workplaces needs instead of
+     * asking `of()` for each.
+     *
+     * @param  list<string>  $workplaceIds
+     * @return array<string, WorkplaceReview> by workplace id; a workplace never reviewed is missing.
+     */
+    public function latestReviews(array $workplaceIds): array
+    {
+        $latest = [];
+
+        foreach (array_chunk($workplaceIds, 1000) as $ids) {
+            $reviews = WorkplaceReview::query()->selectRaw('distinct on (workplace_id) *')->whereIn('workplace_id', $ids)
+                ->orderBy('workplace_id')->orderByDesc('decided_at')->orderByDesc('id')->get();
+
+            foreach ($reviews as $review) {
+                $latest[$review->workplace_id] = $review;
+            }
+        }
+
+        return $latest;
+    }
+
     private function latest(Workplace $workplace): ?WorkplaceReview
     {
         return WorkplaceReview::query()->where('workplace_id', $workplace->id)->orderByDesc('decided_at')->orderByDesc('id')->first();
@@ -71,7 +94,8 @@ final readonly class WorkplaceStanding
         return $this->expiry($review)->lessThanOrEqualTo(CarbonImmutable::now());
     }
 
-    private function expiry(WorkplaceReview $review): CarbonImmutable
+    /** The first day the validation of a review no longer holds (start of that day in the display time zone). */
+    public function expiry(WorkplaceReview $review): CarbonImmutable
     {
         return $review->decided_at->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addMonthsNoOverflow($this->settings->periodMonths());
     }

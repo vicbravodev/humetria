@@ -6,11 +6,11 @@ namespace App\Modules\Telework\Actions;
 
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
-use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Models\WorkplaceReview;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
@@ -61,40 +61,54 @@ final readonly class ScheduleReviews
             return 0;
         }
 
-        $limit = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay()->addDays(self::WARNING_DAYS);
+        $now = CarbonImmutable::now();
+        $limit = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addDays(self::WARNING_DAYS);
         $created = 0;
         $workplaces = Workplace::query()->whereNull('retired_at')
             ->whereIn('teleworker_id', Teleworker::query()->where('status', TeleworkerStatus::Active)->select('id'))
             ->orderBy('id')->get();
+        $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all()));
 
         foreach ($workplaces as $workplace) {
-            $expires = $this->standing->expiresOn($workplace);
+            $review = $reviews[$workplace->id] ?? null;
 
-            if (! in_array($this->standing->of($workplace), [WorkplaceStatus::Valid, WorkplaceStatus::ValidWithPlan], true) || $expires === null || $expires->greaterThan($limit)) {
+            // Valid today (the latest review validates and has not lapsed) and lapsing within the warning days.
+            if ($review === null || ! $review->decision->validates()) {
                 continue;
             }
 
-            $created += $this->requestSectionTwo($workplace);
+            $expires = $this->standing->expiry($review);
+
+            if ($expires->lessThanOrEqualTo($now) || $expires->greaterThan($limit)) {
+                continue;
+            }
+
+            $created += $this->requestSectionTwo($workplace, $review);
         }
 
         return $created;
     }
 
-    private function requestSectionTwo(Workplace $workplace): int
+    /** One Sección II per review: while the last one asked after the latest review is not cancelled, answered or not, nobody is asked again. */
+    private function requestSectionTwo(Workplace $workplace, WorkplaceReview $review): int
     {
-        if (ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', Section::Two)->whereNull('submitted_at')->whereNull('cancelled_at')->exists()) {
+        if (ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', Section::Two)->whereNull('cancelled_at')->where('requested_at', '>', $review->decided_at)->exists()) {
             return 0;
         }
 
         try {
-            $this->request->handle($workplace, Section::Two);
+            $application = $this->request->handle($workplace, Section::Two);
         } catch (ValidationException) {
             // The work center has no published list yet: nothing to ask for.
             return 0;
         }
 
+        if (! $application->wasRecentlyCreated) {
+            return 0;
+        }
+
         $teleworker = Teleworker::query()->findOrFail($workplace->teleworker_id, ['id', 'employee_id']);
-        SendPortalReminder::dispatch($workplace->tenant_id, $teleworker->employee_id, null)->delay(SendPortalReminder::DELAY);
+        SendPortalReminder::remind($workplace->tenant_id, $teleworker->employee_id);
 
         return 1;
     }

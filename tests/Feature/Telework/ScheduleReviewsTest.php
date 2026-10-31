@@ -26,6 +26,7 @@ beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
     ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    workIn($this->tenant);
 });
 
 /**
@@ -79,13 +80,52 @@ it('leaves alone expired, never validated, not valid, retired and non-active wor
     Queue::assertNothingPushed();
 });
 
-it('asks again once the Sección II was answered, and skips a center that has no published list', function (): void {
-    $answered = scheduledWorkplace('2026-01-15');
-    ChecklistApplication::factory()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $answered->id, 'section' => Section::Two]);
+it('skips a center that has no published list', function (): void {
     $bare = WorkCenter::factory()->for($this->tenant)->create();
     scheduledWorkplace('2026-01-15', center: $bare);
 
+    expect(resolve(ScheduleReviews::class)->handle())->toBe(0);
+    Queue::assertNothingPushed();
+});
+
+it('does not ask again while an answered Sección II waits for the Comisión, however many days pass', function (): void {
+    $workplace = scheduledWorkplace('2026-01-15');
+    ChecklistApplication::factory()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => Section::Two, 'requested_at' => '2026-12-10 12:00:00']);
+
+    $first = resolve(ScheduleReviews::class)->handle();
+    $this->travelTo('2026-12-20 13:00:00');
+    $second = resolve(ScheduleReviews::class)->handle();
+    workIn($this->tenant);
+
+    expect([$first, $second])->toBe([0, 0])
+        ->and(ChecklistApplication::query()->where('section', Section::Two)->count())->toBe(1);
+    Queue::assertNothingPushed();
+});
+
+it('asks again only after a newer review whose validation lapses within 30 days', function (): void {
+    $workplace = scheduledWorkplace('2026-01-15');
+    ChecklistApplication::factory()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => Section::Two, 'requested_at' => '2026-12-10 12:00:00']);
+    resolve(App\Modules\Telework\Support\Settings::class)->record();
+    App\Modules\Telework\Models\TeleworkSettings::query()->update(['review_period_months' => 1]);
+    WorkplaceReviewFactory::new()->decidedAt('2026-12-12 18:00:00')->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id]);
+
+    $created = resolve(ScheduleReviews::class)->handle();
+    $again = resolve(ScheduleReviews::class)->handle();
+
+    expect([$created, $again])->toBe([1, 0]);
+    Queue::assertPushed(SendPortalReminder::class, 1);
+});
+
+it('asks afresh when the open Sección II was cancelled, as when a person ended and came back', function (): void {
+    $workplace = scheduledWorkplace('2026-01-15');
+    ChecklistApplication::factory()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => Section::Two, 'requested_at' => '2026-12-10 12:00:00', 'cancelled_at' => '2026-12-11 12:00:00']);
+    WorkplaceReviewFactory::new()->decidedAt('2026-12-12 18:00:00')->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id]);
+    resolve(App\Modules\Telework\Support\Settings::class)->record();
+    App\Modules\Telework\Models\TeleworkSettings::query()->update(['review_period_months' => 1]);
+
     expect(resolve(ScheduleReviews::class)->handle())->toBe(1);
+    workIn($this->tenant);
+    expect(ChecklistApplication::query()->whereNull('cancelled_at')->where('section', Section::Two)->count())->toBe(1);
 });
 
 it('goes through every usable company and skips the blocked ones', function (): void {

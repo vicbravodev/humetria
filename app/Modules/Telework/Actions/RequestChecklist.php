@@ -23,7 +23,7 @@ final readonly class RequestChecklist
     /** @throws ValidationException when the work center has no published list yet. */
     public function handle(Workplace $workplace, Section $section): ChecklistApplication
     {
-        $pending = fn (): ?ChecklistApplication => ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', $section)->whereNull('submitted_at')->first();
+        $pending = fn (): ?ChecklistApplication => ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', $section)->whereNull('submitted_at')->whereNull('cancelled_at')->first();
         $existing = $pending();
 
         if ($existing !== null) {
