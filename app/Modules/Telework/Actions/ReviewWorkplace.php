@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Telework\Enums\EvidenceKind;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\ReviewMethod;
+use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\VisitAuthorization;
@@ -24,7 +25,8 @@ use Illuminate\Validation\ValidationException;
  * The Comisión decides about a workplace (criterio C-12): Validated, Validated with an action plan, or Not validated.
  * With a submitted checklist it is a `checklist` review (the checklist is reviewed once); with the authorization of an
  * in-person visit (see `RecordVisit`, which checks it), a `visit`; with neither, a `remote_check`, which also closes the
- * remote checks the Comisión had asked for.
+ * remote checks the Comisión had asked for. A visit or a remote check validates only a workplace whose person answered its
+ * list (`requireAnsweredList`).
  * "With plan" needs the plan and a due date that is not in the past; "Not validated" needs notes. Who may decide is the
  * controller's business (`ReviewAccess`): this only judges what is decided.
  *
@@ -52,6 +54,10 @@ final readonly class ReviewWorkplace
                     $authorization !== null => ReviewMethod::Visit,
                     default => ReviewMethod::RemoteCheck,
                 };
+
+                if ($method !== ReviewMethod::Checklist && $decision->validates()) {
+                    $this->requireAnsweredList($workplace);
+                }
 
                 $review = WorkplaceReview::query()->create([
                     'tenant_id' => $workplace->tenant_id,
@@ -147,6 +153,26 @@ final readonly class ReviewWorkplace
 
         if (WorkplaceReview::query()->where('application_id', $fresh->id)->exists()) {
             throw ValidationException::withMessages(['application' => 'Esta lista ya fue revisada.']);
+        }
+    }
+
+    /**
+     * A visit or a remote check does not replace the list (criterios C-12 and C-14): the person answers it anyway. To
+     * validate without reviewing a list, the workplace needs a submitted, not cancelled one: a Sección I when it was never
+     * reviewed, and any list sent after the previous review otherwise. Finding it not valid needs none.
+     *
+     * @throws ValidationException
+     */
+    private function requireAnsweredList(Workplace $workplace): void
+    {
+        $previous = WorkplaceReview::query()->where('workplace_id', $workplace->id)->orderByDesc('decided_at')->orderByDesc('id')->first();
+        $answered = ChecklistApplication::query()->where('workplace_id', $workplace->id)->whereNotNull('submitted_at')->whereNull('cancelled_at')
+            ->when($previous === null, fn ($lists) => $lists->where('section', Section::One))
+            ->when($previous !== null, fn ($lists) => $lists->where('submitted_at', '>', $previous?->decided_at))
+            ->exists();
+
+        if (! $answered) {
+            throw ValidationException::withMessages(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
         }
     }
 

@@ -190,6 +190,8 @@ it('keeps the photo requests of other people, other kinds and retired workplaces
 it('fulfils a remote-check request when the Comisión records the remote check', function (): void {
     $asked = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'kind' => EvidenceKind::RemoteCheck]);
     $photos = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    // The person answered the list: a remote check validates only then.
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     Log::spy();
 
     $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $this->workplace->id]), ['decision' => 'valid'])->assertSessionHasNoErrors();
@@ -273,6 +275,8 @@ it('lets RH or the assigned Comisión attach the signed paper authorization as a
 it('records a visit with the person\'s written authorization', function (): void {
     $this->travelTo('2026-03-10 18:00:00');
     $authorization = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    // The person answered the list: a visit validates only then.
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     Log::spy();
 
     $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.visit.store', [$this->tenant, $this->workplace->id]), [
@@ -300,6 +304,7 @@ it('does not record a visit without a given, unused authorization of that workpl
     $other = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
     $foreign = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $other->id]);
     $given = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     $record = fn (VisitAuthorization $authorization, string $on) => resolve(RecordVisit::class)->handle($this->workplace, $authorization, CarbonImmutable::parse($on), ReviewDecision::Valid, '', null, null, $this->cora->id);
 
     expect(evidenceRefused(fn () => $record($waiting, '2026-03-09')))->toHaveKey('visit_authorization_id')
@@ -418,6 +423,7 @@ it('does not let a cancelled request be confirmed, signed or used', function ():
 
 it('does not cancel a request that already backs a visit, nor one outside reach', function (): void {
     $used = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     resolve(RecordVisit::class)->handle($this->workplace, $used, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id);
     $stranger = memberOf($this->tenant, TenantRole::Committee);
 
@@ -442,4 +448,26 @@ it('does not remind the person of a remote check, which the Comisión does itsel
     resolve(RequestEvidence::class)->handle($this->workplace, EvidenceKind::RemoteCheck, 'Revisión remota.', $this->cora->id);
 
     Illuminate\Support\Facades\Queue::assertNothingPushed();
+});
+
+it('does not validate by visit a workplace whose person answered no list, first or after a previous review', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    $visit = function (ReviewDecision $decision, string $notes = '') {
+        $authorization = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+
+        return resolve(RecordVisit::class)->handle($this->workplace, $authorization, CarbonImmutable::now(), $decision, $notes, null, null, $this->cora->id);
+    };
+
+    expect(evidenceRefused(fn () => $visit(ReviewDecision::Valid)))->toBe(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.'])
+        ->and($visit(ReviewDecision::NotValid, 'La silla está rota.')->decision)->toBe(ReviewDecision::NotValid);
+
+    // A list sent before the previous review does not back a new validation.
+    ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'submitted_at' => '2026-03-10 17:00:00']);
+    expect(evidenceRefused(fn () => $visit(ReviewDecision::Valid)))->toHaveKey('application');
+
+    $this->travelTo('2026-03-11 18:00:00');
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'section' => 2]);
+
+    expect($visit(ReviewDecision::Valid)->method)->toBe(ReviewMethod::Visit)
+        ->and(VisitAuthorization::query()->count())->toBe(4);
 });

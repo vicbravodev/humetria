@@ -234,3 +234,52 @@ it('keeps the remote check of a workplace behind the same gate', function (): vo
 
     expect(WorkplaceReview::query()->count())->toBe(0);
 });
+
+it('does not validate by remote check a workplace whose person answered no list, nor with a Sección II before any validation', function (ReviewDecision $decision): void {
+    $bare = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
+    $remote = fn () => resolve(ReviewWorkplace::class)->handle($bare, null, $decision, 'Por videollamada.', 'Plan', CarbonImmutable::parse('2030-01-01'), $this->cora->id);
+
+    expect(reviewRejected($remote))->toBe(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
+
+    ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id, 'section' => 2]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id, 'cancelled_at' => now()]);
+
+    expect(reviewRejected($remote))->toHaveKey('application')
+        ->and(WorkplaceReview::query()->where('workplace_id', $bare->id)->count())->toBe(0);
+
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $bare->id]);
+
+    expect($remote()->method)->toBe(ReviewMethod::RemoteCheck);
+})->with([ReviewDecision::Valid, ReviewDecision::ValidWithPlan]);
+
+it('does not validate again by remote check without a list sent after the previous review', function (): void {
+    $this->application->update(['submitted_at' => '2026-03-09 18:00:00']);
+    $this->travelTo('2026-03-10 18:00:00');
+    decideReview(ReviewDecision::Valid);
+    $this->travelTo('2027-02-20 18:00:00');
+    $remote = fn () => resolve(ReviewWorkplace::class)->handle($this->workplace, null, ReviewDecision::Valid, '', null, null, $this->cora->id);
+
+    expect(reviewRejected($remote))->toHaveKey('application');
+
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'section' => 2]);
+
+    expect($remote()->decision)->toBe(ReviewDecision::Valid);
+});
+
+it('still lets a remote check find a workplace not valid with no list', function (): void {
+    $bare = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
+
+    $review = resolve(ReviewWorkplace::class)->handle($bare, null, ReviewDecision::NotValid, 'Se vio el cable suelto.', null, null, $this->cora->id);
+
+    expect($review->decision)->toBe(ReviewDecision::NotValid)->and($review->method)->toBe(ReviewMethod::RemoteCheck);
+});
+
+it('refuses through the panel a remote-check validation with no list answered', function (): void {
+    $bare = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
+
+    $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $bare->id]), reviewForm())
+        ->assertSessionHasErrors(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
+
+    expect(WorkplaceReview::query()->count())->toBe(0);
+});
