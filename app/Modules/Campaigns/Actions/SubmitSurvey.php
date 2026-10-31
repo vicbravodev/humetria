@@ -63,7 +63,14 @@ final readonly class SubmitSurvey
                 $this->recorder->recordAnonymous(new AnonymousAnswers($survey->campaign->id, $survey->campaign->work_center_id, $person->areaId, $instrument, $definition->version, $answers));
             }
 
-            $guide->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+            // Only while still pending: someone deactivated or moved meanwhile has it cancelled, and then nothing is kept.
+            $taken = $survey->participant->instruments()->whereKey($guide->id)->where('status', InstrumentStatus::Pending)
+                ->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+
+            if ($taken === 0) {
+                throw new SurveyUnavailable(SurveyUnavailableReason::Invalid, $survey->company);
+            }
+
             Log::info('campaign_participant.completed', ['participant_id' => $survey->participant->id, 'instrument' => $instrument]);
         }, Campaign::DEADLOCK_ATTEMPTS);
     }

@@ -142,6 +142,24 @@ it('refuses a guide the person was not given, or one cancelled', function (): vo
     expect(AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
+it('refuses, and keeps nothing of, a guide cancelled while its answers were being taken', function (): void {
+    // The person is deactivated at the very moment their answers are being stored.
+    $cancelled = false;
+    Illuminate\Support\Facades\DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$cancelled): void {
+        if (! $cancelled && str_starts_with($query->sql, 'insert into "anonymous_responses"')) {
+            $cancelled = true;
+            ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $this->participant->id)->where('status', InstrumentStatus::Pending)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
+        }
+    });
+
+    submitGuide('nom035.guide-iii', nom035Answers('nom035.guide-iii'))->assertRedirect(route('survey.show', 'the-token'));
+
+    // Here the cancelling runs inside the same transaction, so it is undone with it; what matters is nothing is taken.
+    expect($cancelled)->toBeTrue()
+        ->and(guideStatus($this->participant, 'nom035.guide-iii'))->not->toBe(InstrumentStatus::Completed)
+        ->and(AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
+});
+
 it('refuses answers after the last day, after closing, from a wrong link or while the company is suspended', function (Closure $change, string $token): void {
     $change($this->participant);
 
