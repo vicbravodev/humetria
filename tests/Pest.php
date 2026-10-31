@@ -227,12 +227,12 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
 
 /**
  * Resizes the window and waits until React has re-rendered for the new width (the sidebar becomes a sheet below
- * 768 px), so what the next assertion measures is the layout at that width, not the one before.
+ * 768 px) and its transitions have settled, so the next assertion measures the layout at that width.
  */
 function resizeTo(AwaitableWebpage $page, int $width, int $height = 900): AwaitableWebpage
 {
     $page->resize($width, $height)
-        ->assertScript('() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))');
+        ->assertScript('() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))).then(() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished))).then(() => true)');
 
     return $page;
 }

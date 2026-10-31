@@ -110,6 +110,15 @@ it('centers the arc over its figures on a phone and sets them beside it on a des
     }
 })->with(['light' => false, 'dark' => true]);
 
+it('keeps the whole trail readable in the top bar at every width', function (): void {
+    $page = visitPage('dashboard', panelCompany());
+
+    foreach ([375, 768, 1024, 1280] as $width) {
+        // How many shown crumbs are cut short.
+        resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'nav[aria-label="Ruta"] li\')).filter((crumb) => crumb.offsetWidth > 0 && crumb.scrollWidth > crumb.clientWidth).length', 0);
+    }
+});
+
 it('fits each work center of the cycle inside its card at every width', function (): void {
     $page = visitPage('dashboard', panelCompany());
 
