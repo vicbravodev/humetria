@@ -9,6 +9,7 @@ use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
 use Carbon\CarbonImmutable;
+use Closure;
 
 /**
  * Where a workplace stands, derived and never stored (criterios C-12 and C-13; designer decisions 3 and 9). The latest
@@ -29,8 +30,17 @@ final readonly class WorkplaceStanding
             return WorkplaceStatus::Retired;
         }
 
-        $review = $this->latest($workplace);
+        return $this->statusOf($this->latest($workplace), fn (): int => $this->settings->periodMonths());
+    }
 
+    /**
+     * Where a workplace stands given its latest review (null: never reviewed). The period is asked for only when it
+     * matters, so a pass over many workplaces reads it once.
+     *
+     * @param  Closure(): int  $periodMonths
+     */
+    public function statusOf(?WorkplaceReview $review, Closure $periodMonths): WorkplaceStatus
+    {
         if ($review === null) {
             return WorkplaceStatus::Pending;
         }
@@ -39,7 +49,7 @@ final readonly class WorkplaceStanding
             return WorkplaceStatus::NotValid;
         }
 
-        return $this->lapsed($review) ? WorkplaceStatus::Pending : WorkplaceStatus::from($review->decision->value);
+        return $this->expiryAfter($review, $periodMonths())->lessThanOrEqualTo(CarbonImmutable::now()) ? WorkplaceStatus::Pending : WorkplaceStatus::from($review->decision->value);
     }
 
     /** Whether one of the person's workplaces is validated (with or without a plan) and in force today. */
@@ -89,14 +99,14 @@ final readonly class WorkplaceStanding
         return WorkplaceReview::query()->where('workplace_id', $workplace->id)->orderByDesc('decided_at')->orderByDesc('id')->first();
     }
 
-    private function lapsed(WorkplaceReview $review): bool
-    {
-        return $this->expiry($review)->lessThanOrEqualTo(CarbonImmutable::now());
-    }
-
     /** The first day the validation of a review no longer holds (start of that day in the display time zone). */
     public function expiry(WorkplaceReview $review): CarbonImmutable
     {
-        return $review->decided_at->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addMonthsNoOverflow($this->settings->periodMonths());
+        return $this->expiryAfter($review, $this->settings->periodMonths());
+    }
+
+    private function expiryAfter(WorkplaceReview $review, int $months): CarbonImmutable
+    {
+        return $review->decided_at->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addMonthsNoOverflow($months);
     }
 }
