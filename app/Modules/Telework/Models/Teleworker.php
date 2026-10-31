@@ -41,10 +41,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $ended_at
  * @property EndReason|null $end_reason
  * @property string|null $end_note
+ * @property string|null $no_equipment_reason
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'work_center_id', 'status', 'telework_percentage', 'marital_status', 'activities', 'job_profile', 'contact_phone', 'street', 'exterior_number', 'interior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'started_at', 'ended_at', 'end_reason', 'end_note'])]
+#[Fillable(['tenant_id', 'employee_id', 'work_center_id', 'status', 'telework_percentage', 'marital_status', 'activities', 'job_profile', 'contact_phone', 'street', 'exterior_number', 'interior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'started_at', 'ended_at', 'end_reason', 'end_note', 'no_equipment_reason'])]
 #[UseFactory(TeleworkerFactory::class)]
 final class Teleworker extends Model
 {

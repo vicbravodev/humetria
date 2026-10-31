@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories\Telework;
 
+use App\Modules\Telework\Enums\EndReason;
+use App\Modules\Telework\Enums\MaritalStatus;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Teleworker;
 use Database\Factories\Organization\EmployeeFactory;
@@ -36,7 +38,26 @@ final class TeleworkerFactory extends Factory
 
     public function active(): self
     {
-        return $this->state(['status' => TeleworkerStatus::Active, 'started_at' => now()]);
+        return $this->state([
+            'status' => TeleworkerStatus::Active,
+            'started_at' => now(),
+            'marital_status' => MaritalStatus::Single,
+            'activities' => 'Atención de clientes.',
+            'job_profile' => 'Analista',
+            'contact_phone' => '4421234567',
+            'street' => 'Calle Reforma',
+            'exterior_number' => '12',
+            'neighborhood' => 'Centro',
+            'postal_code' => '76000',
+            'municipality' => 'Querétaro',
+            'state' => 'QUE',
+            'no_equipment_reason' => 'Usa su propio equipo.',
+        ]);
+    }
+
+    public function ended(EndReason $reason = EndReason::Other): self
+    {
+        return $this->active()->state(['status' => TeleworkerStatus::Ended, 'started_at' => now()->subYear(), 'ended_at' => now(), 'end_reason' => $reason]);
     }
 
     /**

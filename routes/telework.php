@@ -7,6 +7,7 @@ use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
 use App\Modules\Telework\Http\Controllers\PhotoController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
+use App\Modules\Telework\Http\Controllers\RosterController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use App\Modules\Telework\Http\Controllers\VisitController;
@@ -42,6 +43,7 @@ Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers', [Te
 Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.show');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
+Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/roster', [RosterController::class, 'join'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.join');
 
 // The Comisión's review of a center's workplaces: only its assigned members. A decision is never edited or deleted;
 // a later review replaces it as the current one.
