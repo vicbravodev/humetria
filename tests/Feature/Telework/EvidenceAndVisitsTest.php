@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Telework\Actions\AttachVisitDocument;
+use App\Modules\Telework\Actions\CancelVisitAuthorization;
 use App\Modules\Telework\Actions\ConfirmVisitAuthorization;
 use App\Modules\Telework\Actions\FulfillPhotoRequest;
 use App\Modules\Telework\Actions\IssuePortalLink;
@@ -35,7 +36,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
-mutates(RequestEvidence::class, FulfillPhotoRequest::class, RequestVisitAuthorization::class, ConfirmVisitAuthorization::class, AttachVisitDocument::class, RecordVisit::class, EvidenceController::class, VisitController::class, PortalEvidenceController::class);
+mutates(CancelVisitAuthorization::class, RequestEvidence::class, FulfillPhotoRequest::class, RequestVisitAuthorization::class, ConfirmVisitAuthorization::class, AttachVisitDocument::class, RecordVisit::class, EvidenceController::class, VisitController::class, PortalEvidenceController::class);
 
 beforeEach(function (): void {
     Storage::fake('telework_files');
@@ -343,4 +344,82 @@ it('keeps the other company\'s evidence out of the portal and the panel', functi
 
     workIn($this->tenant);
     expect(EvidenceRequest::query()->count())->toBe(0)->and(VisitAuthorization::query()->count())->toBe(0);
+});
+
+it('keeps a confirmation whose address is unknown, with the address empty', function (): void {
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $portal = resolve(App\Modules\Telework\Actions\OpenPortal::class)->handle($this->token);
+
+    resolve(ConfirmVisitAuthorization::class)->handle($portal, $authorization->id, null);
+
+    $authorization->refresh();
+    expect($authorization->confirmed_at)->not->toBeNull()->and($authorization->confirmed_ip)->toBeNull()->and($authorization->authorized())->toBeTrue();
+});
+
+it('tells who may not act that the page is not theirs before it judges what they sent', function (): void {
+    $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $requests = [
+        route('tenant.telework.reviews.store', [$this->tenant, $application->id]),
+        route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $this->workplace->id]),
+        route('tenant.telework.evidence.store', [$this->tenant, $this->workplace->id]),
+        route('tenant.telework.workplaces.visit.store', [$this->tenant, $this->workplace->id]),
+        route('tenant.telework.visit-authorizations.document.store', [$this->tenant, $authorization->id]),
+    ];
+
+    // An empty form is invalid everywhere: only who may act sees the validation errors.
+    foreach ($requests as $url) {
+        $this->actingAs($this->viewer)->post($url, [])->assertStatus(evidenceIsDocument($url) ? 403 : 404);
+        $this->actingAs($this->hr)->post($url, [])->assertStatus(evidenceIsDocument($url) ? 302 : 403);
+    }
+
+    $this->actingAs($this->cora)->post($requests[0], [])->assertSessionHasErrors('decision');
+    expect(WorkplaceReview::query()->count())->toBe(0);
+});
+
+function evidenceIsDocument(string $url): bool
+{
+    return str_ends_with($url, '/document');
+}
+
+it('cancels a visit request nobody used, which stops blocking a new one and vanishes from the portal', function (): void {
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $cancel = route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $authorization->id]);
+    Log::spy();
+
+    $this->actingAs($this->viewer)->post($cancel)->assertForbidden();
+    $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))->assertSessionHasErrors('visit');
+
+    $this->actingAs($this->cora)->post($cancel)->assertSessionHasNoErrors()->assertRedirect();
+
+    $authorization->refresh();
+    expect($authorization->cancelled_at)->not->toBeNull()->and($authorization->cancelled_by)->toBe($this->cora->id)->and($authorization->authorized())->toBeFalse()
+        ->and(evidencePending()['visits'])->toBe([]);
+    Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context): bool => $message === 'telework.visit_authorization_cancelled'
+        && $context === ['visit_authorization_id' => $authorization->id, 'workplace_id' => $this->workplace->id, 'cancelled_by' => $this->cora->id])->once();
+
+    $this->post($cancel)->assertSessionHasErrors('visit');
+    $this->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))->assertSessionHasNoErrors();
+    expect(VisitAuthorization::query()->count())->toBe(2);
+});
+
+it('does not let a cancelled request be confirmed, signed or used', function (): void {
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'cancelled_at' => now(), 'cancelled_by' => $this->cora->id]);
+    $given = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $given->update(['cancelled_at' => now(), 'cancelled_by' => $this->cora->id]);
+
+    $this->post(route('portal.visits.confirm', [$this->token, $authorization->id]))->assertNotFound();
+    expect(evidenceRefused(fn () => resolve(AttachVisitDocument::class)->handle($authorization, __FILE__)))->toHaveKey('document')
+        ->and(evidenceRefused(fn () => resolve(RecordVisit::class)->handle($this->workplace, $given, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id)))->toHaveKey('visit_authorization_id');
+});
+
+it('does not cancel a request that already backs a visit, nor one outside reach', function (): void {
+    $used = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    resolve(RecordVisit::class)->handle($this->workplace, $used, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id);
+    $stranger = memberOf($this->tenant, TenantRole::Committee);
+
+    $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $used->id]))->assertSessionHasErrors('visit');
+    $this->actingAs($stranger)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $used->id]))->assertNotFound();
+    $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, 'nope']))->assertNotFound();
+    expect($used->refresh()->cancelled_at)->toBeNull();
 });

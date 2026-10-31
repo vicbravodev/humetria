@@ -25,20 +25,22 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable|null $confirmed_at
  * @property string|null $confirmed_ip
  * @property string|null $document_path
+ * @property CarbonImmutable|null $cancelled_at
+ * @property int|null $cancelled_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'workplace_id', 'requested_by', 'requested_at', 'confirmed_at', 'confirmed_ip', 'document_path'])]
+#[Fillable(['tenant_id', 'workplace_id', 'requested_by', 'requested_at', 'confirmed_at', 'confirmed_ip', 'document_path', 'cancelled_at', 'cancelled_by'])]
 #[UseFactory(VisitAuthorizationFactory::class)]
 final class VisitAuthorization extends Model
 {
     /** @use HasFactory<VisitAuthorizationFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
 
-    /** Whether the person has authorized the visit, in the portal or on paper. */
+    /** Whether the person has authorized the visit, in the portal or on paper. A cancelled request authorizes nothing. */
     public function authorized(): bool
     {
-        return $this->confirmed_at !== null || $this->document_path !== null;
+        return $this->cancelled_at === null && ($this->confirmed_at !== null || $this->document_path !== null);
     }
 
     /**
@@ -46,6 +48,6 @@ final class VisitAuthorization extends Model
      */
     protected function casts(): array
     {
-        return ['requested_at' => 'immutable_datetime', 'confirmed_at' => 'immutable_datetime'];
+        return ['requested_at' => 'immutable_datetime', 'confirmed_at' => 'immutable_datetime', 'cancelled_at' => 'immutable_datetime'];
     }
 }

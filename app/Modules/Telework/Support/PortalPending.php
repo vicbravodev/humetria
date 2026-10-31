@@ -48,7 +48,7 @@ final readonly class PortalPending
         }
 
         $photos = EvidenceRequest::query()->whereIn('workplace_id', $ids)->where('kind', EvidenceKind::Photos)->whereNull('fulfilled_at')->orderBy('requested_at')->orderBy('id')->get();
-        $visits = VisitAuthorization::query()->whereIn('workplace_id', $ids)->whereNull('confirmed_at')->whereNull('document_path')->orderBy('requested_at')->orderBy('id')->get();
+        $visits = VisitAuthorization::query()->whereIn('workplace_id', $ids)->whereNull('cancelled_at')->whereNull('confirmed_at')->whereNull('document_path')->orderBy('requested_at')->orderBy('id')->get();
 
         return new PortalPendingData(
             $items['pending'],

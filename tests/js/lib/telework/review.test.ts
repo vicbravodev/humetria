@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
     answerLabel,
+    authorizationState,
+    AUTHORIZATION_BADGES,
     decisionNeeds,
     DECISIONS,
     evidenceKindLabel,
     openEvidence,
     statusTone,
 } from '@/lib/telework/review';
-import type { ReviewEvidence, WorkplaceStatusValue } from '@/types';
+import type {
+    ReviewAuthorization,
+    ReviewEvidence,
+    WorkplaceStatusValue,
+} from '@/types';
 
 describe('statusTone', () => {
     it.each<[WorkplaceStatusValue, string]>([
@@ -84,5 +90,29 @@ describe('evidence', () => {
         expect(evidenceKindLabel('remote_check')).toBe(
             'Comprobación a distancia',
         );
+    });
+});
+
+describe('authorizationState', () => {
+    const base: ReviewAuthorization = {
+        id: 'a',
+        requestedOn: '2026-01-01',
+        authorized: false,
+        cancelled: false,
+        viaPortal: false,
+        hasDocument: false,
+        used: false,
+    };
+
+    it.each<[Partial<ReviewAuthorization>, string]>([
+        [{}, 'waiting'],
+        [{ authorized: true }, 'given'],
+        [{ authorized: true, used: true }, 'used'],
+        [{ cancelled: true, used: true }, 'cancelled'],
+    ])('reads %j as %s', (change, state) => {
+        const found = authorizationState({ ...base, ...change });
+
+        expect(found).toBe(state);
+        expect(AUTHORIZATION_BADGES[found].label).not.toBe('');
     });
 });

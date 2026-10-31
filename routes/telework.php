@@ -61,3 +61,6 @@ Route::get('admin/{tenant:slug}/telework/applications/{application}/review', [Re
 Route::get('admin/{tenant:slug}/telework/photos/{photo}', [PhotoController::class, 'checklist'])->where('tenant', $notReserved)->name('tenant.telework.photos.show');
 Route::get('admin/{tenant:slug}/telework/evidence-photos/{photo}', [PhotoController::class, 'evidence'])->where('tenant', $notReserved)->name('tenant.telework.evidence-photos.show');
 Route::get('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/document', [PhotoController::class, 'authorization'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.document.show');
+
+// A visit request nobody gave can be cancelled (marked, never deleted) by RH or the assigned Comisión.
+Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/cancel', [VisitController::class, 'cancel'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.cancel');

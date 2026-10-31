@@ -1,4 +1,5 @@
 import type {
+    ReviewAuthorization,
     ReviewDecisionValue,
     ReviewEvidence,
     WorkplaceStatusValue,
@@ -82,3 +83,30 @@ export function openEvidence(evidence: ReviewEvidence[]): ReviewEvidence[] {
 export function evidenceKindLabel(kind: ReviewEvidence['kind']): string {
     return kind === 'photos' ? 'Fotos' : 'Comprobación a distancia';
 }
+
+export type AuthorizationState = 'cancelled' | 'used' | 'given' | 'waiting';
+
+/** Where a visit request stands: cancelled and used are over; given can be used; waiting needs the person. */
+export function authorizationState(
+    authorization: ReviewAuthorization,
+): AuthorizationState {
+    if (authorization.cancelled) {
+        return 'cancelled';
+    }
+
+    if (authorization.used) {
+        return 'used';
+    }
+
+    return authorization.authorized ? 'given' : 'waiting';
+}
+
+export const AUTHORIZATION_BADGES: Record<
+    AuthorizationState,
+    { label: string; tone: BadgeTone }
+> = {
+    cancelled: { label: 'Cancelada', tone: 'secondary' },
+    used: { label: 'Usada', tone: 'secondary' },
+    given: { label: 'Autorizada', tone: 'success' },
+    waiting: { label: 'Esperando a la persona', tone: 'warning' },
+};

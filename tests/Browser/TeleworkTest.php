@@ -431,3 +431,19 @@ it('lets the Comisión ask the person for photos from the review', function (): 
     workIn($tenant);
     expect(EvidenceRequest::query()->count())->toBe(1);
 });
+
+it('lets the Comisión cancel a visit request nobody answered', function (): void {
+    [, $application, $tenant] = reviewAddress();
+    workIn($tenant);
+    VisitAuthorizationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $application->workplace_id]);
+
+    visit("/admin/acme/telework/applications/{$application->id}/review")
+        ->assertSee('Esperando a la persona')
+        ->press('Cancelar solicitud')
+        ->assertSee('¿Cancelar la solicitud de visita?')
+        ->click('[role="dialog"] [data-slot="dialog-footer"] button:last-child')
+        ->assertSee('Solicitud de visita cancelada')
+        ->assertSee('Cancelada')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});

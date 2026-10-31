@@ -1,7 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 import ReviewAttachForm from '@/components/telework/review-attach-form';
+import ReviewCancelButton from '@/components/telework/review-cancel-button';
 import ReviewVisitDialog from '@/components/telework/review-visit-dialog';
 import { describeDate } from '@/lib/calendar-date';
+import {
+    AUTHORIZATION_BADGES,
+    authorizationState,
+} from '@/lib/telework/review';
 import { show } from '@/routes/tenant/telework/visit-authorizations/document';
 import type { ReviewAuthorization as Authorization } from '@/types';
 
@@ -19,20 +24,16 @@ export default function ReviewAuthorization({
     workplaceId: string;
     authorization: Authorization;
 }) {
+    const state = authorizationState(authorization);
+
     return (
         <li className="flex flex-col gap-2 px-5 py-4">
             <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">
                     Visita pedida el {describeDate(authorization.requestedOn)}
                 </p>
-                <Badge
-                    variant={authorization.authorized ? 'success' : 'warning'}
-                >
-                    {authorization.used
-                        ? 'Usada'
-                        : authorization.authorized
-                          ? 'Autorizada'
-                          : 'Esperando a la persona'}
+                <Badge variant={AUTHORIZATION_BADGES[state].tone}>
+                    {AUTHORIZATION_BADGES[state].label}
                 </Badge>
             </div>
             {authorization.authorized && (
@@ -58,16 +59,22 @@ export default function ReviewAuthorization({
                     )}
                 </p>
             )}
-            {!authorization.authorized && (
+            {state === 'waiting' && (
                 <ReviewAttachForm
                     tenantSlug={tenantSlug}
                     authorizationId={authorization.id}
                 />
             )}
-            {authorization.authorized && !authorization.used && (
+            {state === 'given' && (
                 <ReviewVisitDialog
                     tenantSlug={tenantSlug}
                     workplaceId={workplaceId}
+                    authorizationId={authorization.id}
+                />
+            )}
+            {(state === 'waiting' || state === 'given') && (
+                <ReviewCancelButton
+                    tenantSlug={tenantSlug}
                     authorizationId={authorization.id}
                 />
             )}

@@ -165,6 +165,7 @@ final readonly class ReviewDetail
             'id' => $authorization->id,
             'requestedOn' => $this->day($authorization->requested_at),
             'authorized' => $authorization->authorized(),
+            'cancelled' => $authorization->cancelled_at !== null,
             'viaPortal' => $authorization->confirmed_at !== null,
             'hasDocument' => $authorization->document_path !== null,
             'used' => in_array($authorization->id, $used, true),

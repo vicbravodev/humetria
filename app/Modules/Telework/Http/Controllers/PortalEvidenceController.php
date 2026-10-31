@@ -33,7 +33,7 @@ final class PortalEvidenceController extends Controller
 
     public function confirmVisit(string $token, string $authorization, Request $request, OpenPortal $openPortal, ConfirmVisitAuthorization $confirm): RedirectResponse
     {
-        $confirm->handle($this->portal($token, $openPortal), $authorization, (string) $request->ip());
+        $confirm->handle($this->portal($token, $openPortal), $authorization, $request->ip());
 
         return to_route('portal.show', $token);
     }

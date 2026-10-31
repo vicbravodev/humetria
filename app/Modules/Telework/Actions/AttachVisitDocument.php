@@ -23,10 +23,14 @@ final readonly class AttachVisitDocument
     /**
      * @param  string  $file  Path of the uploaded PDF, already validated.
      *
-     * @throws ValidationException when the authorization already has its document.
+     * @throws ValidationException when the authorization already has its document or was cancelled.
      */
     public function handle(VisitAuthorization $authorization, string $file): void
     {
+        if ($authorization->cancelled_at !== null) {
+            throw ValidationException::withMessages(['document' => 'Esta solicitud de visita fue cancelada.']);
+        }
+
         if ($authorization->document_path !== null) {
             throw ValidationException::withMessages(['document' => 'Esta autorización ya tiene su documento.']);
         }

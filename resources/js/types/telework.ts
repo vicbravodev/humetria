@@ -167,6 +167,7 @@ export type ReviewAuthorization = {
     id: string;
     requestedOn: string;
     authorized: boolean;
+    cancelled: boolean;
     viaPortal: boolean;
     hasDocument: boolean;
     used: boolean;

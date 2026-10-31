@@ -27,6 +27,7 @@ final readonly class RequestVisitAuthorization
 
         $unused = VisitAuthorization::query()
             ->where('workplace_id', $workplace->id)
+            ->whereNull('cancelled_at')
             ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('visit_authorization_id')->select('visit_authorization_id'))
             ->exists();
 

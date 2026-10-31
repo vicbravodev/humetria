@@ -14,20 +14,21 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * The person authorizes the visit from their portal: the time and the address they confirmed from are kept as evidence
- * (like an acknowledgement, designer decision 6). The address is never logged.
+ * (like an acknowledgement, designer decision 6). The address can be unknown (null); it is never logged. A cancelled request is gone for the person.
  */
 final readonly class ConfirmVisitAuthorization
 {
     /**
-     * @throws ModelNotFoundException when the authorization is not for one of this person's workplaces.
+     * @throws ModelNotFoundException when the authorization is not for one of this person's workplaces, or was cancelled.
      * @throws ValidationException when it was already given.
      */
-    public function handle(OpenedPortal $portal, string $authorizationId, string $ip): void
+    public function handle(OpenedPortal $portal, string $authorizationId, ?string $ip): void
     {
         $teleworkerId = $portal->teleworkerId ?? throw new ModelNotFoundException;
 
         DB::transaction(function () use ($teleworkerId, $authorizationId, $ip): void {
             $authorization = VisitAuthorization::query()
+                ->whereNull('cancelled_at')
                 ->whereIn('workplace_id', Workplace::query()->where('teleworker_id', $teleworkerId)->whereNull('retired_at')->select('id'))
                 ->lockForUpdate()
                 ->findOrFail($authorizationId);
