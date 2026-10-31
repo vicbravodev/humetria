@@ -1,4 +1,5 @@
 import SurveyQuestion from '@/components/campaigns/survey/survey-question';
+import { focusOnMount } from '@/lib/focus';
 import type { SurveyGate } from '@/types';
 
 const YES_NO = [
@@ -24,6 +25,7 @@ export default function GateStep({
                 options={YES_NO}
                 value={value}
                 onChange={(answer) => onAnswer(gate.key, answer)}
+                legendRef={focusOnMount}
             />
             <p className="text-lg leading-7 text-muted-foreground">
                 {gate.instruction}
