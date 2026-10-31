@@ -11,6 +11,7 @@ use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Instruments\Contracts\Instruments;
@@ -70,13 +71,12 @@ final class SendSurveyInvitations implements ShouldQueue
         // Who left or moved meanwhile has nothing pending: no link, and nothing left to wait for.
         $this->waiting()->whereDoesntHave('instruments', fn ($guides) => $guides->where('status', InstrumentStatus::Pending))
             ->update(['invitation_status' => null, 'invitation_batch' => null]);
-        $waiting = $this->waiting()->get();
+        $waiting = $this->waiting()->with(['instruments' => fn ($guides) => $guides->where('status', InstrumentStatus::Pending)])->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
         $companies = resolve(Companies::class);
         $company = $companies->current();
         $contact = $companies->contact();
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
-        $minutes = array_sum(array_map(fn (string $key): int => resolve(Instruments::class)->definition($key)->minutes, $campaign->instruments));
 
         foreach ($waiting as $participant) {
             $email = $people[$participant->employee_id]->email ?? null;
@@ -103,12 +103,18 @@ final class SendSurveyInvitations implements ShouldQueue
             $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::route('mail', $email)->notify(new SurveyInvitation(
-                $kind, $token, $people[$participant->employee_id]->name ?? '', $company, $contact, $workCenter, $campaign->closes_on, $minutes,
+                $kind, $token, $people[$participant->employee_id]->name ?? '', $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant),
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }
 
         Log::info('campaign.invitations_sent', ['campaign_id' => $campaign->id, 'sent' => $waiting->count()]);
+    }
+
+    /** How long the guides the person has left take together: a reminder never counts what they already answered. */
+    private static function minutes(Participant $participant): int
+    {
+        return $participant->instruments->sum(fn (ParticipantInstrument $guide): int => resolve(Instruments::class)->definition($guide->instrument)->minutes);
     }
 
     /**

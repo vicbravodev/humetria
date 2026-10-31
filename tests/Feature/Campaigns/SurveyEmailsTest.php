@@ -105,6 +105,21 @@ it('says how long the guides of the evaluation take together', function (int $pe
     'Guías I and III' => [51, 'Unos 20 minutos'],
 ]);
 
+it('counts only the guides the person has left when reminding them', function (): void {
+    $campaign = sentEvaluation($this->tenant, $this->plant, $this->hr, 20);
+    $aaron = Employee::query()->withoutGlobalScopes()->where('name', 'Aaron Pérez')->sole();
+    App\Modules\Campaigns\Models\ParticipantInstrument::query()->withoutGlobalScopes()
+        ->whereHas('participant', fn ($participant) => $participant->where('employee_id', $aaron->id))
+        ->where('instrument', 'nom035.guide-ii')
+        ->update(['status' => 'completed', 'completed_at' => now()]);
+    Bus::fake();
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    sendQueuedLinks();
+
+    expect((string) emailTo('Aaron Pérez')->render())->toContain('Toma unos 5 minutos');
+});
+
 it('takes the minimum group from the results setting', function (): void {
     config(['results.min_group' => 8]);
     sentEvaluation($this->tenant, $this->plant, $this->hr, 20);
