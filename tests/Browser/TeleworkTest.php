@@ -428,6 +428,22 @@ it('lets the Comisión decide a checklist and leaves the inbox empty', function 
     expect(WorkplaceReview::query()->sole()->decision->value)->toBe('not_valid');
 });
 
+it('tells the Comisión a remote check cannot validate a place whose person has not answered a new list', function (): void {
+    [, $application, $tenant] = reviewAddress();
+    workIn($tenant);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $application->workplace_id, 'application_id' => $application->id, 'method' => 'checklist']);
+
+    visit("/admin/acme/telework/applications/{$application->id}/review")
+        ->press('Registrar comprobación a distancia')
+        ->press('Registrar comprobación')
+        ->assertSee('Antes de validar, la persona debe contestar la lista de este lugar.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn($tenant);
+    expect(WorkplaceReview::query()->count())->toBe(1);
+});
+
 it('lets the Comisión ask the person for photos from the review', function (): void {
     [, $application, $tenant] = reviewAddress();
 
