@@ -121,6 +121,11 @@ beforeEach(function (): void {
     $this->owner = memberOf($this->alpha, TenantRole::Owner);
 });
 
+// PHPUnit keeps every test object until the run ends: drop the two worlds so 48 tests do not pile them up in memory.
+afterEach(function (): void {
+    unset($this->alphaWorld, $this->betaWorld, $this->owner);
+});
+
 it('has a row of every Telework model in both companies', function (): void {
     expect(array_keys($this->alphaWorld))->toEqualCanonicalizing(teleworkModels())
         ->and(array_keys($this->betaWorld))->toEqualCanonicalizing(teleworkModels());
