@@ -10,6 +10,7 @@ use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Telework\Actions\AddWorkplace;
 use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Telework\Actions\JoinRoster;
 use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
@@ -19,6 +20,7 @@ use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Support\WorkplaceAddress;
+use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
@@ -34,7 +36,7 @@ use Inertia\Response;
  */
 final class TeleworkerController extends Controller
 {
-    public function __construct(private readonly WorkCenters $workCenters, private readonly Roster $roster, private readonly WorkplaceAddress $address) {}
+    public function __construct(private readonly WorkCenters $workCenters, private readonly Roster $roster, private readonly WorkplaceAddress $address, private readonly WorkplaceStanding $standing, private readonly JoinRoster $joinRoster) {}
 
     public function create(mixed $tenant, string $workCenter): Response
     {
@@ -130,11 +132,29 @@ final class TeleworkerController extends Controller
             'hasEmail' => $person?->email !== null,
             'status' => $teleworker->status->value,
             'percentage' => $teleworker->telework_percentage,
-            'workplaces' => $teleworker->workplaces()->with('applications')->get()->map(fn (Workplace $workplace): array => [
-                'id' => $workplace->id,
-                'address' => $this->address->line($workplace),
-                'label' => $this->label($workplace),
-            ])->all(),
+            'canJoin' => $teleworker->status === TeleworkerStatus::Aspirant && $this->joinRoster->hasWorkplaceInForce($teleworker),
+            'noEquipmentReason' => $teleworker->no_equipment_reason,
+            'endReason' => $teleworker->end_reason?->label(),
+            'endedOn' => $teleworker->ended_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'endNote' => $teleworker->end_note,
+            'workplaces' => $teleworker->workplaces()->with('applications')->get()->map(fn (Workplace $workplace): array => $this->workplace($workplace))->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function workplace(Workplace $workplace): array
+    {
+        $status = $this->standing->of($workplace);
+
+        return [
+            'id' => $workplace->id,
+            'address' => $this->address->line($workplace),
+            'label' => $this->label($workplace),
+            'status' => $status->value,
+            'statusLabel' => $status->label(),
+            'expiresOn' => $this->standing->expiresOn($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
         ];
     }
 
@@ -144,7 +164,8 @@ final class TeleworkerController extends Controller
         $one = $workplace->applications->where('section', Section::One);
 
         return match (true) {
-            $one->contains(fn ($application): bool => $application->submitted_at === null) => 'Pendiente de contestar',
+            $one->isNotEmpty() && $one->every(fn ($application): bool => $application->cancelled_at !== null) => 'Cancelada',
+            $one->contains(fn ($application): bool => $application->submitted_at === null && $application->cancelled_at === null) => 'Pendiente de contestar',
             $one->isNotEmpty() => 'En revisión de la Comisión',
             default => 'Sin lista',
         };

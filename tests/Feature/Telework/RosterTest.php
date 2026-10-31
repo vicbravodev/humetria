@@ -31,6 +31,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(JoinRoster::class, EndTelework::class, RosterController::class);
 
@@ -403,4 +404,52 @@ it('lets only whoever manages Telework end a period, and answers 404 for another
     $this->actingAs($this->hr)->post(route('tenant.telework.teleworkers.end', [$this->tenant, 'not-a-uuid']), ['reason' => 'other', 'ended_on' => '2026-03-01'])->assertNotFound();
 
     expect(joined()->status)->toBe(TeleworkerStatus::Aspirant);
+});
+
+it('shows each workplace with its derived status and expiry, and whether the person can join', function (): void {
+    $other = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'street' => 'Otra calle']);
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('teleworker.canJoin', false)
+            ->where('teleworker.jobTitle', 'Analista')
+            ->where('teleworker.workplaces.0.status', 'pending')
+            ->where('teleworker.workplaces.0.expiresOn', null));
+
+    rosterReview('plan', '2026-02-10 12:00:00');
+    $other->update(['retired_at' => now()]);
+
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('teleworker.canJoin', true)
+            ->where('teleworker.workplaces.0.status', 'valid_with_plan')
+            ->where('teleworker.workplaces.0.statusLabel', 'Validado con plan de acción')
+            ->where('teleworker.workplaces.0.expiresOn', '2027-02-10')
+            ->where('teleworker.workplaces.1.status', 'retired'));
+});
+
+it('does not offer to join once the period is active or ended, and says how it ended', function (): void {
+    $period = TeleworkerFactory::new()->ended(EndReason::Transfer)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'end_note' => 'Se mudó de ciudad.']);
+
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $period->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('teleworker.canJoin', false)
+            ->where('teleworker.status', 'ended')
+            ->where('teleworker.endReason', 'Cambio de centro de trabajo')
+            ->where('teleworker.endNote', 'Se mudó de ciudad.')
+            ->has('teleworker.endedOn'));
+});
+
+it('labels a cancelled checklist as cancelled, not as pending', function (): void {
+    ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'cancelled_at' => now()]);
+
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'Cancelada'));
+});
+
+it('puts no individual answers in the props of the page', function (): void {
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'special_needs' => 'Necesito un escritorio alto.']);
+
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
+        ->assertInertia(fn (Assert $page) => $page->missing('teleworker.workplaces.0.answers')->missing('teleworker.workplaces.0.specialNeeds'));
+    expect($this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))->getContent())->not->toContain('escritorio alto');
 });

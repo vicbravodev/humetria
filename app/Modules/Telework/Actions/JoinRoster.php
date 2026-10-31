@@ -83,7 +83,8 @@ final readonly class JoinRoster
         return array_map(fn (): string => 'Este dato es obligatorio.', array_filter($required));
     }
 
-    private function hasWorkplaceInForce(Teleworker $teleworker): bool
+    /** Whether one of the workplaces is validated and in force today. */
+    public function hasWorkplaceInForce(Teleworker $teleworker): bool
     {
         foreach ($teleworker->workplaces()->get() as $workplace) {
             if (in_array($this->standing->of($workplace), [WorkplaceStatus::Valid, WorkplaceStatus::ValidWithPlan], true)) {
