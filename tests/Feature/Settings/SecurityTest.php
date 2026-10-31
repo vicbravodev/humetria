@@ -9,7 +9,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 
 test('security page is displayed', function () {
-    $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+    $this->assertFortifyHas(Features::twoFactorAuthentication());
 
     Features::twoFactorAuthentication([
         'confirm' => true,
@@ -34,7 +34,7 @@ test('security page is displayed', function () {
 });
 
 test('security page requires password confirmation when enabled', function () {
-    $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+    $this->assertFortifyHas(Features::twoFactorAuthentication());
 
     $user = User::factory()->create();
 
@@ -50,7 +50,7 @@ test('security page requires password confirmation when enabled', function () {
 });
 
 test('security page renders without two factor when feature is disabled', function () {
-    $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+    $this->assertFortifyHas(Features::twoFactorAuthentication());
 
     config(['fortify.features' => []]);
 

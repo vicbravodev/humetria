@@ -21,10 +21,9 @@ abstract class TestCase extends BaseTestCase
         Vite::useHotFile(storage_path('framework/testing/vite-never-hot'));
     }
 
-    protected function skipUnlessFortifyHas(string $feature, ?string $message = null): void
+    /** The tests that need a Fortify feature fail when the app turns it off: a skip would hide the lost feature. */
+    protected function assertFortifyHas(string $feature): void
     {
-        if (! Features::enabled($feature)) {
-            $this->markTestSkipped($message ?? "Fortify feature [{$feature}] is not enabled.");
-        }
+        $this->assertTrue(Features::enabled($feature), "Fortify feature [{$feature}] is off in config/fortify.php.");
     }
 }

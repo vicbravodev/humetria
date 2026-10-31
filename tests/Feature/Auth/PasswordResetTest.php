@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Queue;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyHas(Features::resetPasswords());
+    $this->assertFortifyHas(Features::resetPasswords());
 });
 
 test('reset password link screen can be rendered', function () {
