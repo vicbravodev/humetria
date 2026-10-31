@@ -334,8 +334,13 @@ it('issues a new link to copy and invalidates the previous', function (): void {
     $token = basename($flash);
     expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
 
+    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]));
+    $newer = basename(session('inertia.flash_data')['portalLink']);
+
     auth()->logout();
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+    expect($newer)->not->toBe($token);
+    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', true));
+    $this->get(route('portal.show', $newer))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
 });
 
 it('does not hand a link to anyone but RH and the owner', function (TenantRole $role): void {

@@ -6,37 +6,42 @@ namespace App\Modules\Telework\Actions;
 
 use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 /**
- * Gives an employee of the current company a personal portal link, replacing the one they had. The replaced one stops
- * working at once (RH asked for a new link, often because the old one leaked or was lost), unless `$graceForPrevious`:
- * then it keeps working for GRACE_DAYS, so a reminder never breaks a list the person has half answered. Only the latest
- * replaced link is kept. Only hashes are kept: the plain token goes to the caller once and is never logged.
+ * The portal link of an employee of the current company. It is derived (see `PortalLink`), so issuing it again — an
+ * invitation, a reminder — gives the same link and never breaks the one the person has open. `$revoke` (RH's «Generar
+ * enlace», often because the link leaked or was lost) moves the version: the previous link stops working at once. A link
+ * whose key was dropped from the app keys is issued again with the current one. Only its hash is kept; the plain token
+ * goes to the caller and is never logged.
  */
 final readonly class IssuePortalLink
 {
-    public const int GRACE_DAYS = 7;
-
     public function __construct(private CurrentTenant $tenant) {}
 
-    public function handle(string $employeeId, bool $graceForPrevious = false): string
+    public function handle(string $employeeId, bool $revoke = false): string
     {
-        $token = Str::random(64);
-        $current = $graceForPrevious ? PortalLink::query()->where('employee_id', $employeeId)->first(['token_hash']) : null;
+        return DB::transaction(function () use ($employeeId, $revoke): string {
+            $link = PortalLink::query()->where('employee_id', $employeeId)->lockForUpdate()->first()
+                ?? new PortalLink(['tenant_id' => $this->tenant->id(), 'employee_id' => $employeeId, 'version' => 1]);
 
-        PortalLink::query()->updateOrCreate(
-            ['employee_id' => $employeeId],
-            [
-                'tenant_id' => $this->tenant->id(),
-                'token_hash' => PortalLink::hashToken($token),
-                'previous_token_hash' => $current?->token_hash,
-                'previous_valid_until' => $current === null ? null : now()->addDays(self::GRACE_DAYS),
-            ],
-        );
-        Log::info('telework.portal_link_issued', ['employee_id' => $employeeId]);
+            if ($revoke && $link->exists) {
+                $link->version++;
+            }
 
-        return $token;
+            $token = ($link->exists && ! $revoke ? $link->token() : null)
+                ?? PortalLink::tokenFor($link->tenant_id, $employeeId, $link->version, config()->string('app.key'));
+            $link->token_hash = PortalLink::hashToken($token);
+            $link->save();
+
+            Log::info('telework.portal_link_issued', ['employee_id' => $employeeId]);
+
+            if ($revoke && $link->version > 1) {
+                Log::info('telework.portal_link_revoked', ['employee_id' => $employeeId, 'version' => $link->version]);
+            }
+
+            return $token;
+        });
     }
 }

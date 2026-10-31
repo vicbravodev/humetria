@@ -23,8 +23,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Tells a person what is waiting for them. An employee gets one email listing everything pending in their portal, with a
- * fresh portal link made here (it replaces the one they had: the newest email always works); a Comisión member, the
+ * Tells a person what is waiting for them. An employee gets one email listing everything pending in their portal, with
+ * their portal link derived here (the same one every email carries); a Comisión member, the
  * documents to confirm and the link to the documents page. Only ids travel in the job. The email lists everything pending
  * when it runs, and a person has at most one waiting (the lock is released when it starts, so an item that arrives while it runs queues the next). Nothing is sent when they have nothing pending any more.
  */
@@ -67,7 +67,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
                 $pending = $portal->for(new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name));
 
                 if ($pending->checklists !== [] || $pending->documents !== [] || $pending->equipment !== [] || $pending->photos !== [] || $pending->visits !== []) {
-                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id, graceForPrevious: true)), $person->name, $company->tradeName, $pending));
+                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id)), $person->name, $company->tradeName, $pending));
                 }
             }
 

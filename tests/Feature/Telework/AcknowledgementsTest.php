@@ -150,7 +150,7 @@ it('logs telework.acknowledgement_requested with ids and counts only', function 
     expect(json_encode(Acknowledgement::query()->get()->toArray(), JSON_THROW_ON_ERROR))->toContain($ana->id);
 });
 
-it('mails the employee a fresh portal link made as the job runs, replacing the old one', function (): void {
+it('mails the employee their portal link, derived as the job runs: the same one they had', function (): void {
     Notification::fake();
     $ana = staffer($this->center, ['name' => 'Ana Ruiz']);
     $old = resolve(IssuePortalLink::class)->handle($ana->id);
@@ -166,27 +166,30 @@ it('mails the employee a fresh portal link made as the job runs, replacing the o
 
         return $mail->subject === 'Tiene pendientes en su portal' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
     });
-    expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', basename($url)))
-        ->and(PortalLink::query()->where('token_hash', hash('sha256', $old))->exists())->toBeFalse()
+    expect(basename($url))->toBe($old)
+        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $old))
         ->and($job)->toBeInstanceOf(ShouldQueueAfterCommit::class)
         ->and(serialize($job))->not->toContain(basename($url));
 });
 
-it('keeps the link the person had working for seven days after a reminder replaces it', function (): void {
+it('mails the same link in every reminder, so the first email still opens the portal', function (): void {
     Notification::fake();
-    // Only the reminder below runs.
+    // Only the reminders below run.
     Queue::fake();
-    $this->travelTo('2026-03-10 18:00:00');
     $ana = staffer($this->center);
-    $old = resolve(IssuePortalLink::class)->handle($ana->id);
     publishDocument(DocumentKind::Policy, $this->center);
+    $urls = [];
 
     app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
+    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
 
-    $this->travelTo('2026-03-17 17:59:59');
-    expect(resolve(OpenPortal::class)->handle($old)->employeeId)->toBe($ana->id);
-    $this->travelTo('2026-03-17 18:00:00');
-    expect(fn () => resolve(OpenPortal::class)->handle($old))->toThrow(App\Modules\Telework\Exceptions\PortalUnavailable::class);
+    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$urls): bool {
+        $urls[] = $notification->toMail($notifiable)->actionUrl;
+
+        return true;
+    });
+    expect($urls)->toHaveCount(2)->and($urls[0])->toBe($urls[1])
+        ->and(resolve(OpenPortal::class)->handle(basename($urls[0]))->employeeId)->toBe($ana->id);
 });
 
 it('mails a Comisión member the link to the documents page', function (): void {

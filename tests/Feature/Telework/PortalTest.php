@@ -57,52 +57,43 @@ it('lives at /portal/{token}, outside the panel', function (): void {
     expect(route('portal.show', 'abc', absolute: false))->toBe('/portal/abc');
 });
 
-it('issues a link whose plain token is never stored and replaces the previous one', function (): void {
-    $first = $this->token;
-    $second = resolve(IssuePortalLink::class)->handle($this->employee->id);
+it('derives the same link each time it is issued, storing only its hash, so a reminder never breaks the link the person has', function (): void {
+    $again = resolve(IssuePortalLink::class)->handle($this->employee->id);
 
-    expect($second)->not->toBe($first)->and(strlen($second))->toBeGreaterThanOrEqual(40)
+    expect($again)->toBe($this->token)->and($this->token)->toMatch('/^[A-Za-z0-9_-]{43,}$/')
         ->and(PortalLink::query()->count())->toBe(1)
-        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $second))
-        ->and(PortalLink::query()->where('token_hash', $second)->exists())->toBeFalse();
-
-    $this->get(route('portal.show', $first))->assertInertia(fn (Assert $page) => $page->where('unavailable', true));
-    $this->get(route('portal.show', $second))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $this->token))
+        ->and(PortalLink::query()->sole()->version)->toBe(1)
+        ->and(PortalLink::query()->where('token_hash', $this->token)->exists())->toBeFalse()
+        ->and(portalProps($this->token)['unavailable'])->toBeFalse()
+        // The throttle key is the hash of the link presented, as before.
+        ->and(RateLimiter::limiter('portal-views')(portalRequest($this->token))[0]->key)->toBe('portal:'.hash('sha256', $this->token));
 });
 
-it('keeps only the latest replaced link working for seven days when asked to, and the same page as unknown after', function (): void {
-    $this->travelTo('2026-03-10 18:00:00');
-    $first = $this->token;
-    $second = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+it('derives the link from the company, the employee and the version with the app key, so nobody can make one without it', function (): void {
+    $other = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $expected = rtrim(strtr(base64_encode(hash_hmac('sha256', "portal|{$this->tenant->id}|{$this->employee->id}|1", config()->string('app.key'), true)), '+/', '-_'), '=');
 
-    expect(portalProps($first)['unavailable'])->toBeFalse()->and(portalProps($second)['unavailable'])->toBeFalse()
-        ->and(PortalLink::query()->sole()->previous_token_hash)->toBe(hash('sha256', $first))
-        // Each link keeps its own throttle key, as before.
-        ->and(RateLimiter::limiter('portal-views')(portalRequest($first))[0]->key)->toBe('portal:'.hash('sha256', $first));
-
-    // Only the most recent previous link is kept.
-    $this->travelTo('2026-03-12 18:00:00');
-    $third = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
-    expect(portalProps($first))->toBe(portalProps('not-a-token'))
-        ->and(portalProps($second)['unavailable'])->toBeFalse();
-
-    $this->travelTo('2026-03-19 17:59:59');
-    expect(portalProps($second)['unavailable'])->toBeFalse();
-    $this->travelTo('2026-03-19 18:00:00');
-    expect(portalProps($second))->toBe(portalProps('not-a-token'))
-        ->and(portalProps($third)['unavailable'])->toBeFalse();
+    expect($this->token)->toBe($expected)
+        ->and(resolve(IssuePortalLink::class)->handle($other->id))->not->toBe($this->token)
+        ->and(PortalLink::tokenFor($this->tenant->id, $this->employee->id, 2, config()->string('app.key')))->not->toBe($this->token)
+        ->and(PortalLink::tokenFor(Tenant::factory()->create()->id, $this->employee->id, 1, config()->string('app.key')))->not->toBe($this->token)
+        ->and(PortalLink::tokenFor($this->tenant->id, $this->employee->id, 1, 'base64:'.base64_encode(random_bytes(32))))->not->toBe($this->token);
 });
 
-it('revokes the previous link at once when RH asks for a new one, even one a reminder had left working', function (): void {
-    $graced = $this->token;
-    $current = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+it('revokes the link at once when RH asks for a new one, which reminders then keep', function (): void {
+    Log::spy();
+    $old = $this->token;
 
-    $fresh = resolve(IssuePortalLink::class)->handle($this->employee->id);
+    $fresh = resolve(IssuePortalLink::class)->handle($this->employee->id, revoke: true);
 
-    expect(portalProps($graced))->toBe(portalProps('not-a-token'))
-        ->and(portalProps($current))->toBe(portalProps('not-a-token'))
+    expect($fresh)->not->toBe($old)
+        ->and(portalProps($old))->toBe(portalProps('not-a-token'))
         ->and(portalProps($fresh)['unavailable'])->toBeFalse()
-        ->and(PortalLink::query()->sole()->previous_token_hash)->toBeNull();
+        ->and(PortalLink::query()->sole()->version)->toBe(2)
+        ->and(resolve(IssuePortalLink::class)->handle($this->employee->id))->toBe($fresh);
+    Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context): bool => $message === 'telework.portal_link_revoked'
+        && $context === ['employee_id' => $this->employee->id, 'version' => 2])->once();
 });
 
 it('logs the issued link with ids only', function (): void {
@@ -171,9 +162,9 @@ it('opens for a person who does not telework, with nothing pending yet', functio
         ->and($props['pending'])->toBe(['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]);
 });
 
-it('answers an unknown, replaced or deactivated-employee token with the same page and status', function (): void {
+it('answers an unknown, revoked or deactivated-employee token with the same page and status', function (): void {
     $replaced = $this->token;
-    resolve(IssuePortalLink::class)->handle($this->employee->id);
+    resolve(IssuePortalLink::class)->handle($this->employee->id, revoke: true);
     $gone = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id]);
     $deactivated = resolve(IssuePortalLink::class)->handle($gone->id);
 

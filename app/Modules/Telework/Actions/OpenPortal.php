@@ -14,7 +14,8 @@ use App\Modules\Tenancy\Contracts\Companies;
 
 /**
  * Opens the portal of the person whose link carries `$token`, inside their company. The link works while it is the
- * latest one issued (or the one a reminder replaced, for its grace days: see `IssuePortalLink`), the person is still an active employee and the company may be used.
+ * latest one issued (RH did not revoke it, see `IssuePortalLink`) and a kept app key derives it, the person is still an
+ * active employee and the company may be used.
  */
 final readonly class OpenPortal
 {
@@ -26,10 +27,13 @@ final readonly class OpenPortal
     public function handle(string $token): OpenedPortal
     {
         // Read past the company scope: until the link is known, no company is.
-        $hash = PortalLink::hashToken($token);
-        $link = PortalLink::query()->withoutGlobalScopes()
-            ->where(fn ($links) => $links->where('token_hash', $hash)->orWhere(fn ($replaced) => $replaced->where('previous_token_hash', $hash)->where('previous_valid_until', '>', now())))
-            ->first() ?? throw new PortalUnavailable;
+        $link = PortalLink::query()->withoutGlobalScopes()->where('token_hash', PortalLink::hashToken($token))->first();
+
+        // The hash finds the row; a key still kept must derive it (a link of a dropped key is revoked).
+        if ($link === null || $link->token() !== $token) {
+            throw new PortalUnavailable;
+        }
+
         $company = $this->companies->enter($link->tenant_id);
         $person = $this->roster->find($link->employee_id);
 

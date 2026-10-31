@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistAnswer;
@@ -35,7 +36,6 @@ use Database\Factories\Telework\CommitteeAssignmentFactory;
 use Database\Factories\Telework\DigestDeliveryFactory;
 use Database\Factories\Telework\EquipmentItemFactory;
 use Database\Factories\Telework\EvidenceRequestFactory;
-use Database\Factories\Telework\PortalLinkFactory;
 use Database\Factories\Telework\SafetyCommitteeFactory;
 use Database\Factories\Telework\TeleworkDocumentFactory;
 use Database\Factories\Telework\TeleworkerFactory;
@@ -53,8 +53,6 @@ use Illuminate\Support\Str;
  * never a 403 that would tell A the row exists). Every Telework model has a row in both companies and an entry in
  * isolationRoutes(); a new model without them fails the first test.
  */
-const PORTAL_TOKEN = 'isolation-portal-token-of-company-a';
-
 /**
  * Everything NOM-037 keeps about one company, one row of each model, linked the way the module links them.
  *
@@ -73,6 +71,8 @@ function isolationWorld(Tenant $tenant): array
     $document = TeleworkDocumentFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]);
     $training = TrainingFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]);
 
+    resolve(IssuePortalLink::class)->handle($person->employee_id);
+
     return [
         Acknowledgement::class => AcknowledgementFactory::new()->create([...$tenantId, 'document_id' => $document->id, 'employee_id' => $person->employee_id]),
         Checklist::class => $checklist,
@@ -86,7 +86,7 @@ function isolationWorld(Tenant $tenant): array
         EquipmentItem::class => EquipmentItemFactory::new()->create([...$tenantId, 'teleworker_id' => $person->id]),
         EvidencePhoto::class => EvidencePhoto::query()->create([...$tenantId, 'evidence_request_id' => $request->id, 'path' => 'evidence/'.Str::uuid().'.jpg', 'uploaded_at' => now()]),
         EvidenceRequest::class => $request,
-        PortalLink::class => PortalLinkFactory::new()->token($tenant->slug === 'alpha' ? PORTAL_TOKEN : Str::random(40))->create([...$tenantId, 'employee_id' => $person->employee_id]),
+        PortalLink::class => PortalLink::query()->where('employee_id', $person->employee_id)->sole(),
         SafetyCommittee::class => SafetyCommitteeFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]),
         TeleworkDocument::class => $document,
         Teleworker::class => $person,
@@ -155,7 +155,9 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
     $panel = fn (string $name, mixed ...$parameters): string => route("tenant.telework.{$name}", [$tenant, ...$parameters], absolute: false);
     $address = ['street' => 'Calle Hidalgo', 'exterior_number' => '1', 'neighborhood' => 'Centro', 'postal_code' => '76000', 'municipality' => 'Querétaro', 'state' => 'QUE'];
     $decision = ['decision' => 'valid'];
-    $portal = fn (string $name, mixed ...$parameters): string => route("portal.{$name}", [PORTAL_TOKEN, ...$parameters], absolute: false);
+    // The portal link of the company in session: its token is derived, not stored.
+    $token = PortalLink::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->sole()->token();
+    $portal = fn (string $name, mixed ...$parameters): string => route("portal.{$name}", [$token, ...$parameters], absolute: false);
 
     return [
         Acknowledgement::class => [['GET', $panel('documents.acknowledgements.index', $b[TeleworkDocument::class]->id)]],

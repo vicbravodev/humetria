@@ -96,7 +96,7 @@ final class TeleworkerController extends Controller
         $period = $this->teleworker($teleworker);
         abort_if($period->status === TeleworkerStatus::Ended, 404);
 
-        Inertia::flash('portalLink', route('portal.show', $issue->handle($period->employee_id)));
+        Inertia::flash('portalLink', route('portal.show', $issue->handle($period->employee_id, revoke: true)));
 
         return redirect()->route('tenant.telework.teleworkers.show', [$tenant, $period->id]);
     }
