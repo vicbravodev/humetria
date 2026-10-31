@@ -172,6 +172,23 @@ it('mails the employee a fresh portal link made as the job runs, replacing the o
         ->and(serialize($job))->not->toContain(basename($url));
 });
 
+it('keeps the link the person had working for seven days after a reminder replaces it', function (): void {
+    Notification::fake();
+    // Only the reminder below runs.
+    Queue::fake();
+    $this->travelTo('2026-03-10 18:00:00');
+    $ana = staffer($this->center);
+    $old = resolve(IssuePortalLink::class)->handle($ana->id);
+    publishDocument(DocumentKind::Policy, $this->center);
+
+    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
+
+    $this->travelTo('2026-03-17 17:59:59');
+    expect(resolve(OpenPortal::class)->handle($old)->employeeId)->toBe($ana->id);
+    $this->travelTo('2026-03-17 18:00:00');
+    expect(fn () => resolve(OpenPortal::class)->handle($old))->toThrow(App\Modules\Telework\Exceptions\PortalUnavailable::class);
+});
+
 it('mails a Comisión member the link to the documents page', function (): void {
     Notification::fake();
     $cora = memberOf($this->tenant, TenantRole::Committee);

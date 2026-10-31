@@ -67,7 +67,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
                 $pending = $portal->for(new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name));
 
                 if ($pending->checklists !== [] || $pending->documents !== [] || $pending->equipment !== [] || $pending->photos !== [] || $pending->visits !== []) {
-                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id)), $person->name, $company->tradeName, $pending));
+                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id, graceForPrevious: true)), $person->name, $company->tradeName, $pending));
                 }
             }
 

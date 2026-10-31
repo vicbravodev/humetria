@@ -70,6 +70,41 @@ it('issues a link whose plain token is never stored and replaces the previous on
     $this->get(route('portal.show', $second))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
 });
 
+it('keeps only the latest replaced link working for seven days when asked to, and the same page as unknown after', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    $first = $this->token;
+    $second = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+
+    expect(portalProps($first)['unavailable'])->toBeFalse()->and(portalProps($second)['unavailable'])->toBeFalse()
+        ->and(PortalLink::query()->sole()->previous_token_hash)->toBe(hash('sha256', $first))
+        // Each link keeps its own throttle key, as before.
+        ->and(RateLimiter::limiter('portal-views')(portalRequest($first))[0]->key)->toBe('portal:'.hash('sha256', $first));
+
+    // Only the most recent previous link is kept.
+    $this->travelTo('2026-03-12 18:00:00');
+    $third = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+    expect(portalProps($first))->toBe(portalProps('not-a-token'))
+        ->and(portalProps($second)['unavailable'])->toBeFalse();
+
+    $this->travelTo('2026-03-19 17:59:59');
+    expect(portalProps($second)['unavailable'])->toBeFalse();
+    $this->travelTo('2026-03-19 18:00:00');
+    expect(portalProps($second))->toBe(portalProps('not-a-token'))
+        ->and(portalProps($third)['unavailable'])->toBeFalse();
+});
+
+it('revokes the previous link at once when RH asks for a new one, even one a reminder had left working', function (): void {
+    $graced = $this->token;
+    $current = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+
+    $fresh = resolve(IssuePortalLink::class)->handle($this->employee->id);
+
+    expect(portalProps($graced))->toBe(portalProps('not-a-token'))
+        ->and(portalProps($current))->toBe(portalProps('not-a-token'))
+        ->and(portalProps($fresh)['unavailable'])->toBeFalse()
+        ->and(PortalLink::query()->sole()->previous_token_hash)->toBeNull();
+});
+
 it('logs the issued link with ids only', function (): void {
     Log::spy();
 

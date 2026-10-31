@@ -191,3 +191,30 @@ it('takes photos of the whole list with consent', function (): void {
 
     expect(ChecklistPhoto::query()->whereNull('question_id')->count())->toBe(1);
 });
+
+it('lets the person finish with the link they opened when a reminder replaced it, for seven days', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    $opened = $this->token;
+    resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+
+    $this->travelTo('2026-03-17 17:00:00');
+    $this->post(route('portal.checklist.store', [$opened, $this->application->id]), form())->assertSessionHasNoErrors()->assertRedirect(route('portal.show', $opened));
+
+    expect($this->application->refresh()->submitted_at)->not->toBeNull();
+});
+
+it('does not take a submission with a replaced link after its seven days, nor once RH issued a new one', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    $opened = $this->token;
+    resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+
+    $this->travelTo('2026-03-17 18:00:00');
+    $this->post(route('portal.checklist.store', [$opened, $this->application->id]), form())->assertNotFound();
+
+    $this->travelTo('2026-03-10 18:00:00');
+    $graced = resolve(IssuePortalLink::class)->handle($this->employee->id, graceForPrevious: true);
+    resolve(IssuePortalLink::class)->handle($this->employee->id);
+    $this->post(route('portal.checklist.store', [$graced, $this->application->id]), form())->assertNotFound();
+
+    expect($this->application->refresh()->submitted_at)->toBeNull();
+});
