@@ -252,6 +252,32 @@ function resizeTo(AwaitableWebpage $page, int $width, int $height = 900): Awaita
 }
 
 /**
+ * A script that names what spills past the edges of the page's panel (or the window, outside the panel): an element
+ * cut off at the side, unless it sits in a box that scrolls sideways on purpose, as a wide table does. Empty when
+ * everything fits.
+ */
+function spilledOut(): string
+{
+    return <<<'JS'
+        () => {
+            const panel = document.querySelector('[data-slot="sidebar-inset"]');
+            const scrolls = (element) => {
+                for (let box = element.parentElement; box; box = box.parentElement) {
+                    if (['auto', 'scroll'].includes(getComputedStyle(box).overflowX)) return true;
+                }
+                return false;
+            };
+
+            return Array.from(document.querySelectorAll('body *')).filter((element) => {
+                const box = element.getBoundingClientRect();
+                const edge = panel?.contains(element) ? panel.getBoundingClientRect() : { left: 0, right: window.innerWidth };
+                return box.width > 0 && box.height > 0 && (box.right > edge.right + 1 || box.left < edge.left - 1) && ! scrolls(element) && ! element.closest('[aria-hidden="true"]');
+            }).map((element) => element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 30)).join(' | ');
+        }
+        JS;
+}
+
+/**
  * A complete NOM-035 Guía II or III with every item answered `$value`, and its two gates answered as given: a "no"
  * leaves the block's items out, as the survey does.
  *
