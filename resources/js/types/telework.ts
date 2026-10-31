@@ -14,3 +14,23 @@ export type Committee = {
     hasAct: boolean;
     members: CommitteePerson[];
 };
+
+export type QuestionOrigin = 'dof' | 'dof_modified' | 'humetria' | 'committee';
+
+export type FavorableAnswer = 'yes' | 'no' | 'informative';
+
+/** One question of a checklist version, as the Comisión sees and edits it. */
+export type ChecklistQuestion = {
+    id: string;
+    section: number;
+    code: string;
+    heading: string;
+    text: string;
+    origin: QuestionOrigin;
+    favorable: FavorableAnswer;
+    /** A value of the requirement list (7.1a…), or null when it covers none. */
+    requirement: string | null;
+    sensitive: boolean;
+};
+
+export type RequirementOption = { value: string; label: string };

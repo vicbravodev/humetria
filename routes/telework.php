@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -17,3 +18,13 @@ Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [Commi
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.committee.store');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members', [CommitteeController::class, 'assign'])->where('tenant', $notReserved)->name('tenant.telework.committee.members.store');
 Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members/{user}', [CommitteeController::class, 'unassign'])->where('tenant', $notReserved)->where('user', '[0-9]+')->name('tenant.telework.committee.members.destroy');
+
+// The checklist of a work center: read by RH and the Comisión, edited and published only by the Comisión. Only a draft's
+// question can be removed (published versions are evidence); a published list never changes, a new draft copies it.
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/checklist', [ChecklistController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.checklist.show');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/questions', [ChecklistController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.checklist.questions.store');
+Route::put('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/questions/{question}', [ChecklistController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.checklist.questions.update');
+Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/questions/{question}', [ChecklistController::class, 'destroy'])->where('tenant', $notReserved)->name('tenant.telework.checklist.questions.destroy');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/questions/{question}/move', [ChecklistController::class, 'move'])->where('tenant', $notReserved)->name('tenant.telework.checklist.questions.move');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/draft', [ChecklistController::class, 'draft'])->where('tenant', $notReserved)->name('tenant.telework.checklist.draft');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/publish', [ChecklistController::class, 'publish'])->where('tenant', $notReserved)->name('tenant.telework.checklist.publish');

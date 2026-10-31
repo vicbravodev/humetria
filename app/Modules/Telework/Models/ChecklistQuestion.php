@@ -12,6 +12,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A question of a checklist version. `favorable` is the answer that flags no risk; `base_code` is the base-list question
@@ -37,6 +38,14 @@ use Illuminate\Database\Eloquent\Model;
 final class ChecklistQuestion extends Model
 {
     use BelongsToCurrentTenant, HasVersion4Uuids;
+
+    /**
+     * @return BelongsTo<Checklist, $this>
+     */
+    public function checklist(): BelongsTo
+    {
+        return $this->belongsTo(Checklist::class);
+    }
 
     /**
      * @return array<string, string>

@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+import {
+    favorableLabel,
+    groupBySection,
+    originLabel,
+    originVariant,
+    sectionTitle,
+} from '@/lib/telework/checklist';
+import type { ChecklistQuestion } from '@/types';
+
+function question(
+    code: string,
+    section: number,
+    heading: string,
+): ChecklistQuestion {
+    return {
+        id: code,
+        section,
+        code,
+        heading,
+        text: code,
+        origin: 'dof',
+        favorable: 'yes',
+        requirement: null,
+        sensitive: false,
+    };
+}
+
+describe('originLabel', () => {
+    it('names where each question comes from', () => {
+        expect(originLabel('dof')).toBe('Apéndice 3');
+        expect(originLabel('dof_modified')).toBe('Apéndice 3 modificada');
+        expect(originLabel('humetria')).toBe('Humetría');
+        expect(originLabel('committee')).toBe('Comisión');
+    });
+
+    it('marks the questions that no longer read as the DOF with a warning', () => {
+        expect(originVariant('dof')).toBe('secondary');
+        expect(originVariant('humetria')).toBe('outline');
+        expect(originVariant('dof_modified')).toBe('warning');
+        expect(originVariant('committee')).toBe('default');
+    });
+});
+
+describe('favorableLabel', () => {
+    it('says which answer flags no risk', () => {
+        expect(favorableLabel('yes')).toBe('Favorable: Sí');
+        expect(favorableLabel('no')).toBe('Favorable: No');
+        expect(favorableLabel('informative')).toBe('Solo informativa');
+    });
+});
+
+describe('sectionTitle', () => {
+    it('titles the two sections', () => {
+        expect(sectionTitle(1)).toBe('Sección I: lugar propuesto');
+        expect(sectionTitle(2)).toBe('Sección II: revisión periódica');
+    });
+});
+
+describe('groupBySection', () => {
+    it('groups consecutive questions by section and heading, keeping their order', () => {
+        const groups = groupBySection([
+            question('a', 1, 'Luz'),
+            question('b', 1, 'Luz'),
+            question('c', 1, 'Ruido'),
+            question('d', 2, 'Luz'),
+        ]);
+
+        expect(
+            groups.map((group) => [
+                group.section,
+                group.heading,
+                group.questions.map((item) => item.code),
+            ]),
+        ).toEqual([
+            [1, 'Luz', ['a', 'b']],
+            [1, 'Ruido', ['c']],
+            [2, 'Luz', ['d']],
+        ]);
+    });
+
+    it('is empty without questions', () => {
+        expect(groupBySection([])).toEqual([]);
+    });
+});

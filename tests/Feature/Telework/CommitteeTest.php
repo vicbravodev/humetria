@@ -247,6 +247,7 @@ it('shows the page of a center with and without committee', function (): void {
             ->where('workCenter', ['id' => $this->center->id, 'name' => $this->center->name])
             ->where('committee', null)
             ->where('canManage', true)
+            ->where('canEditChecklist', false)
             ->has('candidates', 2)
             ->where('candidates.0.name', fn (string $name): bool => $name !== ''));
 
@@ -268,7 +269,7 @@ it('lets a committee member see only the centers where they are assigned, withou
     $this->actingAs($this->cora);
 
     $this->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))
-        ->assertOk()->assertInertia(fn (Assert $page) => $page->where('canManage', false));
+        ->assertOk()->assertInertia(fn (Assert $page) => $page->where('canManage', false)->where('canEditChecklist', true));
     $this->get(route('tenant.telework.committee.show', [$this->tenant, $other->id]))->assertNotFound();
     registerCommittee([], $other)->assertForbidden();
     $this->post(route('tenant.telework.committee.members.store', [$this->tenant, $this->center->id]), ['user_id' => $this->hr->id])->assertForbidden();

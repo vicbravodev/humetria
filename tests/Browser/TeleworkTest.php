@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Modules\Telework\Actions\RegisterCommittee;
+use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
 
 $looks = [
     'light desktop' => [false, false],
@@ -82,6 +85,46 @@ it('registers the Comisión from the page and then lets the last member go', fun
         ->assertSee($cora->name)
         ->press('Quitar')
         ->assertSee('La Comisión no tiene integrantes')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+/** @return array{string, WorkCenter} The panel of a Comisión member, and the center whose Comisión has its base draft. */
+function checklistCenter(): array
+{
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $cora = memberOf($tenant, TenantRole::Committee);
+    test()->actingAs($cora);
+    $url = '/admin/acme';
+    $center = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    workIn($tenant);
+    resolve(RegisterCommittee::class)->handle($center->id, CarbonImmutable::parse('2026-09-15'), null, [$cora->id], $cora->id);
+
+    return [$url, $center];
+}
+
+it('shows the checklist of a center, in draft', function (bool $dark, bool $mobile): void {
+    [$url, $center] = checklistCenter();
+
+    visitPage('telework/checklist', "{$url}/telework/centers/{$center->id}/checklist", $dark, $mobile)
+        ->assertSee('Lista de verificación')
+        ->assertSee('Versión 1 · borrador')
+        ->assertSee('Apéndice 3');
+})->with($looks);
+
+it('edits a question, sees it become modified, and publishes', function (): void {
+    [$url, $center] = checklistCenter();
+
+    visit("{$url}/telework/centers/{$center->id}/checklist")
+        ->click('[aria-label="Editar S1-01"]')
+        ->fill('#edit-'.ChecklistQuestion::query()->where('code', 'S1-01')->firstOrFail()->id.'-text', 'Pregunta propia de la Comisión')
+        ->press('Guardar pregunta')
+        ->assertSee('Pregunta propia de la Comisión')
+        ->assertSee('Apéndice 3 modificada')
+        ->press('Publicar versión 1')
+        ->assertSee('Versión 1 publicada')
+        ->assertSee('Versión 1 · publicada')
+        ->assertSee('Iniciar borrador nuevo')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });

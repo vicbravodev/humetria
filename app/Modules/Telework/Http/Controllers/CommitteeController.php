@@ -57,6 +57,8 @@ final class CommitteeController extends Controller
             // The company's people are for whoever manages the committee; the committee role does not see its users.
             'candidates' => $canManage ? array_map($row, array_values(array_filter($reviewers, fn (MemberSummary $member): bool => ! in_array($member->userId, $assigned, true)))) : Inertia::optional(fn (): array => []),
             'canManage' => $canManage,
+            // Whoever sits on this Comisión edits the checklist; RH reads it.
+            'canEditChecklist' => $gate->isMember($user->id, $center->id),
         ]);
     }
 

@@ -38,6 +38,12 @@ final class Checklist extends Model
         return $this->hasMany(ChecklistQuestion::class)->orderBy('position');
     }
 
+    /** The newest published version of a work center's checklist; later applications and drafts start from it. */
+    public static function latestPublished(string $workCenterId): ?self
+    {
+        return self::query()->where('work_center_id', $workCenterId)->where('status', ChecklistStatus::Published)->orderByDesc('version')->first();
+    }
+
     /**
      * @return array<string, string>
      */
