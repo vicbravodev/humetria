@@ -3,10 +3,11 @@ import { useState } from 'react';
 import CampaignMoreMenu from '@/components/campaigns/campaign-more-menu';
 import CloseDialog from '@/components/campaigns/close-dialog';
 import ExtendDialog from '@/components/campaigns/extend-dialog';
+import InviteMissingDialog from '@/components/campaigns/invite-missing-dialog';
 import ReplacementsDialog from '@/components/campaigns/replacements-dialog';
 import ResendFilteredDialog from '@/components/campaigns/resend-filtered-dialog';
 import { Button } from '@/components/ui/button';
-import type { CampaignDetail, ReplacementPool } from '@/types';
+import type { CampaignDetail, CampaignDialog, ReplacementPool } from '@/types';
 
 const PENDING = { status: 'pending', guide: null, area: null, q: '' };
 
@@ -28,8 +29,8 @@ export default function ActiveCampaignActions({
     /** People waiting with a link sent: who "Recordar" reaches. */
     pending: number;
 }) {
-    const [dialog, setDialog] = useState<'close' | 'replacements' | null>(null);
-    const toggle = (name: 'close' | 'replacements') => (open: boolean) =>
+    const [dialog, setDialog] = useState<CampaignDialog | null>(null);
+    const toggle = (name: CampaignDialog) => (open: boolean) =>
         setDialog(open ? name : null);
     const progress = campaign.progress;
     const shortBy =
@@ -64,6 +65,11 @@ export default function ActiveCampaignActions({
                         Recordar a {pending}
                     </Button>
                 }
+            />
+            <InviteMissingDialog
+                route={[tenantSlug, campaign.id]}
+                open={dialog === 'invite'}
+                onOpenChange={toggle('invite')}
             />
             <CloseDialog
                 tenantSlug={tenantSlug}

@@ -274,6 +274,10 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
         ->assertSee('Enlace reenviado a 60 personas.')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
+        // Nothing goes out before confirming: it says who gets a link.
+        ->assertSee('¿Invitar a quien falte?')
+        ->assertSee('quienes entraron al centro de trabajo después del lanzamiento')
+        ->click('[role=dialog] button[type=submit]')
         ->assertSee('Se invitó a 1 persona.')
         ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '61')
         ->click('[aria-label="Más acciones"]')
@@ -513,6 +517,12 @@ it('shares the report through a temporary link that opens with no account until 
     visit("/admin/acme/campaigns/{$campaign->id}/report")
         ->assertSee('Enlaces abiertos')
         ->click('Revocar')
+        // Nothing is revoked before confirming.
+        ->assertSee('¿Revocar este enlace?')
+        ->click('Cancelar')
+        ->assertDontSee('Enlace revocado.')
+        ->click('Revocar')
+        ->click('[role=dialog] button[type=submit]')
         ->assertSee('Enlace revocado.')
         ->assertDontSee('Enlaces abiertos')
         ->navigate(parse_url($link, PHP_URL_PATH) ?: '')
