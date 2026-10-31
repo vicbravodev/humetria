@@ -56,6 +56,8 @@ Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link',
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
 // The equipment delivered to a person: registered by RH, answered by the person in their portal. No edit and no delete: a
 // registration is evidence (C-22, C-29); a mistaken one stays and the person refuses it with the reason.
+// Retiring a workplace (the person no longer works from there, or the Comisión judged it not apt) marks it; it is never deleted.
+Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/retire', [TeleworkerController::class, 'retireWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.workplaces.retire');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/equipment', [EquipmentController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.equipment.store');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/roster', [RosterController::class, 'join'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.join');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/end', [RosterController::class, 'end'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.end');

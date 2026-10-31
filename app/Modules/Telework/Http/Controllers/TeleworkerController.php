@@ -11,6 +11,7 @@ use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Telework\Actions\AddWorkplace;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\RegisterAspirant;
+use App\Modules\Telework\Actions\RetireWorkplace;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Http\Requests\RegisterAspirantRequest;
@@ -109,6 +110,18 @@ final class TeleworkerController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Lugar agregado. Su lista de verificación ya está pedida.']);
 
         return redirect()->route('tenant.telework.teleworkers.show', [$tenant, $period->id]);
+    }
+
+    public function retireWorkplace(mixed $tenant, string $workplace, RetireWorkplace $retire): RedirectResponse
+    {
+        Gate::authorize('manage-telework');
+        $found = Str::isUuid($workplace) ? Workplace::query()->find($workplace) : null;
+        abort_if($found === null, 404);
+
+        $retire->handle($found);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Lugar retirado. Queda en el historial.']);
+
+        return redirect()->route('tenant.telework.teleworkers.show', [$tenant, $found->teleworker_id]);
     }
 
     private function page(string $workCenterId, string $workCenterName, ?Teleworker $teleworker): Response

@@ -4,6 +4,7 @@ import AddWorkplaceDialog from '@/components/telework/add-workplace-dialog';
 import EquipmentSection from '@/components/telework/equipment-section';
 import NoticesSection from '@/components/telework/notices-section';
 import PortalLinkPanel from '@/components/telework/portal-link-panel';
+import RetireWorkplaceButton from '@/components/telework/retire-workplace-button';
 import RosterPanel from '@/components/telework/roster-panel';
 import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
 import { expiryText } from '@/lib/telework/roster';
@@ -96,6 +97,15 @@ export default function TeleworkerDetail({
                                     Lista: {workplace.label}
                                 </p>
                             </div>
+                            {!ended && workplace.status !== 'retired' && (
+                                <div className="ml-auto shrink-0">
+                                    <RetireWorkplaceButton
+                                        tenantSlug={tenantSlug}
+                                        workplaceId={workplace.id}
+                                        address={workplace.address}
+                                    />
+                                </div>
+                            )}
                         </li>
                     ))}
                 </ul>
