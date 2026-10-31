@@ -18,14 +18,49 @@ function filesUnder(string $directory, string $extension): array
     ));
 }
 
+/**
+ * The pages no visitPage() call in the PHP files opens, sorted. Comments are left out: a commented-out call opens nothing.
+ *
+ * @param  list<string>  $pages
+ * @param  list<string>  $files  the contents of each PHP file
+ * @return list<string>
+ */
+function uncoveredPages(array $pages, array $files): array
+{
+    $tokens = array_merge([], ...array_map(token_get_all(...), $files));
+    $source = implode('', array_map(
+        fn (array|string $token): string => match (true) {
+            is_string($token) => $token,
+            in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true) => '',
+            default => $token[1],
+        },
+        $tokens,
+    ));
+    $uncovered = array_values(array_filter($pages, fn (string $page): bool => ! str_contains($source, "visitPage('{$page}'")));
+    sort($uncovered);
+
+    return $uncovered;
+}
+
+it('counts only the visitPage() calls that run, never a commented-out one', function (): void {
+    $source = <<<'PHP'
+        <?php
+        visitPage('landing', '/');
+        // visitPage('auth/login', '/login');
+        # visitPage('auth/register', '/register');
+        /* visitPage('dashboard', '/admin'); */
+        /** visitPage('settings/profile', '/settings'); */
+        PHP;
+
+    expect(uncoveredPages(['landing', 'auth/login', 'auth/register', 'dashboard', 'settings/profile'], [$source]))
+        ->toBe(['auth/login', 'auth/register', 'dashboard', 'settings/profile']);
+});
+
 it('opens every Inertia page in a browser test through visitPage', function (): void {
     $pagesDirectory = __DIR__.'/../../resources/js/pages/';
 
     $pages = array_map(fn (string $path): string => substr($path, strlen($pagesDirectory), -strlen('.tsx')), filesUnder($pagesDirectory, '.tsx'));
-    $browserTests = implode("\n", array_map(file_get_contents(...), filesUnder(__DIR__.'/../Browser', '.php')));
-
-    $uncovered = array_values(array_filter($pages, fn (string $page): bool => ! str_contains($browserTests, "visitPage('{$page}'")));
-    sort($uncovered);
+    $uncovered = uncoveredPages($pages, array_map(fn (string $path): string => (string) file_get_contents($path), filesUnder(__DIR__.'/../Browser', '.php')));
 
     expect($pages)->not->toBeEmpty()
         ->and($uncovered)->toBe([], 'Pages without a visitPage() browser test: '.implode(', ', $uncovered));
