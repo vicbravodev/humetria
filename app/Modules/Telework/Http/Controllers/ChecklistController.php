@@ -13,17 +13,17 @@ use App\Modules\Telework\Actions\RemoveQuestion;
 use App\Modules\Telework\Actions\StartChecklistDraft;
 use App\Modules\Telework\Actions\UpdateQuestion;
 use App\Modules\Telework\Enums\ChecklistStatus;
+use App\Modules\Telework\Http\Requests\MoveQuestionRequest;
 use App\Modules\Telework\Http\Requests\QuestionRequest;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistQuestion;
+use App\Modules\Telework\Support\ChecklistAccess;
 use App\Modules\Telework\Support\CommitteeGate;
 use App\Modules\Telework\Support\Coverage;
-use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -35,9 +35,11 @@ use Inertia\Response;
  */
 final class ChecklistController extends Controller
 {
-    public function show(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, Coverage $coverage): Response
+    public function __construct(private readonly ChecklistAccess $access) {}
+
+    public function show(Request $request, mixed $tenant, string $workCenter, CommitteeGate $gate, Coverage $coverage): Response
     {
-        $center = $this->visibleCenter($request, $workCenters, $gate, $workCenter);
+        $center = $this->visibleCenter($request, $workCenter);
         $draft = Checklist::query()->where('work_center_id', $center->id)->where('status', ChecklistStatus::Draft)->first();
         $checklist = $draft ?? Checklist::latestPublished($center->id);
         abort_if($checklist === null, 404);
@@ -66,9 +68,9 @@ final class ChecklistController extends Controller
         ]);
     }
 
-    public function store(QuestionRequest $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, AddQuestion $add): RedirectResponse
+    public function store(QuestionRequest $request, mixed $tenant, string $workCenter, AddQuestion $add): RedirectResponse
     {
-        $draft = $this->openDraft($request, $workCenters, $gate, $workCenter);
+        $draft = $this->openDraft($request, $workCenter);
 
         $add->handle($draft->id, $request->section(), $request->heading(), $request->questionText(), $request->favorable(), $request->requirement(), $request->sensitive());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pregunta agregada.']);
@@ -76,9 +78,9 @@ final class ChecklistController extends Controller
         return $this->back($tenant, $workCenter);
     }
 
-    public function update(QuestionRequest $request, mixed $tenant, string $workCenter, string $question, WorkCenters $workCenters, CommitteeGate $gate, UpdateQuestion $update): RedirectResponse
+    public function update(QuestionRequest $request, mixed $tenant, string $workCenter, string $question, UpdateQuestion $update): RedirectResponse
     {
-        $found = $this->question($request, $workCenters, $gate, $workCenter, $question);
+        $found = $this->question($request, $workCenter, $question);
 
         $update->handle($found, $request->questionText(), $request->favorable(), $request->requirement(), $request->sensitive());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pregunta guardada.']);
@@ -86,27 +88,26 @@ final class ChecklistController extends Controller
         return $this->back($tenant, $workCenter);
     }
 
-    public function destroy(Request $request, mixed $tenant, string $workCenter, string $question, WorkCenters $workCenters, CommitteeGate $gate, RemoveQuestion $remove): RedirectResponse
+    public function destroy(Request $request, mixed $tenant, string $workCenter, string $question, RemoveQuestion $remove): RedirectResponse
     {
-        $remove->handle($this->question($request, $workCenters, $gate, $workCenter, $question));
+        $remove->handle($this->question($request, $workCenter, $question));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pregunta quitada del borrador.']);
 
         return $this->back($tenant, $workCenter);
     }
 
-    public function move(Request $request, mixed $tenant, string $workCenter, string $question, WorkCenters $workCenters, CommitteeGate $gate, MoveQuestion $move): RedirectResponse
+    public function move(MoveQuestionRequest $request, mixed $tenant, string $workCenter, string $question, MoveQuestion $move): RedirectResponse
     {
-        $found = $this->question($request, $workCenters, $gate, $workCenter, $question);
-        $request->validate(['direction' => ['required', 'in:up,down']]);
+        $found = $this->question($request, $workCenter, $question);
 
-        $move->handle($found, $request->string('direction')->toString() === 'up');
+        $move->handle($found, $request->up());
 
         return $this->back($tenant, $workCenter);
     }
 
-    public function draft(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, StartChecklistDraft $start): RedirectResponse
+    public function draft(Request $request, mixed $tenant, string $workCenter, StartChecklistDraft $start): RedirectResponse
     {
-        $center = $this->editableCenter($request, $workCenters, $gate, $workCenter);
+        $center = $this->editableCenter($request, $workCenter);
 
         $start->handle($center->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Borrador nuevo listo, copiado de la última versión publicada.']);
@@ -114,9 +115,9 @@ final class ChecklistController extends Controller
         return $this->back($tenant, $workCenter);
     }
 
-    public function publish(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, CommitteeGate $gate, PublishChecklist $publish): RedirectResponse
+    public function publish(Request $request, mixed $tenant, string $workCenter, PublishChecklist $publish): RedirectResponse
     {
-        $draft = $this->draftOf($this->editableCenter($request, $workCenters, $gate, $workCenter));
+        $draft = $this->draftOf($this->editableCenter($request, $workCenter));
 
         ['checklist' => $published, 'missing' => $missing] = $publish->handle($draft->id, $this->userId($request));
         $gaps = array_map(fn (Requirement $requirement): string => $requirement->label(), [...$missing[1], ...$missing[2]]);
@@ -142,22 +143,14 @@ final class ChecklistController extends Controller
     }
 
     /** A center the user may look at: RH or an assigned Comisión member. */
-    private function visibleCenter(Request $request, WorkCenters $workCenters, CommitteeGate $gate, string $id): WorkCenterSummary
+    private function visibleCenter(Request $request, string $id): WorkCenterSummary
     {
-        Gate::authorize('view-telework');
-        $center = Str::isUuid($id) ? $workCenters->findActive($id) : null;
-        abort_if($center === null, 404);
-        abort_unless(Gate::allows('manage-telework') || $gate->isMember($this->userId($request), $center->id), 404);
-
-        return $center;
+        return $this->access->visible($this->userId($request), $id);
     }
 
-    private function editableCenter(Request $request, WorkCenters $workCenters, CommitteeGate $gate, string $id): WorkCenterSummary
+    private function editableCenter(Request $request, string $id): WorkCenterSummary
     {
-        $center = $this->visibleCenter($request, $workCenters, $gate, $id);
-        abort_unless($gate->isMember($this->userId($request), $center->id), 403);
-
-        return $center;
+        return $this->access->editable($this->userId($request), $id);
     }
 
     private function draftOf(WorkCenterSummary $center): Checklist
@@ -166,15 +159,15 @@ final class ChecklistController extends Controller
             ?? throw ValidationException::withMessages(['checklist' => 'Este centro no tiene un borrador abierto: inicia uno nuevo para cambiar la lista.']);
     }
 
-    private function openDraft(Request $request, WorkCenters $workCenters, CommitteeGate $gate, string $id): Checklist
+    private function openDraft(Request $request, string $id): Checklist
     {
-        return $this->draftOf($this->editableCenter($request, $workCenters, $gate, $id));
+        return $this->draftOf($this->editableCenter($request, $id));
     }
 
     /** A question of this center's checklist (draft or published; the action refuses a published one). */
-    private function question(Request $request, WorkCenters $workCenters, CommitteeGate $gate, string $workCenter, string $id): ChecklistQuestion
+    private function question(Request $request, string $workCenter, string $id): ChecklistQuestion
     {
-        $center = $this->editableCenter($request, $workCenters, $gate, $workCenter);
+        $center = $this->editableCenter($request, $workCenter);
         $question = Str::isUuid($id)
             ? ChecklistQuestion::query()->whereHas('checklist', fn (Builder $checklists) => $checklists->where('work_center_id', $center->id))->find($id)
             : null;

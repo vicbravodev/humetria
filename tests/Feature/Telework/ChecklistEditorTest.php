@@ -16,6 +16,7 @@ use App\Modules\Telework\Enums\QuestionOrigin;
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistQuestion;
+use App\Modules\Telework\Support\ChecklistAccess;
 use App\Modules\Telework\Support\Coverage;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AddQuestion::class, UpdateQuestion::class, RemoveQuestion::class, MoveQuestion::class, PublishChecklist::class, StartChecklistDraft::class, Coverage::class, ChecklistController::class);
+mutates(AddQuestion::class, UpdateQuestion::class, RemoveQuestion::class, MoveQuestion::class, PublishChecklist::class, StartChecklistDraft::class, Coverage::class, ChecklistController::class, ChecklistAccess::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -270,6 +271,32 @@ it('lets only assigned committee members edit', function (): void {
     }
 
     expect(question('S1-01')->text)->toBe($target->text);
+});
+
+it('tells who may not edit that the checklist is not theirs before it judges what they sent', function (): void {
+    $target = question('S1-01');
+    $other = WorkCenter::factory()->for($this->tenant)->create();
+    $elsewhere = memberOf($this->tenant, TenantRole::Committee);
+    App\Modules\Telework\Models\CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $other->id, 'user_id' => $elsewhere->id]);
+    $send = function () use ($target): array {
+        return [
+            $this->put(qUrl('questions.update', $target->id), [])->status(),
+            $this->post(qUrl('questions.store'), [])->status(),
+            $this->post(qUrl('questions.move', $target->id), ['direction' => 'sideways'])->status(),
+        ];
+    };
+
+    $this->actingAs($this->hr);
+    expect($send())->toBe([403, 403, 403]);
+    $this->actingAs($elsewhere);
+    expect($send())->toBe([404, 404, 404]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+    expect($send())->toBe([404, 404, 404]);
+    $this->put(route('tenant.telework.checklist.questions.update', [$this->tenant, 'nope', $target->id]), [])->assertNotFound();
+
+    // The member who may edit is told what is wrong.
+    $this->actingAs($this->cora);
+    $this->post(qUrl('questions.move', $target->id), ['direction' => 'sideways'])->assertSessionHasErrors('direction');
 });
 
 it('does not let a company reach the checklist of another', function (): void {
