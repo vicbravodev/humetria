@@ -11,9 +11,12 @@ use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
+use App\Modules\Telework\Data\PendingDocument;
+use App\Modules\Telework\Data\PortalPendingData;
 use App\Modules\Telework\Enums\AckChannel;
 use App\Modules\Telework\Enums\DocumentKind;
-use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
+use App\Modules\Telework\Enums\Section;
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Listeners\RequestOnPublication;
 use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
 use App\Modules\Telework\Models\Acknowledgement;
@@ -21,11 +24,17 @@ use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Notifications\DocumentsToConfirm;
+use App\Modules\Telework\Notifications\PortalReminder;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\ChecklistApplicationFactory;
+use Database\Factories\Telework\EquipmentItemFactory;
+use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\VisitAuthorizationFactory;
+use Database\Factories\Telework\WorkplaceFactory;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -78,8 +87,8 @@ it('asks every active employee of the center to acknowledge a published policy',
     $requests = Acknowledgement::query()->where('document_id', $document->id)->get();
     expect($requests->pluck('employee_id')->sort()->values()->all())->toBe(collect([$ana->id, $bea->id])->sort()->values()->all())
         ->and($requests->every(fn (Acknowledgement $request): bool => $request->acknowledged_at === null && $request->user_id === null && $request->channel === null))->toBeTrue();
-    Queue::assertPushed(SendAcknowledgementRequest::class, 1);
-    Queue::assertPushed(SendAcknowledgementRequest::class, fn (SendAcknowledgementRequest $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $ana->id && $job->userId === null);
+    Queue::assertPushed(SendPortalReminder::class, 1);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $ana->id && $job->userId === null);
 });
 
 it('asks nothing for the other kinds', function (): void {
@@ -105,8 +114,8 @@ it('asks the roster and the committee for risk information', function (): void {
     expect($requests)->toHaveCount(2)
         ->and($requests->pluck('employee_id')->filter()->values()->all())->toBe([$onRoster->employee_id])
         ->and($requests->pluck('user_id')->filter()->values()->all())->toBe([$cora->id]);
-    Queue::assertPushed(SendAcknowledgementRequest::class, 2);
-    Queue::assertPushed(SendAcknowledgementRequest::class, fn (SendAcknowledgementRequest $job): bool => $job->userId === $cora->id && $job->employeeId === null);
+    Queue::assertPushed(SendPortalReminder::class, 2);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->userId === $cora->id && $job->employeeId === null);
 });
 
 it('asks again when a new version is published and keeps the old requests', function (): void {
@@ -127,7 +136,7 @@ it('does not ask twice for the same version', function (): void {
 
     expect(resolve(RequestAcknowledgements::class)->handle([$document->id]))->toBe(0)
         ->and(Acknowledgement::query()->count())->toBe(1);
-    Queue::assertPushed(SendAcknowledgementRequest::class, 1);
+    Queue::assertPushed(SendPortalReminder::class, 1);
 });
 
 it('logs telework.acknowledgement_requested with ids and counts only', function (): void {
@@ -147,15 +156,15 @@ it('mails the employee a fresh portal link made as the job runs, replacing the o
     $old = resolve(IssuePortalLink::class)->handle($ana->id);
     publishDocument(DocumentKind::Policy, $this->center);
 
-    $job = new SendAcknowledgementRequest($this->tenant->id, $ana->id, null);
+    $job = new SendPortalReminder($this->tenant->id, $ana->id, null);
     app()->call($job->handle(...));
 
     $url = null;
-    Notification::assertSentOnDemand(DocumentsToConfirm::class, function (DocumentsToConfirm $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url, $ana): bool {
+    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url, $ana): bool {
         $mail = $notification->toMail($notifiable);
         $url = $mail->actionUrl;
 
-        return $mail->subject === 'Tiene documentos por confirmar' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
+        return $mail->subject === 'Tiene pendientes en su portal' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
     });
     expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', basename($url)))
         ->and(PortalLink::query()->where('token_hash', hash('sha256', $old))->exists())->toBeFalse()
@@ -169,7 +178,7 @@ it('mails a Comisión member the link to the documents page', function (): void 
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
     publishDocument(DocumentKind::RiskInformation, $this->center);
 
-    app()->call((new SendAcknowledgementRequest($this->tenant->id, null, $cora->id))->handle(...));
+    app()->call((new SendPortalReminder($this->tenant->id, null, $cora->id))->handle(...));
 
     Notification::assertSentOnDemand(DocumentsToConfirm::class, fn (DocumentsToConfirm $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === $cora->email
         && $notification->toMail($notifiable)->actionUrl === route('tenant.telework.documents.index', $this->tenant));
@@ -179,7 +188,7 @@ it('sends nothing when nothing is pending, the person left or the company is blo
     Notification::fake();
     Queue::fake();
     $ana = staffer($this->center);
-    $job = new SendAcknowledgementRequest($this->tenant->id, $ana->id, null);
+    $job = new SendPortalReminder($this->tenant->id, $ana->id, null);
 
     app()->call($job->handle(...));
     publishDocument(DocumentKind::Policy, $this->center);
@@ -208,7 +217,7 @@ it('asks new, reactivated and moved-in staff for the policy in force of their ce
 
     $request = Acknowledgement::query()->sole();
     expect($request->document_id)->toBe($latest->id)->and($request->employee_id)->toBe($newcomer->id)->and($request->document_id)->not->toBe($elsewhere->id);
-    Queue::assertPushed(SendAcknowledgementRequest::class, fn (SendAcknowledgementRequest $job): bool => $job->employeeId === $newcomer->id);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $newcomer->id);
 })->with(['created', 'reactivated', 'moved']);
 
 it('asks a newcomer once even if the arrival is announced twice, and nothing without a policy', function (): void {
@@ -393,16 +402,16 @@ it('waits two minutes and keeps one waiting email per person, listing everything
     publishDocument(DocumentKind::Policy, $this->center);
     publishDocument(DocumentKind::Policy, $this->center);
 
-    Queue::assertPushed(SendAcknowledgementRequest::class, fn (SendAcknowledgementRequest $job): bool => $job->delay === 120);
-    $job = new SendAcknowledgementRequest($this->tenant->id, $ana->id, null);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->delay === 120);
+    $job = new SendPortalReminder($this->tenant->id, $ana->id, null);
     expect($job)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUnique::class)
         ->and($job->uniqueFor)->toBe(600)
         ->and($job->uniqueId())->toBe("{$this->tenant->id}:{$ana->id}")
-        ->and((new SendAcknowledgementRequest($this->tenant->id, null, 7))->uniqueId())->toBe("{$this->tenant->id}:user-7");
+        ->and((new SendPortalReminder($this->tenant->id, null, 7))->uniqueId())->toBe("{$this->tenant->id}:user-7");
 
     app()->call($job->handle(...));
 
-    Notification::assertSentOnDemand(DocumentsToConfirm::class, function (DocumentsToConfirm $notification, array $channels, AnonymousNotifiable $notifiable): bool {
+    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable): bool {
         $lines = collect($notification->toMail($notifiable)->introLines);
 
         // The first version was superseded: only the one in force is listed.
@@ -410,13 +419,33 @@ it('waits two minutes and keeps one waiting email per person, listing everything
     });
 });
 
-it('writes the Comisión email in the panel voice, without the personal link sentence', function (): void {
-    $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', 'Acme', ['Información sobre riesgos del Teletrabajo · versión 1'], false))->toMail(new AnonymousNotifiable);
-    $person = (new DocumentsToConfirm('https://x.test/portal/t', 'Ana', 'Acme', ['Política de Teletrabajo · versión 1'], true))->toMail(new AnonymousNotifiable);
+it('writes the Comisión email in the panel voice and the person email in the portal voice', function (): void {
+    $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', 'Acme', ['Información sobre riesgos del Teletrabajo · versión 1']))->toMail(new AnonymousNotifiable);
+    $person = (new PortalReminder('https://x.test/portal/t', 'Ana', 'Acme', new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
 
     expect($member->subject)->toBe('Tienes documentos por confirmar')
         ->and(implode(' ', $member->introLines))->toContain('debes leer y confirmar en el panel')
         ->and($member->outroLines)->toBe([])
-        ->and($person->subject)->toBe('Tiene documentos por confirmar')
+        ->and($person->subject)->toBe('Tiene pendientes en su portal')
         ->and(implode(' ', $person->outroLines))->toContain('no lo comparta');
+});
+
+it('lists everything pending in the portal in one email', function (): void {
+    Notification::fake();
+    $workplace = WorkplaceFactory::new()->for(TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => ($ana = staffer($this->center))->id, 'work_center_id' => $this->center->id]), 'teleworker')->create(['tenant_id' => $this->tenant->id]);
+    ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => Section::Two]);
+    EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $workplace->teleworker_id, 'description' => 'Silla ergonómica']);
+    EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id]);
+    VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id]);
+    publishDocument(DocumentKind::Policy, $this->center);
+
+    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
+
+    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable): bool {
+        $lines = array_map(strval(...), $notification->toMail($notifiable)->introLines);
+
+        return collect(['Listas por contestar:', 'Documentos por confirmar:', 'Equipo por confirmar:', 'Fotos que pidió la Comisión:', 'Autorizaciones de visita:'])->every(fn (string $heading): bool => in_array($heading, $lines, true))
+            && in_array('- Silla ergonómica', $lines, true)
+            && array_any($lines, fn (string $line): bool => str_starts_with($line, '- Calle Hidalgo 45') && str_ends_with($line, 'Sección II'));
+    });
 });

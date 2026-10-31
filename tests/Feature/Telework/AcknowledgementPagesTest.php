@@ -229,7 +229,7 @@ it('seats a Comisión member after publication, who then confirms in the panel a
     resolve(App\Modules\Telework\Actions\AssignCommitteeMember::class)->handle($this->center->id, $cora->id);
 
     expect(resolve(AckProgress::class)->of($document))->toBe(['acknowledged' => 1, 'expected' => 2]);
-    Queue::assertPushed(App\Modules\Telework\Jobs\SendAcknowledgementRequest::class, fn ($job): bool => $job->userId === $cora->id);
+    Queue::assertPushed(App\Modules\Telework\Jobs\SendPortalReminder::class, fn ($job): bool => $job->userId === $cora->id);
     $this->actingAs($cora)->post(route('tenant.telework.documents.acknowledge', [$this->tenant, $document->id]))->assertSessionHasNoErrors();
     expect(resolve(AckProgress::class)->of($document))->toBe(['acknowledged' => 2, 'expected' => 2]);
 });

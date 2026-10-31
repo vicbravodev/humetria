@@ -7,7 +7,7 @@ namespace App\Modules\Telework\Actions;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Telework\Enums\DocumentKind;
-use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\AckAudience;
@@ -88,9 +88,9 @@ final readonly class RequestAcknowledgements
         // Those without an email are not mailed: RH records their paper acknowledgements.
         foreach (array_chunk($employees, self::CHUNK) as $chunk) {
             $reachable = array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null));
-            array_map(fn (string $id) => SendAcknowledgementRequest::dispatch($tenantId, $id, null)->delay(SendAcknowledgementRequest::DELAY), $reachable);
+            array_map(fn (string $id) => SendPortalReminder::dispatch($tenantId, $id, null)->delay(SendPortalReminder::DELAY), $reachable);
         }
-        array_map(fn (int $id) => SendAcknowledgementRequest::dispatch($tenantId, null, $id)->delay(SendAcknowledgementRequest::DELAY), $users);
+        array_map(fn (int $id) => SendPortalReminder::dispatch($tenantId, null, $id)->delay(SendPortalReminder::DELAY), $users);
         Log::info('telework.acknowledgement_requested', ['document_ids' => array_map(fn (TeleworkDocument $document): string => $document->id, $documents), 'employees' => count($employees), 'users' => count($users)]);
 
         return count($employees) + count($users);

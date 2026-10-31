@@ -16,7 +16,7 @@ use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Http\Controllers\RosterController;
-use App\Modules\Telework\Jobs\SendAcknowledgementRequest;
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
@@ -511,5 +511,5 @@ it('asks the person who joins the roster for the risk information in force of th
 
     $request = Acknowledgement::query()->sole();
     expect($request->document_id)->toBe($document->id)->and($request->employee_id)->toBe($this->employee->id);
-    Queue::assertPushed(SendAcknowledgementRequest::class, fn ($job): bool => $job->employeeId === $this->employee->id);
+    Queue::assertPushed(SendPortalReminder::class, fn ($job): bool => $job->employeeId === $this->employee->id);
 });
