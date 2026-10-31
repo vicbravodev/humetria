@@ -53,7 +53,7 @@ final readonly class PhotoStore
         }
 
         if ($type === IMAGETYPE_JPEG) {
-            $image = $this->upright($image, $bytes);
+            $image = $this->upright($image, $file->getPathname());
         }
 
         $path = $directory.'/photo-'.Str::uuid().($type === IMAGETYPE_PNG ? '.png' : '.jpg');
@@ -90,20 +90,12 @@ final readonly class PhotoStore
     }
 
     /**
-     * Re-encoding drops the EXIF orientation, so the pixels are turned to match it first. EXIF is read from a temporary
-     * file, never a `data://` stream, so it works on a server with `allow_url_fopen` off.
+     * Re-encoding drops the EXIF orientation, so the pixels are turned to match it first. EXIF is read from the upload's own
+     * file on disk (PHP manages it), never a `data://` stream, so it works on a server with `allow_url_fopen` off.
      */
-    private function upright(GdImage $image, string $bytes): GdImage
+    private function upright(GdImage $image, string $path): GdImage
     {
-        $temporary = tempnam(sys_get_temp_dir(), 'photo');
-
-        try {
-            $exif = $temporary !== false && file_put_contents($temporary, $bytes) !== false ? @exif_read_data($temporary) : false;
-        } finally {
-            if ($temporary !== false) {
-                @unlink($temporary);
-            }
-        }
+        $exif = @exif_read_data($path);
 
         $orientation = is_array($exif) && is_int($exif['Orientation'] ?? null) ? $exif['Orientation'] : 1;
 
@@ -118,6 +110,7 @@ final readonly class PhotoStore
             default => $image,
         };
 
+        // The caller replaces its reference with the result, so the original is freed before encoding.
         return $turned instanceof GdImage ? $turned : $image;
     }
 
