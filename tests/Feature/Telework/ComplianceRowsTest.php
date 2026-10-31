@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Instruments\Data\Requirement;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\EquipmentStatus;
 use App\Modules\Telework\Enums\NoticeKind;
@@ -67,13 +68,28 @@ function rowDocument(DocumentKind $kind, array $items = []): void
     TeleworkDocumentFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'kind' => $kind, 'covered_items' => $items]);
 }
 
-function rowChecklist(bool $withSectionTwo = true): void
+/**
+ * A published list that covers every requirement of both sections, except those named.
+ *
+ * @param  list<Requirement>  $lackingOne
+ * @param  list<Requirement>  $lackingTwo
+ */
+function rowChecklist(bool $withSectionTwo = true, array $lackingOne = [], array $lackingTwo = []): void
 {
     $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id]);
-    addQuestion($checklist, 1, 'yes');
+    $position = 0;
 
-    if ($withSectionTwo) {
-        addQuestion($checklist, 2, 'yes', section: 2);
+    foreach (array_filter([1 => true, 2 => $withSectionTwo]) as $section => $_) {
+        foreach (Requirement::cases() as $requirement) {
+            if (! in_array($requirement, $section === 1 ? $lackingOne : $lackingTwo, true)) {
+                addQuestion($checklist, ++$position, 'yes', section: $section)->update(['requirement' => $requirement]);
+            }
+        }
+    }
+
+    // A section without the covering questions still has questions of its own.
+    if ($withSectionTwo && count($lackingTwo) === count(Requirement::cases())) {
+        addQuestion($checklist, ++$position, 'yes', section: 2);
     }
 }
 
@@ -150,6 +166,10 @@ it('computes each 10.3 row', function (string $numeral, Closure $arrange, RowSta
         rowPlace(rowPerson());
         rowPlace(rowPerson(), 'none');
     }, RowState::Partial],
+    '5.4 y 7 partial: Sección I lacks a requirement' => ['5.4 y 7', function (): void {
+        rowChecklist(lackingOne: [Requirement::Lighting]);
+        rowPlace(rowPerson());
+    }, RowState::Partial],
     '5.5 done' => ['5.5', fn () => rowPlace(rowPerson(), 'plan'), RowState::Done],
     '5.5 missing: no place in force' => ['5.5', fn () => rowPlace(rowPerson(), 'none'), RowState::Missing],
     '5.5 partial: one place lapsed' => ['5.5', function (): void {
@@ -166,10 +186,16 @@ it('computes each 10.3 row', function (string $numeral, Closure $arrange, RowSta
         rowChecklist();
         rowPlace(rowPerson(), 'lapsed');
     }, RowState::Partial],
+    '5.5.1 partial: Sección II lacks a requirement' => ['5.5.1', function (): void {
+        rowChecklist(lackingTwo: [Requirement::Chair]);
+        rowPlace(rowPerson());
+    }, RowState::Partial],
     '5.6 done' => ['5.6', fn () => rowDocument(DocumentKind::ImplementationProcess, ['a', 'b', 'c', 'd']), RowState::Done],
     '5.6 missing' => ['5.6', fn () => null, RowState::Missing],
     '5.6 partial: only a to c' => ['5.6', fn () => rowDocument(DocumentKind::ImplementationProcess, ['a', 'b', 'c']), RowState::Partial],
-    '5.7 done: equipment registered' => ['5.7', fn () => EquipmentItemFactory::new()->create(['tenant_id' => test()->tenant->id, 'teleworker_id' => rowPerson()->id]), RowState::Done],
+    // C-22: the person's signed receipt (or signed refusal) is the evidence; a registration they have not answered is not.
+    '5.7 done: equipment received' => ['5.7', fn () => EquipmentItemFactory::new()->create(['tenant_id' => test()->tenant->id, 'teleworker_id' => rowPerson(['no_equipment_reason' => null])->id, 'status' => EquipmentStatus::Received, 'responded_at' => now()]), RowState::Done],
+    '5.7 partial: equipment only pending' => ['5.7', fn () => EquipmentItemFactory::new()->create(['tenant_id' => test()->tenant->id, 'teleworker_id' => rowPerson(['no_equipment_reason' => null])->id]), RowState::Partial],
     '5.7 done: justified' => ['5.7', fn () => rowPerson(), RowState::Done],
     '5.7 missing: no equipment and no reason' => ['5.7', fn () => rowPerson(['no_equipment_reason' => null]), RowState::Missing],
     '5.7 partial: one of two' => ['5.7', function (): void {
@@ -184,10 +210,17 @@ it('computes each 10.3 row', function (string $numeral, Closure $arrange, RowSta
         $training = TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2026-02-20']);
         TrainingAttendee::query()->create(['tenant_id' => test()->tenant->id, 'training_id' => $training->id, 'employee_id' => $person->employee_id]);
     }, RowState::Done],
-    '5.9 y 8 missing: no training yet' => ['5.9 y 8', fn () => rowPerson(), RowState::Missing],
-    '5.9 y 8 partial: someone past twelve months' => ['5.9 y 8', function (): void {
+    '5.9 y 8 done: a new person in their first twelve months' => ['5.9 y 8', fn () => rowPerson(), RowState::Done],
+    '5.9 y 8 missing: everyone is overdue' => ['5.9 y 8', function (): void {
         rowPerson(['started_at' => '2025-01-10 12:00:00']);
-        TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2026-02-20']);
+        TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2025-01-05']);
+    }, RowState::Missing],
+    '5.9 y 8 missing: nobody ever trained and overdue' => ['5.9 y 8', fn () => rowPerson(['started_at' => '2025-01-10 12:00:00']), RowState::Missing],
+    '5.9 y 8 partial: only some are overdue' => ['5.9 y 8', function (): void {
+        rowPerson(['started_at' => '2025-01-10 12:00:00']);
+        $trained = rowPerson(['started_at' => '2025-12-01 12:00:00']);
+        $training = TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2026-02-20']);
+        TrainingAttendee::query()->create(['tenant_id' => test()->tenant->id, 'training_id' => $training->id, 'employee_id' => $trained->employee_id]);
     }, RowState::Partial],
     '5.10 done' => ['5.10', fn () => rowDocument(DocumentKind::Reversibility), RowState::Done],
     '5.10 missing' => ['5.10', fn () => null, RowState::Missing],
@@ -277,4 +310,36 @@ it('does not read another company', function (): void {
     workIn($this->tenant);
 
     expect(collect($mine)->firstWhere('numeral', '5.8')?->state)->toBe(RowState::Missing);
+});
+
+it('tells what to do about a workplace the Comisión judged not apt', function (): void {
+    rowPlace(rowPerson(), 'not_valid');
+
+    expect(computedRows()['5.1.1']['detail'])->toContain('1 lugar no es apto: retíralo o inicia la reversibilidad')
+        ->and(computedRows()['5.5']['detail'])->toContain('retíralo o inicia la reversibilidad');
+});
+
+it('names the requirements a published list leaves uncovered', function (): void {
+    rowChecklist(lackingOne: [Requirement::Lighting], lackingTwo: [Requirement::Chair, Requirement::Noise]);
+    rowPlace(rowPerson());
+
+    expect(computedRows()['5.4 y 7']['detail'])->toContain(Requirement::Lighting->label())
+        ->and(computedRows()['5.5.1']['detail'])->toContain(Requirement::Chair->label())->toContain(Requirement::Noise->label());
+});
+
+it('says in 5.7 how many people have equipment nobody confirmed', function (): void {
+    EquipmentItemFactory::new()->create(['tenant_id' => test()->tenant->id, 'teleworker_id' => rowPerson(['no_equipment_reason' => null])->id]);
+
+    expect(computedRows()['5.7']['detail'])->toContain('equipo sin acuse');
+});
+
+it('computes the rows of many centers at once, each as on its own', function (): void {
+    rowPlace(rowPerson());
+    $other = WorkCenter::factory()->for($this->tenant)->create();
+    $many = resolve(ComplianceRows::class)->forMany([$this->center->id, $other->id]);
+
+    expect(array_keys($many))->toBe([$this->center->id, $other->id])
+        ->and($many[$this->center->id])->toEqual(resolve(ComplianceRows::class)->for($this->center->id))
+        ->and($many[$other->id])->toEqual(resolve(ComplianceRows::class)->for($other->id))
+        ->and($many[$other->id][0]->state)->toBe(RowState::NotApplicable);
 });
