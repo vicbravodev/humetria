@@ -105,3 +105,20 @@ it('lists the members of the current company only', function (): void {
         ->and($members->find($foreign->id))->toBeNull()
         ->and($members->find(0))->toBeNull();
 });
+
+it('lists as reviewers the members whose role can review workplaces, by name', function (): void {
+    $tenant = Tenant::factory()->create();
+    $viewer = User::factory()->create(['name' => 'Beto']);
+    $committee = User::factory()->create(['name' => 'Cora']);
+    $hr = User::factory()->create(['name' => 'Ana']);
+    $owner = User::factory()->create(['name' => 'Zoe']);
+    TenantMembership::factory()->for($tenant)->for($viewer)->role(TenantRole::Viewer)->create();
+    TenantMembership::factory()->for($tenant)->for($owner)->role(TenantRole::Owner)->create();
+    TenantMembership::factory()->for($tenant)->for($committee)->role(TenantRole::Committee)->create();
+    TenantMembership::factory()->for($tenant)->for($hr)->hr()->create();
+    memberOf(Tenant::factory()->create(), TenantRole::Hr);
+    workIn($tenant);
+
+    expect(array_map(fn (MemberSummary $member): int => $member->userId, resolve(Members::class)->reviewers()))
+        ->toBe([$hr->id, $committee->id, $owner->id]);
+});
