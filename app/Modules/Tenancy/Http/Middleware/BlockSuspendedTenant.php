@@ -15,7 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Keeps a suspended company (trial ended, expired or deactivated) from being used. A page request gets
  * the blocked page, a modal over the frame; anything that would change something gets 423, with no effect.
- * A superadmin impersonating the owner passes: the frame shows them the modal, and they can dismiss it.
+ * A superadmin impersonating the owner sees the real pages (the frame shows them the modal, and they can dismiss it),
+ * but changes nothing either: a suspended company launches and sends nothing, whoever acts as its owner.
  * Runs after ResolveTenant, which has already bound the company and checked membership.
  */
 final class BlockSuspendedTenant
@@ -29,12 +30,12 @@ final class BlockSuspendedTenant
     {
         $tenant = $request->route('tenant');
 
-        if (! $tenant instanceof Tenant || ! $tenant->status()->isBlocked() || $this->impersonation->isActive()) {
+        if (! $tenant instanceof Tenant || ! $tenant->status()->isBlocked()) {
             return $next($request);
         }
 
         if ($request->isMethodSafe()) {
-            return Inertia::render('tenancy/blocked')->toResponse($request);
+            return $this->impersonation->isActive() ? $next($request) : Inertia::render('tenancy/blocked')->toResponse($request);
         }
 
         Log::warning('tenant.blocked_request_rejected', ['tenant_id' => $tenant->id]);

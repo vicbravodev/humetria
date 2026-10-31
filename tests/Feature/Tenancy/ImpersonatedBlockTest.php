@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(BlockSuspendedTenant::class);
 
-it('gives an impersonating superadmin the real page of an expired company, told it is blocked', function (): void {
+it('gives an impersonating superadmin the real page of an expired company, told it is blocked, but lets them change nothing', function (): void {
     $effects = 0;
     Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class])
         ->post('admin/{tenant:slug}/_probe', function () use (&$effects): string {
@@ -31,9 +31,10 @@ it('gives an impersonating superadmin the real page of an expired company, told 
             ->component('dashboard')
             ->where('tenant.blocked', true)
             ->where('impersonator', $superadmin->name));
-    $this->post(route('tenant.impersonated-probe', $tenant))->assertOk();
+    // A suspended company sends nothing and launches nothing, whoever is acting as its owner.
+    $this->post(route('tenant.impersonated-probe', $tenant))->assertStatus(423);
 
-    expect($effects)->toBe(1);
+    expect($effects)->toBe(0);
 });
 
 it('never tells a member of a blocked company they are impersonated', function (): void {
