@@ -1,11 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CalendarCheck, ListChecks, Users } from 'lucide-react';
+import { CalendarCheck, ListChecks, UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/page-header';
 import type { PageFact } from '@/components/page-header';
 import CommitteePanel from '@/components/telework/committee-panel';
 import { describeDate } from '@/lib/calendar-date';
 import { show } from '@/routes/tenant/telework/checklist';
+import { create } from '@/routes/tenant/telework/teleworkers';
 import type { Committee, CommitteePerson } from '@/types';
 
 function committeeFacts(committee: Committee | null): PageFact[] {
@@ -58,6 +59,19 @@ export default function CommitteePage({
                     }
                     facts={committeeFacts(committee)}
                 >
+                    {committee !== null && canManage && (
+                        <Button variant="outline" asChild>
+                            <Link
+                                href={create({
+                                    tenant: tenantSlug,
+                                    workCenter: workCenter.id,
+                                })}
+                            >
+                                <UserPlus aria-hidden />
+                                Agregar persona
+                            </Link>
+                        </Button>
+                    )}
                     {committee !== null && (
                         <Button asChild>
                             <Link

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
+use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,3 +29,12 @@ Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/quest
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/questions/{question}/move', [ChecklistController::class, 'move'])->where('tenant', $notReserved)->name('tenant.telework.checklist.questions.move');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/draft', [ChecklistController::class, 'draft'])->where('tenant', $notReserved)->name('tenant.telework.checklist.draft');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/checklist/publish', [ChecklistController::class, 'publish'])->where('tenant', $notReserved)->name('tenant.telework.checklist.publish');
+
+// The people who will telework, registered by RH from their work center. A period is never deleted; the portal link is
+// replaced, not removed (the person's old one stops working).
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers/create', [TeleworkerController::class, 'create'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.create');
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers/employees', [TeleworkerController::class, 'employees'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.employees');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers', [TeleworkerController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.store');
+Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.show');
+Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
+Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');

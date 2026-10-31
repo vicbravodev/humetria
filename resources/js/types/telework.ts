@@ -49,3 +49,22 @@ export type PortalPending = {
     /** Sent, waiting for the Comisión. */
     sent: PortalChecklist[];
 };
+
+export type TeleworkerStatus = 'aspirant' | 'active' | 'ended';
+
+/** A place where a person teleworks, with where its first checklist stands. */
+export type TeleworkerWorkplace = {
+    id: string;
+    address: string;
+    label: string;
+};
+
+export type TeleworkerSummary = {
+    id: string;
+    name: string;
+    jobTitle: string;
+    hasEmail: boolean;
+    status: TeleworkerStatus;
+    percentage: number;
+    workplaces: TeleworkerWorkplace[];
+};

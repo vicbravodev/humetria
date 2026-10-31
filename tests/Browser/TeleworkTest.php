@@ -16,6 +16,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
+use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 
@@ -187,3 +188,80 @@ it('tells a link that opens nothing apart from nothing else', function (bool $da
     visitPage('telework/portal', '/portal/not-a-link', $dark, $mobile)
         ->assertSee('Este enlace no es válido');
 })->with($looks);
+
+/** @return array{string, WorkCenter, Tenant} The panel of RH in acme, and a center of it (with a published list unless said otherwise). */
+function teleworkerCenter(bool $published = true): array
+{
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $center = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+
+    if ($published) {
+        ChecklistFactory::new()->published()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    }
+
+    return [$url, $center, $tenant];
+}
+
+it('shows the page to add a person to telework', function (bool $dark, bool $mobile): void {
+    [$url, $center] = teleworkerCenter();
+
+    visitPage('telework/teleworker', "{$url}/telework/centers/{$center->id}/teleworkers/create", $dark, $mobile)
+        ->assertSee('Agregar persona')
+        ->assertSee('Porcentaje de teletrabajo')
+        ->assertSee('Lugar de trabajo')
+        ->assertSee('Registrar persona');
+})->with($looks);
+
+it('asks for the published list before adding anyone', function (): void {
+    [$url, $center] = teleworkerCenter(published: false);
+
+    visitPage('telework/teleworker', "{$url}/telework/centers/{$center->id}/teleworkers/create")
+        ->assertSee('La Comisión aún no publica la lista')
+        ->assertDontSee('Registrar persona');
+});
+
+it('shows a teleworker with their workplaces and no email', function (bool $dark, bool $mobile): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'email' => null]);
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+    ChecklistApplicationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id]);
+
+    visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}", $dark, $mobile)
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Sin correo')
+        ->assertSee('Generar enlace para copiar')
+        ->assertSee('Calle Hidalgo 45')
+        ->assertSee('Pendiente de contestar');
+})->with($looks);
+
+it('registers a person from the page and hands over a new link once', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'email' => null]);
+
+    visit("{$url}/telework/centers/{$center->id}/teleworkers/create")
+        ->click('#aspirant-employee')
+        ->type('[role="combobox"][aria-controls="aspirant-employee-options"]', 'ana')
+        ->assertSee('Ana Ruiz')
+        ->keys('[role="combobox"][aria-controls="aspirant-employee-options"]', 'Enter')
+        ->fill('#aspirant-percentage', '60')
+        ->fill('#workplace-0-street', 'Calle Hidalgo')
+        ->fill('#workplace-0-exterior_number', '45')
+        ->fill('#workplace-0-neighborhood', 'Centro')
+        ->fill('#workplace-0-postal_code', '76000')
+        ->fill('#workplace-0-municipality', 'Querétaro')
+        ->click('#workplace-0-state')
+        ->type('[role="combobox"][aria-controls="workplace-0-state-options"]', 'quer')
+        ->keys('[role="combobox"][aria-controls="workplace-0-state-options"]', 'Enter')
+        ->press('Registrar persona')
+        ->assertSee('Persona registrada')
+        ->assertSee('Calle Hidalgo 45, Centro, Querétaro, Querétaro')
+        ->press('Generar enlace para copiar')
+        ->assertSee('El enlace anterior de esta persona dejará de funcionar')
+        ->press('Generar enlace')
+        ->assertSee('Enlace nuevo')
+        ->assertScript('() => document.querySelector("#portal-link").value.includes("/portal/")', true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
