@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Modules\Telework\Actions\AddWorkplace;
 use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Actions\RequestChecklist;
@@ -23,8 +24,10 @@ use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -213,15 +216,22 @@ it('queues only ids: the plain token never reaches the queue, and the job makes 
     $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
 });
 
-it('sends nothing when the person left or the company is blocked before the job runs', function (): void {
-    Queue::fake();
-    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
-    $job = new SendPortalInvitation($this->tenant->id, $this->employee->id);
+it('sends nothing when the person left before the job runs', function (): void {
     $this->employee->forceFill(['deactivated_at' => now()])->save();
 
-    app()->call($job->handle(...));
+    app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 
     Notification::assertNothingSent();
+    expect(PortalLink::query()->count())->toBe(0);
+});
+
+it('sends nothing when the company may not be used by the time the job runs', function (): void {
+    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+
+    app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
+
+    Notification::assertNothingSent();
+    workIn(tenantOf($this->tenant->id));
     expect(PortalLink::query()->count())->toBe(0);
 });
 
@@ -246,6 +256,34 @@ it('answers with the pending application when the insert races, even inside a tr
     });
 
     expect($found->id)->toBe($rival);
+});
+
+it('logs telework.aspirant_registered with ids only and audits it', function (): void {
+    Log::spy();
+
+    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
+
+    $teleworker = aspirant();
+    $expected = ['teleworker_id' => $teleworker->id, 'employee_id' => $this->employee->id, 'work_center_id' => $this->center->id, 'workplaces' => 1];
+    Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context = []): bool => $message === 'telework.aspirant_registered' && $context === $expected)->once();
+    $entry = AuditEntry::query()->where('event', 'telework.aspirant_registered')->sole();
+
+    expect($entry->subject_id)->toBe($teleworker->id)->and($entry->metadata)->toEqual([...$expected, 'registered_by' => $this->hr->id]);
+    foreach (['Ana', 'ana@acme.test', 'Hidalgo'] as $private) {
+        expect(json_encode($entry->metadata, JSON_THROW_ON_ERROR))->not->toContain($private);
+    }
+});
+
+it('does not run the invitation job until the surrounding transaction commits', function (): void {
+    // The sync queue runs a job as it is pushed, so a mail inside the transaction would mean it was pushed early.
+    DB::transaction(function (): void {
+        SendPortalInvitation::dispatch($this->tenant->id, $this->employee->id);
+
+        Notification::assertNothingSent();
+    });
+
+    Notification::assertSentOnDemandTimes(PortalInvitation::class, 1);
+    expect(new SendPortalInvitation($this->tenant->id, $this->employee->id))->toBeInstanceOf(ShouldQueueAfterCommit::class);
 });
 
 it('shows the registration page of a work center with its checklist state', function (): void {
