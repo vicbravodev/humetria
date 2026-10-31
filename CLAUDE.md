@@ -117,7 +117,9 @@ layouts/  hooks/  lib/  types/
 
 ## Multi-tenancy
 
-- Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo aplica un global scope por tenant.
+- Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo aplica un global scope por tenant
+  (`BelongsToCurrentTenant`). `tests/Feature/TenantScopedModelsTest.php` lo exige; las únicas excepciones, cada una con su
+  razón, son las que se leen entre empresas: `TenantMembership`, `TenantInvitation` y `AuditEntry`.
 - Cada modelo con tenant tiene un test que prueba que la empresa A no puede leer ni modificar datos de B,
   tanto por consulta directa como por URL (route model binding debe dar 404, no 403 que delate existencia).
 - Nunca se confía en un `tenant_id` que venga del request.
