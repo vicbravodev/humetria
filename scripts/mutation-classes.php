@@ -18,8 +18,8 @@ declare(strict_types=1);
  */
 
 // Paths every test depends on: a change here can move any mutation's result.
-const SHARED = ['composer.lock', 'composer.json', 'phpunit.xml', 'tests/Pest.php', 'tests/TestCase.php'];
-const SHARED_DIRECTORIES = ['bootstrap/', 'config/', 'database/', 'routes/'];
+const SHARED = ['composer.lock', 'composer.json', 'package.json', 'package-lock.json', 'phpunit.xml', 'tests/Pest.php', 'tests/TestCase.php'];
+const SHARED_DIRECTORIES = ['bootstrap/', 'config/', 'database/', 'lang/', 'resources/views/', 'routes/', 'scripts/'];
 
 $options = getopt('', ['all', 'shard:'], $firstArgument);
 $testsDirectory = rtrim($argv[$firstArgument] ?? 'tests', '/');
