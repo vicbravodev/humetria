@@ -85,6 +85,7 @@ final readonly class TeleworkPages
         return [
             'workCenter' => ['id' => $center->id, 'name' => $center->name, 'activity' => $center->mainActivity],
             'progress' => $this->progress($rows),
+            'dossierHref' => $manage || $member ? route('tenant.telework.dossier', [$tenant, $center->id]) : null,
             'teleworkers' => $active,
             'aspirants' => $people['aspirants'],
             'rows' => array_map(fn (ComplianceRow $row): array => [
@@ -302,7 +303,7 @@ final readonly class TeleworkPages
                 ...($manage ? [
                     'maritalStatus' => $person->marital_status?->value,
                     'contactPhone' => $person->contact_phone,
-                    'homeAddress' => $this->homeAddress($person, $states),
+                    'homeAddress' => $person->homeAddress($states),
                 ] : []),
             ]);
         });
@@ -317,17 +318,5 @@ final readonly class TeleworkPages
     private function props(array $props): array
     {
         return $props;
-    }
-
-    /** @param array<string, string> $states */
-    private function homeAddress(Teleworker $person, array $states): ?string
-    {
-        if ($person->street === null) {
-            return null;
-        }
-
-        $number = $person->interior_number === null ? $person->exterior_number : "{$person->exterior_number}, int. {$person->interior_number}";
-
-        return "{$person->street} {$number}, {$person->neighborhood}, {$person->postal_code} {$person->municipality}, ".($states[$person->state ?? ''] ?? $person->state);
     }
 }

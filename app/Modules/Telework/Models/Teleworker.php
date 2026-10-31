@@ -61,6 +61,22 @@ final class Teleworker extends Model
     }
 
     /**
+     * The person's home address in one line (5.1), or null without one.
+     *
+     * @param  array<string, string>  $states  state code => name
+     */
+    public function homeAddress(array $states): ?string
+    {
+        if ($this->street === null) {
+            return null;
+        }
+
+        $number = $this->interior_number === null ? $this->exterior_number : "{$this->exterior_number}, int. {$this->interior_number}";
+
+        return "{$this->street} {$number}, {$this->neighborhood}, {$this->postal_code} {$this->municipality}, ".($states[$this->state ?? ''] ?? $this->state);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

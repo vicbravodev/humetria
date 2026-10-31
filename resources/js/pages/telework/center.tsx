@@ -1,6 +1,7 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import { Factory, Users } from 'lucide-react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { FileText, Factory, Users } from 'lucide-react';
 import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import CenterCenterNextStepData from '@/components/telework/center-next-step';
 import CenterProgressCard from '@/components/telework/center-progress-card';
 import CenterRoster from '@/components/telework/center-roster';
@@ -20,6 +21,7 @@ import type {
 export default function TeleworkCenter({
     workCenter,
     progress,
+    dossierHref,
     teleworkers,
     aspirants,
     rows,
@@ -29,6 +31,8 @@ export default function TeleworkCenter({
 }: {
     workCenter: { id: string; name: string; activity: string };
     progress: CenterProgress;
+    /** The printable dossier for an inspection; null for the viewer. */
+    dossierHref: string | null;
     teleworkers: number;
     aspirants: number;
     rows: ComplianceRow[];
@@ -58,7 +62,16 @@ export default function TeleworkCenter({
                             text: headcountText(teleworkers, aspirants),
                         },
                     ]}
-                />
+                >
+                    {dossierHref !== null && (
+                        <Button variant="outline" asChild>
+                            <Link href={dossierHref}>
+                                <FileText aria-hidden />
+                                Expediente
+                            </Link>
+                        </Button>
+                    )}
+                </PageHeader>
                 {nextStep !== null && (
                     <CenterCenterNextStepData step={nextStep} />
                 )}

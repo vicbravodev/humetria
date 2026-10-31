@@ -6,6 +6,7 @@ use App\Modules\Telework\Http\Controllers\AcknowledgementController;
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\DocumentController;
+use App\Modules\Telework\Http\Controllers\DossierController;
 use App\Modules\Telework\Http\Controllers\EquipmentController;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
 use App\Modules\Telework\Http\Controllers\NoticeController;
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\Route;
 // The entry point: every center the person may see with its progress, and the dashboard of one (the rows of table 10.3).
 Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.index');
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}', [TeleworkController::class, 'center'])->where('tenant', $notReserved)->name('tenant.telework.center');
+// The printable dossier of the center for an inspection (criterio C-30); every view is audited.
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.dossier');
 
 Route::get('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'edit'])->where('tenant', $notReserved)->name('tenant.telework.settings.edit');
 Route::put('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.settings.update');

@@ -39,6 +39,7 @@ use Database\Factories\Telework\VisitAuthorizationFactory;
 use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 $looks = [
@@ -910,5 +911,43 @@ it('shows the next step on a center that has no Comisión yet', function (): voi
     visitPage('telework/center', "{$url}/telework/centers/{$center->id}")
         ->assertSee('Registra la Comisión')
         ->assertSee('Aún no hay personas')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows the printable dossier of a center with the evidence of each row or Falta', function (bool $dark, bool $mobile): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    SafetyCommittee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $person->id])->id]);
+
+    visitPage('telework/dossier', "{$url}/telework/centers/{$center->id}/dossier", $dark, $mobile)
+        ->assertSee('Expediente de NOM-037 para la inspección')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Falta')
+        ->assertSee('Imprimir o guardar PDF');
+})->with($looks);
+
+it('opens the dossier from the center dashboard', function (): void {
+    [$url, $center] = teleworkerCenter();
+
+    visit("{$url}/telework/centers/{$center->id}")
+        ->click('Expediente')
+        ->assertSee('Expediente de NOM-037 para la inspección')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('downloads the constitution act from the Comisión page', function (): void {
+    Storage::fake(config()->string('filesystems.telework_files'));
+    [$url, $center, $tenant] = teleworkerCenter();
+    $path = "committees/{$tenant->id}/{$center->id}/act-browser.pdf";
+    Storage::disk(config()->string('filesystems.telework_files'))->put($path, "%PDF-1.4\n%%EOF\n");
+    SafetyCommittee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'act_path' => $path]);
+
+    visit("{$url}/telework/centers/{$center->id}/committee")
+        ->assertSee('Ver el acta de constitución (PDF)')
+        ->assertScript('() => fetch(document.querySelector(\'a[href$="/committee/act"]\').href).then((response) => response.status + " " + response.headers.get("content-type") + " " + response.headers.get("cache-control"))', '200 application/pdf no-store, private')
         ->assertNoJavaScriptErrors();
 });

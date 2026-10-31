@@ -292,3 +292,13 @@ it('reads the center list in the same number of queries with two centers or with
 
     $this->get(route('tenant.telework.index', $this->tenant))->assertOk()->assertInertia(fn (Assert $page) => $page->has('centers.data', $centers));
 })->with([2, 6]);
+
+it('links the dossier from the center dashboard only to whoever may open it', function (string $who, bool $linked): void {
+    $this->actingAs($this->{$who})->get(centerUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('dossierHref', $linked ? route('tenant.telework.dossier', [$this->tenant, $this->center->id]) : null));
+})->with([
+    'owner' => ['owner', true],
+    'hr' => ['hr', true],
+    'committee' => ['cora', true],
+    'viewer' => ['viewer', false],
+]);

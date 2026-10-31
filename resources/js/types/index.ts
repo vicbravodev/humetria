@@ -10,5 +10,6 @@ export type * from './results';
 export type * from './telework';
 export type * from './telework-center';
 export type * from './telework-documents';
+export type * from './telework-dossier';
 export type * from './telework-notices';
 export type * from './telework-training';

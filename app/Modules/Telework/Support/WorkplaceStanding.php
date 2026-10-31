@@ -105,7 +105,8 @@ final readonly class WorkplaceStanding
         return $this->expiryAfter($review, $this->settings->periodMonths());
     }
 
-    private function expiryAfter(WorkplaceReview $review, int $months): CarbonImmutable
+    /** The same, with the period asked for once by a pass over many reviews. */
+    public function expiryAfter(WorkplaceReview $review, int $months): CarbonImmutable
     {
         return $review->decided_at->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addMonthsNoOverflow($months);
     }
