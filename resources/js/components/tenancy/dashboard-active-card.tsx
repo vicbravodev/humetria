@@ -28,7 +28,7 @@ export default function DashboardActiveCard({
     return (
         <article
             aria-labelledby="active-evaluation"
-            className="flex flex-col gap-5 rounded-xl border bg-card p-6"
+            className="@container/active flex flex-col gap-5 rounded-xl border bg-card p-6"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
@@ -45,7 +45,8 @@ export default function DashboardActiveCard({
                 </div>
                 <Badge>En curso</Badge>
             </div>
-            <div className="flex flex-wrap items-end gap-7">
+            {/* Side by side once the card fits both (pantalla Panel); in a narrower card the arc centers over them. */}
+            <div className="flex flex-col items-center gap-6 @[23rem]/active:flex-row @[23rem]/active:gap-7">
                 <ArcMeter
                     value={evaluation.completed}
                     max={evaluation.target}
@@ -58,7 +59,10 @@ export default function DashboardActiveCard({
                         de {evaluation.target} contestaron
                     </span>
                 </ArcMeter>
-                <div className="flex flex-[1_1_180px] flex-col gap-3.5 pb-1.5">
+                <div
+                    data-test="active-kpis"
+                    className="grid w-full grid-cols-2 gap-3.5 text-center @[23rem]/active:flex @[23rem]/active:w-auto @[23rem]/active:min-w-0 @[23rem]/active:flex-1 @[23rem]/active:flex-col @[23rem]/active:text-left"
+                >
                     <DashboardKpi kpi={missingKpi(evaluation)} />
                     <DashboardKpi kpi={closingKpi(evaluation.daysLeft)} />
                 </div>

@@ -86,3 +86,28 @@ it('reminds whoever is missing from the panel', function (): void {
         ->click('Recordar a quien falta')
         ->assertSee('Enlace reenviado a 3 personas.');
 });
+
+/** Where the arc of the evaluation in course sits in its card: centered or not, and its figures beside it or below. */
+function activeCardLayout(): string
+{
+    return <<<'JS'
+        () => {
+            const card = document.querySelector('[aria-labelledby="active-evaluation"]').getBoundingClientRect();
+            const meter = document.querySelector('[aria-labelledby="active-evaluation"] [data-slot="arc-meter"]').getBoundingClientRect();
+            const kpis = document.querySelector('[data-test="active-kpis"]').getBoundingClientRect();
+            const centered = Math.abs((meter.left + meter.right) / 2 - (card.left + card.right) / 2) <= 2;
+
+            return `${centered ? 'centered' : 'aside'} ${kpis.top < meter.bottom && kpis.left >= meter.right ? 'beside' : 'below'}`;
+        }
+        JS;
+}
+
+it('centers the arc over its figures on a phone and sets them beside it on a desktop', function (bool $dark): void {
+    visitPage('dashboard', panelCompany(), $dark)
+        ->resize(375, 800)
+        ->assertScript(activeCardLayout(), 'centered below')
+        ->resize(768, 900)
+        ->assertScript(activeCardLayout(), 'centered below')
+        ->resize(1280, 900)
+        ->assertScript(activeCardLayout(), 'aside beside');
+})->with(['light' => false, 'dark' => true]);
