@@ -20,6 +20,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::statement('ALTER TABLE workplace_reviews DROP CONSTRAINT workplace_reviews_checklist_has_application');
-        DB::statement("ALTER TABLE workplace_reviews ADD CONSTRAINT workplace_reviews_checklist_has_application CHECK ((method = 'checklist') = (application_id IS NOT NULL))");
+        // NOT VALID: new writes are checked again, but visits and remote checks stored with their list since `up()` are kept.
+        DB::statement("ALTER TABLE workplace_reviews ADD CONSTRAINT workplace_reviews_checklist_has_application CHECK ((method = 'checklist') = (application_id IS NOT NULL)) NOT VALID");
     }
 };
