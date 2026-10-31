@@ -35,6 +35,9 @@ use Closure;
  * photos and the answers are only counted, with a link back into the application.
  *
  * Marital status, phone and home address (5.1) are for whoever manages NOM-037; the Comisión reads the rest (C-18).
+ *
+ * ponytail: the whole dossier is built and held in memory (complete lists, printed by the browser). Past about 5k people
+ * in one center, generate it as a queued PDF instead.
  */
 final readonly class Dossier
 {
@@ -215,12 +218,15 @@ final readonly class Dossier
     {
         $tally = [];
 
-        foreach (EquipmentItem::query()->whereIn('teleworker_id', array_values($people->map(fn (Teleworker $person): string => $person->id)->all()))->get(['teleworker_id', 'status', 'delivered_on']) as $item) {
-            $own = $tally[$item->teleworker_id] ?? ['received' => 0, 'refused' => 0, 'pending' => 0, 'last' => null];
-            $own[$item->status->value]++;
-            $day = $item->delivered_on->toDateString();
-            $own['last'] = $own['last'] === null || $day > $own['last'] ? $day : $own['last'];
-            $tally[$item->teleworker_id] = $own;
+        $rows = EquipmentItem::query()->toBase()->whereIn('teleworker_id', array_values($people->map(fn (Teleworker $person): string => $person->id)->all()))
+            ->groupBy('teleworker_id', 'status')->selectRaw('teleworker_id, status, count(*) as total, max(delivered_on) as last')->get();
+
+        foreach ($rows as $row) {
+            if (is_string($row->teleworker_id) && is_string($row->status) && is_int($row->total)) {
+                $tally[$row->teleworker_id][$row->status] = $row->total;
+                $last = $tally[$row->teleworker_id]['last'] ?? null;
+                $tally[$row->teleworker_id]['last'] = is_string($row->last) && ($last === null || $row->last > $last) ? $row->last : $last;
+            }
         }
 
         return array_values($people->map(fn (Teleworker $person): array => [
@@ -283,15 +289,27 @@ final readonly class Dossier
      */
     private function notices(string $workCenterId): array
     {
-        $notices = WorkerNotice::query()->whereIn('teleworker_id', Teleworker::query()->where('work_center_id', $workCenterId)->select('id'))->get(['kind', 'reviewed_at']);
+        $kinds = [];
+        $reviewed = 0;
+        $pending = 0;
+
+        $rows = WorkerNotice::query()->toBase()->whereIn('teleworker_id', Teleworker::query()->where('work_center_id', $workCenterId)->select('id'))
+            ->groupBy('kind')->groupByRaw('reviewed_at is not null')->selectRaw('kind, (reviewed_at is not null) as done, count(*) as total')->get();
+
+        foreach ($rows as $row) {
+            if (is_string($row->kind) && is_int($row->total)) {
+                $kinds[$row->kind] = ($kinds[$row->kind] ?? 0) + $row->total;
+                $row->done ? $reviewed += $row->total : $pending += $row->total;
+            }
+        }
 
         return [
             'byKind' => array_values(array_filter(array_map(
-                fn (NoticeKind $kind): array => ['label' => $kind->label(), 'count' => $notices->filter(fn (WorkerNotice $notice): bool => $notice->kind === $kind)->count()],
+                fn (NoticeKind $kind): array => ['label' => $kind->label(), 'count' => $kinds[$kind->value] ?? 0],
                 NoticeKind::cases(),
             ), fn (array $row): bool => $row['count'] > 0)),
-            'reviewed' => $notices->filter(fn (WorkerNotice $notice): bool => $notice->reviewed_at !== null)->count(),
-            'pending' => $notices->filter(fn (WorkerNotice $notice): bool => $notice->reviewed_at === null)->count(),
+            'reviewed' => $reviewed,
+            'pending' => $pending,
         ];
     }
 

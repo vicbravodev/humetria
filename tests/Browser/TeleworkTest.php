@@ -926,8 +926,28 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertSee('Planta Querétaro')
         ->assertSee('Ana Ruiz')
         ->assertSee('Falta')
-        ->assertSee('Imprimir o guardar PDF');
+        ->assertSee('Imprimir o guardar PDF')
+        // A section that is done never says «Falta», and 5.1.2 lists the validated place.
+        ->assertScript('() => JSON.stringify([...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple") && section.textContent.includes("Falta")).map((section) => section.getAttribute("aria-label")))', '[]')
+        ->assertScript('() => document.querySelector(\'section[aria-label="Numeral 5.1.2"]\').textContent.includes("Ana Ruiz")', true)
+        ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
+
+it('says that a row does not apply instead of Falta, and prints the medical exams note once', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'no_equipment_reason' => 'Usa su propio equipo.']);
+    $empty = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Vacía']);
+
+    visit("{$url}/telework/centers/{$empty->id}/dossier")
+        ->assertSee('No aplica: nadie teletrabaja en este centro todavía.')
+        ->assertSee('No aplica: nadie ha enviado un aviso de riesgo de trabajo.')
+        ->assertScript('() => document.body.textContent.split("no los cubre Humetría").length - 1', 1);
+
+    visit("{$url}/telework/centers/{$center->id}/dossier")
+        ->assertSee('Sin equipo, justificado')
+        ->assertNoJavaScriptErrors();
+});
 
 it('opens the dossier from the center dashboard', function (): void {
     [$url, $center] = teleworkerCenter();

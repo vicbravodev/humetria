@@ -3,49 +3,55 @@ import DossierChecklistBlock from '@/components/telework/dossier-checklist';
 import DossierCommitteeBlock from '@/components/telework/dossier-committee';
 import DossierDocumentBlock from '@/components/telework/dossier-document';
 import DossierEquipmentBlock from '@/components/telework/dossier-equipment';
+import DossierFixedPlaces from '@/components/telework/dossier-fixed-places';
 import DossierNoticesBlock from '@/components/telework/dossier-notices';
 import DossierRoster from '@/components/telework/dossier-roster';
 import DossierTrainings from '@/components/telework/dossier-trainings';
 import DossierWorkplaces from '@/components/telework/dossier-workplaces';
-import type { DossierData } from '@/types';
+import { dossierBlock, inapplicableText } from '@/lib/telework/dossier';
+import type { DossierData, DossierRow } from '@/types';
 
-/** The evidence of a numeral of table 10.3 (the documents are found by their numeral). */
+/** The evidence of a row of table 10.3; a row that does not apply says so instead of printing an empty block. */
 export default function DossierEvidenceBlock({
-    numeral,
+    row,
     data,
 }: {
-    numeral: string;
+    row: DossierRow;
     data: DossierData;
 }) {
-    const places = <DossierWorkplaces workplaces={data.workplaces} />;
-    const checklist = (
-        <DossierChecklistBlock
-            checklist={data.checklist}
-            evidence={data.evidence}
-        />
-    );
-    const byNumeral: Record<string, ReactNode> = {
-        '5.1': <DossierRoster people={data.roster} />,
-        '5.1.1': places,
-        '5.5': places,
-        '5.4 y 7': checklist,
-        '5.5.1': checklist,
-        '5.7': <DossierEquipmentBlock equipment={data.equipment} />,
-        '5.9 y 8': (
+    if (row.state === 'not_applicable') {
+        return (
+            <p className="text-[15px] leading-[22px] text-muted-foreground">
+                {inapplicableText(row.numeral)}
+            </p>
+        );
+    }
+
+    const blocks: Record<ReturnType<typeof dossierBlock>, ReactNode> = {
+        roster: <DossierRoster people={data.roster} />,
+        workplaces: <DossierWorkplaces workplaces={data.workplaces} />,
+        fixed: <DossierFixedPlaces workplaces={data.workplaces} />,
+        checklist: (
+            <DossierChecklistBlock
+                checklist={data.checklist}
+                evidence={data.evidence}
+            />
+        ),
+        equipment: <DossierEquipmentBlock equipment={data.equipment} />,
+        trainings: (
             <DossierTrainings
                 trainings={data.trainings}
                 overdue={data.overdue}
             />
         ),
-        '5.11': <DossierNoticesBlock notices={data.notices} />,
-        '5.12': <DossierCommitteeBlock committee={data.committee} />,
+        notices: <DossierNoticesBlock notices={data.notices} />,
+        committee: <DossierCommitteeBlock committee={data.committee} />,
+        document: (
+            <DossierDocumentBlock
+                document={data.documents.find((d) => d.numeral === row.numeral)}
+            />
+        ),
     };
 
-    return (
-        byNumeral[numeral] ?? (
-            <DossierDocumentBlock
-                document={data.documents.find((d) => d.numeral === numeral)}
-            />
-        )
-    );
+    return blocks[dossierBlock(row.numeral)];
 }

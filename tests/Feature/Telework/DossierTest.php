@@ -236,3 +236,28 @@ it('asserts the query count of the dossier and does not grow with people or docu
 
     $this->get(dossierUrl())->assertOk();
 })->with([false, true]);
+
+it('cuts the trainings at exactly twelve months back, counting the boundary day', function (): void {
+    foreach (['2025-02-28', '2025-03-01', '2026-03-01'] as $day) {
+        TrainingFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'held_on' => $day]);
+    }
+
+    $this->actingAs($this->hr)->get(dossierUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('trainings', fn ($trainings) => collect($trainings)->pluck('heldOn')->all() === ['2026-03-01', '2025-03-01']));
+});
+
+it('lets an assigned committee member follow the document link of the dossier', function (): void {
+    $document = TeleworkDocumentFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'kind' => DocumentKind::Policy]);
+    Storage::disk(config()->string('filesystems.telework_files'))->put($document->path, "%PDF-1.4\n%%EOF\n");
+
+    $href = $this->actingAs($this->cora)->get(dossierUrl())->viewData('page')['props']['documents'][0]['href'];
+
+    $this->get($href)->assertOk();
+});
+
+it('marks a person without equipment who justified it', function (): void {
+    dossierPerson()->update(['no_equipment_reason' => 'Usa su propio equipo.']);
+
+    $this->actingAs($this->hr)->get(dossierUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('equipment.0', fn ($item) => $item['justified'] === true && $item['lastDeliveredOn'] === null && $item['received'] === 0));
+});

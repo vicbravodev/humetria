@@ -32,7 +32,7 @@ export default function DossierSection({
                 </div>
                 <Badge variant={rowTone(row.state)}>{row.stateLabel}</Badge>
             </div>
-            <DossierEvidenceBlock numeral={row.numeral} data={data} />
+            <DossierEvidenceBlock row={row} data={data} />
         </section>
     );
 }

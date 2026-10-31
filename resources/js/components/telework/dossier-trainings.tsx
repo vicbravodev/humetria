@@ -1,4 +1,3 @@
-import DossierMissing from '@/components/telework/dossier-missing';
 import DossierTable from '@/components/telework/dossier-table';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { describeDate } from '@/lib/calendar-date';
@@ -15,9 +14,9 @@ export default function DossierTrainings({
     return (
         <div className="flex flex-col gap-3">
             {trainings.length === 0 ? (
-                <DossierMissing>
-                    no hay capacitaciones en los últimos 12 meses.
-                </DossierMissing>
+                <p className="text-[15px] leading-[22px]">
+                    Sin capacitaciones en los últimos 12 meses.
+                </p>
             ) : (
                 <DossierTable
                     columns={['Fecha', 'Modalidad', 'Temas', 'Asistentes']}

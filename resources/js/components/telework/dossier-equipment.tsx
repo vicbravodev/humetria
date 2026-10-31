@@ -37,7 +37,7 @@ export default function DossierEquipmentBlock({
                     <TableCell>
                         {describeDate(item.lastDeliveredOn ?? '') ??
                             (item.justified
-                                ? 'Justifica no recibirlo'
+                                ? 'Sin equipo, justificado'
                                 : 'Falta')}
                     </TableCell>
                 </TableRow>

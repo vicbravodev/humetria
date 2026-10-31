@@ -23,10 +23,6 @@ export default function DossierNoticesBlock({
                     .
                 </p>
             )}
-            <p className="text-muted-foreground">
-                Los exámenes médicos del 5.11 no los cubre Humetría: se llevan
-                por separado.
-            </p>
         </div>
     );
 }
