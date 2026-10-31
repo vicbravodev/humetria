@@ -6,9 +6,11 @@ import type { PortalPending } from '@/types';
 /** What the person has to do and what they already sent, in plain words ("usted"). */
 export default function PortalHome({
     name,
+    token,
     pending,
 }: {
     name: string;
+    token: string;
     pending: PortalPending;
 }) {
     const nothing =
@@ -44,6 +46,7 @@ export default function PortalHome({
                             <PortalChecklistCard
                                 key={checklist.id}
                                 checklist={checklist}
+                                token={token}
                                 pending
                             />
                         ))}
@@ -60,6 +63,7 @@ export default function PortalHome({
                             <PortalChecklistCard
                                 key={checklist.id}
                                 checklist={checklist}
+                                token={token}
                                 pending={false}
                             />
                         ))}

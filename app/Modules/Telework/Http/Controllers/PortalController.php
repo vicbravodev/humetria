@@ -24,6 +24,7 @@ final class PortalController extends Controller
         } catch (PortalUnavailable) {
             return Inertia::render('telework/portal', [
                 'unavailable' => true,
+                'token' => null,
                 'company' => null,
                 'name' => null,
                 'pending' => ['checklists' => [], 'sent' => []],
@@ -35,6 +36,7 @@ final class PortalController extends Controller
 
         return Inertia::render('telework/portal', [
             'unavailable' => false,
+            'token' => $token,
             'company' => $portal->company,
             'name' => $portal->name,
             'pending' => ['checklists' => array_map($row, $items->checklists), 'sent' => array_map($row, $items->sent)],

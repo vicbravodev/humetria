@@ -18,6 +18,7 @@ const ARRAY_PROPS = [
     'campaigns/survey:instruments' => 'las guías que contesta una persona: tres a lo más',
     'telework/settings:presets' => 'catálogo fijo: los periodos predefinidos de la Sección II (cuatro)',
     'telework/checklist:questions' => 'las preguntas de una versión de la lista: un instrumento, 122 en la base',
+    'telework/portal-checklist:questions' => 'las preguntas de una sección de la lista: un instrumento',
     'telework/checklist:requirements' => 'catálogo fijo: los requisitos del capítulo 7 y 5.1.1 (catorce)',
     'telework/committee:candidates' => 'quienes pueden integrar la Comisión: las personas de la empresa con rol de revisión (dueño, RH, Comisión), pocas',
     'campaigns/show:instruments' => 'resumen por guía de la evaluación: tres a lo más',

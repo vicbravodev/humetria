@@ -7,6 +7,9 @@ use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\PublishChecklist;
 use App\Modules\Telework\Actions\RegisterCommittee;
 use App\Modules\Telework\Models\Checklist;
+use App\Modules\Telework\Models\ChecklistAnswer;
+use App\Modules\Telework\Models\ChecklistApplication;
+use App\Modules\Telework\Models\ChecklistPhoto;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
@@ -19,6 +22,7 @@ use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\WorkplaceFactory;
+use Illuminate\Support\Str;
 
 $looks = [
     'light desktop' => [false, false],
@@ -264,4 +268,66 @@ it('registers a person from the page and hands over a new link once', function (
         ->assertScript('() => document.querySelector("#portal-link").value.includes("/portal/")', true)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+/** @return array{string, Tenant, ChecklistQuestion, ChecklistQuestion} The address of a Section I checklist with two questions, a flagged answer and a health one. */
+function checklistAddress(): array
+{
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $tenant->id, 'work_center_id' => $teleworker->work_center_id]);
+    $light = addQuestion($checklist, 1, 'yes');
+    $health = addQuestion($checklist, 2, 'yes', sensitive: true);
+    $application = ChecklistApplicationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id, 'checklist_id' => $checklist->id]);
+    workIn($tenant);
+
+    return ['/portal/'.resolve(IssuePortalLink::class)->handle($employee->id).'/checklists/'.$application->id, $tenant, $light, $health];
+}
+
+it('shows the person the checklist with its instructions, the notice and the consent', function (bool $dark, bool $mobile): void {
+    [$address] = checklistAddress();
+
+    visitPage('telework/portal-checklist', $address, $dark, $mobile)
+        ->assertSee('Lista de verificación de su lugar de trabajo')
+        ->assertSee('Consentimiento')
+        ->assertSee('Pregunta 1')
+        ->assertDontSee('Pregunta 2')
+        ->assertSee('Enviar mi lista');
+})->with($looks);
+
+it('tells a checklist link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
+    visitPage('telework/portal-checklist', '/portal/not-a-link/checklists/'.Str::uuid(), $dark, $mobile)
+        ->assertSee('Este enlace no es válido');
+})->with($looks);
+
+it('lets the person answer on their phone with a flagged answer, pick a photo and send it once', function (): void {
+    [$address, $tenant, $light, $health] = checklistAddress();
+
+    visit($address)->on()->mobile()
+        ->click('Acepto')
+        ->assertSee('Pregunta 2')
+        ->click("input[name=\"answer-{$light->id}\"][value=\"no\"]")
+        ->assertSee('Describa el riesgo que encontró')
+        ->assertSee('Agregar foto')
+        ->attach("[data-testid=\"photo-{$light->id}\"]", __DIR__.'/../Fixtures/photo-with-gps.jpg')
+        ->assertSee('photo-with-gps.jpg')
+        // Pest's test server turns every non-UTF-8 byte of an upload into "?", so a real image cannot reach PHP through it:
+        // the upload itself (re-encoding, EXIF) is covered by PortalChecklistTest; here the picker is used and emptied.
+        ->click('[aria-label="Quitar photo-with-gps.jpg"]')
+        ->assertDontSee('photo-with-gps.jpg')
+        ->press('Enviar mi lista')
+        ->assertSee('Describa el riesgo')
+        ->fill("#note-{$light->id}", 'La luz es muy poca')
+        ->click("input[name=\"answer-{$health->id}\"][value=\"yes\"]")
+        ->press('Enviar mi lista')
+        ->assertSee('En revisión de la Comisión')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn($tenant);
+    expect(ChecklistApplication::query()->whereNotNull('submitted_at')->count())->toBe(1)
+        ->and(ChecklistPhoto::query()->count())->toBe(0)
+        ->and(ChecklistAnswer::query()->where('question_id', $light->id)->sole()->risk_note)->toBe('La luz es muy poca');
 });

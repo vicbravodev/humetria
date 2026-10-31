@@ -6,11 +6,13 @@ import type { PortalPending } from '@/types';
 
 export default function Portal({
     unavailable,
+    token,
     company,
     name,
     pending,
 }: {
     unavailable: boolean;
+    token: string | null;
     company: string | null;
     name: string | null;
     pending: PortalPending;
@@ -18,12 +20,12 @@ export default function Portal({
     return (
         <PortalShell company={company}>
             <Head title="Su teletrabajo" />
-            {unavailable || name === null ? (
+            {unavailable || name === null || token === null ? (
                 <div className="w-full max-w-2xl">
                     <PortalUnavailable />
                 </div>
             ) : (
-                <PortalHome name={name} pending={pending} />
+                <PortalHome name={name} token={token} pending={pending} />
             )}
         </PortalShell>
     );

@@ -53,6 +53,33 @@ final readonly class PhotoStore
         return $path;
     }
 
+    /**
+     * Stores every photo or none: if one is refused, those already kept are deleted.
+     *
+     * @param  array<string, list<UploadedFile>>  $files  By question id, or `general`.
+     * @return array<string, list<string>> The stored paths, by the same keys.
+     *
+     * @throws ValidationException
+     */
+    public function storeMany(array $files, string $directory): array
+    {
+        $paths = [];
+
+        try {
+            foreach ($files as $key => $group) {
+                foreach ($group as $file) {
+                    $paths[$key][] = $this->store($file, $directory);
+                }
+            }
+        } catch (ValidationException $refused) {
+            $this->files->delete(...array_merge(...array_values($paths)));
+
+            throw $refused;
+        }
+
+        return $paths;
+    }
+
     private function encode(GdImage $image, bool $png): string
     {
         ob_start();

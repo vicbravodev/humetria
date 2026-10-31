@@ -68,3 +68,20 @@ export type TeleworkerSummary = {
     percentage: number;
     workplaces: TeleworkerWorkplace[];
 };
+
+/** A question as the person sees it in their portal. */
+export type PortalQuestion = {
+    id: string;
+    heading: string;
+    text: string;
+    favorable: FavorableAnswer;
+    sensitive: boolean;
+};
+
+export type PortalAnswer = 'yes' | 'no' | 'not_applicable';
+
+export type PortalApplication = {
+    id: string;
+    section: number;
+    workplace: string;
+};

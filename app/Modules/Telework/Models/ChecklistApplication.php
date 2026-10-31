@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +38,16 @@ final class ChecklistApplication extends Model
 {
     /** @use HasFactory<ChecklistApplicationFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+
+    /**
+     * The applications of a teleworker's workplaces still in use: the only ones their portal may open.
+     *
+     * @param  Builder<ChecklistApplication>  $query
+     */
+    protected function scopeOwnedBy(Builder $query, string $teleworkerId): void
+    {
+        $query->whereHas('workplace', fn (Builder $workplaces) => $workplaces->where('teleworker_id', $teleworkerId)->whereNull('retired_at'));
+    }
 
     /**
      * @return BelongsTo<Workplace, $this>
