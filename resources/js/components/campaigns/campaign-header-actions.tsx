@@ -36,7 +36,7 @@ export default function CampaignHeaderActions({
         ) : null;
     }
 
-    if (campaign.status === 'active' && minDeadline !== null) {
+    if (campaign.status === 'active' && canManage) {
         return (
             <ActiveCampaignActions
                 tenantSlug={tenantSlug}

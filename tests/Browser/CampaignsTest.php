@@ -304,6 +304,10 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
     $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Extender fecha')
+        ->assertSee('Ahora cierra el '.App\Modules\Campaigns\Support\CampaignClock::day(now()->addWeek(), isDate: true).'.')
+        ->assertDontSee('Hoy cierra el')
+        ->click('Cancelar')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
         ->assertSee('Faltan 53 respuestas para el mínimo de la muestra que pide la norma.')

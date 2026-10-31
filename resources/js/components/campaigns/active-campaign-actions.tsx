@@ -24,7 +24,8 @@ export default function ActiveCampaignActions({
 }: {
     tenantSlug: string;
     campaign: CampaignDetail;
-    minDeadline: string;
+    /** The earliest new last day; null once the last day has passed, when it can no longer be extended. */
+    minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
     /** People waiting with a link sent: who "Recordar" reaches. */
     pending: number;
@@ -48,12 +49,14 @@ export default function ActiveCampaignActions({
                 }
                 onOpen={setDialog}
             />
-            <ExtendDialog
-                tenantSlug={tenantSlug}
-                campaignId={campaign.id}
-                closesOn={campaign.closesOn}
-                min={minDeadline}
-            />
+            {minDeadline !== null && (
+                <ExtendDialog
+                    tenantSlug={tenantSlug}
+                    campaignId={campaign.id}
+                    closesOn={campaign.closesOn}
+                    min={minDeadline}
+                />
+            )}
             <ResendFilteredDialog
                 tenantSlug={tenantSlug}
                 campaignId={campaign.id}
