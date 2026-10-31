@@ -269,7 +269,7 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
 
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->click('Recordar a 60')
-        ->assertSee('el anterior deja de servir')
+        ->assertSee('Es el mismo de antes: el que ya tienen sigue sirviendo.')
         ->click('Reenviar enlaces')
         ->assertSee('Enlace reenviado a 60 personas.')
         ->click('[aria-label="Más acciones"]')
