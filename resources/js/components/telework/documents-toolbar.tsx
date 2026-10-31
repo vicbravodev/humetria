@@ -3,7 +3,7 @@ import Combobox from '@/components/humetria/combobox';
 import { Button } from '@/components/ui/button';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/telework/documents';
-import { options } from '@/routes/tenant/work-centers';
+import { options } from '@/routes/tenant/telework/work-centers';
 import type { DocumentFilters } from '@/types';
 
 const VIEWS = [

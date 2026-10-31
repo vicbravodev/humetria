@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import type { Option } from '@/lib/option-search';
 import { serverSource } from '@/lib/server-options';
 import { addCenter, removeCenter } from '@/lib/telework/documents';
-import { options } from '@/routes/tenant/work-centers';
+import { options } from '@/routes/tenant/telework/work-centers';
 
 /** Step 3: the work centers that get this version: all those in use, or the ones searched and added one by one. */
 export default function DocumentCenterField({

@@ -12,6 +12,7 @@ use App\Modules\Telework\Http\Controllers\RosterController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use App\Modules\Telework\Http\Controllers\VisitController;
+use App\Modules\Telework\Http\Controllers\WorkCenterOptionsController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
@@ -74,3 +75,6 @@ Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/c
 Route::get('admin/{tenant:slug}/telework/documents', [DocumentController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.documents.index');
 Route::post('admin/{tenant:slug}/telework/documents', [DocumentController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.documents.store');
 Route::get('admin/{tenant:slug}/telework/documents/{document}/file', [DocumentController::class, 'file'])->where('tenant', $notReserved)->name('tenant.telework.documents.file');
+
+// The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
+Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');

@@ -67,7 +67,7 @@ final readonly class PublishDocument
                 }
 
                 $ids = array_map(fn (TeleworkDocument $document): string => $document->id, $documents);
-                $record = ['document_ids' => $ids, 'kind' => $kind->value, 'version' => $documents[0]->version, 'work_center_count' => count($documents)];
+                $record = ['document_ids' => $ids, 'kind' => $kind->value, 'versions' => array_column(array_map(fn (TeleworkDocument $document): array => [$document->work_center_id, $document->version], $documents), 1, 0), 'work_center_count' => count($documents)];
                 $this->audit->handle('telework.document_published', $documents[0], $record);
                 Log::info('telework.document_published', $record);
                 Event::dispatch(new DocumentPublished($tenantId, $ids));

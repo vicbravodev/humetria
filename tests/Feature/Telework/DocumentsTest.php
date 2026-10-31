@@ -205,7 +205,8 @@ it('shows a committee user only the documents of its centers, and the others see
 
     $this->actingAs($cora)->get(route('tenant.telework.documents.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
         ->where('documents.total', 1)->where('documents.data.0.workCenter.id', $this->north->id)->where('canManage', false));
-    $this->get(route('tenant.telework.documents.index', [$this->tenant, 'center' => $this->south->id]))->assertInertia(fn (Assert $page) => $page->where('documents.total', 0));
+    // An unassigned center is no filter at all for the committee: it still sees only its own.
+    $this->get(route('tenant.telework.documents.index', [$this->tenant, 'center' => $this->south->id]))->assertInertia(fn (Assert $page) => $page->where('documents.total', 1)->where('documents.data.0.workCenter.id', $this->north->id));
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get(route('tenant.telework.documents.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
         ->where('documents.total', 2));
@@ -253,4 +254,31 @@ it('never deletes: there is no way to remove or replace a document', function ()
     $this->put('/admin/'.$this->tenant->slug.'/telework/documents/'.$document->id.'/file')->assertStatus(405);
     workIn($this->tenant);
     expect(TeleworkDocument::query()->count())->toBe(1);
+});
+
+it('offers the committee only its centers to search, owner and hr every active one, never another company\'s', function (): void {
+    WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Archivada', 'archived_at' => now()]);
+    WorkCenter::factory()->for(Tenant::factory()->create())->create(['name' => 'Planta Ajena']);
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id, 'user_id' => $cora->id]);
+    $options = fn (array $query = []): array => $this->getJson(route('tenant.telework.work-centers.options', [$this->tenant, ...$query]))->assertOk()->json();
+
+    expect($options())->toBe([['value' => $this->north->id, 'label' => 'Planta Norte'], ['value' => $this->south->id, 'label' => 'Planta Sur']]);
+    expect($options(['q' => 'sur']))->toBe([['value' => $this->south->id, 'label' => 'Planta Sur']]);
+
+    $this->actingAs($cora);
+    expect($options())->toBe([['value' => $this->north->id, 'label' => 'Planta Norte']])
+        ->and($options(['q' => 'sur']))->toBe([]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+    expect($options())->toHaveCount(2);
+});
+
+it('does not name a center the committee user is not assigned to when filtering by it', function (): void {
+    stored(DocumentKind::Policy, $this->south);
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id, 'user_id' => $cora->id]);
+
+    $this->actingAs($cora)->get(route('tenant.telework.documents.index', [$this->tenant, 'center' => $this->south->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.center', null)->where('documents.total', 0)); // no documents of its own: nothing leaks
 });

@@ -579,3 +579,21 @@ it('asks for the missing steps when publishing', function (): void {
         ->assertSee('El campo documento es obligatorio.')
         ->assertSee('Elige al menos un centro de trabajo.');
 });
+
+it('lets a committee user filter the documents by its own centers only', function (): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $cora = memberOf($tenant, TenantRole::Committee);
+    $mine = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Propia']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Ajena']);
+    CommitteeAssignment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $mine->id, 'user_id' => $cora->id]);
+    TeleworkDocument::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $mine->id, 'kind' => DocumentKind::Policy]);
+    test()->actingAs($cora);
+
+    visit('/admin/acme/telework/documents')
+        ->assertSee('Política de Teletrabajo · versión 1')
+        ->click('#filter-document-center')
+        ->assertSee('Planta Propia')
+        ->assertDontSee('Planta Ajena')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});

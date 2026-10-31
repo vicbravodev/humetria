@@ -132,16 +132,28 @@ it('deletes the stored file when the database refuses', function (): void {
     expect(Storage::disk(config()->string('filesystems.telework_files'))->allFiles())->toBe([]);
 });
 
+it('records the version of each center when their histories differ', function (): void {
+    publish(DocumentKind::Policy, [$this->north->id]);
+    publish(DocumentKind::Policy, [$this->north->id]);
+    publish(DocumentKind::Policy, [$this->north->id, $this->south->id]);
+
+    $entry = AuditEntry::query()->where('event', 'telework.document_published')->get()->first(fn (AuditEntry $entry): bool => $entry->metadata['work_center_count'] === 2);
+    expect($entry->metadata['versions'])->toEqual([$this->north->id => 3, $this->south->id => 1])
+        ->and($entry->metadata)->not->toHaveKey('version');
+});
+
 it('audits and logs the publication without file names', function (): void {
     Log::spy();
 
     $documents = publish(DocumentKind::Policy, [$this->north->id, $this->south->id], ['a']);
 
     $entry = AuditEntry::query()->where('event', 'telework.document_published')->sole();
-    expect($entry->metadata)->toMatchArray(['kind' => 'policy', 'version' => 1, 'work_center_count' => 2])
+    expect($entry->metadata)->toMatchArray(['kind' => 'policy', 'work_center_count' => 2])
+        ->and($entry->metadata['versions'])->toEqual([$this->north->id => 1, $this->south->id => 1])
         ->and($entry->metadata['document_ids'])->toHaveCount(2)
         ->and(json_encode($entry->metadata))->not->toContain($documents[0]->path);
     Log::shouldHaveReceived('info')->with('telework.document_published', Mockery::on(fn (array $context): bool => $context['kind'] === 'policy'
+        && $context['versions'] === [$this->north->id => 1, $this->south->id => 1]
         && $context['work_center_count'] === 2
         && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), $documents[0]->path)))->once();
 });

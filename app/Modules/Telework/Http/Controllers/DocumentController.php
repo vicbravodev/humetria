@@ -9,8 +9,8 @@ use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Http\Requests\DocumentRequest;
 use App\Modules\Telework\Models\TeleworkDocument;
-use App\Modules\Telework\Support\CommitteeGate;
 use App\Modules\Telework\Support\FileStore;
+use App\Modules\Telework\Support\VisibleCenters;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,7 +29,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class DocumentController extends Controller
 {
-    public function __construct(private readonly CommitteeGate $gate, private readonly WorkCenters $workCenters) {}
+    public function __construct(private readonly VisibleCenters $visible, private readonly WorkCenters $workCenters) {}
 
     public function index(Request $request): Response
     {
@@ -43,11 +43,12 @@ final class DocumentController extends Controller
         $names = array_map(fn (WorkCenterSummary $center): string => $center->name, $centers);
 
         $only = $request->string('center')->toString();
-        $selected = Str::isUuid($only) ? ($centers[$only] ?? null) : null;
+        $limit = $this->limitedCenters($request);
+        $selected = Str::isUuid($only) && ($limit === null || in_array($only, $limit, true)) ? ($centers[$only] ?? null) : null;
         $history = $request->string('versions')->toString() === 'all';
 
         $page = TeleworkDocument::query()
-            ->when($this->limitedCenters($request) !== null, fn (Builder $query) => $query->whereIn('work_center_id', $this->limitedCenters($request) ?? []))
+            ->when($limit !== null, fn (Builder $query) => $query->whereIn('work_center_id', $limit))
             ->when($selected !== null, fn (Builder $query) => $query->where('work_center_id', $selected?->id))
             ->when(! $history, fn (Builder $query) => $query->where('version', TeleworkDocument::query()->withoutGlobalScopes()->from('telework_documents as newer')
                 ->selectRaw('max(newer.version)')
@@ -109,19 +110,19 @@ final class DocumentController extends Controller
     }
 
     /**
-     * The only work centers the user may see, or null when it sees every center of the company: owner, hr and viewer read
-     * the company's documents; the committee only those of the centers it sits on.
+     * The only work centers the user may see, or null when it sees every center of the company. Worked out once per request.
      *
      * @return list<string>|null
      */
     private function limitedCenters(Request $request): ?array
     {
-        $user = $request->user();
-
-        if ($user === null) {
-            return [];
+        if (! $request->attributes->has('telework.limited_centers')) {
+            $user = $request->user();
+            $request->attributes->set('telework.limited_centers', $user === null ? [] : $this->visible->limitedTo($user->id));
         }
 
-        return Gate::allows('manage-telework') || ! Gate::allows('review-workplaces') ? null : $this->gate->workCenterIds($user->id);
+        $limited = $request->attributes->get('telework.limited_centers');
+
+        return is_array($limited) ? array_values(array_filter($limited, is_string(...))) : null;
     }
 }
