@@ -241,7 +241,7 @@ it('does not let a person confirm the visit of someone else\'s workplace', funct
 
 it('lets RH or the assigned Comisión attach the signed paper authorization as a PDF', function (): void {
     $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
-    $url = route('tenant.telework.visit-authorizations.document', [$this->tenant, $authorization->id]);
+    $url = route('tenant.telework.visit-authorizations.document.store', [$this->tenant, $authorization->id]);
     // Real uploads (the fake ones take their type from the extension): the server sniffs the content.
     $file = function (string $content): UploadedFile {
         $path = tempnam(sys_get_temp_dir(), 'vis');

@@ -1,11 +1,18 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CalendarCheck, ListChecks, UserPlus, Users } from 'lucide-react';
+import {
+    CalendarCheck,
+    ClipboardCheck,
+    ListChecks,
+    UserPlus,
+    Users,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/page-header';
 import type { PageFact } from '@/components/page-header';
 import CommitteePanel from '@/components/telework/committee-panel';
 import { describeDate } from '@/lib/calendar-date';
 import { show } from '@/routes/tenant/telework/checklist';
+import { index as reviewsIndex } from '@/routes/tenant/telework/reviews';
 import { create } from '@/routes/tenant/telework/teleworkers';
 import type { Committee, CommitteePerson } from '@/types';
 
@@ -35,6 +42,7 @@ export default function CommitteePage({
     candidates = [],
     canManage,
     canEditChecklist,
+    canReview,
 }: {
     workCenter: { id: string; name: string };
     committee: Committee | null;
@@ -42,6 +50,8 @@ export default function CommitteePage({
     candidates?: CommitteePerson[];
     canManage: boolean;
     canEditChecklist: boolean;
+    /** Whoever sits on this Comisión reviews the checklists people send. */
+    canReview: boolean;
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';
 
@@ -69,6 +79,19 @@ export default function CommitteePage({
                             >
                                 <UserPlus aria-hidden />
                                 Agregar persona
+                            </Link>
+                        </Button>
+                    )}
+                    {canReview && (
+                        <Button variant="outline" asChild>
+                            <Link
+                                href={reviewsIndex({
+                                    tenant: tenantSlug,
+                                    workCenter: workCenter.id,
+                                })}
+                            >
+                                <ClipboardCheck aria-hidden />
+                                Listas por revisar
                             </Link>
                         </Button>
                     )}

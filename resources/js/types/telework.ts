@@ -100,3 +100,98 @@ export type PortalApplication = {
     section: number;
     workplace: string;
 };
+
+/** A submitted checklist waiting in the Comisión's inbox. */
+export type ReviewRow = {
+    id: string;
+    person: string;
+    jobTitle: string;
+    workplace: string;
+    section: number;
+    /** The day it was sent, Y-m-d. */
+    submittedOn: string | null;
+};
+
+export type ReviewDecisionValue = 'valid' | 'valid_with_plan' | 'not_valid';
+
+export type WorkplaceStatusValue =
+    | 'pending'
+    | 'valid'
+    | 'valid_with_plan'
+    | 'not_valid'
+    | 'retired';
+
+/** A photo, by id: it is shown through the authorized route, never by a public address. */
+export type ReviewPhoto = { id: string };
+
+export type ReviewAnswer = {
+    id: string;
+    code: string;
+    heading: string;
+    text: string;
+    /** yes, no, not_applicable, or null when a sensitive question was left unanswered. */
+    answer: string | null;
+    note: string | null;
+    photos: ReviewPhoto[];
+};
+
+export type ReviewAnswers = {
+    unfavorable: ReviewAnswer[];
+    other: ReviewAnswer[];
+    informative: ReviewAnswer[];
+    generalPhotos: ReviewPhoto[];
+};
+
+/** A decision of the Comisión about a workplace. Dates are Y-m-d. */
+export type ReviewDecisionRecord = {
+    decision: ReviewDecisionValue;
+    decisionLabel: string;
+    methodLabel: string;
+    decidedOn: string;
+    visitedOn: string | null;
+    notes: string;
+    actionPlan: string | null;
+    planDueOn: string | null;
+};
+
+export type ReviewEvidence = {
+    id: string;
+    kind: 'photos' | 'remote_check';
+    note: string;
+    requestedOn: string;
+    fulfilled: boolean;
+    photos: ReviewPhoto[];
+};
+
+export type ReviewAuthorization = {
+    id: string;
+    requestedOn: string;
+    authorized: boolean;
+    viaPortal: boolean;
+    hasDocument: boolean;
+    used: boolean;
+};
+
+export type ReviewDetail = {
+    application: {
+        id: string;
+        section: number;
+        submittedOn: string | null;
+        consentAccepted: boolean;
+        specialNeeds: string | null;
+    };
+    person: { name: string; jobTitle: string };
+    workplace: {
+        id: string;
+        address: string;
+        status: WorkplaceStatusValue;
+        statusLabel: string;
+        expiresOn: string | null;
+    };
+    answers: ReviewAnswers;
+    current: ReviewDecisionRecord | null;
+    previous: ReviewDecisionRecord | null;
+    canDecide: boolean;
+    evidence: ReviewEvidence[];
+    authorizations: ReviewAuthorization[];
+};

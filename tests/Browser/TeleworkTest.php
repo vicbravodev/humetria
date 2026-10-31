@@ -12,9 +12,11 @@ use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\ChecklistPhoto;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
+use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Models\WorkplaceReview;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -358,4 +360,74 @@ it('lets the person answer on their phone with a flagged answer, pick a photo an
     expect(ChecklistApplication::query()->whereNotNull('submitted_at')->count())->toBe(1)
         ->and(ChecklistPhoto::query()->count())->toBe(0)
         ->and(ChecklistAnswer::query()->where('question_id', $light->id)->sole()->risk_note)->toBe('La luz es muy poca');
+});
+
+/** @return array{string, ChecklistApplication, Tenant} The panel of a Comisión member and a submitted checklist of their center with one flagged answer. */
+function reviewAddress(): array
+{
+    [$url, $center] = checklistCenter();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'version' => 2]);
+    $risk = addQuestion($checklist, 1, 'yes');
+    addQuestion($checklist, 2, 'informative');
+    $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id, 'checklist_id' => $checklist->id]);
+    ChecklistAnswer::query()->create(['tenant_id' => $tenant->id, 'application_id' => $application->id, 'question_id' => $risk->id, 'answer' => 'no', 'risk_note' => 'La luz es muy poca']);
+
+    return ["{$url}/telework/centers/{$center->id}/reviews", $application, $tenant];
+}
+
+it('shows the Comisión its inbox of checklists to review', function (bool $dark, bool $mobile): void {
+    [$inbox] = reviewAddress();
+
+    visitPage('telework/reviews', $inbox, $dark, $mobile)
+        ->assertSee('Listas por revisar')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Calle Hidalgo 45');
+})->with($looks);
+
+it('shows the Comisión the checklist to review with its flagged answers first', function (bool $dark, bool $mobile): void {
+    [, $application] = reviewAddress();
+
+    visitPage('telework/review', "/admin/acme/telework/applications/{$application->id}/review", $dark, $mobile)
+        ->assertSee('Con riesgo')
+        ->assertSee('La luz es muy poca')
+        ->assertSee('Informativas')
+        ->assertSee('Tu decisión')
+        ->assertSee('Pedir fotos');
+})->with($looks);
+
+it('lets the Comisión decide a checklist and leaves the inbox empty', function (): void {
+    [$inbox, $application, $tenant] = reviewAddress();
+
+    visit("/admin/acme/telework/applications/{$application->id}/review")
+        ->click('No validado')
+        ->fill('#decision-notes', 'Falta luz en el escritorio.')
+        ->press('Registrar decisión')
+        ->assertSee('Decisión registrada')
+        ->assertSee('Todo al día')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn($tenant);
+    expect(WorkplaceReview::query()->sole()->decision->value)->toBe('not_valid');
+});
+
+it('lets the Comisión ask the person for photos from the review', function (): void {
+    [, $application, $tenant] = reviewAddress();
+
+    visit("/admin/acme/telework/applications/{$application->id}/review")
+        ->press('Pedir fotos')
+        ->fill('#ask-photos-note', 'Una foto del escritorio.')
+        ->press('Pedir')
+        ->assertSee('Solicitud registrada')
+        ->assertSee('Evidencia pedida')
+        ->assertSee('Una foto del escritorio.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn($tenant);
+    expect(EvidenceRequest::query()->count())->toBe(1);
 });

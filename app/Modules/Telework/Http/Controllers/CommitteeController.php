@@ -59,6 +59,8 @@ final class CommitteeController extends Controller
             'canManage' => $canManage,
             // Whoever sits on this Comisión edits the checklist; RH reads it.
             'canEditChecklist' => $gate->isMember($user->id, $center->id),
+            // The inbox of submitted checklists is for the same assigned members.
+            'canReview' => $committee !== null && $gate->isMember($user->id, $center->id),
         ]);
     }
 

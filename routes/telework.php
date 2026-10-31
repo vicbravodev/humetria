@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
+use App\Modules\Telework\Http\Controllers\PhotoController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
@@ -50,5 +51,13 @@ Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/remote-check', 
 // More evidence about a workplace and in-person visits. The person answers from their portal (routes/portal.php).
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/evidence-requests', [EvidenceController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.evidence.store');
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/visit-authorizations', [VisitController::class, 'requestAuthorization'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.store');
-Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/document', [VisitController::class, 'document'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.document');
+Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/document', [VisitController::class, 'document'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.document.store');
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/visit', [VisitController::class, 'record'])->where('tenant', $notReserved)->name('tenant.telework.workplaces.visit.store');
+
+// The inbox and detail of the checklists to review, and the evidence files (photos, signed paper) through an authorized
+// route: assigned Comisión members and RH read them, nobody else.
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/reviews', [ReviewController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.reviews.index');
+Route::get('admin/{tenant:slug}/telework/applications/{application}/review', [ReviewController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.reviews.show');
+Route::get('admin/{tenant:slug}/telework/photos/{photo}', [PhotoController::class, 'checklist'])->where('tenant', $notReserved)->name('tenant.telework.photos.show');
+Route::get('admin/{tenant:slug}/telework/evidence-photos/{photo}', [PhotoController::class, 'evidence'])->where('tenant', $notReserved)->name('tenant.telework.evidence-photos.show');
+Route::get('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/document', [PhotoController::class, 'authorization'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.document.show');
