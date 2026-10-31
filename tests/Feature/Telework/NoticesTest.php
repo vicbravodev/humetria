@@ -99,7 +99,7 @@ it('stores each notice with its dates, time and address, and logs only ids', fun
         ->and($notice->submitted_at->toIso8601String())->toBe('2026-03-01T12:00:00+00:00')
         ->and($notice->ip)->toBe('127.0.0.1')
         ->and($notice->reviewed_at)->toBeNull();
-    Log::shouldHaveReceived('info')->with('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $this->teleworker->id, 'kind' => $kind, 'traumatic_event' => false, 'temporary' => false])->once();
+    Log::shouldHaveReceived('info')->with('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $this->teleworker->id, 'kind' => $kind, 'temporary' => false])->once();
 })->with(['condition_change', 'work_risk']);
 
 it('never logs the description', function (): void {
@@ -109,6 +109,16 @@ it('never logs the description', function (): void {
 
     Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'Secreto'));
     Log::shouldNotHaveReceived('warning');
+});
+
+it('never logs nor audits that a person reported a traumatic event', function (): void {
+    Log::spy();
+
+    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1']))->assertSessionHasNoErrors();
+
+    expect(WorkerNotice::query()->sole()->traumatic_event)->toBeTrue();
+    Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'traumatic'));
+    expect(json_encode(AuditEntry::query()->get()->toArray(), JSON_THROW_ON_ERROR))->not->toContain('traumatic');
 });
 
 it('accepts today and an occurrence before the written date, and refuses the future', function (): void {
@@ -261,7 +271,7 @@ describe('a change of address (6.7)', function (): void {
         expect($new->street)->toBe('Calle Nueva')->and($new->teleworker_id)->toBe($this->teleworker->id)->and($new->retired_at)->toBeNull()
             ->and($notice->temporary)->toBeTrue()
             ->and(ChecklistApplication::query()->where('workplace_id', $new->id)->sole()->section)->toBe(Section::Two);
-        Log::shouldHaveReceived('info')->with('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $this->teleworker->id, 'kind' => 'address_change', 'traumatic_event' => false, 'temporary' => true])->once();
+        Log::shouldHaveReceived('info')->with('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $this->teleworker->id, 'kind' => 'address_change', 'temporary' => true])->once();
     });
 
     it('asks an aspirant for the Sección I of the new workplace', function (): void {

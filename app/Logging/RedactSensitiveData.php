@@ -65,6 +65,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'risk_note',
             'special_needs',
             'street',
+            // NOM-037: that a person reported a severe traumatic event is health data.
+            'traumatic_event',
         ];
 
         foreach ($data as $key => $value) {

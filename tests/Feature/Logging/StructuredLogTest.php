@@ -82,6 +82,8 @@ it('redacts each sensitive key', function (string $key): void {
     'risk_note', 'special_needs', 'description', 'marital_status', 'contact_phone', 'home_address', 'street',
     'exterior_number', 'interior_number', 'refusal_reason', 'review_note', 'notes', 'note', 'action_plan',
     'ip', 'confirmed_ip', 'responded_ip',
+    // NOM-037: that a person reported a severe traumatic event is health data.
+    'traumatic_event',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {

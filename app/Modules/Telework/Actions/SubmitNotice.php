@@ -58,7 +58,8 @@ final readonly class SubmitNotice
                 'ip' => $ip,
             ]);
 
-            Log::info('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $teleworkerId, 'kind' => $kind->value, 'traumatic_event' => $traumaticEvent, 'temporary' => $temporary]);
+            // Never whether it reports a traumatic event: next to the person's id, that is health data.
+            Log::info('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $teleworkerId, 'kind' => $kind->value, 'temporary' => $temporary]);
 
             if ($traumaticEvent) {
                 $teleworker = Teleworker::query()->findOrFail($teleworkerId, ['id', 'work_center_id']);
