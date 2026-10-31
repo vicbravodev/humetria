@@ -250,7 +250,8 @@ it('shows how the sending of the links goes until it ends, and offers to resend 
 
     App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('invitation_status', 'queued')->update(['invitation_status' => 'sent']);
 
-    $page->wait(4)->assertDontSee('Enviando invitaciones');
+    // The page polls every 3 seconds: the assertion retries until a poll brings the finished sending, up to the browser timeout.
+    $page->assertDontSee('Enviando invitaciones');
 })->with($looks);
 
 it('sends the link again only to whom it failed', function (): void {

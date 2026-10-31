@@ -15,6 +15,15 @@ runs:
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: '22'
+        # Caches npm's download cache (~/.npm), keyed on package-lock.json; npm ci still installs from the lockfile.
+        cache: npm
+
+    # composer install then only checks the lockfile against the restored vendor and dumps the autoloader.
+    - name: Cache vendor
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: vendor
+        key: vendor-${{ runner.os }}-php8.5-${{ hashFiles('composer.lock') }}
 
     - name: Setup Application
       shell: bash

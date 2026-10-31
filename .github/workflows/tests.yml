@@ -18,8 +18,8 @@ env:
   DB_PASSWORD: password
 
 # The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
-# requires only the ci job, which waits for checks and browser: a job can be added or renamed without touching the
-# settings. Mutation is not required: mutation-score reports it, and a pull request can merge before it ends.
+# requires only the ci job, which waits for every other job and holds the mutation score: a job can be added or renamed
+# without touching the settings.
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -130,8 +130,10 @@ jobs:
           mutations=$(grep -m1 -E '^ *Mutations:' mutation.log) || { echo "Pest printed no Mutations: line."; exit 1; }
           echo "mutations_$SHARD=$mutations" >> "$GITHUB_OUTPUT"
 
+  # The required check: every job passed and the shards' mutation score, added up, reaches --min. A shard with nothing
+  # to mutate (a pull request that touches no mutated class) passes, and the total of no mutations passes too.
   ci:
-    needs: [checks, browser]
+    needs: [checks, browser, mutation]
     # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
     if: always()
     runs-on: ubuntu-latest
@@ -139,7 +141,7 @@ jobs:
       - name: Every job passed
         env:
           NEEDS: ${{ toJSON(needs) }}
-        run: &every-job-passed |
+        run: |
           failed=$(printf '%s' "$NEEDS" | jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"')
           if [ -n "$failed" ]; then
             echo "Failed jobs:"
@@ -147,12 +149,6 @@ jobs:
             exit 1
           fi
 
-  # Not required on main: it holds the shards' total to --min, and its result shows on the pull request.
-  mutation-score:
-    needs: [mutation]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -161,11 +157,6 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
-
-      - name: Every shard passed
-        env:
-          NEEDS: ${{ toJSON(needs) }}
-        run: *every-job-passed
 
       - name: Total mutation score
         env:
