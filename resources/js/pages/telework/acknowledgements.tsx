@@ -1,4 +1,5 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import AckCommittee from '@/components/telework/ack-committee';
 import AckPanelConfirm from '@/components/telework/ack-panel-confirm';
 import AckPaperDialog from '@/components/telework/ack-paper-dialog';
@@ -8,6 +9,7 @@ import PageHeader from '@/components/page-header';
 import { useChosenPeople } from '@/hooks/use-chosen-people';
 import { describeDate } from '@/lib/calendar-date';
 import type {
+    AckAllMatching,
     AckCommitteeMember,
     AckDocument,
     AckFilters,
@@ -37,6 +39,11 @@ export default function Acknowledgements({
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';
     const choice = useChosenPeople(document.id);
+    const [all, setAll] = useState<AckAllMatching | null>(null);
+    const clear = () => {
+        setAll(null);
+        choice.clear();
+    };
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037' },
@@ -65,7 +72,8 @@ export default function Acknowledgements({
                             tenantSlug={tenantSlug}
                             documentId={document.id}
                             chosen={choice.chosen}
-                            onDone={choice.clear}
+                            all={all}
+                            onDone={clear}
                         />
                     )}
                 </PageHeader>
@@ -82,6 +90,9 @@ export default function Acknowledgements({
                     people={people}
                     filters={filters}
                     choice={choice}
+                    all={all}
+                    onAll={setAll}
+                    onClear={clear}
                     canManage={canManage}
                 />
                 <AckCommittee members={committee} />

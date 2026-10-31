@@ -272,6 +272,9 @@ export type AckCommitteeMember = {
     acknowledgedOn: string | null;
 };
 
+/** "Every pending person the search found", chosen without listing them: the server resolves it. */
+export type AckAllMatching = { q: string; count: number };
+
 export type AckFilters = { status: 'all' | AckStatus; q: string };
 
 export type AckDocument = {

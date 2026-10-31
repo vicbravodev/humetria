@@ -13,36 +13,41 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/tenant/telework/documents/acknowledgements';
+import type { AckAllMatching } from '@/types';
 
 /** Records, for the people ticked in the list, the confirmations they signed on paper: the day and a note about the sheet. */
 export default function AckPaperDialog({
     tenantSlug,
     documentId,
     chosen,
+    all,
     onDone,
 }: {
     tenantSlug: string;
     documentId: string;
     chosen: string[];
+    /** Everyone pending the search found: sent as a request, never as ids, so there is no cap. */
+    all: AckAllMatching | null;
     onDone: () => void;
 }) {
     const [open, setOpen] = useState(false);
+    const count = all?.count ?? chosen.length;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button disabled={chosen.length === 0}>
+                <Button disabled={count === 0}>
                     <FileCheck aria-hidden />
-                    Registrar acuses en papel ({chosen.length})
+                    Registrar acuses en papel ({count})
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogTitle>Registrar acuses en papel</DialogTitle>
                 <DialogDescription>
                     Para{' '}
-                    {chosen.length === 1
+                    {count === 1
                         ? 'la persona elegida'
-                        : `las ${chosen.length} personas elegidas`}
+                        : `las ${count} personas elegidas`}
                     . Queda constancia del día que firmaron y de tu nota.
                 </DialogDescription>
                 <Form
@@ -59,7 +64,21 @@ export default function AckPaperDialog({
                 >
                     {({ processing, errors }) => (
                         <>
-                            {chosen.map((id) => (
+                            {all !== null && (
+                                <>
+                                    <input
+                                        type="hidden"
+                                        name="all_matching"
+                                        value="1"
+                                    />
+                                    <input
+                                        type="hidden"
+                                        name="q"
+                                        value={all.q}
+                                    />
+                                </>
+                            )}
+                            {(all === null ? chosen : []).map((id) => (
                                 <input
                                     key={id}
                                     type="hidden"

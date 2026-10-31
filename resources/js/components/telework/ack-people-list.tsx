@@ -8,7 +8,7 @@ import type { useChosenPeople } from '@/hooks/use-chosen-people';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { ackQuery } from '@/lib/telework/acknowledgements';
 import { index } from '@/routes/tenant/telework/documents/acknowledgements';
-import type { AckFilters, AckPerson, Paginated } from '@/types';
+import type { AckAllMatching, AckFilters, AckPerson, Paginated } from '@/types';
 
 /**
  * The people asked to confirm, a page at a time and searched on the server. Where RH manages, the pending ones can be
@@ -20,6 +20,9 @@ export default function AckPeopleList({
     people,
     filters,
     choice,
+    all,
+    onAll,
+    onClear,
     canManage,
 }: {
     tenantSlug: string;
@@ -27,11 +30,15 @@ export default function AckPeopleList({
     people: Paginated<AckPerson>;
     filters: AckFilters;
     choice: ReturnType<typeof useChosenPeople>;
+    /** Everyone pending the search found, when RH took them at once. */
+    all: AckAllMatching | null;
+    onAll: (all: AckAllMatching | null) => void;
+    onClear: () => void;
     canManage: boolean;
 }) {
     const url = index.url({ tenant: tenantSlug, document: documentId });
     const { text, type } = useQueryFilters(url, filters, ackQuery);
-    const { chosen, toggle, chooseFound, clear } = choice;
+    const { chosen, toggle } = choice;
 
     return (
         <section aria-label="Personas" className="flex flex-col gap-2">
@@ -43,9 +50,11 @@ export default function AckPeopleList({
             {canManage && (
                 <AckChoiceBar
                     found={filters.status === 'pending' ? people.total : 0}
-                    chosen={chosen.length}
-                    onChooseFound={chooseFound}
-                    onClear={clear}
+                    chosen={all?.count ?? chosen.length}
+                    onChooseFound={() =>
+                        onAll({ q: filters.q, count: people.total })
+                    }
+                    onClear={onClear}
                 />
             )}
             {people.data.length === 0 ? (
@@ -59,7 +68,8 @@ export default function AckPeopleList({
                             key={person.id}
                             person={person}
                             selectable={canManage}
-                            checked={chosen.includes(person.id)}
+                            checked={all !== null || chosen.includes(person.id)}
+                            disabled={all !== null}
                             onCheckedChange={(checked) =>
                                 toggle(person, checked)
                             }

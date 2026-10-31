@@ -608,7 +608,7 @@ function acknowledgementsDocument(): array
     foreach (['Ana Ruiz', 'Beto Soto', 'Carla Díaz'] as $name) {
         EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => $name]);
     }
-    $document = TeleworkDocument::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy]);
+    $document = TeleworkDocument::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy, 'created_at' => now()->subDays(10)]);
     workIn($tenant);
     resolve(RequestAcknowledgements::class)->handle([$document->id]);
 
@@ -640,6 +640,22 @@ it('records paper acknowledgements of the people ticked, from the page', functio
         ->press('Registrar')
         ->assertSee('Se registraron 2 acuses.')
         ->assertSee('2 de 3 (67 %)')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('records on paper everyone pending the search found, without listing them', function (): void {
+    [$url, $document] = acknowledgementsDocument();
+
+    visit("{$url}/telework/documents/{$document->id}/acknowledgements?status=pending")
+        ->click('button:has-text("Elegir a las 3 personas pendientes")')
+        ->click('button:has-text("Registrar acuses en papel")')
+        ->click('#ack-date')
+        ->keys('[data-day] button[tabindex="0"]', ['ArrowUp', 'Enter'])
+        ->fill('#ack-note', 'Hoja de firmas 4')
+        ->press('Registrar')
+        ->assertSee('Se registraron 3 acuses.')
+        ->assertSee('3 de 3 (100 %)')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });

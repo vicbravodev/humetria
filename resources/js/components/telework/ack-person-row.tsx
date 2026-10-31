@@ -9,11 +9,13 @@ export default function AckPersonRow({
     person,
     selectable,
     checked,
+    disabled,
     onCheckedChange,
 }: {
     person: AckPerson;
     selectable: boolean;
     checked: boolean;
+    disabled: boolean;
     onCheckedChange: (checked: boolean) => void;
 }) {
     const done = person.status === 'acknowledged';
@@ -26,6 +28,7 @@ export default function AckPersonRow({
                     id={`ack-${person.id}`}
                     aria-label={`Elegir a ${person.name}`}
                     checked={checked}
+                    disabled={disabled}
                     onCheckedChange={(state) => onCheckedChange(state === true)}
                 />
             )}
