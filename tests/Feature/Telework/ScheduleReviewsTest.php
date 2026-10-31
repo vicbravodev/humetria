@@ -66,8 +66,7 @@ it('requests Sección II for workplaces expiring in 30 days or less, once', func
     'expiring in 2 days' => ['2025-12-18', 1],
 ]);
 
-it('leaves alone expired, never validated, not valid, retired and non-active workplaces, and those with a Sección II already open', function (): void {
-    scheduledWorkplace('2025-12-15');
+it('leaves alone never validated, not valid, retired and non-active workplaces, and those with a Sección II already open', function (): void {
     scheduledWorkplace(null);
     $notValid = scheduledWorkplace(null);
     WorkplaceReviewFactory::new()->notValid()->decidedAt('2026-01-15 18:00:00')->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $notValid->id]);
@@ -150,4 +149,28 @@ it('logs how many it asked for, without personal data', function (): void {
     resolve(ScheduleReviews::class)->handle();
 
     Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context = []): bool => $message === 'telework.reviews_scheduled' && $context === ['applications' => 1])->once();
+});
+
+it('asks an expired workplace for its Sección II once, as when the scheduler was down past the expiry', function (): void {
+    // Validated 2025-12-15 for 12 months: it lapsed yesterday and nobody was asked.
+    $workplace = scheduledWorkplace('2025-12-15');
+
+    $first = resolve(ScheduleReviews::class)->handle();
+    $second = resolve(ScheduleReviews::class)->handle();
+    workIn($this->tenant);
+
+    expect([$first, $second])->toBe([1, 0])
+        ->and(ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', Section::Two)->count())->toBe(1);
+    Queue::assertPushed(SendPortalReminder::class, 1);
+});
+
+it('asks for the Sección II of the workplaces a shorter period leaves expired', function (): void {
+    $workplace = scheduledWorkplace('2026-06-01');
+    resolve(App\Modules\Telework\Support\Settings::class)->record();
+    App\Modules\Telework\Models\TeleworkSettings::query()->update(['review_period_months' => 3]);
+
+    expect(resolve(ScheduleReviews::class)->handle())->toBe(1)
+        ->and(resolve(ScheduleReviews::class)->handle())->toBe(0);
+    workIn($this->tenant);
+    expect(ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', Section::Two)->count())->toBe(1);
 });

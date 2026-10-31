@@ -21,8 +21,7 @@ use Throwable;
 
 /**
  * The daily periodic review (criterio C-13): thirty days before a validation lapses, asks the person for the periodic
- * Sección II and tells them. Expired workplaces need nothing recorded: they already show as pending, and the staff digest
- * reports them. Blocked companies are skipped.
+ * Sección II and tells them. A workplace that already lapsed without it is asked too, once. Blocked companies are skipped.
  */
 final readonly class ScheduleReviews
 {
@@ -61,8 +60,7 @@ final readonly class ScheduleReviews
             return 0;
         }
 
-        $now = CarbonImmutable::now();
-        $limit = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addDays(self::WARNING_DAYS);
+        $limit = CarbonImmutable::now()->setTimezone(config()->string('app.display_timezone'))->startOfDay()->addDays(self::WARNING_DAYS);
         $created = 0;
         $workplaces = Workplace::query()->whereNull('retired_at')
             ->whereIn('teleworker_id', Teleworker::query()->where('status', TeleworkerStatus::Active)->select('id'))
@@ -72,14 +70,9 @@ final readonly class ScheduleReviews
         foreach ($workplaces as $workplace) {
             $review = $reviews[$workplace->id] ?? null;
 
-            // Valid today (the latest review validates and has not lapsed) and lapsing within the warning days.
-            if ($review === null || ! $review->decision->validates()) {
-                continue;
-            }
-
-            $expires = $this->standing->expiry($review);
-
-            if ($expires->lessThanOrEqualTo($now) || $expires->greaterThan($limit)) {
+            // The latest review validates and lapses within the warning days, or already lapsed (the period was shortened,
+            // or nobody ran this in time): either way the person owes a Sección II, asked once per review.
+            if ($review === null || ! $review->decision->validates() || $this->standing->expiry($review)->greaterThan($limit)) {
                 continue;
             }
 
