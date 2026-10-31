@@ -68,13 +68,21 @@ final class SendSurveyInvitations implements ShouldQueue
             return;
         }
 
+        $companies = resolve(Companies::class);
+        $company = $companies->current();
+
+        // A blocked company sends nothing; who was waiting is marked failed, so a resend reaches them once it is back.
+        if ($company->blocked) {
+            $this->failed(null);
+
+            return;
+        }
+
         // Who left or moved meanwhile has nothing pending: no link, and nothing left to wait for.
         $this->waiting()->whereDoesntHave('instruments', fn ($guides) => $guides->where('status', InstrumentStatus::Pending))
             ->update(['invitation_status' => null, 'invitation_batch' => null]);
         $waiting = $this->waiting()->with(['instruments' => fn ($guides) => $guides->where('status', InstrumentStatus::Pending)])->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $companies = resolve(Companies::class);
-        $company = $companies->current();
         $contact = $companies->contact();
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
 

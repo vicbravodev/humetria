@@ -136,6 +136,15 @@ it('sends it once the closing is committed, also when the last day closes it', f
     expect(new CampaignClosed('t', 'c'))->toBeInstanceOf(Illuminate\Contracts\Events\ShouldDispatchAfterCommit::class);
 });
 
+it('sends nothing to a blocked company', function (): void {
+    $this->campaign->update(['status' => 'closed', 'closed_at' => now()]);
+    $this->tenant->update(['deactivated_at' => now()]);
+
+    app(SendClosingSummary::class)->handle(new CampaignClosed($this->tenant->id, $this->campaign->id));
+
+    Notification::assertNothingSent();
+});
+
 it('sends nothing to a company with no owner', function (): void {
     $tenant = Tenant::factory()->create();
     $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
