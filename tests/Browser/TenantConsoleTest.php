@@ -10,9 +10,6 @@ use App\Modules\Tenancy\Models\TenantMembership;
 // The labels of the open row menu, in order.
 const MENU_ITEMS = '() => [...document.querySelectorAll(\'[role="menuitem"]\')].map((item) => item.textContent).join(", ")';
 
-// Holds every request of the page 400 ms before it leaves.
-const SLOW_REQUESTS = '() => { const send = XMLHttpRequest.prototype.send; XMLHttpRequest.prototype.send = function (...args) { setTimeout(() => send.apply(this, args), 400); }; }';
-
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
