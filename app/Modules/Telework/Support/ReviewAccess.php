@@ -25,6 +25,19 @@ final readonly class ReviewAccess
         }
     }
 
+    /**
+     * The assigned Comisión of the center, or RH. A viewer is refused outright; the Comisión of another center does not
+     * learn that it exists.
+     */
+    public function reader(int $userId, string $workCenterId): void
+    {
+        abort_unless(Gate::allows('view-telework'), 403);
+
+        if (! Gate::allows('manage-telework') && ! $this->gate->isMember($userId, $workCenterId)) {
+            abort(Gate::allows('review-workplaces') ? 404 : 403);
+        }
+    }
+
     /** The work center of the person who teleworks from this workplace. */
     public function workCenterOf(Workplace $workplace): string
     {

@@ -7,6 +7,8 @@ namespace App\Modules\Telework\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Data\PendingChecklist;
+use App\Modules\Telework\Data\PendingPhotoRequest;
+use App\Modules\Telework\Data\PendingVisit;
 use App\Modules\Telework\Exceptions\PortalUnavailable;
 use App\Modules\Telework\Support\PortalPending;
 use Inertia\Inertia;
@@ -27,7 +29,7 @@ final class PortalController extends Controller
                 'token' => null,
                 'company' => null,
                 'name' => null,
-                'pending' => ['checklists' => [], 'sent' => []],
+                'pending' => ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => []],
             ]);
         }
 
@@ -39,7 +41,12 @@ final class PortalController extends Controller
             'token' => $token,
             'company' => $portal->company,
             'name' => $portal->name,
-            'pending' => ['checklists' => array_map($row, $items->checklists), 'sent' => array_map($row, $items->sent)],
+            'pending' => [
+                'checklists' => array_map($row, $items->checklists),
+                'sent' => array_map($row, $items->sent),
+                'photos' => array_map(fn (PendingPhotoRequest $item): array => ['id' => $item->id, 'workplace' => $item->workplace, 'note' => $item->note], $items->photos),
+                'visits' => array_map(fn (PendingVisit $item): array => ['id' => $item->id, 'workplace' => $item->workplace], $items->visits),
+            ],
         ]);
     }
 }

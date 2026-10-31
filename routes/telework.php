@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
+use App\Modules\Telework\Http\Controllers\EvidenceController;
 use App\Modules\Telework\Http\Controllers\ReviewController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
+use App\Modules\Telework\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
@@ -44,3 +46,9 @@ Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', 
 // a later review replaces it as the current one.
 Route::post('admin/{tenant:slug}/telework/applications/{application}/review', [ReviewController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.reviews.store');
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/remote-check', [ReviewController::class, 'remoteCheck'])->where('tenant', $notReserved)->name('tenant.telework.workplaces.remote-check.store');
+
+// More evidence about a workplace and in-person visits. The person answers from their portal (routes/portal.php).
+Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/evidence-requests', [EvidenceController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.evidence.store');
+Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/visit-authorizations', [VisitController::class, 'requestAuthorization'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.store');
+Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/document', [VisitController::class, 'document'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.document');
+Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/visit', [VisitController::class, 'record'])->where('tenant', $notReserved)->name('tenant.telework.workplaces.visit.store');

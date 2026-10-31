@@ -1,6 +1,8 @@
 import { PartyPopper } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
+import PortalPhotoRequestCard from '@/components/telework/portal/portal-photo-request-card';
+import PortalVisitCard from '@/components/telework/portal/portal-visit-card';
 import type { PortalPending } from '@/types';
 
 /** What the person has to do and what they already sent, in plain words ("usted"). */
@@ -14,7 +16,10 @@ export default function PortalHome({
     pending: PortalPending;
 }) {
     const nothing =
-        pending.checklists.length === 0 && pending.sent.length === 0;
+        pending.checklists.length === 0 &&
+        pending.sent.length === 0 &&
+        pending.photos.length === 0 &&
+        pending.visits.length === 0;
 
     return (
         <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -32,6 +37,29 @@ export default function PortalHome({
                     Cuando su empresa le pida algo, lo verá aquí y le avisaremos
                     por correo.
                 </EmptyState>
+            )}
+            {(pending.photos.length > 0 || pending.visits.length > 0) && (
+                <section aria-labelledby="portal-asked" className="grid gap-3">
+                    <h2 id="portal-asked" className="text-xl font-semibold">
+                        La Comisión le pide
+                    </h2>
+                    <ul className="grid gap-3">
+                        {pending.photos.map((request) => (
+                            <PortalPhotoRequestCard
+                                key={request.id}
+                                request={request}
+                                token={token}
+                            />
+                        ))}
+                        {pending.visits.map((visit) => (
+                            <PortalVisitCard
+                                key={visit.id}
+                                visit={visit}
+                                token={token}
+                            />
+                        ))}
+                    </ul>
+                </section>
             )}
             {pending.checklists.length > 0 && (
                 <section

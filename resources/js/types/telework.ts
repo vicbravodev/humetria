@@ -43,11 +43,26 @@ export type PortalChecklist = {
     label: string;
 };
 
+/** Photos the Comisión asked the person for. `note` says what to photograph. */
+export type PortalPhotoRequest = {
+    id: string;
+    workplace: string;
+    note: string;
+};
+
+/** A visit the Comisión asked the person to authorize. */
+export type PortalVisit = {
+    id: string;
+    workplace: string;
+};
+
 export type PortalPending = {
     /** Still to answer. */
     checklists: PortalChecklist[];
-    /** Sent, waiting for the Comisión. */
+    /** Sent: waiting for the Comisión, or reviewed. */
     sent: PortalChecklist[];
+    photos: PortalPhotoRequest[];
+    visits: PortalVisit[];
 };
 
 export type TeleworkerStatus = 'aspirant' | 'active' | 'ended';

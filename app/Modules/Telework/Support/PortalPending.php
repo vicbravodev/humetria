@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Telework\Data\PendingChecklist;
+use App\Modules\Telework\Data\PendingPhotoRequest;
+use App\Modules\Telework\Data\PendingVisit;
 use App\Modules\Telework\Data\PortalPendingData;
+use App\Modules\Telework\Enums\EvidenceKind;
+use App\Modules\Telework\Models\EvidenceRequest;
+use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Models\WorkplaceReview;
 
 /**
- * The pending items of a person's portal. Today: the checklists of their workplaces; documents, equipment, photo requests
- * and visit authorizations join as those arrive. A sent checklist is only ever "En revisión de la Comisión": the outcome
- * is told by RH, not by the portal (criterio C-11).
+ * The pending items of a person's portal: the checklists of their workplaces, the photos the Comisión asked for and the
+ * visits to authorize; documents and equipment join as those arrive. A sent checklist is only ever "En revisión de la
+ * Comisión" or "Revisada": the outcome is told by RH, not by the portal (criterio C-11, designer decision 7).
  */
 final readonly class PortalPending
 {
@@ -23,15 +29,32 @@ final readonly class PortalPending
             return new PortalPendingData([], []);
         }
 
+        $workplaces = Workplace::query()->where('teleworker_id', $portal->teleworkerId)->whereNull('retired_at')->with('applications')->orderBy('created_at')->orderBy('id')->get();
+        $lines = $workplaces->mapWithKeys(fn (Workplace $workplace): array => [$workplace->id => $this->address->line($workplace)])->all();
+        $ids = array_keys($lines);
+        $reviewed = WorkplaceReview::query()->whereIn('workplace_id', $ids)->whereNotNull('application_id')->pluck('application_id')->all();
         $items = ['pending' => [], 'sent' => []];
 
-        foreach (Workplace::query()->where('teleworker_id', $portal->teleworkerId)->whereNull('retired_at')->with('applications')->orderBy('created_at')->orderBy('id')->get() as $workplace) {
+        foreach ($workplaces as $workplace) {
             foreach ($workplace->applications->sortBy([['requested_at', 'asc'], ['id', 'asc']]) as $application) {
                 $sent = $application->submitted_at !== null;
-                $items[$sent ? 'sent' : 'pending'][] = new PendingChecklist($application->id, $this->address->line($workplace), $application->section->value, $sent ? 'En revisión de la Comisión' : 'Pendiente de contestar');
+                $label = match (true) {
+                    ! $sent => 'Pendiente de contestar',
+                    in_array($application->id, $reviewed, true) => 'Revisada',
+                    default => 'En revisión de la Comisión',
+                };
+                $items[$sent ? 'sent' : 'pending'][] = new PendingChecklist($application->id, $lines[$workplace->id], $application->section->value, $label);
             }
         }
 
-        return new PortalPendingData($items['pending'], $items['sent']);
+        $photos = EvidenceRequest::query()->whereIn('workplace_id', $ids)->where('kind', EvidenceKind::Photos)->whereNull('fulfilled_at')->orderBy('requested_at')->orderBy('id')->get();
+        $visits = VisitAuthorization::query()->whereIn('workplace_id', $ids)->whereNull('confirmed_at')->whereNull('document_path')->orderBy('requested_at')->orderBy('id')->get();
+
+        return new PortalPendingData(
+            $items['pending'],
+            $items['sent'],
+            array_values($photos->map(fn (EvidenceRequest $request): PendingPhotoRequest => new PendingPhotoRequest($request->id, $lines[$request->workplace_id] ?? '', $request->note))->all()),
+            array_values($visits->map(fn (VisitAuthorization $authorization): PendingVisit => new PendingVisit($authorization->id, $lines[$authorization->workplace_id] ?? ''))->all()),
+        );
     }
 }

@@ -13,6 +13,8 @@ use App\Modules\Telework\Models\ChecklistPhoto;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
+use App\Modules\Telework\Models\VisitAuthorization;
+use App\Modules\Telework\Models\Workplace;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -20,7 +22,9 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\ChecklistFactory;
+use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\VisitAuthorizationFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Illuminate\Support\Str;
 
@@ -186,6 +190,25 @@ it('shows the person their portal with what is pending and what was sent', funct
         ->assertSee('Pendiente de contestar')
         ->assertSee('Ya enviado')
         ->assertSee('En revisión de la Comisión');
+})->with($looks);
+
+it('shows the person what the Comisión asked for and lets them authorize a visit', function (bool $dark, bool $mobile): void {
+    $address = portalAddress();
+    $tenant = Tenant::query()->where('trade_name', 'Acme')->firstOrFail();
+    workIn($tenant);
+    $workplace = Workplace::query()->firstOrFail();
+    EvidenceRequestFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id, 'note' => 'Una foto de la silla.']);
+    VisitAuthorizationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id]);
+
+    visitPage('telework/portal', $address, $dark, $mobile)
+        ->assertSee('La Comisión le pide')
+        ->assertSee('Una foto de la silla.')
+        ->assertSee('Enviar fotos')
+        ->assertSee('Autorizo la visita')
+        ->press('Autorizo la visita')
+        ->assertDontSee('Autorizo la visita');
+
+    expect(VisitAuthorization::query()->sole()->confirmed_at)->not->toBeNull();
 })->with($looks);
 
 it('tells a link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Actions;
 
 use App\Actions\RecordAudit;
+use App\Modules\Telework\Enums\EvidenceKind;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\ReviewMethod;
 use App\Modules\Telework\Models\ChecklistApplication;
+use App\Modules\Telework\Models\EvidenceRequest;
+use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
 use Carbon\CarbonImmutable;
@@ -18,7 +21,9 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * The Comisión decides about a workplace (criterio C-12): Validated, Validated with an action plan, or Not validated.
- * With a submitted checklist it is a `checklist` review (the checklist is reviewed once); without one, a `remote_check`.
+ * With a submitted checklist it is a `checklist` review (the checklist is reviewed once); with the authorization of an
+ * in-person visit (see `RecordVisit`, which checks it), a `visit`; with neither, a `remote_check`, which also closes the
+ * remote checks the Comisión had asked for.
  * "With plan" needs the plan and a due date that is not in the past; "Not validated" needs notes. Who may decide is the
  * controller's business (`ReviewAccess`): this only judges what is decided.
  *
@@ -31,7 +36,7 @@ final readonly class ReviewWorkplace
     /**
      * @throws ValidationException
      */
-    public function handle(Workplace $workplace, ?ChecklistApplication $application, ReviewDecision $decision, string $notes, ?string $actionPlan, ?CarbonImmutable $planDueOn, int $userId): WorkplaceReview
+    public function handle(Workplace $workplace, ?ChecklistApplication $application, ReviewDecision $decision, string $notes, ?string $actionPlan, ?CarbonImmutable $planDueOn, int $userId, ?VisitAuthorization $authorization = null, ?CarbonImmutable $visitedOn = null): WorkplaceReview
     {
         $notes = trim($notes);
         $plan = trim($actionPlan ?? '');
@@ -39,20 +44,27 @@ final readonly class ReviewWorkplace
         $withPlan = $decision === ReviewDecision::ValidWithPlan;
 
         try {
-            return DB::transaction(function () use ($workplace, $application, $decision, $notes, $plan, $planDueOn, $userId, $withPlan): WorkplaceReview {
+            return DB::transaction(function () use ($workplace, $application, $decision, $notes, $plan, $planDueOn, $userId, $withPlan, $authorization, $visitedOn): WorkplaceReview {
                 $this->checkApplication($workplace, $application);
+                $method = match (true) {
+                    $application !== null => ReviewMethod::Checklist,
+                    $authorization !== null => ReviewMethod::Visit,
+                    default => ReviewMethod::RemoteCheck,
+                };
 
                 $review = WorkplaceReview::query()->create([
                     'tenant_id' => $workplace->tenant_id,
                     'workplace_id' => $workplace->id,
                     'application_id' => $application?->id,
-                    'method' => $application === null ? ReviewMethod::RemoteCheck : ReviewMethod::Checklist,
+                    'method' => $method,
                     'decision' => $decision,
                     'notes' => $notes,
                     'action_plan' => $withPlan ? $plan : null,
                     'plan_due_on' => $withPlan ? $planDueOn?->toDateString() : null,
                     'decided_by' => $userId,
                     'decided_at' => now(),
+                    'visited_on' => $visitedOn?->toDateString(),
+                    'visit_authorization_id' => $authorization?->id,
                 ]);
 
                 $record = [
@@ -65,10 +77,16 @@ final readonly class ReviewWorkplace
                 $this->audit->handle('telework.workplace_reviewed', $review, $record);
                 Log::info('telework.workplace_reviewed', $record);
 
+                if ($method === ReviewMethod::RemoteCheck) {
+                    $this->closeRemoteChecks($workplace);
+                }
+
                 return $review;
             });
         } catch (UniqueConstraintViolationException) {
-            throw ValidationException::withMessages(['application' => 'Esta lista ya fue revisada.']);
+            throw ValidationException::withMessages($authorization === null
+                ? ['application' => 'Esta lista ya fue revisada.']
+                : ['visit_authorization_id' => 'Esta autorización ya se usó en otra visita.']);
         }
     }
 
@@ -124,6 +142,17 @@ final readonly class ReviewWorkplace
 
         if (WorkplaceReview::query()->where('application_id', $fresh->id)->exists()) {
             throw ValidationException::withMessages(['application' => 'Esta lista ya fue revisada.']);
+        }
+    }
+
+    /** A remote check the Comisión had asked for is done by recording it. */
+    private function closeRemoteChecks(Workplace $workplace): void
+    {
+        $open = EvidenceRequest::query()->where('workplace_id', $workplace->id)->where('kind', EvidenceKind::RemoteCheck)->whereNull('fulfilled_at')->get();
+
+        foreach ($open as $request) {
+            $request->update(['fulfilled_at' => now()]);
+            Log::info('telework.evidence_fulfilled', ['evidence_request_id' => $request->id, 'workplace_id' => $workplace->id, 'kind' => 'remote_check']);
         }
     }
 }

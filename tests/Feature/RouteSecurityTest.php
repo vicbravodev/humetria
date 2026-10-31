@@ -36,6 +36,8 @@ function publicRouteNames(): array
         'portal.show', // guest: la persona teletrabajadora no tiene cuenta; el token es la credencial; throttled
         'portal.checklist.show', // guest: la lista de verificación de la persona; el token del portal es la credencial; solo ve sus lugares; throttled
         'portal.checklist.store', // guest: envía la lista una sola vez, bajo candado; el token del portal es la credencial; throttled
+        'portal.evidence.store', // guest: la persona envía las fotos que pidió la Comisión, una sola vez, bajo candado; el token del portal es la credencial; solo sus lugares; throttled
+        'portal.visits.confirm', // guest: la persona autoriza por escrito la visita a su lugar; el token del portal es la credencial; solo sus lugares; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
     ];
 }
