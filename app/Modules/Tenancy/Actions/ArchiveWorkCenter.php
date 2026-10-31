@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -21,11 +22,16 @@ final readonly class ArchiveWorkCenter
      */
     public function handle(WorkCenter $workCenter): WorkCenter
     {
-        if ($this->openCampaigns->existFor($workCenter->id)) {
-            throw ValidationException::withMessages(['work_center' => 'Este centro tiene una evaluación NOM-035 abierta. Ciérrala o elimina su borrador antes de archivarlo.']);
-        }
+        DB::transaction(function () use ($workCenter): void {
+            // Under lock: a draft of it being created at the same time waits here, or this finds it.
+            WorkCenter::query()->lockForUpdate()->findOrFail($workCenter->id);
 
-        $workCenter->update(['archived_at' => now()]);
+            if ($this->openCampaigns->existFor($workCenter->id)) {
+                throw ValidationException::withMessages(['work_center' => 'Este centro tiene una evaluación NOM-035 abierta. Ciérrala o elimina su borrador antes de archivarlo.']);
+            }
+
+            $workCenter->update(['archived_at' => now()]);
+        });
 
         Log::info('work_center.archived', ['work_center_id' => $workCenter->id]);
 

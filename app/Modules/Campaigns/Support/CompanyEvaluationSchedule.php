@@ -25,7 +25,10 @@ final class CompanyEvaluationSchedule implements EvaluationSchedule
             ->get(['work_center_id', 'status', 'closes_on', 'closed_at']);
 
         foreach ($evaluations as $campaign) {
-            $standings[$campaign->work_center_id] = $this->standing($campaign);
+            $standing = $this->standing($campaign);
+            // A draft is not an evaluation yet: the last one stays overdue until the next one runs (C-26).
+            $overdue = ($standings[$campaign->work_center_id] ?? null)?->state === 'overdue';
+            $standings[$campaign->work_center_id] = $standing->state === 'draft' && $overdue ? $standings[$campaign->work_center_id] : $standing;
         }
 
         return $standings;

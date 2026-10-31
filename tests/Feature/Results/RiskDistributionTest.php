@@ -137,6 +137,13 @@ it('filters by an area it shows, and ignores an area it hides', function (): voi
         ->and($inC['final'])->toBe([3, 0, 5, 0, 6]);
 });
 
+it('scores each questionnaire in the version of the norm it was answered in, never the current one', function (): void {
+    $records = guideTwoRecords('area-a', calm: 5);
+    $records[] = new AnonymousRecord('area-a', 'dof-2030-01-01', calmGuideTwo());
+
+    $this->distribution->of('nom035.guide-ii', $records);
+})->throws(InvalidArgumentException::class, 'No scoring tables for [nom035.guide-ii] in version [dof-2030-01-01].');
+
 it('shows how each question was answered, and only a question answered by at least 5', function (): void {
     $records = [...guideTwoRecords(AREA_A, never: 4, calm: 3), ...guideTwoRecords(AREA_B, always: 1)];
 

@@ -11,6 +11,7 @@ use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
 use App\Modules\Campaigns\Exceptions\DraftOutdated;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Instruments\Contracts\Nom035Sample;
@@ -57,7 +58,7 @@ final readonly class LaunchCampaign
             $queue = [];
 
             foreach ($people as $person) {
-                $queue[$participants[$person->id]] = $person->email !== null;
+                $queue[$participants[$person->id]] = SurveyInvitation::routes($person) !== [];
             }
 
             $invited = $this->queueInvitations->handle($campaign, $queue);

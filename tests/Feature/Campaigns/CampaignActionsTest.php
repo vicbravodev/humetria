@@ -53,7 +53,7 @@ function guidesOf(Participant $participant): array
         ->mapWithKeys(fn (ParticipantInstrument $guide): array => [$guide->instrument => $guide->status->value])->all();
 }
 
-it('sends the link again to everyone with a guide pending and an email, killing their old link', function (): void {
+it('sends the link again to everyone with a guide pending and an email, the same link they already had', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
     $done = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->first();
     ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $done?->id)->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
@@ -66,9 +66,30 @@ it('sends the link again to everyone with a guide pending and an email, killing 
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 19);
     $after = Participant::query()->withoutGlobalScopes()->where('id', '!=', $done?->id)->pluck('token_hash', 'id');
 
-    foreach ($after as $id => $hash) {
-        expect($hash)->not->toBe($before[$id]);
-    }
+    // Someone halfway through the survey keeps going on the link they opened.
+    expect($after->all())->toBe($before->all());
+});
+
+it('keeps the link someone already opened working after a reminder, and still single-use once they answer', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => staffOf($this->tenant, $this->plant, 10));
+    $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->firstOrFail();
+    $links = [];
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$links): bool {
+        $links[] = (string) $notification->toMail($notifiable)->actionUrl;
+
+        return true;
+    });
+    $mine = array_values(array_filter($links, fn (string $link): bool => Participant::query()->withoutGlobalScopes()->where('token_hash', Participant::hashToken(basename($link)))->value('id') === $participant->id));
+
+    expect($mine)->toHaveCount(2)->and($mine[0])->toBe($mine[1]);
+    $this->get($mine[0])->assertInertia(fn ($page) => $page->where('unavailable', null));
+
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $participant->id)->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+
+    $this->get($mine[0])->assertInertia(fn ($page) => $page->where('unavailable', 'done'));
 });
 
 it('sends the link again only to the pending people the filters narrow the list to', function (): void {

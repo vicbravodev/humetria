@@ -192,3 +192,12 @@ it('runs on Mondays at 9:00 in Mexico City', function (): void {
     expect($event?->expression)->toBe('0 9 * * 1')
         ->and($event?->timezone)->toBe('America/Mexico_City');
 });
+
+it('runs at 9:00 in the display time zone, whatever it is set to', function (): void {
+    config(['app.display_timezone' => 'America/Tijuana']);
+    require base_path('routes/console.php');
+
+    $event = collect(app(Schedule::class)->events())->last(fn ($event): bool => str_contains((string) $event->command, 'campaigns:send-digests'));
+
+    expect($event?->timezone)->toBe('America/Tijuana');
+});

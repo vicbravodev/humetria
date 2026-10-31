@@ -43,6 +43,16 @@ it('cancels the guides a person had pending when they are deactivated, keeping w
     $this->get(route('survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', 'done'));
 });
 
+it('deactivates a person and cancels their guides together, or neither', function (): void {
+    resolve(App\Modules\Tenancy\Contracts\Companies::class)->enter($this->tenant->id);
+    Illuminate\Support\Facades\Event::listen(App\Modules\Organization\Events\EmployeeDeactivated::class, fn () => throw new RuntimeException('Something after the cancelling failed.'));
+
+    expect(fn () => resolve(App\Modules\Organization\Actions\DeactivateEmployee::class)->handle($this->employee))->toThrow(RuntimeException::class);
+
+    expect($this->employee->fresh()?->deactivated_at)->toBeNull()
+        ->and(statusesOf($this->participant))->toBe(['nom035.guide-i' => 'completed', 'nom035.guide-ii' => 'pending']);
+});
+
 it('leaves closed evaluations as they ended', function (): void {
     $this->campaign->update(['status' => 'closed', 'closed_at' => now()]);
 

@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -70,7 +71,8 @@ final readonly class LaunchTraumaCampaign
             $queue = [];
 
             foreach ($chosen as $employeeId) {
-                $queue[$participants[$employeeId]] = $active->get($employeeId)?->email !== null;
+                $person = $active->get($employeeId);
+                $queue[$participants[$employeeId]] = $person !== null && SurveyInvitation::routes($person) !== [];
             }
 
             $invited = $this->queueInvitations->handle($campaign, $queue);

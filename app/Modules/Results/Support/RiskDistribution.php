@@ -162,7 +162,7 @@ final readonly class RiskDistribution
      */
     private function scores(string $instrument, array $records): array
     {
-        return array_map(fn (AnonymousRecord $record): RiskScore => $this->instruments->scoreRisk($instrument, $record->answers), $records);
+        return array_map(fn (AnonymousRecord $record): RiskScore => $this->instruments->scoreRisk($instrument, $record->answers, $record->version), $records);
     }
 
     /**
