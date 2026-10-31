@@ -20,12 +20,13 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-const QUERIES_DOCUMENTS = 20;
+const QUERIES_DOCUMENTS = 19;
 const QUERIES_ACKNOWLEDGEMENTS = 22;
 
 mutates(AckProgress::class, AckAudience::class, RecordManualAcknowledgements::class, AcknowledgementController::class);
@@ -259,12 +260,60 @@ function queryCountSetup(): TeleworkDocument
     return $document;
 }
 
-it('answers the documents page with a fixed number of queries', function (): void {
-    queryCountSetup();
+it('answers the documents page with the same queries for 3 documents as for 8', function (): void {
+    $north = $this->center;
+    $south = $this->other;
+    worker('Ana');
+    worker('Beto', $south);
+    published(DocumentKind::Policy, $north);
+    published(DocumentKind::RiskInformation, $north);
+    published(DocumentKind::Policy, $south);
+    $this->actingAs($this->hr);
+    $this->get(route('tenant.telework.documents.index', $this->tenant));
+    $visit = function (): int {
+        DB::enableQueryLog();
+        test()->get(route('tenant.telework.documents.index', test()->tenant))->assertOk();
+        $queries = count(DB::getQueryLog());
+        DB::flushQueryLog();
+        DB::disableQueryLog();
 
-    $this->expectsDatabaseQueryCount(QUERIES_DOCUMENTS);
+        return $queries;
+    };
 
-    $this->get(route('tenant.telework.documents.index', $this->tenant))->assertOk();
+    $three = $visit();
+    foreach ([DocumentKind::Reversibility, DocumentKind::FamilyViolence, DocumentKind::InspectionReport] as $kind) {
+        published($kind, $north);
+    }
+    published(DocumentKind::RiskInformation, $south);
+    published(DocumentKind::Reversibility, $south);
+    $eight = $visit();
+
+    expect($three)->toBe(QUERIES_DOCUMENTS)->and($eight)->toBe($three);
+});
+
+it('counts each document of the list against its own audience', function (): void {
+    $ana = worker('Ana');
+    worker('Beto');
+    $south = worker('Zoe', $this->other);
+    $rosa = worker('Rosa');
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $rosa->id]);
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    $northPolicy = published();
+    $southPolicy = published(DocumentKind::Policy, $this->other);
+    $risk = published(DocumentKind::RiskInformation);
+    confirm($northPolicy, $ana);
+    confirm($southPolicy, $south);
+    confirm($risk, $rosa);
+    resolve(Acknowledge::class)->inPanel($cora->id, $risk->id, null);
+
+    $progress = resolve(AckProgress::class)->forDocuments([$northPolicy, $southPolicy, $risk]);
+
+    expect($progress)->toBe([
+        $northPolicy->id => ['acknowledged' => 1, 'expected' => 3],
+        $southPolicy->id => ['acknowledged' => 1, 'expected' => 1],
+        $risk->id => ['acknowledged' => 2, 'expected' => 2],
+    ])->and(resolve(AckProgress::class)->forDocuments([]))->toBe([]);
 });
 
 it('answers the acknowledgements page with a fixed number of queries', function (): void {

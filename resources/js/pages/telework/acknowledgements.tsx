@@ -8,6 +8,7 @@ import AckSummary from '@/components/telework/ack-summary';
 import PageHeader from '@/components/page-header';
 import { useChosenPeople } from '@/hooks/use-chosen-people';
 import { describeDate } from '@/lib/calendar-date';
+import { liveAll } from '@/lib/telework/acknowledgements';
 import type {
     AckAllMatching,
     AckCommitteeMember,
@@ -39,7 +40,8 @@ export default function Acknowledgements({
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';
     const choice = useChosenPeople(document.id);
-    const [all, setAll] = useState<AckAllMatching | null>(null);
+    const [chosenAll, setAll] = useState<AckAllMatching | null>(null);
+    const all = liveAll(chosenAll, filters);
     const clear = () => {
         setAll(null);
         choice.clear();

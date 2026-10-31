@@ -31,6 +31,45 @@ final readonly class AckAudience
     }
 
     /**
+     * The audiences of several documents, in a fixed number of queries whatever their number: the people of all their
+     * centers are read at once and split by center.
+     *
+     * @param  list<TeleworkDocument>  $documents
+     * @return array<string, AckAudienceIds> by document id
+     */
+    public function ofMany(array $documents): array
+    {
+        $centers = fn (DocumentKind $kind): array => array_values(array_unique(array_map(fn (TeleworkDocument $document): string => $document->work_center_id, array_filter($documents, fn (TeleworkDocument $document): bool => $document->kind === $kind))));
+        $policyCenters = $centers(DocumentKind::Policy);
+        $riskCenters = $centers(DocumentKind::RiskInformation);
+
+        $active = $policyCenters === [] ? [] : $this->roster->activeIdsInMany($policyCenters);
+        $rostered = [];
+        $seated = [];
+
+        if ($riskCenters !== []) {
+            foreach (Teleworker::query()->whereIn('work_center_id', $riskCenters)->where('status', TeleworkerStatus::Active)->get(['employee_id', 'work_center_id']) as $period) {
+                $rostered[$period->work_center_id][] = $period->employee_id;
+            }
+            $reviewers = array_map(fn (MemberSummary $member): int => $member->userId, $this->members->reviewers());
+            foreach (CommitteeAssignment::query()->whereIn('work_center_id', $riskCenters)->whereIn('user_id', $reviewers)->get(['user_id', 'work_center_id']) as $seat) {
+                $seated[$seat->work_center_id][] = $seat->user_id;
+            }
+        }
+
+        $audiences = [];
+        foreach ($documents as $document) {
+            $audiences[$document->id] = match ($document->kind) {
+                DocumentKind::Policy => new AckAudienceIds($active[$document->work_center_id] ?? [], []),
+                DocumentKind::RiskInformation => new AckAudienceIds($rostered[$document->work_center_id] ?? [], $seated[$document->work_center_id] ?? []),
+                default => new AckAudienceIds([], []),
+            };
+        }
+
+        return $audiences;
+    }
+
+    /**
      * The requests of a document that still count: those of the people expected today.
      *
      * @return Builder<Acknowledgement>

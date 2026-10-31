@@ -1,4 +1,4 @@
-import type { AckFilters, AckProgress } from '@/types';
+import type { AckAllMatching, AckFilters, AckProgress } from '@/types';
 
 /** The share of the people expected who confirmed, as a whole percent; nobody expected is 0, never NaN. */
 export function percent(progress: AckProgress): number {
@@ -22,4 +22,17 @@ export function ackQuery(
         ...(filters.status === 'all' ? {} : { status: filters.status }),
         ...(q === '' ? {} : { q }),
     };
+}
+
+/**
+ * The "all the pending ones found" choice, only while the list still shows what it was made on: the pending view with the
+ * same search. Change either and the choice is gone, so what is submitted always matches what is on screen.
+ */
+export function liveAll(
+    all: AckAllMatching | null,
+    filters: AckFilters,
+): AckAllMatching | null {
+    return all !== null && filters.status === 'pending' && all.q === filters.q
+        ? all
+        : null;
 }

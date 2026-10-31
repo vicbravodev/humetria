@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     ackQuery,
+    liveAll,
     percent,
     progressText,
 } from '@/lib/telework/acknowledgements';
@@ -37,5 +38,20 @@ describe('ackQuery', () => {
             status: 'pending',
             q: 'ana',
         });
+    });
+});
+
+describe('liveAll', () => {
+    const all = { q: 'ana', count: 4 };
+
+    it('keeps the choice while the pending view shows the same search', () => {
+        expect(liveAll(all, { status: 'pending', q: 'ana' })).toBe(all);
+    });
+
+    it('drops it when the search or the view changes, or when there is none', () => {
+        expect(liveAll(all, { status: 'pending', q: 'ana r' })).toBeNull();
+        expect(liveAll(all, { status: 'all', q: 'ana' })).toBeNull();
+        expect(liveAll(all, { status: 'acknowledged', q: 'ana' })).toBeNull();
+        expect(liveAll(null, { status: 'pending', q: 'ana' })).toBeNull();
     });
 });

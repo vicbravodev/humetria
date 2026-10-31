@@ -32,7 +32,7 @@ final class DocumentController extends Controller
 {
     public function __construct(private readonly VisibleCenters $visible, private readonly WorkCenters $workCenters) {}
 
-    public function index(Request $request, AckProgress $progress): Response
+    public function index(Request $request, AckProgress $acknowledgements): Response
     {
         Gate::authorize('view-telework');
         $centers = [];
@@ -58,6 +58,8 @@ final class DocumentController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $progress = $acknowledgements->forDocuments(array_values($page->items()));
+
         return Inertia::render('telework/documents', [
             'documents' => $page->through(fn (TeleworkDocument $document): array => [
                 'id' => $document->id,
@@ -67,7 +69,7 @@ final class DocumentController extends Controller
                 'publishedOn' => $document->created_at->setTimezone(config()->string('app.display_timezone'))->toDateString(),
                 'coveredItems' => $document->covered_items,
                 'missingItems' => array_values(array_diff($document->kind->coverableItems(), $document->covered_items)),
-                'acknowledgements' => $document->kind->needsAcknowledgement() ? $progress->of($document) : null,
+                'acknowledgements' => $document->kind->needsAcknowledgement() ? $progress[$document->id] : null,
             ]),
             'filters' => [
                 'center' => $selected === null ? null : ['value' => $selected->id, 'label' => $selected->name],

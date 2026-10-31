@@ -31,6 +31,17 @@ final class CompanyRoster implements Roster
         return array_values(Employee::query()->where('work_center_id', $workCenterId)->whereNull('deactivated_at')->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all());
     }
 
+    public function activeIdsInMany(array $workCenterIds): array
+    {
+        $byCenter = array_fill_keys($workCenterIds, []);
+
+        foreach (Employee::query()->whereIn('work_center_id', $workCenterIds)->whereNull('deactivated_at')->get(['id', 'work_center_id']) as $employee) {
+            $byCenter[$employee->work_center_id][] = $employee->id;
+        }
+
+        return $byCenter;
+    }
+
     public function find(string $employeeId): ?RosterEntry
     {
         $employee = $this->query()->find($employeeId);

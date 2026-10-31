@@ -47,6 +47,19 @@ it('lists only the ids of the active people of a work center', function (): void
     expect(resolve(Roster::class)->activeIdsIn($this->plant->id))->toBe([]);
 });
 
+it('lists the ids of the active people of several work centers at once, by center', function (): void {
+    $other = WorkCenter::factory()->for($this->tenant)->create();
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+    $a = rosterEmployee($this->tenant, $this->plant, $this->production);
+    $b = rosterEmployee($this->tenant, $other, $this->production);
+    rosterEmployee($this->tenant, $other, $this->production, ['deactivated_at' => now()]);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->activeIdsInMany([$this->plant->id, $other->id, $empty->id]))->toBe([$this->plant->id => [$a->id], $other->id => [$b->id], $empty->id => []]);
+    workIn(Tenant::factory()->create());
+    expect(resolve(Roster::class)->activeIdsInMany([$this->plant->id]))->toBe([$this->plant->id => []]);
+});
+
 it('leaves out deactivated people and other work centers', function (): void {
     rosterEmployee($this->tenant, $this->plant, $this->production, ['deactivated_at' => now()]);
     rosterEmployee($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), $this->production);
