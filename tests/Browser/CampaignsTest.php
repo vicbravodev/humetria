@@ -72,6 +72,25 @@ it('opens the new-evaluation assistant at its second step from a work center', f
         ->assertSee('A quién se aplica la Guía III'));
 })->with($looks);
 
+it('sets both header actions on one row beside the sidebar, and stacks them whole on a phone', function (bool $dark): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 20);
+    $page = visitPage('campaigns/index', '/admin/acme/campaigns', $dark);
+    // "row" when both actions share a row (tops within 2 px); "stacked" when each spans the whole header.
+    $layout = <<<'JS'
+        () => {
+            const header = document.querySelector('header:has(h1)').getBoundingClientRect();
+            const [trauma, evaluation] = ['Guía I por acontecimiento', 'Nueva evaluación'].map((name) => [...document.querySelectorAll('header:has(h1) a, header:has(h1) button')].find((action) => action.textContent === name).getBoundingClientRect());
+            if (Math.abs(trauma.top - evaluation.top) <= 2) return 'row';
+            return [trauma, evaluation].every((action) => Math.abs(action.width - header.width) <= 1) ? 'stacked' : 'ragged';
+        }
+        JS;
+
+    foreach ([375 => 'stacked', 768 => 'row', 1024 => 'row', 1280 => 'row'] as $width => $expected) {
+        resizeTo($page, $width)->assertScript($layout, $expected)->assertScript(spilledOut(), '');
+    }
+})->with(['light' => false, 'dark' => true]);
+
 it('pages the evaluations and the work centers', function (): void {
     $tenant = campaignsCompany();
 
