@@ -23,14 +23,20 @@ final readonly class IssuePortalLink
     public function handle(string $employeeId, bool $revoke = false): string
     {
         return DB::transaction(function () use ($employeeId, $revoke): string {
-            $link = PortalLink::query()->where('employee_id', $employeeId)->lockForUpdate()->first()
-                ?? new PortalLink(['tenant_id' => $this->tenant->id(), 'employee_id' => $employeeId, 'version' => 1]);
+            // `createOrFirst`: if two first issues race, the loser reads the winner's row instead of failing on the unique index.
+            $tenantId = $this->tenant->id();
+            $created = PortalLink::query()->createOrFirst(
+                ['employee_id' => $employeeId],
+                ['tenant_id' => $tenantId, 'version' => 1, 'token_hash' => PortalLink::hashToken(PortalLink::tokenFor($tenantId, $employeeId, 1, config()->string('app.key')))],
+            );
+            $isNew = $created->wasRecentlyCreated;
+            $link = PortalLink::query()->whereKey($created->id)->lockForUpdate()->firstOrFail();
 
-            if ($revoke && $link->exists) {
+            if ($revoke && ! $isNew) {
                 $link->version++;
             }
 
-            $token = ($link->exists && ! $revoke ? $link->token() : null)
+            $token = (! $isNew && ! $revoke ? $link->token() : null)
                 ?? PortalLink::tokenFor($link->tenant_id, $employeeId, $link->version, config()->string('app.key'));
             $link->token_hash = PortalLink::hashToken($token);
             $link->save();

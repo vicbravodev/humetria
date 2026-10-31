@@ -255,3 +255,15 @@ function portalRequest(string $token): Request
 
     return $request;
 }
+
+it('issues one link when a first issue meets the row another request just inserted: the insert loses on the unique index and reads that row', function (): void {
+    $other = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    // The row exists but not for this process's lookup: `createOrFirst` inserts first, so the unique index is what decides.
+    $winner = PortalLink::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $other->id]);
+
+    $token = resolve(IssuePortalLink::class)->handle($other->id);
+
+    expect(PortalLink::query()->where('employee_id', $other->id)->count())->toBe(1)
+        ->and(PortalLink::query()->where('employee_id', $other->id)->value('id'))->toBe($winner->id)
+        ->and($token)->toBe(PortalLink::tokenFor($this->tenant->id, $other->id, 1, config()->string('app.key')));
+});
