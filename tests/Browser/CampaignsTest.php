@@ -545,3 +545,17 @@ it('opens a shared report, or says the link is no longer available', function (b
         ->assertSee('Este enlace ya no está disponible')
         ->assertDontSee('Acme');
 })->with($looks);
+
+it('offers no new date once the last day has passed, but still lets hr close it', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create([
+        'tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'closes_on' => now()->subDays(2)->toDateString(),
+    ]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertDontSee('Extender fecha')
+        ->click('[aria-label="Más acciones"]')
+        ->assertSee('Cerrar evaluación')
+        ->assertNoJavaScriptErrors();
+});
