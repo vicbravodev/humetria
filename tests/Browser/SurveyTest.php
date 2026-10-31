@@ -5,7 +5,11 @@ declare(strict_types=1);
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Contracts\Encryption\Encrypter;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 $looks = [
     'light desktop' => [false, false],
@@ -118,7 +122,7 @@ it('lets the employee answer Guía I and Guía II from the phone, one question p
         ->assertNoJavaScriptErrors();
 
     $response = App\Modules\Responses\Models\AnonymousResponse::query()->withoutGlobalScopes()->sole();
-    $screening = App\Modules\Responses\Models\TraumaScreening::query()->withoutGlobalScopes()->sole();
+    $screening = TraumaScreening::query()->withoutGlobalScopes()->sole();
 
     expect($screening->employee_id)->toBe($participant->employee_id)
         ->and($screening->requires_clinical_assessment)->toBeFalse()
@@ -290,3 +294,43 @@ it('says the survey is confidential before the first question, in the header and
         ->assertSeeIn('main[class]', 'Nadie de su empresa puede ver lo que contesta.')
         ->assertScript('() => [...document.querySelectorAll("main fieldset label")].every((option) => option.getBoundingClientRect().height >= 56)');
 })->with(['desktop' => false, 'mobile' => true]);
+
+it('takes a submission whose session expired back to the survey with the answers kept, and sends it again', function (): void {
+    invitedPerson(['nom035.guide-i']);
+    $page = visit('/survey/the-token')->click('Comenzar')->click('Empezar');
+    $page->script(ANSWER_SCREEN);
+    $page->click('Siguiente')->script(ANSWER_SCREEN);
+
+    // The session runs out while the person answers. The app answers in this same process, whose session store still
+    // holds the last request's data in memory: forgetting it leaves only what the expired handler gives back, as a new
+    // PHP process would. The real CSRF check runs, as in production (it steps aside in unit tests), for a browser that
+    // sends no Fetch Metadata (Safari before 16.4): only the token vouches for the request, and it died with the session.
+    $this->travel((int) config('session.lifetime') + 1)->minutes();
+    app('session')->driver()->flush();
+    app()->bind(PreventRequestForgery::class, fn (Application $app) => new class($app, $app->make(Encrypter::class)) extends PreventRequestForgery
+    {
+        public function handle($request, Closure $next)
+        {
+            $request->headers->remove('Sec-Fetch-Site');
+
+            return parent::handle($request, $next);
+        }
+
+        protected function runningUnitTests()
+        {
+            return false;
+        }
+    });
+
+    $page->click('Enviar respuestas')
+        ->assertSee('La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.')
+        ->assertPathIs('/survey/the-token')
+        // Still on the last screen, every answer in place.
+        ->assertSee('Pregunta 6 de 6')
+        ->assertScript('() => [...document.querySelectorAll("fieldset")].every((fieldset) => fieldset.querySelector("input[type=radio]:checked")?.value === "no")')
+        ->click('Enviar respuestas')
+        ->assertSee('Gracias, terminó')
+        ->assertNoJavaScriptErrors();
+
+    expect(TraumaScreening::query()->withoutGlobalScopes()->count())->toBe(1);
+});
