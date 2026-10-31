@@ -7,8 +7,11 @@ namespace App\Modules\Telework\Models;
 use App\Concerns\BelongsToCurrentTenant;
 use App\Modules\Telework\Enums\ChecklistStatus;
 use Carbon\CarbonImmutable;
+use Database\Factories\Telework\ChecklistFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -26,9 +29,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable $updated_at
  */
 #[Fillable(['tenant_id', 'work_center_id', 'version', 'status', 'published_at', 'published_by'])]
+#[UseFactory(ChecklistFactory::class)]
 final class Checklist extends Model
 {
-    use BelongsToCurrentTenant, HasVersion4Uuids;
+    /** @use HasFactory<ChecklistFactory> */
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
 
     /**
      * @return HasMany<ChecklistQuestion, $this>
