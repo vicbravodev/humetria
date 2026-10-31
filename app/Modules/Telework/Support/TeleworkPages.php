@@ -59,7 +59,7 @@ final readonly class TeleworkPages
         $people = $this->headcounts($ids);
         $pending = $this->pendingReviews($ids);
 
-        return ['centers' => $page->through(fn (WorkCenterSummary $center): array => $this->props([
+        return ['centers' => $page->through(fn (WorkCenterSummary $center): array => [
             'id' => $center->id,
             'name' => $center->name,
             'activity' => $center->mainActivity,
@@ -67,7 +67,7 @@ final readonly class TeleworkPages
             'aspirants' => $people[$center->id]['aspirants'] ?? 0,
             'pendingReviews' => $pending[$center->id] ?? 0,
             ...$this->progress($rows[$center->id] ?? []),
-        ]))];
+        ])];
     }
 
     /**
@@ -273,7 +273,7 @@ final readonly class TeleworkPages
      * The roster page: active people first, with where each of their workplaces stands. RH also gets the 5.1 personal
      * data; the Comisión does not (criterios C-06, C-18).
      *
-     * @return LengthAwarePaginator<int, array<string, mixed>>
+     * @return LengthAwarePaginator<int, array{id: string, name: string, jobTitle: string, percentage: int, status: string, workplaces: list<array{id: string, status: string, statusLabel: string}>, href: string|null, maritalStatus?: string|null, contactPhone?: string|null, homeAddress?: string|null}>
      */
     private function people(mixed $tenant, WorkCenterSummary $center, bool $manage): LengthAwarePaginator
     {
@@ -288,7 +288,7 @@ final readonly class TeleworkPages
         return $page->through(function (Teleworker $person) use ($tenant, $manage, $names, $places, $reviews, $months, $states): array {
             $entry = $names[$person->employee_id] ?? null;
 
-            return $this->props([
+            return [
                 'id' => $person->id,
                 'name' => $entry === null ? '' : $entry->name,
                 'jobTitle' => $entry === null ? '' : $entry->jobTitle,
@@ -305,18 +305,7 @@ final readonly class TeleworkPages
                     'contactPhone' => $person->contact_phone,
                     'homeAddress' => $person->homeAddress($states),
                 ] : []),
-            ]);
+            ];
         });
-    }
-
-    /**
-     * A page prop as a plain map: what Inertia sends is not narrower than its keys.
-     *
-     * @param  array<string, mixed>  $props
-     * @return array<string, mixed>
-     */
-    private function props(array $props): array
-    {
-        return $props;
     }
 }
