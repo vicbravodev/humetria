@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\PublishChecklist;
 use App\Modules\Telework\Actions\RegisterCommittee;
 use App\Modules\Telework\Models\Checklist;
@@ -13,6 +14,10 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\ChecklistApplicationFactory;
+use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\WorkplaceFactory;
 
 $looks = [
     'light desktop' => [false, false],
@@ -154,3 +159,31 @@ it('tells a stale editor that the version was published meanwhile', function ():
         ->assertMissing('[aria-label="Quitar S1-02"]')
         ->assertNoJavaScriptErrors();
 });
+
+/** @return string The address of the portal of a person with one checklist to answer and one sent. */
+function portalAddress(): string
+{
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+    ChecklistApplicationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'street' => 'Calle Juárez'])->id]);
+    workIn($tenant);
+
+    return '/portal/'.resolve(IssuePortalLink::class)->handle($employee->id);
+}
+
+it('shows the person their portal with what is pending and what was sent', function (bool $dark, bool $mobile): void {
+    visitPage('telework/portal', portalAddress(), $dark, $mobile)
+        ->assertSee('Hola, Ana Ruiz')
+        ->assertSee('Por contestar')
+        ->assertSee('Pendiente de contestar')
+        ->assertSee('Ya enviado')
+        ->assertSee('En revisión de la Comisión');
+})->with($looks);
+
+it('tells a link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
+    visitPage('telework/portal', '/portal/not-a-link', $dark, $mobile)
+        ->assertSee('Este enlace no es válido');
+})->with($looks);

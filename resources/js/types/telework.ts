@@ -34,3 +34,18 @@ export type ChecklistQuestion = {
 };
 
 export type RequirementOption = { value: string; label: string };
+
+/** A checklist in a person's portal. `label` never says how the Comisión judged it. */
+export type PortalChecklist = {
+    id: string;
+    workplace: string;
+    section: number;
+    label: string;
+};
+
+export type PortalPending = {
+    /** Still to answer. */
+    checklists: PortalChecklist[];
+    /** Sent, waiting for the Comisión. */
+    sent: PortalChecklist[];
+};

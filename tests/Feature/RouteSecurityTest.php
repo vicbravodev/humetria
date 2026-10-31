@@ -33,6 +33,7 @@ function publicRouteNames(): array
         'invitations.accept', // guest: accepts the invitation; throttled, single-use token
         'survey.show', // guest: survey link from the email; the token is the credential; throttled
         'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
+        'portal.show', // guest: la persona teletrabajadora no tiene cuenta; el token es la credencial; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
     ];
 }
