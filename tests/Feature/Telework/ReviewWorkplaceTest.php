@@ -314,3 +314,26 @@ it('takes the sent list out of the inbox when a remote check decides the workpla
     $this->post(reviewUrl(), reviewForm())->assertSessionHasErrors(['application' => 'Esta lista ya fue revisada.']);
     expect(WorkplaceReview::query()->where('workplace_id', $this->workplace->id)->count())->toBe(2);
 })->with([ReviewDecision::Valid, ReviewDecision::NotValid]);
+
+it('tells which unique rule a visit lost a race on: the list decided meanwhile, or the authorization used meanwhile', function (string $lost, array $error): void {
+    $authorization = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $raced = false;
+    // Another member commits between this visit's checks and its insert: the database's unique index is what refuses.
+    WorkplaceReview::creating(function () use (&$raced, $lost, $authorization): void {
+        if ($raced) {
+            return;
+        }
+
+        $raced = true;
+        WorkplaceReview::factory()->create($lost === 'list'
+            ? ['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => $this->application->id, 'method' => 'checklist']
+            : ['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => null, 'method' => 'visit', 'visit_authorization_id' => $authorization->id, 'visited_on' => now()->toDateString()]);
+    });
+
+    $visit = fn () => resolve(ReviewWorkplace::class)->handle($this->workplace, null, ReviewDecision::Valid, '', null, null, $this->cora->id, $authorization, CarbonImmutable::now());
+
+    expect(reviewRejected($visit))->toBe($error);
+})->with([
+    'the list' => ['list', ['application' => 'Esta lista ya fue revisada.']],
+    'the authorization' => ['authorization', ['visit_authorization_id' => 'Esta autorización ya se usó en otra visita.']],
+]);

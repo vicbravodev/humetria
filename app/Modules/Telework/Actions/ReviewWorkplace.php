@@ -96,10 +96,11 @@ final readonly class ReviewWorkplace
 
                 return $review;
             });
-        } catch (UniqueConstraintViolationException) {
-            throw ValidationException::withMessages($authorization === null
-                ? ['application' => 'Esta lista ya fue revisada.']
-                : ['visit_authorization_id' => 'Esta autorización ya se usó en otra visita.']);
+        } catch (UniqueConstraintViolationException $race) {
+            // Two unique indexes: the list (decided by someone else meanwhile) and the visit's authorization (used meanwhile).
+            throw ValidationException::withMessages(str_contains($race->getMessage(), 'workplace_reviews_visit_authorization_id_unique')
+                ? ['visit_authorization_id' => 'Esta autorización ya se usó en otra visita.']
+                : ['application' => 'Esta lista ya fue revisada.']);
         }
     }
 
