@@ -28,7 +28,7 @@ export default function PortalDocumentCard({
                 </p>
                 <p className="mt-1 text-base">
                     Léalo y confirme que lo leyó. Queda constancia de la fecha,
-                    la hora y el dispositivo desde el que lo confirma.
+                    la hora y la dirección IP desde la que lo confirma.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                     <Button

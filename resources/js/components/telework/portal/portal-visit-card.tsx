@@ -28,7 +28,8 @@ export default function PortalVisitCard({
                 </p>
                 <p className="mt-1 text-base">
                     Solo irán con su permiso. Al autorizar, queda constancia de
-                    la fecha, la hora y el dispositivo desde el que lo confirma.
+                    la fecha, la hora y la dirección IP desde la que lo
+                    confirma.
                 </p>
                 <Button
                     className="mt-2 h-12 self-start text-base"
