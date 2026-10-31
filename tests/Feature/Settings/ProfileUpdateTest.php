@@ -53,6 +53,7 @@ test('email verification status is unchanged when the email address is unchanged
 });
 
 test('user can delete their account', function () {
+    Illuminate\Support\Facades\Log::spy();
     $user = User::factory()->create();
 
     $response = $this
@@ -67,6 +68,7 @@ test('user can delete their account', function () {
 
     $this->assertGuest();
     expect($user->fresh())->toBeNull();
+    Illuminate\Support\Facades\Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context = []): bool => $message === 'account.deleted' && $context === ['user_id' => $user->id])->once();
 });
 
 test('correct password must be provided to delete account', function () {

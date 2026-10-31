@@ -76,6 +76,8 @@ final class ProfileController extends Controller
             throw ValidationException::withMessages(['password' => 'No puedes borrar tu cuenta: hay registros que la ley obliga a conservar a tu nombre. Pide a la empresa que te quite el acceso.']);
         }
 
+        Log::info('account.deleted', ['user_id' => $user->id]);
+
         // Not `logout()`: it would save a new remember token, inserting the deleted user again.
         Auth::logoutCurrentDevice();
 
