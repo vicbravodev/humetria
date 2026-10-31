@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-037-STPS-2023 en Humetría
 
-Versión 0.2 (borrador para aprobación) · 30 de octubre de 2026 · Norma base: NOM-037-STPS-2023, DOF del 8 de junio de
+Versión 1 · 30 de octubre de 2026 · Norma base: NOM-037-STPS-2023, DOF del 8 de junio de
 2023, en vigor desde el 5 de diciembre de 2023 (versión de la lista de verificación en el sistema: `dof-2023-06-08`).
 
 Este documento explica **cómo aplica Humetría la NOM-037 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -11,9 +11,7 @@ norma cambia.
 **Este documento manda** sobre cualquier otro del repositorio en cuanto a cómo se interpreta la NOM-037. Si el código
 o un diseño lo contradicen, se corrige el código o el diseño, o se actualiza este documento con su justificación.
 
-> **Estado: borrador.** Los criterios marcados **⚑ Por decidir** son una propuesta y esperan la aprobación del usuario;
-> los demás se derivan directamente de la norma o de la interpretación oficial. Al aprobarse, el documento pasa a
-> versión 1.
+> **Estado: aprobado** por el usuario el 2026-10-30, incluidas sus decisiones (ver historial).
 
 Fuentes (copias en [`fuentes/`](fuentes/README.md)):
 
@@ -239,7 +237,7 @@ evidencia fotográfica)» [DOF, Apéndice 3, instrucción 3]
 pregunta a otra (tener extintor es favorable; tener cables expuestos, no). La tabla del anexo la fija con base en
 la condición del capítulo 7 que cada pregunta revisa. Esa tabla es solo **el valor inicial** de la lista base: como
 la lista es editable (C-07), la Comisión puede cambiar la respuesta favorable de cualquier pregunta.
-**⚑ Por decidir:** aprobar la tabla del anexo como valor inicial.
+**Decisión del usuario (2026-10-30):** se aprueba la tabla del anexo como valor inicial.
 
 ### C-11. La persona contesta; no decide · Norma + STPS
 
@@ -521,7 +519,7 @@ versiones (HTML, Word y PDF de la edición) y que [RC] no explica. Humetría no 
 
 ---
 
-## Anexo: respuesta favorable por pregunta (valor inicial, ⚑ propuesta)
+## Anexo: respuesta favorable por pregunta (valor inicial)
 
 Valor inicial de la lista base; la Comisión lo puede cambiar (C-07). Respuesta que **no** marca riesgo. Si la persona contesta la otra, la pregunta se marca (C-10). «Informativa»: no
 marca en ningún caso. «No aplica» nunca marca. Los criterios usados:
@@ -695,5 +693,6 @@ marca en ningún caso. «No aplica» nunca marca. Los criterios usados:
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 1 | 2026-10-30 | Aprobado: el usuario aprueba la tabla del anexo como valor inicial de la respuesta favorable. |
 | 0.2 | 2026-10-30 | Decisiones del usuario: lista editable desde el principio con versiones (C-07, C-10), periodicidad predefinida o propia con 12 meses por defecto (C-14), rol de la Comisión (C-17), política en PDF (C-19, C-21), solo registro de capacitación (C-24), consentimiento base (C-25). Un solo PR para toda la NOM-037. Queda por aprobar el anexo. |
 | 0.1 | 2026-10-30 | Borrador con base en el DOF del 08/06/2023, las respuestas a los comentarios (DOF 15/05/2023), la LFT vigente, la NOM-019 y la LFPDPPP. Pendiente de aprobación de los criterios marcados ⚑. |
