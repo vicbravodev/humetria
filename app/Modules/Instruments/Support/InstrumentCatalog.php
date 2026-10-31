@@ -39,10 +39,15 @@ final readonly class InstrumentCatalog implements Instruments
         return $this->traumaScreener->screen($answers);
     }
 
-    public function scoreRisk(string $key, array $answers): RiskScore
+    public function scoreRisk(string $key, array $answers, string $version): RiskScore
     {
         if ($key !== GuideTwo::KEY && $key !== GuideThree::KEY) {
             throw new InvalidArgumentException("[{$key}] is not scored by risk level.");
+        }
+
+        // One edition of the norm is transcribed so far; answers of another are never scored with its tables.
+        if ($version !== $this->definition($key)->version) {
+            throw new InvalidArgumentException("No scoring tables for [{$key}] in version [{$version}].");
         }
 
         $this->validate($key, $answers);

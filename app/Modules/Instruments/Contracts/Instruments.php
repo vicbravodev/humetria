@@ -39,13 +39,15 @@ interface Instruments
     public function screenTrauma(array $answers): TraumaOutcome;
 
     /**
-     * Scores one NOM-035 Guía II or III by domain, category and total (II.3, III.3). Validates the answers first.
+     * Scores one NOM-035 Guía II or III by domain, category and total (II.3, III.3), with the tables of the version
+     * of the instrument it was answered in. Validates the answers first.
      *
      * @param  array<array-key, mixed>  $answers
      *
-     * @throws InvalidArgumentException for another instrument or answers that are not complete and coherent.
+     * @throws InvalidArgumentException for another instrument, a version it has no tables of, or answers that are not
+     *                                  complete and coherent.
      */
-    public function scoreRisk(string $key, array $answers): RiskScore;
+    public function scoreRisk(string $key, array $answers, string $version): RiskScore;
 
     /**
      * The points one answer gives one item of a Guía II or III (Tablas 2 and 5): 0 to 4, where 3 and 4 are the side
