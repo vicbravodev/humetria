@@ -223,6 +223,18 @@ it('says where each work center stands with its NOM-035 evaluations', function (
             ]));
 });
 
+it('keeps saying the last evaluation is overdue while the next one is only a draft (C-26)', function (): void {
+    $this->travelTo('2026-11-03 18:00:00');
+    $tenant = Tenant::factory()->create();
+    $center = WorkCenter::factory()->for($tenant)->create();
+    Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'closed_at' => '2024-11-02 18:00:00']);
+    Campaign::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.work-centers.index', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('workCenters.data.0.evaluation', ['state' => 'overdue', 'day' => '2 nov 2026']));
+});
+
 it('never reads the areas nor the evaluations of another company', function (): void {
     $tenant = Tenant::factory()->create();
     $center = WorkCenter::factory()->for($tenant)->create();
