@@ -1,7 +1,8 @@
 import { Form } from '@inertiajs/react';
+import { Send, UserPlus } from 'lucide-react';
 import { useState } from 'react';
+import MemberRoleChoice from '@/components/tenancy/member-role-choice';
 import TenantField from '@/components/tenancy/tenant-field';
-import MemberRoleField from '@/components/tenancy/member-role-field';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -18,9 +19,11 @@ import type { RoleOption } from '@/types';
 
 export default function InviteMemberDialog({
     tenantSlug,
+    tradeName,
     roles,
 }: {
     tenantSlug: string;
+    tradeName: string;
     roles: RoleOption[];
 }) {
     const [open, setOpen] = useState(false);
@@ -28,13 +31,16 @@ export default function InviteMemberDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>Invitar</Button>
+                <Button>
+                    <UserPlus aria-hidden />
+                    Invitar
+                </Button>
             </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>Invitar a la empresa</DialogTitle>
+            <DialogContent className="sm:max-w-[540px]">
+                <DialogTitle>Invitar a {tradeName}</DialogTitle>
                 <DialogDescription>
-                    Le llegará un correo con un enlace de un solo uso, válido 7
-                    días.
+                    Le llegará un correo con un enlace de un solo uso, válido
+                    por 7 días.
                 </DialogDescription>
                 <Form
                     {...store.form(tenantSlug)}
@@ -60,9 +66,8 @@ export default function InviteMemberDialog({
                                     maxLength={255}
                                     error={errors['email']}
                                 />
-                                <MemberRoleField
+                                <MemberRoleChoice
                                     roles={roles}
-                                    defaultValue="hr"
                                     error={errors['role']}
                                 />
                             </div>
@@ -71,7 +76,11 @@ export default function InviteMemberDialog({
                                     <Button variant="outline">Cancelar</Button>
                                 </DialogClose>
                                 <Button type="submit" disabled={processing}>
-                                    {processing && <Spinner />}
+                                    {processing ? (
+                                        <Spinner />
+                                    ) : (
+                                        <Send aria-hidden />
+                                    )}
                                     Enviar invitación
                                 </Button>
                             </DialogFooter>

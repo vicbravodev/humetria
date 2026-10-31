@@ -1,4 +1,6 @@
 import { Form, Link } from '@inertiajs/react';
+import { Link2Off } from 'lucide-react';
+import AuthHeading from '@/components/auth-heading';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
@@ -12,31 +14,36 @@ export default function InvitationNotice(props: Props) {
     switch (props.state) {
         case 'invalid':
             return (
-                <p className="text-center text-sm">
-                    Este enlace ya no es válido. Pide uno nuevo al administrador
-                    de Humetría.
-                </p>
+                <AuthHeading
+                    icon={Link2Off}
+                    title="Este enlace ya no es válido"
+                >
+                    Venció, ya se usó o quien lo envió lo canceló. Pide uno
+                    nuevo a quien te invitó.
+                </AuthHeading>
             );
         case 'sign_in':
             return (
-                <div className="grid gap-6">
-                    <p className="text-center text-sm">
-                        Ya tienes una cuenta en Humetría. Inicia sesión para
-                        unirte a {props.trade_name}.
-                    </p>
+                <>
+                    <AuthHeading title="Ya tienes una cuenta en Humetría">
+                        Inicia sesión para unirte a {props.trade_name}.
+                    </AuthHeading>
                     <Button asChild className="w-full">
                         <Link href={login()}>Iniciar sesión</Link>
                     </Button>
-                </div>
+                </>
             );
         case 'confirm':
             return (
-                <Form {...accept.form(props.token)} className="grid gap-6">
+                <Form
+                    {...accept.form(props.token)}
+                    className="flex flex-col gap-7"
+                >
                     {({ processing }) => (
                         <>
-                            <p className="text-center text-sm">
-                                Únete a {props.trade_name}
-                            </p>
+                            <AuthHeading title={`Únete a ${props.trade_name}`}>
+                                Entrarás con tu cuenta de Humetría.
+                            </AuthHeading>
                             <Button
                                 type="submit"
                                 className="w-full"
@@ -53,14 +60,14 @@ export default function InvitationNotice(props: Props) {
             return (
                 <Form
                     {...switchAccount.form(props.token)}
-                    className="grid gap-6"
+                    className="flex flex-col gap-7"
                 >
                     {({ processing }) => (
                         <>
-                            <p className="text-center text-sm">
+                            <AuthHeading title="Entraste con otra cuenta">
                                 Esta invitación es para {props.email}. Cierra
                                 sesión para continuar.
-                            </p>
+                            </AuthHeading>
                             <Button
                                 type="submit"
                                 className="w-full"

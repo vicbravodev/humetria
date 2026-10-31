@@ -1,3 +1,4 @@
+import Initials from '@/components/humetria/initials';
 import {
     Table,
     TableBody,
@@ -18,7 +19,7 @@ export default function SampleTable({ people }: { people: SampledPerson[] }) {
             </TableCaption>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead>Persona</TableHead>
                     <TableHead>Área</TableHead>
                     <TableHead>Género</TableHead>
                 </TableRow>
@@ -26,8 +27,11 @@ export default function SampleTable({ people }: { people: SampledPerson[] }) {
             <TableBody>
                 {people.map((person) => (
                     <TableRow key={person.id}>
-                        <TableCell className="font-medium">
-                            {person.name}
+                        <TableCell>
+                            <span className="flex items-center gap-2.5 font-medium">
+                                <Initials name={person.name} />
+                                {person.name}
+                            </span>
                         </TableCell>
                         <TableCell className="text-sm">{person.area}</TableCell>
                         <TableCell className="text-sm">

@@ -90,7 +90,7 @@ it('tells the owner how the evaluation closed: participation, risk levels, the d
         ->toContain('Lo que sigue')
         ->toContain('2 personas requieren valoración clínica (Guía I)')
         ->toContain('Completa el informe 7.7 con las conclusiones y las acciones de intervención.')
-        ->toContain('Recibes este aviso porque eres el owner de Autopartes Demo.')
+        ->toContain('Recibes este aviso porque eres el dueño de Autopartes Demo.')
         ->toContain('alt="Humetría"');
 });
 

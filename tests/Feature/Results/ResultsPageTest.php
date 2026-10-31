@@ -88,6 +88,7 @@ it('shows a closed evaluation by risk level: the center, its categories and doma
                 'closedOn' => '19 nov 2026',
                 'workers' => 30,
                 'sampleSize' => null,
+                'instruments' => ['Guía I', 'Guía II'],
             ])
             ->where('guide', ['key' => 'nom035.guide-ii', 'title' => 'Guía II'])
             ->where('participation', ['invited' => 12, 'answered' => 11])
@@ -172,6 +173,7 @@ it('shows a Guía I campaign with its screenings only', function (): void {
         ->get(route('tenant.campaigns.results', [$this->tenant, $trauma->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('campaign.kindLabel', 'Guía I por acontecimiento')
+            ->where('campaign.instruments', ['Guía I'])
             ->where('guide', null)
             ->where('results', null)
             ->where('trauma', ['answered' => 3, 'requiring' => 2]));
@@ -230,7 +232,7 @@ it('reads the results with a fixed number of queries, however many answered', fu
     $url = route('tenant.campaigns.results', [$this->tenant, $this->evaluation->id]);
     $this->get($url);
 
-    $this->expectsDatabaseQueryCount(15);
+    $this->expectsDatabaseQueryCount(16);
 
     $this->get($url)->assertOk();
 })->with([5, 15]);

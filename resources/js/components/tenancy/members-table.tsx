@@ -1,35 +1,41 @@
-import { Badge } from '@/components/ui/badge';
-import MemberRowActions from '@/components/tenancy/member-row-actions';
+import MemberInvitationRow from '@/components/tenancy/member-invitation-row';
+import MemberRowView from '@/components/tenancy/member-row';
 import {
     Table,
     TableBody,
     TableCaption,
-    TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { MemberRow, RoleOption } from '@/types';
+import type {
+    MemberInvitationRow as Invitation,
+    MemberRow,
+    RoleOption,
+} from '@/types';
 
+/** Who has access, then the invitations still open, in one table (pantallas: Usuarios). */
 export default function MembersTable({
     tenantSlug,
     members,
+    invitations,
     roles,
 }: {
     tenantSlug: string;
     members: MemberRow[];
+    invitations: Invitation[];
     roles: RoleOption[];
 }) {
     return (
         <Table>
             <TableCaption className="sr-only">
-                Personas con acceso a la empresa
+                Personas con acceso a la empresa e invitaciones sin aceptar
             </TableCaption>
             <TableHeader>
                 <TableRow>
                     <TableHead>Persona</TableHead>
                     <TableHead>Rol</TableHead>
-                    <TableHead>Desde</TableHead>
+                    <TableHead>Acceso</TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>
@@ -37,46 +43,19 @@ export default function MembersTable({
             </TableHeader>
             <TableBody>
                 {members.map((member) => (
-                    <TableRow key={member.id}>
-                        <TableCell className="whitespace-normal">
-                            <p className="font-medium">
-                                {member.name}
-                                {member.is_you && (
-                                    <span className="text-muted-foreground">
-                                        {' '}
-                                        (tú)
-                                    </span>
-                                )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                                {member.email}
-                            </p>
-                        </TableCell>
-                        <TableCell>
-                            <Badge
-                                variant={
-                                    member.role === 'owner'
-                                        ? 'default'
-                                        : 'secondary'
-                                }
-                            >
-                                {member.role_label}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                            {member.since}
-                        </TableCell>
-                        <TableCell className="w-px text-right">
-                            {/* The owner is changed from the superadmin's console, never here. */}
-                            {member.role !== 'owner' && (
-                                <MemberRowActions
-                                    tenantSlug={tenantSlug}
-                                    member={member}
-                                    roles={roles}
-                                />
-                            )}
-                        </TableCell>
-                    </TableRow>
+                    <MemberRowView
+                        key={member.id}
+                        tenantSlug={tenantSlug}
+                        member={member}
+                        roles={roles}
+                    />
+                ))}
+                {invitations.map((invitation) => (
+                    <MemberInvitationRow
+                        key={invitation.id}
+                        tenantSlug={tenantSlug}
+                        invitation={invitation}
+                    />
                 ))}
             </TableBody>
         </Table>

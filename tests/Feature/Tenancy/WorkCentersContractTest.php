@@ -28,7 +28,7 @@ it('pages the company\'s work centers in use, by name', function (): void {
     request()->query->set('centers', 2);
 
     expect(resolve(WorkCenters::class)->activePage(perPage: 1, pageName: 'centers')->items())
-        ->toEqual([new WorkCenterSummary($north->id, 'Norte', false)]);
+        ->toEqual([new WorkCenterSummary($north->id, 'Norte', false, 'Manufactura de autopartes')]);
 });
 
 it('finds a work center in use of the company, and no archived or other company\'s one', function (): void {
@@ -38,7 +38,8 @@ it('finds a work center in use of the company, and no archived or other company\
     $other = WorkCenter::factory()->for(Tenant::factory()->create())->create();
     workIn($tenant);
 
-    expect(resolve(WorkCenters::class)->findActive($north->id))->toEqual(new WorkCenterSummary($north->id, 'Norte', false))
+    expect(resolve(WorkCenters::class)->findActive($north->id))->toEqual(new WorkCenterSummary($north->id, 'Norte', false, 'Manufactura de autopartes'))
+        ->and(resolve(WorkCenters::class)->findActive($north->id)?->mainActivity)->toBe('Manufactura de autopartes')
         ->and(resolve(WorkCenters::class)->findActive($archived->id))->toBeNull()
         ->and(resolve(WorkCenters::class)->findActive($other->id))->toBeNull();
 });

@@ -5,8 +5,10 @@ import {
     Monitor,
     Moon,
     PanelLeft,
+    Plus,
     Settings,
     Sun,
+    Upload,
 } from 'lucide-react';
 import type { Appearance } from '@/hooks/use-appearance';
 import {
@@ -18,6 +20,8 @@ import {
 } from '@/lib/app-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
+import { index as campaigns } from '@/routes/tenant/campaigns';
+import { create as importCsv } from '@/routes/tenant/employees/import';
 
 export type PaletteCommand = Command & {
     group: string;
@@ -43,7 +47,39 @@ const THEMES: { id: Appearance; label: string; icon: LucideIcon }[] = [
     { id: 'system', label: 'Usar el tema del sistema', icon: Monitor },
 ];
 
-/** What the ⌘K palette offers: the pages this person can open, the theme and the sidebar. */
+/** What a role may start from the palette inside a company: a new evaluation, loading employees. */
+function companyActions(
+    tenant: NavTenant | null,
+    visit: Options['actions']['visit'],
+): PaletteCommand[] {
+    if (tenant === null) {
+        return [];
+    }
+
+    const newEvaluation: PaletteCommand = {
+        id: 'new-evaluation',
+        label: 'Nueva evaluación',
+        keywords: ['nom-035', 'campaña', 'lanzar'],
+        group: 'Acciones',
+        icon: Plus,
+        run: () => visit(campaigns(tenant.slug)),
+    };
+    const importEmployees: PaletteCommand = {
+        id: toUrl(importCsv(tenant.slug)),
+        label: 'Cargar empleados desde CSV',
+        keywords: ['importar', 'plantilla', 'personal'],
+        group: 'Acciones',
+        icon: Upload,
+        run: () => visit(importCsv(tenant.slug)),
+    };
+
+    return [
+        ...(tenant.can.manage_campaigns ? [newEvaluation] : []),
+        ...(tenant.can.manage_organization ? [importEmployees] : []),
+    ];
+}
+
+/** What the ⌘K palette offers: what this person can start, the pages they can open, the theme and the sidebar. */
 export function paletteCommands({
     isSuperadmin,
     tenant,
@@ -58,6 +94,7 @@ export function paletteCommands({
     ];
 
     return [
+        ...companyActions(tenant, actions.visit),
         ...pages.map(({ title, href, icon }) => ({
             id: toUrl(href),
             label: title,

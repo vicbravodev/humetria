@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Models;
 
+use App\Concerns\SearchesText;
 use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Enums\TenantView;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +43,7 @@ use Illuminate\Database\Query\Builder;
 final class Tenant extends Model
 {
     /** @use HasFactory<TenantFactory> */
-    use HasFactory, HasVersion4Uuids;
+    use HasFactory, HasVersion4Uuids, SearchesText;
 
     public const int TRIAL_DAYS = 14;
 
@@ -61,6 +64,26 @@ final class Tenant extends Model
         }
 
         return now()->lessThan($trialEndsAt) ? TenantStatus::Trial : TenantStatus::TrialEnded;
+    }
+
+    /**
+     * The companies in a view of the console, by the same dates status() reads.
+     *
+     * @param  EloquentBuilder<self>  $query
+     */
+    public function scopeInView(EloquentBuilder $query, TenantView $view): void
+    {
+        $trialCutoff = now()->subDays(self::TRIAL_DAYS);
+
+        match ($view) {
+            TenantView::All => null,
+            TenantView::Deactivated => $query->whereNotNull('deactivated_at'),
+            TenantView::Active => $query->whereNull('deactivated_at')->where('active_until', '>', now()),
+            TenantView::Trial => $query->whereNull('deactivated_at')->whereNull('active_until')->where('trial_started_at', '>', $trialCutoff),
+            TenantView::Expired => $query->whereNull('deactivated_at')->where(fn (EloquentBuilder $expired) => $expired
+                ->where('active_until', '<=', now())
+                ->orWhere(fn (EloquentBuilder $ended) => $ended->whereNull('active_until')->where('trial_started_at', '<=', $trialCutoff))),
+        };
     }
 
     public function trialEndsAt(): ?CarbonImmutable

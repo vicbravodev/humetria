@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
+import SurveyDone from '@/components/campaigns/survey/survey-done';
 import SurveyFlow from '@/components/campaigns/survey/survey-flow';
 import SurveyShell from '@/components/campaigns/survey/survey-shell';
 import SurveyUnavailableNotice from '@/components/campaigns/survey/survey-unavailable';
@@ -33,6 +34,15 @@ export default function Survey({
         }
     }, [usable]);
 
+    if (unavailable === 'done') {
+        return (
+            <SurveyShell company={company}>
+                <Head title="Evaluación" />
+                <SurveyDone />
+            </SurveyShell>
+        );
+    }
+
     return (
         <SurveyShell company={company}>
             <Head title="Evaluación" />
@@ -40,7 +50,11 @@ export default function Survey({
             company === null ||
             token === null ||
             next === undefined ? (
-                <SurveyUnavailableNotice reason={unavailable ?? 'invalid'} />
+                <div className="w-full max-w-2xl">
+                    <SurveyUnavailableNotice
+                        reason={unavailable ?? 'invalid'}
+                    />
+                </div>
             ) : (
                 <SurveyFlow
                     // A new key once a guide is sent: the person is back at the list, the sent one marked.

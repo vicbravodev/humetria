@@ -29,6 +29,15 @@ interface ResponseReader
     public function screeningCounts(string $campaignId): array;
 
     /**
+     * How many people require a clinical assessment in each of several campaigns, in one query; a campaign with
+     * nobody is left out.
+     *
+     * @param  list<string>  $campaignIds
+     * @return array<string, int> by campaign id
+     */
+    public function requiringCounts(array $campaignIds): array;
+
+    /**
      * Who requires a clinical assessment in a campaign (num. 5.5), by when they answered, a page at a time.
      *
      * @return LengthAwarePaginator<int, ScreeningRecord>

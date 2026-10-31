@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Models;
 
+use App\Models\User;
 use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
@@ -91,6 +92,16 @@ final class TenantInvitation extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Who sent it, named on the link page; null when it was sent from the console without a recorded sender.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function inviter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by');
     }
 
     /**

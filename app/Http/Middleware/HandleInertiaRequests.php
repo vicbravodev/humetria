@@ -6,7 +6,9 @@ namespace App\Http\Middleware;
 
 use App\Http\Impersonation;
 use App\Models\User;
+use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
@@ -51,8 +53,21 @@ final class HandleInertiaRequests extends Middleware
             // The company routes override these (Tenancy's ResolveTenant); the kernel only gives the defaults.
             'tenant' => null,
             'tenants' => [],
+            // The NOM-035 count and the next deadline in the sidebar. Read when the page renders, after ResolveTenant
+            // has shared the company: outside one, nothing is asked.
+            'inCourse' => fn (): ?array => Inertia::getShared('tenant') === null ? null : $this->inCourse(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * @return array{count: int, daysLeft: int|null, elapsed: int}
+     */
+    private function inCourse(): array
+    {
+        $inCourse = app(OpenCampaigns::class)->inCourse();
+
+        return ['count' => $inCourse->count, 'daysLeft' => $inCourse->daysLeft, 'elapsed' => $inCourse->elapsed];
     }
 
     private function impersonatorName(): ?string

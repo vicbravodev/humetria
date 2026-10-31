@@ -1,6 +1,33 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { matchCommands, moveActive } from '@/lib/commands';
+import { groupCommands, matchCommands, moveActive } from '@/lib/commands';
+
+describe('groupCommands', () => {
+    it('puts each command under its group, in the order groups first appear, keeping its place in the list', () => {
+        const grouped = groupCommands([
+            { id: 'a', label: 'A', group: 'Ir a' },
+            { id: 'b', label: 'B', group: 'Tema' },
+            { id: 'c', label: 'C', group: 'Ir a' },
+        ]);
+
+        expect(
+            grouped.map(({ group, items }) => [
+                group,
+                items.map(({ command, index }) => [command.id, index]),
+            ]),
+        ).toEqual([
+            [
+                'Ir a',
+                [
+                    ['a', 0],
+                    ['c', 2],
+                ],
+            ],
+            ['Tema', [['b', 1]]],
+        ]);
+        expect(groupCommands([])).toEqual([]);
+    });
+});
 
 const commands = [
     { id: 'panel', label: 'Panel', keywords: ['inicio'] },

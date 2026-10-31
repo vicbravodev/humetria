@@ -21,9 +21,9 @@ export default function Landing() {
             <main>
                 <LandingHero />
                 <ToolsSection />
-                <AudienceSection />
                 <HowItWorksSection />
                 <ComplianceSection />
+                <AudienceSection />
                 <DemoSection />
             </main>
             <LandingFooter />

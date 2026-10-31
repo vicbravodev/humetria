@@ -1,10 +1,11 @@
 import { Head, usePage } from '@inertiajs/react';
 import ConsolePagination from '@/components/console-pagination';
+import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
-import WorkCenterViews from '@/components/tenancy/work-center-views';
 import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
-import WorkCentersTable from '@/components/tenancy/work-centers-table';
+import WorkCentersGrid from '@/components/tenancy/work-centers-grid';
+import { index } from '@/routes/tenant/work-centers';
 import type {
     MexicanStateOption,
     Paginated,
@@ -32,7 +33,10 @@ export default function WorkCenters({
         <>
             <Head title="Centros de trabajo" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <PageHeader title="Centros de trabajo">
+                <PageHeader
+                    title="Centros de trabajo"
+                    description="Cada centro se evalúa por separado. El número de personas decide qué guías aplican."
+                >
                     {canManage && (
                         <CreateWorkCenterDialog
                             tenantSlug={tenantSlug}
@@ -42,16 +46,32 @@ export default function WorkCenters({
                 </PageHeader>
                 {/* Only once there is something archived, or while looking at the archive. */}
                 {(counts.archived > 0 || view === 'archived') && (
-                    <WorkCenterViews
-                        tenantSlug={tenantSlug}
-                        view={view}
-                        counts={counts}
-                    />
+                    <div>
+                        <CountTabs
+                            label="Vistas de centros de trabajo"
+                            tabs={[
+                                {
+                                    label: 'Activos',
+                                    count: counts.active,
+                                    href: index.url(tenantSlug),
+                                    active: view === 'active',
+                                },
+                                {
+                                    label: 'Archivados',
+                                    count: counts.archived,
+                                    href: index.url(tenantSlug, {
+                                        query: { archived: 1 },
+                                    }),
+                                    active: view === 'archived',
+                                },
+                            ]}
+                        />
+                    </div>
                 )}
                 {workCenters.total === 0 ? (
                     <WorkCentersEmpty view={view} />
                 ) : (
-                    <WorkCentersTable
+                    <WorkCentersGrid
                         tenantSlug={tenantSlug}
                         view={view}
                         workCenters={workCenters.data}

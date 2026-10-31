@@ -23,6 +23,7 @@ const summary = (changes: Partial<CampaignSummary> = {}): CampaignSummary => ({
     instruments: ['Guía I', 'Guía III'],
     closesOn: '14 nov 2026',
     closedOn: null,
+    launchedOn: null,
     progress: null,
     ...changes,
 });

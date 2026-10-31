@@ -84,6 +84,7 @@ final class CompanyRoster implements Roster
             $area->name,
             $employee->work_center_id,
             $employee->deactivated_at === null,
+            $employee->job_title,
         );
     }
 }

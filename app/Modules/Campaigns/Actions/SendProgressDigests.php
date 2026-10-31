@@ -79,7 +79,7 @@ final readonly class SendProgressDigests
             workCenter: $this->workCenters->profile($campaign->work_center_id)->name ?? '',
             completed: $progress['completed'],
             target: $progress['target'],
-            daysLeft: CampaignClock::daysLeft($campaign->closes_on),
+            daysLeft: CampaignClock::daysToAnswer($campaign->closes_on),
             areas: $this->shown($areas),
             behind: $this->behind($areas),
             toRemind: $this->toRemind($campaign),

@@ -1,9 +1,13 @@
 import { Link } from '@inertiajs/react';
+import { HandHeart, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { screenings } from '@/routes/tenant/campaigns';
 import type { ScreeningCounts } from '@/types';
 
-/** The Guía I of the campaign, counted, and the way to who needs care. Only for those who channel people (num. 5.5). */
+/**
+ * The Guía I of the campaign, counted, and the way to who needs care (pantallas: Eval-Cerrada). Only for those who
+ * channel people (num. 5.5).
+ */
 export default function TraumaSummary({
     url,
     counts,
@@ -12,30 +16,28 @@ export default function TraumaSummary({
     counts: ScreeningCounts;
 }) {
     return (
-        <section className="grid gap-3 rounded-xl border bg-card p-6">
-            <h2 className="text-xl font-semibold">
-                Guía I: acontecimientos traumáticos severos
-            </h2>
-            <dl className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-1">
-                    <dt className="text-sm text-muted-foreground">
-                        Contestaron
-                    </dt>
-                    <dd className="text-2xl font-semibold tabular-nums">
-                        {counts.answered}
-                    </dd>
-                </div>
-                <div className="grid gap-1">
-                    <dt className="text-sm text-muted-foreground">
-                        Requieren valoración clínica
-                    </dt>
-                    <dd className="text-2xl font-semibold tabular-nums">
-                        {counts.requiring}
-                    </dd>
-                </div>
-            </dl>
-            <Button asChild variant="outline" className="w-fit">
-                <Link href={screenings(url)}>Ver quiénes la requieren</Link>
+        <section
+            aria-labelledby="trauma-heading"
+            className="flex flex-col gap-3.5 rounded-xl border bg-card p-6"
+        >
+            <div className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-risk-alto-bg text-risk-alto-fg">
+                    <HandHeart aria-hidden className="size-5" />
+                </span>
+                <h2 id="trauma-heading" className="text-lg font-semibold">
+                    Guía I · acontecimientos traumáticos
+                </h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+                {counts.requiring} de {counts.answered} personas que contestaron
+                requieren valoración clínica. Solo las personas autorizadas ven
+                quiénes son.
+            </p>
+            <Button asChild variant="outline" size="sm" className="w-fit">
+                <Link href={screenings(url)}>
+                    <Lock aria-hidden="true" />
+                    Ver canalización
+                </Link>
             </Button>
         </section>
     );

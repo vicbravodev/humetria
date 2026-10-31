@@ -49,6 +49,7 @@ it('lists the people with access, the owner first, and the open invitations', fu
             ->component('tenancy/members')
             ->where('members.data', fn ($members): bool => collect($members)->pluck('name')->all() === ['Olga Owner', 'Ana Lectora', 'Beto RH'])
             ->where('members.data.0.is_you', true)
+            ->where('members.data.0.role_label', 'Dueño')
             ->where('members.data.2', fn ($row): bool => collect($row)->except('id')->all() === [
                 'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'RH', 'is_you' => false, 'since' => '29 oct 2026',
             ])

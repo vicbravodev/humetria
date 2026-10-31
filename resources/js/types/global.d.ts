@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { InCourse } from '@/types/navigation';
 import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
@@ -20,6 +21,8 @@ declare module '@inertiajs/core' {
             tenant: CurrentTenant | null;
             /** The user's first companies, for the switcher, and how many they have. */
             tenants: { data: TenantSummary[]; total: number };
+            /** The company's campaigns in course and how close the soonest is to its last day; null outside a company. */
+            inCourse: InCourse | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

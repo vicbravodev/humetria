@@ -29,8 +29,8 @@ Los nombres coinciden 1:1 con las variables CSS de shadcn/ui (Tailwind v4). Cada
 | `chart-3` | `#1D5C55` | `#9EDDD2` | marca sobre `card` | 7.74 / 11.14 ✓ | ≥ 3 |
 | `chart-4` | `#A08A70` | `#C2AE94` | marca sobre `card` | 3.30 / 7.93 ✓ | ≥ 3 |
 | `chart-5` | `#5C5248` | `#8A7E70` | marca sobre `card` | 7.62 / 4.30 ✓ | ≥ 3 |
-| `sidebar` | `#F5F8F7` | `#0B1211` | texto | 15.51 / 17.83 ✓ | ≥ 4.5 |
-| `sidebar-foreground` | `#14211F` | `#F1FAF8` | sobre `sidebar` | 15.51 / 17.83 ✓ | ≥ 4.5 |
+| `sidebar` | `#F2F6F5` | `#0B1211` | texto | 15.21 / 17.83 ✓ | ≥ 4.5 |
+| `sidebar-foreground` | `#14211F` | `#F1FAF8` | sobre `sidebar` | 15.21 / 17.83 ✓ | ≥ 4.5 |
 | `sidebar-primary` | `#0B7A6F` | `#3CCFBD` | sobre `sidebar` | 4.88 / 9.79 ✓ | ≥ 3 |
 | `sidebar-primary-foreground` | `#FFFFFF` | `#0F1716` | sobre `sidebar-primary` | 5.21 / 9.40 ✓ | ≥ 4.5 |
 | `sidebar-accent` | `#E5F1EE` | `#213330` | texto | 14.32 / 12.51 ✓ | ≥ 4.5 |
@@ -64,6 +64,9 @@ Fuera del set de shadcn, pero necesarias para el sistema. Se agregan al mismo `:
 | `risk-muy-alto` | `#9A3B26` | `#F07A62` | segmento sobre `card` | 6.94 / 6.22 ✓ | ≥ 3 |
 | `risk-muy-alto-bg` | `#F3D8CF` | `#4A1F18` | texto | 6.24 / 6.91 ✓ | ≥ 4.5 |
 | `risk-muy-alto-fg` | `#8A2E1C` | `#F7A08C` | sobre `risk-muy-alto-bg` | 6.24 / 6.91 ✓ | ≥ 4.5 |
+| `track` | `#E3EAE7` | `#24312E` | `primary` encima (relleno del medidor) | 4.27 / 6.98 ✓ | ≥ 3 |
+| `warning` | `#F6EEDC` | `#33291A` | fondo de avisos | — | — |
+| `warning-foreground` | `#7A5714` | `#E9C886` | sobre `warning` | 5.68 / 8.87 ✓ | ≥ 4.5 |
 
 ## Radio
 
@@ -121,7 +124,7 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --chart-3: #1D5C55;
   --chart-4: #A08A70;
   --chart-5: #5C5248;
-  --sidebar: #F5F8F7;
+  --sidebar: #F2F6F5;
   --sidebar-foreground: #14211F;
   --sidebar-primary: #0B7A6F;
   --sidebar-primary-foreground: #FFFFFF;
@@ -147,6 +150,9 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --risk-muy-alto: #9A3B26;
   --risk-muy-alto-bg: #F3D8CF;
   --risk-muy-alto-fg: #8A2E1C;
+  --track: #E3EAE7;
+  --warning: #F6EEDC;
+  --warning-foreground: #7A5714;
 }
 
 .dark {
@@ -199,6 +205,9 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --risk-muy-alto: #F07A62;
   --risk-muy-alto-bg: #4A1F18;
   --risk-muy-alto-fg: #F7A08C;
+  --track: #24312E;
+  --warning: #33291A;
+  --warning-foreground: #E9C886;
 }
 
 @theme inline {
@@ -256,6 +265,9 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --color-risk-muy-alto: var(--risk-muy-alto);
   --color-risk-muy-alto-bg: var(--risk-muy-alto-bg);
   --color-risk-muy-alto-fg: var(--risk-muy-alto-fg);
+  --color-track: var(--track);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 }
 
 @layer base {

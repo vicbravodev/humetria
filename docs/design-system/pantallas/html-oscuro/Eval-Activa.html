@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Evaluación en curso · Humetría</title>
+
+</head>
+<body>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--pop:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--dest:#B0463C;--ondest:#FFFFFF;--bsoft:#7FD3C6;--bdeep:#064A43;--c2:#3F9A8F;--c3:#1D5C55;--c4:#A08A70;--c5:#5C5248;--seal:#6B7472;
+--r-nulo:#5A9C91;--r-nulo-bg:#E9F4F1;--r-nulo-fg:#0A5A52;--r-bajo:#2B7F74;--r-bajo-bg:#DCEFEA;--r-bajo-fg:#0A6A60;--r-medio:#A47F2C;--r-medio-bg:#F6EEDC;--r-medio-fg:#7A5714;--r-alto:#BC6A48;--r-alto-bg:#F8E7DF;--r-alto-fg:#9A4527;--r-muy:#9A3B26;--r-muy-bg:#F3D8CF;--r-muy-fg:#8A2E1C;--warn-bg:#F6EEDC;--warn-fg:#7A5714;
+--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08);--float:0 12px 32px -8px rgba(20,33,31,.22),0 2px 6px rgba(20,33,31,.06);--edge:transparent;--scrim:rgba(20,33,31,.32)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--pop:#18241F;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--dest:#EC8F84;--ondest:#0F1716;--bsoft:#1E8C7F;--bdeep:#B8F5EC;--c2:#2A9C8E;--c3:#9EDDD2;--c4:#C2AE94;--c5:#8A7E70;--seal:#C9D3D0;
+--r-nulo:#6FB5A9;--r-nulo-bg:#16302B;--r-nulo-fg:#A6E6DA;--r-bajo:#3CBFAE;--r-bajo-bg:#123A34;--r-bajo-fg:#6FDCCB;--r-medio:#D2AE62;--r-medio-bg:#33291A;--r-medio-fg:#E9C886;--r-alto:#E08A66;--r-alto-bg:#3B241C;--r-alto-fg:#F2A686;--r-muy:#F07A62;--r-muy-bg:#4A1F18;--r-muy-fg:#F7A08C;--warn-bg:#33291A;--warn-fg:#E9C886;
+--raised:0 0 0 1px #1C2826;--float:0 16px 40px -8px rgba(0,0,0,.6),0 0 0 1px #26332F;--edge:rgba(255,255,255,.06);--scrim:rgba(0,0,0,.55)}
+
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app a:hover{text-decoration:underline;text-underline-offset:3px}
+.app button,.app input,.app select,.app textarea{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible,.app input:focus-visible,.app select:focus-visible,.app textarea:focus-visible,.app label:focus-within{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app h3,.app h4,.app p{margin:0}
+.h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-0.01em}
+.h2{font-size:22px;line-height:30px;font-weight:600;letter-spacing:-0.01em}
+.h3{font-size:18px;line-height:26px;font-weight:600}
+.sm{font-size:14px;line-height:20px}
+.xs{font-size:13px;line-height:18px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.btn{height:44px;padding:0 16px;border-radius:8px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background-color 150ms,transform 120ms;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-p:hover{filter:brightness(1.07)}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.btn-o:hover{background:var(--muted)}
+.btn-g{color:var(--fg) !important}
+.btn-g:hover{background:var(--muted)}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn-d{background:var(--dest);color:var(--ondest) !important}
+.btn-i{width:44px;padding:0}
+.btn-i.btn-sm{width:36px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px}
+.badge{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--sec);color:var(--fg)}
+.badge .dot{width:6px;height:6px;border-radius:999px;background:currentColor}
+.b-live{background:var(--accent);color:var(--primary)}
+.b-draft{background:var(--sec);color:var(--mfg)}
+.b-warn{background:var(--warn-bg);color:var(--warn-fg)}
+.b-dest{background:var(--r-alto-bg);color:var(--r-alto-fg)}
+.b-ok{background:var(--r-bajo-bg);color:var(--r-bajo-fg)}
+.inp{height:44px;width:100%;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:0 12px;font-size:16px;color:var(--fg);display:flex;align-items:center;gap:8px}
+.inp::placeholder{color:var(--mfg)}
+.lbl{font-size:14px;line-height:20px;font-weight:500;display:block}
+.help{font-size:13px;line-height:18px;color:var(--mfg)}
+.field{display:flex;flex-direction:column;gap:6px}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:15px;line-height:22px}
+.tbl th{text-align:left;font-weight:500;font-size:13px;line-height:18px;color:var(--mfg);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--muted);white-space:nowrap}
+.tbl td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr{transition:background-color 120ms}
+.tbl tbody tr:hover{background:var(--accent)}
+.num{text-align:right !important}
+.av{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sec);color:var(--fg);flex-shrink:0}
+.bar{height:8px;border-radius:999px;background:var(--off);overflow:hidden}
+.bar > span{display:block;height:100%;border-radius:999px;background:var(--primary)}
+.tabs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--muted);border:1px solid var(--border)}
+.tab{height:38px;padding:0 14px;border-radius:8px;border:0;background:transparent;font-size:14px;font-weight:500;color:var(--mfg);display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.tab .n{font-size:12px;color:var(--mfg);background:var(--off);border-radius:999px;padding:0 7px;line-height:20px}
+.tab.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(20,33,31,.08)}
+.tab.on .n{background:var(--accent);color:var(--primary)}
+.kbd{font-size:12px;line-height:18px;padding:0 6px;border-radius:5px;border:1px solid var(--border);background:var(--muted);color:var(--mfg)}
+.divider{height:1px;background:var(--border)}
+.scrim{position:absolute;inset:0;background:var(--scrim)}
+.float{background:var(--pop);border-radius:14px;box-shadow:var(--float)}
+.chk{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--input);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--card)}
+.chk.on{background:var(--primary);border-color:var(--primary);color:var(--pfg)}
+.radio{width:20px;height:20px;border-radius:999px;border:1.5px solid var(--input);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--card)}
+.radio.on{border:2px solid var(--primary)}
+.radio.on::after{content:"";width:10px;height:10px;border-radius:999px;background:var(--primary)}
+.opt{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 16px;border-radius:10px;border:1px solid var(--input);background:var(--card);cursor:pointer;font-size:18px;line-height:28px;transition:background-color 120ms,border-color 120ms}
+.opt:hover{background:var(--muted)}
+.opt.on{border:2px solid var(--primary);background:var(--accent);font-weight:500;padding:11px 15px}
+.navi{display:flex;align-items:center;gap:12px;min-height:40px;padding:0 10px;border-radius:8px;font-size:15px;color:var(--fg) !important;text-decoration:none !important}
+.navi svg{color:var(--mfg)}
+.navi:hover{background:var(--sec)}
+.navi.on{background:var(--card);font-weight:500;box-shadow:0 0 0 1px var(--border)}
+.navi.on svg{color:var(--primary)}
+.navi .cnt{margin-left:auto;font-size:12px;line-height:20px;padding:0 7px;border-radius:999px;background:var(--accent);color:var(--primary);font-weight:600}
+.panel{background:var(--bg);border-radius:14px;box-shadow:var(--raised);border-top:1px solid var(--edge)}
+.seg3{display:inline-flex;padding:3px;border-radius:9px;background:var(--muted);border:1px solid var(--border);gap:2px}
+.seg3 button{width:32px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--mfg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.seg3 button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(20,33,31,.1)}
+.lift{transition:border-color 150ms,background-color 150ms}
+.lift:hover{border-color:var(--input)}
+.dz{border:1.5px dashed var(--input);border-radius:12px;background:var(--muted)}
+.ring-pulse{position:relative}
+@keyframes drawArc{from{stroke-dashoffset:var(--off0)}to{stroke-dashoffset:var(--off1)}}
+.arcfill{animation:drawArc 900ms cubic-bezier(.23,1,.32,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.rise{animation:rise 220ms cubic-bezier(.23,1,.32,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.popin{animation:pop 200ms cubic-bezier(.23,1,.32,1) both}
+@media (prefers-reduced-motion:reduce){.arcfill,.rise,.popin{animation:none}.btn:active{transform:none}}
+@media (max-width:900px){.side{width:100% !important;flex-direction:row !important;flex-wrap:wrap;align-items:center}.side .navs{flex-direction:row !important;flex-wrap:wrap}.side .foot{display:none !important}.hide-m{display:none !important}}
+.tblwrap{overflow-x:auto}
+.steps > li:first-child{border-top:0 !important}
+</style>
+
+<div class="app th-oscuro" style="min-height: 100vh; display: flex; flex-wrap: wrap; padding: 8px 8px 8px 0; position: relative">
+<aside class="side" style="width: 252px; flex-shrink: 0; padding: 18px 14px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="padding: 4px 10px 0"><svg width="130.8" height="26" viewBox="0 0 322.05 64" role="img" aria-label="humetría"><g transform="translate(-3 0)"><path d="M12 6V58M12 36C12 17 52 17 52 36V58" fill="none" stroke="var(--primary)" stroke-width="10" stroke-linecap="round"></path><clipPath id="clsb"><path d="M19.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z"></path></clipPath><path d="M29.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--bsoft)"></path><path d="M19.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--primary)"></path><path d="M29.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--bdeep)" clip-path="url(#clsb)"></path><path d="M74.96 61V17H82V33.85Q83.57 31.39 85.96 30.11Q88.35 28.82 91.37 28.82Q95.07 28.82 97.78 30.33Q100.48 31.83 101.89 35.01Q103.31 38.18 103.31 43.27V61H96.27V44.91Q96.27 41.14 95.39 39.09Q94.51 37.05 92.97 36.23Q91.43 35.42 89.42 35.42Q85.83 35.35 83.92 37.74Q82 40.13 82 44.59V61ZM120.91 61.75Q117.2 61.75 114.53 60.25Q111.86 58.74 110.41 55.53Q108.97 52.33 108.97 47.3V29.57H116.01V45.66Q116.01 49.37 116.89 51.45Q117.77 53.52 119.31 54.34Q120.85 55.15 122.86 55.15Q126.44 55.22 128.39 52.83Q130.34 50.44 130.34 45.98V29.57H137.31V61H130.71L130.4 56.54Q128.89 59.05 126.47 60.4Q124.05 61.75 120.91 61.75ZM144.35 61V29.57H150.95L151.27 33.78Q152.71 31.33 154.98 30.07Q157.24 28.82 160.13 28.82Q163.9 28.82 166.54 30.51Q169.18 32.21 170.38 35.67Q171.76 32.34 174.27 30.58Q176.79 28.82 180.18 28.82Q185.65 28.82 188.61 32.31Q191.56 35.79 191.5 43.02V61H184.52V44.91Q184.52 41.14 183.7 39.09Q182.89 37.05 181.5 36.23Q180.12 35.42 178.3 35.42Q175.03 35.35 173.24 37.74Q171.45 40.13 171.45 44.59V61H164.41V44.91Q164.41 41.14 163.62 39.09Q162.83 37.05 161.45 36.23Q160.07 35.42 158.25 35.42Q154.98 35.35 153.19 37.74Q151.39 40.13 151.39 44.59V61ZM211.93 61.75Q207.34 61.75 203.79 59.65Q200.23 57.54 198.19 53.83Q196.15 50.13 196.15 45.29Q196.15 40.45 198.22 36.74Q200.3 33.03 203.91 30.92Q207.53 28.82 212.18 28.82Q216.39 28.82 219.78 30.99Q223.18 33.15 225.16 37.24Q227.14 41.33 227.14 46.98H203.44Q203.75 50.94 206.36 53.21Q208.97 55.47 212.55 55.47Q215.45 55.47 217.33 54.18Q219.22 52.89 220.29 50.82L226.51 53.46Q225.19 55.97 223.15 57.86Q221.1 59.74 218.31 60.75Q215.51 61.75 211.93 61.75ZM203.88 41.58H219.53Q219.34 39.31 218.21 37.84Q217.08 36.36 215.45 35.61Q213.81 34.85 211.99 34.85Q210.23 34.85 208.44 35.57Q206.65 36.3 205.39 37.81Q204.13 39.31 203.88 41.58ZM244.3 61.75Q239.33 61.75 236.72 59.27Q234.11 56.79 234.11 52.14V35.61H228.9V29.57H234.11V19.77H241.09V29.57H249.58V35.61H241.09V50.82Q241.09 53.02 242.13 54.15Q243.17 55.28 245.18 55.28Q245.81 55.28 246.56 55.03Q247.31 54.78 248.26 54.09L250.83 59.43Q249.2 60.56 247.57 61.16Q245.93 61.75 244.3 61.75ZM255.74 61V29.57H262.78V35.29Q264.66 32.34 267.68 30.89Q270.7 29.45 273.9 29.45V36.17Q271.01 36.17 268.47 36.96Q265.92 37.74 264.35 39.5Q262.78 41.26 262.78 44.15V61ZM278.24 61V29.57H285.22V61ZM302.88 61.75Q297.22 61.75 294.11 59.24Q291 56.73 291 52.14Q291 47.23 294.3 44.66Q297.6 42.08 303.51 42.08H311.49Q311.11 38.62 309.54 36.8Q307.97 34.98 304.89 34.98Q302.63 34.98 300.93 35.92Q299.23 36.86 298.04 38.87L291.88 36.61Q292.89 34.54 294.55 32.75Q296.22 30.95 298.76 29.89Q301.31 28.82 304.89 28.82Q309.48 28.82 312.56 30.61Q315.64 32.4 317.12 35.73Q318.59 39.06 318.59 43.78L318.41 61H311.93L311.74 57.17Q310.49 59.37 308.25 60.56Q306.02 61.75 302.88 61.75ZM303.76 55.85Q306.09 55.85 307.88 54.81Q309.67 53.77 310.64 52.01Q311.62 50.25 311.62 48.11V47.49H305.77Q301.56 47.49 299.86 48.65Q298.17 49.81 298.17 51.95Q298.17 53.77 299.64 54.81Q301.12 55.85 303.76 55.85Z" fill="var(--fg)"></path><path d="M279.48 23.47L286.54 15.13" stroke="var(--primary)" stroke-width="6.42" stroke-linecap="round" fill="none"></path></g></svg></div>
+<button type="button" style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); cursor: pointer; text-align: left">
+<span style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0">AD</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1"><span class="sm w6">Autopartes Demo</span><span class="xs mfg">90 personas</span></span>
+<span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span>
+</button>
+<nav aria-label="Principal" class="navs" style="display: flex; flex-direction: column; gap: 2px"><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>Panel</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg><span>Centros de trabajo</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Empleados</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><circle cx="18" cy="17" r="3"/><path d="M18 12.5v1.5M18 20v1.5M22.5 17H21M15 17h-1.5M21.2 13.8l-1 1M15.8 19.2l-1 1M21.2 20.2l-1-1M15.8 14.8l-1-1"/></svg><span>Usuarios</span></a></nav>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span class="xs mfg w5" style="padding: 0 10px 6px">Cumplimiento</span>
+<a href="#" class="navi on" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>NOM-035</span><span class="cnt" title="1 evaluación en curso">1</span></a>
+</div>
+<div class="foot" style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+<div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 8px; background: transparent">
+<span class="xs w5">Siguiente obligación</span>
+<span class="xs mfg">Cierre de Oficinas Monterrey en <b class="w6" style="color: var(--fg)">11 días</b></span>
+<div class="bar" style="height: 6px"><span style="width: 30%"></span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-top: 1px solid var(--border); padding-top: 14px">
+<span class="av">RR</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1"><span class="sm w5">Rita RH</span><span class="xs mfg">rh@demo.test</span></span>
+<button type="button" class="btn btn-g btn-sm btn-i" aria-label="Cuenta y cerrar sesión"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+</div>
+</div>
+</aside>
+<main class="panel" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; overflow: hidden">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px 10px 12px; border-bottom: 1px solid var(--border)">
+<button type="button" class="btn btn-g btn-sm btn-i" aria-label="Plegar menú"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg></button>
+<nav aria-label="Ruta" style="display: flex; align-items: center; gap: 6px; flex-grow: 1; min-width: 0"><a href="#" class="sm mfg" style="color: var(--mfg)">NOM-035</a><span class="mfg" style="display: inline-flex"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="sm w5" aria-current="page">Oficinas Monterrey</span></nav>
+<button type="button" class="inp" style="width: 240px; height: 36px; cursor: pointer; color: var(--mfg); font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span style="flex-grow: 1; text-align: left">Buscar o ir a…</span><span class="kbd">⌘K</span></button>
+<div class="seg3" role="group" aria-label="Tema"><button type="button" class="on" aria-label="Tema claro"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button><button type="button" aria-label="Tema oscuro"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button><button type="button" aria-label="Tema del sistema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button></div>
+</div>
+<div style="padding: 32px 40px 64px; display: flex; flex-direction: column; gap: 32px; max-width: 1180px; width: 100%">
+
+<header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div class="col" style="gap: 8px">
+<div class="row" style="gap: 12px"><h1 class="h1">Oficinas Monterrey</h1><span class="badge b-live"><span class="dot"></span>En curso</span></div>
+<div class="row sm mfg" style="gap: 18px; flex-wrap: wrap">
+<span class="row" style="gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>60 personas</span>
+<span class="row" style="gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>Guías I y III (muestra de 52)</span>
+<span class="row" style="gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>27 oct al 10 nov 2026</span>
+</div>
+</div>
+<div class="row" style="gap: 8px">
+<button type="button" class="btn btn-o btn-i" aria-label="Más acciones: extender fecha, cerrar evaluación"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+<a href="#" class="btn btn-o">Extender fecha</a>
+<button type="button" class="btn btn-p"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Recordar a 42</button>
+</div>
+</header>
+
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 20px" aria-label="Avance">
+<article class="card" style="padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 18px">
+<div role="img" aria-label="30 %" style="position: relative; width: 232px; height: 167px; flex-shrink: 0"><svg width="232" height="167" viewBox="0 5 64 46" aria-hidden="true" style="display: block"><path d="M10 49V33A22 22 0 0 1 54 33V49" fill="none" stroke="var(--off)" stroke-width="4.97" stroke-linecap="round" pathLength="100"></path><path class="arcfill" d="M10 49V33A22 22 0 0 1 54 33V49" fill="none" stroke="var(--primary)" stroke-width="4.97" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="70.0" style="--off0: 100; --off1: 70.0"></path></svg><div style="position: absolute; left: 0; right: 0; bottom: 2px; display: flex; flex-direction: column; align-items: center; gap: 2px"><span style="font-size: 46px; line-height: 1; font-weight: 600; letter-spacing: -0.03em">18</span><span style="font-size: 13px; line-height: 16px; color: var(--mfg); text-align: center; max-width: 116px">de 60 contestaron</span></div></div>
+<div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border)">
+<div class="col" style="gap: 6px"><span class="xs mfg">Guía I</span><span class="sm w6">18 de 60</span><div class="bar" style="height: 6px"><span style="width: 30%"></span></div></div>
+<div class="col" style="gap: 6px"><span class="xs mfg">Guía III</span><span class="sm w6">18 de 52</span><div class="bar" style="height: 6px"><span style="width: 35%"></span></div></div>
+</div>
+</article>
+
+<article class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; grid-column: span 2">
+<div class="row" style="justify-content: space-between; gap: 12px; flex-wrap: wrap">
+<div class="col" style="gap: 2px"><h2 class="h3">Respuestas por día</h2><span class="sm mfg">Quedan 11 días. El recordatorio del 29 oct trajo 4 respuestas al día siguiente.</span></div>
+<span class="row xs mfg" style="gap: 14px"><span class="row" style="gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: var(--primary)"></span>Respuestas</span><span class="row" style="gap: 6px; color: var(--c4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span class="mfg">Recordatorio</span></span></span>
+</div>
+<div style="display: flex; align-items: flex-end; gap: 8px; padding-top: 6px"><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span title="7 respuestas" style="width: 100%; height: 98px; border-radius: 6px 6px 2px 2px; background: var(--primary)"></span></div>
+<span class="xs mfg">27</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span title="5 respuestas" style="width: 100%; height: 70px; border-radius: 6px 6px 2px 2px; background: var(--primary)"></span></div>
+<span class="xs mfg">28</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span title="Recordatorio enviado" style="position: absolute; top: -2px; left: 50%; transform: translateX(-50%); color: var(--c4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span><span title="2 respuestas" style="width: 100%; height: 28px; border-radius: 6px 6px 2px 2px; background: var(--primary)"></span></div>
+<span class="xs mfg">29</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span title="4 respuestas" style="width: 100%; height: 56px; border-radius: 6px 6px 2px 2px; background: var(--primary)"></span></div>
+<span class="xs mfg">30</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">31</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">1</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">2</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">3</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">4</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">5</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">6</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">7</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">8</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">9</span></div><div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0">
+<div style="position: relative; height: 120px; width: 100%; max-width: 30px; display: flex; align-items: flex-end; padding-top: 20px"><span style="width: 100%; height: 26px; border-radius: 6px; border: 1.5px dashed var(--border)"></span></div>
+<span class="xs mfg">10</span></div></div>
+<div class="row xs mfg" style="justify-content: space-between"><span>octubre</span><span>noviembre</span></div>
+</article>
+</section>
+
+<section class="card" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 24px 40px" aria-labelledby="areas">
+<div class="col" style="gap: 8px">
+<h2 id="areas" class="h3">Participación por área</h2>
+<p class="sm mfg">Aquí ves cuántas personas contestaron, nunca qué contestaron. Ventas es el área que más falta.</p>
+<button type="button" class="btn btn-o btn-sm" style="align-self: flex-start; margin-top: 4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Recordar solo a Ventas · 30</button>
+</div>
+<div class="col" style="gap: 16px; grid-column: span 2"><div class="col" style="gap: 6px"><div class="row" style="justify-content: space-between"><span class="sm w5">Administración</span><span class="sm"><b class="w6">6</b> <span class="mfg">de 14 · 43 %</span></span></div><div class="bar"><span style="width: 43%"></span></div></div><div class="col" style="gap: 6px"><div class="row" style="justify-content: space-between"><span class="sm w5">Dirección</span><span class="sm"><b class="w6">4</b> <span class="mfg">de 8 · 50 %</span></span></div><div class="bar"><span style="width: 50%"></span></div></div><div class="col" style="gap: 6px"><div class="row" style="justify-content: space-between"><span class="sm w5">Ventas</span><span class="sm"><b class="w6">8</b> <span class="mfg">de 38 · 21 %</span></span></div><div class="bar"><span style="width: 21%"></span></div></div></div>
+</section>
+
+<section class="col" style="gap: 14px" aria-labelledby="personas">
+<div class="row" style="justify-content: space-between; gap: 12px; flex-wrap: wrap">
+<h2 id="personas" class="h3">Personas</h2>
+<div class="tabs" role="tablist" aria-label="Filtrar personas">
+<button type="button" role="tab" aria-selected="true" class="tab on">Pendientes <span class="n">42</span></button>
+<button type="button" role="tab" aria-selected="false" class="tab">Contestaron <span class="n">18</span></button>
+<button type="button" role="tab" aria-selected="false" class="tab">Todas <span class="n">60</span></button>
+</div>
+</div>
+<div class="row" style="gap: 10px; flex-wrap: wrap">
+<label class="inp" style="flex: 1 1 280px; max-width: 420px"><span class="mfg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><input type="search" placeholder="Buscar por nombre, correo o número" aria-label="Buscar persona" style="border: 0; outline: 0; background: transparent; flex-grow: 1; min-width: 0; font-size: 16px"></label>
+<button type="button" class="btn btn-o" style="font-weight: 400">Todas las áreas<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="btn btn-o" style="font-weight: 400">Todos los canales<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+</div>
+<div class="card" style="overflow: hidden">
+<div class="row" style="gap: 12px; padding: 10px 16px; background: var(--accent); border-bottom: 1px solid var(--border); flex-wrap: wrap">
+<span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="sm w5" style="flex-grow: 1">42 personas seleccionadas</span>
+<button type="button" class="btn btn-g btn-sm">Quitar selección</button>
+<button type="button" class="btn btn-p btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Enviar recordatorio</button>
+</div>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th></th><th>Persona</th><th>Área</th><th>Canal</th><th>Guías</th><th>Última invitación</th><th></th></tr></thead>
+<tbody><tr><td style="width: 44px"><span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+<td><div class="row" style="gap: 10px"><span class="av">AO</span><span class="col"><span class="w5">Alexandra Olivas</span><span class="xs mfg">Analista</span></span></div></td>
+<td>Ventas</td>
+<td><span class="row sm" style="gap: 6px"><span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>Correo</span></td>
+<td><div class="row" style="gap: 6px; flex-wrap: wrap"><span class="badge b-draft"><span class="dot"></span>Guía I</span><span class="badge b-draft"><span class="dot"></span>Guía III</span></div></td>
+<td><span class="sm">hace 2 días</span><br><span class="xs mfg">2 envíos</span></td>
+<td class="num"><button type="button" class="btn btn-g btn-sm">Reenviar</button></td></tr><tr><td style="width: 44px"><span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+<td><div class="row" style="gap: 10px"><span class="av">AN</span><span class="col"><span class="w5">Alma Nava</span><span class="xs mfg">Operador</span></span></div></td>
+<td>Ventas</td>
+<td><span class="row sm" style="gap: 6px"><span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span>WhatsApp</span></td>
+<td><div class="row" style="gap: 6px; flex-wrap: wrap"><span class="badge b-draft"><span class="dot"></span>Guía I</span><span class="badge b-draft"><span class="dot"></span>Guía III</span></div></td>
+<td><span class="sm">hace 2 días</span><br><span class="xs mfg">2 envíos</span></td>
+<td class="num"><button type="button" class="btn btn-g btn-sm">Reenviar</button></td></tr><tr><td style="width: 44px"><span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+<td><div class="row" style="gap: 10px"><span class="av">BO</span><span class="col"><span class="w5">Blanca Osorio</span><span class="xs mfg">Supervisora</span></span></div></td>
+<td>Ventas</td>
+<td><span class="row sm" style="gap: 6px"><span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>Correo</span></td>
+<td><div class="row" style="gap: 6px; flex-wrap: wrap"><span class="badge b-draft"><span class="dot"></span>Guía I</span><span class="badge b-draft"><span class="dot"></span>Guía III</span></div></td>
+<td><span class="sm">hace 2 días</span><br><span class="xs mfg">2 envíos</span></td>
+<td class="num"><button type="button" class="btn btn-g btn-sm">Reenviar</button></td></tr><tr><td style="width: 44px"><span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+<td><div class="row" style="gap: 10px"><span class="av">CD</span><span class="col"><span class="w5">Carla Delagarza</span><span class="xs mfg">Analista</span></span></div></td>
+<td>Ventas</td>
+<td><span class="row sm" style="gap: 6px"><span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span>WhatsApp</span></td>
+<td><div class="row" style="gap: 6px; flex-wrap: wrap"><span class="badge b-draft"><span class="dot"></span>Guía I</span><span class="badge b-draft"><span class="dot"></span>Guía III</span></div></td>
+<td><span class="sm">hace 3 días</span><br><span class="xs mfg">1 envío</span></td>
+<td class="num"><button type="button" class="btn btn-g btn-sm">Reenviar</button></td></tr><tr><td style="width: 44px"><span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+<td><div class="row" style="gap: 10px"><span class="av">DU</span><span class="col"><span class="w5">Diana Ulloa</span><span class="xs mfg">Operadora</span></span></div></td>
+<td>Administración</td>
+<td><span class="row sm" style="gap: 6px"><span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>SMS</span></td>
+<td><div class="row" style="gap: 6px; flex-wrap: wrap"><span class="badge b-draft"><span class="dot"></span>Guía I</span><span class="badge b-draft"><span class="dot"></span>Guía III</span></div></td>
+<td><span class="sm">hace 3 días</span><br><span class="xs mfg">1 envío</span></td>
+<td class="num"><button type="button" class="btn btn-g btn-sm">Reenviar</button></td></tr><tr><td style="width: 44px"><span class="chk on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+<td><div class="row" style="gap: 10px"><span class="av">EM</span><span class="col"><span class="w5">Elsa Madera</span><span class="xs mfg">Analista</span></span></div></td>
+<td>Dirección</td>
+<td><span class="row sm" style="gap: 6px"><span class="mfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>Correo</span></td>
+<td><div class="row" style="gap: 6px; flex-wrap: wrap"><span class="badge b-draft"><span class="dot"></span>Guía I</span><span class="badge b-draft"><span class="dot"></span>Guía III</span></div></td>
+<td><span class="sm">hace 3 días</span><br><span class="xs mfg">1 envío</span></td>
+<td class="num"><button type="button" class="btn btn-g btn-sm">Reenviar</button></td></tr></tbody></table></div>
+<div class="row sm mfg" style="justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border)"><span>1 a 6 de 42</span><div class="row" style="gap: 6px"><button type="button" class="btn btn-o btn-sm" disabled style="opacity: .5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Anteriores</button><button type="button" class="btn btn-o btn-sm">Siguientes<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div></div>
+</div>
+</section>
+
+</div>
+</main>
+<div role="status" class="float popin" style="position: absolute; right: 32px; bottom: 32px; width: 340px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+<div class="row" style="gap: 10px"><span style="color: var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span><span class="sm w5" style="flex-grow: 1">Enviando recordatorios · 12 de 42</span><button type="button" class="btn btn-g btn-sm btn-i" aria-label="Ocultar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+<div class="bar" style="height: 6px"><span style="width: 29%"></span></div></div>
+</div>
+
+</body>
+</html>

@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Actions\DeactivateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Enums\TenantView;
 use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
@@ -18,6 +19,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\DisplayDate;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -25,13 +27,20 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
-    public function index(ListTenants $listTenants): Response
+    public function index(Request $request, ListTenants $listTenants): Response
     {
         Gate::authorize('manage-tenants');
 
+        $search = trim($request->string('q')->toString());
+        $view = TenantView::tryFrom($request->string('status')->toString()) ?? TenantView::All;
+        $summary = $listTenants->summary($search);
+
         return Inertia::render('tenancy/index', [
             'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
-            'tenants' => $listTenants->handle()->through(function (Tenant $tenant): array {
+            'filters' => ['q' => $search, 'status' => $view->value],
+            'counts' => $summary['counts'],
+            'trialsEndingSoon' => $summary['trialsEndingSoon'],
+            'tenants' => $listTenants->handle($search, $view)->through(function (Tenant $tenant): array {
                 $status = $tenant->status();
 
                 return [

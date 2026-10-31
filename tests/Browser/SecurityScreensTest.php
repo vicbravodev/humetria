@@ -23,12 +23,15 @@ function visitSecuritySettings(User $user): AwaitableWebpage
 
 it('renders the password, two-factor and passkeys sections', function (): void {
     visitSecuritySettings(User::factory()->create())
-        ->assertSee('Cambiar contraseña')
+        ->assertSee('Guardar contraseña')
         ->assertSee('Contraseña actual')
         ->assertSee('Nueva contraseña')
+        ->assertSee('Al menos 8 caracteres')
         ->assertSee('Verificación en dos pasos')
-        ->assertSee('Activar verificación en dos pasos')
+        ->assertSee('Desactivada')
+        ->assertPresent('button[aria-label="Activar verificación en dos pasos"]')
         ->assertSee('Llaves de acceso')
+        ->assertSee('Agregar llave')
         ->assertSee('Aún no tienes llaves de acceso')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
@@ -36,7 +39,7 @@ it('renders the password, two-factor and passkeys sections', function (): void {
 
 it('opens the setup modal with the QR code and the manual key', function (): void {
     visitSecuritySettings(User::factory()->create())
-        ->press('Activar verificación en dos pasos')
+        ->click('button[aria-label="Activar verificación en dos pasos"]')
         ->assertSee('Activar la verificación en dos pasos')
         ->assertSee('o escribe la clave manualmente')
         ->assertPresent('[role="dialog"] svg')
@@ -53,7 +56,8 @@ it('opens the setup modal with the QR code and the manual key', function (): voi
 
 it('reveals the recovery codes of a user with two-factor enabled', function (): void {
     visitSecuritySettings(User::factory()->withTwoFactor()->create())
-        ->assertSee('Desactivar verificación en dos pasos')
+        ->assertSee('Activada')
+        ->assertPresent('button[aria-label="Desactivar verificación en dos pasos"]')
         ->assertSee('Códigos de recuperación')
         ->assertAttribute('#recovery-codes-section', 'aria-hidden', 'true')
         ->assertNotPresent('button[aria-describedby="regenerate-warning"]')

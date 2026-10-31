@@ -30,7 +30,7 @@
     --chart-3: #1d5c55;
     --chart-4: #a08a70;
     --chart-5: #5c5248;
-    --sidebar: #f5f8f7;
+    --sidebar: #f2f6f5;
     --sidebar-foreground: #14211f;
     --sidebar-primary: #0b7a6f;
     --sidebar-primary-foreground: #ffffff;
@@ -56,6 +56,11 @@
     --risk-muy-alto: #9a3b26;
     --risk-muy-alto-bg: #f3d8cf;
     --risk-muy-alto-fg: #8a2e1c;
+    /* The empty part of a meter or bar (ArcMeter, ProgressBar). */
+    --track: #e3eae7;
+    /* A notice that needs attention without alarm: missing contact, a deadline. */
+    --warning: #f6eedc;
+    --warning-foreground: #7a5714;
     /* Raised: the page panel. Float: what hovers over the page (menus, dialogs, toasts). */
     --elevation-raised:
         0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
@@ -115,6 +120,9 @@
     --risk-muy-alto: #f07a62;
     --risk-muy-alto-bg: #4a1f18;
     --risk-muy-alto-fg: #f7a08c;
+    --track: #24312e;
+    --warning: #33291a;
+    --warning-foreground: #e9c886;
     /* A shadow disappears on dark: depth comes from a lit top edge and a shade of the frame. */
     --elevation-raised: inset 0 1px 0
         color-mix(in oklab, var(--foreground) 5%, transparent);
@@ -186,6 +194,9 @@
     --color-risk-muy-alto: var(--risk-muy-alto);
     --color-risk-muy-alto-bg: var(--risk-muy-alto-bg);
     --color-risk-muy-alto-fg: var(--risk-muy-alto-fg);
+    --color-track: var(--track);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
     --shadow-raised: var(--elevation-raised);
     --shadow-float: var(--elevation-float);
 }
@@ -324,8 +335,47 @@
     }
 }
 
+/*
+ * The report's charts (components/results/report-*): once, as the report opens, bars grow from their axis, the
+ * questionnaires of the summary appear one after another and each block rises into place. Never with reduced motion
+ * (they go through motion-safe:) and never on paper.
+ */
+@theme {
+    --animate-report-grow: report-grow 850ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    --animate-report-rise: report-rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    --animate-report-pop: report-pop 380ms var(--ease-out) both;
+
+    @keyframes report-grow {
+        from {
+            transform: scaleX(0);
+        }
+    }
+
+    @keyframes report-rise {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+    }
+
+    @keyframes report-pop {
+        from {
+            opacity: 0;
+            transform: scale(0.7);
+        }
+    }
+}
+
 /* A report prints alone: no sidebar, no top bar, no panel frame, and anything marked print:hidden stays on screen. */
 @media print {
+    *,
+    ::before,
+    ::after {
+        animation: none !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
     [data-slot='sidebar'] {
         display: none;
     }

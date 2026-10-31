@@ -1,4 +1,6 @@
+import { index, show } from '@/routes/tenant/campaigns';
 import type {
+    BreadcrumbItem,
     ItemResult,
     LevelCounts,
     Participation,
@@ -96,7 +98,7 @@ export function riskVerdict(counts: LevelCounts): string {
 
 /** Which group (a domain, a category) has the largest share in Alto or Muy alto; nothing when none has any. */
 export function worstGroupText(
-    groups: RiskGroup[],
+    groups: Pick<RiskGroup, 'label' | 'levels'>[],
     noun: string,
 ): string | null {
     const worst = rankBySeverity(groups)[0];
@@ -105,7 +107,7 @@ export function worstGroupText(
         return null;
     }
 
-    return `El ${noun} que más pesa es ${worst.label}: ${percentText(highRisk(worst.levels), total(worst.levels))} en riesgo alto o muy alto.`;
+    return `El ${noun} que más pesa es ${worst.label}, con ${percentText(highRisk(worst.levels), total(worst.levels))} en riesgo alto o muy alto.`;
 }
 
 /** "7 de 29 desfavorables (24 %)": the answers to a question on the side that scores risk. */
@@ -121,4 +123,45 @@ export function rankItems(items: ItemResult[]): ItemResult[] {
             : shareOf(item.unfavorable, item.answered);
 
     return items.toSorted((a, b) => share(b) - share(a));
+}
+
+/**
+ * When an evaluation ran, from two days as the server writes them ("10 oct 2026"), with what they share written
+ * once: "10 al 29 oct 2026", "28 oct al 3 nov 2026". Since when while it runs; nothing before it starts.
+ */
+export function periodText(
+    from: string | null,
+    to: string | null,
+): string | null {
+    if (from === null) {
+        return null;
+    }
+
+    if (to === null) {
+        return `Desde el ${from}`;
+    }
+
+    const [fromDay, fromMonth, fromYear] = from.split(' ');
+    const [, toMonth, toYear] = to.split(' ');
+
+    if (fromYear !== toYear) {
+        return `${from} al ${to}`;
+    }
+
+    return fromMonth === toMonth
+        ? `${fromDay} al ${to}`
+        : `${fromDay} ${fromMonth} al ${to}`;
+}
+
+/** The trail of a page under an evaluation, in the top bar: "NOM-035 › Planta Norte › Resultados". */
+export function resultsTrail(
+    tenantSlug: string,
+    campaign: { id: string; workCenter: string },
+    page: string,
+): BreadcrumbItem[] {
+    return [
+        { title: 'NOM-035', href: index(tenantSlug) },
+        { title: campaign.workCenter, href: show([tenantSlug, campaign.id]) },
+        { title: page },
+    ];
 }

@@ -14,23 +14,21 @@ export default function RiskSummary({
     const worst = worstGroupText(results.domains, 'dominio');
 
     return (
-        <div className="grid gap-5">
-            <p className="max-w-[65ch] text-lg leading-7 font-medium">
+        <div className="flex flex-col gap-4">
+            <p className="max-w-[520px] text-[22px] leading-8 font-medium tracking-[-0.01em] text-pretty">
                 {riskVerdict(results.final)}
-                {worst !== null && (
-                    <span className="font-normal text-muted-foreground">
-                        {' '}
-                        {worst}
-                    </span>
-                )}
+                {worst !== null && ` ${worst}`}
             </p>
             <LevelBar
                 counts={results.final}
                 levels={levels}
                 label="Cuestionarios por nivel de riesgo"
-                className="h-8 rounded-md"
+                className="h-3.5 rounded-full"
             />
             <LevelLegend levels={levels} counts={results.final} />
+            <p className="text-[13px] leading-[18px] text-muted-foreground">
+                Cada cuestionario se califica por sí solo; no se promedian.
+            </p>
         </div>
     );
 }

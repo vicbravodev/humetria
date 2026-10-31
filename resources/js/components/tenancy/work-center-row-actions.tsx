@@ -46,7 +46,7 @@ export default function WorkCenterRowActions({
                         size="icon"
                         aria-label={`Acciones de ${workCenter.name}`}
                         data-test="work-center-actions"
-                        className="text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground"
+                        className="-my-2 -mr-2 text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground"
                     >
                         <Ellipsis className="size-5" />
                     </Button>

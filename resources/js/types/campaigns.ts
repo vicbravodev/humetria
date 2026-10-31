@@ -22,6 +22,7 @@ export type CampaignSummary = {
     instruments: string[];
     closesOn: string | null;
     closedOn: string | null;
+    launchedOn: string | null;
     progress: CampaignProgress | null;
 };
 
@@ -34,7 +35,29 @@ export type CampaignDetail = CampaignSummary & {
     sampleSize: number | null;
     quotas: GenderQuota[];
     launchedOn: string | null;
+    workCenterId: string;
+    createdOn: string;
+    /** Two years after it closed (num. 7.9); null while open. */
+    nextDueBy: string | null;
 };
+
+/** Who answered in one area, of everyone still in the campaign, and how many wait with a link sent. */
+export type AreaParticipation = {
+    id: string;
+    name: string;
+    answered: number;
+    pending: number;
+    total: number;
+};
+
+/** People who finished on one day (Y-m-d); null for the days still to come. */
+export type AnswerDay = { date: string; answers: number | null };
+
+/** The days from launch to the last day, or null while fewer than the minimum group answered. */
+export type AnswersByDay = { minimum: number; days: AnswerDay[] | null };
+
+/** Before launch: how many of the people the links reach by email, and how many they do not. */
+export type DraftContact = { reachable: number; unreachable: number };
 
 export type InstrumentProgress = {
     key: string;
@@ -80,14 +103,22 @@ export type SampledPerson = {
 export type WorkCenterEvaluation = {
     id: string;
     name: string;
+    /** Its main activity: "Manufactura de autopartes". */
+    activity: string;
     workers: number;
     guides: ('I' | 'II' | 'III')[];
     lastEvaluatedOn: string | null;
     dueOn: string | null;
     overdue: boolean;
-    openCampaignId: string | null;
+    /** The last closed evaluation, to read its results. */
+    lastCampaignId: string | null;
+    /** The evaluation in draft or running, if any. */
+    openCampaign: CampaignSummary | null;
     eligible: boolean;
 };
+
+/** How many work centers in use call for Guía I alone (up to 15), Guías I and II (16 to 50) and I and III (over 50). */
+export type CentersBySize = { small: number; medium: number; large: number };
 
 export type SurveyOption = { value: string; label: string };
 

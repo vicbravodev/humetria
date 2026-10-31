@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Organization\Actions\CountEmployees;
 use App\Modules\Organization\Actions\CreateEmployee;
 use App\Modules\Organization\Actions\DeactivateEmployee;
 use App\Modules\Organization\Actions\ListEmployees;
@@ -31,7 +32,7 @@ final class EmployeeController extends Controller
 {
     public function __construct(private readonly WorkCenters $workCenters) {}
 
-    public function index(Request $request, ListEmployees $listEmployees): Response
+    public function index(Request $request, ListEmployees $listEmployees, CountEmployees $countEmployees): Response
     {
         Gate::authorize('manage-organization');
 
@@ -40,6 +41,8 @@ final class EmployeeController extends Controller
         $centerNames = array_column(array_map(fn (WorkCenterSummary $center): array => ['id' => $center->id, 'name' => $center->name], $centers), 'name', 'id');
 
         return Inertia::render('organization/employees', [
+            // Of the whole company: the filters narrow the list, never the tabs or the sentence above it.
+            'counts' => $countEmployees->handle(),
             'employees' => $listEmployees->handle($filters)->through(fn (Employee $employee): array => [
                 'id' => $employee->id,
                 'name' => $employee->name,
@@ -60,6 +63,7 @@ final class EmployeeController extends Controller
                 'work_center' => $filters->workCenterId === null ? null : ['value' => $filters->workCenterId, 'label' => $centerNames[$filters->workCenterId] ?? ''],
                 'area' => $filters->areaId === null ? null : ['value' => $filters->areaId, 'label' => Area::query()->find($filters->areaId, ['id', 'name'])->name ?? ''],
                 'status' => $filters->active ? 'active' : 'inactive',
+                'without_email' => $filters->withoutEmail,
             ],
             'genders' => array_map(fn (Gender $gender): array => ['value' => $gender->value, 'label' => $gender->label()], Gender::cases()),
         ]);
@@ -109,6 +113,7 @@ final class EmployeeController extends Controller
             workCenterId: $uuid('work_center'),
             areaId: $uuid('area'),
             active: $request->string('status')->toString() !== 'inactive',
+            withoutEmail: $request->boolean('without_email'),
         );
     }
 

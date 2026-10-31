@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { peopleQuery } from '@/lib/campaigns';
+import { remindable } from '@/lib/evaluation';
 import { resend } from '@/routes/tenant/campaigns';
 import type { PeopleFilters } from '@/types';
 
@@ -24,23 +26,28 @@ export default function ResendFilteredDialog({
     campaignId,
     filters,
     count,
+    trigger,
 }: {
     tenantSlug: string;
     campaignId: string;
     filters: PeopleFilters;
     count: number;
+    /** The button that opens it; "Reenviar a N personas" when not given. */
+    trigger?: ReactElement;
 }) {
     const [open, setOpen] = useState(false);
     const people = count === 1 ? '1 persona' : `${count} personas`;
 
-    if (!['pending', 'failed'].includes(filters.status) || count === 0) {
+    if (!remindable(filters.status, count)) {
         return null;
     }
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">Reenviar a {people}</Button>
+                {trigger ?? (
+                    <Button variant="outline">Reenviar a {people}</Button>
+                )}
             </DialogTrigger>
             <DialogContent>
                 <DialogTitle>¿Reenviar el enlace?</DialogTitle>

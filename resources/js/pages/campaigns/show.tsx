@@ -1,43 +1,36 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
-import CampaignFacts from '@/components/campaigns/campaign-facts';
-import CampaignHeaderActions from '@/components/campaigns/campaign-header-actions';
-import DraftActions from '@/components/campaigns/draft-actions';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import CampaignFollowUp from '@/components/campaigns/campaign-follow-up';
-import LaunchForm from '@/components/campaigns/launch-form';
-import SampleTable from '@/components/campaigns/sample-table';
-import ConsolePagination from '@/components/console-pagination';
-import PageHeader from '@/components/page-header';
-import { index } from '@/routes/tenant/campaigns';
+import CampaignHeaderActions from '@/components/campaigns/campaign-header-actions';
+import CampaignPageHeader from '@/components/campaigns/campaign-page-header';
+import ClosedEvaluation from '@/components/campaigns/closed-evaluation';
+import DraftReview from '@/components/campaigns/draft-review';
+import { useCampaignAccess } from '@/hooks/use-campaign-access';
 import { peoplePage } from '@/lib/campaigns';
+import { pendingTotal } from '@/lib/evaluation';
+import { index } from '@/routes/tenant/campaigns';
 import type {
+    AnswersByDay,
+    AreaParticipation,
     CampaignDetail,
-    CampaignSending,
-    PeopleFilters,
     CampaignPerson,
-    Paginated,
-    StandingCount,
+    CampaignSending,
+    DraftContact,
     InstrumentProgress,
+    Paginated,
+    PeopleFilters,
     ReplacementPool,
     SampledPerson,
+    StandingCount,
 } from '@/types';
 
-export default function Campaign({
-    campaign,
-    instruments,
-    people,
-    standings,
-    filters,
-    sending,
-    sample,
-    launch,
-    minDeadline,
-    replacementPool,
-}: {
+export default function Campaign(props: {
     campaign: CampaignDetail;
     instruments: InstrumentProgress[];
     people: Paginated<CampaignPerson> | null;
     standings: StandingCount[] | null;
+    areas: AreaParticipation[] | null;
+    answersByDay: AnswersByDay | null;
+    contact: DraftContact | null;
     filters: PeopleFilters;
     sending: CampaignSending | null;
     sample: Paginated<SampledPerson> | null;
@@ -45,71 +38,60 @@ export default function Campaign({
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
 }) {
-    const { tenant } = usePage().props;
-    const tenantSlug = tenant?.slug ?? '';
-    const canManage = tenant?.can.manage_campaigns ?? false;
-    const isDraft = campaign.status === 'draft';
+    const { campaign, instruments } = props;
+    const { route, company, canManage, canSeeGuideI } = useCampaignAccess(
+        campaign.id,
+    );
+    const people = peoplePage(props.people, props.standings, props.filters);
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'NOM-035', href: index(route[0]) },
+            { title: campaign.workCenter },
+        ],
+    });
 
     return (
         <>
             <Head title={`${campaign.kindLabel} · ${campaign.workCenter}`} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <Link
-                    href={index(tenantSlug)}
-                    className="flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                >
-                    <ArrowLeft aria-hidden="true" className="size-4" />
-                    NOM-035
-                </Link>
-                <PageHeader
-                    caption={campaign.kindLabel}
-                    title={campaign.workCenter}
-                >
+            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+                <CampaignPageHeader campaign={campaign} canManage={canManage}>
                     <CampaignHeaderActions
-                        tenantSlug={tenantSlug}
+                        tenantSlug={route[0]}
                         campaign={campaign}
+                        canManage={canManage}
+                        minDeadline={props.minDeadline}
+                        replacementPool={props.replacementPool}
+                        pending={pendingTotal(props.areas)}
                     />
-                </PageHeader>
-                <CampaignFacts campaign={campaign} />
-                {!isDraft && (
+                </CampaignPageHeader>
+                {campaign.status === 'draft' && (
+                    <DraftReview
+                        route={route}
+                        company={company}
+                        campaign={campaign}
+                        draft={props}
+                    />
+                )}
+                {campaign.status === 'active' && (
                     <CampaignFollowUp
-                        tenantSlug={tenantSlug}
+                        route={route}
                         campaign={campaign}
                         instruments={instruments}
-                        people={peoplePage(people, standings, filters)}
-                        sending={sending}
-                        minDeadline={minDeadline}
-                        replacementPool={replacementPool}
+                        people={people}
+                        sending={props.sending}
+                        areas={props.areas}
+                        answersByDay={props.answersByDay}
                     />
                 )}
-                {isDraft && canManage && (
-                    <DraftActions
-                        tenantSlug={tenantSlug}
-                        campaignId={campaign.id}
-                        sampled={campaign.population === 'sample'}
+                {campaign.status === 'closed' && (
+                    <ClosedEvaluation
+                        route={route}
+                        campaign={campaign}
+                        instruments={instruments}
+                        people={people}
+                        canSeeGuideI={canSeeGuideI}
                     />
-                )}
-                {launch !== null && (
-                    <LaunchForm
-                        tenantSlug={tenantSlug}
-                        campaignId={campaign.id}
-                        min={launch.min}
-                        suggested={launch.suggested}
-                    />
-                )}
-                {sample !== null && (
-                    <section className="flex flex-col gap-4">
-                        <h2 className="text-xl leading-7 font-semibold">
-                            Muestra sorteada ({sample.total})
-                        </h2>
-                        <SampleTable people={sample.data} />
-                        <ConsolePagination
-                            page={sample}
-                            label="Páginas de la muestra"
-                            previous="Anteriores"
-                            next="Siguientes"
-                        />
-                    </section>
                 )}
             </div>
         </>

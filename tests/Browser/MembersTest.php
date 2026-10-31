@@ -40,8 +40,9 @@ it('lists who has access and the pending invitations', function (bool $dark, boo
         ->assertSee('Olga Owner')
         ->assertSee('(tú)')
         ->assertSee('Beto Ramírez')
-        ->assertSee('Invitaciones pendientes')
-        ->assertSee('Carla Díaz');
+        ->assertSee('Carla Díaz')
+        ->assertSee('Pendiente')
+        ->assertSee('Qué puede hacer cada rol');
 })->with($looks);
 
 it('passes the checks with the invite dialog and a row menu open', function (bool $dark, bool $mobile): void {
@@ -49,11 +50,11 @@ it('passes the checks with the invite dialog and a row menu open', function (boo
 
     visitPage('tenancy/members', '/admin/acme/members', $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('Invitar')
-        ->assertSee('Invitar a la empresa'));
+        ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.'));
 
     visitPage('tenancy/members', '/admin/acme/members', $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('@member-actions')
-        ->assertSee('Cambiar a Consulta'));
+        ->assertSee('Quitar acceso'));
 })->with($looks);
 
 it('invites someone as a viewer', function (): void {
@@ -63,8 +64,7 @@ it('invites someone as a viewer', function (): void {
         ->click('Invitar')
         ->type('name', 'Diego Luna')
         ->type('email', 'diego@acme.mx')
-        ->click('#member-role')
-        ->click('[role="option"]:has-text("Consulta")')
+        ->radio('role', 'viewer')
         ->press('Enviar invitación')
         ->assertSee('Invitación enviada.')
         ->assertSee('Diego Luna')
@@ -88,8 +88,9 @@ it('changes a role and takes access away', function (): void {
     $tenant = acmeWithPeople();
 
     visit('/admin/acme/members')
-        ->click('@member-actions')->click('Cambiar a Consulta')
+        ->click('@member-role')->click('[role="option"]:has-text("Consulta")')
         ->assertSee('Rol actualizado.')
+        ->assertSeeIn('@member-role', 'Consulta')
         ->click('@member-actions')->click('Quitar acceso')
         ->assertSee('¿Quitar el acceso de Beto Ramírez?')
         ->press('Quitar acceso')

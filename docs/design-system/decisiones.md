@@ -24,6 +24,7 @@ Una línea por decisión importante, con el porqué frente a la personalidad: c�
 - **Cuerpo de 16 px y encuesta en 18–20 px.** Legible para personas de planta con poca práctica digital, en cualquier celular.
 - **Radio base de 10 px.** Eco de los remates redondos del símbolo: amable sin llegar a lo burbujeante e infantil.
 - **Profundidad en dos niveles (`shadow-raised` y `shadow-float`).** Sin capas todo se leía al mismo nivel y se veía plano; el panel levantado sobre el marco ordena la vista como en las herramientas modernas, sin volver a las sombras pesadas.
+- **El informe sí se anima al abrir.** Es el entregable que RH presenta: ver crecer las barras desde el eje enseña a leer la gráfica divergente; se hace una sola vez y nunca con movimiento reducido ni en papel.
 - **Movimiento corto con curvas fuertes.** Responder al toque en menos de 300 ms se siente rápido y vivo; las curvas débiles o el rebote se sienten lentos o infantiles.
 - **Sidebar plegable a íconos.** RH gana espacio para tablas y reportes sin perder la navegación; el nombre vuelve como tooltip.
 - **Tema siempre visible.** Quien trabaja de noche o comparte pantalla cambia de modo sin buscarlo en ajustes.

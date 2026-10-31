@@ -14,6 +14,8 @@ export type LevelCounts = number[];
 export type RiskGroup = {
     key: string;
     label: string;
+    /** The category a domain belongs to (Tablas 3 y 6); null for a category. */
+    category: string | null;
     levels: LevelCounts;
 };
 
@@ -61,6 +63,8 @@ export type ResultsCampaign = {
     closedOn: string | null;
     workers: number | null;
     sampleSize: number | null;
+    /** The guides it applies, by short title: "Guía I", "Guía II". */
+    instruments: string[];
 };
 
 export type Participation = {
@@ -86,6 +90,7 @@ export type ScreenedPerson = {
     id: string;
     name: string;
     area: string;
+    jobTitle: string;
     answeredOn: string;
 };
 
@@ -102,6 +107,8 @@ export type ReportCenter = {
 export type NomReport = {
     center: ReportCenter;
     guide: string;
+    /** How many items the guide has: 46 for the Guía II, 72 for the III. */
+    itemCount: number;
     period: string;
     participation: Participation;
     method: string;

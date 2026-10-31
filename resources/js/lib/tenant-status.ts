@@ -1,10 +1,10 @@
-import type { TenantRow } from '@/types';
+import type { TenantFilters, TenantRow } from '@/types';
 
 type BadgeVariant = 'default' | 'secondary' | 'outline' | 'destructive';
 
 const VARIANTS: Record<TenantRow['status'], BadgeVariant> = {
     active: 'default',
-    trial: 'secondary',
+    trial: 'default',
     not_started: 'outline',
     trial_ended: 'destructive',
     expired: 'destructive',
@@ -56,4 +56,29 @@ export function trialLabel(daysLeft: number): string {
     return daysLeft === 1
         ? 'Prueba · último día'
         : `Prueba · quedan ${daysLeft} días`;
+}
+
+/** The console's line under "Empresas": how many there are and, when any, how many trials end this week. */
+export function companiesSummary(total: number, endingSoon: number): string {
+    const companies = total === 1 ? '1 empresa' : `${total} empresas`;
+
+    if (endingSoon === 0) {
+        return companies;
+    }
+
+    return endingSoon === 1
+        ? `${companies} · 1 prueba termina esta semana`
+        : `${companies} · ${endingSoon} pruebas terminan esta semana`;
+}
+
+/** The console's search and view as its address carries them: without the defaults. */
+export function companiesQuery(
+    filters: TenantFilters,
+): Partial<Record<keyof TenantFilters, string>> {
+    const q = filters.q.trim();
+
+    return {
+        ...(q === '' ? {} : { q }),
+        ...(filters.status === 'all' ? {} : { status: filters.status }),
+    };
 }

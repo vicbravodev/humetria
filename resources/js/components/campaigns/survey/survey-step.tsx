@@ -32,14 +32,12 @@ export default function SurveyStep({
     }
 
     return (
-        <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-2 rounded-xl bg-accent p-5 text-accent-foreground">
+        <div className="flex flex-col gap-5 md:gap-0">
+            <div className="flex flex-col gap-1 rounded-xl bg-accent px-4 py-3.5 text-[17px] leading-[26px] text-accent-foreground md:mb-2 md:px-[18px] md:py-4 md:text-lg md:leading-7">
                 {section.title !== null && (
                     <p className="font-semibold">{section.title}</p>
                 )}
-                {section.instruction !== '' && (
-                    <p className="text-lg leading-7">{section.instruction}</p>
-                )}
+                {section.instruction !== '' && <p>{section.instruction}</p>}
             </div>
             {step.items.map((item) => (
                 <SurveyQuestion
