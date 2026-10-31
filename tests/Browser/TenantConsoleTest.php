@@ -217,8 +217,9 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
 it('activates a company that has not started, choosing the date', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
-    // Mid-month, two months ahead: always reachable with two clicks on the next-month arrow.
-    $until = now('America/Mexico_City')->startOfMonth()->addMonths(2)->addDays(14);
+    // The calendar opens on the month of the first day it allows (tomorrow), not today's: on the last day of a month
+    // that is already the next one. Mid-month, two months after it: always two clicks on the next-month arrow.
+    $until = now('America/Mexico_City')->addDay()->startOfMonth()->addMonths(2)->addDays(14);
 
     visit('/admin/companies')
         ->assertSee('Sin iniciar')
