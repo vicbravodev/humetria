@@ -8,6 +8,7 @@ use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
 use App\Modules\Organization\Providers\OrganizationServiceProvider;
 use App\Modules\Responses\Providers\ResponsesServiceProvider;
 use App\Modules\Results\Providers\ResultsServiceProvider;
+use App\Modules\Telework\Providers\TeleworkServiceProvider;
 use App\Modules\Tenancy\Providers\TenancyServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
@@ -24,4 +25,5 @@ return [
     CampaignsServiceProvider::class,
     ResponsesServiceProvider::class,
     ResultsServiceProvider::class,
+    TeleworkServiceProvider::class,
 ];

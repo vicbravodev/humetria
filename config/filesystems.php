@@ -36,6 +36,13 @@ return [
 
     'tenant_logos' => env('TENANT_LOGOS_DISK', 'public'),
 
+    /*
+    | The disk of the NOM-037 evidence (photos of workplaces, policy and other PDFs). Private: never a public URL; files
+    | are served only through the app, after checking who may see them.
+    */
+
+    'telework_files' => env('TELEWORK_FILES_DISK', 'local'),
+
     'disks' => [
 
         'local' => [
