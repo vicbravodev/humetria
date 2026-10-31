@@ -133,7 +133,7 @@ function SidebarProvider({
             "--sidebar-width": SIDEBAR_WIDTH,
             "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
             ...style,
-          } as React.CSSProperties
+          }
         }
         className={cn(
           "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
@@ -191,7 +191,7 @@ function Sidebar({
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
+            }
           }
           side={side}
         >
@@ -604,7 +604,7 @@ function SidebarMenuSkeleton({
   const [skeletonStyle] = React.useState(() => (
       {
         "--skeleton-width": `${Math.floor(Math.random() * 40) + 50}%` // Random width between 50 and 90%.
-    } as React.CSSProperties
+    }
   ))
 
   return (
