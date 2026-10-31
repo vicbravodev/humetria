@@ -2,12 +2,13 @@ import { router } from '@inertiajs/react';
 import PortalController from '@/actions/App/Modules/Telework/Http/Controllers/PortalController';
 import ChecklistConsent from '@/components/telework/checklist-consent';
 import ChecklistGroup from '@/components/telework/checklist-group';
+import GeneralPhotos from '@/components/telework/general-photos';
 import ChecklistIntro from '@/components/telework/checklist-intro';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { useChecklistForm } from '@/hooks/use-checklist-form';
-import { groupByHeading } from '@/lib/telework/answers';
+import { GENERAL, groupByHeading } from '@/lib/telework/answers';
 import type { PortalApplication, PortalQuestion } from '@/types';
 
 /** The checklist as the person fills it in, one send at the end (pantalla: Encuesta-Movil). */
@@ -56,6 +57,12 @@ export default function ChecklistForm({
                     form={form}
                 />
             ))}
+            {consented && (
+                <GeneralPhotos
+                    photos={form.state.photos[GENERAL] ?? []}
+                    onPhotos={(files) => form.photos(GENERAL, files)}
+                />
+            )}
             {consented && (
                 <div className="grid gap-2">
                     <Label htmlFor="special-needs" className="text-base">

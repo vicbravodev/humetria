@@ -25,6 +25,9 @@ export function isUnfavorable(
     );
 }
 
+/** The key of the photos of the whole list, as the server names them. */
+export const GENERAL = 'general';
+
 export type ChecklistState = {
     consent: boolean | null;
     answers: Record<string, PortalAnswer>;
@@ -118,11 +121,13 @@ export function submission(questions: PortalQuestion[], state: ChecklistState) {
         ),
         photos: consent
             ? Object.fromEntries(
-                  flagged.flatMap((question) => {
-                      const files = state.photos[question.id] ?? [];
+                  [GENERAL, ...flagged.map((question) => question.id)].flatMap(
+                      (key) => {
+                          const files = state.photos[key] ?? [];
 
-                      return files.length === 0 ? [] : [[question.id, files]];
-                  }),
+                          return files.length === 0 ? [] : [[key, files]];
+                      },
+                  ),
               )
             : {},
         special_needs: consent ? state.specialNeeds.trim() : '',

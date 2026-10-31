@@ -199,6 +199,29 @@ describe('submission', () => {
         expect(sent.special_needs).toBe('Escritorio alto');
     });
 
+    it('sends the photos of the whole list only with consent', () => {
+        const base = {
+            answers: {},
+            notes: {},
+            photos: { general: [photo] },
+            specialNeeds: '',
+        };
+
+        expect(
+            submission(questions, { ...base, consent: true }).photos,
+        ).toEqual({ general: [photo] });
+        expect(
+            submission(questions, { ...base, consent: false }).photos,
+        ).toEqual({});
+        expect(
+            submission(questions, {
+                ...base,
+                consent: true,
+                photos: { general: [] },
+            }).photos,
+        ).toEqual({});
+    });
+
     it('leaves out the health answers, photos and special needs when consent is declined', () => {
         const sent = submission(questions, {
             consent: false,

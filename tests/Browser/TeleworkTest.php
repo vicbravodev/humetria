@@ -317,6 +317,11 @@ it('lets the person answer on their phone with a flagged answer, pick a photo an
         // the upload itself (re-encoding, EXIF) is covered by PortalChecklistTest; here the picker is used and emptied.
         ->click('[aria-label="Quitar photo-with-gps.jpg"]')
         ->assertDontSee('photo-with-gps.jpg')
+        ->assertSee('Fotos del lugar (opcional)')
+        ->attach('[data-testid="photo-general"]', __DIR__.'/../Fixtures/photo.png')
+        ->assertSee('photo.png')
+        ->click('[aria-label="Quitar photo.png"]')
+        ->assertDontSee('photo.png')
         ->press('Enviar mi lista')
         ->assertSee('Describa el riesgo')
         ->fill("#note-{$light->id}", 'La luz es muy poca')
