@@ -1,8 +1,10 @@
 import { PartyPopper } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
+import PortalDocuments from '@/components/telework/portal/portal-documents';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
 import PortalPhotoRequestCard from '@/components/telework/portal/portal-photo-request-card';
 import PortalVisitCard from '@/components/telework/portal/portal-visit-card';
+import { nothingPending } from '@/lib/telework/portal';
 import type { PortalPending } from '@/types';
 
 /** What the person has to do and what they already sent, in plain words ("usted"). */
@@ -15,11 +17,7 @@ export default function PortalHome({
     token: string;
     pending: PortalPending;
 }) {
-    const nothing =
-        pending.checklists.length === 0 &&
-        pending.sent.length === 0 &&
-        pending.photos.length === 0 &&
-        pending.visits.length === 0;
+    const nothing = nothingPending(pending);
 
     return (
         <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -38,6 +36,7 @@ export default function PortalHome({
                     por correo.
                 </EmptyState>
             )}
+            <PortalDocuments documents={pending.documents} token={token} />
             {(pending.photos.length > 0 || pending.visits.length > 0) && (
                 <section aria-labelledby="portal-asked" className="grid gap-3">
                     <h2 id="portal-asked" className="text-xl font-semibold">
