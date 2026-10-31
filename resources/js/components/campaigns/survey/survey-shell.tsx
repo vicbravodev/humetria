@@ -14,21 +14,21 @@ export default function SurveyShell({
     children: ReactNode;
 }) {
     return (
-        <div className="flex min-h-dvh flex-col bg-background">
-            <header className="flex items-center justify-between gap-4 border-b px-4 py-4 md:px-6">
-                <p className="text-lg leading-7 font-semibold">
+        <div className="flex min-h-dvh flex-col bg-background text-lg leading-7">
+            <header className="flex h-[60px] shrink-0 items-center justify-between gap-3 border-b bg-card px-4">
+                <p className="text-base font-semibold">
                     {company ?? 'Evaluación'}
                 </p>
-                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-base font-medium text-primary">
                     <Lock aria-hidden="true" className="size-4" />
                     Confidencial
                 </p>
             </header>
-            <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8 md:px-6">
+            <main className="flex w-full flex-1 justify-center px-4 pt-6 pb-4 md:px-6 md:py-10">
                 {children}
             </main>
-            <footer className="flex justify-center border-t px-4 py-4">
-                <Logo kind="seal" className="h-5" />
+            <footer className="flex justify-center px-4 py-3.5">
+                <Logo kind="seal" className="h-4" />
             </footer>
         </div>
     );

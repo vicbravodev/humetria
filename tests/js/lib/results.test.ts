@@ -12,7 +12,10 @@ import {
     needingAction,
     participationText,
     percentText,
+    periodText,
+    resultsTrail,
 } from '@/lib/results';
+import { index, show } from '@/routes/tenant/campaigns';
 
 describe('percentText', () => {
     it('rounds a share to a whole percent', () => {
@@ -120,7 +123,7 @@ describe('worstGroupText', () => {
 
     it('names the group with the largest share in Alto or Muy alto', () => {
         expect(worstGroupText(groups, 'dominio')).toBe(
-            'El dominio que más pesa es Carga de trabajo: 80 % en riesgo alto o muy alto.',
+            'El dominio que más pesa es Carga de trabajo, con 80 % en riesgo alto o muy alto.',
         );
     });
 
@@ -153,6 +156,50 @@ describe('rankItems', () => {
 
         expect(rankItems(items).map((item) => item.number)).toEqual([
             3, 1, 4, 2,
+        ]);
+    });
+});
+
+describe('periodText', () => {
+    it('writes the month and year once when both days share them', () => {
+        expect(periodText('10 oct 2026', '29 oct 2026')).toBe(
+            '10 al 29 oct 2026',
+        );
+    });
+
+    it('writes the year once when only the year is shared', () => {
+        expect(periodText('28 oct 2026', '3 nov 2026')).toBe(
+            '28 oct al 3 nov 2026',
+        );
+    });
+
+    it('writes both days whole across years', () => {
+        expect(periodText('20 dic 2025', '5 ene 2026')).toBe(
+            '20 dic 2025 al 5 ene 2026',
+        );
+    });
+
+    it('says since when while it has not closed', () => {
+        expect(periodText('27 oct 2026', null)).toBe('Desde el 27 oct 2026');
+    });
+
+    it('is nothing before it starts', () => {
+        expect(periodText(null, null)).toBeNull();
+    });
+});
+
+describe('resultsTrail', () => {
+    it('goes from NOM-035 through the evaluation to the page', () => {
+        expect(
+            resultsTrail(
+                'acme',
+                { id: 'c1', workCenter: 'Planta Norte' },
+                'Resultados',
+            ),
+        ).toEqual([
+            { title: 'NOM-035', href: index('acme') },
+            { title: 'Planta Norte', href: show(['acme', 'c1']) },
+            { title: 'Resultados' },
         ]);
     });
 });

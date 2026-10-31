@@ -15,7 +15,7 @@ final class CompanyWorkCenters implements WorkCenters
 {
     public function all(): array
     {
-        return array_values(WorkCenter::query()->orderBy('name')->get(['id', 'name', 'archived_at'])->map($this->summary(...))->all());
+        return array_values(WorkCenter::query()->orderBy('name')->get(['id', 'name', 'archived_at', 'main_activity'])->map($this->summary(...))->all());
     }
 
     public function activePage(int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
@@ -24,14 +24,14 @@ final class CompanyWorkCenters implements WorkCenters
             ->whereNull('archived_at')
             ->orderBy('name')
             ->orderBy('id')
-            ->paginate($perPage, ['id', 'name', 'archived_at'], $pageName)
+            ->paginate($perPage, ['id', 'name', 'archived_at', 'main_activity'], $pageName)
             ->withQueryString()
             ->through($this->summary(...));
     }
 
     public function findActive(string $id): ?WorkCenterSummary
     {
-        $workCenter = WorkCenter::query()->whereNull('archived_at')->find($id, ['id', 'name', 'archived_at']);
+        $workCenter = WorkCenter::query()->whereNull('archived_at')->find($id, ['id', 'name', 'archived_at', 'main_activity']);
 
         return $workCenter === null ? null : $this->summary($workCenter);
     }
@@ -58,6 +58,6 @@ final class CompanyWorkCenters implements WorkCenters
 
     private function summary(WorkCenter $workCenter): WorkCenterSummary
     {
-        return new WorkCenterSummary($workCenter->id, $workCenter->name, $workCenter->archived_at !== null);
+        return new WorkCenterSummary($workCenter->id, $workCenter->name, $workCenter->archived_at !== null, $workCenter->main_activity);
     }
 }

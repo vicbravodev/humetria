@@ -19,6 +19,12 @@ final class CampaignClock
         return CarbonImmutable::now(self::zone())->startOfDay();
     }
 
+    /** The day a moment falls on in the display time zone, as Y-m-d. */
+    public static function date(CarbonInterface $moment): string
+    {
+        return $moment->setTimezone(self::zone())->format('Y-m-d');
+    }
+
     /** The moment a campaign whose last day is `$closesOn` stops taking answers. */
     public static function deadline(CarbonInterface $closesOn): CarbonImmutable
     {
@@ -38,6 +44,35 @@ final class CampaignClock
 
         // Carbon's Spanish months end in a dot ("oct."); the design system writes "27 oct 2026".
         return str_replace('.', '', $moment->isoFormat('D MMM YYYY'));
+    }
+
+    /** Whole days from today to a campaign's last day `$closesOn`: 0 on that day and after it. */
+    public static function daysLeft(CarbonInterface $closesOn): int
+    {
+        return max(0, self::daysBetween(self::today(), self::deadline($closesOn)->subDay()));
+    }
+
+    /**
+     * How much of the days from the one `$start` falls on to the one `$end` falls on has gone by today, in percent
+     * from 0 to 100, rounded down; 100 for a span of no days.
+     */
+    public static function elapsed(CarbonInterface $start, CarbonInterface $end): int
+    {
+        $from = self::dayOf($start);
+        $span = self::daysBetween($from, self::dayOf($end));
+
+        return $span <= 0 ? 100 : max(0, min(100, intdiv(100 * self::daysBetween($from, self::today()), $span)));
+    }
+
+    /** The start of the day a moment falls on, in the display time zone. */
+    private static function dayOf(CarbonInterface $moment): CarbonImmutable
+    {
+        return self::today()->setTimestamp($moment->getTimestamp())->startOfDay();
+    }
+
+    private static function daysBetween(CarbonInterface $from, CarbonInterface $to): int
+    {
+        return intdiv($to->getTimestamp() - $from->getTimestamp(), 86400);
     }
 
     private static function zone(): string

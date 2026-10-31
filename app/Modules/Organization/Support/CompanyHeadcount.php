@@ -21,4 +21,27 @@ final class CompanyHeadcount implements Headcount
 
         return $counts;
     }
+
+    public function areasByWorkCenter(array $workCenterIds): array
+    {
+        $areas = [];
+        $rows = Employee::query()
+            ->whereNull('deactivated_at')
+            ->whereIn('work_center_id', $workCenterIds)
+            ->join('areas', 'areas.id', '=', 'employees.area_id')
+            ->groupBy('employees.work_center_id', 'areas.id', 'areas.name')
+            ->selectRaw('employees.work_center_id, areas.name, count(*) as employees')
+            ->orderByDesc('employees')
+            ->orderBy('areas.name')
+            ->toBase()
+            ->get();
+
+        foreach ($rows as $row) {
+            if (is_string($row->work_center_id) && is_string($row->name) && is_int($row->employees)) {
+                $areas[$row->work_center_id][] = ['name' => $row->name, 'employees' => $row->employees];
+            }
+        }
+
+        return $areas;
+    }
 }

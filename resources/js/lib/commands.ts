@@ -29,6 +29,25 @@ export function matchCommands<T extends Command>(
     );
 }
 
+/**
+ * The commands under their group's heading, groups in the order they first appear, each command with its place in
+ * the flat list (what the arrows and aria-activedescendant count).
+ */
+export function groupCommands<T extends Command & { group: string }>(
+    commands: T[],
+): { group: string; items: { command: T; index: number }[] }[] {
+    const groups = new Map<string, { command: T; index: number }[]>();
+
+    commands.forEach((command, index) => {
+        groups.set(command.group, [
+            ...(groups.get(command.group) ?? []),
+            { command, index },
+        ]);
+    });
+
+    return [...groups].map(([group, items]) => ({ group, items }));
+}
+
 const MOVES: Record<string, (active: number, last: number) => number> = {
     ArrowDown: (active) => active + 1,
     ArrowUp: (active) => active - 1,

@@ -30,12 +30,7 @@ export default function DemoToolsField({ error }: Props) {
                             value={tool.key}
                             className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         />
-                        <span className="grid">
-                            <span className="font-medium">{tool.name}</span>
-                            <span className="text-sm text-muted-foreground">
-                                {tool.hint}
-                            </span>
-                        </span>
+                        <span className="font-medium">{tool.name}</span>
                     </label>
                 ))}
             </div>

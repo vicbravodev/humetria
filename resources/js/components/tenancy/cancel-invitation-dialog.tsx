@@ -28,8 +28,9 @@ export default function CancelInvitationDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="text-muted-foreground"
                     aria-label={`Cancelar invitación de ${tenant.trade_name}`}
                 >
                     Cancelar

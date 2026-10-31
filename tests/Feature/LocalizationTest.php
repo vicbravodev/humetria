@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia as Assert;
 
 it('shows validation messages in Mexican Spanish', function (): void {
     $this->post(route('login.store'), ['email' => '', 'password' => ''])
@@ -82,8 +83,9 @@ it('shows the page of an unknown address in Spanish', function (): void {
 
     $this->get('/no-such-page')
         ->assertNotFound()
-        ->assertSee('<html lang="es">', escape: false)
-        ->assertSee('<title>No encontrado</title>', escape: false)
+        // The app's own error page: its words are Spanish (browser test ErrorPagesTest reads them on screen).
+        ->assertSee('<html lang="es"', escape: false)
+        ->assertInertia(fn (Assert $page) => $page->component('error'))
         ->assertDontSee('Not Found');
 });
 

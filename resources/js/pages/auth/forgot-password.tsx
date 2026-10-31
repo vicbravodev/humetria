@@ -1,72 +1,38 @@
-// Components
-import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
-import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import ResetLinkForm from '@/components/auth/reset-link-form';
+import ResetLinkSent from '@/components/auth/reset-link-sent';
 import { login } from '@/routes';
-import { email } from '@/routes/password';
 
-export default function ForgotPassword({ status }: { status?: string }) {
+export default function ForgotPassword({ status }: { status: string | null }) {
+    const [email, setEmail] = useState('');
+    const [changingEmail, setChangingEmail] = useState(false);
+
     return (
         <>
             <Head title="Recuperar contraseña" />
 
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-primary">
-                    {status}
-                </div>
+            <Link
+                href={login()}
+                className="flex items-center gap-1.5 self-start rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+                <ArrowLeft aria-hidden className="size-4" />
+                Volver a iniciar sesión
+            </Link>
+
+            {status !== null && !changingEmail ? (
+                <ResetLinkSent
+                    email={email}
+                    onChangeEmail={() => setChangingEmail(true)}
+                />
+            ) : (
+                <ResetLinkForm
+                    email={email}
+                    onEmailChange={setEmail}
+                    onSent={() => setChangingEmail(false)}
+                />
             )}
-
-            <div className="space-y-6">
-                <Form {...email.form()}>
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">
-                                    Correo electrónico
-                                </Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    autoComplete="off"
-                                    autoFocus
-                                    placeholder="nombre@empresa.mx"
-                                />
-
-                                <InputError message={errors['email']} />
-                            </div>
-
-                            <div className="my-6 flex items-center justify-start">
-                                <Button
-                                    className="w-full"
-                                    disabled={processing}
-                                    data-test="email-password-reset-link-button"
-                                >
-                                    {processing && (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    )}
-                                    Enviar enlace para restablecer
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-
-                <div className="space-x-1 text-center text-sm text-muted-foreground">
-                    <span>O vuelve a</span>
-                    <TextLink href={login()}>iniciar sesión</TextLink>
-                </div>
-            </div>
         </>
     );
 }
-
-ForgotPassword.layout = {
-    title: '¿Olvidaste tu contraseña?',
-    description:
-        'Escribe tu correo y te enviaremos un enlace para restablecer tu contraseña',
-};

@@ -142,7 +142,7 @@ it('presents Humetría as an HR platform with its three tools', function (): voi
     visitPage('landing', '/')
         ->assertTitleContains('Herramientas de RH')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => document.querySelector("[data-test=hero-eyebrow]").textContent', 'NOM-035 · NOM-037 · Ley Silla')
+        ->assertScript('() => document.querySelector("[data-test=hero-tools]").textContent', 'NOM-035-STPS-2018 · NOM-037-STPS-2023 · Ley Silla')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
 
@@ -151,12 +151,13 @@ it('previews a work center with the state of the three tools', function (): void
         ->assertSeeIn('@hero-preview', 'NOM-035')
         ->assertSeeIn('@hero-preview', 'NOM-037')
         ->assertSeeIn('@hero-preview', 'Ley Silla')
-        ->assertSeeIn('figure [data-test="preview-nom_035"] [data-slot="badge"]', 'En curso')
-        ->assertScript('() => new Set([...document.querySelectorAll("figure [data-slot=badge]")].filter((badge) => badge.textContent === "En curso").map((badge) => badge.className)).size', 1);
+        ->assertSeeIn('figure [data-slot="badge"]', 'En curso')
+        ->assertAttribute('figure [data-slot="arc-meter"]', 'aria-label', '89 de 120 contestaron')
+        ->assertScript('() => ["nom_035", "nom_037", "ley_silla"].every((tool) => document.querySelector(`figure [data-test="preview-${tool}"] [role=progressbar]`) !== null)');
 });
 
 it('takes the header tools link to the tools section', function (): void {
-    // The link shows from the sm breakpoint up: on a phone the header only fits the logo and the two calls to action.
+    // The link shows from the md breakpoint up: on a phone the header only fits the logo and the two calls to action.
     // The section lands right under the 64 px sticky header (`scroll-mt-16`); the jump is instant, there is no smooth scroll.
     $sectionTop = '() => Math.abs(document.getElementById("herramientas").getBoundingClientRect().top - 64) < 2';
 
@@ -167,16 +168,25 @@ it('takes the header tools link to the tools section', function (): void {
         ->assertScript($sectionTop);
 });
 
+it('takes the header section links to how it works and to confidentiality', function (string $link, string $hash): void {
+    visitPage('landing', '/')
+        ->click($link)
+        ->assertScript('() => window.location.hash', $hash);
+})->with([
+    'how it works' => ['@header-how', '#como-funciona'],
+    'confidentiality' => ['@header-privacy', '#confidencialidad'],
+]);
+
 it('details each of the three tools', function (): void {
     $page = visitPage('landing', '/')
         ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]").length', 3);
 
     foreach ([
-        'NOM-035-STPS-2018 · Factores de riesgo psicosocial',
-        'NOM-037-STPS-2023 · Teletrabajo',
-        'Ley Federal del Trabajo, arts. 132, 133 y 423 · Asientos y descansos',
-    ] as $index => $official) {
-        $page->assertScript("() => document.querySelectorAll('#herramientas [data-test=tool-card]')[{$index}].querySelector('[data-test=tool-official]').textContent", $official);
+        'Factores de riesgo psicosocial',
+        'Teletrabajo',
+        'Asientos y descansos',
+    ] as $index => $hint) {
+        $page->assertScript("() => document.querySelectorAll('#herramientas [data-test=tool-card]')[{$index}].querySelector('[data-test=tool-hint]').textContent", $hint);
     }
 
     $page->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-card]")[1].textContent.toLowerCase().includes("lista de verificación")')
@@ -214,7 +224,8 @@ it('never promises anonymity for identified records', function (): void {
 
 it('states its legal and privacy claims exactly', function (): void {
     visitPage('landing', '/')
-        ->assertSee('datos del centro, objetivo, actividades, método')
+        ->assertSee('Genera el informe del numeral 7.7')
+        ->assertSee('solo con 5 o más respuestas')
         ->assertSee('con la confidencialidad que requiere cada herramienta')
         ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
         ->assertDontSee('confidencialidad que pide cada norma');

@@ -99,7 +99,7 @@ it('lets the employee answer Guía I and Guía II from the phone, one question p
     $page = visit('/survey/the-token')->on()->mobile()
         ->click('Comenzar')
         ->assertSee('sí lleva su nombre')
-        ->click('Comenzar')
+        ->click('Empezar')
         ->assertSee('Sección 1 de 4')
         ->assertSee('Pregunta 1 de 6');
 
@@ -108,12 +108,14 @@ it('lets the employee answer Guía I and Guía II from the phone, one question p
     $page->assertSee('Enviada')
         ->click('Continuar con la Guía II')
         ->assertSee('anónima')
-        ->click('Comenzar')
+        ->click('Empezar')
         ->assertSee('Para responder las preguntas siguientes considere las condiciones de su centro de trabajo');
 
     answerGuide($page);
 
-    $page->assertSee('Ya contestó todo lo que le correspondía')->assertNoJavaScriptErrors();
+    $page->assertSee('Gracias, terminó')
+        ->assertSee('Ya contestó todo lo que le correspondía')
+        ->assertNoJavaScriptErrors();
 
     $response = App\Modules\Responses\Models\AnonymousResponse::query()->withoutGlobalScopes()->sole();
     $screening = App\Modules\Responses\Models\TraumaScreening::query()->withoutGlobalScopes()->sole();
@@ -133,7 +135,8 @@ it('asks up to three questions of a section per screen on a computer, and never 
 
     $page = visit('/survey/the-token')
         ->click('Comenzar')
-        ->click('Comenzar')
+        ->click('Empezar')
+        ->assertSee('Su avance')
         ->assertSee('Pregunta 1 de 5')
         ->assertSee('Pregunta 3 de 5')
         ->assertDontSee('Pregunta 4 de 5')
@@ -150,13 +153,13 @@ it('asks up to three questions of a section per screen on a computer, and never 
 it('keeps what was answered on the device after a reload', function (): void {
     invitedPerson(['nom035.guide-iii']);
 
-    $page = visit('/survey/the-token')->click('Comenzar')->click('Comenzar');
+    $page = visit('/survey/the-token')->click('Comenzar')->click('Empezar');
     $page->script(ANSWER_SCREEN);
     $page->click('Siguiente')->assertSee('Pregunta 4 de 5');
 
     $page->refresh()
         ->click('Comenzar')
-        ->click('Comenzar')
+        ->click('Empezar')
         ->assertSee('Sección 1 de 14')
         ->assertSee('3 de 5 respondidas')
         ->assertButtonEnabled('Siguiente');
@@ -167,6 +170,7 @@ it('says there is nothing left when the used link is opened again', function (bo
     ParticipantInstrument::query()->withoutGlobalScopes()->update(['status' => 'completed', 'completed_at' => now()]);
 
     visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile)
+        ->assertSee('Gracias, terminó')
         ->assertSee('Ya contestó todo lo que le correspondía')
         ->assertSee('Autopartes del Bajío');
 })->with($looks);
@@ -174,7 +178,7 @@ it('says there is nothing left when the used link is opened again', function (bo
 it('shows each question as the design system asks: the instruction, the question and five large options', function (bool $dark, bool $mobile): void {
     invitedPerson(['nom035.guide-ii']);
 
-    visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile, fn ($page) => $page->click('Comenzar')->click('Comenzar'))
+    visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile, fn ($page) => $page->click('Comenzar')->click('Empezar'))
         ->assertSee('Sección 1 de 8')
         ->assertSee('Mi trabajo me exige hacer mucho esfuerzo físico')
         ->assertSee('Casi siempre')
@@ -192,3 +196,26 @@ it('clears what the device kept for a link once it no longer works', function ()
         ->assertScript("() => localStorage.getItem('humetria:survey:the-token:nom035.guide-i')", null)
         ->assertScript("() => localStorage.getItem('appearance')", 'dark');
 });
+
+it('goes back from a guide\'s introduction to the list of guides', function (): void {
+    invitedPerson();
+
+    visit('/survey/the-token')
+        ->click('Comenzar')
+        ->assertSee('sí lleva su nombre')
+        ->click('Anterior')
+        ->assertSee('No hay respuestas correctas ni incorrectas.')
+        ->assertSee('Comenzar');
+});
+
+it('says the survey is confidential before the first question, in the header and at the foot', function (bool $mobile): void {
+    invitedPerson(['nom035.guide-iii']);
+
+    visitPage('campaigns/survey', '/survey/the-token', mobile: $mobile)
+        ->assertSeeIn('header[class]', 'Confidencial')
+        ->assertSeeIn('main[class]', 'Sus respuestas son confidenciales')
+        ->click('Comenzar')
+        ->click('Empezar')
+        ->assertSeeIn('main[class]', 'Nadie de su empresa puede ver lo que contesta.')
+        ->assertScript('() => [...document.querySelectorAll("main fieldset label")].every((option) => option.getBoundingClientRect().height >= 56)');
+})->with(['desktop' => false, 'mobile' => true]);

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -16,12 +17,15 @@ $looks = [
 ];
 
 it('shows the form to create the owner account', function (bool $dark, bool $mobile): void {
-    TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']))
-        ->withToken(str_repeat('a', 64))->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+    $olga = User::factory()->create(['name' => 'Olga Owner']);
+    TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']))->role(TenantRole::Hr)
+        ->withToken(str_repeat('a', 64))->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'invited_by' => $olga->id]);
 
     visitPage('tenancy/accept-invitation', '/admin/invitations/'.str_repeat('a', 64), $dark, $mobile)
-        ->assertSee('Acepta tu invitación')
-        ->assertSee('Te invitaron como owner de Grupo Ejemplo')
+        ->assertSee('Olga Owner te invitó a')
+        ->assertSee('Grupo Ejemplo')
+        ->assertSee('como RH · opera evaluaciones, centros y empleados')
+        ->assertSee('Crea tu cuenta')
         ->assertValue('#email', 'ana@acme.mx')
         ->assertValue('name', 'Ana Pérez')
         ->assertAttribute('#password', 'passwordrules', Password::defaults()->toPasswordRulesString());
@@ -31,8 +35,9 @@ it('says the link is no longer valid', function (bool $dark, bool $mobile): void
     TenantInvitation::factory()->withToken(str_repeat('a', 64))->expired()->create();
 
     visitPage('tenancy/accept-invitation', '/admin/invitations/'.str_repeat('a', 64), $dark, $mobile)
-        ->assertSee('Este enlace ya no es válido. Pide uno nuevo al administrador de Humetría.')
-        ->assertDontSee('Aceptar invitación');
+        ->assertSee('Este enlace ya no es válido')
+        ->assertSee('Pide uno nuevo a quien te invitó.')
+        ->assertDontSee('Crear cuenta y entrar');
 })->with($looks);
 
 it('asks an existing account to sign in', function (bool $dark, bool $mobile): void {
@@ -41,7 +46,8 @@ it('asks an existing account to sign in', function (bool $dark, bool $mobile): v
         ->withToken(str_repeat('a', 64))->create(['email' => 'ana@acme.mx']);
 
     visitPage('tenancy/accept-invitation', '/admin/invitations/'.str_repeat('a', 64), $dark, $mobile)
-        ->assertSee('Ya tienes una cuenta en Humetría. Inicia sesión para unirte a Grupo Ejemplo.')
+        ->assertSee('Ya tienes una cuenta en Humetría')
+        ->assertSee('Inicia sesión para unirte a Grupo Ejemplo.')
         ->assertSee('Iniciar sesión')
         ->assertDontSee('Contraseña');
 })->with($looks);
@@ -97,7 +103,7 @@ it('accepts an invitation and lands on the dashboard', function (): void {
     visit('/admin/invitations/'.$token)
         ->type('password', 'secreto-largo-123')
         ->type('password_confirmation', 'secreto-largo-123')
-        ->press('Aceptar invitación')
+        ->press('Crear cuenta y entrar')
         ->assertPathIs('/admin/'.$invitation->tenant->slug)
         ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();

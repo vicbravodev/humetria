@@ -16,7 +16,7 @@ $looks = [
     'dark mobile' => [true, true],
 ];
 
-/** Signs in the owner of Acme with two work centers, two areas and, unless told otherwise, three employees. */
+/** Signs in the owner of Acme with two work centers, two areas and, unless told otherwise, three employees (one without email). */
 function acmeWithEmployees(bool $employees = true): Tenant
 {
     signInToPanel();
@@ -29,7 +29,7 @@ function acmeWithEmployees(bool $employees = true): Tenant
     if ($employees) {
         Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $production->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678']);
         Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $office->id, 'area_id' => $sales->id, 'name' => 'Beto Díaz', 'email' => 'beto@acme.mx']);
-        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $sales->id, 'name' => 'Carla Ruiz', 'email' => 'carla@acme.mx']);
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $sales->id, 'name' => 'Carla Ruiz', 'email' => null, 'mobile' => '5587654321']);
     }
 
     return $tenant;
@@ -47,11 +47,26 @@ it('lists the employees with their contact, center and area', function (bool $da
     acmeWithEmployees();
 
     visitPage('organization/employees', '/admin/acme/employees', $dark, $mobile)
-        ->assertSee('3 personas')
+        ->assertSee('3 personas activas en 2 centros de trabajo.')
         ->assertSee('Ana López')
-        ->assertSee('55 1234 5678')
-        ->assertSee('Planta Norte');
+        ->assertSee('ana@acme.mx')
+        ->assertSee('55 8765 4321')
+        ->assertSee('Planta Norte')
+        ->assertSee('1 persona no tiene correo');
 })->with($looks);
+
+it('shows only the people the survey email cannot reach, and everyone again', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->click('Ver quién es')
+        ->assertQueryStringHas('without_email', '1')
+        ->assertSee('Carla Ruiz')
+        ->assertDontSee('Ana López')
+        ->click('Ver a todas')
+        ->assertSee('Ana López')
+        ->assertNoJavaScriptErrors();
+});
 
 it('searches as the person types, once they pause', function (): void {
     acmeWithEmployees();
@@ -83,7 +98,7 @@ it('adds an employee, creating their area as it is typed', function (): void {
     acmeWithEmployees(employees: false);
 
     visit('/admin/acme/employees')
-        ->click('Dar de alta empleado')
+        ->click('Dar de alta')
         ->type('name', 'Diego Luna')
         ->type('mobile', '55 8765 4321')
         ->click('#employee-work_center_id')
@@ -95,21 +110,20 @@ it('adds an employee, creating their area as it is typed', function (): void {
         ->assertSee('Agregar «Logística»')
         ->keys('[role="combobox"][aria-controls="employee-area-options"]', 'Enter')
         ->type('job_title', 'Chofer')
-        ->click('#employee-gender')
-        ->click('[role="option"]:has-text("Hombre")')
-        ->press('Dar de alta')
+        ->click('Hombre')
+        ->click('[data-slot="sheet-content"] button[type="submit"]')
         ->assertSee('Empleado dado de alta.')
         ->assertSee('Diego Luna')
         ->assertSee('Logística')
         ->assertNoJavaScriptErrors();
 });
 
-it('passes the checks with the employee dialog open', function (bool $dark, bool $mobile): void {
+it('passes the checks with the employee panel open', function (bool $dark, bool $mobile): void {
     acmeWithEmployees();
 
     visitPage('organization/employees', '/admin/acme/employees', $dark, $mobile, fn (AwaitableWebpage $page) => $page
-        ->click('Dar de alta empleado')
-        ->assertSee('Al menos uno de los dos'));
+        ->click('Dar de alta')
+        ->assertSee('Con al menos uno de los dos basta.'));
 })->with($looks);
 
 it('deactivates an employee and reactivates them from the deactivated ones', function (): void {
@@ -121,8 +135,7 @@ it('deactivates an employee and reactivates them from the deactivated ones', fun
         ->press('Dar de baja')
         ->assertSee('Empleado dado de baja.')
         ->assertDontSee('Ana López')
-        ->click('[aria-label="Estado"]')
-        ->click('[role="option"]:has-text("Dados de baja")')
+        ->click('nav[aria-label="Estado de las personas"] a:has-text("Bajas")')
         ->assertSee('Ana López')
         ->click('[aria-label="Acciones de Ana López"]')->click('Reactivar')
         ->assertSee('Empleado reactivado.')

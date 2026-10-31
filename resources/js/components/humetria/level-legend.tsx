@@ -1,4 +1,3 @@
-import { percentText } from '@/lib/results';
 import { cn } from '@/lib/utils';
 import type { LevelCounts, RiskLevelInfo, RiskLevelValue } from '@/types';
 
@@ -23,26 +22,31 @@ export default function LevelLegend({
     counts?: LevelCounts;
     className?: string;
 }) {
-    const total = counts?.reduce((sum, count) => sum + count, 0) ?? 0;
-
     return (
-        <ul className={cn('flex flex-wrap gap-x-5 gap-y-2 text-sm', className)}>
+        <ul
+            className={cn(
+                'flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] leading-[18px]',
+                className,
+            )}
+        >
             {levels.map((level, index) => {
                 const count = counts?.[index];
 
                 return (
-                    <li key={level.value} className="flex items-center gap-2">
+                    <li key={level.value} className="flex items-center gap-1.5">
                         <span
                             aria-hidden="true"
                             className={cn(
-                                'size-2.5 shrink-0 rounded-[3px] [-webkit-print-color-adjust:exact] [print-color-adjust:exact]',
+                                'size-2 shrink-0 rounded-[2px] [-webkit-print-color-adjust:exact] [print-color-adjust:exact]',
                                 SWATCHES[level.value],
                             )}
                         />
-                        <span>{level.label}</span>
+                        <span className="text-muted-foreground">
+                            {level.label}
+                        </span>
                         {count !== undefined && (
-                            <span className="text-muted-foreground tabular-nums">
-                                {count} · {percentText(count, total)}
+                            <span className="font-semibold tabular-nums">
+                                {count}
                             </span>
                         )}
                     </li>

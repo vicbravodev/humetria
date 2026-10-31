@@ -32,11 +32,44 @@ it('lists the work centers to evaluate before any evaluation', function (bool $d
     staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 20);
 
     visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile)
-        ->assertSee('No hay evaluaciones abiertas')
         ->assertSee('Planta Norte')
-        ->assertSee('NOM-035: Guías I y II')
+        ->assertSee('Manufactura de autopartes')
+        ->assertSee('20 personas')
+        ->assertSee('I y II')
+        ->assertSee('De 16 a 50')
         ->assertSee('Sin evaluar')
+        ->assertSee('Qué guía aplica según el tamaño del centro')
         ->assertSee('Evaluar');
+})->with($looks);
+
+it('follows a running evaluation and the history from each work center', function (bool $dark, bool $mobile): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $this->post(route('tenant.campaigns.launch', [$tenant, Campaign::query()->withoutGlobalScopes()->sole()->id]), ['closes_on' => now()->addWeeks(2)->toDateString()]);
+    $warehouse = WorkCenter::factory()->for($tenant)->create(['name' => 'Almacén']);
+    staffOf($tenant, $warehouse, 3);
+    Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $warehouse->id]);
+
+    visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile)
+        ->assertSee('En curso')
+        ->assertSee('0 de 20')
+        ->assertSee('Ver avance')
+        ->assertSee('Al día')
+        ->assertSee('Ver resultados')
+        ->assertSee('Historial');
+})->with($looks);
+
+it('opens the new-evaluation assistant at its second step from a work center', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
+
+    visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile, fn ($page) => $page
+        ->click('button:has-text("Evaluar")')
+        ->assertSee('Nueva evaluación')
+        ->assertSee('A quién se aplica la Guía III'));
 })->with($looks);
 
 it('pages the evaluations and the work centers', function (): void {
@@ -78,16 +111,34 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
         ->click('NOM-035')
         ->assertPathIs('/admin/acme/campaigns')
         ->click('button:has-text("Evaluar")')
-        ->assertSee('Evaluar Planta Norte')
-        ->assertSee('¿Quién contesta la Guía III?')
-        ->assertSee('Se sortean 53 de 60 personas')
-        ->click('Una muestra representativa')
-        ->click('Preparar borrador')
+        ->assertSee('Planta Norte · 60 personas')
+        ->assertSee('Con más de 50 personas aplican las Guías I y III.')
+        ->assertSee('Muestra representativa · 53 personas')
+        ->click('button:has-text("Siguiente: fecha y envío")')
         ->assertSee('Borrador de evaluación creado.')
         ->assertSee('Muestra sorteada (53)')
         ->assertNoJavaScriptErrors();
 
     expect(Campaign::query()->withoutGlobalScopes()->sole()->sample_size)->toBe(53);
+});
+
+it('chooses the work center in the new-evaluation assistant, and everyone instead of a sample', function (): void {
+    $tenant = campaignsCompany();
+    staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
+
+    visit('/admin/acme/campaigns')
+        ->click('Nueva evaluación')
+        ->click('#evaluation-work-center')
+        ->type('[role="combobox"][aria-controls="evaluation-work-center-options"]', 'norte')
+        ->click('[role="option"]:has-text("Planta Norte")')
+        ->click('button:has-text("Siguiente: guías y muestra")')
+        ->assertSee('Planta Norte · 60 personas')
+        ->click('Todas las personas · 60')
+        ->click('button:has-text("Siguiente: fecha y envío")')
+        ->assertSee('Borrador de evaluación creado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Campaign::query()->withoutGlobalScopes()->sole()->population->value)->toBe('all');
 });
 
 it('launches a draft with the deadline suggested, inviting everyone by email', function (): void {
@@ -99,12 +150,13 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
     $campaign = Campaign::query()->withoutGlobalScopes()->sole();
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->assertSee('Lanzar la evaluación')
-        ->click('Lanzar e invitar')
+        ->assertSee('Último día para contestar')
+        ->assertSee('Así le llega a cada persona')
+        ->click('Lanzar e invitar a 20 personas')
         ->assertSee('Evaluación lanzada. Las invitaciones van en camino.')
         ->assertSee('En curso')
         ->assertSee('0 de 20')
-        ->assertDontSee('Lanzar la evaluación')
+        ->assertDontSee('Último día para contestar')
         ->assertNoJavaScriptErrors();
 
     Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 20);
@@ -125,7 +177,9 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('Faltan 43 respuestas para el mínimo de la muestra')
         ->assertSee('10 de 53')
         ->assertSee('43 pendientes')
-        ->assertSee('Pendientes (60)')
+        ->assertSee('Participación por área')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', 'Pendientes')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '60')
         ->assertSee('Página 1 de 3');
 })->with($looks);
 
@@ -142,16 +196,16 @@ it('narrows who answered a guide and searches them by name', function (): void {
     App\Modules\Campaigns\Models\ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $zoila->id)->update(['status' => 'completed', 'completed_at' => now()]);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->assertSee('Pendientes (29)')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '29')
         ->assertDontSee('Zoila Contreras')
-        ->click('[aria-label="Situación"]')
-        ->click('text=Contestaron (1)')
+        ->click('[aria-label="Situación de las personas"] >> text=Contestaron')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '1')
         ->assertSee('Zoila Contreras')
-        ->click('[aria-label="Situación"]')
-        ->click('text=Todas (30)')
+        ->click('[aria-label="Situación de las personas"] >> text=Todas')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '30')
         ->click('#filter-area')
         ->type('[role="combobox"][aria-controls="filter-area-options"]', 'cali')
-        ->assertSee('Calidad')
+        ->assertSeeIn('#filter-area-options', 'Calidad')
         ->keys('[role="combobox"][aria-controls="filter-area-options"]', 'Enter')
         ->assertQueryStringHas('area')
         ->assertSee('Zoila Contreras')
@@ -172,7 +226,7 @@ it('shows how the sending of the links goes until it ends, and offers to resend 
     }
 
     $page = visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
-        ->assertSee('Enviando invitaciones 3 de 4')
+        ->assertSee('Enviando invitaciones · 3 de 4')
         ->assertSee('No se pudo enviar el enlace a 1 persona.');
 
     App\Modules\Campaigns\Models\Participant::query()->withoutGlobalScopes()->where('invitation_status', 'queued')->update(['invitation_status' => 'sent']);
@@ -193,8 +247,9 @@ it('sends the link again only to whom it failed', function (): void {
 
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->click('Ver y reenviar')
-        ->assertSee('Envío fallido (2)')
-        ->click('Reenviar a 2 personas')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', 'Envío fallido')
+        ->assertSee('2 personas en esta lista')
+        ->click('Enviar recordatorio')
         ->click('Reenviar enlaces')
         ->assertSee('Enlace reenviado a 2 personas.')
         ->assertNoJavaScriptErrors();
@@ -213,14 +268,16 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
     staffOf($tenant, $plant, female: 1);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Reenviar a 60 personas')
+        ->click('Recordar a 60')
         ->assertSee('el anterior deja de servir')
         ->click('Reenviar enlaces')
         ->assertSee('Enlace reenviado a 60 personas.')
-        ->click('Invitar a quien falte')
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
         ->assertSee('Se invitó a 1 persona.')
-        ->assertSee('Pendientes (61)')
-        ->click('Sortear reemplazos')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '61')
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Sortear reemplazos")')
         ->assertSee('del mismo género de quienes no contestarán')
         ->assertSee('¿De qué género son quienes no contestarán?')
         ->click('Hombres')
@@ -243,16 +300,37 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
     $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Cerrar evaluación')
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
         ->assertSee('Faltan 53 respuestas para el mínimo de la muestra que pide la norma.')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación cerrada. Los enlaces ya no funcionan.')
         ->assertSee('Cerrada')
-        ->assertDontSee('Reenviar a 60 personas')
+        ->assertSee('Historial')
+        ->assertDontSee('Recordar a 60')
         ->assertNoJavaScriptErrors();
 
     expect($campaign->refresh()->status->value)->toBe('closed');
 });
+
+it('shows a closed evaluation: how many answered, the Guía I channeling and its history', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    foreach (['completed', 'completed', 'pending'] as $status) {
+        $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii', 'status' => $status, 'completed_at' => $status === 'completed' ? now() : null]);
+    }
+
+    visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
+        ->assertSee('Cerrada')
+        ->assertSee('Participación final · Guía II')
+        ->assertSee('67 %')
+        ->assertSee('Ver canalización')
+        ->assertSee('Siguiente evaluación')
+        ->assertSee('Informe 7.7');
+})->with($looks);
 
 it('applies Guía I to the people of an event', function (bool $dark, bool $mobile): void {
     Illuminate\Support\Facades\Notification::fake();
@@ -263,6 +341,8 @@ it('applies Guía I to the people of an event', function (bool $dark, bool $mobi
 
     visitPage('campaigns/trauma', "/admin/acme/campaigns/trauma?work_center={$plant->id}", $dark, $mobile)
         ->assertSee('trayecto directo')
+        ->assertSee('Qué pasa después')
+        ->assertSee('Solo personas de Planta Norte.')
         ->assertSee('Ana López');
 })->with($looks);
 
@@ -285,7 +365,9 @@ it('keeps who was ticked across pages and searches, and ticks everyone a search 
         ->assertSee('Elegir a las 2 encontradas')
         ->click('Elegir a las 2 encontradas')
         ->assertSee('(3 elegidas)')
-        ->click('Enviar Guía I')
+        ->assertSee('+2 más')
+        ->assertSee('Enviar Guía I a 3 personas')
+        ->click('button:has-text("Enviar Guía I")')
         ->assertSee('Guía I enviada a las personas elegidas.')
         ->assertNoJavaScriptErrors();
 
@@ -309,7 +391,7 @@ it('sends Guía I to the people ticked, from the NOM-035 page', function (): voi
         ->assertSee('Ana López')
         ->click('Ana López')
         ->assertSee('(1 elegidas)')
-        ->click('Enviar Guía I')
+        ->click('button:has-text("Enviar Guía I")')
         ->assertSee('Guía I enviada a las personas elegidas.')
         ->assertSee('Guía I por acontecimiento')
         ->assertNoJavaScriptErrors();
@@ -332,7 +414,7 @@ it('shows the results of a closed evaluation by risk level, and filters them by 
         ->assertSee('Liderazgo y relaciones en el trabajo')
         ->assertSee('Producción')
         ->assertSee('Qué pide la norma en cada nivel')
-        ->assertSee('Guía I: acontecimientos traumáticos severos');
+        ->assertSee('Guía I · acontecimientos traumáticos');
 })->with($looks);
 
 it('narrows the results to one area, and reaches them from the evaluation', function (): void {
@@ -346,12 +428,14 @@ it('narrows the results to one area, and reaches them from the evaluation', func
     }
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Resultados')
+        ->click('Ver resultados')
         ->assertPathIs("/admin/acme/campaigns/{$campaign->id}/results")
-        ->assertSee('Cuántos de los 11 cuestionarios de todo el centro')
+        ->assertSee('Calificación final · Guía II')
+        ->assertSee('de 11 cuestionarios')
         ->click('#results-area')
         ->click('[role="option"] >> text=Ventas')
-        ->assertSee('Cuántos de los 5 cuestionarios de Ventas')
+        ->assertSee('Calificación final · Guía II · Ventas')
+        ->assertSee('de 5 cuestionarios')
         ->assertQueryStringHas('area')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
@@ -365,7 +449,7 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
     $person->update(['name' => 'Ana López']);
     App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
 
-    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver quiénes la requieren'))
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver canalización'))
         ->assertSee('Personas que requieren valoración clínica')
         ->assertSee('1 de 1 personas')
         ->assertSee('Ana López');
@@ -377,7 +461,7 @@ it('shows the 7.7 report of a closed evaluation, ready to print', function (bool
     $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
     App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii')]);
 
-    visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Informe del numeral 7.7'))
+    visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Informe 7.7'))
         ->assertSee('Diagnóstico de factores de riesgo psicosocial')
         ->assertSee('Datos del centro de trabajo')
         ->assertSee('Pendiente de capturar')

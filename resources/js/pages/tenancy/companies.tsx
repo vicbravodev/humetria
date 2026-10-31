@@ -16,13 +16,20 @@ export default function Companies({
         <>
             <Head title={title} />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <PageHeader title={title} />
+                <PageHeader
+                    title={title}
+                    description={
+                        companies.total === 0
+                            ? undefined
+                            : 'Tienes acceso a varias empresas. Abre aquella en la que vas a trabajar.'
+                    }
+                />
                 {companies.total === 0 ? (
                     <NoCompanies />
                 ) : (
-                    <ul className="grid gap-4 md:grid-cols-2">
+                    <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-3">
                         {companies.data.map((company) => (
-                            <li key={company.slug} className="relative">
+                            <li key={company.slug}>
                                 <CompanyCard company={company} />
                             </li>
                         ))}

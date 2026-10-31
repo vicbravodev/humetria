@@ -1,5 +1,4 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
 import FormField from '@/components/form-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +8,6 @@ import {
     DialogDescription,
     DialogFooter,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { replacements } from '@/routes/tenant/campaigns';
@@ -24,18 +22,17 @@ export default function ReplacementsDialog({
     tenantSlug,
     campaignId,
     pool,
+    open,
+    onOpenChange,
 }: {
     tenantSlug: string;
     campaignId: string;
     pool: ReplacementPool[];
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
-    const [open, setOpen] = useState(false);
-
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">Sortear reemplazos</Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogTitle>Sortear reemplazos para la muestra</DialogTitle>
                 <DialogDescription>
@@ -46,7 +43,7 @@ export default function ReplacementsDialog({
                 <Form
                     {...replacements.form([tenantSlug, campaignId])}
                     options={{ preserveScroll: true }}
-                    onSuccess={() => setOpen(false)}
+                    onSuccess={() => onOpenChange(false)}
                     className="grid gap-6"
                 >
                     {({ processing, errors }) => (

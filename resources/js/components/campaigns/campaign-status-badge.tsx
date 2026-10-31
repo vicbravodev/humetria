@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import type { CampaignStatus } from '@/types';
 
-const VARIANTS: Record<CampaignStatus, 'default' | 'secondary' | 'outline'> = {
+const VARIANTS: Record<CampaignStatus, 'default' | 'secondary'> = {
     active: 'default',
     draft: 'secondary',
-    closed: 'outline',
+    closed: 'secondary',
 };
 
 /** En curso, Borrador or Cerrada: a dot and the word, never the color alone. */

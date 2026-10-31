@@ -38,8 +38,8 @@ function contrastRatio(string $hexA, string $hexB): float
 
 dataset('themes', [':root', '.dark']);
 
-it('defines the same 49 color tokens in light and dark', function (): void {
-    expect(array_keys(themeTokens(':root')))->toHaveCount(49)
+it('defines the same 52 color tokens in light and dark', function (): void {
+    expect(array_keys(themeTokens(':root')))->toHaveCount(52)
         ->toEqualCanonicalizing(array_keys(themeTokens('.dark')));
 });
 
@@ -55,6 +55,7 @@ it('keeps text at 4.5:1 or more', function (string $theme, string $text, string 
     ['sidebar-primary-foreground', 'sidebar-primary'], ['sidebar-accent-foreground', 'sidebar-accent'],
     ['risk-nulo-fg', 'risk-nulo-bg'], ['risk-bajo-fg', 'risk-bajo-bg'], ['risk-medio-fg', 'risk-medio-bg'],
     ['risk-alto-fg', 'risk-alto-bg'], ['risk-muy-alto-fg', 'risk-muy-alto-bg'],
+    ['warning-foreground', 'warning'], ['muted-foreground', 'sidebar'],
 ]);
 
 it('keeps control borders, focus and data marks at 3:1 or more', function (string $theme, string $mark, string $surface): void {
@@ -65,6 +66,8 @@ it('keeps control borders, focus and data marks at 3:1 or more', function (strin
     ['sidebar-ring', 'sidebar'], ['sidebar-primary', 'sidebar'],
     ['chart-1', 'card'], ['chart-2', 'card'], ['chart-3', 'card'], ['chart-4', 'card'], ['chart-5', 'card'],
     ['risk-nulo', 'card'], ['risk-bajo', 'card'], ['risk-medio', 'card'], ['risk-alto', 'card'], ['risk-muy-alto', 'card'],
+    // A meter's fill stands out from its empty track (ArcMeter, bars).
+    ['primary', 'track'],
 ]);
 
 it('measures contrast like WCAG', function (): void {

@@ -39,6 +39,10 @@ type PendingInvitation = {
     trade_name: string;
     /** What the person joins as, written for display ("Te invitaron como RH de Acme"). */
     invited_as: string;
+    /** Who sent it; null when no sender was recorded. */
+    inviter: string | null;
+    role: TenantRole;
+    role_label: string;
     email: string;
     name: string;
 };
@@ -49,12 +53,20 @@ export type InvitationPage = { token: string; passwordRules: string } & (
           state: 'invalid';
           trade_name: null;
           invited_as: null;
+          inviter: null;
+          role: null;
+          role_label: null;
           email: null;
           name: null;
       }
     | ({ state: 'new_account' } & PendingInvitation)
     | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
 );
+
+/** The views of the console's companies. */
+export type TenantView = 'all' | 'active' | 'trial' | 'expired' | 'deactivated';
+
+export type TenantFilters = { q: string; status: TenantView };
 
 export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 
@@ -100,6 +112,18 @@ export type WorkCenterRow = {
     employees: number;
     /** The NOM-035 guides that apply by that number: none with nobody, I up to 15, I and II up to 50, I and III above. */
     guides: ('I' | 'II' | 'III')[];
+    /** Its five largest areas, with their active people. */
+    areas: { name: string; employees: number }[];
+    /** How many other areas it has. */
+    more_areas: number;
+    /** Where it stands with its NOM-035 evaluations; null when it was never evaluated. */
+    evaluation: WorkCenterEvaluationStanding | null;
+};
+
+export type WorkCenterEvaluationStanding = {
+    state: 'draft' | 'running' | 'due' | 'overdue';
+    /** The running one's last day, or the day the next one is (or was) due; null for a draft. */
+    day: string | null;
 };
 
 export type MexicanStateOption = { value: string; label: string };

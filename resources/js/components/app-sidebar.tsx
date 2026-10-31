@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { NextObligationCard } from '@/components/next-obligation-card';
 import { TenantSwitcher } from '@/components/tenant-switcher';
 import {
     Sidebar,
@@ -20,9 +21,9 @@ import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
-    const { auth, tenant } = usePage().props;
+    const { auth, tenant, inCourse } = usePage().props;
     const mainItems = mainNavItems(tenant, auth.isSuperadmin);
-    const complianceItems = complianceNavItems(tenant);
+    const complianceItems = complianceNavItems(tenant, inCourse?.count);
 
     return (
         <Sidebar variant="inset" collapsible="icon">
@@ -36,8 +37,14 @@ export function AppSidebar() {
                     prefetch
                     className="flex h-11 w-fit items-center rounded-md px-3 transition-[padding] duration-300 ease-drawer group-data-[collapsible=icon]:px-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
-                    <span className="contents group-data-[collapsible=icon]:hidden">
+                    <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                         <Logo className="h-7" />
+                        {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
+                        {auth.isSuperadmin && tenant === null && (
+                            <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-[13px] leading-[18px] font-medium text-warning-foreground">
+                                Consola
+                            </span>
+                        )}
                     </span>
                     <span className="hidden group-data-[collapsible=icon]:contents">
                         <Logo kind="symbol" className="h-7" />
@@ -60,6 +67,7 @@ export function AppSidebar() {
                 )}
             </SidebarContent>
 
+            <NextObligationCard />
             <SidebarFooter className="mx-3 border-t border-sidebar-border px-0 py-4 group-data-[collapsible=icon]:mx-1.5">
                 <NavUser />
             </SidebarFooter>

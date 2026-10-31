@@ -1,3 +1,5 @@
+import Initials from '@/components/humetria/initials';
+import EmployeeContact from '@/components/organization/employee-contact';
 import EmployeeRowActions from '@/components/organization/employee-row-actions';
 import {
     Table,
@@ -8,8 +10,19 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { formatMobile } from '@/lib/employees';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
+
+/** One line under the name: the position, the number and, for someone deactivated, since when. */
+const details = (employee: EmployeeRow) =>
+    [
+        employee.job_title,
+        employee.employee_number,
+        employee.deactivated_on === null
+            ? null
+            : `Baja el ${employee.deactivated_on}`,
+    ]
+        .filter((part) => part !== null)
+        .join(' · ');
 
 export default function EmployeesTable({
     tenantSlug,
@@ -27,7 +40,7 @@ export default function EmployeesTable({
             </TableCaption>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Empleado</TableHead>
+                    <TableHead>Persona</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead>Centro de trabajo</TableHead>
                     <TableHead>Área</TableHead>
@@ -40,27 +53,25 @@ export default function EmployeesTable({
                 {employees.map((employee) => (
                     <TableRow key={employee.id}>
                         <TableCell className="whitespace-normal">
-                            <p className="font-medium">{employee.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                                {employee.job_title}
-                                {employee.employee_number !== null &&
-                                    ` · ${employee.employee_number}`}
-                                {employee.deactivated_on !== null &&
-                                    ` · Baja el ${employee.deactivated_on}`}
-                            </p>
+                            <div className="flex items-center gap-3">
+                                <Initials name={employee.name} />
+                                <div className="min-w-0">
+                                    <p className="font-medium">
+                                        {employee.name}
+                                    </p>
+                                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                                        {details(employee)}
+                                    </p>
+                                </div>
+                            </div>
                         </TableCell>
-                        <TableCell className="text-sm whitespace-normal">
-                            {employee.email !== null && <p>{employee.email}</p>}
-                            {employee.mobile !== null && (
-                                <p className="tabular-nums">
-                                    {formatMobile(employee.mobile)}
-                                </p>
-                            )}
+                        <TableCell className="max-w-72">
+                            <EmployeeContact employee={employee} />
                         </TableCell>
-                        <TableCell className="text-sm whitespace-normal">
+                        <TableCell className="whitespace-normal">
                             {employee.work_center}
                         </TableCell>
-                        <TableCell className="text-sm whitespace-normal">
+                        <TableCell className="whitespace-normal">
                             {employee.area}
                         </TableCell>
                         <TableCell className="w-px text-right">

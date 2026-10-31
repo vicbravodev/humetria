@@ -1,39 +1,45 @@
 import { Form } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
+import NewPasswordFields from '@/components/settings/new-password-fields';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 
-type Props = {
+/** Changing your password: the current one, then the new one twice, ticking off what it still needs. */
+export default function UpdatePasswordForm({
+    passwordRules,
+}: {
     passwordRules: string;
-};
-
-export default function UpdatePasswordForm({ passwordRules }: Props) {
+}) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
+    const [password, setPassword] = useState('');
 
     return (
-        <div className="space-y-6">
-            <Heading
-                variant="small"
-                title="Cambiar contraseña"
-                description="Usa una contraseña larga y aleatoria para mantener tu cuenta segura"
-            />
-
+        <section
+            aria-labelledby="password-title"
+            className="flex flex-col gap-3.5"
+        >
+            <div className="flex flex-col">
+                <h2
+                    id="password-title"
+                    className="text-lg leading-[26px] font-semibold"
+                >
+                    Contraseña
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                    Usa una contraseña larga y que no uses en otro lado.
+                </p>
+            </div>
             <Form
                 {...SecurityController.update.form()}
-                options={{
-                    preserveScroll: true,
-                }}
+                options={{ preserveScroll: true }}
                 resetOnError={[
                     'password',
                     'password_confirmation',
                     'current_password',
                 ]}
                 resetOnSuccess
+                onSuccess={() => setPassword('')}
                 onError={(errors) => {
                     if (errors['password']) {
                         passwordInput.current?.focus();
@@ -43,73 +49,30 @@ export default function UpdatePasswordForm({ passwordRules }: Props) {
                         currentPasswordInput.current?.focus();
                     }
                 }}
-                className="space-y-6"
+                className="flex flex-col gap-4"
             >
                 {({ errors, processing }) => (
                     <>
-                        <div className="grid gap-2">
-                            <Label htmlFor="current_password">
-                                Contraseña actual
-                            </Label>
-
-                            <PasswordInput
-                                id="current_password"
-                                ref={currentPasswordInput}
-                                name="current_password"
-                                className="mt-1 block w-full"
-                                autoComplete="current-password"
-                                placeholder="Contraseña actual"
-                            />
-
-                            <InputError message={errors['current_password']} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Nueva contraseña</Label>
-
-                            <PasswordInput
-                                id="password"
-                                ref={passwordInput}
-                                name="password"
-                                className="mt-1 block w-full"
-                                autoComplete="new-password"
-                                placeholder="Nueva contraseña"
-                                passwordrules={passwordRules}
-                            />
-
-                            <InputError message={errors['password']} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
-                                Confirmar contraseña
-                            </Label>
-
-                            <PasswordInput
-                                id="password_confirmation"
-                                name="password_confirmation"
-                                className="mt-1 block w-full"
-                                autoComplete="new-password"
-                                placeholder="Repite tu nueva contraseña"
-                                passwordrules={passwordRules}
-                            />
-
-                            <InputError
-                                message={errors['password_confirmation']}
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-start gap-4">
+                            <NewPasswordFields
+                                errors={errors}
+                                passwordRules={passwordRules}
+                                password={password}
+                                onPasswordChange={setPassword}
+                                currentPasswordInput={currentPasswordInput}
+                                passwordInput={passwordInput}
                             />
                         </div>
-
-                        <div className="flex items-center gap-4">
-                            <Button
-                                disabled={processing}
-                                data-test="update-password-button"
-                            >
-                                Guardar contraseña
-                            </Button>
-                        </div>
+                        <Button
+                            disabled={processing}
+                            data-test="update-password-button"
+                            className="self-start"
+                        >
+                            Guardar contraseña
+                        </Button>
                     </>
                 )}
             </Form>
-        </div>
+        </section>
     );
 }

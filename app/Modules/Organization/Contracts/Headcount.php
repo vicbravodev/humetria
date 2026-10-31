@@ -13,4 +13,12 @@ interface Headcount
      * @return array<string, int> active employees by work center id; a work center with nobody is left out.
      */
     public function byWorkCenter(): array;
+
+    /**
+     * The areas of each of those work centers with their active people, the largest first and then by name.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return array<string, list<array{name: string, employees: int}>> by work center id; one with nobody is left out.
+     */
+    public function areasByWorkCenter(array $workCenterIds): array;
 }

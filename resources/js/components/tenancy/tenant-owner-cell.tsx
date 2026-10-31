@@ -1,7 +1,6 @@
 import { Form } from '@inertiajs/react';
 import CancelInvitationDialog from '@/components/tenancy/cancel-invitation-dialog';
 import TenantInvitationLines from '@/components/tenancy/tenant-invitation-lines';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { resend } from '@/routes/companies/invitations';
@@ -16,19 +15,19 @@ export default function TenantOwnerCell({ tenant }: { tenant: TenantRow }) {
     }
 
     return (
-        <div className="grid gap-3">
+        <div className="grid gap-2">
             {owner !== null && (
-                <div className="grid justify-items-start gap-1">
-                    <Badge>Activo</Badge>
-                    <p className="text-sm text-muted-foreground">
-                        {owner.name} · {owner.email}
-                    </p>
+                <div className="flex flex-col">
+                    <span>{owner.name}</span>
+                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        {owner.email}
+                    </span>
                 </div>
             )}
             {invitation !== null && (
-                <div className="grid justify-items-start gap-2">
+                <div className="grid justify-items-start gap-1">
                     <TenantInvitationLines invitation={invitation} />
-                    <div className="flex gap-2">
+                    <div className="-ml-3 flex">
                         <Form
                             {...resend.form({
                                 tenant: tenant.id,
@@ -38,7 +37,7 @@ export default function TenantOwnerCell({ tenant }: { tenant: TenantRow }) {
                             {({ processing }) => (
                                 <Button
                                     type="submit"
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     disabled={processing}
                                     aria-label={`Reenviar invitación de ${tenant.trade_name}`}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Data\PeopleFilter;
+use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
@@ -12,9 +13,11 @@ use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use LogicException;
 
 /**
@@ -115,6 +118,71 @@ final readonly class CampaignPeople
     public function employeeIds(Campaign $campaign, PeopleFilter $filter): array
     {
         return $this->roster->matchingIds($this->rosterQuery($campaign, $filter));
+    }
+
+    /**
+     * How many people of each area answered every guide, and how many wait with a link sent, of everyone still in the
+     * campaign (cancelled people left out): the counts the list of people gives, area by area. By area name.
+     *
+     * @return list<array{id: string, name: string, answered: int, pending: int, total: int}>
+     */
+    public function byArea(Campaign $campaign): array
+    {
+        $standings = DB::query()->fromSub($this->standingQuery($campaign, null), 'people')->pluck('standing', 'employee_id')->all();
+        $people = $this->roster->findMany(array_values(array_filter(array_keys($standings), is_string(...))));
+        $areas = [];
+
+        foreach ($people as $id => $person) {
+            $standing = $standings[$id] ?? null;
+
+            if ($standing === Standing::Cancelled->value) {
+                continue;
+            }
+
+            $area = $areas[$person->areaId] ?? ['id' => $person->areaId, 'name' => $person->areaName, 'answered' => 0, 'pending' => 0, 'total' => 0];
+            $area['answered'] += $standing === Standing::Answered->value ? 1 : 0;
+            $area['pending'] += $standing === Standing::Pending->value ? 1 : 0;
+            $area['total']++;
+            $areas[$person->areaId] = $area;
+        }
+
+        usort($areas, fn (array $a, array $b): int => strcmp(Str::ascii($a['name']), Str::ascii($b['name'])));
+
+        return $areas;
+    }
+
+    /**
+     * How many people finished on each day from the launch to the last day, counted on the day of their last guide
+     * (null for the days still to come). Below the minimum group there is no count at all: with fewer people, a day
+     * could tell when one of them answered.
+     *
+     * @return array{minimum: int, days: list<array{date: string, answers: int|null}>|null}
+     */
+    public function answersByDay(Campaign $campaign): array
+    {
+        $minimum = config()->integer('results.min_group');
+        $finished = $campaign->participants()->getQuery()
+            ->join('participant_instruments', 'participant_instruments.participant_id', '=', 'campaign_participants.id')
+            ->groupBy('campaign_participants.id')
+            ->havingRaw("bool_and(participant_instruments.status = 'completed')")
+            ->toBase()
+            ->selectRaw('max(participant_instruments.completed_at) as finished_at')
+            ->pluck('finished_at');
+
+        if ($finished->count() < $minimum || $campaign->launched_at === null || $campaign->closes_on === null) {
+            return ['minimum' => $minimum, 'days' => null];
+        }
+
+        $answers = array_count_values($finished->map(fn (mixed $at): string => CampaignClock::date(CarbonImmutable::parse(is_string($at) ? $at : '')))->all());
+        $today = CampaignClock::today()->format('Y-m-d');
+        $days = [];
+
+        for ($day = CarbonImmutable::parse(CampaignClock::date($campaign->launched_at)); $day->format('Y-m-d') <= $campaign->closes_on->format('Y-m-d'); $day = $day->addDay()) {
+            $date = $day->format('Y-m-d');
+            $days[] = ['date' => $date, 'answers' => $date > $today ? null : $answers[$date] ?? 0];
+        }
+
+        return ['minimum' => $minimum, 'days' => $days];
     }
 
     private function rosterQuery(Campaign $campaign, PeopleFilter $filter): RosterQuery

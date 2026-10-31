@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -27,12 +28,12 @@ export function NavUser() {
                             className="h-14 font-normal data-[state=open]:bg-sidebar-accent"
                             data-test="sidebar-menu-button"
                         >
-                            <Avatar className="size-9 rounded-full">
+                            <Avatar className="size-8 rounded-full">
                                 <AvatarImage
                                     src={auth.user.avatar}
                                     alt={auth.user.name}
                                 />
-                                <AvatarFallback className="bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground">
+                                <AvatarFallback className="bg-secondary text-xs font-semibold text-foreground">
                                     {getInitials(auth.user.name)}
                                 </AvatarFallback>
                             </Avatar>
@@ -40,12 +41,16 @@ export function NavUser() {
                                 <span className="truncate">
                                     {auth.user.name}
                                 </span>
-                                <span className="truncate text-sm text-muted-foreground">
+                                <span className="truncate text-[13px] text-muted-foreground">
                                     {auth.isSuperadmin
                                         ? 'Superadmin'
                                         : auth.user.email}
                                 </span>
                             </span>
+                            <Settings
+                                aria-hidden
+                                className="ml-auto text-muted-foreground group-data-[collapsible=icon]:hidden"
+                            />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent

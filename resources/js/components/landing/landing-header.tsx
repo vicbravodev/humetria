@@ -3,10 +3,20 @@ import Logo from '@/components/humetria/logo';
 import { Button } from '@/components/ui/button';
 import { dashboard, home } from '@/routes';
 
+const sections = [
+    { href: '#herramientas', label: 'Herramientas', test: 'header-tools' },
+    { href: '#como-funciona', label: 'Cómo funciona', test: 'header-how' },
+    {
+        href: '#confidencialidad',
+        label: 'Confidencialidad',
+        test: 'header-privacy',
+    },
+] as const;
+
 export default function LandingHeader() {
     return (
-        <header className="sticky top-0 z-10 border-b bg-background/90 backdrop-blur">
-            <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-10 border-b bg-background">
+            <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-1 px-4 sm:px-6">
                 <Link
                     href={home()}
                     className="mr-auto flex min-h-11 items-center rounded-md"
@@ -19,21 +29,35 @@ export default function LandingHeader() {
                     </span>
                 </Link>
                 {/* A phone's header only fits the logo and the two calls to action. */}
+                <nav
+                    aria-label="Secciones"
+                    className="hidden items-center gap-1 md:flex"
+                >
+                    {sections.map((section) => (
+                        <Button
+                            key={section.href}
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="font-normal"
+                        >
+                            <a href={section.href} data-test={section.test}>
+                                {section.label}
+                            </a>
+                        </Button>
+                    ))}
+                </nav>
                 <Button
                     asChild
                     variant="ghost"
-                    className="hidden sm:inline-flex"
+                    size="sm"
+                    className="font-normal"
                 >
-                    <a href="#herramientas" data-test="header-tools">
-                        Herramientas
-                    </a>
-                </Button>
-                <Button asChild variant="ghost">
                     <Link href={dashboard()} data-test="sign-in">
                         Iniciar sesión
                     </Link>
                 </Button>
-                <Button asChild>
+                <Button asChild size="sm" className="ml-2">
                     <a href="#agenda-una-demo" data-test="header-demo">
                         Agenda una demo
                     </a>

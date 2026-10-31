@@ -1,32 +1,15 @@
 import { Head } from '@inertiajs/react';
-import AppearanceTabs from '@/components/appearance-tabs';
-import Heading from '@/components/heading';
-import { edit as editAppearance } from '@/routes/appearance';
+import ThemeChoice from '@/components/settings/theme-choice';
 
 export default function Appearance() {
     return (
         <>
             <Head title="Apariencia" />
-
-            <h1 className="sr-only">Apariencia</h1>
-
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Apariencia"
-                    description="Elige si Humetría se ve en modo claro, oscuro o como tu sistema"
-                />
-                <AppearanceTabs />
-            </div>
+            <ThemeChoice />
         </>
     );
 }
 
 Appearance.layout = {
-    breadcrumbs: [
-        {
-            title: 'Apariencia',
-            href: editAppearance(),
-        },
-    ],
+    breadcrumbs: [{ title: 'Cuenta' }, { title: 'Configuración' }],
 };

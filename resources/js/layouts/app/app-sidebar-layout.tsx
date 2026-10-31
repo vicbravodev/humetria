@@ -7,7 +7,10 @@ import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice'
 import { ImpersonationBanner } from '@/components/impersonation-banner';
 import type { AppLayoutProps } from '@/types';
 
-export default function AppSidebarLayout({ children }: AppLayoutProps) {
+export default function AppSidebarLayout({
+    children,
+    breadcrumbs = [],
+}: AppLayoutProps) {
     return (
         <AppShell>
             <AppSidebar />
@@ -15,7 +18,7 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                 {/* One sticky block, so the top bar stays under the banner instead of sliding beneath it. */}
                 <div className="sticky top-0 z-20 md:overflow-clip md:rounded-t-xl print:hidden">
                     <ImpersonationBanner />
-                    <AppSidebarHeader />
+                    <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 </div>
                 {/* The part that cross-fades between pages (app.css, ::view-transition-*(page)). */}
                 <div className="flex flex-1 flex-col [view-transition-name:page]">

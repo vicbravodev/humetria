@@ -6,7 +6,8 @@ namespace App\Modules\Campaigns\Data;
 
 /**
  * A campaign as other modules read it. Days are written as the design system writes them ("2 nov 2026"), in the display
- * time zone; a draft has no launch day and only a closed campaign has a closing one.
+ * time zone; a draft has no launch day and only a closed campaign has a closing one. `closesOn` is the last day it takes
+ * answers, and `daysLeft` how many days there are from today to it, only while it runs.
  */
 final readonly class CampaignRecord
 {
@@ -29,5 +30,7 @@ final readonly class CampaignRecord
         public ?string $closedOn,
         public array $invited,
         public array $answered,
+        public ?string $closesOn = null,
+        public ?int $daysLeft = null,
     ) {}
 }

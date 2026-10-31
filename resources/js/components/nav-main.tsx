@@ -3,10 +3,12 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import { toUrl } from '@/lib/utils';
 import type { NavItem } from '@/types';
 
 export function NavMain({
@@ -16,7 +18,17 @@ export function NavMain({
     label?: string;
     items: NavItem[];
 }) {
-    const { isCurrentUrl } = useCurrentUrl();
+    const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
+    // A page below an item keeps it lit (NOM-035 on an evaluation), unless the item opens its siblings (Panel).
+    const isActive = (item: NavItem) => {
+        const url = toUrl(item.href);
+
+        return (
+            isCurrentUrl(item.href) ||
+            (isCurrentOrParentUrl(`${url}/`) &&
+                !items.some((other) => toUrl(other.href).startsWith(`${url}/`)))
+        );
+    };
 
     return (
         <SidebarGroup className="py-0">
@@ -26,7 +38,7 @@ export function NavMain({
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                             asChild
-                            isActive={isCurrentUrl(item.href)}
+                            isActive={isActive(item)}
                             tooltip={item.title}
                         >
                             <Link href={item.href} prefetch>
@@ -34,6 +46,9 @@ export function NavMain({
                                 <span>{item.title}</span>
                             </Link>
                         </SidebarMenuButton>
+                        {item.badge !== undefined && item.badge > 0 && (
+                            <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                        )}
                     </SidebarMenuItem>
                 ))}
             </SidebarMenu>

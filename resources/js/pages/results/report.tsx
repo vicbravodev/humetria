@@ -1,9 +1,10 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import ReportDetailsDialog from '@/components/results/report-details-dialog';
 import ReportDocument from '@/components/results/report-document';
 import ReportPending from '@/components/results/report-pending';
 import ReportShares from '@/components/results/report-shares';
 import ReportToolbar from '@/components/results/report-toolbar';
+import { resultsTrail } from '@/lib/results';
 import type {
     NomReport,
     Paginated,
@@ -30,6 +31,13 @@ export default function Report({
     shares: Paginated<ReportShareRow> | null;
 }) {
     const tenantSlug = usePage().props.tenant?.slug ?? '';
+    setLayoutProps({
+        breadcrumbs: resultsTrail(
+            tenantSlug,
+            { id: campaignId, workCenter: report.center.name },
+            'Informe 7.7',
+        ),
+    });
 
     return (
         <>
