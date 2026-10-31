@@ -20,7 +20,7 @@ export default function ComplianceRow({ row }: { row: Row }) {
                 {row.href !== null && row.action !== null && (
                     <Link
                         href={row.href}
-                        className="mt-1 w-fit rounded-sm text-[15px] font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="touch-hit mt-1 w-fit rounded-sm text-[15px] font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >
                         {row.action}
                         <span className="sr-only">

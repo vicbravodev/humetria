@@ -36,7 +36,7 @@ export default function ChecklistConsent({
                     role="radio"
                     aria-checked={consent === true}
                     variant={consent === true ? 'default' : 'outline'}
-                    className="h-12 flex-1 text-base"
+                    className="h-12 text-base sm:flex-1"
                     onClick={() => onDecide(true)}
                 >
                     Acepto
@@ -46,7 +46,7 @@ export default function ChecklistConsent({
                     role="radio"
                     aria-checked={consent === false}
                     variant={consent === false ? 'default' : 'outline'}
-                    className="h-12 flex-1 text-base"
+                    className="h-12 text-base sm:flex-1"
                     onClick={() => onDecide(false)}
                 >
                     No acepto

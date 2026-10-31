@@ -22,7 +22,7 @@ export default function CenterPersonRow({ person }: { person: CenterPerson }) {
                 ) : (
                     <Link
                         href={person.href}
-                        className="w-fit rounded-sm font-medium hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="touch-hit w-fit rounded-sm font-medium hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >
                         {person.name}
                     </Link>

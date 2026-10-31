@@ -34,7 +34,7 @@ export default function PortalNotices({
             <div className="flex w-full max-w-2xl flex-col gap-6">
                 <Link
                     href={show.url({ token })}
-                    className="flex w-fit items-center gap-1.5 text-base font-medium text-primary"
+                    className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
                 >
                     <ArrowLeft aria-hidden className="size-4" />
                     Volver a mi teletrabajo

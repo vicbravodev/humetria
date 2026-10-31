@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
 
 const selectClass =
-    'h-10 w-full rounded-lg border border-input bg-card px-3 text-[15px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+    'h-11 w-full rounded-lg border border-input bg-card px-3 text-[15px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 /** The fields a question is written with; `prefix` keeps ids unique when several forms are open. */
 export default function QuestionFields({
