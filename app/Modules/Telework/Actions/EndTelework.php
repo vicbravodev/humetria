@@ -37,7 +37,9 @@ final readonly class EndTelework
                 throw ValidationException::withMessages(['teleworker' => 'Este periodo de teletrabajo ya terminó.']);
             }
 
-            $current->update(['status' => TeleworkerStatus::Ended, 'ended_at' => $on, 'end_reason' => $reason, 'end_note' => $note]);
+            // Ending on the day it started never ends it before it started.
+            $endedAt = $current->started_at !== null && $on->lessThan($current->started_at) ? $current->started_at : $on;
+            $current->update(['status' => TeleworkerStatus::Ended, 'ended_at' => $endedAt, 'end_reason' => $reason, 'end_note' => $note]);
             ChecklistApplication::query()
                 ->whereNull('submitted_at')->whereNull('cancelled_at')
                 ->whereIn('workplace_id', Workplace::query()->where('teleworker_id', $current->id)->select('id'))

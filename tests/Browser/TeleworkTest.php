@@ -478,7 +478,7 @@ it('tells an aspirant without a validated workplace that they cannot join yet', 
     WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
 
     visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}")
-        ->assertSee('Por validar')
+        ->assertSee('Pendiente de validar')
         ->assertSee('Necesita al menos un lugar validado y vigente')
         ->assertScript('[...document.querySelectorAll("button")].find((b) => b.textContent.includes("Pasar al padrón")).disabled', true);
 });
@@ -516,4 +516,19 @@ it('moves an aspirant into the roster and then ends their telework', function ()
         ->assertSee('Prueba.')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('shows an ended period as history, without the actions that no longer work', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    $teleworker = TeleworkerFactory::new()->ended()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id, 'end_note' => 'Regresó a la oficina.']);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id]);
+
+    visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}")
+        ->assertSee('Teletrabajo terminado')
+        ->assertSee('Regresó a la oficina.')
+        ->assertDontSee('Vence el')
+        ->assertDontSee('Agregar lugar')
+        ->assertDontSee('Enlace a su portal');
 });

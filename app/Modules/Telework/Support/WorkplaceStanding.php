@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Telework\Enums\WorkplaceStatus;
+use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
 use Carbon\CarbonImmutable;
@@ -39,6 +40,14 @@ final readonly class WorkplaceStanding
         }
 
         return $this->lapsed($review) ? WorkplaceStatus::Pending : WorkplaceStatus::from($review->decision->value);
+    }
+
+    /** Whether one of the person's workplaces is validated (with or without a plan) and in force today. */
+    public function hasOneInForce(Teleworker $teleworker): bool
+    {
+        return $teleworker->loadMissing('workplaces')->workplaces->contains(
+            fn (Workplace $workplace): bool => in_array($this->of($workplace), [WorkplaceStatus::Valid, WorkplaceStatus::ValidWithPlan], true),
+        );
     }
 
     /**

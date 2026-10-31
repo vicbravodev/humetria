@@ -7,7 +7,6 @@ namespace App\Modules\Telework\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Telework\Data\RosterData;
 use App\Modules\Telework\Enums\TeleworkerStatus;
-use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +34,7 @@ final readonly class JoinRoster
 
             if ($current->status !== TeleworkerStatus::Aspirant) {
                 $errors['teleworker'] = 'Esta persona ya está en el padrón o su periodo terminó.';
-            } elseif (! $this->hasWorkplaceInForce($current)) {
+            } elseif (! $this->standing->hasOneInForce($current)) {
                 $errors['workplaces'] = 'Necesita al menos un lugar validado y vigente.';
             }
 
@@ -81,17 +80,5 @@ final readonly class JoinRoster
         ];
 
         return array_map(fn (): string => 'Este dato es obligatorio.', array_filter($required));
-    }
-
-    /** Whether one of the workplaces is validated and in force today. */
-    public function hasWorkplaceInForce(Teleworker $teleworker): bool
-    {
-        foreach ($teleworker->workplaces()->get() as $workplace) {
-            if (in_array($this->standing->of($workplace), [WorkplaceStatus::Valid, WorkplaceStatus::ValidWithPlan], true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

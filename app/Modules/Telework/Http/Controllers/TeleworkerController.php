@@ -10,7 +10,6 @@ use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Telework\Actions\AddWorkplace;
 use App\Modules\Telework\Actions\IssuePortalLink;
-use App\Modules\Telework\Actions\JoinRoster;
 use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
@@ -37,7 +36,7 @@ use Inertia\Response;
  */
 final class TeleworkerController extends Controller
 {
-    public function __construct(private readonly WorkCenters $workCenters, private readonly Roster $roster, private readonly WorkplaceAddress $address, private readonly WorkplaceStanding $standing, private readonly JoinRoster $joinRoster) {}
+    public function __construct(private readonly WorkCenters $workCenters, private readonly Roster $roster, private readonly WorkplaceAddress $address, private readonly WorkplaceStanding $standing) {}
 
     public function create(mixed $tenant, string $workCenter): Response
     {
@@ -92,6 +91,7 @@ final class TeleworkerController extends Controller
     {
         Gate::authorize('manage-telework');
         $period = $this->teleworker($teleworker);
+        abort_if($period->status === TeleworkerStatus::Ended, 404);
 
         Inertia::flash('portalLink', route('portal.show', $issue->handle($period->employee_id)));
 
@@ -124,6 +124,8 @@ final class TeleworkerController extends Controller
      */
     private function summary(Teleworker $teleworker): array
     {
+        // The workplaces are read once, for the roster check and the list.
+        $teleworker->load('workplaces.applications');
         $person = $this->roster->find($teleworker->employee_id);
         $zone = config()->string('app.display_timezone');
 
@@ -134,21 +136,21 @@ final class TeleworkerController extends Controller
             'hasEmail' => $person?->email !== null,
             'status' => $teleworker->status->value,
             'percentage' => $teleworker->telework_percentage,
-            'canJoin' => $teleworker->status === TeleworkerStatus::Aspirant && $this->joinRoster->hasWorkplaceInForce($teleworker),
+            'canJoin' => $teleworker->status === TeleworkerStatus::Aspirant && $this->standing->hasOneInForce($teleworker),
             'today' => CarbonImmutable::now($zone)->toDateString(),
             'startedOn' => $teleworker->started_at?->setTimezone($zone)->toDateString(),
             'noEquipmentReason' => $teleworker->no_equipment_reason,
             'endReason' => $teleworker->end_reason?->label(),
             'endedOn' => $teleworker->ended_at?->setTimezone($zone)->toDateString(),
             'endNote' => $teleworker->end_note,
-            'workplaces' => $teleworker->workplaces()->with('applications')->get()->map(fn (Workplace $workplace): array => $this->workplace($workplace))->all(),
+            'workplaces' => $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended))->all(),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function workplace(Workplace $workplace): array
+    private function workplace(Workplace $workplace, bool $ended): array
     {
         $status = $this->standing->of($workplace);
 
@@ -158,7 +160,7 @@ final class TeleworkerController extends Controller
             'label' => $this->label($workplace),
             'status' => $status->value,
             'statusLabel' => $status->label(),
-            'expiresOn' => $this->standing->expiresOn($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'expiresOn' => $ended ? null : $this->standing->expiresOn($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
         ];
     }
 

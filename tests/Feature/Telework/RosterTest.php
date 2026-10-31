@@ -10,7 +10,9 @@ use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Data\RosterData;
 use App\Modules\Telework\Enums\EndReason;
 use App\Modules\Telework\Enums\MaritalStatus;
+use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Http\Controllers\RosterController;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
@@ -454,4 +456,38 @@ it('puts no individual answers in the props of the page', function (): void {
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
         ->assertInertia(fn (Assert $page) => $page->missing('teleworker.workplaces.0.answers')->missing('teleworker.workplaces.0.specialNeeds'));
     expect($this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))->getContent())->not->toContain('escritorio alto');
+});
+
+it('ends on the day it started no earlier than it started', function (): void {
+    $period = activePeriod();
+    $period->update(['started_at' => '2026-02-10 18:00:00']);
+
+    $this->post(endUrl($period), ['reason' => 'other', 'ended_on' => '2026-02-10'])->assertSessionHasNoErrors();
+
+    workIn($this->tenant);
+    expect(Teleworker::query()->findOrFail($period->id)->ended_at?->toIso8601String())->toBe('2026-02-10T18:00:00+00:00');
+});
+
+it('refuses in the database an end before the start', function (): void {
+    $period = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'started_at' => '2026-02-10 18:00:00']);
+
+    expect(fn () => DB::transaction(fn () => $period->forceFill(['status' => TeleworkerStatus::Ended, 'ended_at' => '2026-02-10 06:00:00', 'end_reason' => 'other'])->save()))
+        ->toThrow(QueryException::class);
+});
+
+it('labels the status of a workplace as the criteria do', function (): void {
+    expect(WorkplaceStatus::Pending->label())->toBe('Pendiente de validar')
+        ->and(WorkplaceStatus::NotValid->label())->toBe('No apto')
+        ->and(ReviewDecision::NotValid->label())->toBe('No validado');
+});
+
+it('offers nothing to do on an ended period: no link, no workplace, no expiry', function (): void {
+    $period = TeleworkerFactory::new()->ended()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    $place = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $period->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
+
+    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $period->id]))->assertNotFound();
+    $this->post(route('tenant.telework.teleworkers.workplaces.store', [$this->tenant, $period->id]), rosterForm())->assertNotFound();
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $period->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.expiresOn', null)->where('teleworker.workplaces.0.status', 'valid'));
 });

@@ -16,10 +16,10 @@ enum WorkplaceStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Pending => 'Por validar',
+            self::Pending => 'Pendiente de validar',
             self::Valid => 'Validado',
             self::ValidWithPlan => 'Validado con plan de acción',
-            self::NotValid => 'No validado',
+            self::NotValid => 'No apto',
             self::Retired => 'Retirado',
         };
     }

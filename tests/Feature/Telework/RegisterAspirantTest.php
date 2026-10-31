@@ -316,7 +316,7 @@ it('shows a teleworker with their workplaces and the missing email', function ()
             ->where('teleworker.percentage', 50)
             ->where('teleworker.hasEmail', false)
             ->where('workCenter.id', $this->center->id)
-            ->has('teleworker.workplaces', 1, fn (Assert $place) => $place->has('id')->where('address', 'Calle Hidalgo 45, Centro, Querétaro, Querétaro')->where('label', 'Pendiente de contestar')->where('status', 'pending')->where('statusLabel', 'Por validar')->where('expiresOn', null))
+            ->has('teleworker.workplaces', 1, fn (Assert $place) => $place->has('id')->where('address', 'Calle Hidalgo 45, Centro, Querétaro, Querétaro')->where('label', 'Pendiente de contestar')->where('status', 'pending')->where('statusLabel', 'Pendiente de validar')->where('expiresOn', null))
             ->missing('teleworker.link'));
 });
 

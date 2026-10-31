@@ -24,6 +24,7 @@ export default function TeleworkerDetail({
     states: Record<string, string>;
 }) {
     const newLink = usePage().flash.portalLink;
+    const ended = teleworker.status === 'ended';
 
     return (
         <div className="flex flex-col gap-6">
@@ -43,22 +44,26 @@ export default function TeleworkerDetail({
                 teleworker={teleworker}
                 states={states}
             />
-            <PortalLinkPanel
-                tenantSlug={tenantSlug}
-                teleworkerId={teleworker.id}
-                hasEmail={teleworker.hasEmail}
-                newLink={newLink}
-            />
+            {!ended && (
+                <PortalLinkPanel
+                    tenantSlug={tenantSlug}
+                    teleworkerId={teleworker.id}
+                    hasEmail={teleworker.hasEmail}
+                    newLink={newLink}
+                />
+            )}
             <section className="grid gap-3" aria-labelledby="workplaces-title">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 id="workplaces-title" className="text-xl font-semibold">
                         Lugares de trabajo
                     </h2>
-                    <AddWorkplaceDialog
-                        tenantSlug={tenantSlug}
-                        teleworkerId={teleworker.id}
-                        states={states}
-                    />
+                    {!ended && (
+                        <AddWorkplaceDialog
+                            tenantSlug={tenantSlug}
+                            teleworkerId={teleworker.id}
+                            states={states}
+                        />
+                    )}
                 </div>
                 <ul className="grid gap-3">
                     {teleworker.workplaces.map((workplace) => (
