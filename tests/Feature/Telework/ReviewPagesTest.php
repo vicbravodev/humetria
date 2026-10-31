@@ -106,6 +106,16 @@ it('leaves out what is not waiting for this center', function (): void {
     $this->actingAs($this->cora)->get(inboxUrl())->assertInertia(fn (Assert $page) => $page->where('applications.total', 1)->where('applications.data.0.id', $waiting->id));
 });
 
+it('leaves out the lists of a person whose period ended and the cancelled ones, in the inbox and in the center counts', function (): void {
+    $gone = TeleworkerFactory::new()->ended()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id])->id]);
+    submittedApplication(3, WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $gone->id]));
+    submittedApplication(4)->update(['cancelled_at' => now()]);
+    $waiting = submittedApplication(2, WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id]));
+
+    $this->actingAs($this->cora)->get(inboxUrl())->assertInertia(fn (Assert $page) => $page->where('applications.total', 1)->where('applications.data.0.id', $waiting->id));
+    $this->actingAs($this->owner)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('centers.data.0.pendingReviews', 1));
+});
+
 it('asserts the query count of the inbox', function (): void {
     foreach (range(1, 3) as $n) {
         submittedApplication($n, WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id]));

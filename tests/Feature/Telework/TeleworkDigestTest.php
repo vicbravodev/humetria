@@ -116,6 +116,17 @@ it('tells each Comisión member about their own centers only: lists, notices, ov
     ]);
 });
 
+it('does not count the list of a person whose period ended', function (): void {
+    $ended = digestWorkplace($this->center);
+    Teleworker::query()->whereKey($ended->teleworker_id)->update(['status' => 'ended', 'ended_at' => now(), 'end_reason' => 'other', 'started_at' => now()->subYear()]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $ended->id]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => digestWorkplace($this->center)->id]);
+
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestLinesFor($this->owner->email))->toContain('1 lista por revisar.');
+});
+
 it('does not count a plan that was reviewed again, is not due yet or belongs to a retired workplace', function (): void {
     $cora = memberOf($this->tenant, TenantRole::Committee);
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);

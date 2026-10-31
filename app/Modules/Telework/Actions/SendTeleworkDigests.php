@@ -225,15 +225,14 @@ final readonly class SendTeleworkDigests
     }
 
     /**
-     * Sent checklists no review answers yet, of workplaces still in use.
+     * Sent checklists waiting for the Comisión (`awaitingReview`).
      *
      * @param  list<string>|null  $centers
      */
     private function listsToReview(?array $centers): int
     {
-        return ChecklistApplication::query()->whereNotNull('submitted_at')->whereNull('cancelled_at')
-            ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('application_id')->select('application_id'))
-            ->whereIn('workplace_id', Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', $this->teleworkers($centers)->select('id'))->select('id'))
+        return ChecklistApplication::query()->awaitingReview()
+            ->whereIn('workplace_id', Workplace::query()->whereIn('teleworker_id', $this->teleworkers($centers)->select('id'))->select('id'))
             ->count();
     }
 

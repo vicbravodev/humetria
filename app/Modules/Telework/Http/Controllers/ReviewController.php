@@ -11,7 +11,6 @@ use App\Modules\Telework\Http\Requests\ReviewRequest;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
-use App\Modules\Telework\Models\WorkplaceReview;
 use App\Modules\Telework\Support\ReviewAccess;
 use App\Modules\Telework\Support\ReviewDetail;
 use App\Modules\Telework\Support\WorkplaceAddress;
@@ -38,10 +37,8 @@ final class ReviewController extends Controller
         $this->access->member($this->userId($request), $center->id);
 
         // Oldest first, so nothing waits behind newer lists. A retired workplace can no longer be reviewed.
-        $page = ChecklistApplication::query()
-            ->whereNotNull('submitted_at')
-            ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('application_id')->select('application_id'))
-            ->whereIn('workplace_id', Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', Teleworker::query()->where('work_center_id', $center->id)->select('id'))->select('id'))
+        $page = ChecklistApplication::query()->awaitingReview()
+            ->whereIn('workplace_id', Workplace::query()->whereIn('teleworker_id', Teleworker::query()->where('work_center_id', $center->id)->select('id'))->select('id'))
             ->orderBy('submitted_at')
             ->orderBy('id')
             ->paginate(15)

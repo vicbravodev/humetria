@@ -6,6 +6,7 @@ namespace App\Modules\Telework\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Modules\Telework\Enums\Section;
+use App\Modules\Telework\Enums\TeleworkerStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -48,6 +49,19 @@ final class ChecklistApplication extends Model
     protected function scopeOwnedBy(Builder $query, string $teleworkerId): void
     {
         $query->whereNull('cancelled_at')->whereHas('workplace', fn (Builder $workplaces) => $workplaces->where('teleworker_id', $teleworkerId)->whereNull('retired_at'));
+    }
+
+    /**
+     * Sent lists no review answers yet, not cancelled, of workplaces still in use whose person's period did not end: what
+     * waits for the Comisión (inbox, counts and digests).
+     *
+     * @param  Builder<ChecklistApplication>  $query
+     */
+    protected function scopeAwaitingReview(Builder $query): void
+    {
+        $query->whereNotNull('submitted_at')->whereNull('cancelled_at')
+            ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('application_id')->select('application_id'))
+            ->whereIn('workplace_id', Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', Teleworker::query()->where('status', '!=', TeleworkerStatus::Ended)->select('id'))->select('id'));
     }
 
     /**

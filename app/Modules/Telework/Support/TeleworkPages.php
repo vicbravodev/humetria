@@ -16,7 +16,6 @@ use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Training;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
-use App\Modules\Telework\Models\WorkplaceReview;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\MemberSummary;
@@ -150,9 +149,8 @@ final readonly class TeleworkPages
      */
     private function pendingReviews(array $ids): array
     {
-        $waiting = ChecklistApplication::query()->whereNotNull('submitted_at')->whereNull('cancelled_at')
-            ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('application_id')->select('application_id'))
-            ->whereIn('workplace_id', Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->select('id'))
+        $waiting = ChecklistApplication::query()->awaitingReview()
+            ->whereIn('workplace_id', Workplace::query()->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->select('id'))
             ->get(['workplace_id']);
 
         if ($waiting->isEmpty()) {
