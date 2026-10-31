@@ -51,8 +51,7 @@ export default function ItemsTable({ section }: { section: ItemSection }) {
                                 colSpan={OPTIONS.length}
                                 className="text-right text-sm text-muted-foreground"
                             >
-                                {item.answered} respuestas: menos de 5, no se
-                                muestra
+                                Menos de 5 respuestas: no se muestra
                             </TableCell>
                         ) : (
                             item.counts.map((count, option) => (

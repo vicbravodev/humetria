@@ -16,7 +16,7 @@ export default function ItemRow({ item }: { item: ItemResult }) {
             </p>
             {item.unfavorable === null ? (
                 <p className="text-sm text-muted-foreground sm:col-span-2 sm:text-right">
-                    {item.answered} respuestas: menos de 5, no se muestra
+                    Menos de 5 respuestas: no se muestra
                 </p>
             ) : (
                 <>
