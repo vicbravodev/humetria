@@ -37,6 +37,8 @@ it('shows its own page for the errors a person can meet, each with its status', 
 
 it('keeps saying when to try again on its page for too many attempts', function (): void {
     Route::middleware(['web', 'throttle:1,1'])->get('/test/limited', fn () => 'ok');
+    // Frozen: a second ticking between the two visits would make the wait 59.
+    $this->freezeSecond();
 
     $this->get('/test/limited')->assertOk();
     $this->get('/test/limited')

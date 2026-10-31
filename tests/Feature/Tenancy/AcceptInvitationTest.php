@@ -280,6 +280,9 @@ it('sends an Inertia submit over the limit back to the form with a toast', funct
 });
 
 it('shows a plain visit over the limit the app\'s error page in Spanish, and a JSON request the usual answer', function (): void {
+    // Frozen: a second ticking during the 61 visits would make the wait 59.
+    $this->freezeSecond();
+
     foreach (range(1, 60) as $attempt) {
         $this->get(route('invitations.show', Str::random(64)))->assertOk();
     }
