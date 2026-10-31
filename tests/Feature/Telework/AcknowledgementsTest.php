@@ -225,17 +225,40 @@ it('asks new, reactivated and moved-in staff for the policy in force of their ce
     [$elsewhere] = publishDocument(DocumentKind::Policy, $this->other);
     Queue::fake();
     $newcomer = staffer($this->center);
+    // The listener is queued: run it as the worker would.
+    $listener = resolve(RequestPolicyFromNewStaff::class);
 
     match ($arrival) {
-        'created' => Event::dispatch(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id)),
-        'reactivated' => Event::dispatch(new EmployeeReactivated($this->tenant->id, $newcomer->id)),
-        'moved' => Event::dispatch(new EmployeeMoved($this->tenant->id, $newcomer->id, $this->other->id, $this->center->id)),
+        'created' => $listener->handle(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id)),
+        'reactivated' => $listener->handle(new EmployeeReactivated($this->tenant->id, $newcomer->id)),
+        'moved' => $listener->handle(new EmployeeMoved($this->tenant->id, $newcomer->id, $this->other->id, $this->center->id)),
     };
 
     $request = Acknowledgement::query()->sole();
     expect($request->document_id)->toBe($latest->id)->and($request->employee_id)->toBe($newcomer->id)->and($request->document_id)->not->toBe($elsewhere->id);
     Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $newcomer->id);
 })->with(['created', 'reactivated', 'moved']);
+
+it('asks newcomers from a queued listener after the commit, so an import of many rows is not held up', function (): void {
+    publishDocument(DocumentKind::Policy, $this->center);
+    Queue::fake();
+    $newcomer = staffer($this->center);
+
+    Event::dispatch(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id));
+    Event::dispatch(new EmployeeReactivated($this->tenant->id, $newcomer->id));
+    Event::dispatch(new EmployeeMoved($this->tenant->id, $newcomer->id, $this->other->id, $this->center->id));
+
+    Queue::assertPushed(Illuminate\Events\CallQueuedListener::class, fn (Illuminate\Events\CallQueuedListener $job): bool => $job->class === RequestPolicyFromNewStaff::class && $job->data[0]->employeeId === $newcomer->id);
+    expect(Queue::pushed(Illuminate\Events\CallQueuedListener::class, fn (Illuminate\Events\CallQueuedListener $job): bool => $job->class === RequestPolicyFromNewStaff::class))->toHaveCount(3);
+    expect(is_subclass_of(RequestPolicyFromNewStaff::class, ShouldQueueAfterCommit::class))->toBeTrue()
+        ->and(Acknowledgement::query()->where('employee_id', $newcomer->id)->count())->toBe(0);
+
+    // The job enters the company named by the event, whatever company the worker was in.
+    workIn(Tenant::factory()->create());
+    resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $newcomer->id, $this->center->id));
+    workIn($this->tenant);
+    expect(Acknowledgement::query()->where('employee_id', $newcomer->id)->count())->toBe(1);
+});
 
 it('asks a newcomer once even if the arrival is announced twice, and nothing without a policy', function (): void {
     $lonely = staffer($this->other);

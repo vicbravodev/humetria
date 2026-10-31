@@ -11,12 +11,15 @@ use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Tenancy\Contracts\Companies;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 
 /**
  * Whoever joins a work center after its policy was published (a new hire, a reactivated or a moved-in person) is asked to
- * acknowledge the policy in force there. Asking twice is harmless: a version asks once per person.
+ * acknowledge the policy in force there. Asking twice is harmless: a version asks once per person. Queued, after the
+ * commit, entering the company the event names: an import of many rows must not wait for one request per row.
  */
-final readonly class RequestPolicyFromNewStaff
+final class RequestPolicyFromNewStaff implements ShouldQueue, ShouldQueueAfterCommit
 {
     public function __construct(private Companies $companies, private Roster $roster, private RequestAcknowledgements $request) {}
 
