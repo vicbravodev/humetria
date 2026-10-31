@@ -7,3 +7,4 @@ export type * from './organization';
 export type * from './tenancy';
 export type * from './ui';
 export type * from './results';
+export type * from './telework';

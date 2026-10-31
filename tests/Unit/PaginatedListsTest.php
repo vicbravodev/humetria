@@ -17,6 +17,7 @@ const ARRAY_PROPS = [
     'dashboard:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'campaigns/survey:instruments' => 'las guías que contesta una persona: tres a lo más',
     'telework/settings:presets' => 'catálogo fijo: los periodos predefinidos de la Sección II (cuatro)',
+    'telework/committee:candidates' => 'quienes pueden integrar la Comisión: las personas de la empresa con rol de revisión (dueño, RH, Comisión), pocas',
     'campaigns/show:instruments' => 'resumen por guía de la evaluación: tres a lo más',
     'campaigns/show:standings' => 'conteos por situación: cinco',
     'campaigns/show:areas' => 'resumen por área del centro: un conteo por área, no personas',

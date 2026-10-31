@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,3 +11,9 @@ use Illuminate\Support\Facades\Route;
 /** @var string $notReserved */
 Route::get('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'edit'])->where('tenant', $notReserved)->name('tenant.telework.settings.edit');
 Route::put('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.settings.update');
+
+// The Comisión de seguridad e higiene of a work center: who sits on it. Unassigning is not deleting evidence: it only ends a seat.
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.committee.show');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.committee.store');
+Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members', [CommitteeController::class, 'assign'])->where('tenant', $notReserved)->name('tenant.telework.committee.members.store');
+Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members/{user}', [CommitteeController::class, 'unassign'])->where('tenant', $notReserved)->where('user', '[0-9]+')->name('tenant.telework.committee.members.destroy');
