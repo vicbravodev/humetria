@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-037-STPS-2023 en Humetría
 
-Versión 0.1 (borrador para aprobación) · 30 de octubre de 2026 · Norma base: NOM-037-STPS-2023, DOF del 8 de junio de
+Versión 0.2 (borrador para aprobación) · 30 de octubre de 2026 · Norma base: NOM-037-STPS-2023, DOF del 8 de junio de
 2023, en vigor desde el 5 de diciembre de 2023 (versión de la lista de verificación en el sistema: `dof-2023-06-08`).
 
 Este documento explica **cómo aplica Humetría la NOM-037 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -153,7 +153,7 @@ esta modalidad, o cuando una de las que ya están en el listado deja de estarlo.
 
 ### C-06. Confidencialidad del padrón · Norma + Humetría
 
-**Qué hacemos.** El padrón lo ven solo los roles autorizados (⚑ ver C-25). El domicilio, el estado civil y el teléfono
+**Qué hacemos.** El padrón lo ven solo los roles autorizados (C-25). El domicilio, el estado civil y el teléfono
 no aparecen en listas generales ni en exportaciones que no los necesiten.
 
 **Qué dice la norma.** «La confidencialidad de los datos contenidos en el listado (…) estará bajo la responsabilidad
@@ -163,16 +163,26 @@ del patrón.» [DOF, 5.1, nota]
 
 ## C. Lista de verificación (5.4, 5.5, 5.5.1 y capítulo 7)
 
-### C-07. La lista base de Humetría: el Apéndice 3 literal más lo que le falta · Norma + STPS + Humetría
+### C-07. Cada centro edita su lista, partiendo de la base de Humetría · Norma + STPS + Humetría
 
-**Qué hacemos.** Humetría ofrece una lista base con dos secciones:
+**Qué hacemos.** Cada centro de trabajo tiene su lista de verificación, que la Comisión puede editar desde el primer
+día. Arranca con la lista base de Humetría, que tiene dos secciones:
 
 - **Sección I** (antes de teletrabajar): las 48 preguntas del Apéndice 3, Sección I, literales.
 - **Sección II** (comprobación periódica): las 61 preguntas del Apéndice 3, Sección II, literales.
 - **Preguntas agregadas por Humetría** (C-08), marcadas como tales, para cubrir lo que el capítulo 7 y el numeral 5.1.1
   exigen y el Apéndice no pregunta.
 
-La lista la **adopta la Comisión de Seguridad e Higiene** del centro, y Humetría registra quién la adoptó y cuándo.
+La Comisión puede **agregar, quitar y modificar** preguntas, y cambiar su respuesta favorable (C-10). Reglas:
+
+- **Versiones.** Cada vez que la Comisión publica cambios se crea una versión nueva, con quién la publicó y cuándo. Una
+  lista ya contestada conserva la versión con la que se contestó; los cambios solo aplican a las siguientes.
+- **Origen visible.** Cada pregunta indica si es del Apéndice 3 literal, del Apéndice 3 modificada, de Humetría o de la
+  Comisión. Solo las primeras se presentan como texto del DOF.
+- **Cobertura.** Cada pregunta base lleva el requisito que cubre (tabla de C-08). Si una edición deja algún requisito
+  del capítulo 7 o del 5.1.1 sin preguntas en alguna sección, Humetría lo advierte antes de publicar, porque la
+  inspección lo revisa. La Comisión puede publicar de todos modos: la decisión es suya.
+- **Forma.** Toda pregunta, nueva o editada, se contesta Sí / No / No aplica (C-09).
 
 **Qué dice la norma.** La lista es una «Herramienta elaborada por la Comisión de Seguridad e Higiene» [DOF, 4.17]. El
 Apéndice 3 es «informativo y no es de cumplimiento obligatorio», y «El patrón puede adicionar, eliminar o modificar
@@ -183,8 +193,7 @@ contenido» [RC, promovente 72, l. 2485]; «cada centro de trabajo podrá elabor
 que considere convenientes» [RC, l. 6456]; «es preferible contar con preguntas dicotómicas y no abiertas» [RC,
 promovente 34, l. 3445].
 
-**⚑ Por decidir.** En el MVP, ¿la lista es fija (base de Humetría) o la Comisión puede editarla? Propuesta: **fija**, con
-la adopción registrada. Si la Comisión necesita otras preguntas, se agrega la edición en una versión posterior.
+**Decisión del usuario (2026-10-30).** La lista es editable desde el principio.
 
 ### C-08. Lo que el Apéndice 3 no pregunta y la inspección sí revisa · Norma + Humetría
 
@@ -228,7 +237,9 @@ evidencia fotográfica)» [DOF, Apéndice 3, instrucción 3]
 
 **Por qué es interpretación.** El Apéndice no dice cuál respuesta es la desfavorable, y la polaridad cambia de una
 pregunta a otra (tener extintor es favorable; tener cables expuestos, no). La tabla del anexo la fija con base en
-la condición del capítulo 7 que cada pregunta revisa. **⚑ Por decidir:** revisar la tabla del anexo.
+la condición del capítulo 7 que cada pregunta revisa. Esa tabla es solo **el valor inicial** de la lista base: como
+la lista es editable (C-07), la Comisión puede cambiar la respuesta favorable de cualquier pregunta.
+**⚑ Por decidir:** aprobar la tabla del anexo como valor inicial.
 
 ### C-11. La persona contesta; no decide · Norma + STPS
 
@@ -289,8 +300,10 @@ como persona trabajadora bajo la modalidad de Teletrabajo, y después de serlo, 
 **Criterio STPS.** La periodicidad no está fija: «corresponderá al patrón establecer dicha periodicidad» [RC,
 promovente 3, l. 3193; promovente 62, l. 3316].
 
-**⚑ Por decidir.** Cada empresa fija su periodicidad (en meses) en la configuración de NOM-037. Propuesta: **12 meses**
-por defecto, y Humetría avisa cuando una validación vence. Además se aplica cuando cambia el lugar (6.7).
+**Decisión del usuario (2026-10-30).** Cada empresa elige la periodicidad en la configuración de NOM-037: un periodo
+predefinido (3, 6, 12 o 24 meses) o uno propio en meses. Por defecto, **12 meses**. Humetría avisa cuando una
+validación está por vencer y, al vencer, el lugar vuelve a «Pendiente de validar». La Sección II también se aplica
+cuando cambia el lugar (6.7).
 
 ### C-15. Fotos y video: opcionales y con consentimiento · Norma + Humetría
 
@@ -329,9 +342,9 @@ la modalidad de teletrabajo, existe comisión de seguridad e higiene» [RC, prom
 de seguridad e higiene debido a que por la cantidad de trabajadores de ese centro de trabajo no lo amerite» [DOF, 10.3,
 obs. a 5.4 y 7]. La NOM-019 no exime a nadie, así que Humetría no ofrece ese atajo.
 
-**⚑ Por decidir.** ¿Cómo entra la Comisión a Humetría? Propuesta: un rol nuevo, **Comisión de seguridad e higiene**,
-que solo ve el expediente NOM-037 de su centro, valida listas y recibe los avisos. Con Spatie, igual que los roles
-actuales.
+**Decisión del usuario (2026-10-30).** Un rol nuevo, **Comisión de seguridad e higiene** (Spatie, como los roles
+actuales). Solo ve la NOM-037 de su centro: edita la lista (C-07), valida lugares (C-12) y recibe los avisos (C-26). No
+ve la NOM-035 ni el resto de la empresa.
 
 ### C-18. La Comisión tiene acceso a la documentación · Norma
 
@@ -346,9 +359,9 @@ actuales.
 
 ### C-19. Política de Teletrabajo con los incisos a) a l) · Norma
 
-**Qué hacemos.** La empresa registra su Política de Teletrabajo **por escrito**, sea su propio documento o uno que
-parte de la plantilla de Humetría (basada en el ejemplo del Apéndice 1). Antes de publicarla, RH confirma que cubre
-cada inciso de 5.2 a) a l), y Humetría muestra cuáles faltan. Cada versión queda guardada con su fecha.
+**Qué hacemos.** La empresa **sube su Política de Teletrabajo en PDF**. Antes de publicarla, RH marca qué incisos de
+5.2 a) a l) cubre, y Humetría advierte cuáles faltan. Cada versión queda guardada con su fecha. Humetría no redacta la
+política ni ofrece plantilla (decisión del usuario, 2026-10-30).
 
 **Qué dice la norma.** [DOF, 5.2 a) a l)], literal en el anexo. La política puede ir sola o dentro de otra política
 [DOF, 10.3, obs. a 5.2]. El Apéndice 1 es solo de referencia: «no se considerará como incumplimiento si el patrón
@@ -379,7 +392,8 @@ la modalidad de teletrabajo)» [DOF, 10.3, obs. a 5.2].
 | Mecanismo de atención de violencia familiar | 5.13 | Incluye regresar a presencial, temporal o permanente |
 | Apoyo para participar en las comisiones | 5.14 | Evidencia documental |
 
-Pueden ser secciones de la misma política. Humetría no redacta textos legales: da plantillas y la lista de contenido.
+Pueden ser secciones de la misma política o PDF aparte. Humetría no redacta textos legales: guarda el documento y
+muestra la lista de contenido mínimo.
 
 ### C-22. Equipo entregado: listado, acuse o negativa · Norma
 
@@ -419,8 +433,7 @@ verificación (riesgos por condiciones peligrosas e inseguras, ergonómicos, psi
 Teletrabajo y el manejo de las TIC [DOF, 8.1]. Puede ser «remota, presencial o mixta, como parte de la jornada de
 trabajo» [DOF, 8.1, nota].
 
-**⚑ Por decidir.** Propuesta: Humetría **registra** la capacitación; no la imparte. Impartirla (contenido, video,
-evaluación) sería otra herramienta.
+**Decisión del usuario (2026-10-30).** Humetría **registra** la capacitación; no la imparte.
 
 ---
 
@@ -439,8 +452,9 @@ fr. VI], y su tratamiento requiere «consentimiento expreso y por escrito (…) 
 electrónica, o cualquier mecanismo de autenticación» [LFPDPPP, art. 8]. No se requiere consentimiento para cumplir
 obligaciones de la relación laboral [LFPDPPP, art. 9 fr. IV], lo que cubre el padrón del 5.1.
 
-**⚑ Por decidir.** El texto del aviso y del consentimiento debe revisarlo el abogado del cliente: la empresa es la
-responsable de los datos y Humetría el encargado. Humetría da el mecanismo, no la opinión legal.
+**Decisión del usuario (2026-10-30).** Humetría incluye un texto de consentimiento base (salud y fotos) que la persona
+acepta dentro de la lista, con fecha y versión del texto. La empresa es la responsable de los datos y Humetría el
+encargado: se le recomienda revisar el texto con su abogado, y puede reemplazarlo por el suyo.
 
 ### C-26. Los tres avisos de la persona, con su contenido mínimo · Norma
 
@@ -507,9 +521,9 @@ versiones (HTML, Word y PDF de la edición) y que [RC] no explica. Humetría no 
 
 ---
 
-## Anexo: respuesta favorable por pregunta (⚑ propuesta)
+## Anexo: respuesta favorable por pregunta (valor inicial, ⚑ propuesta)
 
-Respuesta que **no** marca riesgo. Si la persona contesta la otra, la pregunta se marca (C-10). «Informativa»: no
+Valor inicial de la lista base; la Comisión lo puede cambiar (C-07). Respuesta que **no** marca riesgo. Si la persona contesta la otra, la pregunta se marca (C-10). «Informativa»: no
 marca en ningún caso. «No aplica» nunca marca. Los criterios usados:
 
 - Sí es favorable cuando la pregunta describe una condición del capítulo 7 o del 5.1.1 (iluminación, extintor,
@@ -681,4 +695,5 @@ marca en ningún caso. «No aplica» nunca marca. Los criterios usados:
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.2 | 2026-10-30 | Decisiones del usuario: lista editable desde el principio con versiones (C-07, C-10), periodicidad predefinida o propia con 12 meses por defecto (C-14), rol de la Comisión (C-17), política en PDF (C-19, C-21), solo registro de capacitación (C-24), consentimiento base (C-25). Un solo PR para toda la NOM-037. Queda por aprobar el anexo. |
 | 0.1 | 2026-10-30 | Borrador con base en el DOF del 08/06/2023, las respuestas a los comentarios (DOF 15/05/2023), la LFT vigente, la NOM-019 y la LFPDPPP. Pendiente de aprobación de los criterios marcados ⚑. |
