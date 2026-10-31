@@ -6,7 +6,9 @@ use App\Models\User;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\PublishChecklist;
 use App\Modules\Telework\Actions\RegisterCommittee;
+use App\Modules\Telework\Actions\RequestAcknowledgements;
 use App\Modules\Telework\Enums\DocumentKind;
+use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistAnswer;
 use App\Modules\Telework\Models\ChecklistApplication;
@@ -597,3 +599,66 @@ it('lets a committee user filter the documents by its own centers only', functio
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+/** @return array{string, TeleworkDocument} The panel of RH and a policy of a center whose three people were asked to confirm it. */
+function acknowledgementsDocument(): array
+{
+    [$url, $center] = committeeCenter();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    foreach (['Ana Ruiz', 'Beto Soto', 'Carla Díaz'] as $name) {
+        EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => $name]);
+    }
+    $document = TeleworkDocument::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy]);
+    workIn($tenant);
+    resolve(RequestAcknowledgements::class)->handle([$document->id]);
+
+    return [$url, $document];
+}
+
+it('shows who confirmed a document and who is pending', function (bool $dark, bool $mobile): void {
+    [$url, $document] = acknowledgementsDocument();
+
+    visitPage('telework/acknowledgements', "{$url}/telework/documents/{$document->id}/acknowledgements", $dark, $mobile)
+        ->assertSee('Política de Teletrabajo · versión 1')
+        ->assertSee('0 de 3 (0 %)')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Carla Díaz')
+        ->assertSee('Pendientes')
+        ->assertSee('Registrar acuses en papel');
+})->with($looks);
+
+it('records paper acknowledgements of the people ticked, from the page', function (): void {
+    [$url, $document] = acknowledgementsDocument();
+
+    visit("{$url}/telework/documents/{$document->id}/acknowledgements")
+        ->click('[aria-label="Elegir a Ana Ruiz"]')
+        ->click('[aria-label="Elegir a Beto Soto"]')
+        ->click('button:has-text("Registrar acuses en papel")')
+        ->click('#ack-date')
+        ->keys('[data-day] button[tabindex="0"]', ['ArrowUp', 'Enter'])
+        ->fill('#ack-note', 'Hoja de firmas 3')
+        ->press('Registrar')
+        ->assertSee('Se registraron 2 acuses.')
+        ->assertSee('2 de 3 (67 %)')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('lets the person read and confirm a document from their portal', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $center = WorkCenter::factory()->for($tenant)->create();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    $document = TeleworkDocument::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy]);
+    workIn($tenant);
+    resolve(RequestAcknowledgements::class)->handle([$document->id]);
+    $address = '/portal/'.resolve(IssuePortalLink::class)->handle($employee->id);
+
+    visitPage('telework/portal', $address, $dark, $mobile)
+        ->assertSee('Documentos por confirmar')
+        ->assertSee('Política de Teletrabajo · versión 1')
+        ->assertSee('Ver el documento')
+        ->press('Confirmo que lo leí')
+        ->assertSee('Nada pendiente por ahora');
+
+    expect(Acknowledgement::query()->sole()->acknowledged_at)->not->toBeNull();
+})->with($looks);

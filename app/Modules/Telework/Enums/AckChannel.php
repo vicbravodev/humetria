@@ -10,4 +10,13 @@ enum AckChannel: string
     case Portal = 'portal';
     case Manual = 'manual';
     case Panel = 'panel';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Portal => 'Portal',
+            self::Manual => 'En papel',
+            self::Panel => 'Panel',
+        };
+    }
 }

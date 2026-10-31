@@ -22,6 +22,7 @@ const ARRAY_PROPS = [
     'telework/checklist:requirements' => 'catálogo fijo: los requisitos del capítulo 7 y 5.1.1 (catorce)',
     'telework/documents:kinds' => 'catálogo fijo: los ocho tipos de documento de la norma, con sus incisos',
     'telework/committee:candidates' => 'quienes pueden integrar la Comisión: las personas de la empresa con rol de revisión (dueño, RH, Comisión), pocas',
+    'telework/acknowledgements:committee' => 'resumen corto: los integrantes de la Comisión que confirman en el panel, pocos por centro',
     'campaigns/show:instruments' => 'resumen por guía de la evaluación: tres a lo más',
     'campaigns/show:standings' => 'conteos por situación: cinco',
     'campaigns/show:areas' => 'resumen por área del centro: un conteo por área, no personas',

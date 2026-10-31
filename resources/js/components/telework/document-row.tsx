@@ -1,9 +1,13 @@
-import { Download } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Download, UserCheck } from 'lucide-react';
+import ProgressBar from '@/components/humetria/progress-bar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { describeDate } from '@/lib/calendar-date';
+import { progressText } from '@/lib/telework/acknowledgements';
 import { missingLabels } from '@/lib/telework/documents';
 import { file } from '@/routes/tenant/telework/documents';
+import { index as acknowledgements } from '@/routes/tenant/telework/documents/acknowledgements';
 import type { DocumentKindOption, DocumentRow as Row } from '@/types';
 
 /** One version of a document in one work center: its date, what it covers and what it leaves out. */
@@ -54,6 +58,32 @@ export default function DocumentRow({
                     </Button>
                 </div>
             </div>
+            {row.acknowledgements !== null && (
+                <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm font-medium">
+                            Confirmaron que la leyeron:{' '}
+                            {progressText(row.acknowledgements)}
+                        </p>
+                        <Button variant="outline" size="sm" asChild>
+                            <Link
+                                href={acknowledgements.url({
+                                    tenant: tenantSlug,
+                                    document: row.id,
+                                })}
+                            >
+                                <UserCheck aria-hidden />
+                                Ver confirmaciones
+                            </Link>
+                        </Button>
+                    </div>
+                    <ProgressBar
+                        value={row.acknowledgements.acknowledged}
+                        max={row.acknowledgements.expected}
+                        label="Personas que confirmaron"
+                    />
+                </div>
+            )}
             {missing.length > 0 && (
                 <div>
                     <p className="text-sm font-medium">Incisos que faltan</p>

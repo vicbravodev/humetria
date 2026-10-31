@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Telework\Http\Controllers\AcknowledgementController;
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\DocumentController;
@@ -75,6 +76,12 @@ Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/c
 Route::get('admin/{tenant:slug}/telework/documents', [DocumentController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.documents.index');
 Route::post('admin/{tenant:slug}/telework/documents', [DocumentController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.documents.store');
 Route::get('admin/{tenant:slug}/telework/documents/{document}/file', [DocumentController::class, 'file'])->where('tenant', $notReserved)->name('tenant.telework.documents.file');
+
+// Who confirmed a document: the list (RH and the assigned Comisión), the paper acknowledgements RH records in bulk and a
+// Comisión member's own confirmation. Nothing is deleted or edited: a confirmation, once given, stays.
+Route::get('admin/{tenant:slug}/telework/documents/{document}/acknowledgements', [AcknowledgementController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.documents.acknowledgements.index');
+Route::post('admin/{tenant:slug}/telework/documents/{document}/acknowledgements', [AcknowledgementController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.documents.acknowledgements.store');
+Route::post('admin/{tenant:slug}/telework/documents/{document}/acknowledge', [AcknowledgementController::class, 'acknowledge'])->where('tenant', $notReserved)->name('tenant.telework.documents.acknowledge');
 
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');

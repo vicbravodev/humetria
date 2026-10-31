@@ -8,11 +8,13 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\MemberSummary;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Who has to acknowledge a document today (criterio C-20): the policy, every active employee of its center; the risk
@@ -44,5 +46,19 @@ final readonly class AckAudience
 
         return array_values(array_map(fn (CommitteeAssignment $seat): int => $seat->user_id, CommitteeAssignment::query()
             ->where('work_center_id', $document->work_center_id)->whereIn('user_id', $reviewers)->get(['user_id'])->all()));
+    }
+
+    /**
+     * The requests of a document that still count: those of the people expected today.
+     *
+     * @return Builder<Acknowledgement>
+     */
+    public function requests(TeleworkDocument $document): Builder
+    {
+        $employees = $this->employeeIds($document);
+        $users = $this->userIds($document);
+
+        return Acknowledgement::query()->where('document_id', $document->id)
+            ->where(fn (Builder $query) => $query->whereIn('employee_id', $employees)->orWhereIn('user_id', $users));
     }
 }

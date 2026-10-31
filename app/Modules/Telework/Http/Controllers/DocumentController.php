@@ -9,6 +9,7 @@ use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Http\Requests\DocumentRequest;
 use App\Modules\Telework\Models\TeleworkDocument;
+use App\Modules\Telework\Support\AckProgress;
 use App\Modules\Telework\Support\FileStore;
 use App\Modules\Telework\Support\VisibleCenters;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -31,7 +32,7 @@ final class DocumentController extends Controller
 {
     public function __construct(private readonly VisibleCenters $visible, private readonly WorkCenters $workCenters) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request, AckProgress $progress): Response
     {
         Gate::authorize('view-telework');
         $centers = [];
@@ -66,6 +67,7 @@ final class DocumentController extends Controller
                 'publishedOn' => $document->created_at->setTimezone(config()->string('app.display_timezone'))->toDateString(),
                 'coveredItems' => $document->covered_items,
                 'missingItems' => array_values(array_diff($document->kind->coverableItems(), $document->covered_items)),
+                'acknowledgements' => $document->kind->needsAcknowledgement() ? $progress->of($document) : null,
             ]),
             'filters' => [
                 'center' => $selected === null ? null : ['value' => $selected->id, 'label' => $selected->name],

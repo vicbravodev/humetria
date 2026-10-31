@@ -220,6 +220,7 @@ return [
         'consent' => 'consentimiento',
         'consent_text' => 'texto de consentimiento',
         'employee_id' => 'persona',
+        'date' => 'fecha',
         'employee_ids' => 'personas',
         'employee_number' => 'número de empleado',
         'exterior_number' => 'número exterior',

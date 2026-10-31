@@ -63,6 +63,7 @@ export type PortalPending = {
     sent: PortalChecklist[];
     photos: PortalPhotoRequest[];
     visits: PortalVisit[];
+    documents: PortalDocument[];
 };
 
 export type TeleworkerStatus = 'aspirant' | 'active' | 'ended';
@@ -239,9 +240,46 @@ export type DocumentRow = {
     publishedOn: string;
     coveredItems: string[];
     missingItems: string[];
+    /** Null for the kinds nobody has to confirm. */
+    acknowledgements: AckProgress | null;
 };
 
 export type DocumentFilters = {
     center: { value: string; label: string } | null;
     versions: 'latest' | 'all';
 };
+
+/** How many of the people a document is for have confirmed it. */
+export type AckProgress = { acknowledged: number; expected: number };
+
+export type AckStatus = 'pending' | 'acknowledged';
+
+/** A person who was asked to confirm a document, with how they did. */
+export type AckPerson = {
+    id: string;
+    name: string;
+    jobTitle: string;
+    status: AckStatus;
+    /** How it was confirmed ("Portal", "En papel", "Panel"); null while pending. */
+    channelLabel: string | null;
+    /** Y-m-d in the company's time zone. */
+    acknowledgedOn: string | null;
+};
+
+export type AckCommitteeMember = {
+    name: string;
+    status: AckStatus;
+    acknowledgedOn: string | null;
+};
+
+export type AckFilters = { status: 'all' | AckStatus; q: string };
+
+export type AckDocument = {
+    id: string;
+    title: string;
+    workCenter: string;
+    publishedOn: string;
+};
+
+/** A published document the person has to read and confirm in their portal. */
+export type PortalDocument = { id: string; title: string; publishedOn: string };

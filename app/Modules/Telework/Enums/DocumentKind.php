@@ -85,4 +85,10 @@ enum DocumentKind: string
     {
         return array_keys($this->items());
     }
+
+    /** Whether people have to confirm they read it: the policy and the risk information (criterio C-20). */
+    public function needsAcknowledgement(): bool
+    {
+        return $this === self::Policy || $this === self::RiskInformation;
+    }
 }
