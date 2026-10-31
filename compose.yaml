@@ -56,6 +56,7 @@ services:
         working_dir: /var/www/html
         command: ['php', 'artisan', 'horizon']
         environment:
+            WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
         volumes:
             - '.:/var/www/html'
@@ -72,6 +73,7 @@ services:
         working_dir: /var/www/html
         command: ['php', 'artisan', 'schedule:work']
         environment:
+            WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
         volumes:
             - '.:/var/www/html'
