@@ -257,6 +257,7 @@ it('never gives the pages an answer', function (): void {
     foreach ([route('tenant.campaigns.index', $this->tenant), route('tenant.campaigns.show', [$this->tenant, $campaign->id])] as $url) {
         $this->actingAs($this->hr)->get($url)->assertInertia(function (Assert $page): void {
             expect(hasKeyDeep($page->toArray()['props'], 'answers'))->toBeFalse();
+            expectNoIndividualResponses($page->toArray()['props']);
         });
     }
 });

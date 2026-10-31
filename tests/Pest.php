@@ -384,3 +384,47 @@ function staffOf(Tenant $tenant, WorkCenter $workCenter, int $female, int $male 
 
     return $people;
 }
+
+/**
+ * Fails when the props of a page hold an individual response, whatever the key it hides under: the id of a stored
+ * anonymous response, a map named `answers` (a count by that name passes), or an answer given to an item (an item number or a gate key whose value
+ * is an answer option as stored, such as "never" or "yes"). Aggregates (counts, shares, levels) pass.
+ * Every page HR sees runs its props through this (CLAUDE.md, Privacidad).
+ *
+ * @param  array<array-key, mixed>  $props
+ */
+function expectNoIndividualResponses(array $props): void
+{
+    $json = json_encode($props, JSON_THROW_ON_ERROR);
+
+    foreach (App\Modules\Responses\Models\AnonymousResponse::query()->withoutGlobalScopes()->pluck('id') as $id) {
+        expect($json)->not->toContain($id);
+    }
+
+    expect(individualAnswersIn($props))->toBe([]);
+}
+
+/**
+ * Where in `$value` one person's answer shows (see expectNoIndividualResponses), as dotted paths.
+ *
+ * @param  array<array-key, mixed>  $value
+ * @return list<string>
+ */
+function individualAnswersIn(array $value, string $path = 'props'): array
+{
+    // What a questionnaire stores: the Likert scale of Guías II and III and the yes/no of Guía I and of the gates.
+    $options = ['always', 'almost_always', 'sometimes', 'almost_never', 'never', 'yes', 'no'];
+    $found = [];
+
+    foreach ($value as $key => $item) {
+        $isItem = (ctype_digit((string) $key) && (int) $key > 0) || in_array($key, ['serves_clients', 'supervises'], true);
+
+        if (($key === 'answers' && is_array($item)) || ($isItem && in_array($item, $options, true))) {
+            $found[] = $path.'.'.$key;
+        } elseif (is_array($item)) {
+            $found = [...$found, ...individualAnswersIn($item, $path.'.'.$key)];
+        }
+    }
+
+    return $found;
+}
