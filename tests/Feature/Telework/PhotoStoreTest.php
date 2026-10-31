@@ -104,6 +104,23 @@ it('turns a photo upright by its EXIF orientation before dropping the metadata',
         ->and(@exif_read_data($stored))->not->toHaveKey('Orientation');
 })->with([[1, false], [2, false], [3, false], [4, false], [5, true], [6, true], [7, true], [8, true]]);
 
+it('reads the orientation from the uploaded file on disk, so it works with allow_url_fopen off (no data:// stream)', function (): void {
+    $upload = orientedJpeg(6);
+    $temporary = fn (): array => glob(sys_get_temp_dir().'/photo*') ?: [];
+    $before = $temporary();
+    // Without the data:// wrapper, as a server that cannot open URLs would behave.
+    stream_wrapper_unregister('data');
+
+    try {
+        $path = resolve(PhotoStore::class)->store($upload, 'photos/a');
+    } finally {
+        stream_wrapper_restore('data');
+    }
+
+    // The temporary copy EXIF was read from is gone.
+    expect(getimagesize(Storage::disk('telework_files')->path($path))[0])->toBe(10)->and($temporary())->toBe($before);
+});
+
 it('refuses an upload that did not arrive whole', function (): void {
     $partial = new UploadedFile(__DIR__.'/../../Fixtures/photo.jpg', 'photo.jpg', null, UPLOAD_ERR_PARTIAL, true);
 

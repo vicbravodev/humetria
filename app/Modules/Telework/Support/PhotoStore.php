@@ -89,10 +89,22 @@ final readonly class PhotoStore
         return $paths;
     }
 
-    /** Re-encoding drops the EXIF orientation, so the pixels are turned to match it first. */
+    /**
+     * Re-encoding drops the EXIF orientation, so the pixels are turned to match it first. EXIF is read from a temporary
+     * file, never a `data://` stream, so it works on a server with `allow_url_fopen` off.
+     */
     private function upright(GdImage $image, string $bytes): GdImage
     {
-        $exif = @exif_read_data('data://image/jpeg;base64,'.base64_encode($bytes));
+        $temporary = tempnam(sys_get_temp_dir(), 'photo');
+
+        try {
+            $exif = $temporary !== false && file_put_contents($temporary, $bytes) !== false ? @exif_read_data($temporary) : false;
+        } finally {
+            if ($temporary !== false) {
+                @unlink($temporary);
+            }
+        }
+
         $orientation = is_array($exif) && is_int($exif['Orientation'] ?? null) ? $exif['Orientation'] : 1;
 
         $turned = match ($orientation) {
