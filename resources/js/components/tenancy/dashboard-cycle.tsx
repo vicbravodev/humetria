@@ -32,7 +32,7 @@ export default function DashboardCycle({
                 </div>
                 <Link
                     href={workCenters(tenantSlug)}
-                    className="text-sm font-medium text-primary underline-offset-[3px] hover:underline"
+                    className="touch-hit text-sm font-medium text-primary underline-offset-[3px] hover:underline"
                 >
                     Ver centros de trabajo
                 </Link>

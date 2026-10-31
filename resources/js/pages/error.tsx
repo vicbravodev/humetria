@@ -30,7 +30,10 @@ export default function ErrorPage({ status }: { status: number }) {
         <div className="flex min-h-dvh flex-col bg-background">
             <Head title={message.title} />
             <header className="px-4 py-7 sm:px-10">
-                <Link href={home()} className="inline-block rounded-md">
+                <Link
+                    href={home()}
+                    className="touch-hit inline-block rounded-md"
+                >
                     <Logo className="h-[26px]" />
                 </Link>
             </header>

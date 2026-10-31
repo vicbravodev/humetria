@@ -217,12 +217,51 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
 
     $page->assertScript(englishWords(), '[]');
 
-    return $page->assertNoJavaScriptErrors()
+    $page->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
         // (endless ones, like the OTP caret blink, never finish and are left alone).
-        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)');
+
+    if ($mobile) {
+        $page->assertScript(smallTouchTargets(), '');
+    }
+
+    return $page->assertNoAccessibilityIssues(1);
+}
+
+/**
+ * A script that names the controls a finger can hardly hit: less than 44 px tall, counting the invisible area a
+ * pseudo-element (`touch-hit`, the small buttons) or its input group adds around them. Left out, as WCAG 2.5.8 leaves
+ * them: a link or button inside a sentence, and a checkbox or radio whose label also toggles it. Empty when every control is big enough.
+ */
+function smallTouchTargets(): string
+{
+    return <<<'JS'
+        () => {
+            const reach = (element) => {
+                const box = element.getBoundingClientRect();
+                // A field and its button inside an input group take the touch of the whole group.
+                let height = Math.max(box.height, element.closest('[data-slot="input-group"]')?.getBoundingClientRect().height ?? 0);
+                for (const pseudo of ['::before', '::after']) {
+                    const style = getComputedStyle(element, pseudo);
+                    if (style.content !== 'none' && style.position === 'absolute') {
+                        height = Math.max(height, box.height - (parseFloat(style.top) || 0) - (parseFloat(style.bottom) || 0));
+                    }
+                }
+                return height;
+            };
+            const labelled = (element) => element.closest('label') !== null || (element.id !== '' && document.querySelector(`label[for="${element.id}"]`) !== null);
+
+            return Array.from(document.querySelectorAll('a[href], button, summary, [role="tab"], [role="combobox"], input:not([type="hidden"]), select, textarea')).filter((element) => {
+                const box = element.getBoundingClientRect();
+                if (box.width <= 1 || box.height <= 1 || getComputedStyle(element).visibility === 'hidden' || element.closest('[aria-hidden="true"], [inert]')) return false;
+                if (element.matches('a, button') && Array.from(element.parentElement.childNodes).some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '')) return false;
+                if ((element.matches('[role="checkbox"], [role="radio"], input[type="checkbox"], input[type="radio"]')) && labelled(element)) return false;
+                return reach(element) < 43.5;
+            }).map((element) => `${element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 40)} (${Math.round(reach(element))} px)`).join(' | ');
+        }
+        JS;
 }
 
 /**
