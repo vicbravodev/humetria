@@ -3,10 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Telework\Enums\EndReason;
+use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Http\Controllers\PortalChecklistController;
 use App\Modules\Telework\Models\ChecklistAnswer;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\ChecklistPhoto;
+use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Support\PhotoStore;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
@@ -153,4 +156,38 @@ it('never puts individual answers in the props of its pages', function (): void 
 
     $json = json_encode($this->get(route('portal.show', $this->token))->viewData('page')['props'], JSON_THROW_ON_ERROR);
     expect($json)->not->toContain('Cable suelto')->not->toContain($this->yes->id);
+});
+
+it('opens nothing for a person whose telework period ended, to read or to send', function (): void {
+    Teleworker::query()->update(['status' => TeleworkerStatus::Ended, 'started_at' => now()->subDay(), 'ended_at' => now(), 'end_reason' => EndReason::Other]);
+
+    $this->get($this->url)->assertNotFound();
+    $this->post($this->url, form())->assertNotFound();
+    expect(ChecklistApplication::query()->findOrFail($this->application->id)->submitted_at)->toBeNull();
+});
+
+it('takes at most 10 photos per question and 10 for the list', function (int $count, bool $accepted): void {
+    $photos = [];
+    foreach (range(0, $count - 1) as $n) {
+        $photos["photo_general_{$n}"] = new UploadedFile(__DIR__.'/../../Fixtures/photo.png', "{$n}.png", null, null, true);
+        $photos["photo_{$this->yes->id}_{$n}"] = new UploadedFile(__DIR__.'/../../Fixtures/photo.png', "{$n}.png", null, null, true);
+    }
+
+    $response = $this->post($this->url, form($photos));
+
+    if ($accepted) {
+        $response->assertSessionHasNoErrors();
+        expect(ChecklistPhoto::query()->count())->toBe($count * 2);
+    } else {
+        $response->assertSessionHasErrors('photos');
+        expect(ChecklistPhoto::query()->count())->toBe(0)->and(Storage::disk('telework_files')->allFiles())->toBe([]);
+    }
+})->with([[10, true], [11, false]]);
+
+it('takes photos of the whole list with consent', function (): void {
+    $photo = new UploadedFile(__DIR__.'/../../Fixtures/photo.png', 'lugar.png', null, null, true);
+
+    $this->post($this->url, form(['photo_general_0' => $photo]))->assertSessionHasNoErrors();
+
+    expect(ChecklistPhoto::query()->whereNull('question_id')->count())->toBe(1);
 });

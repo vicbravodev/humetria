@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Http\Requests;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\Validator;
 
 /**
  * The answers of a checklist, as the person's portal sends them. Their content is judged by `AnswerRules`; this only
@@ -31,6 +33,18 @@ final class SubmitChecklistRequest extends FormRequest
             'risk_notes.*' => ['nullable', 'string', 'max:2000'],
             'special_needs' => ['nullable', 'string', 'max:2000'],
         ];
+    }
+
+    /** @return list<Closure(Validator): void> */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            $most = config()->integer('telework.max_photos_per_group');
+
+            if (array_filter($this->photos(), fn (array $group): bool => count($group) > $most) !== []) {
+                $validator->errors()->add('photos', "Puede agregar hasta {$most} fotos por pregunta y {$most} del lugar.");
+            }
+        }];
     }
 
     /** @return array<string, ?string> */

@@ -8,4 +8,9 @@ return [
     */
     'max_photo_kb' => 8192,
     'max_document_kb' => 20480,
+
+    /*
+    | Most photos one submission may carry for each question, and for the whole list.
+    */
+    'max_photos_per_group' => 10,
 ];

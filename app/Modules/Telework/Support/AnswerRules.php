@@ -55,6 +55,10 @@ final readonly class AnswerRules
         }
 
         foreach ($questions as $question) {
+            if (($photos[$question->id] ?? []) !== [] && ! self::unfavorable($question->favorable, $answers[$question->id] ?? '')) {
+                $errors['photos'] = 'Solo se agregan fotos a una respuesta con riesgo.';
+            }
+
             $errors = [...$errors, ...$this->questionErrors($question, $consent, $answers[$question->id] ?? null, trim($riskNotes[$question->id] ?? ''))];
         }
 

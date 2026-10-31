@@ -8,6 +8,7 @@ use GdImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Keeps a photo of a workplace on the private disk. Only real JPEG or PNG images that GD can open are accepted (the
@@ -17,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 final readonly class PhotoStore
 {
     /** Pixels GD may be asked to decode: a small file can unpack to gigabytes. */
-    private const MAX_PIXELS = 50_000_000;
+    private const MAX_PIXELS = 25_000_000;
 
     public function __construct(private FileStore $files) {}
 
@@ -28,6 +29,10 @@ final readonly class PhotoStore
      */
     public function store(UploadedFile $file, string $directory): string
     {
+        if (! $file->isValid()) {
+            throw $this->invalid();
+        }
+
         $bytes = $file->getContent();
 
         if (strlen($bytes) > config()->integer('telework.max_photo_kb') * 1024) {
@@ -45,6 +50,10 @@ final readonly class PhotoStore
 
         if (! $image instanceof GdImage) {
             throw $this->invalid();
+        }
+
+        if ($type === IMAGETYPE_JPEG) {
+            $image = $this->upright($image, $bytes);
         }
 
         $path = $directory.'/photo-'.Str::uuid().($type === IMAGETYPE_PNG ? '.png' : '.jpg');
@@ -71,13 +80,42 @@ final readonly class PhotoStore
                     $paths[$key][] = $this->store($file, $directory);
                 }
             }
-        } catch (ValidationException $refused) {
+        } catch (Throwable $failure) {
             $this->files->delete(...array_merge(...array_values($paths)));
 
-            throw $refused;
+            throw $failure;
         }
 
         return $paths;
+    }
+
+    /** Re-encoding drops the EXIF orientation, so the pixels are turned to match it first. */
+    private function upright(GdImage $image, string $bytes): GdImage
+    {
+        $exif = @exif_read_data('data://image/jpeg;base64,'.base64_encode($bytes));
+        $orientation = is_array($exif) && is_int($exif['Orientation'] ?? null) ? $exif['Orientation'] : 1;
+
+        $turned = match ($orientation) {
+            2 => $this->flip($image, IMG_FLIP_HORIZONTAL),
+            3 => imagerotate($image, 180, 0),
+            4 => $this->flip($image, IMG_FLIP_VERTICAL),
+            5 => $this->flip(imagerotate($image, -90, 0), IMG_FLIP_HORIZONTAL),
+            6 => imagerotate($image, -90, 0),
+            7 => $this->flip(imagerotate($image, 90, 0), IMG_FLIP_HORIZONTAL),
+            8 => imagerotate($image, 90, 0),
+            default => $image,
+        };
+
+        return $turned instanceof GdImage ? $turned : $image;
+    }
+
+    private function flip(GdImage|false $image, int $mode): GdImage|false
+    {
+        if ($image !== false) {
+            imageflip($image, $mode);
+        }
+
+        return $image;
     }
 
     private function encode(GdImage $image, bool $png): string

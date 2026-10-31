@@ -210,6 +210,27 @@ it('stores the photos of the list and of a question, and deletes them when the s
     $disk->assertMissing('p/lost.jpg');
 });
 
+it('accepts a photo of a question only on its unfavorable answer', function (string $question, string $answer, bool $accepted): void {
+    $id = $this->q[$question]->id;
+    Storage::disk('telework_files')->put('p/a.jpg', 'x');
+    $notes = $accepted ? [$id => 'Riesgo'] : [];
+    $attempt = fn () => submit([...goodAnswers(true), $id => $answer], true, $notes, photos: [$id => ['p/a.jpg']]);
+
+    if ($accepted) {
+        $attempt();
+        expect(ChecklistPhoto::query()->where('question_id', $id)->count())->toBe(1);
+    } else {
+        expect(refusal($attempt))->toHaveKey('photos');
+        Storage::disk('telework_files')->assertMissing('p/a.jpg');
+    }
+})->with([
+    'unfavorable yes-question' => ['yes', 'no', true],
+    'unfavorable no-question' => ['no', 'yes', true],
+    'favorable answer' => ['yes', 'yes', false],
+    'not applicable' => ['yes', 'not_applicable', false],
+    'informative' => ['info', 'no', false],
+]);
+
 it('refuses photos for a question that is not in the checklist', function (): void {
     Storage::disk('telework_files')->put('p/a.jpg', 'x');
 
