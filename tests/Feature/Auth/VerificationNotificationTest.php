@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Queue;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyHas(Features::emailVerification());
+    $this->assertFortifyHas(Features::emailVerification());
 });
 
 test('sends verification notification', function () {

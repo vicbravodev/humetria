@@ -45,7 +45,7 @@ Ver `docs/testing.md`.
 El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
 (chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
 tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
-(`--class`, de `scripts/mutation-classes.php`); el job `mutation-score` suma los shards y aplica `--min=85` al total
+(`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
 (`scripts/mutation-score.php`). Así cada clase saca el mismo resultado que en una corrida completa. Si la mutación se vuelve
 el job más lento, se agrega un shard en el workflow; no se baja el umbral. En un PR se mutan solo las clases de los tests
 cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca lo que comparten (`database/`, `routes/`,
