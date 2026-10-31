@@ -292,3 +292,11 @@ describe('joining the roster (5.1 k)', function (): void {
         expect($this->aspirant->refresh()->status->value)->toBe('active');
     });
 });
+
+it('queues a portal reminder for the person when equipment is registered', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
+
+    resolve(RegisterEquipment::class)->handle($this->teleworker, App\Modules\Telework\Enums\EquipmentKind::Chair, 'Silla', Carbon\CarbonImmutable::parse('2026-02-20'), $this->hr->id);
+
+    Illuminate\Support\Facades\Queue::assertPushed(App\Modules\Telework\Jobs\SendPortalReminder::class, fn ($job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->employee->id && $job->delay === 120);
+});

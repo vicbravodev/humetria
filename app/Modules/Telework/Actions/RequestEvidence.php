@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Actions;
 
 use App\Modules\Telework\Enums\EvidenceKind;
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\Workplace;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +43,10 @@ final readonly class RequestEvidence
 
         // Ids and the kind only: the note says what is wrong with somebody's home.
         Log::info('telework.evidence_requested', ['evidence_request_id' => $request->id, 'workplace_id' => $workplace->id, 'kind' => $kind->value]);
+
+        if ($kind === EvidenceKind::Photos) {
+            SendPortalReminder::remind($workplace->tenant_id, $workplace->teleworker()->firstOrFail()->employee_id);
+        }
 
         return $request;
     }

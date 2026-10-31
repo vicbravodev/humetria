@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Actions;
 
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
@@ -43,6 +44,8 @@ final readonly class RequestVisitAuthorization
         ]);
 
         Log::info('telework.visit_authorization_requested', ['visit_authorization_id' => $authorization->id, 'workplace_id' => $workplace->id]);
+
+        SendPortalReminder::remind($workplace->tenant_id, $workplace->teleworker()->firstOrFail()->employee_id);
 
         return $authorization;
     }

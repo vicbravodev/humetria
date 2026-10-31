@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Telework\Enums\EquipmentKind;
 use App\Modules\Telework\Enums\EquipmentStatus;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\Teleworker;
 use Carbon\CarbonImmutable;
@@ -47,6 +48,9 @@ final readonly class RegisterEquipment
             $record = ['equipment_id' => $item->id, 'teleworker_id' => $teleworker->id, 'kind' => $kind->value];
             $this->audit->handle('telework.equipment_registered', $item, $record);
             Log::info('telework.equipment_registered', $record);
+
+            // After commit (the job waits for it): the person finds the item in their portal.
+            SendPortalReminder::remind($teleworker->tenant_id, $teleworker->employee_id);
 
             return $item;
         });

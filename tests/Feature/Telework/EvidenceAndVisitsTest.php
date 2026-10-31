@@ -86,6 +86,8 @@ function evidenceRefused(Closure $attempt): array
 }
 
 it('creates an evidence request that appears in the portal', function (): void {
+    // The reminder job would run inline and replace the portal link this test holds.
+    Illuminate\Support\Facades\Queue::fake();
     $this->actingAs($this->cora)->post(evidenceUrl(), ['kind' => 'photos', 'note' => 'Una foto de la silla.'])->assertSessionHasNoErrors()->assertRedirect();
 
     $request = EvidenceRequest::query()->sole();
@@ -198,6 +200,7 @@ it('fulfils a remote-check request when the Comisión records the remote check',
 });
 
 it('asks the person to authorize a visit and shows it in their portal until they confirm', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
     Log::spy();
     $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))->assertSessionHasNoErrors()->assertRedirect();
 
@@ -422,4 +425,21 @@ it('does not cancel a request that already backs a visit, nor one outside reach'
     $this->actingAs($stranger)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $used->id]))->assertNotFound();
     $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, 'nope']))->assertNotFound();
     expect($used->refresh()->cancelled_at)->toBeNull();
+});
+
+it('queues a portal reminder for the person when photos are requested or a visit needs authorization (one waiting at a time)', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
+
+    resolve(RequestEvidence::class)->handle($this->workplace, EvidenceKind::Photos, 'Una foto de la silla.', $this->cora->id);
+    resolve(RequestVisitAuthorization::class)->handle($this->workplace, $this->cora->id);
+
+    Illuminate\Support\Facades\Queue::assertPushed(App\Modules\Telework\Jobs\SendPortalReminder::class, fn ($job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->employee->id && $job->userId === null && $job->delay === 120);
+});
+
+it('does not remind the person of a remote check, which the Comisión does itself', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
+
+    resolve(RequestEvidence::class)->handle($this->workplace, EvidenceKind::RemoteCheck, 'Revisión remota.', $this->cora->id);
+
+    Illuminate\Support\Facades\Queue::assertNothingPushed();
 });

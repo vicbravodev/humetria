@@ -404,7 +404,7 @@ it('waits two minutes and keeps one waiting email per person, listing everything
 
     Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->delay === 120);
     $job = new SendPortalReminder($this->tenant->id, $ana->id, null);
-    expect($job)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUnique::class)
+    expect($job)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing::class)
         ->and($job->uniqueFor)->toBe(600)
         ->and($job->uniqueId())->toBe("{$this->tenant->id}:{$ana->id}")
         ->and((new SendPortalReminder($this->tenant->id, null, 7))->uniqueId())->toBe("{$this->tenant->id}:user-7");
