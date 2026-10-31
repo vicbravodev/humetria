@@ -52,21 +52,22 @@ final readonly class TeleworkPages
      */
     public function index(int $userId): array
     {
-        // ponytail: the rows of each center of the page are read one center at a time (about twenty queries each); a
-        // batch across centers if a page of twelve ever feels slow.
-        return ['centers' => $this->visible->page($userId, self::CENTERS_PER_PAGE)->through(function (WorkCenterSummary $center): array {
-            $progress = $this->progress($this->rows->for($center->id));
+        $page = $this->visible->page($userId, self::CENTERS_PER_PAGE);
+        $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, $page->items()));
+        // Everything about the centers of the page is read once for all of them: the page costs the same with two or twelve.
+        $rows = $this->rows->forMany($ids);
+        $people = $this->headcounts($ids);
+        $pending = $this->pendingReviews($ids);
 
-            return [
-                'id' => $center->id,
-                'name' => $center->name,
-                'activity' => $center->mainActivity,
-                'teleworkers' => $this->headcount($center->id, TeleworkerStatus::Active),
-                'aspirants' => $this->headcount($center->id, TeleworkerStatus::Aspirant),
-                'pendingReviews' => $this->pendingReviews($center->id),
-                ...$progress,
-            ];
-        })];
+        return ['centers' => $page->through(fn (WorkCenterSummary $center): array => $this->props([
+            'id' => $center->id,
+            'name' => $center->name,
+            'activity' => $center->mainActivity,
+            'teleworkers' => $people[$center->id]['active'] ?? 0,
+            'aspirants' => $people[$center->id]['aspirants'] ?? 0,
+            'pendingReviews' => $pending[$center->id] ?? 0,
+            ...$this->progress($rows[$center->id] ?? []),
+        ]))];
     }
 
     /**
@@ -78,13 +79,14 @@ final readonly class TeleworkPages
         $member = $this->gate->isMember($userId, $center->id);
         $rows = $this->rows->for($center->id);
         $reach = ['manage' => $manage, 'member' => $member];
-        $active = $this->headcount($center->id, TeleworkerStatus::Active);
+        $people = $this->headcounts([$center->id])[$center->id] ?? ['active' => 0, 'aspirants' => 0];
+        $active = $people['active'];
 
         return [
             'workCenter' => ['id' => $center->id, 'name' => $center->name, 'activity' => $center->mainActivity],
             'progress' => $this->progress($rows),
             'teleworkers' => $active,
-            'aspirants' => $this->headcount($center->id, TeleworkerStatus::Aspirant),
+            'aspirants' => $people['aspirants'],
             'rows' => array_map(fn (ComplianceRow $row): array => [
                 'numeral' => $row->numeral,
                 'label' => $row->label,
@@ -113,18 +115,72 @@ final readonly class TeleworkPages
         ];
     }
 
-    private function headcount(string $workCenterId, TeleworkerStatus $status): int
+    /**
+     * @param  list<string>  $ids
+     * @return array<string, array{active: int, aspirants: int}>
+     */
+    private function headcounts(array $ids): array
     {
-        return Teleworker::query()->where('work_center_id', $workCenterId)->where('status', $status)->count();
+        $active = [];
+        $aspirants = [];
+
+        foreach (Teleworker::query()->whereIn('work_center_id', $ids)->whereIn('status', [TeleworkerStatus::Active, TeleworkerStatus::Aspirant])->get(['work_center_id', 'status']) as $person) {
+            if ($person->status === TeleworkerStatus::Active) {
+                $active[$person->work_center_id] = ($active[$person->work_center_id] ?? 0) + 1;
+            } else {
+                $aspirants[$person->work_center_id] = ($aspirants[$person->work_center_id] ?? 0) + 1;
+            }
+        }
+
+        $counts = [];
+
+        foreach ($ids as $id) {
+            $counts[$id] = ['active' => $active[$id] ?? 0, 'aspirants' => $aspirants[$id] ?? 0];
+        }
+
+        return $counts;
     }
 
-    /** Sent checklists nobody has judged yet, of workplaces still in use: what the Comisión's inbox lists. */
-    private function pendingReviews(string $workCenterId): int
+    /**
+     * Sent checklists nobody has judged yet, of workplaces still in use: what the Comisión's inbox lists, by center.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, int>
+     */
+    private function pendingReviews(array $ids): array
     {
-        return ChecklistApplication::query()->whereNotNull('submitted_at')->whereNull('cancelled_at')
+        $waiting = ChecklistApplication::query()->whereNotNull('submitted_at')->whereNull('cancelled_at')
             ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('application_id')->select('application_id'))
-            ->whereIn('workplace_id', Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', Teleworker::query()->where('work_center_id', $workCenterId)->select('id'))->select('id'))
-            ->count();
+            ->whereIn('workplace_id', Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->select('id'))
+            ->get(['workplace_id']);
+
+        if ($waiting->isEmpty()) {
+            return [];
+        }
+
+        $personOf = [];
+
+        foreach (Workplace::query()->whereIn('id', array_values($waiting->map(fn (ChecklistApplication $application): string => $application->workplace_id)->unique()->all()))->get(['id', 'teleworker_id']) as $workplace) {
+            $personOf[$workplace->id] = $workplace->teleworker_id;
+        }
+
+        $centerOf = [];
+
+        foreach (Teleworker::query()->whereIn('id', array_values(array_unique($personOf)))->get(['id', 'work_center_id']) as $person) {
+            $centerOf[$person->id] = $person->work_center_id;
+        }
+
+        $counts = [];
+
+        foreach ($waiting as $application) {
+            $center = $centerOf[$personOf[$application->workplace_id] ?? ''] ?? null;
+
+            if ($center !== null) {
+                $counts[$center] = ($counts[$center] ?? 0) + 1;
+            }
+        }
+
+        return $counts;
     }
 
     /**
@@ -202,7 +258,7 @@ final readonly class TeleworkPages
 
         return [
             $tab('people', 'Padrón', $active, route('tenant.telework.center', [$tenant, $center->id]), true),
-            ...($reach['member'] ? [$tab('review', 'Por validar', $this->pendingReviews($center->id), route('tenant.telework.reviews.index', [$tenant, $center->id]))] : []),
+            ...($reach['member'] ? [$tab('review', 'Por validar', ($this->pendingReviews([$center->id])[$center->id] ?? 0), route('tenant.telework.reviews.index', [$tenant, $center->id]))] : []),
             $tab('documents', 'Documentos', TeleworkDocument::query()->inForce()->where('work_center_id', $center->id)->count(), route('tenant.telework.documents.index', [$tenant, 'center' => $center->id])),
             ...($reach['manage'] ? [$tab('trainings', 'Capacitación', Training::query()->where('work_center_id', $center->id)->count(), route('tenant.telework.trainings.index', [$tenant, 'center' => $center->id]))] : []),
             ...($either ? [

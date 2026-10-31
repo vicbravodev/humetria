@@ -19,11 +19,14 @@ use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\EquipmentItemFactory;
 use Database\Factories\Telework\TeleworkDocumentFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 const QUERIES_CENTER = 49;
+
+const QUERIES_INDEX = 39;
 
 mutates(TeleworkController::class, TeleworkPages::class, VisibleCenters::class);
 
@@ -98,7 +101,7 @@ it('lists the 17 rows of table 10.3 with their state, detail and where to fix th
         ->where('rows.3.state', 'missing')
         ->where('rows.3.href', route('tenant.telework.documents.index', [$this->tenant, 'center' => $this->center->id]))
         ->where('rows.16.numeral', '5.14')
-        ->where('progress', ['done' => 6, 'applicable' => 16]));
+        ->where('progress', ['done' => 7, 'applicable' => 16]));
 });
 
 it('counts the progress as done rows over the rows that apply', function (): void {
@@ -264,3 +267,28 @@ it('keeps the other company out of the list', function (): void {
     $this->actingAs($this->owner)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
         ->where('centers.total', 2));
 });
+
+it('reads the center list in the same number of queries with two centers or with six', function (int $centers): void {
+    // Every center of the page has people, a published list, documents, a pending list and a notice.
+    $this->center->update(['name' => 'Planta Norte']);
+    $others = WorkCenter::factory()->for($this->tenant)->count($centers - 2)->create();
+
+    foreach ([$this->center, $this->other, ...$others] as $center) {
+        $employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+        $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id]);
+        $place = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id]);
+        WorkplaceReviewFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
+        ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
+        EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id]);
+        WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id]);
+        SafetyCommittee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+        foreach ([DocumentKind::Policy, DocumentKind::RiskInformation, DocumentKind::Reversibility] as $kind) {
+            TeleworkDocumentFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'kind' => $kind]);
+        }
+    }
+
+    $this->actingAs($this->owner);
+    $this->expectsDatabaseQueryCount(QUERIES_INDEX);
+
+    $this->get(route('tenant.telework.index', $this->tenant))->assertOk()->assertInertia(fn (Assert $page) => $page->has('centers.data', $centers));
+})->with([2, 6]);
