@@ -31,6 +31,7 @@ final class PortalController extends Controller
                 'token' => null,
                 'company' => null,
                 'name' => null,
+                'canNotify' => false,
                 'pending' => ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []],
             ]);
         }
@@ -43,6 +44,7 @@ final class PortalController extends Controller
             'token' => $token,
             'company' => $portal->company,
             'name' => $portal->name,
+            'canNotify' => $portal->teleworkerId !== null,
             'pending' => [
                 'checklists' => array_map($row, $items->checklists),
                 'sent' => array_map($row, $items->sent),

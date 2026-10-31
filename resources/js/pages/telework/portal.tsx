@@ -9,12 +9,14 @@ export default function Portal({
     token,
     company,
     name,
+    canNotify,
     pending,
 }: {
     unavailable: boolean;
     token: string | null;
     company: string | null;
     name: string | null;
+    canNotify: boolean;
     pending: PortalPending;
 }) {
     return (
@@ -25,7 +27,12 @@ export default function Portal({
                     <PortalUnavailable />
                 </div>
             ) : (
-                <PortalHome name={name} token={token} pending={pending} />
+                <PortalHome
+                    name={name}
+                    token={token}
+                    canNotify={canNotify}
+                    pending={pending}
+                />
             )}
         </PortalShell>
     );

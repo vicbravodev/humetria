@@ -11,6 +11,7 @@ use App\Modules\Telework\Enums\ReviewMethod;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\VisitAuthorization;
+use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
 use Carbon\CarbonImmutable;
@@ -81,6 +82,10 @@ final readonly class ReviewWorkplace
                     $this->closeRemoteChecks($workplace);
                 }
 
+                if ($decision->validates()) {
+                    $this->retireReplaced($workplace);
+                }
+
                 return $review;
             });
         } catch (UniqueConstraintViolationException) {
@@ -142,6 +147,24 @@ final readonly class ReviewWorkplace
 
         if (WorkplaceReview::query()->where('application_id', $fresh->id)->exists()) {
             throw ValidationException::withMessages(['application' => 'Esta lista ya fue revisada.']);
+        }
+    }
+
+    /**
+     * The new workplace of a permanent change of address (criterio C-14), once validated, replaces the person's others:
+     * they are retired, kept as history. A temporary change retires nothing, and neither does a workplace no notice named.
+     */
+    private function retireReplaced(Workplace $workplace): void
+    {
+        $notice = WorkerNotice::query()->where('new_workplace_id', $workplace->id)->where('temporary', false)->first(['id']);
+
+        if ($notice === null) {
+            return;
+        }
+
+        foreach (Workplace::query()->where('teleworker_id', $workplace->teleworker_id)->whereKeyNot($workplace->id)->whereNull('retired_at')->get() as $old) {
+            $old->update(['retired_at' => now()]);
+            Log::info('telework.workplace_retired', ['workplace_id' => $old->id, 'replaced_by' => $workplace->id, 'notice_id' => $notice->id]);
         }
     }
 

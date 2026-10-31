@@ -795,3 +795,29 @@ it('registers a training from the page', function (): void {
     expect(Training::query()->sole()->topics)->toHaveCount(2)
         ->and(TrainingAttendee::query()->count())->toBe(1);
 });
+
+it('shows the person their three written notices', function (bool $dark, bool $mobile): void {
+    visitPage('telework/portal-notices', portalAddress().'/notices', $dark, $mobile)
+        ->assertSee('Sus avisos por escrito')
+        ->assertSee('Alteración de condiciones o fuerza mayor')
+        ->assertSee('Cambio de domicilio')
+        ->assertSee('Riesgo de trabajo');
+})->with($looks);
+
+it('lets the person write a work risk notice, and shows it received', function (): void {
+    $address = portalAddress().'/notices';
+
+    visit($address)
+        ->click('ul > li:nth-child(3) button')
+        ->press('[role="dialog"] button[type="submit"]')
+        ->assertSee('descripción es obligatorio')
+        ->fill('#work_risk-description', 'Me caí al levantarme de la silla.')
+        ->press('[role="dialog"] button[type="submit"]')
+        ->assertSee('Avisos enviados')
+        ->assertSee('Recibido')
+        ->assertDontSee('Me caí al levantarme')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(App\Modules\Telework\Models\WorkerNotice::query()->withoutGlobalScopes()->sole()->kind->value)->toBe('work_risk');
+});

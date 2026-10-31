@@ -21,8 +21,7 @@ void createInertiaApp({
             case name === 'landing':
             case name === 'campaigns/survey':
             // The person's portal has its own frame (PortalShell): no account, no panel.
-            case name === 'telework/portal':
-            case name === 'telework/portal-checklist':
+            case name.startsWith('telework/portal'):
             // A report opened from a temporary link: no panel, nobody signed in.
             case name === 'results/shared-report':
             // An error page stands alone: the address may not even be a page of the panel.

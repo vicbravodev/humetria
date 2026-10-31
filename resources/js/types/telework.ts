@@ -247,3 +247,18 @@ export type ReviewDetail = {
     evidence: ReviewEvidence[];
     authorizations: ReviewAuthorization[];
 };
+
+export type NoticeKindValue =
+    | 'condition_change'
+    | 'address_change'
+    | 'work_risk';
+
+/** A notice the person sent, as their portal lists it: only that it was received, or reviewed. */
+export type PortalNotice = {
+    id: string;
+    /** The kind, worded. */
+    kind: string;
+    /** Y-m-d. */
+    writtenOn: string;
+    status: 'Recibido' | 'Revisado';
+};
