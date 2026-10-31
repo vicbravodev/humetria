@@ -276,7 +276,7 @@ it('records a visit with the person\'s written authorization', function (): void
     $this->travelTo('2026-03-10 18:00:00');
     $authorization = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     // The person answered the list: a visit validates only then.
-    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $list = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     Log::spy();
 
     $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.visit.store', [$this->tenant, $this->workplace->id]), [
@@ -293,7 +293,8 @@ it('records a visit with the person\'s written authorization', function (): void
         ->and($review->decision)->toBe(ReviewDecision::ValidWithPlan)
         ->and($review->visit_authorization_id)->toBe($authorization->id)
         ->and($review->visited_on?->toDateString())->toBe('2026-03-09')
-        ->and($review->application_id)->toBeNull();
+        // The list the person sent is the one this visit decided: it leaves the inbox.
+        ->and($review->application_id)->toBe($list->id);
     Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context): bool => $message === 'telework.visit_recorded'
         && $context === ['review_id' => $review->id, 'workplace_id' => $this->workplace->id, 'visit_authorization_id' => $authorization->id])->once();
 });

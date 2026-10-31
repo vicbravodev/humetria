@@ -55,14 +55,17 @@ final readonly class ReviewWorkplace
                     default => ReviewMethod::RemoteCheck,
                 };
 
+                // A visit or a remote check decides the list the person sent too: it leaves the inbox.
+                $list = $application ?? $this->openList($workplace);
+
                 if ($method !== ReviewMethod::Checklist && $decision->validates()) {
-                    $this->requireAnsweredList($workplace);
+                    $this->requireAnsweredList($workplace, $list);
                 }
 
                 $review = WorkplaceReview::query()->create([
                     'tenant_id' => $workplace->tenant_id,
                     'workplace_id' => $workplace->id,
-                    'application_id' => $application?->id,
+                    'application_id' => $list?->id,
                     'method' => $method,
                     'decision' => $decision,
                     'notes' => $notes,
@@ -77,7 +80,7 @@ final readonly class ReviewWorkplace
                 $record = [
                     'review_id' => $review->id,
                     'workplace_id' => $workplace->id,
-                    'application_id' => $application?->id,
+                    'application_id' => $list?->id,
                     'decision' => $decision->value,
                     'method' => $review->method->value,
                 ];
@@ -158,22 +161,27 @@ final readonly class ReviewWorkplace
 
     /**
      * A visit or a remote check does not replace the list (criterios C-12 and C-14): the person answers it anyway. To
-     * validate without reviewing a list, the workplace needs a submitted, not cancelled one: a Sección I when it was never
+     * validate without reviewing a list, the workplace needs a sent one nobody decided yet: a Sección I when it was never
      * reviewed, and any list sent after the previous review otherwise. Finding it not valid needs none.
      *
      * @throws ValidationException
      */
-    private function requireAnsweredList(Workplace $workplace): void
+    private function requireAnsweredList(Workplace $workplace, ?ChecklistApplication $list): void
     {
         $previous = WorkplaceReview::query()->where('workplace_id', $workplace->id)->orderByDesc('decided_at')->orderByDesc('id')->first();
-        $answered = ChecklistApplication::query()->where('workplace_id', $workplace->id)->whereNotNull('submitted_at')->whereNull('cancelled_at')
-            ->when($previous === null, fn ($lists) => $lists->where('section', Section::One))
-            ->when($previous !== null, fn ($lists) => $lists->where('submitted_at', '>', $previous?->decided_at))
-            ->exists();
+        $answered = $list?->submitted_at !== null && ($previous === null ? $list->section === Section::One : $list->submitted_at->greaterThan($previous->decided_at));
 
         if (! $answered) {
             throw ValidationException::withMessages(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
         }
+    }
+
+    /** The latest sent, not cancelled list of the workplace nobody decided yet; locked, as `checkApplication` does. */
+    private function openList(Workplace $workplace): ?ChecklistApplication
+    {
+        return ChecklistApplication::query()->where('workplace_id', $workplace->id)->whereNotNull('submitted_at')->whereNull('cancelled_at')
+            ->whereNotIn('id', WorkplaceReview::query()->whereNotNull('application_id')->select('application_id'))
+            ->orderByDesc('submitted_at')->orderByDesc('id')->lockForUpdate()->first();
     }
 
     /**

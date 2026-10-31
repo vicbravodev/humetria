@@ -217,8 +217,10 @@ it('says the checklist was already reviewed', function (): void {
 });
 
 it('records a remote check without a checklist', function (): void {
+    $bare = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
+
     $this->actingAs($this->cora)
-        ->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $this->workplace->id]), reviewForm(['decision' => 'not_valid', 'notes' => 'Por videollamada se vio el cable suelto.']))
+        ->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $bare->id]), reviewForm(['decision' => 'not_valid', 'notes' => 'Por videollamada se vio el cable suelto.']))
         ->assertSessionHasNoErrors()->assertRedirect();
 
     $review = WorkplaceReview::query()->sole();
@@ -283,3 +285,17 @@ it('refuses through the panel a remote-check validation with no list answered', 
 
     expect(WorkplaceReview::query()->count())->toBe(0);
 });
+
+it('takes the sent list out of the inbox when a remote check decides the workplace, and it cannot be decided again', function (ReviewDecision $decision): void {
+    $older = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'submitted_at' => now()->subDays(3)]);
+    WorkplaceReview::factory()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => $older->id, 'method' => 'checklist', 'decided_at' => now()->subDays(2)]);
+    $inbox = route('tenant.telework.reviews.index', [$this->tenant, $this->center->id]);
+    $this->actingAs($this->cora)->get($inbox)->assertInertia(fn ($page) => $page->where('applications.total', 1));
+
+    $review = resolve(ReviewWorkplace::class)->handle($this->workplace, null, $decision, 'Por videollamada.', null, null, $this->cora->id);
+
+    expect($review->method)->toBe(ReviewMethod::RemoteCheck)->and($review->application_id)->toBe($this->application->id);
+    $this->get($inbox)->assertInertia(fn ($page) => $page->where('applications.total', 0));
+    $this->post(reviewUrl(), reviewForm())->assertSessionHasErrors(['application' => 'Esta lista ya fue revisada.']);
+    expect(WorkplaceReview::query()->where('workplace_id', $this->workplace->id)->count())->toBe(2);
+})->with([ReviewDecision::Valid, ReviewDecision::NotValid]);
