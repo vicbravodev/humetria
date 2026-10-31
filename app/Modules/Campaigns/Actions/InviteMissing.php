@@ -29,8 +29,7 @@ final readonly class InviteMissing
 
     /**
      * @return int how many people got a link.
-     */
-    /**
+     *
      * @throws CampaignStateChanged when another request closed it meanwhile.
      */
     public function handle(Campaign $campaign): int
