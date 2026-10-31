@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { AppBreadcrumbs } from '@/components/app-breadcrumbs';
+import { ThemeMenu } from '@/components/theme-menu';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
@@ -60,7 +61,13 @@ export function AppSidebarHeader({
                         ⌘K
                     </kbd>
                 </Button>
-                <ThemeSwitch />
+                {/* On a phone the three-way switch would squeeze where the page sits: one button with a menu. */}
+                <div className="hidden sm:block">
+                    <ThemeSwitch />
+                </div>
+                <div className="sm:hidden">
+                    <ThemeMenu />
+                </div>
             </div>
         </header>
     );

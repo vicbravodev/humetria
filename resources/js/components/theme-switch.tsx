@@ -4,7 +4,12 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useAppearance } from '@/hooks/use-appearance';
 
-const options: { value: Appearance; label: string; icon: LucideIcon }[] = [
+// The three themes, shared by the switch and its phone menu.
+export const themeOptions: {
+    value: Appearance;
+    label: string;
+    icon: LucideIcon;
+}[] = [
     { value: 'light', label: 'Claro', icon: Sun },
     { value: 'dark', label: 'Oscuro', icon: Moon },
     { value: 'system', label: 'Sistema', icon: Monitor },
@@ -13,7 +18,7 @@ const options: { value: Appearance; label: string; icon: LucideIcon }[] = [
 /** Light, dark or system theme, always at hand in the app frame. A raised chip slides under the chosen one. */
 export function ThemeSwitch() {
     const { appearance, updateAppearance } = useAppearance();
-    const chosen = options.findIndex(({ value }) => value === appearance);
+    const chosen = themeOptions.findIndex(({ value }) => value === appearance);
 
     return (
         <ToggleGroup
@@ -21,7 +26,7 @@ export function ThemeSwitch() {
             aria-label="Tema"
             value={appearance}
             onValueChange={(value) => {
-                const option = options.find((o) => o.value === value);
+                const option = themeOptions.find((o) => o.value === value);
 
                 if (option !== undefined) {
                     updateAppearance(option.value);
@@ -34,7 +39,7 @@ export function ThemeSwitch() {
                 className="absolute top-0.5 left-0.5 h-9 w-10 rounded-md bg-card shadow-raised transition-transform duration-200 ease-out motion-reduce:transition-none"
                 style={{ transform: `translateX(${chosen * 100}%)` }}
             />
-            {options.map(({ value, label, icon: Icon }) => (
+            {themeOptions.map(({ value, label, icon: Icon }) => (
                 <ToggleGroupItem
                     key={value}
                     value={value}

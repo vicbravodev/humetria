@@ -170,10 +170,10 @@ it('titles the settings like every other page and marks where you are', function
         ->assertScript('() => { const zone = getComputedStyle(document.querySelector(\'[data-slot="danger-zone"]\')); const probe = document.createElement("span"); probe.style.color = "var(--card)"; document.body.append(probe); const card = getComputedStyle(probe).color; probe.remove(); return zone.backgroundColor === card; }');
 })->with(['light' => false, 'dark' => true]);
 
-it('switches the theme from the app frame and keeps it', function (bool $mobile): void {
+it('switches the theme from the app frame and keeps it', function (): void {
     $panel = signInToPanel();
 
-    visitPage('dashboard', $panel, mobile: $mobile)
+    visitPage('dashboard', $panel)
         ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent !== null')
         ->click('[role="radio"][aria-label="Oscuro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")')
@@ -182,7 +182,31 @@ it('switches the theme from the app frame and keeps it', function (bool $mobile)
         ->assertScript('() => document.documentElement.classList.contains("dark")')
         ->click('[role="radio"][aria-label="Claro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")', false);
-})->with(['desktop' => false, 'mobile' => true]);
+});
+
+it('switches the theme on a phone from one button, leaving the trail its room', function (): void {
+    $panel = signInToPanel();
+
+    visitPage('dashboard', $panel, mobile: true)
+        // The three-way switch would squeeze where the page sits: on a phone the theme is one button with a menu.
+        ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent === null')
+        ->click('button[aria-label="Tema"]')
+        ->click('[role="menuitemradio"]:has-text("Oscuro")')
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->refresh()
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->click('button[aria-label="Tema"]')
+        ->assertScript('() => document.querySelector(\'[role="menuitemradio"][aria-checked="true"]\').textContent.trim()', 'Oscuro')
+        ->click('[role="menuitemradio"]:has-text("Claro")')
+        ->assertScript('() => document.documentElement.classList.contains("dark")', false);
+});
+
+it('shows the whole name of the page in the trail on a phone', function (): void {
+    $panel = signInToPanel();
+
+    visitPage('tenancy/work-centers', "{$panel}/work-centers", mobile: true)
+        ->assertScript('() => { const here = document.querySelector(\'[data-slot="app-topbar"] [aria-current="page"]\'); return here.textContent.trim() === "Centros de trabajo" && here.scrollWidth <= here.clientWidth; }');
+});
 
 it('moves with the design system motion', function (): void {
     $panel = signInToPanel(superadmin());
