@@ -78,6 +78,10 @@ it('redacts each sensitive key', function (string $key): void {
     'answers', 'authorization', 'cookie', 'current_password', 'email', 'password',
     'password_confirmation', 'recovery_codes', 'remember_token', 'secret',
     'rfc', 'token', 'two_factor_recovery_codes', 'two_factor_secret', 'whatsapp',
+    // NOM-037: a person's home, health-adjacent notes and the address they answered from.
+    'risk_note', 'special_needs', 'description', 'marital_status', 'contact_phone', 'home_address', 'street',
+    'exterior_number', 'interior_number', 'refusal_reason', 'review_note', 'notes', 'note', 'action_plan',
+    'ip', 'confirmed_ip', 'responded_ip',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {

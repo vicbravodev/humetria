@@ -47,6 +47,24 @@ final class RedactSensitiveData implements ProcessorInterface
             'two_factor_secret',
             // A phone number reaches a person directly: never log one, whatever event carries it.
             'whatsapp',
+            // NOM-037: a person's home, marital status, free-text notes and the address they answered from.
+            'action_plan',
+            'confirmed_ip',
+            'contact_phone',
+            'description',
+            'exterior_number',
+            'home_address',
+            'interior_number',
+            'ip',
+            'marital_status',
+            'note',
+            'notes',
+            'refusal_reason',
+            'responded_ip',
+            'review_note',
+            'risk_note',
+            'special_needs',
+            'street',
         ];
 
         foreach ($data as $key => $value) {
