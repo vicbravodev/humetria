@@ -200,6 +200,12 @@ return [
 
     'attributes' => [
         'act' => 'acta',
+        'action_plan' => 'plan de acción',
+        'decision' => 'decisión',
+        'notes' => 'notas',
+        'note' => 'nota',
+        'plan_due_on' => 'fecha compromiso',
+        'visited_on' => 'fecha de la visita',
         'answers' => 'respuestas',
         'active_until' => 'fecha de vigencia',
         'activities' => 'actividades principales',

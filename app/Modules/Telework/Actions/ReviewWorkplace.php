@@ -1,0 +1,129 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Telework\Actions;
+
+use App\Actions\RecordAudit;
+use App\Modules\Telework\Enums\ReviewDecision;
+use App\Modules\Telework\Enums\ReviewMethod;
+use App\Modules\Telework\Models\ChecklistApplication;
+use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Models\WorkplaceReview;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * The Comisión decides about a workplace (criterio C-12): Validated, Validated with an action plan, or Not validated.
+ * With a submitted checklist it is a `checklist` review (the checklist is reviewed once); without one, a `remote_check`.
+ * "With plan" needs the plan and a due date that is not in the past; "Not validated" needs notes. Who may decide is the
+ * controller's business (`ReviewAccess`): this only judges what is decided.
+ *
+ * Notes and plan are personal data: never logged or audited.
+ */
+final readonly class ReviewWorkplace
+{
+    public function __construct(private RecordAudit $audit) {}
+
+    /**
+     * @throws ValidationException
+     */
+    public function handle(Workplace $workplace, ?ChecklistApplication $application, ReviewDecision $decision, string $notes, ?string $actionPlan, ?CarbonImmutable $planDueOn, int $userId): WorkplaceReview
+    {
+        $notes = trim($notes);
+        $plan = trim($actionPlan ?? '');
+        $this->validate($workplace, $decision, $notes, $plan, $planDueOn);
+        $withPlan = $decision === ReviewDecision::ValidWithPlan;
+
+        try {
+            return DB::transaction(function () use ($workplace, $application, $decision, $notes, $plan, $planDueOn, $userId, $withPlan): WorkplaceReview {
+                $this->checkApplication($workplace, $application);
+
+                $review = WorkplaceReview::query()->create([
+                    'tenant_id' => $workplace->tenant_id,
+                    'workplace_id' => $workplace->id,
+                    'application_id' => $application?->id,
+                    'method' => $application === null ? ReviewMethod::RemoteCheck : ReviewMethod::Checklist,
+                    'decision' => $decision,
+                    'notes' => $notes,
+                    'action_plan' => $withPlan ? $plan : null,
+                    'plan_due_on' => $withPlan ? $planDueOn?->toDateString() : null,
+                    'decided_by' => $userId,
+                    'decided_at' => now(),
+                ]);
+
+                $record = [
+                    'review_id' => $review->id,
+                    'workplace_id' => $workplace->id,
+                    'application_id' => $application?->id,
+                    'decision' => $decision->value,
+                    'method' => $review->method->value,
+                ];
+                $this->audit->handle('telework.workplace_reviewed', $review, $record);
+                Log::info('telework.workplace_reviewed', $record);
+
+                return $review;
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['application' => 'Esta lista ya fue revisada.']);
+        }
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function validate(Workplace $workplace, ReviewDecision $decision, string $notes, string $plan, ?CarbonImmutable $planDueOn): void
+    {
+        $errors = [];
+
+        if ($workplace->retired_at !== null) {
+            $errors['workplace'] = 'Este lugar ya está retirado.';
+        }
+
+        if ($decision === ReviewDecision::NotValid && $notes === '') {
+            $errors['notes'] = 'Escribe las notas: explican por qué el lugar no se valida.';
+        }
+
+        if ($decision === ReviewDecision::ValidWithPlan) {
+            if ($plan === '') {
+                $errors['action_plan'] = 'Escribe el plan de acción.';
+            }
+
+            if ($planDueOn === null) {
+                $errors['plan_due_on'] = 'Elige la fecha compromiso del plan.';
+            } elseif ($planDueOn->toDateString() < CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()) {
+                $errors['plan_due_on'] = 'La fecha compromiso no puede estar en el pasado.';
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * The checklist must be a submitted one of this workplace that nobody reviewed yet. Locked, so two members deciding
+     * the same list at once cannot both pass (the unique index is the backstop).
+     *
+     * @throws ValidationException
+     */
+    private function checkApplication(Workplace $workplace, ?ChecklistApplication $application): void
+    {
+        if ($application === null) {
+            return;
+        }
+
+        $fresh = ChecklistApplication::query()->where('workplace_id', $workplace->id)->whereNotNull('submitted_at')->lockForUpdate()->find($application->id);
+
+        if ($fresh === null) {
+            throw ValidationException::withMessages(['application' => 'Esta lista aún no se envía o no es de este lugar.']);
+        }
+
+        if (WorkplaceReview::query()->where('application_id', $fresh->id)->exists()) {
+            throw ValidationException::withMessages(['application' => 'Esta lista ya fue revisada.']);
+        }
+    }
+}

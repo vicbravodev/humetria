@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
+use App\Modules\Telework\Http\Controllers\ReviewController;
 use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -38,3 +39,8 @@ Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers', [Te
 Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.show');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
+
+// The Comisión's review of a center's workplaces: only its assigned members. A decision is never edited or deleted;
+// a later review replaces it as the current one.
+Route::post('admin/{tenant:slug}/telework/applications/{application}/review', [ReviewController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.reviews.store');
+Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/remote-check', [ReviewController::class, 'remoteCheck'])->where('tenant', $notReserved)->name('tenant.telework.workplaces.remote-check.store');
