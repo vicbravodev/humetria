@@ -74,9 +74,9 @@ function rowDocument(DocumentKind $kind, array $items = []): void
  * @param  list<Requirement>  $lackingOne
  * @param  list<Requirement>  $lackingTwo
  */
-function rowChecklist(bool $withSectionTwo = true, array $lackingOne = [], array $lackingTwo = []): void
+function rowChecklist(bool $withSectionTwo = true, array $lackingOne = [], array $lackingTwo = [], int $version = 1): void
 {
-    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id]);
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'version' => $version]);
     $position = 0;
 
     foreach (array_filter([1 => true, 2 => $withSectionTwo]) as $section => $_) {
@@ -342,4 +342,201 @@ it('computes the rows of many centers at once, each as on its own', function ():
         ->and($many[$this->center->id])->toEqual(resolve(ComplianceRows::class)->for($this->center->id))
         ->and($many[$other->id])->toEqual(resolve(ComplianceRows::class)->for($other->id))
         ->and($many[$other->id][0]->state)->toBe(RowState::NotApplicable);
+});
+
+/** @return array<string, string> numeral => «state: detail» of every row of the test's center. */
+function rowWords(): array
+{
+    return array_map(fn (array $row): string => "{$row['state']->value}: {$row['detail']}", computedRows());
+}
+
+it('describes each row in words, with its counts, in a center half way through', function (): void {
+    // Ana: trained this period, equipment received, two places in force.
+    $ana = rowPerson(['started_at' => '2025-12-01 12:00:00', 'no_equipment_reason' => null]);
+    rowPlace($ana);
+    rowPlace($ana);
+    $training = TrainingFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'held_on' => '2026-02-20']);
+    TrainingAttendee::query()->create(['tenant_id' => $this->tenant->id, 'training_id' => $training->id, 'employee_id' => $ana->employee_id]);
+    EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ana->id, 'status' => EquipmentStatus::Received, 'responded_at' => now()]);
+    // Beto: never trained in more than twelve months, justified without equipment, his only place not apt.
+    rowPlace(rowPerson(['started_at' => '2025-01-10 12:00:00']), 'not_valid');
+    // Ciro: due for training next month, equipment not answered, a lapsed place and one without decision.
+    $ciro = rowPerson(['started_at' => '2025-03-20 12:00:00', 'no_equipment_reason' => null]);
+    rowPlace($ciro, 'lapsed');
+    rowPlace($ciro, 'none');
+    EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ciro->id]);
+    // Two aspirants do not count while there are people in the roster.
+    foreach (range(1, 2) as $n) {
+        TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id])->id]);
+    }
+    rowDocument(DocumentKind::Policy, ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']);
+    rowDocument(DocumentKind::RiskInformation);
+    rowDocument(DocumentKind::ImplementationProcess, ['a', 'b']);
+    rowDocument(DocumentKind::FamilyViolence);
+    foreach (Illuminate\Support\Facades\DB::table('telework_documents')->whereIn('kind', [DocumentKind::Policy->value, DocumentKind::RiskInformation->value])->pluck('id') as $documentId) {
+        Acknowledgement::factory()->acknowledged()->create(['tenant_id' => $this->tenant->id, 'document_id' => $documentId, 'employee_id' => $ana->employee_id]);
+    }
+    rowChecklist(lackingOne: [Requirement::Lighting], lackingTwo: [Requirement::Chair, Requirement::Noise]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ana->id, 'reviewed_at' => now(), 'review_note' => 'Atendido.', 'reviewed_by' => memberOf($this->tenant, TenantRole::Hr)->id]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ciro->id]);
+    SafetyCommitteeFactoryForRows();
+    foreach (range(1, 2) as $n) {
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => memberOf($this->tenant, TenantRole::Committee)->id]);
+    }
+
+    expect(rowWords())->toBe([
+        '5.1' => 'done: 3 personas en el padrón.',
+        '5.1.1' => 'partial: 2 de 5 lugares validados y vigentes. 1 lugar no es apto: retíralo o inicia la reversibilidad.',
+        '5.1.2' => 'partial: 1 de 3 personas con un lugar validado y vigente.',
+        // The policy is for all the staff of the center: the three people and the two aspirants.
+        '5.2' => 'partial: Versión 1. Faltan los incisos k, l. 1 de 5 personas confirmaron que la leyeron.',
+        // The risk information is for the roster and the Comisión: three people and two members.
+        '5.3' => 'partial: 1 de 5 confirmaron que lo leyeron.',
+        '5.4 y 7' => 'partial: 4 de 5 lugares con decisión de la Comisión. A la Sección I le falta cubrir: '.Requirement::Lighting->label().'.',
+        '5.5' => 'partial: 2 de 5 lugares con validación vigente de la Comisión. 1 lugar no es apto: retíralo o inicia la reversibilidad.',
+        '5.5.1' => 'partial: A la Sección II le falta cubrir: '.Requirement::Noise->label().', '.Requirement::Chair->label().'.',
+        '5.6' => 'partial: Versión 1. Faltan los incisos c, d.',
+        '5.7' => 'partial: 2 de 3 personas con equipo confirmado o con la justificación de no recibirlo. 1 persona con equipo sin acuse de recibido.',
+        '5.8' => 'missing: Aún no subes este documento.',
+        '5.9 y 8' => 'partial: 1 persona tiene su capacitación vencida (más de 12 meses).',
+        '5.10' => 'missing: Aún no subes este documento.',
+        '5.11' => 'partial: 1 de 2 avisos de riesgo de trabajo revisados. Los exámenes médicos del 5.11 no los cubre Humetría: llévalos por separado.',
+        '5.12' => 'done: 2 integrantes con acceso al expediente.',
+        '5.13' => 'done: Versión 1.',
+        '5.14' => 'missing: Aún no subes este documento.',
+    ]);
+});
+
+it('describes each row in words in a center with one person up to date', function (): void {
+    $ana = rowPerson(['started_at' => '2025-03-20 12:00:00']);
+    rowPlace($ana);
+    rowDocument(DocumentKind::Policy, DocumentKind::Policy->coverableItems());
+    rowDocument(DocumentKind::RiskInformation);
+    foreach (Illuminate\Support\Facades\DB::table('telework_documents')->pluck('id') as $documentId) {
+        Acknowledgement::factory()->acknowledged()->create(['tenant_id' => $this->tenant->id, 'document_id' => $documentId, 'employee_id' => $ana->employee_id]);
+    }
+    rowChecklist();
+    SafetyCommitteeFactoryForRows();
+    $member = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $member->id]);
+    Acknowledgement::factory()->acknowledged()->create(['tenant_id' => $this->tenant->id, 'document_id' => Illuminate\Support\Facades\DB::table('telework_documents')->where('kind', DocumentKind::RiskInformation->value)->value('id'), 'employee_id' => null, 'user_id' => $member->id]);
+
+    expect(rowWords())->toBe([
+        '5.1' => 'done: 1 persona en el padrón.',
+        '5.1.1' => 'done: 1 de 1 lugar validado y vigente.',
+        '5.1.2' => 'done: 1 de 1 persona con un lugar validado y vigente.',
+        '5.2' => 'done: Versión 1. 1 de 1 persona confirmó que la leyó.',
+        '5.3' => 'done: 2 de 2 confirmaron que lo leyeron.',
+        '5.4 y 7' => 'done: 1 de 1 lugar con decisión de la Comisión.',
+        '5.5' => 'done: 1 de 1 lugar con validación vigente de la Comisión.',
+        '5.5.1' => 'done: Sección II publicada y ninguna revisión periódica vencida.',
+        '5.6' => 'missing: Aún no subes este documento.',
+        '5.7' => 'done: 1 de 1 persona con equipo confirmado o con la justificación de no recibirlo.',
+        '5.8' => 'missing: Aún no subes este documento.',
+        // Twelve months after 2025-03-20 is less than a month away.
+        '5.9 y 8' => 'done: 1 persona debe capacitarse en el próximo mes.',
+        '5.10' => 'missing: Aún no subes este documento.',
+        '5.11' => 'not_applicable: Nadie ha avisado de un riesgo de trabajo. Los exámenes médicos del 5.11 no los cubre Humetría: llévalos por separado.',
+        '5.12' => 'done: 1 integrante con acceso al expediente.',
+        '5.13' => 'missing: Aún no subes este documento.',
+        '5.14' => 'missing: Aún no subes este documento.',
+    ]);
+});
+
+it('describes each row in words in a center with documents and a list but nobody yet', function (): void {
+    rowDocument(DocumentKind::Policy, DocumentKind::Policy->coverableItems());
+    rowChecklist();
+    foreach (range(1, 2) as $n) {
+        TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id])->id]);
+    }
+
+    expect(rowWords())->toBe([
+        '5.1' => 'missing: Hay 2 aspirantes, pero ninguna persona en el padrón.',
+        '5.1.1' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
+        '5.1.2' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
+        '5.2' => 'done: Versión 1. 0 de 2 personas confirmaron que la leyeron.',
+        '5.3' => 'missing: Aún no subes la información sobre los riesgos del Teletrabajo.',
+        '5.4 y 7' => 'done: Lista publicada (versión 1); no hay lugares por validar.',
+        '5.5' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
+        '5.5.1' => 'done: Sección II publicada y ninguna revisión periódica vencida.',
+        '5.6' => 'missing: Aún no subes este documento.',
+        '5.7' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
+        '5.8' => 'missing: Aún no subes este documento.',
+        '5.9 y 8' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
+        '5.10' => 'missing: Aún no subes este documento.',
+        '5.11' => 'not_applicable: Nadie ha avisado de un riesgo de trabajo. Los exámenes médicos del 5.11 no los cubre Humetría: llévalos por separado.',
+        '5.12' => 'missing: Registra la Comisión de seguridad e higiene del centro.',
+        '5.13' => 'missing: Aún no subes este documento.',
+        '5.14' => 'missing: Aún no subes este documento.',
+    ]);
+});
+
+it('words the policy in the singular while nobody works in the center yet', function (): void {
+    rowDocument(DocumentKind::Policy, DocumentKind::Policy->coverableItems());
+
+    expect(rowWords()['5.2'])->toBe('done: Versión 1. 0 de 1 persona confirmó que la leyó.');
+});
+
+it('words the rows that have nothing to count yet', function (): void {
+    rowDocument(DocumentKind::RiskInformation);
+    rowChecklist(withSectionTwo: false);
+
+    expect(rowWords())->toMatchArray([
+        '5.3' => 'done: Aún no hay personas ni integrantes de la Comisión a quienes informar.',
+        '5.5.1' => 'partial: La lista publicada no tiene Sección II, la que contestan las personas cada periodo.',
+    ]);
+});
+
+it('says that everyone is up to date with their training', function (): void {
+    $ana = rowPerson(['started_at' => '2025-12-01 12:00:00']);
+    $training = TrainingFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'held_on' => '2026-02-20']);
+    TrainingAttendee::query()->create(['tenant_id' => $this->tenant->id, 'training_id' => $training->id, 'employee_id' => $ana->employee_id]);
+
+    expect(rowWords()['5.9 y 8'])->toBe('done: Todas las personas están al corriente.');
+});
+
+it('marks 5.4 y 7 missing while the only place has no decision', function (): void {
+    rowChecklist();
+    rowPlace(rowPerson(), 'none');
+
+    expect(rowWords()['5.4 y 7'])->toBe('missing: 0 de 1 lugar con decisión de la Comisión.');
+});
+
+it('says in 5.5 that nobody has a workplace yet', function (): void {
+    rowPerson();
+
+    expect(rowWords()['5.5'])->toBe('missing: Ninguna persona tiene registrado un lugar de trabajo.');
+});
+
+it('does not take an empty reason as the justification of having no equipment', function (): void {
+    rowPerson(['no_equipment_reason' => '']);
+
+    expect(rowWords()['5.7'])->toBe('missing: 0 de 1 persona con equipo confirmado o con la justificación de no recibirlo.');
+});
+
+it('reads the newest published list of the center', function (): void {
+    rowChecklist(lackingOne: [Requirement::Lighting]);
+    rowChecklist(version: 2);
+
+    expect(rowWords()['5.4 y 7'])->toBe('done: Lista publicada (versión 2); no hay lugares por validar.');
+});
+
+it('counts in 5.5.1 only the places whose validation lapsed', function (): void {
+    rowChecklist();
+    rowPlace(rowPerson());
+    rowPlace(rowPerson(), 'lapsed');
+    rowPlace(rowPerson(), 'not_valid');
+
+    expect(rowWords()['5.5.1'])->toBe('partial: 1 lugar tiene vencida su revisión periódica.');
+});
+
+it('reads nothing for no centers, and a center with nothing in a fixed number of queries', function (): void {
+    Illuminate\Support\Facades\DB::enableQueryLog();
+
+    expect(resolve(ComplianceRows::class)->forMany([]))->toBe([])
+        ->and(Illuminate\Support\Facades\DB::getQueryLog())->toBe([]);
+
+    resolve(ComplianceRows::class)->for($this->center->id);
+
+    expect(Illuminate\Support\Facades\DB::getQueryLog())->toHaveCount(10);
 });

@@ -88,7 +88,8 @@ final readonly class ComplianceRows
      */
     public function forMany(array $workCenterIds): array
     {
-        $ids = array_values(array_unique($workCenterIds));
+        // A repeated id yields the same rows under the same key, and the keys of $ids are never read: both are equivalent.
+        $ids = array_values(array_unique($workCenterIds)); // @pest-mutate-ignore: UnwrapArrayUnique,UnwrapArrayValues
 
         if ($ids === []) {
             return [];
@@ -105,23 +106,25 @@ final readonly class ComplianceRows
         [$committees, $members] = $this->committees($ids);
         $rows = [];
 
+        // The defaults below stand for a center without active people, and every row that reads equipment, training or the
+        // reviewed notices answers before it reads them when there is nobody (or no notice): changing them changes nothing.
         foreach ($ids as $id) {
             $checklist = $checklists[$id] ?? null;
             $rows[$id] = $this->rows(new CenterFacts(
                 count($people['active'][$id] ?? []),
-                $people['aspirants'][$id] ?? 0,
+                $people['aspirants'][$id] ?? 0, // @pest-mutate-ignore: DecrementInteger
                 $places[$id],
                 $documents[$id] ?? [],
                 $checklist,
                 $checklist !== null && isset($sectionTwo[$checklist->id]),
                 $checklist === null ? [] : $uncovered[$checklist->id] ?? [],
                 $acks,
-                $equipment[$id]['covered'] ?? 0,
-                $equipment[$id]['unconfirmed'] ?? 0,
-                $trainings[$id]['overdue'] ?? 0,
-                $trainings[$id]['soon'] ?? 0,
+                $equipment[$id]['covered'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
+                $equipment[$id]['unconfirmed'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
+                $trainings[$id]['overdue'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
+                $trainings[$id]['soon'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
                 $notices[$id]['total'] ?? 0,
-                $notices[$id]['reviewed'] ?? 0,
+                $notices[$id]['reviewed'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
                 isset($committees[$id]),
                 $members[$id] ?? 0,
             ));
@@ -186,10 +189,11 @@ final readonly class ComplianceRows
      */
     private function people(array $ids): array
     {
-        $people = ['active' => [], 'aspirants' => []];
+        // Without the aspirants key, the first aspirant creates it and a center without any falls back to 0: equivalent.
+        $people = ['active' => [], 'aspirants' => []]; // @pest-mutate-ignore: RemoveArrayItem
 
         foreach (Teleworker::query()->whereIn('work_center_id', $ids)->whereIn('status', [TeleworkerStatus::Active, TeleworkerStatus::Aspirant])
-            ->get(['id', 'employee_id', 'work_center_id', 'status', 'started_at', 'created_at', 'no_equipment_reason']) as $person) {
+            ->get(['id', 'work_center_id', 'status', 'started_at', 'no_equipment_reason']) as $person) {
             if ($person->status === TeleworkerStatus::Active) {
                 $people['active'][$person->work_center_id][] = $person;
             } else {
@@ -232,7 +236,8 @@ final readonly class ComplianceRows
 
         if ($centerOf !== []) {
             $workplaces = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', $this->activeIds($ids))->get(['id', 'teleworker_id']);
-            $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all()));
+            // latestReviews only chunks the ids into a whereIn: their keys are never read.
+            $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
             $months = $this->settings->periodMonths();
             $withOne = [];
 
@@ -254,7 +259,8 @@ final readonly class ComplianceRows
                     $inForce[$center]++;
 
                     if (! isset($withOne[$workplace->teleworker_id])) {
-                        $withOne[$workplace->teleworker_id] = true;
+                        // Here and in the other sets of this class, isset() reads only the key: the value true is never read.
+                        $withOne[$workplace->teleworker_id] = true; // @pest-mutate-ignore: TrueToFalse
                         $peopleInForce[$center]++;
                     }
                 }
@@ -306,10 +312,11 @@ final readonly class ComplianceRows
         $sectionTwo = [];
 
         foreach (ChecklistQuestion::query()->whereIn('checklist_id', array_map(fn (Checklist $checklist): string => $checklist->id, $latest))->where('section', 2)->distinct()->get(['checklist_id']) as $question) {
-            $sectionTwo[$question->checklist_id] = true;
+            $sectionTwo[$question->checklist_id] = true; // @pest-mutate-ignore: TrueToFalse
         }
 
-        return [$latest, $sectionTwo, $this->coverage->missingMany(array_values($latest))];
+        // missingMany only iterates the lists and keys its answer by list id: the keys of $latest are never read.
+        return [$latest, $sectionTwo, $this->coverage->missingMany(array_values($latest))]; // @pest-mutate-ignore: UnwrapArrayValues
     }
 
     /**
@@ -331,9 +338,9 @@ final readonly class ComplianceRows
 
         foreach (EquipmentItem::query()->whereIn('teleworker_id', $this->activeIds($ids))->get(['teleworker_id', 'status']) as $item) {
             if ($item->status === EquipmentStatus::Pending) {
-                $waiting[$item->teleworker_id] = true;
+                $waiting[$item->teleworker_id] = true; // @pest-mutate-ignore: TrueToFalse
             } else {
-                $answered[$item->teleworker_id] = true;
+                $answered[$item->teleworker_id] = true; // @pest-mutate-ignore: TrueToFalse
             }
         }
 
@@ -408,7 +415,8 @@ final readonly class ComplianceRows
 
         $centerOf = [];
 
-        foreach (Teleworker::query()->whereIn('id', array_values($notices->map(fn (WorkerNotice $notice): string => $notice->teleworker_id)->unique()->all()))->get(['id', 'work_center_id']) as $person) {
+        // A whereIn ignores the keys of its values.
+        foreach (Teleworker::query()->whereIn('id', array_values($notices->map(fn (WorkerNotice $notice): string => $notice->teleworker_id)->unique()->all()))->get(['id', 'work_center_id']) as $person) { // @pest-mutate-ignore: UnwrapArrayValues
             $centerOf[$person->id] = $person->work_center_id;
         }
 
@@ -438,7 +446,7 @@ final readonly class ComplianceRows
         $registered = [];
 
         foreach (SafetyCommittee::query()->whereIn('work_center_id', $ids)->get(['work_center_id']) as $committee) {
-            $registered[$committee->work_center_id] = true;
+            $registered[$committee->work_center_id] = true; // @pest-mutate-ignore: TrueToFalse
         }
 
         $members = [];
@@ -501,7 +509,7 @@ final readonly class ComplianceRows
         }
 
         $lacking = $this->lacking($document);
-        $ack = $acks[$document->id] ?? ['acknowledged' => 0, 'expected' => 0];
+        $ack = $acks[$document->id];
         $parts = [
             "Versión {$document->version}",
             ...($lacking === [] ? [] : [$this->lackingText($lacking)]),
@@ -520,7 +528,7 @@ final readonly class ComplianceRows
             return new ComplianceRow('5.3', $label, RowState::Missing, 'Aún no subes la información sobre los riesgos del Teletrabajo.');
         }
 
-        $ack = $acks[$document->id] ?? ['acknowledged' => 0, 'expected' => 0];
+        $ack = $acks[$document->id];
 
         return match (true) {
             $ack['expected'] === 0 => new ComplianceRow('5.3', $label, RowState::Done, 'Aún no hay personas ni integrantes de la Comisión a quienes informar.'),
@@ -542,7 +550,8 @@ final readonly class ComplianceRows
         $detail = $places['total'] === 0
             ? "Lista publicada (versión {$facts->checklist->version}); no hay lugares por validar."
             : trans_choice('{1} :good de :count lugar con decisión de la Comisión.|[2,*] :good de :count lugares con decisión de la Comisión.', $places['total'], ['good' => $places['decided']]);
-        $state = $places['total'] === 0 ? RowState::Done : $this->share($places['decided'], $places['total']);
+        // With no places share(0, 0) is Done as well: `=== -1` changes nothing.
+        $state = $places['total'] === 0 ? RowState::Done : $this->share($places['decided'], $places['total']); // @pest-mutate-ignore: DecrementInteger
 
         if ($lacking !== []) {
             $detail .= ' '.$this->uncoveredText(1, $lacking);
@@ -578,7 +587,8 @@ final readonly class ComplianceRows
         return match (true) {
             $facts->checklist === null => new ComplianceRow('5.5.1', $label, RowState::Missing, 'La Comisión aún no publica la lista de verificación del centro.'),
             ! $facts->sectionTwo => new ComplianceRow('5.5.1', $label, RowState::Partial, 'La lista publicada no tiene Sección II, la que contestan las personas cada periodo.'),
-            $lacking !== [] => new ComplianceRow('5.5.1', $label, RowState::Partial, $this->uncoveredText(2, $lacking)),
+            // roman() calls every section but the first «II»: a 3 here reads the same.
+            $lacking !== [] => new ComplianceRow('5.5.1', $label, RowState::Partial, $this->uncoveredText(2, $lacking)), // @pest-mutate-ignore: IncrementInteger
             $facts->places['lapsed'] > 0 => new ComplianceRow('5.5.1', $label, RowState::Partial, trans_choice('{1} :count lugar tiene vencida su revisión periódica.|[2,*] :count lugares tienen vencida su revisión periódica.', $facts->places['lapsed'])),
             default => new ComplianceRow('5.5.1', $label, RowState::Done, 'Sección II publicada y ninguna revisión periódica vencida.'),
         };
@@ -690,7 +700,8 @@ final readonly class ComplianceRows
     /** @return list<string> the letters of the document's items it does not cover. */
     private function lacking(TeleworkDocument $document): array
     {
-        return array_values(array_diff($document->kind->coverableItems(), $document->covered_items));
+        // The letters are only compared with [] and joined: their keys are never read.
+        return array_values(array_diff($document->kind->coverableItems(), $document->covered_items)); // @pest-mutate-ignore: UnwrapArrayValues
     }
 
     /** @param list<string> $letters */
