@@ -35,7 +35,8 @@ final readonly class RequestAcknowledgements
      */
     public function handle(array $documentIds): int
     {
-        $documents = array_values(TeleworkDocument::query()->whereIn('id', $documentIds)->get()->all());
+        // A fresh get() is already a list.
+        $documents = array_values(TeleworkDocument::query()->whereIn('id', $documentIds)->get()->all()); // @pest-mutate-ignore: UnwrapArrayValues
 
         return $this->ask($documents, fn (TeleworkDocument $document): AckAudienceIds => $this->audience->of($document));
     }
@@ -111,12 +112,15 @@ final readonly class RequestAcknowledgements
 
         foreach (array_chunk($people, self::CHUNK) as $chunk) {
             $have = Acknowledgement::query()->where('document_id', $document->id)->whereIn($column, $chunk)->pluck($column)->all();
-            $missing = array_values(array_filter($chunk, fn (string|int $person): bool => ! in_array($person, $have, false)));
+            // $have and $chunk hold the same type (uuid strings or user ids), so a strict in_array() reads the same; the keys
+            // are never read (array_map() keeps them for insertOrIgnore() and the spread below renumbers them).
+            $missing = array_values(array_filter($chunk, fn (string|int $person): bool => ! in_array($person, $have, false))); // @pest-mutate-ignore: FalseToTrue,UnwrapArrayValues
             $now = now();
 
             // The unique indexes make a race harmless: the row another request just made is skipped.
             DB::table('acknowledgements')->insertOrIgnore(array_map(fn (string|int $person): array => [
-                'id' => (string) Str::uuid(),
+                // The query builder turns the uuid into its string itself: the cast only narrows the type.
+                'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
                 'tenant_id' => $document->tenant_id,
                 'document_id' => $document->id,
                 $column => $person,

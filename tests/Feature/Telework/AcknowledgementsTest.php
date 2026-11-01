@@ -492,3 +492,37 @@ it('lists everything pending in the portal in one email', function (): void {
             && array_any($lines, fn (string $line): bool => str_starts_with($line, '- Calle Hidalgo 45') && str_ends_with($line, 'Sección II'));
     });
 });
+
+it('counts each person asked once across documents, the staff and the Comisión, and asks nothing twice', function (): void {
+    Queue::fake();
+    $this->travelTo('2026-03-01 12:00:00');
+    $ana = staffer($this->center);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id]);
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    foreach ([$this->center, $this->other] as $center) {
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'user_id' => $cora->id]);
+    }
+    $documents = [
+        TeleworkDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'kind' => DocumentKind::Policy]),
+        TeleworkDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'kind' => DocumentKind::RiskInformation]),
+        TeleworkDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->other->id, 'kind' => DocumentKind::RiskInformation]),
+    ];
+    $ids = array_map(fn (TeleworkDocument $document): string => $document->id, $documents);
+    Log::spy();
+
+    // Ana for the policy and the risk information of her center, Cora for the risk information of both: two people.
+    expect(resolve(RequestAcknowledgements::class)->handle($ids))->toBe(2)
+        ->and(Acknowledgement::query()->count())->toBe(4)
+        ->and(Acknowledgement::query()->get()->every(fn (Acknowledgement $request): bool => $request->created_at?->equalTo(now()) === true && $request->updated_at?->equalTo(now()) === true))->toBeTrue();
+    Queue::assertPushed(SendPortalReminder::class, 2);
+
+    expect(resolve(RequestAcknowledgements::class)->handle($ids))->toBe(0);
+    Log::shouldHaveReceived('info')->with('telework.acknowledgement_requested', Mockery::any())->once();
+});
+
+it('asks nothing of a Comisión member seated where there is no risk information', function (): void {
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+
+    expect(resolve(RequestAcknowledgements::class)->forUser($cora->id, $this->center->id))->toBe(0)
+        ->and(Acknowledgement::query()->count())->toBe(0);
+});
