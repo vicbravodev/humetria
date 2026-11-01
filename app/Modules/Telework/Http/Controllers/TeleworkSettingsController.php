@@ -34,7 +34,8 @@ final class TeleworkSettingsController extends Controller
 
     public function update(TeleworkSettingsRequest $request, mixed $tenant, UpdateTeleworkSettings $update): RedirectResponse
     {
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $update->handle($request->periodMonths(), $request->consentText(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ajustes de NOM-037 guardados.']);

@@ -157,3 +157,10 @@ it('keeps each company to its own settings and consents', function (): void {
     // Another company's member cannot reach it through the URL: not a member, so the company does not exist for them.
     $this->actingAs(memberOf($other, TenantRole::Owner))->get(route('tenant.telework.settings.edit', $this->tenant))->assertNotFound();
 });
+
+it('tells the page the longest period allowed, and confirms the change in a toast', function (): void {
+    $this->actingAs($this->hr)->get(route('tenant.telework.settings.edit', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('maxMonths', 60));
+
+    $this->actingAs($this->hr)->put(route('tenant.telework.settings.update', $this->tenant), settingsForm())
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Ajustes de NOM-037 guardados.']]);
+});
