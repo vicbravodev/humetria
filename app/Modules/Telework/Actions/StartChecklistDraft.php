@@ -44,7 +44,8 @@ final readonly class StartChecklistDraft
             ]);
             $now = now();
             DB::table('checklist_questions')->insert(ChecklistQuestion::query()->where('checklist_id', $latest->id)->orderBy('position')->get()->map(fn (ChecklistQuestion $question): array => [
-                'id' => (string) Str::uuid(),
+                // The query builder turns the uuid into its string itself: the cast only narrows the type.
+                'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
                 'tenant_id' => $question->tenant_id,
                 'checklist_id' => $draft->id,
                 'section' => $question->section,

@@ -452,3 +452,29 @@ it('warns on publishing which requirements of each section have no question, sec
         'message' => 'Versión 1 publicada. Sin pregunta para: '.implode('; ', array_map(fn (Requirement $requirement): string => $requirement->label(), [Requirement::FamilyViolenceChannel, ...$sectionTwo])).'.',
     ]]);
 });
+
+it('copies every field of each question into the new draft, with its own times, and logs the draft with ids', function (): void {
+    $this->travelTo('2026-10-01 12:00:00');
+    workIn($this->tenant);
+    $source = question('S1-01');
+    $source->update(['requirement' => Requirement::Chair, 'sensitive' => true]);
+    $this->post(qUrl('publish'))->assertSessionHasNoErrors();
+    Log::spy();
+
+    $this->post(qUrl('draft'))->assertSessionHasNoErrors();
+
+    $copy = question('S1-01', draft());
+    expect($copy->requirement)->toBe(Requirement::Chair)
+        ->and($copy->sensitive)->toBeTrue()
+        ->and($copy->base_code)->toBe($source->base_code)
+        ->and($copy->created_at?->equalTo(now()))->toBeTrue()
+        ->and($copy->updated_at?->equalTo(now()))->toBeTrue();
+    Log::shouldHaveReceived('info')->with('telework.checklist_draft_started', ['work_center_id' => $this->center->id, 'checklist_id' => draft()->id, 'version' => 2])->once();
+});
+
+it('says there is no published list to copy', function (): void {
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+
+    expect(fn () => resolve(StartChecklistDraft::class)->handle($empty->id))->toThrow(Illuminate\Validation\ValidationException::class, 'Este centro aún no tiene una lista publicada que copiar.');
+});
