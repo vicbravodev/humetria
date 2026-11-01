@@ -167,6 +167,17 @@ it('edits a question, sees it become modified, and publishes', function (): void
         ->assertScript(cspViolations(), '[]');
 });
 
+it('shows the first group of questions open and the rest closed until asked for, so 122 questions stay light', function (): void {
+    [$url, $center] = checklistCenter();
+
+    visit("{$url}/telework/centers/{$center->id}/checklist")
+        ->assertPresent('[aria-label="Editar S1-01"]')
+        ->assertMissing('[aria-label="Editar S1-13"]')
+        ->click('Organización para el trabajo')
+        ->assertPresent('[aria-label="Editar S1-13"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('tells a stale editor that the version was published meanwhile', function (): void {
     [$url, $center] = checklistCenter();
     $page = visit("{$url}/telework/centers/{$center->id}/checklist")->assertSee('Versión 1 · borrador');

@@ -78,3 +78,15 @@ export function groupBySection(
         ];
     }, []);
 }
+
+/** A group shows its questions from the start when it is the first one, or the Comisión has changed it; the rest open on demand. */
+export function startsOpen(group: QuestionGroup, index: number): boolean {
+    return (
+        index === 0 ||
+        group.questions.some(
+            (question) =>
+                question.origin === 'committee' ||
+                question.origin === 'dof_modified',
+        )
+    );
+}

@@ -5,6 +5,7 @@ import {
     originLabel,
     originVariant,
     sectionTitle,
+    startsOpen,
 } from '@/lib/telework/checklist';
 import type { ChecklistQuestion } from '@/types';
 
@@ -81,5 +82,32 @@ describe('groupBySection', () => {
 
     it('is empty without questions', () => {
         expect(groupBySection([])).toEqual([]);
+    });
+});
+
+describe('startsOpen', () => {
+    const group = (...questions: ChecklistQuestion[]) => ({
+        section: 1,
+        heading: 'Luz',
+        questions,
+    });
+
+    it('opens the first group, to start editing right away', () => {
+        expect(startsOpen(group(question('a', 1, 'Luz')), 0)).toBe(true);
+        expect(startsOpen(group(question('a', 1, 'Luz')), 1)).toBe(false);
+    });
+
+    it('opens a group the Comisión has changed, so its own questions show', () => {
+        const base = question('a', 1, 'Luz');
+
+        expect(
+            startsOpen(group(base, { ...base, origin: 'committee' }), 3),
+        ).toBe(true);
+        expect(startsOpen(group({ ...base, origin: 'dof_modified' }), 3)).toBe(
+            true,
+        );
+        expect(startsOpen(group({ ...base, origin: 'humetria' }), 3)).toBe(
+            false,
+        );
     });
 });
