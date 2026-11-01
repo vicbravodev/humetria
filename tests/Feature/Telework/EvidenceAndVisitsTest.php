@@ -512,3 +512,20 @@ it('says a visit needs the written authorization of that workplace, and lets onl
     $this->actingAs(memberOf($this->tenant, TenantRole::Committee))->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))->assertNotFound();
     expect(VisitAuthorization::query()->count())->toBe(1);
 });
+
+it('keeps the signed paper under the company and the workplace, logs it with ids, and takes it only once', function (): void {
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $file = function (): string {
+        $path = tempnam(sys_get_temp_dir(), 'vis');
+        file_put_contents($path, "%PDF-1.4\n%%EOF\n");
+
+        return $path;
+    };
+    Log::spy();
+
+    resolve(AttachVisitDocument::class)->handle($authorization, $file());
+
+    expect($authorization->refresh()->document_path)->toMatch('#^visits/'.$this->tenant->id.'/'.$this->workplace->id.'/authorization-[0-9a-f-]{36}\.pdf$#');
+    Log::shouldHaveReceived('info')->with('telework.visit_document_attached', ['visit_authorization_id' => $authorization->id, 'workplace_id' => $this->workplace->id])->once();
+    expect(evidenceRefused(fn () => resolve(AttachVisitDocument::class)->handle($authorization, $file())))->toBe(['document' => 'Esta autorización ya tiene su documento.']);
+});

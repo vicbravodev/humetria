@@ -37,7 +37,8 @@ final readonly class AttachVisitDocument
 
         $contents = file_get_contents($file);
 
-        if ($contents === false) {
+        // Laravel turns the warning of a failed read into an ErrorException first: the check only narrows the type.
+        if ($contents === false) { // @pest-mutate-ignore: FalseToTrue
             throw new RuntimeException('The signed authorization could not be read.');
         }
 
