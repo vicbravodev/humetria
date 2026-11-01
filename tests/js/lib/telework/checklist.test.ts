@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
     favorableLabel,
     groupBySection,
+    groupIsOpen,
     originLabel,
     originVariant,
     sectionTitle,
     startsOpen,
 } from '@/lib/telework/checklist';
+import type { QuestionGroup } from '@/lib/telework/checklist';
 import type { ChecklistQuestion } from '@/types';
 
 function question(
@@ -109,5 +111,38 @@ describe('startsOpen', () => {
         expect(startsOpen(group({ ...base, origin: 'humetria' }), 3)).toBe(
             false,
         );
+    });
+});
+
+describe('groupIsOpen', () => {
+    const base = question('a', 1, 'Luz');
+    const plain: QuestionGroup = {
+        section: 1,
+        heading: 'Luz',
+        questions: [base],
+    };
+    const changed: QuestionGroup = {
+        ...plain,
+        questions: [base, { ...base, id: 'c', origin: 'committee' }],
+    };
+
+    it('starts as startsOpen says until someone chooses', () => {
+        expect(groupIsOpen(undefined, plain, 0)).toBe(true);
+        expect(groupIsOpen(undefined, plain, 2)).toBe(false);
+    });
+
+    it('keeps what was chosen while the group gains nothing new', () => {
+        expect(groupIsOpen({ open: false, changed: 0 }, plain, 0)).toBe(false);
+        expect(groupIsOpen({ open: true, changed: 0 }, plain, 2)).toBe(true);
+        expect(groupIsOpen({ open: false, changed: 1 }, changed, 2)).toBe(
+            false,
+        );
+        expect(groupIsOpen({ open: false, changed: 2 }, changed, 2)).toBe(
+            false,
+        );
+    });
+
+    it('opens a closed group once the Comisión adds or modifies a question in it', () => {
+        expect(groupIsOpen({ open: false, changed: 0 }, changed, 2)).toBe(true);
     });
 });

@@ -46,7 +46,10 @@ export default function NewQuestionForm({
                         errors={errors}
                     />
                     <div className="sm:col-span-2">
-                        <Button disabled={processing}>
+                        <Button
+                            disabled={processing}
+                            data-test={`add-question-${section}`}
+                        >
                             <Plus aria-hidden />
                             Agregar pregunta
                         </Button>

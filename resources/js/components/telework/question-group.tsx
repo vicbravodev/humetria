@@ -7,23 +7,26 @@ import {
 } from '@/components/ui/collapsible';
 
 /**
- * One heading of the checklist, folded until asked for: its rows only exist while it is open, so a list of 122
+ * One heading of the checklist, open or folded as the page says: its rows only exist while it is open, so a list of 122
  * questions with their controls stays light for the browser and for screen readers.
  */
 export default function QuestionGroup({
     heading,
     count,
-    defaultOpen,
+    open,
+    onOpenChange,
     children,
 }: {
     heading: string;
     count: number;
-    defaultOpen: boolean;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     children: ReactNode;
 }) {
     return (
         <Collapsible
-            defaultOpen={defaultOpen}
+            open={open}
+            onOpenChange={onOpenChange}
             className="overflow-hidden rounded-xl border bg-card"
         >
             <h3>

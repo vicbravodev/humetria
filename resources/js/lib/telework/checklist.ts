@@ -79,14 +79,30 @@ export function groupBySection(
     }, []);
 }
 
+/** How many questions of a group the Comisión has added or reworded. */
+export function changedCount(group: QuestionGroup): number {
+    return group.questions.filter(
+        (question) =>
+            question.origin === 'committee' ||
+            question.origin === 'dof_modified',
+    ).length;
+}
+
 /** A group shows its questions from the start when it is the first one, or the Comisión has changed it; the rest open on demand. */
 export function startsOpen(group: QuestionGroup, index: number): boolean {
-    return (
-        index === 0 ||
-        group.questions.some(
-            (question) =>
-                question.origin === 'committee' ||
-                question.origin === 'dof_modified',
-        )
-    );
+    return index === 0 || changedCount(group) > 0;
+}
+
+/** Someone opened or closed a group, when it had `changed` questions of the Comisión. */
+export type GroupChoice = { open: boolean; changed: number };
+
+/** What was chosen holds until the Comisión adds or rewords a question in the group: then it shows open, so the change is seen. */
+export function groupIsOpen(
+    choice: GroupChoice | undefined,
+    group: QuestionGroup,
+    index: number,
+): boolean {
+    return choice !== undefined && choice.changed >= changedCount(group)
+        ? choice.open
+        : startsOpen(group, index);
 }

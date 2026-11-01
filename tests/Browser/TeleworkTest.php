@@ -178,6 +178,20 @@ it('shows the first group of questions open and the rest closed until asked for,
         ->assertNoJavaScriptErrors();
 });
 
+it('adds a question to a closed group and opens that group to show it', function (): void {
+    [$url, $center] = checklistCenter();
+
+    visit("{$url}/telework/centers/{$center->id}/checklist")
+        ->assertMissing('[aria-label="Editar H2-05"]')
+        ->fill('#new-2-heading', 'Condiciones de la norma')
+        ->fill('#new-2-text', '¿Cuenta con extintor cerca?')
+        ->click('@add-question-2')
+        ->assertSee('¿Cuenta con extintor cerca?')
+        ->assertPresent('[aria-label="Editar C2-01"]')
+        ->assertPresent('[aria-label="Editar H2-05"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('tells a stale editor that the version was published meanwhile', function (): void {
     [$url, $center] = checklistCenter();
     $page = visit("{$url}/telework/centers/{$center->id}/checklist")->assertSee('Versión 1 · borrador');
