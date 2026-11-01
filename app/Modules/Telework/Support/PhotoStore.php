@@ -42,7 +42,8 @@ final readonly class PhotoStore
         $info = getimagesizefromstring($bytes);
         $type = $info === false ? null : $info[2];
 
-        if ($info === false || ! in_array($type, [IMAGETYPE_JPEG, IMAGETYPE_PNG], true) || $info[0] * $info[1] > self::MAX_PIXELS) {
+        // Without $info the type is null and in_array() refuses it already: `=== true` there changes nothing.
+        if ($info === false || ! in_array($type, [IMAGETYPE_JPEG, IMAGETYPE_PNG], true) || $info[0] * $info[1] > self::MAX_PIXELS) { // @pest-mutate-ignore: FalseToTrue
             throw $this->invalid();
         }
 
@@ -101,22 +102,30 @@ final readonly class PhotoStore
 
         $turned = match ($orientation) {
             2 => $this->flip($image, IMG_FLIP_HORIZONTAL),
-            3 => imagerotate($image, 180, 0),
+            3 => $this->rotate($image, 180),
             4 => $this->flip($image, IMG_FLIP_VERTICAL),
-            5 => $this->flip(imagerotate($image, -90, 0), IMG_FLIP_HORIZONTAL),
-            6 => imagerotate($image, -90, 0),
-            7 => $this->flip(imagerotate($image, 90, 0), IMG_FLIP_HORIZONTAL),
-            8 => imagerotate($image, 90, 0),
+            5 => $this->flip($this->rotate($image, -90), IMG_FLIP_HORIZONTAL),
+            6 => $this->rotate($image, -90),
+            7 => $this->flip($this->rotate($image, 90), IMG_FLIP_HORIZONTAL),
+            8 => $this->rotate($image, 90),
             default => $image,
         };
 
-        // The caller replaces its reference with the result, so the original is freed before encoding.
-        return $turned instanceof GdImage ? $turned : $image;
+        // The caller replaces its reference with the result, so the original is freed before encoding. GD fails to turn only
+        // when it runs out of memory, which no test can bring about: then the photo is kept as it came.
+        return $turned instanceof GdImage ? $turned : $image; // @pest-mutate-ignore: InstanceOfToTrue
+    }
+
+    /** A turn by a right angle: no corner is left uncovered, so the background colour never shows. */
+    private function rotate(GdImage $image, int $degrees): GdImage|false
+    {
+        return imagerotate($image, $degrees, 0); // @pest-mutate-ignore: IncrementInteger,DecrementInteger
     }
 
     private function flip(GdImage|false $image, int $mode): GdImage|false
     {
-        if ($image !== false) {
+        // $image is false only when a turn failed (see upright()): `!== true` holds for every image GD gives back.
+        if ($image !== false) { // @pest-mutate-ignore: FalseToTrue
             imageflip($image, $mode);
         }
 
@@ -128,7 +137,8 @@ final readonly class PhotoStore
         ob_start();
         $png ? imagepng($image) : imagejpeg($image, null, 90);
 
-        return (string) ob_get_clean();
+        // The buffer was opened just above, so ob_get_clean() returns a string: the cast only narrows the type.
+        return (string) ob_get_clean(); // @pest-mutate-ignore: RemoveStringCast
     }
 
     private function invalid(): ValidationException

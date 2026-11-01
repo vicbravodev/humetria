@@ -80,29 +80,69 @@ it('puts, streams and deletes private files', function (): void {
     Storage::disk('telework_files')->assertMissing('x/y.txt');
 });
 
-/** A jpeg of 20x10 pixels whose EXIF says it must be turned to be seen upright (Orientation 6, a portrait phone photo). */
-function orientedJpeg(int $orientation = 6): UploadedFile
+/**
+ * A jpeg of 20x10 pixels, black with its top-left quarter white, whose EXIF says how it must be turned to be seen upright
+ * (Orientation 6, a portrait phone photo, by default); without EXIF when the orientation is null.
+ */
+function orientedJpeg(?int $orientation = 6): UploadedFile
 {
     $image = imagecreatetruecolor(20, 10);
+    imagefilledrectangle($image, 0, 0, 9, 4, (int) imagecolorallocate($image, 255, 255, 255));
     ob_start();
-    imagejpeg($image);
+    imagejpeg($image, null, 100);
     $jpeg = (string) ob_get_clean();
+
+    if ($orientation === null) {
+        return UploadedFile::fake()->createWithContent('photo.jpg', $jpeg);
+    }
+
     $tiff = "II*\0".pack('V', 8).pack('v', 1).pack('vvVv', 0x0112, 3, 1, $orientation).pack('v', 0).pack('V', 0);
     $segment = "Exif\0\0".$tiff;
 
     return UploadedFile::fake()->createWithContent('portrait.jpg', substr($jpeg, 0, 2)."\xFF\xE1".pack('n', strlen($segment) + 2).$segment.substr($jpeg, 2));
 }
 
-it('turns a photo upright by its EXIF orientation before dropping the metadata', function (int $orientation, bool $swapped): void {
+/** Which quarter of a stored photo is the white one: tl, tr, bl or br. */
+function whiteQuarter(string $path): string
+{
+    $image = imagecreatefromstring((string) file_get_contents($path));
+    expect($image)->toBeInstanceOf(GdImage::class);
+    $width = imagesx($image);
+    $height = imagesy($image);
+    $white = [];
+
+    foreach (['tl' => [0.25, 0.25], 'tr' => [0.75, 0.25], 'bl' => [0.25, 0.75], 'br' => [0.75, 0.75]] as $quarter => [$x, $y]) {
+        $rgb = imagecolorat($image, (int) ($width * $x), (int) ($height * $y));
+
+        if ((($rgb >> 16) & 0xFF) > 128) {
+            $white[] = $quarter;
+        }
+    }
+
+    return implode(',', $white);
+}
+
+it('turns a photo upright by its EXIF orientation before dropping the metadata', function (?int $orientation, bool $swapped, string $quarter): void {
     $upload = orientedJpeg($orientation);
-    expect(exif_read_data($upload->getPathname())['Orientation'])->toBe($orientation);
+    expect(@exif_read_data($upload->getPathname())['Orientation'] ?? null)->toBe($orientation);
 
     $path = resolve(PhotoStore::class)->store($upload, 'photos/a');
 
     $stored = Storage::disk('telework_files')->path($path);
     expect(getimagesize($stored)[0])->toBe($swapped ? 10 : 20)->and(getimagesize($stored)[1])->toBe($swapped ? 20 : 10)
-        ->and(@exif_read_data($stored))->not->toHaveKey('Orientation');
-})->with([[1, false], [2, false], [3, false], [4, false], [5, true], [6, true], [7, true], [8, true]]);
+        ->and(@exif_read_data($stored))->not->toHaveKey('Orientation')
+        ->and(whiteQuarter($stored))->toBe($quarter);
+})->with([
+    'no EXIF' => [null, false, 'tl'],
+    'upright' => [1, false, 'tl'],
+    'mirrored' => [2, false, 'tr'],
+    'upside down' => [3, false, 'br'],
+    'mirrored upside down' => [4, false, 'bl'],
+    'transposed' => [5, true, 'tl'],
+    'turned left' => [6, true, 'tr'],
+    'transversed' => [7, true, 'br'],
+    'turned right' => [8, true, 'bl'],
+]);
 
 it('reads the orientation from the uploaded file on disk, so it works with allow_url_fopen off (no data:// stream)', function (): void {
     $upload = orientedJpeg(6);
@@ -116,6 +156,23 @@ it('reads the orientation from the uploaded file on disk, so it works with allow
     }
 
     expect(getimagesize(Storage::disk('telework_files')->path($path))[0])->toBe(10);
+});
+
+it('says how much a photo may weigh', function (): void {
+    config()->set('telework.max_photo_kb', 2048);
+    $heavy = UploadedFile::fake()->createWithContent('photo.jpg', str_repeat('a', 2048 * 1024 + 1));
+
+    expect(fn () => resolve(PhotoStore::class)->store($heavy, 'photos/a'))->toThrow(ValidationException::class, 'Cada foto debe pesar menos de 2 MB.');
+});
+
+it('refuses a png whose header is fine but whose pixels GD cannot decode', function (): void {
+    $png = (string) file_get_contents(__DIR__.'/../../Fixtures/photo.png');
+    $data = strpos($png, 'IDAT') + 4;
+    $broken = substr($png, 0, $data).str_repeat("\0", strlen($png) - $data);
+
+    expect(fn () => resolve(PhotoStore::class)->store(UploadedFile::fake()->createWithContent('broken.png', $broken), 'photos/a'))
+        ->toThrow(ValidationException::class, 'Cada foto debe ser una imagen JPG o PNG.');
+    expect(Storage::disk('telework_files')->allFiles())->toBe([]);
 });
 
 it('refuses an upload that did not arrive whole', function (): void {
