@@ -107,8 +107,7 @@ final readonly class SendTeleworkDigests
     {
         $now = CarbonImmutable::now();
         $today = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay();
-        // first([]) reads every column, delivered_at among them.
-        $since = DigestDelivery::query()->where('recipient', $recipient)->where('day', '<', $today->toDateString())->orderByDesc('delivered_at')->first(['delivered_at'])->delivered_at ?? $now->subDay(); // @pest-mutate-ignore: RemoveArrayItem
+        $since = DigestDelivery::query()->where('recipient', $recipient)->where('day', '<', $today->toDateString())->orderByDesc('delivered_at')->first(['delivered_at'])->delivered_at ?? $now->subDay();
         $lines = $this->lines($sections, $centers, $since, $now, $today);
 
         if ($lines === []) {
