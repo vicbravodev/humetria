@@ -541,3 +541,18 @@ it('confirms an evidence request in a toast, and keeps it to the assigned Comisi
     $this->actingAs($this->cora)->post(evidenceUrl(), $form)
         ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Solicitud registrada.']]);
 });
+
+it('answers 404 for the paper of a visit authorization that does not exist or whose address is malformed', function (): void {
+    foreach (['not-a-uuid', (string) Illuminate\Support\Str::uuid()] as $id) {
+        $this->actingAs($this->hr)->post(route('tenant.telework.visit-authorizations.document.store', [$this->tenant, $id]), [])->assertNotFound();
+    }
+});
+
+it('follows the roles: RH without the review permission is told nothing exists, and the Comisión without view-telework may not read', function (): void {
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    Spatie\Permission\Models\Role::findByName(TenantRole::Hr->value)->revokePermissionTo('review-workplaces');
+    Spatie\Permission\Models\Role::findByName(TenantRole::Committee->value)->revokePermissionTo('view-telework');
+
+    $this->actingAs($this->hr)->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))->assertNotFound();
+    $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $authorization->id]))->assertForbidden();
+});
