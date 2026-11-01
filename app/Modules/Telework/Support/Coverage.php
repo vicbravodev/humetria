@@ -17,7 +17,8 @@ final readonly class Coverage
     /** @return array<int, list<Requirement>> Section (1 and 2) to the requirements it has no question for. */
     public function missing(Checklist $checklist): array
     {
-        return $this->missingMany([$checklist])[$checklist->id] ?? [1 => Requirement::cases(), 2 => Requirement::cases()];
+        // missingMany() answers for every list it is given.
+        return $this->missingMany([$checklist])[$checklist->id];
     }
 
     /**
