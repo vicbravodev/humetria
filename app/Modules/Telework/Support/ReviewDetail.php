@@ -17,6 +17,7 @@ use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
 use Carbon\CarbonInterface;
+use LogicException;
 
 /**
  * What the Comisión sees when it opens a submitted checklist: the person and the place, the answers (the unfavorable
@@ -33,7 +34,8 @@ final readonly class ReviewDetail
     public function for(ChecklistApplication $application): array
     {
         $workplace = Workplace::query()->findOrFail($application->workplace_id);
-        $person = $this->roster->find(Teleworker::query()->findOrFail($workplace->teleworker_id)->employee_id);
+        $period = Teleworker::query()->findOrFail($workplace->teleworker_id);
+        $person = $this->roster->find($period->employee_id) ?? throw new LogicException("Teleworker [{$period->id}] has no employee.");
         $current = WorkplaceReview::query()->where('application_id', $application->id)->first();
         $previous = WorkplaceReview::query()->where('workplace_id', $workplace->id)
             ->where(fn ($reviews) => $reviews->whereNull('application_id')->orWhere('application_id', '!=', $application->id))
@@ -49,7 +51,7 @@ final readonly class ReviewDetail
                 'consentAccepted' => $application->consent_accepted_at !== null,
                 'specialNeeds' => $application->special_needs,
             ],
-            'person' => ['name' => $person->name ?? '', 'jobTitle' => $person->jobTitle ?? ''],
+            'person' => ['name' => $person->name, 'jobTitle' => $person->jobTitle],
             'workplace' => [
                 'id' => $workplace->id,
                 'address' => $this->address->line($workplace),
@@ -143,14 +145,16 @@ final readonly class ReviewDetail
             $photos[$photo->evidence_request_id][] = ['id' => $photo->id];
         }
 
-        return array_values($requests->map(fn (EvidenceRequest $request): array => [
-            'id' => $request->id,
-            'kind' => $request->kind->value,
-            'note' => $request->note,
-            'requestedOn' => $this->day($request->requested_at),
-            'fulfilled' => $request->fulfilled_at !== null,
-            'photos' => $photos[$request->id] ?? [],
-        ])->all());
+        // A fresh get() is already a list, here and in authorizations().
+        return array_values($requests->map( // @pest-mutate-ignore: UnwrapArrayValues
+            fn (EvidenceRequest $request): array => [
+                'id' => $request->id,
+                'kind' => $request->kind->value,
+                'note' => $request->note,
+                'requestedOn' => $this->day($request->requested_at),
+                'fulfilled' => $request->fulfilled_at !== null,
+                'photos' => $photos[$request->id] ?? [],
+            ])->all());
     }
 
     /**
@@ -161,15 +165,16 @@ final readonly class ReviewDetail
         $authorizations = VisitAuthorization::query()->where('workplace_id', $workplace->id)->orderByDesc('requested_at')->orderByDesc('id')->get();
         $used = WorkplaceReview::query()->whereIn('visit_authorization_id', $authorizations->pluck('id')->all())->pluck('visit_authorization_id')->all();
 
-        return array_values($authorizations->map(fn (VisitAuthorization $authorization): array => [
-            'id' => $authorization->id,
-            'requestedOn' => $this->day($authorization->requested_at),
-            'authorized' => $authorization->authorized(),
-            'cancelled' => $authorization->cancelled_at !== null,
-            'viaPortal' => $authorization->confirmed_at !== null,
-            'hasDocument' => $authorization->document_path !== null,
-            'used' => in_array($authorization->id, $used, true),
-        ])->all());
+        return array_values($authorizations->map( // @pest-mutate-ignore: UnwrapArrayValues
+            fn (VisitAuthorization $authorization): array => [
+                'id' => $authorization->id,
+                'requestedOn' => $this->day($authorization->requested_at),
+                'authorized' => $authorization->authorized(),
+                'cancelled' => $authorization->cancelled_at !== null,
+                'viaPortal' => $authorization->confirmed_at !== null,
+                'hasDocument' => $authorization->document_path !== null,
+                'used' => in_array($authorization->id, $used, true),
+            ])->all());
     }
 
     /** A calendar date in the company's display time zone. */

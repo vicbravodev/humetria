@@ -322,3 +322,56 @@ it('offers the inbox from the committee page to its assigned members only', func
     $this->actingAs($this->cora)->get($url)->assertInertia(fn (Assert $page) => $page->where('canReview', true));
     $this->actingAs($this->hr)->get($url)->assertInertia(fn (Assert $page) => $page->where('canReview', false));
 });
+
+it('sends the detail of a checklist in full', function (): void {
+    $this->travelTo('2026-05-11 00:30:00'); // UTC; still 2026-05-10 in Mexico City
+    [$application, $q, $photo] = answeredApplication();
+    $consent = App\Modules\Telework\Models\Consent::query()->create(['tenant_id' => $this->tenant->id, 'version' => 1, 'text' => 'Acepto.']);
+    $application->update(['special_needs' => 'Escritorio alto', 'consent_id' => $consent->id, 'consent_accepted_at' => now()]);
+    WorkplaceReviewFactory::new()->withPlan()->decidedAt('2025-01-15 18:00:00')->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'decided_by' => $this->cora->id, 'notes' => 'Revisada.', 'visited_on' => '2025-01-14']);
+    $request = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $cancelled = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'requested_at' => now()->subDays(2), 'cancelled_at' => now()->subDay(), 'cancelled_by' => $this->hr->id, 'document_path' => 'visits/x/acta.pdf']);
+
+    $this->actingAs($this->cora)->get(route('tenant.telework.reviews.show', [$this->tenant, $application->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('workCenter', ['id' => $this->center->id, 'name' => $this->center->name])
+        ->where('review.application', ['id' => $application->id, 'section' => 1, 'submittedOn' => '2026-05-09', 'consentAccepted' => true, 'specialNeeds' => 'Escritorio alto'])
+        ->where('review.workplace', ['id' => $this->workplace->id, 'address' => 'Calle Hidalgo 45, Centro, Querétaro, Querétaro', 'status' => 'pending', 'statusLabel' => 'Pendiente de validar', 'expiresOn' => '2026-01-15'])
+        ->where('review.answers.unfavorable.0', ['id' => $q['risk']->id, 'code' => $q['risk']->code, 'heading' => $q['risk']->heading, 'text' => $q['risk']->text, 'answer' => 'no', 'note' => 'La luz es muy poca', 'photos' => [['id' => $photo->id]]])
+        ->where('review.previous', ['decision' => 'valid_with_plan', 'decisionLabel' => 'Validado con plan de acción', 'methodLabel' => 'Comprobación a distancia', 'decidedOn' => '2025-01-15', 'visitedOn' => '2025-01-14', 'notes' => 'Revisada.', 'actionPlan' => 'Cambiar la silla.', 'planDueOn' => now()->addMonth()->toDateString()])
+        ->where('review.evidence', [['id' => $request->id, 'kind' => $request->kind->value, 'note' => $request->note, 'requestedOn' => $request->requested_at->setTimezone('America/Mexico_City')->toDateString(), 'fulfilled' => false, 'photos' => []]])
+        ->where('review.authorizations', [['id' => $cancelled->id, 'requestedOn' => '2026-05-08', 'authorized' => false, 'cancelled' => true, 'viaPortal' => false, 'hasDocument' => true, 'used' => false]]));
+});
+
+it('keeps a checklist nobody answered out of the detail, and says a missing consent', function (): void {
+    $waiting = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $this->checklist->id]);
+    $application = submittedApplication();
+
+    $this->actingAs($this->cora)->get(route('tenant.telework.reviews.show', [$this->tenant, $waiting->id]))->assertNotFound();
+    $this->actingAs($this->cora)->get(route('tenant.telework.reviews.show', [$this->tenant, $application->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('review.application.consentAccepted', false)
+        ->where('review.answers', ['unfavorable' => [], 'other' => [], 'informative' => [], 'generalPhotos' => []]));
+});
+
+it('lists a question the person left without an answer row among the other answers', function (): void {
+    $application = submittedApplication();
+    $question = addQuestion($this->checklist, 1, 'yes');
+
+    $this->actingAs($this->cora)->get(route('tenant.telework.reviews.show', [$this->tenant, $application->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('review.answers.other', [['id' => $question->id, 'code' => $question->code, 'heading' => $question->heading, 'text' => $question->text, 'answer' => null, 'note' => null, 'photos' => []]]));
+});
+
+it('confirms each decision in a toast, and lets only the assigned Comisión decide', function (): void {
+    $application = submittedApplication();
+    $outsider = memberOf($this->tenant, TenantRole::Committee);
+
+    $this->actingAs($outsider)->post(route('tenant.telework.reviews.store', [$this->tenant, $application->id]), ['decision' => 'valid'])->assertNotFound();
+    $this->actingAs($outsider)->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $this->workplace->id]), ['decision' => 'valid'])->assertNotFound();
+    $this->actingAs($this->cora)->post(route('tenant.telework.reviews.store', [$this->tenant, (string) Str::uuid()]), ['decision' => 'valid'])->assertNotFound();
+    $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, (string) Str::uuid()]), ['decision' => 'valid'])->assertNotFound();
+
+    $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.remote-check.store', [$this->tenant, $this->workplace->id]), ['decision' => 'valid'])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Comprobación a distancia registrada.']]);
+    $other = submittedApplication(1, WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id]));
+    $this->actingAs($this->cora)->post(route('tenant.telework.reviews.store', [$this->tenant, $other->id]), ['decision' => 'valid'])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Decisión registrada.']]);
+});

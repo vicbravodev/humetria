@@ -50,25 +50,28 @@ final class ReviewController extends Controller
             $workplaces[$workplace->id] = $workplace;
         }
 
-        foreach (Teleworker::query()->whereIn('id', array_map(fn (Workplace $workplace): string => $workplace->teleworker_id, array_values($workplaces)))->get() as $teleworker) {
+        // A whereIn ignores the keys and the repetitions of its values, here and in findMany() below.
+        foreach (Teleworker::query()->whereIn('id', array_map(fn (Workplace $workplace): string => $workplace->teleworker_id, array_values($workplaces)))->get() as $teleworker) { // @pest-mutate-ignore: UnwrapArrayValues
             $employees[$teleworker->id] = $teleworker->employee_id;
         }
 
-        $people = $roster->findMany(array_values(array_unique($employees)));
+        $people = $roster->findMany(array_values(array_unique($employees))); // @pest-mutate-ignore: UnwrapArrayValues,UnwrapArrayUnique
 
         return Inertia::render('telework/reviews', [
             'workCenter' => ['id' => $center->id, 'name' => $center->name],
             'applications' => $page->through(function (ChecklistApplication $application) use ($workplaces, $employees, $people, $address): array {
                 $workplace = $workplaces[$application->workplace_id] ?? throw new ModelNotFoundException;
-                $person = $people[$employees[$workplace->teleworker_id] ?? ''] ?? null;
+                // The foreign keys guarantee the period of every workplace and the employee of every period.
+                $person = $people[$employees[$workplace->teleworker_id]];
 
                 return [
                     'id' => $application->id,
-                    'person' => $person->name ?? '',
-                    'jobTitle' => $person->jobTitle ?? '',
+                    'person' => $person->name,
+                    'jobTitle' => $person->jobTitle,
                     'workplace' => $address->line($workplace),
                     'section' => $application->section->value,
-                    'submittedOn' => $application->submitted_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+                    // The inbox lists only sent lists: the ?-> only narrows the type.
+                    'submittedOn' => $application->submitted_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(), // @pest-mutate-ignore: RemoveNullSafeOperator
                 ];
             }),
         ]);
@@ -117,7 +120,8 @@ final class ReviewController extends Controller
     private function userId(Request $request): int
     {
         $user = $request->user();
-        abort_if($user === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore
 
         return $user->id;
     }
