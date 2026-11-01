@@ -443,3 +443,80 @@ it('lets only whoever manages Telework record paper acknowledgements', function 
 
     expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
 })->with([TenantRole::Viewer, TenantRole::Committee]);
+
+/** A Comisión member of the test's center with a fixed name. */
+function seatedMember(string $name): App\Models\User
+{
+    $user = App\Models\User::factory()->create(['name' => $name]);
+    App\Modules\Tenancy\Models\TenantMembership::factory()->for(test()->tenant)->for($user)->role(TenantRole::Committee)->create();
+    CommitteeAssignment::factory()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'user_id' => $user->id]);
+
+    return $user;
+}
+
+it('lists the Comisión members expected for the risk information by name, with the status filter and the search', function (): void {
+    seatedMember('Zoe Lara');
+    $ana = seatedMember('Ana Comisión');
+    $document = published(DocumentKind::RiskInformation);
+    resolve(Acknowledge::class)->inPanel($ana->id, $document->id, null);
+    $this->actingAs($this->hr);
+    $url = fn (array $query = []) => route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $document->id, ...$query]);
+    $anaRow = ['name' => 'Ana Comisión', 'status' => 'acknowledged', 'acknowledgedOn' => '2026-05-10'];
+    $zoeRow = ['name' => 'Zoe Lara', 'status' => 'pending', 'acknowledgedOn' => null];
+
+    $this->get($url())->assertInertia(fn (Assert $page) => $page->where('committee', [$anaRow, $zoeRow]));
+    $this->get($url(['status' => 'pending']))->assertInertia(fn (Assert $page) => $page->where('committee', [$zoeRow]));
+    $this->get($url(['status' => 'acknowledged']))->assertInertia(fn (Assert $page) => $page->where('committee', [$anaRow]));
+    $this->get($url(['q' => 'comision']))->assertInertia(fn (Assert $page) => $page->where('committee', [$anaRow]));
+    $this->actingAs($ana)->get($url())->assertInertia(fn (Assert $page) => $page->where('canAcknowledge', false));
+    $this->actingAs(App\Models\User::query()->where('name', 'Zoe Lara')->sole())->get($url())->assertInertia(fn (Assert $page) => $page->where('canAcknowledge', true));
+});
+
+it('sends the document and each person in full', function (): void {
+    $ana = worker('Ana Ruiz', state: ['job_title' => 'Analista']);
+    $beto = worker('Beto Soto', state: ['job_title' => 'Diseñador']);
+    $document = published();
+    confirm($document, $ana);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $document->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('document', ['id' => $document->id, 'title' => 'Política de Teletrabajo · versión 1', 'workCenter' => 'Planta Norte', 'publishedOn' => '2026-05-10'])
+        ->where('today', '2026-05-10')
+        ->where('people.data', [
+            ['id' => $ana->id, 'employeeId' => $ana->id, 'name' => 'Ana Ruiz', 'jobTitle' => 'Analista', 'status' => 'acknowledged', 'channel' => 'portal', 'channelLabel' => AckChannel::Portal->label(), 'acknowledgedOn' => '2026-05-10'],
+            ['id' => $beto->id, 'employeeId' => $beto->id, 'name' => 'Beto Soto', 'jobTitle' => 'Diseñador', 'status' => 'pending', 'channel' => null, 'channelLabel' => null, 'acknowledgedOn' => null],
+        ]));
+});
+
+it('lets only whoever may see Telework open the acknowledgements, and answers 404 for a made-up document', function (): void {
+    $document = published();
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    $risk = published(DocumentKind::RiskInformation);
+    Spatie\Permission\Models\Role::findByName(TenantRole::Committee->value)->revokePermissionTo('view-telework');
+
+    $this->actingAs($cora)->get(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $risk->id]))->assertForbidden();
+    $this->actingAs($cora)->post(route('tenant.telework.documents.acknowledge', [$this->tenant, $risk->id]))->assertForbidden();
+
+    $this->actingAs($this->hr)->get(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, 'not-a-uuid']))->assertNotFound();
+    $this->actingAs($this->hr)->post(route('tenant.telework.documents.acknowledge', [$this->tenant, 'not-a-uuid']))->assertNotFound();
+    $this->actingAs($this->hr)->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, (string) Illuminate\Support\Str::uuid()]), ['employee_ids' => [worker('Ana')->id], 'date' => '2026-05-10', 'note' => 'Hoja'])->assertNotFound();
+});
+
+it('confirms in a toast what was recorded', function (): void {
+    $ana = worker('Ana');
+    $bea = worker('Bea');
+    $cleo = worker('Cleo');
+    $document = published();
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    $risk = published(DocumentKind::RiskInformation);
+    $url = route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]);
+
+    $this->actingAs($this->hr)->post($url, ['employee_ids' => [$ana->id], 'date' => '2026-05-10', 'note' => 'Hoja'])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Se registró 1 acuse.']]);
+    $this->actingAs($this->hr)->post($url, ['employee_ids' => [$bea->id, $cleo->id], 'date' => '2026-05-10', 'note' => 'Hoja'])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Se registraron 2 acuses.']]);
+    $this->actingAs($cora)->post(route('tenant.telework.documents.acknowledge', [$this->tenant, $risk->id]))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Listo, quedó tu confirmación.']]);
+});

@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use LogicException;
 
 /**
  * Who has confirmed a document and who has not (RH, the Comisión within its centers), the paper acknowledgements RH
@@ -41,7 +42,8 @@ final class AcknowledgementController extends Controller
     public function index(Request $request, mixed $tenant, string $document, AckProgress $progress, WorkCenters $workCenters, Members $members): Response
     {
         Gate::authorize('view-telework');
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
         $found = $this->reachable($request->user()->id, $document);
         $status = in_array($request->string('status')->toString(), self::STATUSES, true) ? $request->string('status')->toString() : 'all';
         $search = $request->string('q')->trim()->toString();
@@ -50,7 +52,8 @@ final class AcknowledgementController extends Controller
         $requests = $this->audience->requests($found, $audience)
             ->when($status === 'pending', fn ($query) => $query->whereNull('acknowledged_at'))
             ->when($status === 'acknowledged', fn ($query) => $query->whereNotNull('acknowledged_at'));
-        $employeeIds = array_values(array_filter($requests->pluck('employee_id')->all(), is_string(...)));
+        // The Comisión's requests carry no employee: a null id in a whereIn matches nobody, and its keys are never read.
+        $employeeIds = array_values(array_filter($requests->pluck('employee_id')->all(), is_string(...))); // @pest-mutate-ignore: UnwrapArrayFilter,UnwrapArrayValues
         $query = new RosterQuery(employeeIds: $employeeIds, search: $search);
         $statusOf = fn (array $ids) => Acknowledgement::query()->where('document_id', $found->id)->whereIn('employee_id', $ids)->get()->keyBy('employee_id');
 
@@ -70,17 +73,18 @@ final class AcknowledgementController extends Controller
             // The default paper date: the last day the server accepts, so it never depends on the browser's clock.
             'today' => CarbonImmutable::now($zone)->toDateString(),
             'people' => $people->through(function (RosterEntry $person) use ($given, $date): array {
-                $ack = $given->get($person->id);
+                // Everyone on the page comes from a request of this document: a missing one is broken data.
+                $ack = $given->get($person->id) ?? throw new LogicException("Employee [{$person->id}] has no request for this document.");
 
                 return [
                     'id' => $person->id,
                     'employeeId' => $person->id,
                     'name' => $person->name,
                     'jobTitle' => $person->jobTitle,
-                    'status' => $ack?->acknowledged_at === null ? 'pending' : 'acknowledged',
-                    'channel' => $ack?->channel?->value,
-                    'channelLabel' => $ack?->channel?->label(),
-                    'acknowledgedOn' => $date($ack?->acknowledged_at),
+                    'status' => $ack->acknowledged_at === null ? 'pending' : 'acknowledged',
+                    'channel' => $ack->channel?->value,
+                    'channelLabel' => $ack->channel?->label(),
+                    'acknowledgedOn' => $date($ack->acknowledged_at),
                 ];
             }),
             'committee' => $this->committee($found, $audience, $members, $status, $search, $date),
