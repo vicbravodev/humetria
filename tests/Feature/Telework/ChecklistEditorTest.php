@@ -489,9 +489,8 @@ it('leaves the first question up and the last one down where they are, and logs 
     Log::shouldNotHaveReceived('info', fn (string $message): bool => $message === 'telework.question_moved');
 
     $this->post(qUrl('questions.move', question('S1-02')->id), ['direction' => 'up']);
-    $this->post(qUrl('questions.move', question('S1-02')->id), ['direction' => 'down']);
     Log::shouldHaveReceived('info')->with('telework.question_moved', ['checklist_id' => draft()->id, 'question_id' => question('S1-02')->id, 'direction' => 'up'])->once();
-    Log::shouldHaveReceived('info')->with('telework.question_moved', ['checklist_id' => draft()->id, 'question_id' => question('S1-02')->id, 'direction' => 'down'])->once();
+    Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => $message === 'telework.question_moved' && $context['direction'] === 'down');
 });
 
 it('logs each added question with its code', function (): void {

@@ -440,8 +440,9 @@ it('does not look for whose lists wait for review when none does', function (): 
 it('searches the centers by the trimmed text, twenty at most, and pages the list on its own address', function (): void {
     WorkCenter::factory()->for($this->tenant)->count(20)->sequence(fn ($sequence) => ['name' => sprintf('Planta %02d', $sequence->index)])->create();
 
-    $found = $this->actingAs($this->owner)->getJson(route('tenant.telework.work-centers.options', [$this->tenant, 'q' => '  planta  ']))->assertOk()->json();
+    $found = $this->actingAs($this->owner)->getJson(route('tenant.telework.work-centers.options', [$this->tenant, 'q' => 'planta']))->assertOk()->json();
 
-    expect($found)->toHaveCount(20);
+    expect($found)->toHaveCount(20)
+        ->and(resolve(VisibleCenters::class)->search($this->owner->id, '  planta  '))->toHaveCount(20);
     $this->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('centers.path', route('tenant.telework.index', $this->tenant)));
 });
