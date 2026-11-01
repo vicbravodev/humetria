@@ -144,9 +144,10 @@ it('narrows the page by name, email or number, and by area', function (): void {
 });
 
 it('gives the ids of everyone a query matches, without paging', function (): void {
-    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López']);
-    $luis = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Luis Mora']);
-    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Baja', 'deactivated_at' => now()]);
+    // Fixed emails: the search also reads them, and a random one could contain «mora».
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'email' => 'ana@acme.mx']);
+    $luis = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Luis Mora', 'email' => 'luis@acme.mx']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Baja', 'email' => 'baja@acme.mx', 'deactivated_at' => now()]);
     workIn($this->tenant);
 
     expect(resolve(Roster::class)->matchingIds(new RosterQuery(activeInWorkCenter: $this->plant->id)))->toBe([$ana->id, $luis->id])
