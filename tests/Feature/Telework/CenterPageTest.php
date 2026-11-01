@@ -28,6 +28,8 @@ const QUERIES_CENTER = 49;
 
 const QUERIES_INDEX = 39;
 
+const QUERIES_INDEX_NOTHING_TO_REVIEW = 30;
+
 mutates(TeleworkController::class, TeleworkPages::class, VisibleCenters::class);
 
 beforeEach(function (): void {
@@ -302,3 +304,135 @@ it('links the dossier from the center dashboard only to whoever may open it', fu
     'committee' => ['cora', true],
     'viewer' => ['viewer', false],
 ]);
+
+it('links each row to where each role fixes it, and nowhere for the viewer', function (string $who): void {
+    $center = $this->center->id;
+    $documents = [route('tenant.telework.documents.index', [$this->tenant, 'center' => $center]), 'Ver documentos'];
+    $list = [route('tenant.telework.checklist.show', [$this->tenant, $center]), 'Ver la lista'];
+    $reviews = $who === 'cora' ? [route('tenant.telework.reviews.index', [$this->tenant, $center]), 'Ver las listas por revisar'] : [null, null];
+    $expected = $who === 'viewer' ? array_fill_keys(['5.1', '5.1.1', '5.1.2', '5.2', '5.3', '5.4 y 7', '5.5', '5.5.1', '5.6', '5.7', '5.8', '5.9 y 8', '5.10', '5.11', '5.12', '5.13', '5.14'], [null, null]) : [
+        '5.1' => $who === 'owner' ? [route('tenant.telework.teleworkers.create', [$this->tenant, $center]), 'Registrar persona'] : [null, null],
+        '5.1.1' => $reviews,
+        '5.1.2' => $reviews,
+        '5.2' => $documents,
+        '5.3' => $documents,
+        '5.4 y 7' => $list,
+        '5.5' => $reviews,
+        '5.5.1' => $list,
+        '5.6' => $documents,
+        '5.7' => $who === 'owner' ? [route('tenant.telework.center', [$this->tenant, $center]).'#padron', 'Ver el padrón'] : [null, null],
+        '5.8' => $documents,
+        '5.9 y 8' => $who === 'owner' ? [route('tenant.telework.trainings.index', [$this->tenant, 'center' => $center]), 'Ver capacitaciones'] : [null, null],
+        '5.10' => $documents,
+        '5.11' => [route('tenant.telework.notices.index', [$this->tenant, 'center' => $center]), 'Ver los avisos'],
+        '5.12' => [route('tenant.telework.committee.show', [$this->tenant, $center]), 'Ver la Comisión'],
+        '5.13' => $documents,
+        '5.14' => $documents,
+    ];
+
+    $this->actingAs($this->{$who})->get(centerUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('rows', fn ($rows): bool => collect($rows)->mapWithKeys(fn (array $row): array => [$row['numeral'] => [$row['href'], $row['action']]])->all() === $expected));
+})->with(['owner', 'cora', 'viewer']);
+
+it('sends each row with its numeral, label, state, state label and detail', function (): void {
+    $this->actingAs($this->owner)->get(centerUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('rows.0', [
+            'numeral' => '5.1',
+            'label' => 'Listado de personas teletrabajadoras',
+            'state' => 'not_applicable',
+            'stateLabel' => 'No aplica',
+            'detail' => 'Nadie teletrabaja en este centro todavía.',
+            'href' => route('tenant.telework.teleworkers.create', [$this->tenant, $this->center->id]),
+            'action' => 'Registrar persona',
+        ])
+        ->where('teleworkers', 0)
+        ->where('aspirants', 0));
+});
+
+it('tells each role the next step in full, with a link only for whoever may open it', function (string $who, bool $linked): void {
+    $this->actingAs($this->{$who})->get(centerUrl())->assertInertia(fn (Assert $page) => $page->where('nextStep', [
+        'kind' => 'committee',
+        'title' => 'Registra la Comisión',
+        'body' => 'NOM-037 empieza por la Comisión de seguridad e higiene del centro: ella publica la lista de verificación y valida los lugares de trabajo.',
+        'cta' => 'Registrar la Comisión',
+        'href' => $linked ? route('tenant.telework.committee.show', [$this->tenant, $this->center->id]) : null,
+    ]));
+
+    centerCommittee();
+
+    $this->actingAs($this->{$who})->get(centerUrl())->assertInertia(fn (Assert $page) => $page->where('nextStep', [
+        'kind' => 'checklist',
+        'title' => 'Que la Comisión publique la lista',
+        'body' => 'Mientras la lista de verificación no esté publicada, nadie puede contestarla y ningún lugar de trabajo se valida.',
+        'cta' => 'Ver la lista',
+        'href' => $linked ? route('tenant.telework.checklist.show', [$this->tenant, $this->center->id]) : null,
+    ]));
+})->with([
+    'owner' => ['owner', true],
+    'committee' => ['cora', true],
+    'viewer' => ['viewer', false],
+]);
+
+it('sends each tab with its label, count, link and whether it is the page itself', function (): void {
+    centerPerson();
+    $center = $this->center->id;
+
+    $this->actingAs($this->cora)->get(centerUrl())->assertInertia(fn (Assert $page) => $page->where('tabs', [
+        ['key' => 'people', 'label' => 'Padrón', 'count' => 1, 'href' => centerUrl(), 'active' => true],
+        ['key' => 'review', 'label' => 'Por validar', 'count' => 0, 'href' => route('tenant.telework.reviews.index', [$this->tenant, $center]), 'active' => false],
+        ['key' => 'documents', 'label' => 'Documentos', 'count' => 0, 'href' => route('tenant.telework.documents.index', [$this->tenant, 'center' => $center]), 'active' => false],
+        ['key' => 'notices', 'label' => 'Avisos', 'count' => 0, 'href' => route('tenant.telework.notices.index', [$this->tenant, 'center' => $center]), 'active' => false],
+        ['key' => 'committee', 'label' => 'Comisión', 'count' => 1, 'href' => route('tenant.telework.committee.show', [$this->tenant, $center]), 'active' => false],
+    ]));
+    $this->actingAs($this->owner)->get(centerUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('tabs.2', ['key' => 'trainings', 'label' => 'Capacitación', 'count' => 0, 'href' => route('tenant.telework.trainings.index', [$this->tenant, 'center' => $center]), 'active' => false]));
+});
+
+it('lists the aspirants after the active people, each with every field and their places as a list', function (): void {
+    $ana = centerPerson('Ana Ruiz');
+    $beto = centerPerson('Beto Gil', 'none');
+    $aspirant = TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Ciro Paz', 'job_title' => 'Diseñador'])->id]);
+    $anaPlace = Workplace::query()->where('teleworker_id', $ana->id)->firstOrFail();
+    $betoPlace = Workplace::query()->where('teleworker_id', $beto->id)->firstOrFail();
+    $person = fn (Teleworker $who, string $name, string $job, string $status, array $workplaces, ?string $marital, ?string $phone, ?string $address): array => [
+        'id' => $who->id,
+        'name' => $name,
+        'jobTitle' => $job,
+        'percentage' => 50,
+        'status' => $status,
+        'workplaces' => $workplaces,
+        'href' => route('tenant.telework.teleworkers.show', [$this->tenant, $who->id]),
+        'maritalStatus' => $marital,
+        'contactPhone' => $phone,
+        'homeAddress' => $address,
+    ];
+    $address = 'Calle Reforma 12, Centro, 76000 Querétaro, Querétaro';
+
+    $this->actingAs($this->owner)->get(centerUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('teleworkers', 2)
+        ->where('aspirants', 1)
+        ->where('people.data', [
+            $person($ana, 'Ana Ruiz', 'Analista', 'active', [['id' => $anaPlace->id, 'status' => 'valid', 'statusLabel' => 'Validado']], 'single', '4421234567', $address),
+            $person($beto, 'Beto Gil', 'Analista', 'active', [['id' => $betoPlace->id, 'status' => 'pending', 'statusLabel' => 'Pendiente de validar']], 'single', '4421234567', $address),
+            $person($aspirant, 'Ciro Paz', 'Diseñador', 'aspirant', [], null, null, null),
+        ]));
+});
+
+it('counts in the list two people, two aspirants and two lists to review in a center, and zero in another', function (): void {
+    foreach (['Ana Ruiz', 'Beto Gil'] as $name) {
+        ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => Workplace::query()->where('teleworker_id', centerPerson($name)->id)->firstOrFail()->id]);
+        TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id])->id]);
+    }
+
+    $this->actingAs($this->owner)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 6, 'applicable' => 16])
+        ->where('centers.data.1', ['id' => $this->other->id, 'name' => 'Planta Sur', 'activity' => $this->other->main_activity, 'teleworkers' => 0, 'aspirants' => 0, 'pendingReviews' => 0, 'done' => 0, 'applicable' => 10]));
+});
+
+it('does not look for whose lists wait for review when none does', function (): void {
+    centerPerson();
+    $this->actingAs($this->owner);
+    $this->expectsDatabaseQueryCount(QUERIES_INDEX_NOTHING_TO_REVIEW);
+
+    $this->get(route('tenant.telework.index', $this->tenant))->assertOk();
+});

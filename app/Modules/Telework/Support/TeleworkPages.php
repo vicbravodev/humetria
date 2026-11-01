@@ -52,7 +52,8 @@ final readonly class TeleworkPages
     public function index(int $userId): array
     {
         $page = $this->visible->page($userId, self::CENTERS_PER_PAGE);
-        $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, $page->items()));
+        // The items of a page are already a list.
+        $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, $page->items())); // @pest-mutate-ignore: UnwrapArrayValues
         // Everything about the centers of the page is read once for all of them: the page costs the same with two or twelve.
         $rows = $this->rows->forMany($ids);
         $people = $this->headcounts($ids);
@@ -62,8 +63,8 @@ final readonly class TeleworkPages
             'id' => $center->id,
             'name' => $center->name,
             'activity' => $center->mainActivity,
-            'teleworkers' => $people[$center->id]['active'] ?? 0,
-            'aspirants' => $people[$center->id]['aspirants'] ?? 0,
+            'teleworkers' => $people[$center->id]['active'],
+            'aspirants' => $people[$center->id]['aspirants'],
             'pendingReviews' => $pending[$center->id] ?? 0,
             ...$this->progress($rows[$center->id] ?? []),
         ])];
@@ -78,7 +79,7 @@ final readonly class TeleworkPages
         $member = $this->gate->isMember($userId, $center->id);
         $rows = $this->rows->for($center->id);
         $reach = ['manage' => $manage, 'member' => $member];
-        $people = $this->headcounts([$center->id])[$center->id] ?? ['active' => 0, 'aspirants' => 0];
+        $people = $this->headcounts([$center->id])[$center->id];
         $active = $people['active'];
 
         return [
@@ -159,20 +160,21 @@ final readonly class TeleworkPages
 
         $personOf = [];
 
-        foreach (Workplace::query()->whereIn('id', array_values($waiting->map(fn (ChecklistApplication $application): string => $application->workplace_id)->unique()->all()))->get(['id', 'teleworker_id']) as $workplace) {
+        // A whereIn ignores the keys of its values, and repeated values.
+        foreach (Workplace::query()->whereIn('id', array_values($waiting->map(fn (ChecklistApplication $application): string => $application->workplace_id)->unique()->all()))->get(['id', 'teleworker_id']) as $workplace) { // @pest-mutate-ignore: UnwrapArrayValues
             $personOf[$workplace->id] = $workplace->teleworker_id;
         }
 
         $centerOf = [];
 
-        foreach (Teleworker::query()->whereIn('id', array_values(array_unique($personOf)))->get(['id', 'work_center_id']) as $person) {
+        foreach (Teleworker::query()->whereIn('id', array_values(array_unique($personOf)))->get(['id', 'work_center_id']) as $person) { // @pest-mutate-ignore: UnwrapArrayValues,UnwrapArrayUnique
             $centerOf[$person->id] = $person->work_center_id;
         }
 
         $counts = [];
 
         foreach ($waiting as $application) {
-            $center = $centerOf[$personOf[$application->workplace_id] ?? ''] ?? null;
+            $center = $centerOf[$personOf[$application->workplace_id]] ?? null;
 
             if ($center !== null) {
                 $counts[$center] = ($counts[$center] ?? 0) + 1;
@@ -277,19 +279,21 @@ final readonly class TeleworkPages
     {
         $page = Teleworker::query()->where('work_center_id', $center->id)->whereIn('status', [TeleworkerStatus::Active, TeleworkerStatus::Aspirant])
             ->orderBy('status')->orderBy('created_at')->orderBy('id')->paginate(self::PEOPLE_PER_PAGE)->withQueryString();
-        $names = $this->roster->findMany(array_values(array_map(fn (Teleworker $person): string => $person->employee_id, $page->items())));
+        // The items of a page are already a list, and latestReviews only chunks its ids into a whereIn.
+        $names = $this->roster->findMany(array_values(array_map(fn (Teleworker $person): string => $person->employee_id, $page->items()))); // @pest-mutate-ignore: UnwrapArrayValues
         $places = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', array_map(fn (Teleworker $person): string => $person->id, $page->items()))->orderBy('created_at')->orderBy('id')->get(['id', 'teleworker_id']);
-        $reviews = $this->standing->latestReviews(array_values($places->map(fn (Workplace $place): string => $place->id)->all()));
+        $reviews = $this->standing->latestReviews(array_values($places->map(fn (Workplace $place): string => $place->id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
         $months = $this->settings->periodMonths();
         $states = $this->workCenters->states();
 
         return $page->through(function (Teleworker $person) use ($tenant, $manage, $names, $places, $reviews, $months, $states): array {
-            $entry = $names[$person->employee_id] ?? null;
+            // The foreign key guarantees the employee of every period.
+            $entry = $names[$person->employee_id];
 
             return [
                 'id' => $person->id,
-                'name' => $entry === null ? '' : $entry->name,
-                'jobTitle' => $entry === null ? '' : $entry->jobTitle,
+                'name' => $entry->name,
+                'jobTitle' => $entry->jobTitle,
                 'percentage' => $person->telework_percentage,
                 'status' => $person->status->value,
                 'workplaces' => array_values($places->where('teleworker_id', $person->id)->map(function (Workplace $place) use ($reviews, $months): array {
