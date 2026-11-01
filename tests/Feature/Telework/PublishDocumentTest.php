@@ -157,3 +157,11 @@ it('audits and logs the publication without file names', function (): void {
         && $context['work_center_count'] === 2
         && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), $documents[0]->path)))->once();
 });
+
+it('publishes once per center and keeps each covered item once, however often they come', function (): void {
+    $documents = publish(DocumentKind::Policy, [$this->north->id, $this->north->id], ['a', 'a', 'b']);
+
+    expect($documents)->toHaveCount(1)
+        ->and(TeleworkDocument::query()->sole()->covered_items)->toBe(['a', 'b'])
+        ->and($documents[0]->path)->toMatch('#^documents/'.$this->tenant->id.'/[0-9a-f-]{36}\.pdf$#');
+});

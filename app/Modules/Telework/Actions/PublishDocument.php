@@ -37,7 +37,8 @@ final readonly class PublishDocument
      */
     public function handle(DocumentKind $kind, string $storedPath, array $workCenterIds, array $coveredItems, int $userId): array
     {
-        $centers = array_values(array_unique($workCenterIds));
+        // sort() numbers the centers anew right below.
+        $centers = array_values(array_unique($workCenterIds)); // @pest-mutate-ignore: UnwrapArrayValues
         sort($centers);
         $items = array_values(array_unique($coveredItems));
         $this->check($kind, $centers, $items);
@@ -59,7 +60,8 @@ final readonly class PublishDocument
                         'tenant_id' => $tenantId,
                         'work_center_id' => $center,
                         'kind' => $kind,
-                        'version' => (is_numeric($latest) ? (int) $latest : 0) + 1,
+                        // max() gives a numeric string or an int, and + 1 makes an int of either: the cast only narrows the type.
+                        'version' => (is_numeric($latest) ? (int) $latest : 0) + 1, // @pest-mutate-ignore: RemoveIntegerCast
                         'path' => $path,
                         'covered_items' => $items,
                         'uploaded_by' => $userId,
@@ -103,7 +105,8 @@ final readonly class PublishDocument
     {
         $contents = file_get_contents($file);
 
-        if ($contents === false) {
+        // Laravel turns the warning of a failed read into an ErrorException first: the check only narrows the type.
+        if ($contents === false) { // @pest-mutate-ignore: FalseToTrue
             throw new RuntimeException('The uploaded document could not be read.');
         }
 
