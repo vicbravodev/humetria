@@ -8,7 +8,8 @@ import type { GroupChoice } from '@/lib/telework/checklist';
 import type { ChecklistQuestion } from '@/types';
 
 /**
- * The checklist's groups, each one open or closed: as `groupIsOpen` says, or as the editor chose one group at a time. A group the Comisión changes after it was closed opens again, so the change is seen.
+ * The checklist's groups, each one open or closed: as `groupIsOpen` says, or as the editor chose, one at a time or all
+ * at once. A group the Comisión changes after it was closed opens again, so the change is seen.
  */
 export function useChecklistGroups(questions: ChecklistQuestion[]) {
     const [choices, setChoices] = useState<Record<string, GroupChoice>>({});
@@ -30,5 +31,14 @@ export function useChecklistGroups(questions: ChecklistQuestion[]) {
                 ...current,
                 [key]: { open, changed },
             })),
+        chooseAll: (open: boolean) =>
+            setChoices(
+                Object.fromEntries(
+                    groups.map((group) => [
+                        group.key,
+                        { open, changed: group.changed },
+                    ]),
+                ),
+            ),
     };
 }

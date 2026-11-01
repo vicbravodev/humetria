@@ -3,6 +3,7 @@ import NewQuestionForm from '@/components/telework/new-question-form';
 import QuestionEditor from '@/components/telework/question-editor';
 import QuestionGroup from '@/components/telework/question-group';
 import QuestionRow from '@/components/telework/question-row';
+import GroupsToggle from '@/components/telework/groups-toggle';
 import { useChecklistGroups } from '@/hooks/use-checklist-groups';
 import { sectionTitle } from '@/lib/telework/checklist';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
@@ -29,10 +30,11 @@ export default function ChecklistSections({
         question.requirement === null
             ? undefined
             : labels.get(question.requirement);
-    const { groups, choose } = useChecklistGroups(questions);
+    const { groups, choose, chooseAll } = useChecklistGroups(questions);
 
     return (
         <div className="flex flex-col gap-8">
+            <GroupsToggle onToggle={chooseAll} />
             {[1, 2].map((section) => (
                 <section
                     key={section}

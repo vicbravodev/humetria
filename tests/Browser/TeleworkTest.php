@@ -192,6 +192,20 @@ it('adds a question to a closed group and opens that group to show it', function
         ->assertNoJavaScriptErrors();
 });
 
+it('opens and closes every group at once, to read the whole list before publishing', function (): void {
+    [$url, $center] = checklistCenter();
+
+    visit("{$url}/telework/centers/{$center->id}/checklist")
+        ->assertMissing('[aria-label="Editar S2-01"]')
+        ->press('Abrir todo')
+        ->assertPresent('[aria-label="Editar S2-01"]')
+        ->assertPresent('[aria-label="Editar S1-13"]')
+        ->press('Cerrar todo')
+        ->assertMissing('[aria-label="Editar S1-01"]')
+        ->assertMissing('[aria-label="Editar S2-01"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('tells a stale editor that the version was published meanwhile', function (): void {
     [$url, $center] = checklistCenter();
     $page = visit("{$url}/telework/centers/{$center->id}/checklist")->assertSee('Versión 1 · borrador');
