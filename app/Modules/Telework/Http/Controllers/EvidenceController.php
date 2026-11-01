@@ -26,7 +26,8 @@ final class EvidenceController extends Controller
         $found = Str::isUuid($workplace) ? Workplace::query()->find($workplace) : null;
         abort_if($found === null, 404);
         $user = $request->user();
-        abort_if($user === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore
         $this->access->member($user->id, $this->access->workCenterOf($found));
 
         $evidence->handle($found, $request->kind(), $request->note(), $user->id);

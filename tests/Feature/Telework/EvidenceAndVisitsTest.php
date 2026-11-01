@@ -529,3 +529,15 @@ it('keeps the signed paper under the company and the workplace, logs it with ids
     Log::shouldHaveReceived('info')->with('telework.visit_document_attached', ['visit_authorization_id' => $authorization->id, 'workplace_id' => $this->workplace->id])->once();
     expect(evidenceRefused(fn () => resolve(AttachVisitDocument::class)->handle($authorization, $file())))->toBe(['document' => 'Esta autorización ya tiene su documento.']);
 });
+
+it('confirms an evidence request in a toast, and keeps it to the assigned Comisión of a workplace that exists', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
+    $form = ['kind' => 'photos', 'note' => 'Una foto de la silla.'];
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Committee))->post(evidenceUrl(), $form)->assertNotFound();
+    $this->actingAs($this->cora)->post(route('tenant.telework.evidence.store', [$this->tenant, (string) Illuminate\Support\Str::uuid()]), $form)->assertNotFound();
+    expect(EvidenceRequest::query()->count())->toBe(0);
+
+    $this->actingAs($this->cora)->post(evidenceUrl(), $form)
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Solicitud registrada.']]);
+});
