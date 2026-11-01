@@ -26,12 +26,14 @@ final class RosterController extends Controller
     public function join(JoinRosterRequest $request, mixed $tenant, string $teleworker, JoinRoster $join): RedirectResponse
     {
         $period = $this->teleworker($teleworker);
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
 
         $join->handle($period, new RosterData(
             $request->maritalStatus(),
             $request->string('activities')->toString(),
-            $this->roster->find($period->employee_id)?->jobTitle,
+            // The foreign key guarantees the employee of every period: the ?-> only narrows the type.
+            $this->roster->find($period->employee_id)?->jobTitle, // @pest-mutate-ignore: RemoveNullSafeOperator
             $request->string('contact_phone')->toString(),
             $request->home(),
             $request->string('no_equipment_reason')->toString(),
@@ -44,7 +46,8 @@ final class RosterController extends Controller
     public function end(EndTeleworkRequest $request, mixed $tenant, string $teleworker, EndTelework $end): RedirectResponse
     {
         $period = $this->teleworker($teleworker);
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
 
         $end->handle($period, $request->reason(), $request->endedAt(), $request->note(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Teletrabajo terminado. Queda en el historial.']);

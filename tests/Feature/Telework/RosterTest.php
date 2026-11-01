@@ -513,3 +513,11 @@ it('asks the person who joins the roster for the risk information in force of th
     expect($request->document_id)->toBe($document->id)->and($request->employee_id)->toBe($this->employee->id);
     Queue::assertPushed(SendPortalReminder::class, fn ($job): bool => $job->employeeId === $this->employee->id);
 });
+
+it('confirms joining and ending in a toast', function (): void {
+    rosterReview();
+
+    $this->post(joinUrl(), rosterForm())->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Persona en el padrón de teletrabajo.']]);
+    $this->post(endUrl(), ['reason' => 'other', 'ended_on' => '2026-03-01'])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Teletrabajo terminado. Queda en el historial.']]);
+});
