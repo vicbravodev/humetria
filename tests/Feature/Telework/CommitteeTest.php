@@ -167,7 +167,7 @@ it('stores the act PDF on the private disk', function (): void {
     workIn($this->tenant);
     $path = SafetyCommittee::query()->sole()->act_path;
 
-    expect($path)->toBeString()->and($path)->toStartWith("committees/{$this->tenant->id}/{$this->center->id}/")->and($path)->toEndWith('.pdf');
+    expect($path)->toMatch("#^committees/{$this->tenant->id}/{$this->center->id}/act-[0-9a-f-]{36}\\.pdf$#");
     Storage::disk('local')->assertExists((string) $path);
 });
 
@@ -508,4 +508,13 @@ it('closes the Comisión page and its act to a role without view-telework', func
 
     $this->actingAs($this->cora)->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))->assertForbidden();
     $this->actingAs($this->cora)->get(route('tenant.telework.committee.act', [$this->tenant, $this->center->id]))->assertForbidden();
+});
+
+it('dates every question of the first draft when the committee is registered', function (): void {
+    $this->travelTo('2026-09-20 12:00:00');
+
+    registerCommittee()->assertSessionHasNoErrors();
+
+    workIn($this->tenant);
+    expect(ChecklistQuestion::query()->get()->every(fn (ChecklistQuestion $question): bool => $question->created_at?->equalTo(now()) === true && $question->updated_at?->equalTo(now()) === true))->toBeTrue();
 });

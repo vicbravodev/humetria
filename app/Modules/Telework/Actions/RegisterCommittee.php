@@ -61,8 +61,9 @@ final readonly class RegisterCommittee
 
                 $this->seedDraft($tenantId, $workCenterId);
 
-                // Last, so a failure above leaves no file behind.
-                if ($actFile !== null && $path !== null) {
+                // Last, so a failure above leaves no file behind. $path is set exactly when there is a file: the second check
+                // only narrows the type.
+                if ($actFile !== null && $path !== null) { // @pest-mutate-ignore: BooleanAndToBooleanOr
                     $this->store($actFile, $path);
                 }
 
@@ -86,11 +87,13 @@ final readonly class RegisterCommittee
     {
         $stream = fopen($file, 'rb');
 
-        if ($stream === false || ! Storage::disk(config()->string('filesystems.telework_files'))->put($path, $stream)) {
+        // Laravel turns the warning of a failed fopen() into an ErrorException first; PHP closes the stream at the end of the
+        // request even without fclose().
+        if ($stream === false || ! Storage::disk(config()->string('filesystems.telework_files'))->put($path, $stream)) { // @pest-mutate-ignore: FalseToTrue
             throw new RuntimeException('The committee act could not be stored.');
         }
 
-        fclose($stream);
+        fclose($stream); // @pest-mutate-ignore: RemoveFunctionCall
     }
 
     /** Draft version 1: the base questions in order; the DOF ones keep their origin, Humetría's are marked as such. */
@@ -107,7 +110,8 @@ final readonly class RegisterCommittee
 
         foreach ($this->base->items() as $index => $item) {
             $rows[] = [
-                'id' => (string) Str::uuid(),
+                // The query builder turns the uuid into its string itself: the cast only narrows the type.
+                'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
                 'tenant_id' => $tenantId,
                 'checklist_id' => $checklist->id,
                 'section' => $item->section,
