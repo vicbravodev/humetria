@@ -89,8 +89,13 @@ it('is a 404 for an application that is not the person\'s, not found, retired or
 
 it('tells a bad link apart from nothing: the unavailable page, like the portal', function (): void {
     $this->get(route('portal.checklist.show', ['nope', $this->application->id]))
-        ->assertInertia(fn (Assert $page) => $page->component('telework/portal-checklist')->where('unavailable', true)->where('questions', []));
+        ->assertInertia(fn (Assert $page) => $page->component('telework/portal-checklist')->where('unavailable', true)->where('questions', [])
+            ->where('token', null)->where('company', null)->where('application', null)->where('instructions', '')->where('notice', '')->where('consent', null));
     $this->post(route('portal.checklist.store', ['nope', $this->application->id]), form())->assertNotFound();
+});
+
+it('sends the token of the link that opened the list', function (): void {
+    $this->get($this->url)->assertInertia(fn (Assert $page) => $page->where('token', $this->token));
 });
 
 it('sends a sent list back to the portal', function (): void {
