@@ -129,6 +129,7 @@ final readonly class SubmitChecklist
         foreach ($photos as $key => $paths) {
             foreach ($paths as $path) {
                 $rows[] = [
+                    // The query builder turns the uuid into its string itself: the cast only narrows the type.
                     'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
                     'tenant_id' => $application->tenant_id,
                     'application_id' => $application->id,

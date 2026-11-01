@@ -73,11 +73,9 @@ final class NoticeController extends Controller
         $workplaces = Workplace::query()->whereIn('id', array_values(array_filter(array_map(fn (WorkerNotice $notice): ?string => $notice->new_workplace_id, $page->items()))))->get()->keyBy('id'); // @pest-mutate-ignore: UnwrapArrayValues,UnwrapArrayFilter
         $zone = config()->string('app.display_timezone');
         $canLaunch = Gate::allows('manage-campaigns');
-        // Once per request: RH reviews everywhere, the Comisión only in the centers it sits on (already read as the limit).
-        $manages = Gate::allows('manage-telework');
 
         return Inertia::render('telework/notices', [
-            'notices' => $page->through(function (WorkerNotice $notice) use ($teleworkers, $people, $workplaces, $centers, $zone, $canLaunch, $manages, $limit): array {
+            'notices' => $page->through(function (WorkerNotice $notice) use ($teleworkers, $people, $workplaces, $centers, $zone, $canLaunch): array {
                 // The foreign keys guarantee the period of every notice and the employee of every period.
                 $teleworker = $teleworkers->get($notice->teleworker_id) ?? throw new LogicException("Notice [{$notice->id}] has no period.");
                 $person = $people[$teleworker->employee_id];
@@ -100,8 +98,8 @@ final class NoticeController extends Controller
                     'submittedOn' => $notice->submitted_at->setTimezone($zone)->toDateString(),
                     'reviewedOn' => $notice->reviewed_at?->setTimezone($zone)->toDateString(),
                     'reviewNote' => $notice->review_note,
-                    // The Comisión sees only the notices of its centers, so for it the in_array() always holds.
-                    'canReview' => $manages || ($limit !== null && in_array($centerId, $limit, true)), // @pest-mutate-ignore: BooleanAndToBooleanOr
+                    // The list is already limited to the centers the user reviews (RH everywhere, the Comisión where it sits): always true.
+                    'canReview' => true,
                     // The Guía I is launched from the NOM-035 area: only who may open campaigns gets the way in.
                     'trauma' => $canLaunch && $notice->traumatic_event ? ['workCenter' => $centerId, 'employee' => $teleworker->employee_id] : null,
                 ];
@@ -113,6 +111,7 @@ final class NoticeController extends Controller
     public function review(NoticeReviewRequest $request, mixed $tenant, string $notice, ReviewNotice $review): RedirectResponse
     {
         $user = $request->user();
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
         abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $review->handle($this->access->reviewable($user->id, $notice), $request->string('note')->toString(), $user->id);
