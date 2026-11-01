@@ -44,7 +44,8 @@ final class CompanyMembers implements Members
     {
         $roles = $this->roles->inCompany($this->tenant());
 
-        return array_values(User::query()
+        // A fresh get() is already a list.
+        return array_values(User::query() // @pest-mutate-ignore: UnwrapArrayValues
             ->whereIn('id', array_keys($roles))
             ->orderBy('name')
             ->orderBy('id')

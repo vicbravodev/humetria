@@ -28,7 +28,8 @@ final class CompanyRoster implements Roster
 
     public function activeIdsIn(string $workCenterId): array
     {
-        return array_values(Employee::query()->where('work_center_id', $workCenterId)->whereNull('deactivated_at')->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all());
+        // A fresh get() is already a list.
+        return array_values(Employee::query()->where('work_center_id', $workCenterId)->whereNull('deactivated_at')->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all()); // @pest-mutate-ignore: UnwrapArrayValues
     }
 
     public function activeIdsInMany(array $workCenterIds): array

@@ -173,3 +173,10 @@ it('leaves to the Humetría questions what C-08 says the Apéndice does not ask'
     'section I' => [1, [Requirement::Connectivity, Requirement::WorkSurface, Requirement::ErgonomicAids, Requirement::FamilyViolenceChannel, Requirement::Breaks, Requirement::Disconnection]],
     'section II' => [2, [Requirement::Connectivity, Requirement::FamilyViolenceChannel, Requirement::Disconnection]],
 ]);
+
+it('puts each Humetría question in the section its code names', function (): void {
+    $added = array_values(array_filter(checklist(), fn (ChecklistItem $i): bool => ! $i->fromDof));
+
+    expect(array_map(fn (ChecklistItem $i): string => "{$i->code}:{$i->section}", $added))
+        ->toBe(array_map(fn (ChecklistItem $i): string => $i->code.':'.substr($i->code, 1, 1), $added));
+});

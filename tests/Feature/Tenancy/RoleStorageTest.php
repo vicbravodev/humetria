@@ -116,3 +116,15 @@ it('rejects an unknown role in an invitation', function (): void {
         'id' => fake()->uuid(),
     ]))->toThrow(QueryException::class, 'tenant_invitations_role_known');
 });
+
+it('forgets who can review as soon as someone loses their role', function (): void {
+    $tenant = Tenant::factory()->create();
+    $cora = memberOf($tenant, TenantRole::Committee);
+    workIn($tenant);
+    $members = resolve(App\Modules\Tenancy\Contracts\Members::class);
+    expect(array_map(fn ($member): int => $member->userId, $members->reviewers()))->toBe([$cora->id]);
+
+    resolve(CompanyRoles::class)->remove($cora, $tenant);
+
+    expect($members->reviewers())->toBe([]);
+});

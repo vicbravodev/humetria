@@ -122,3 +122,16 @@ it('lists as reviewers the members whose role can review workplaces, by name', f
     expect(array_map(fn (MemberSummary $member): int => $member->userId, resolve(Members::class)->reviewers()))
         ->toBe([$hr->id, $committee->id, $owner->id]);
 });
+
+it('reads the people of the company once while it serves them', function (): void {
+    $tenant = Tenant::factory()->create();
+    memberOf($tenant, TenantRole::Committee);
+    workIn($tenant);
+    $members = resolve(Members::class);
+    Illuminate\Support\Facades\DB::enableQueryLog();
+
+    $members->all();
+    $members->all();
+
+    expect(collect(Illuminate\Support\Facades\DB::getQueryLog())->filter(fn (array $log): bool => str_contains((string) $log['query'], 'from "users"')))->toHaveCount(1);
+});
