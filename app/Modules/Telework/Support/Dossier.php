@@ -26,6 +26,7 @@ use App\Modules\Tenancy\Data\WorkCenterProfile;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Closure;
+use LogicException;
 
 /**
  * What the printable dossier («expediente») of a work center sends to the browser (criterio C-30): one block of evidence
@@ -62,8 +63,11 @@ final readonly class Dossier
     {
         $now = CarbonImmutable::now();
         $people = Teleworker::query()->where('work_center_id', $profile->id)->where('status', TeleworkerStatus::Active)->orderBy('created_at')->orderBy('id')->get();
-        $names = $this->roster->findMany(array_values($people->map(fn (Teleworker $person): string => $person->employee_id)->all()));
-        $nameOf = fn (Teleworker $person): string => isset($names[$person->employee_id]) ? $names[$person->employee_id]->name : '';
+        // Every array_values() of this class with an ignore re-lists what a fresh get() already gives as a list, or feeds a
+        // whereIn or a lookup keyed by id: the keys are never read.
+        $names = $this->roster->findMany(array_values($people->map(fn (Teleworker $person): string => $person->employee_id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
+        // The foreign key guarantees the employee of every period.
+        $nameOf = fn (Teleworker $person): string => $names[$person->employee_id]->name;
         $evidence = $this->evidence($tenant, $profile->id);
 
         return [
@@ -105,16 +109,17 @@ final readonly class Dossier
     {
         $states = $this->workCenters->states();
 
-        return array_values($people->map(function (Teleworker $person) use ($names, $personal, $states): array {
-            $entry = $names[$person->employee_id] ?? null;
+        return array_values($people->map(function (Teleworker $person) use ($names, $personal, $states): array { // @pest-mutate-ignore: UnwrapArrayValues
+            $entry = $names[$person->employee_id];
 
             return [
-                'name' => $entry === null ? '' : $entry->name,
-                'jobTitle' => $entry === null ? '' : $entry->jobTitle,
+                'name' => $entry->name,
+                'jobTitle' => $entry->jobTitle,
                 'percentage' => $person->telework_percentage,
                 'startedOn' => $person->started_at === null ? null : $this->day($person->started_at),
                 ...($personal ? [
-                    'maritalStatus' => $person->marital_status?->value,
+                    // The database requires the estado civil of an active person: the ?-> only narrows the type.
+                    'maritalStatus' => $person->marital_status?->value, // @pest-mutate-ignore: RemoveNullSafeOperator
                     'contactPhone' => $person->contact_phone,
                     'homeAddress' => $person->homeAddress($states),
                 ] : []),
@@ -133,18 +138,18 @@ final readonly class Dossier
     private function workplaces($people, Closure $nameOf): array
     {
         $byId = $people->keyBy('id');
-        $places = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', array_values($byId->keys()->all()))->orderBy('created_at')->orderBy('id')->get();
-        $reviews = $this->standing->latestReviews(array_values($places->map(fn (Workplace $place): string => $place->id)->all()));
+        $places = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', array_values($byId->keys()->all()))->orderBy('created_at')->orderBy('id')->get(); // @pest-mutate-ignore: UnwrapArrayValues
+        $reviews = $this->standing->latestReviews(array_values($places->map(fn (Workplace $place): string => $place->id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
         $months = $this->settings->periodMonths();
         $states = $this->workCenters->states();
 
-        return array_values($places->map(function (Workplace $place) use ($byId, $nameOf, $reviews, $months): array {
+        return array_values($places->map(function (Workplace $place) use ($byId, $nameOf, $reviews, $months): array { // @pest-mutate-ignore: UnwrapArrayValues
             $review = $reviews[$place->id] ?? null;
             $status = $this->standing->statusOf($review, fn (): int => $months);
-            $person = $byId->get($place->teleworker_id);
+            $person = $byId->get($place->teleworker_id) ?? throw new LogicException("Workplace [{$place->id}] has no active person.");
 
             return [
-                'person' => $person === null ? '' : $nameOf($person),
+                'person' => $nameOf($person),
                 'status' => $status->value,
                 'statusLabel' => $status->label(),
                 'review' => $review === null ? null : [
@@ -193,9 +198,9 @@ final readonly class Dossier
     private function documents(mixed $tenant, string $workCenterId): array
     {
         $documents = TeleworkDocument::query()->inForce()->where('work_center_id', $workCenterId)->orderBy('kind')->get();
-        $progress = $this->acknowledgements->forDocuments(array_values($documents->filter(fn (TeleworkDocument $document): bool => $document->kind->needsAcknowledgement())->all()));
+        $progress = $this->acknowledgements->forDocuments(array_values($documents->filter(fn (TeleworkDocument $document): bool => $document->kind->needsAcknowledgement())->all())); // @pest-mutate-ignore: UnwrapArrayValues
 
-        return array_values($documents->map(fn (TeleworkDocument $document): array => [
+        return array_values($documents->map(fn (TeleworkDocument $document): array => [ // @pest-mutate-ignore: UnwrapArrayValues
             'numeral' => $document->kind->numeral(),
             'kind' => $document->kind->label(),
             'version' => $document->version,
@@ -218,18 +223,20 @@ final readonly class Dossier
     {
         $tally = [];
 
-        $rows = EquipmentItem::query()->toBase()->whereIn('teleworker_id', array_values($people->map(fn (Teleworker $person): string => $person->id)->all()))
+        $rows = EquipmentItem::query()->toBase()->whereIn('teleworker_id', array_values($people->map(fn (Teleworker $person): string => $person->id)->all())) // @pest-mutate-ignore: UnwrapArrayValues
             ->groupBy('teleworker_id', 'status')->selectRaw('teleworker_id, status, count(*) as total, max(delivered_on) as last')->get();
 
         foreach ($rows as $row) {
-            if (is_string($row->teleworker_id) && is_string($row->status) && is_int($row->total)) {
+            // The checks only narrow the types of a raw row: the database always gives strings and an integer.
+            if (is_string($row->teleworker_id) && is_string($row->status) && is_int($row->total)) { // @pest-mutate-ignore: BooleanAndToBooleanOr
                 $tally[$row->teleworker_id][$row->status] = $row->total;
                 $last = $tally[$row->teleworker_id]['last'] ?? null;
-                $tally[$row->teleworker_id]['last'] = is_string($row->last) && ($last === null || $row->last > $last) ? $row->last : $last;
+                // On a tie both dates are the same.
+                $tally[$row->teleworker_id]['last'] = is_string($row->last) && ($last === null || $row->last > $last) ? $row->last : $last; // @pest-mutate-ignore: GreaterToGreaterOrEqual
             }
         }
 
-        return array_values($people->map(fn (Teleworker $person): array => [
+        return array_values($people->map(fn (Teleworker $person): array => [ // @pest-mutate-ignore: UnwrapArrayValues
             'person' => $nameOf($person),
             'received' => $tally[$person->id]['received'] ?? 0,
             'refused' => $tally[$person->id]['refused'] ?? 0,
@@ -248,7 +255,7 @@ final readonly class Dossier
     {
         $since = $now->setTimezone(config()->string('app.display_timezone'))->subMonthsNoOverflow(self::TRAINING_MONTHS)->toDateString();
 
-        return array_values(Training::query()->where('work_center_id', $workCenterId)->where('held_on', '>=', $since)->withCount('attendees')
+        return array_values(Training::query()->where('work_center_id', $workCenterId)->where('held_on', '>=', $since)->withCount('attendees') // @pest-mutate-ignore: UnwrapArrayValues
             ->orderByDesc('held_on')->orderBy('id')->get()
             ->map(fn (Training $training): array => [
                 'heldOn' => $training->held_on->toDateString(),
@@ -267,7 +274,7 @@ final readonly class Dossier
      */
     private function overdue($people, Closure $nameOf, CarbonImmutable $now): array
     {
-        $schedule = $this->training->schedule(array_values($people->all()));
+        $schedule = $this->training->schedule(array_values($people->all())); // @pest-mutate-ignore: UnwrapArrayValues
         $today = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay();
         $late = [];
 
@@ -297,7 +304,7 @@ final readonly class Dossier
             ->groupBy('kind')->groupByRaw('reviewed_at is not null')->selectRaw('kind, (reviewed_at is not null) as done, count(*) as total')->get();
 
         foreach ($rows as $row) {
-            if (is_string($row->kind) && is_int($row->total)) {
+            if (is_string($row->kind) && is_int($row->total)) { // @pest-mutate-ignore: BooleanAndToBooleanOr
                 $kinds[$row->kind] = ($kinds[$row->kind] ?? 0) + $row->total;
                 $row->done ? $reviewed += $row->total : $pending += $row->total;
             }

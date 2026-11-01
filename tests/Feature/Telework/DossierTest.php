@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Instruments\Data\Requirement;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\EquipmentStatus;
 use App\Modules\Telework\Enums\NoticeKind;
@@ -260,4 +261,74 @@ it('marks a person without equipment who justified it', function (): void {
 
     $this->actingAs($this->hr)->get(dossierUrl())->assertInertia(fn (Assert $page) => $page
         ->where('equipment.0', fn ($item) => $item['justified'] === true && $item['lastDeliveredOn'] === null && $item['received'] === 0));
+});
+
+it('sends the evidence of each row in full', function (): void {
+    // Owner and hr can review too, and come first by name: the members list must still be a list.
+    $this->hr->update(['name' => 'Alma Recursos']);
+    $this->cora->update(['name' => 'Zoe Comisión']);
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'version' => 2]);
+    $position = 0;
+    foreach ([1 => [Requirement::Lighting], 2 => [Requirement::Chair, Requirement::Noise]] as $section => $lacking) {
+        foreach (Requirement::cases() as $requirement) {
+            if (! in_array($requirement, $lacking, true)) {
+                addQuestion($checklist, ++$position, 'yes', section: $section)->update(['requirement' => $requirement]);
+            }
+        }
+    }
+    SafetyCommittee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'constituted_on' => '2026-01-10']);
+    $ana = dossierPerson();
+    $beto = dossierPerson('Beto Soto');
+    $beto->update(['started_at' => '2025-01-10 12:00:00']);
+    App\Modules\Telework\Models\WorkplaceReview::query()->where('workplace_id', Workplace::query()->where('teleworker_id', $beto->id)->firstOrFail()->id)->update(['decision' => 'not_valid', 'notes' => 'No es seguro.']);
+    $policy = TeleworkDocumentFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'kind' => DocumentKind::Policy, 'covered_items' => ['a', 'b']]);
+    $reversibility = TeleworkDocumentFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'kind' => DocumentKind::Reversibility]);
+    AcknowledgementFactory::new()->acknowledged()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'employee_id' => $ana->employee_id]);
+    EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ana->id, 'status' => EquipmentStatus::Pending, 'delivered_on' => '2026-02-01']);
+    EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ana->id, 'status' => EquipmentStatus::Received, 'responded_at' => now(), 'delivered_on' => '2026-02-20']);
+    $recent = TrainingFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'held_on' => '2026-02-20', 'topics' => ['hazards', 'ict']]);
+    TrainingAttendee::query()->create(['tenant_id' => $this->tenant->id, 'training_id' => $recent->id, 'employee_id' => $ana->employee_id]);
+    // Two work risks pending and one reviewed: the kind adds both groups, and reviewed and pending do not swap.
+    WorkerNoticeFactory::new()->count(2)->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ana->id, 'kind' => NoticeKind::WorkRisk]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $beto->id, 'kind' => NoticeKind::WorkRisk, 'reviewed_by' => $this->hr->id, 'reviewed_at' => now(), 'review_note' => 'Revisado.']);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $beto->id, 'kind' => NoticeKind::ConditionChange]);
+    $labels = fn (array $requirements): array => array_values(array_map(fn (Requirement $requirement): string => $requirement->label(), array_filter(Requirement::cases(), fn (Requirement $requirement): bool => in_array($requirement, $requirements, true))));
+    $items = fn (array $letters): array => array_map(fn (string $letter): string => "{$letter}) ".DocumentKind::Policy->items()[$letter], $letters);
+    $address = 'Calle Reforma 12, Centro, 76000 Querétaro, Querétaro';
+    $review = ['decidedOn' => '2026-03-01', 'method' => App\Modules\Telework\Enums\ReviewMethod::RemoteCheck->label()];
+
+    $this->actingAs($this->hr)->get(dossierUrl())->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('workCenterId', $this->center->id)
+        ->where('header', fn ($header): bool => array_keys($header->all()) === ['legalName', 'rfc', 'workCenter', 'address', 'generatedOn', 'generatedBy']
+            && $header['legalName'] === 'Acme Manufactura SA de CV' && $header['rfc'] === $this->tenant->rfc && $header['workCenter'] === 'Planta Norte'
+            && str_contains($header['address'], $this->center->street) && $header['generatedOn'] === '2026-03-01' && $header['generatedBy'] === 'Alma Recursos')
+        ->where('rows.0', ['numeral' => '5.1', 'label' => 'Listado de personas teletrabajadoras', 'state' => 'done', 'stateLabel' => 'Cumple', 'detail' => '2 personas en el padrón.'])
+        ->where('roster', [
+            ['name' => 'Ana Ruiz', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2026-03-01', 'maritalStatus' => 'single', 'contactPhone' => '4421234567', 'homeAddress' => $address],
+            ['name' => 'Beto Soto', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2025-01-10', 'maritalStatus' => 'single', 'contactPhone' => '4421234567', 'homeAddress' => $address],
+        ])
+        ->where('workplaces', [
+            ['person' => 'Ana Ruiz', 'status' => 'valid', 'statusLabel' => 'Validado', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'Validado', 'method' => $review['method'], 'validUntil' => '2027-02-28']],
+            ['person' => 'Beto Soto', 'status' => 'not_valid', 'statusLabel' => 'No apto', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'No validado', 'method' => $review['method'], 'validUntil' => null]],
+        ])
+        ->where('checklist', ['version' => 2, 'publishedOn' => '2026-03-01', 'gaps' => [
+            ['section' => 1, 'requirements' => $labels([Requirement::Lighting])],
+            ['section' => 2, 'requirements' => $labels([Requirement::Chair, Requirement::Noise])],
+        ]])
+        ->where('documents', [
+            ['numeral' => '5.2', 'kind' => 'Política de Teletrabajo', 'version' => 1, 'publishedOn' => '2026-03-01', 'coveredItems' => $items(['a', 'b']), 'missingItems' => $items(['c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']), 'acknowledgements' => ['acknowledged' => 1, 'expected' => 2], 'href' => route('tenant.telework.documents.file', [$this->tenant, $policy->id])],
+            ['numeral' => '5.10', 'kind' => 'Mecanismo de reversibilidad', 'version' => 1, 'publishedOn' => '2026-03-01', 'coveredItems' => [], 'missingItems' => [], 'acknowledgements' => null, 'href' => route('tenant.telework.documents.file', [$this->tenant, $reversibility->id])],
+        ])
+        ->where('equipment', [
+            ['person' => 'Ana Ruiz', 'received' => 1, 'refused' => 0, 'pending' => 1, 'lastDeliveredOn' => '2026-02-20', 'justified' => true],
+            ['person' => 'Beto Soto', 'received' => 0, 'refused' => 0, 'pending' => 0, 'lastDeliveredOn' => null, 'justified' => true],
+        ])
+        ->where('trainings', [['heldOn' => '2026-02-20', 'modality' => $recent->modality->label(), 'topics' => [App\Modules\Telework\Enums\TrainingTopic::Hazards->label(), App\Modules\Telework\Enums\TrainingTopic::Ict->label()], 'attendees' => 1]])
+        ->where('overdue', [['person' => 'Beto Soto', 'dueOn' => '2026-01-10']])
+        ->where('notices', ['byKind' => [
+            ['label' => NoticeKind::ConditionChange->label(), 'count' => 1],
+            ['label' => NoticeKind::WorkRisk->label(), 'count' => 3],
+        ], 'reviewed' => 1, 'pending' => 3])
+        ->where('committee', ['constitutedOn' => '2026-01-10', 'members' => ['Zoe Comisión'], 'actHref' => null])
+        ->where('evidence', ['checklists' => 0, 'photos' => 0, 'href' => route('tenant.telework.reviews.index', [$this->tenant, $this->center->id])]));
 });
