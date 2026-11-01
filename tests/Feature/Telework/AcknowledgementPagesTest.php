@@ -520,3 +520,7 @@ it('confirms in a toast what was recorded', function (): void {
     $this->actingAs($cora)->post(route('tenant.telework.documents.acknowledge', [$this->tenant, $risk->id]))
         ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Listo, quedó tu confirmación.']]);
 });
+
+it('answers 404 for paper acknowledgements of every pending person of a document that does not exist', function (): void {
+    $this->actingAs($this->hr)->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, (string) Illuminate\Support\Str::uuid()]), ['all_matching' => '1', 'date' => '2026-05-10', 'note' => 'Hoja'])->assertNotFound();
+});

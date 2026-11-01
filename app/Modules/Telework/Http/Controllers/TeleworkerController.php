@@ -71,9 +71,10 @@ final class TeleworkerController extends Controller
 
     public function store(RegisterAspirantRequest $request, mixed $tenant, string $workCenter, RegisterAspirant $register): RedirectResponse
     {
-        $this->center($workCenter);
+        // RegisterAspirantRequest::authorize() already answered 404 for a center outside the company, archived or unknown.
+        $this->center($workCenter); // @pest-mutate-ignore: RemoveMethodCall
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $teleworker = $register->handle($request->employeeId(), $request->percentage(), $request->addresses(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Persona registrada. Su lista de verificación ya está pedida.']);
@@ -85,9 +86,9 @@ final class TeleworkerController extends Controller
     {
         Gate::authorize('manage-telework');
         $period = $this->teleworker($teleworker);
-        // The period keeps its center even if it was archived since.
+        // The period keeps its center even if it was archived since: profile() finds it, so the check only narrows the type.
         $center = $this->workCenters->profile($period->work_center_id);
-        abort_if($center === null, 404);
+        abort_if($center === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         return $this->page($center->id, $center->name, $period);
     }

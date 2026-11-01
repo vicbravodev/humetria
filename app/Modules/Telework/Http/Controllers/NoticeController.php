@@ -44,7 +44,7 @@ final class NoticeController extends Controller
         Gate::authorize('review-workplaces');
         $user = $request->user();
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($user === null, 403); // @pest-mutate-ignore
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $centers = [];
 
@@ -113,7 +113,7 @@ final class NoticeController extends Controller
     public function review(NoticeReviewRequest $request, mixed $tenant, string $notice, ReviewNotice $review): RedirectResponse
     {
         $user = $request->user();
-        abort_if($user === null, 403); // @pest-mutate-ignore
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $review->handle($this->access->reviewable($user->id, $notice), $request->string('note')->toString(), $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Revisión registrada.']);

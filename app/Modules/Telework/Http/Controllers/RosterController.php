@@ -27,7 +27,7 @@ final class RosterController extends Controller
     {
         $period = $this->teleworker($teleworker);
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $join->handle($period, new RosterData(
             $request->maritalStatus(),
@@ -47,7 +47,7 @@ final class RosterController extends Controller
     {
         $period = $this->teleworker($teleworker);
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $end->handle($period, $request->reason(), $request->endedAt(), $request->note(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Teletrabajo terminado. Queda en el historial.']);

@@ -82,7 +82,7 @@ final class TrainingController extends Controller
     public function store(TrainingRequest $request, mixed $tenant, RegisterTraining $register): RedirectResponse
     {
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $register->handle($request->string('work_center_id')->toString(), $request->heldOn(), $request->modality(), $request->topics(), $request->employeeIds(), $request->evidenceFile(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Capacitación registrada.']);

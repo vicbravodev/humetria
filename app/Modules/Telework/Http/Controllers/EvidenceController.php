@@ -27,7 +27,7 @@ final class EvidenceController extends Controller
         abort_if($found === null, 404);
         $user = $request->user();
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($user === null, 403); // @pest-mutate-ignore
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
         $this->access->member($user->id, $this->access->workCenterOf($found));
 
         $evidence->handle($found, $request->kind(), $request->note(), $user->id);

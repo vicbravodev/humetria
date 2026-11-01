@@ -43,7 +43,7 @@ final class AcknowledgementController extends Controller
     {
         Gate::authorize('view-telework');
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
         $found = $this->reachable($request->user()->id, $document);
         $status = in_array($request->string('status')->toString(), self::STATUSES, true) ? $request->string('status')->toString() : 'all';
         $search = $request->string('q')->trim()->toString();
@@ -131,10 +131,11 @@ final class AcknowledgementController extends Controller
         $rows = [];
 
         foreach ($this->audience->requests($document, $audience)->whereNotNull('user_id')->get() as $ack) {
+            // The audience asks only who still holds a reviewing role, so find() gives a member for every request here.
             $member = $ack->user_id === null ? null : $members->find($ack->user_id);
             $state = $ack->acknowledged_at === null ? 'pending' : 'acknowledged';
 
-            if ($member instanceof MemberSummary && ($status === 'all' || $status === $state) && str_contains(Str::lower(Str::ascii($member->name)), $needle)) {
+            if ($member instanceof MemberSummary && ($status === 'all' || $status === $state) && str_contains(Str::lower(Str::ascii($member->name)), $needle)) { // @pest-mutate-ignore: InstanceOfToTrue
                 $rows[] = ['name' => $member->name, 'status' => $state, 'acknowledgedOn' => $date($ack->acknowledged_at)];
             }
         }

@@ -134,7 +134,7 @@ final class ChecklistController extends Controller
     {
         $user = $request->user();
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($user === null, 403); // @pest-mutate-ignore
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         return $user->id;
     }

@@ -98,7 +98,8 @@ final readonly class PhotoStore
     {
         $exif = @exif_read_data($path);
 
-        $orientation = is_array($exif) && is_int($exif['Orientation'] ?? null) ? $exif['Orientation'] : 1;
+        // Without EXIF the photo stays as it is: 1 (upright) and 0 (unknown) both fall to the default arm.
+        $orientation = is_array($exif) && is_int($exif['Orientation'] ?? null) ? $exif['Orientation'] : 1; // @pest-mutate-ignore: DecrementInteger
 
         $turned = match ($orientation) {
             2 => $this->flip($image, IMG_FLIP_HORIZONTAL),

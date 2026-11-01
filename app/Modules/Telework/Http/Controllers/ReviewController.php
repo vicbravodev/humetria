@@ -94,10 +94,12 @@ final class ReviewController extends Controller
 
     public function store(ReviewRequest $request, mixed $tenant, string $application, ReviewWorkplace $review): RedirectResponse
     {
+        // ReviewRequest::authorize() already answered 404 for what is not there and checked the seat: this only gives the
+        // controller its model.
         $found = Str::isUuid($application) ? ChecklistApplication::query()->find($application) : null;
-        abort_if($found === null, 404);
+        abort_if($found === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
         $workplace = Workplace::query()->findOrFail($found->workplace_id);
-        $this->access->member($this->userId($request), $this->access->workCenterOf($workplace));
+        $this->access->member($this->userId($request), $this->access->workCenterOf($workplace)); // @pest-mutate-ignore: RemoveMethodCall
 
         $review->handle($workplace, $found, $request->decision(), $request->notes(), $request->actionPlan(), $request->planDueOn(), $this->userId($request));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Decisión registrada.']);
@@ -107,9 +109,11 @@ final class ReviewController extends Controller
 
     public function remoteCheck(ReviewRequest $request, mixed $tenant, string $workplace, ReviewWorkplace $review): RedirectResponse
     {
+        // ReviewRequest::authorize() already answered 404 for what is not there and checked the seat: this only gives the
+        // controller its model.
         $found = Str::isUuid($workplace) ? Workplace::query()->find($workplace) : null;
-        abort_if($found === null, 404);
-        $this->access->member($this->userId($request), $this->access->workCenterOf($found));
+        abort_if($found === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
+        $this->access->member($this->userId($request), $this->access->workCenterOf($found)); // @pest-mutate-ignore: RemoveMethodCall
 
         $review->handle($found, null, $request->decision(), $request->notes(), $request->actionPlan(), $request->planDueOn(), $this->userId($request));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Comprobación a distancia registrada.']);
@@ -121,7 +125,7 @@ final class ReviewController extends Controller
     {
         $user = $request->user();
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($user === null, 403); // @pest-mutate-ignore
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         return $user->id;
     }

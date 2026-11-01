@@ -312,7 +312,8 @@ final readonly class Dossier
 
         return [
             'byKind' => array_values(array_filter(array_map(
-                fn (NoticeKind $kind): array => ['label' => $kind->label(), 'count' => $kinds[$kind->value] ?? 0],
+                // A kind nobody used is dropped by the filter below whether it counts 0 or -1.
+                fn (NoticeKind $kind): array => ['label' => $kind->label(), 'count' => $kinds[$kind->value] ?? 0], // @pest-mutate-ignore: DecrementInteger
                 NoticeKind::cases(),
             ), fn (array $row): bool => $row['count'] > 0)),
             'reviewed' => $reviewed,

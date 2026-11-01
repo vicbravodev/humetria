@@ -106,7 +106,7 @@ final class CommitteeController extends Controller
     {
         $center = $this->center($workCenters, $workCenter);
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         $register->handle($center->id, $request->constitutedOn(), $request->actFile(), $request->memberIds(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Comisión registrada. Ya existe el borrador de la lista de verificación.']);

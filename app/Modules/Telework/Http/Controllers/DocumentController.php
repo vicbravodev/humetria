@@ -91,7 +91,7 @@ final class DocumentController extends Controller
     public function store(DocumentRequest $request, mixed $tenant, PublishDocument $publish): RedirectResponse
     {
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
-        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
         // PublishDocument only iterates the ids: their keys are never read.
         $centers = $request->allCenters()
             ? array_values( // @pest-mutate-ignore: UnwrapArrayValues

@@ -504,3 +504,11 @@ it('does not register anyone in an archived work center', function (): void {
     $this->post(registerUrl(), aspirantForm())->assertNotFound();
     expect(Teleworker::query()->count())->toBe(0);
 });
+
+it('searches the picker with the first hundred characters typed', function (): void {
+    $long = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => str_repeat('a', 100).'z']);
+
+    $found = $this->getJson(route('tenant.telework.teleworkers.employees', [$this->tenant, $this->center->id, 'q' => str_repeat('a', 100).'q']))->assertOk()->json();
+
+    expect(array_column($found, 'value'))->toBe([$long->id]);
+});
