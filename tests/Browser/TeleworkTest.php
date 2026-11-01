@@ -706,6 +706,30 @@ it('records paper acknowledgements of the people ticked, from the page', functio
         ->assertScript(cspViolations(), '[]');
 });
 
+it('lets the paper date start no earlier than the day the document was published', function (): void {
+    [$url, $document] = acknowledgementsDocument();
+    $published = $document->created_at->setTimezone(config()->string('app.display_timezone'));
+    [$first, $before] = [$published->toDateString(), $published->subDay()->toDateString()];
+
+    visit("{$url}/telework/documents/{$document->id}/acknowledgements")
+        ->click('[aria-label="Elegir a Ana Ruiz"]')
+        ->click('button:has-text("Registrar acuses en papel")')
+        ->click('#ack-date')
+        // The calendar opens on today's month: it goes back to the publication's month when that one is earlier.
+        ->assertScript(<<<JS
+            async () => {
+                const day = (date) => document.querySelector(`[data-day="\${date}"] button`);
+                if (day('{$first}') === null) {
+                    document.querySelector('[data-slot="popover-content"] nav button').click();
+                    await new Promise((done) => setTimeout(done, 100));
+                }
+                // The day before is disabled, or not even reachable when publication fell on the 1st.
+                return [day('{$first}')?.disabled, day('{$before}')?.disabled ?? true].join();
+            }
+            JS, 'false,true')
+        ->assertNoJavaScriptErrors();
+});
+
 it('records on paper everyone pending the search found, without listing them', function (): void {
     [$url, $document] = acknowledgementsDocument();
 
