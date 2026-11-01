@@ -78,7 +78,8 @@ final readonly class RequestAcknowledgements
                 $users = [...$users, ...$this->insertMissing($document, 'user_id', $ids->userIds)];
             }
 
-            return [array_values(array_unique($employees)), array_values(array_unique($users))];
+            // The people are only counted and chunked: their keys are never read.
+            return [array_values(array_unique($employees)), array_values(array_unique($users))]; // @pest-mutate-ignore: UnwrapArrayValues
         });
 
         if ($employees === [] && $users === []) {

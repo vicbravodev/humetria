@@ -23,12 +23,14 @@ final class EvidenceController extends Controller
 
     public function store(EvidenceRequestRequest $request, mixed $tenant, string $workplace, RequestEvidence $evidence): RedirectResponse
     {
+        // EvidenceRequestRequest::authorize() already answered 404 for what is not there and checked the seat: this only
+        // gives the controller its model.
         $found = Str::isUuid($workplace) ? Workplace::query()->find($workplace) : null;
-        abort_if($found === null, 404);
+        abort_if($found === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
         $user = $request->user();
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
         abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
-        $this->access->member($user->id, $this->access->workCenterOf($found));
+        $this->access->member($user->id, $this->access->workCenterOf($found)); // @pest-mutate-ignore: RemoveMethodCall
 
         $evidence->handle($found, $request->kind(), $request->note(), $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud registrada.']);

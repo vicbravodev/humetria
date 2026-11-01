@@ -526,3 +526,13 @@ it('asks nothing of a Comisión member seated where there is no risk information
     expect(resolve(RequestAcknowledgements::class)->forUser($cora->id, $this->center->id))->toBe(0)
         ->and(Acknowledgement::query()->count())->toBe(0);
 });
+
+it('adds up the Comisión members asked across documents', function (): void {
+    Queue::fake();
+    foreach ([$this->center, $this->other] as $center) {
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'user_id' => memberOf($this->tenant, TenantRole::Committee)->id]);
+    }
+    $ids = array_map(fn (WorkCenter $center): string => TeleworkDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::RiskInformation])->id, [$this->center, $this->other]);
+
+    expect(resolve(RequestAcknowledgements::class)->handle($ids))->toBe(2);
+});
