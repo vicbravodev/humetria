@@ -282,3 +282,36 @@ it('does not name a center the committee user is not assigned to when filtering 
     $this->actingAs($cora)->get(route('tenant.telework.documents.index', [$this->tenant, 'center' => $this->south->id]))->assertInertia(fn (Assert $page) => $page
         ->where('filters.center', null)->where('documents.total', 0)); // no documents of its own: nothing leaks
 });
+
+it('sends each document and each kind in full, and confirms the publication in a toast', function (): void {
+    $this->travelTo('2026-03-01 18:00:00');
+    uploadDocument(['covered_items' => ['a', 'b']])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Documento publicado.']]);
+    $document = TeleworkDocument::query()->sole();
+
+    $this->get(route('tenant.telework.documents.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('documents.data', [[
+            'id' => $document->id,
+            'kind' => 'policy',
+            'workCenter' => ['id' => $this->north->id, 'name' => 'Planta Norte'],
+            'version' => 1,
+            'publishedOn' => '2026-03-01',
+            'coveredItems' => ['a', 'b'],
+            'missingItems' => ['c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'],
+            'acknowledgements' => ['acknowledged' => 0, 'expected' => 0],
+        ]])
+        ->where('kinds', array_map(fn (DocumentKind $kind): array => [
+            'value' => $kind->value,
+            'label' => $kind->label(),
+            'numeral' => $kind->numeral(),
+            'items' => array_map(fn (string $value): array => ['value' => $value, 'label' => $kind->items()[$value]], array_keys($kind->items())),
+        ], DocumentKind::cases())));
+});
+
+it('closes the documents and their files to a role without view-telework', function (): void {
+    $document = stored(DocumentKind::Policy, $this->north);
+    Spatie\Permission\Models\Role::findByName(TenantRole::Hr->value)->revokePermissionTo('view-telework');
+
+    $this->get(route('tenant.telework.documents.index', $this->tenant))->assertForbidden();
+    $this->get(route('tenant.telework.documents.file', [$this->tenant, $document->id]))->assertForbidden();
+});

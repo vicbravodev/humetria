@@ -50,7 +50,7 @@ final class DocumentController extends Controller
 
         $page = TeleworkDocument::query()
             ->when($limit !== null, fn (Builder $query) => $query->whereIn('work_center_id', $limit))
-            ->when($selected !== null, fn (Builder $query) => $query->where('work_center_id', $selected?->id))
+            ->when($selected, fn (Builder $query, WorkCenterSummary $center) => $query->where('work_center_id', $center->id))
             ->when(! $history, fn (Builder $query) => $query->inForce())
             ->orderByDesc('created_at')
             ->orderByDesc('version')
@@ -58,13 +58,15 @@ final class DocumentController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $progress = $acknowledgements->forDocuments(array_values($page->items()));
+        // The items of a page are already a list.
+        $progress = $acknowledgements->forDocuments(array_values($page->items())); // @pest-mutate-ignore: UnwrapArrayValues
 
         return Inertia::render('telework/documents', [
             'documents' => $page->through(fn (TeleworkDocument $document): array => [
                 'id' => $document->id,
                 'kind' => $document->kind->value,
-                'workCenter' => ['id' => $document->work_center_id, 'name' => $names[$document->work_center_id] ?? ''],
+                // $names has every center of the company, archived ones too.
+                'workCenter' => ['id' => $document->work_center_id, 'name' => $names[$document->work_center_id]],
                 'version' => $document->version,
                 'publishedOn' => $document->created_at->setTimezone(config()->string('app.display_timezone'))->toDateString(),
                 'coveredItems' => $document->covered_items,
@@ -79,7 +81,8 @@ final class DocumentController extends Controller
                 'value' => $kind->value,
                 'label' => $kind->label(),
                 'numeral' => $kind->numeral(),
-                'items' => array_map(fn (string $value, string $label): array => ['value' => $value, 'label' => $label], array_keys($kind->items()), array_values($kind->items())),
+                // An array_map() over two arrays numbers its result anew: the keys of the labels are never read.
+                'items' => array_map(fn (string $value, string $label): array => ['value' => $value, 'label' => $label], array_keys($kind->items()), array_values($kind->items())), // @pest-mutate-ignore: UnwrapArrayValues
             ], DocumentKind::cases()),
             'canManage' => Gate::allows('manage-telework'),
         ]);
@@ -87,9 +90,12 @@ final class DocumentController extends Controller
 
     public function store(DocumentRequest $request, mixed $tenant, PublishDocument $publish): RedirectResponse
     {
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
+        // PublishDocument only iterates the ids: their keys are never read.
         $centers = $request->allCenters()
-            ? array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)))
+            ? array_values( // @pest-mutate-ignore: UnwrapArrayValues
+                array_map(fn (WorkCenterSummary $center): string => $center->id, array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)))
             : $request->workCenterIds();
 
         $publish->handle($request->kind(), $request->documentFile(), $centers, $request->coveredItems(), $request->user()->id);
@@ -124,6 +130,7 @@ final class DocumentController extends Controller
 
         $limited = $request->attributes->get('telework.limited_centers');
 
-        return is_array($limited) ? array_values(array_filter($limited, is_string(...))) : null;
+        // What was stored above is the list<string> limitedTo() gives: the filter and the renumbering only narrow the type.
+        return is_array($limited) ? array_values(array_filter($limited, is_string(...))) : null; // @pest-mutate-ignore: UnwrapArrayFilter,UnwrapArrayValues
     }
 }
