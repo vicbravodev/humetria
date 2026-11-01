@@ -328,3 +328,36 @@ it('never writes answers, notes or special needs to the logs or the audit trail'
         ->not->toContain('secreta')->not->toContain('riesgo')->not->toContain('"no"');
     expect(json_encode(AuditEntry::query()->get()->toArray(), JSON_UNESCAPED_UNICODE))->not->toContain('secreta');
 });
+
+it('keeps the note trimmed and the time of each answer and photo, and no special needs when none were written', function (): void {
+    $this->travelTo('2026-03-01 12:00:00');
+    Storage::disk('telework_files')->put('p/general.jpg', 'x');
+    $id = $this->q['yes']->id;
+
+    submit([...goodAnswers(true), $id => 'no'], true, notes: [$id => '  Cable suelto  '], photos: ['general' => ['p/general.jpg']]);
+
+    $answers = ChecklistAnswer::query()->get();
+    $photo = ChecklistPhoto::query()->sole();
+    expect($answers->firstWhere('question_id', $id)?->risk_note)->toBe('Cable suelto')
+        ->and($answers->every(fn (ChecklistAnswer $answer): bool => $answer->created_at?->equalTo(now()) === true && $answer->updated_at?->equalTo(now()) === true))->toBeTrue()
+        ->and($photo->created_at?->equalTo(now()))->toBeTrue()
+        ->and($photo->updated_at?->equalTo(now()))->toBeTrue()
+        ->and($this->application->fresh()->special_needs)->toBeNull();
+});
+
+it('logs the submission with ids and counts only', function (): void {
+    Log::spy();
+    Storage::disk('telework_files')->put('p/general.jpg', 'x');
+
+    submit(goodAnswers(true), true, photos: ['general' => ['p/general.jpg']]);
+
+    Log::shouldHaveReceived('info')->with('telework.checklist_submitted', [
+        'application_id' => $this->application->id,
+        'workplace_id' => $this->workplace->id,
+        'checklist_id' => $this->checklist->id,
+        'section' => 1,
+        'answer_count' => 4,
+        'photo_count' => 1,
+        'consent_accepted' => true,
+    ])->once();
+});

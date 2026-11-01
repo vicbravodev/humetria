@@ -66,7 +66,9 @@ final readonly class SubmitChecklist
             throw ValidationException::withMessages(['application' => 'Esta lista ya se envió.']);
         }
 
-        $questions = array_values(ChecklistQuestion::query()->where('checklist_id', $application->checklist_id)->where('section', $application->section->value)->orderBy('position')->get()->all());
+        // A fresh get() is already a list.
+        $questions = array_values(ChecklistQuestion::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->where('checklist_id', $application->checklist_id)->where('section', $application->section->value)->orderBy('position')->get()->all());
         $errors = $this->rules->errors($questions, $consent, $answers, $riskNotes, $specialNeeds, $photos);
 
         if ($errors !== []) {
@@ -104,7 +106,8 @@ final readonly class SubmitChecklist
     private function insertAnswers(ChecklistApplication $application, array $questions, array $answers, array $riskNotes, DateTimeInterface $now): void
     {
         DB::table('checklist_answers')->insert(array_map(fn (ChecklistQuestion $question): array => [
-            'id' => (string) Str::uuid(),
+            // The query builder turns the uuid into its string itself: the cast only narrows the type.
+            'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
             'tenant_id' => $application->tenant_id,
             'application_id' => $application->id,
             'question_id' => $question->id,
@@ -126,7 +129,7 @@ final readonly class SubmitChecklist
         foreach ($photos as $key => $paths) {
             foreach ($paths as $path) {
                 $rows[] = [
-                    'id' => (string) Str::uuid(),
+                    'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
                     'tenant_id' => $application->tenant_id,
                     'application_id' => $application->id,
                     'question_id' => $key === AnswerRules::GENERAL ? null : $key,
