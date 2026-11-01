@@ -46,7 +46,7 @@ final readonly class PortalPending
         $items = ['pending' => [], 'sent' => []];
 
         foreach ($workplaces as $workplace) {
-            foreach ($workplace->applications->whereNull('cancelled_at')->sortBy([['requested_at', 'asc'], ['id', 'asc']]) as $application) {
+            foreach ($workplace->applications->whereNull('cancelled_at')->sortBy(['requested_at', 'id']) as $application) {
                 $sent = $application->submitted_at !== null;
                 $label = match (true) {
                     ! $sent => 'Pendiente de contestar',

@@ -300,3 +300,26 @@ it('lists the checklists of a workplace in the order they were asked, whatever t
 
     expect(array_map(fn ($item): string => $item->id, $sent))->toBe([$earlier->id, $later->id]);
 });
+
+it('logs a revoked link only when a link already existed', function (): void {
+    $newcomer = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    Log::spy();
+
+    resolve(IssuePortalLink::class)->handle($newcomer->id, revoke: true);
+    Log::shouldNotHaveReceived('info', fn (string $message): bool => $message === 'telework.portal_link_revoked');
+
+    resolve(IssuePortalLink::class)->handle($newcomer->id, revoke: true);
+    Log::shouldHaveReceived('info')->with('telework.portal_link_revoked', ['employee_id' => $newcomer->id, 'version' => 2])->once();
+});
+
+it('lists two checklists asked at the same moment by their id', function (): void {
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id]);
+    foreach (['ffffffff-ffff-4fff-bfff-ffffffffffff' => 2, '00000000-0000-4000-8000-000000000000' => 1] as $id => $section) {
+        ChecklistApplicationFactory::new()->submitted()->create(['id' => $id, 'tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => $section, 'requested_at' => '2026-02-01 12:00:00']);
+    }
+
+    $sent = resolve(PortalPending::class)->for(resolve(OpenPortal::class)->handle($this->token))->sent;
+
+    expect(array_map(fn ($item): string => $item->id, $sent))->toBe(['00000000-0000-4000-8000-000000000000', 'ffffffff-ffff-4fff-bfff-ffffffffffff']);
+});
