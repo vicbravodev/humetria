@@ -174,3 +174,21 @@ it('asks for the Sección II of the workplaces a shorter period leaves expired',
     workIn($this->tenant);
     expect(ChecklistApplication::query()->where('workplace_id', $workplace->id)->where('section', Section::Two)->count())->toBe(1);
 });
+
+it('goes on past workplaces never reviewed or not due, in any order, to the ones that are', function (): void {
+    scheduledWorkplace(null);
+    scheduledWorkplace('2026-06-01');
+    $due = scheduledWorkplace('2026-01-15');
+
+    expect(resolve(ScheduleReviews::class)->handle())->toBe(1);
+    workIn($this->tenant);
+    expect(ChecklistApplication::query()->where('section', Section::Two)->sole()->workplace_id)->toBe($due->id);
+});
+
+it('does not count nor remind a Sección II that was already waiting from before the review', function (): void {
+    $workplace = scheduledWorkplace('2026-01-15');
+    ChecklistApplication::factory()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => Section::Two, 'requested_at' => '2026-01-10 18:00:00']);
+
+    expect(resolve(ScheduleReviews::class)->handle())->toBe(0);
+    Queue::assertNothingPushed();
+});

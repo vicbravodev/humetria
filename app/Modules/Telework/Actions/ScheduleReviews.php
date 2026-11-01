@@ -65,7 +65,8 @@ final readonly class ScheduleReviews
         $workplaces = Workplace::query()->whereNull('retired_at')
             ->whereIn('teleworker_id', Teleworker::query()->where('status', TeleworkerStatus::Active)->select('id'))
             ->orderBy('id')->get();
-        $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all()));
+        // latestReviews only chunks the ids into a whereIn: their keys are never read.
+        $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
 
         foreach ($workplaces as $workplace) {
             $review = $reviews[$workplace->id] ?? null;
@@ -100,7 +101,7 @@ final readonly class ScheduleReviews
             return 0;
         }
 
-        $teleworker = Teleworker::query()->findOrFail($workplace->teleworker_id, ['id', 'employee_id']);
+        $teleworker = Teleworker::query()->findOrFail($workplace->teleworker_id, ['employee_id']);
         SendPortalReminder::remind($workplace->tenant_id, $teleworker->employee_id);
 
         return 1;
