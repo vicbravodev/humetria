@@ -66,6 +66,7 @@ function submittedApplication(int $daysAgo = 1, ?Workplace $workplace = null, in
 }
 
 it('orders the inbox oldest first and paginates it', function (): void {
+    $this->travelTo('2026-05-11 00:30:00'); // UTC; still 2026-05-10 in Mexico City, the day the submission is shown on
     $newest = submittedApplication(1);
     $oldest = submittedApplication(9, WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'street' => 'Calle Juárez']));
 
@@ -79,7 +80,7 @@ it('orders the inbox oldest first and paginates it', function (): void {
             ->where('data.0.jobTitle', 'Analista')
             ->where('data.0.workplace', 'Calle Juárez 45, Centro, Querétaro, Querétaro')
             ->where('data.0.section', 1)
-            ->where('data.0.submittedOn', now()->subDays(9)->toDateString())
+            ->where('data.0.submittedOn', '2026-05-01')
             ->where('data.1.id', $newest->id)
             ->etc()));
 });

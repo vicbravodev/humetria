@@ -65,7 +65,7 @@ it('never puts NOM-037 personal data or answers in a log line or audit entry', f
     // RH registers the aspirant, with the home they would work from, and the equipment delivered.
     $this->actingAs($hr)->post(route('tenant.telework.teleworkers.store', [$tenant, $center->id]), ['employee_id' => $employee->id, 'telework_percentage' => 60, 'workplaces' => [$home]])->assertSessionHasNoErrors();
     $person = Teleworker::query()->sole();
-    $this->post(route('tenant.telework.teleworkers.equipment.store', [$tenant, $person->id]), ['kind' => 'chair', 'description' => $secrets['equipment'], 'delivered_on' => now()->toDateString()])->assertSessionHasNoErrors();
+    $this->post(route('tenant.telework.teleworkers.equipment.store', [$tenant, $person->id]), ['kind' => 'chair', 'description' => $secrets['equipment'], 'delivered_on' => now(config()->string('app.display_timezone'))->toDateString()])->assertSessionHasNoErrors();
 
     // The person answers Sección I with an unfavorable answer, a note, special needs and a photo.
     $token = resolve(IssuePortalLink::class)->handle($employee->id);
@@ -87,14 +87,14 @@ it('never puts NOM-037 personal data or answers in a log line or audit entry', f
     // The person refuses the equipment with a reason and gives a written notice.
     $item = EquipmentItem::query()->sole();
     $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.equipment.respond', [$token, $item->id]), ['received' => '0', 'reason' => $secrets['refusal']])->assertSessionHasNoErrors();
-    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.notices.store', $token), ['kind' => 'work_risk', 'written_on' => now()->toDateString(), 'occurred_on' => now()->toDateString(), 'description' => $secrets['notice']])->assertSessionHasNoErrors();
+    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.notices.store', $token), ['kind' => 'work_risk', 'written_on' => now(config()->string('app.display_timezone'))->toDateString(), 'occurred_on' => now(config()->string('app.display_timezone'))->toDateString(), 'description' => $secrets['notice']])->assertSessionHasNoErrors();
     $notice = WorkerNotice::query()->sole();
     $this->actingAs($hr)->post(route('tenant.telework.notices.review', [$tenant, $notice->id]), ['note' => $secrets['review_note']])->assertSessionHasNoErrors();
 
     // RH records a paper acknowledgement with a note; the person also confirms the document from the portal.
     $document = TeleworkDocumentFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
-    $this->post(route('tenant.telework.documents.acknowledgements.store', [$tenant, $document->id]), ['employee_ids' => [$employee->id], 'date' => now()->toDateString(), 'note' => $secrets['ack_note']])->assertSessionHasNoErrors();
-    $this->post(route('tenant.telework.documents.acknowledgements.store', [$tenant, $document->id]), ['employee_ids' => [$employee->id], 'date' => now()->toDateString(), 'note' => $secrets['ack_note']]);
+    $this->post(route('tenant.telework.documents.acknowledgements.store', [$tenant, $document->id]), ['employee_ids' => [$employee->id], 'date' => now(config()->string('app.display_timezone'))->toDateString(), 'note' => $secrets['ack_note']])->assertSessionHasNoErrors();
+    $this->post(route('tenant.telework.documents.acknowledgements.store', [$tenant, $document->id]), ['employee_ids' => [$employee->id], 'date' => now(config()->string('app.display_timezone'))->toDateString(), 'note' => $secrets['ack_note']]);
     $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasNoErrors();
 
     // Looking at the dossier and the pages RH uses is logged too.

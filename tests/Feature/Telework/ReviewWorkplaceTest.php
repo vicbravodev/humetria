@@ -264,7 +264,7 @@ it('validates by remote check and by visit the new place of a moved active perso
     $remote = resolve(ReviewWorkplace::class)->handle($moved(), null, ReviewDecision::Valid, '', null, null, $this->cora->id);
     $place = $moved();
     $authorization = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
-    $visit = resolve(RecordVisit::class)->handle($place, $authorization, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id);
+    $visit = resolve(RecordVisit::class)->handle($place, $authorization, CarbonImmutable::now(config()->string('app.display_timezone')), ReviewDecision::Valid, '', null, null, $this->cora->id);
 
     expect($remote->method)->toBe(ReviewMethod::RemoteCheck)->and($remote->application_id)->not->toBeNull()
         ->and($visit->method)->toBe(ReviewMethod::Visit)->and($visit->application_id)->not->toBeNull();
@@ -327,10 +327,10 @@ it('tells which unique rule a visit lost a race on: the list decided meanwhile, 
         $raced = true;
         WorkplaceReview::factory()->create($lost === 'list'
             ? ['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => $this->application->id, 'method' => 'checklist']
-            : ['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => null, 'method' => 'visit', 'visit_authorization_id' => $authorization->id, 'visited_on' => now()->toDateString()]);
+            : ['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => null, 'method' => 'visit', 'visit_authorization_id' => $authorization->id, 'visited_on' => now(config()->string('app.display_timezone'))->toDateString()]);
     });
 
-    $visit = fn () => resolve(ReviewWorkplace::class)->handle($this->workplace, null, ReviewDecision::Valid, '', null, null, $this->cora->id, $authorization, CarbonImmutable::now());
+    $visit = fn () => resolve(ReviewWorkplace::class)->handle($this->workplace, null, ReviewDecision::Valid, '', null, null, $this->cora->id, $authorization, CarbonImmutable::now(config()->string('app.display_timezone')));
 
     expect(reviewRejected($visit))->toBe($error);
 })->with([

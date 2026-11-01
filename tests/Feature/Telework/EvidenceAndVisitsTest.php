@@ -419,13 +419,23 @@ it('does not let a cancelled request be confirmed, signed or used', function ():
 
     $this->post(route('portal.visits.confirm', [$this->token, $authorization->id]))->assertNotFound();
     expect(evidenceRefused(fn () => resolve(AttachVisitDocument::class)->handle($authorization, __FILE__)))->toHaveKey('document')
-        ->and(evidenceRefused(fn () => resolve(RecordVisit::class)->handle($this->workplace, $given, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id)))->toHaveKey('visit_authorization_id');
+        ->and(evidenceRefused(fn () => resolve(RecordVisit::class)->handle($this->workplace, $given, CarbonImmutable::now(config()->string('app.display_timezone')), ReviewDecision::Valid, '', null, null, $this->cora->id)))->toHaveKey('visit_authorization_id');
+});
+
+it('takes today in Mexico City, not in UTC, as the latest visit date', function (): void {
+    $this->travelTo('2026-05-11 00:30:00'); // UTC; still 2026-05-10 in Mexico City
+    $given = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $record = fn (string $on) => resolve(RecordVisit::class)->handle($this->workplace, $given, CarbonImmutable::parse($on), ReviewDecision::Valid, '', null, null, $this->cora->id);
+
+    expect(evidenceRefused(fn () => $record('2026-05-11')))->toHaveKey('visited_on')
+        ->and($record('2026-05-10')->visited_on?->toDateString())->toBe('2026-05-10');
 });
 
 it('does not cancel a request that already backs a visit, nor one outside reach', function (): void {
     $used = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
-    resolve(RecordVisit::class)->handle($this->workplace, $used, CarbonImmutable::now(), ReviewDecision::Valid, '', null, null, $this->cora->id);
+    resolve(RecordVisit::class)->handle($this->workplace, $used, CarbonImmutable::now(config()->string('app.display_timezone')), ReviewDecision::Valid, '', null, null, $this->cora->id);
     $stranger = memberOf($this->tenant, TenantRole::Committee);
 
     $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $used->id]))->assertSessionHasErrors('visit');
