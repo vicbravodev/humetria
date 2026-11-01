@@ -54,7 +54,7 @@ final class TrainingController extends Controller
         $today = CarbonImmutable::now($zone)->startOfDay();
 
         $trainings = Training::query()
-            ->when($selected !== null, fn (Builder $query) => $query->where('work_center_id', $selected?->id))
+            ->when($selected, fn (Builder $query, WorkCenterSummary $center) => $query->where('work_center_id', $center->id))
             ->withCount('attendees')
             ->orderByDesc('held_on')->orderByDesc('created_at')->orderBy('id')
             ->paginate(self::PER_PAGE)
@@ -81,7 +81,8 @@ final class TrainingController extends Controller
 
     public function store(TrainingRequest $request, mixed $tenant, RegisterTraining $register): RedirectResponse
     {
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
 
         $register->handle($request->string('work_center_id')->toString(), $request->heldOn(), $request->modality(), $request->topics(), $request->employeeIds(), $request->evidenceFile(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Capacitación registrada.']);
@@ -111,9 +112,10 @@ final class TrainingController extends Controller
     {
         // ponytail: the due day is derived, so the roster (a few light columns per person) is sorted in memory; a SQL
         // expression and ORDER BY when a company has tens of thousands of teleworkers.
-        $roster = array_values(Teleworker::query()->where('status', TeleworkerStatus::Active)
-            ->when($selected !== null, fn (Builder $query) => $query->where('work_center_id', $selected?->id))
-            ->get(['id', 'tenant_id', 'employee_id', 'work_center_id', 'started_at', 'created_at'])->all());
+        // A fresh get() is already a list.
+        $roster = array_values(Teleworker::query()->where('status', TeleworkerStatus::Active) // @pest-mutate-ignore: UnwrapArrayValues
+            ->when($selected, fn (Builder $query, WorkCenterSummary $center) => $query->where('work_center_id', $center->id))
+            ->get(['id', 'employee_id', 'work_center_id', 'started_at'])->all());
         $schedule = $this->due->schedule($roster);
         usort($roster, fn (Teleworker $a, Teleworker $b): int => [$schedule[$a->id]['due'], $a->id] <=> [$schedule[$b->id]['due'], $b->id]);
 
@@ -133,13 +135,14 @@ final class TrainingController extends Controller
      */
     private function row(Teleworker $teleworker, CarbonImmutable $due, ?string $last, array $names, array $centers, CarbonImmutable $today): array
     {
-        $person = $names[$teleworker->employee_id] ?? null;
+        // The foreign key guarantees the employee of every period.
+        $person = $names[$teleworker->employee_id];
         $standing = $this->due->standing($due, $today);
 
         return [
             'id' => $teleworker->id,
-            'name' => $person === null ? '' : $person->name,
-            'jobTitle' => $person === null ? '' : $person->jobTitle,
+            'name' => $person->name,
+            'jobTitle' => $person->jobTitle,
             'workCenter' => isset($centers[$teleworker->work_center_id]) ? $centers[$teleworker->work_center_id]->name : '',
             'lastTrainingOn' => $last,
             'dueOn' => $due->toDateString(),

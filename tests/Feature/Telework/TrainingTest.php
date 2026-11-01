@@ -421,3 +421,44 @@ describe('the page', function (): void {
         $this->actingAs(memberOf($this->tenant, $role))->get(route('tenant.telework.trainings.index', $this->tenant))->assertStatus($status);
     })->with([[TenantRole::Owner, 200], [TenantRole::Hr, 200], [TenantRole::Viewer, 403], [TenantRole::Committee, 403]]);
 });
+
+it('sends each training and each person of the roster in full, the soonest due first whatever the order they joined', function (): void {
+    $training = heldOn('2026-02-15', [$this->beto], ['ict']);
+    $training->update(['evidence_path' => 'trainings/lista.pdf']);
+    $beto = joinedOn('2026-01-10 15:00:00', $this->beto);
+    $this->beto->update(['job_title' => 'Diseñador']);
+    $carla = joinedOn('2025-01-05 15:00:00', trainee('Carla Paz', state: ['job_title' => 'Analista']));
+
+    $this->get(route('tenant.telework.trainings.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('trainings.data', [[
+            'id' => $training->id,
+            'heldOn' => '2026-02-15',
+            'modality' => $training->modality->label(),
+            'workCenter' => ['id' => $this->center->id, 'name' => 'Planta Norte'],
+            'topics' => [TrainingTopic::Ict->label()],
+            'attendees' => 1,
+            'hasEvidence' => true,
+        ]])
+        ->where('people.data', [
+            ['id' => $carla->id, 'name' => 'Carla Paz', 'jobTitle' => 'Analista', 'workCenter' => 'Planta Norte', 'lastTrainingOn' => null, 'dueOn' => '2026-01-05', 'status' => 'overdue', 'statusLabel' => App\Modules\Telework\Enums\TrainingStanding::Overdue->label()],
+            ['id' => $beto->id, 'name' => 'Beto Soto', 'jobTitle' => 'Diseñador', 'workCenter' => 'Planta Norte', 'lastTrainingOn' => '2026-02-15', 'dueOn' => '2027-02-15', 'status' => 'ok', 'statusLabel' => App\Modules\Telework\Enums\TrainingStanding::Ok->label()],
+        ])
+        ->where('people.path', route('tenant.telework.trainings.index', $this->tenant))
+        ->where('people.first_page_url', route('tenant.telework.trainings.index', [$this->tenant, 'people_page' => 1]))
+        ->where('today', '2026-03-01')
+        ->where('topics', array_map(fn (TrainingTopic $topic): array => ['value' => $topic->value, 'label' => $topic->label()], TrainingTopic::cases()))
+        ->where('modalities', array_map(fn (TrainingModality $modality): array => ['value' => $modality->value, 'label' => $modality->label()], TrainingModality::cases())));
+});
+
+it('says that a training has no evidence, and names the topics a filtered center has not covered', function (): void {
+    heldOn('2026-02-01', [$this->ana], ['hazards']);
+
+    $this->get(route('tenant.telework.trainings.index', [$this->tenant, 'center' => $this->center->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('trainings.data.0.hasEvidence', false)
+        ->where('uncovered', array_values(array_map(fn (TrainingTopic $topic): array => ['value' => $topic->value, 'label' => $topic->label()], array_filter(TrainingTopic::cases(), fn (TrainingTopic $topic): bool => $topic !== TrainingTopic::Hazards)))));
+});
+
+it('confirms the registration in a toast', function (): void {
+    $this->post(trainingUrl(), trainingForm())
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Capacitación registrada.']]);
+});
