@@ -39,7 +39,8 @@ final readonly class RegisterTraining
      */
     public function handle(string $workCenterId, CarbonImmutable $heldOn, TrainingModality $modality, array $topics, array $employeeIds, ?string $evidenceFile, int $userId): Training
     {
-        $attendees = array_values(array_unique($employeeIds));
+        // The attendees are only checked and inserted one by one: their keys are never read.
+        $attendees = array_values(array_unique($employeeIds)); // @pest-mutate-ignore: UnwrapArrayValues
         $this->check($heldOn, $workCenterId, $topics, $attendees);
 
         $tenantId = $this->tenant->id();
@@ -111,7 +112,8 @@ final readonly class RegisterTraining
     {
         $contents = file_get_contents($file);
 
-        if ($contents === false) {
+        // Laravel turns the warning of a failed read into an ErrorException first: the check only narrows the type.
+        if ($contents === false) { // @pest-mutate-ignore: FalseToTrue
             throw new RuntimeException('The uploaded list could not be read.');
         }
 

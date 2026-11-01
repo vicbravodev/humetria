@@ -462,3 +462,22 @@ it('confirms the registration in a toast', function (): void {
     $this->post(trainingUrl(), trainingForm())
         ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Capacitación registrada.']]);
 });
+
+it('keeps each topic once, stores the evidence under the company, and says why it refuses', function (): void {
+    $register = fn (array $topics, array $people, string $on = '2026-02-01') => resolve(RegisterTraining::class)->handle($this->center->id, CarbonImmutable::parse($on), TrainingModality::Mixed, $topics, $people, null, $this->hr->id);
+    joinedOn('2026-01-10 15:00:00');
+
+    expect($register([TrainingTopic::Hazards, TrainingTopic::Hazards, TrainingTopic::Ict], [$this->ana->id, $this->ana->id])->refresh()->topics)->toBe([TrainingTopic::Hazards, TrainingTopic::Ict]);
+
+    foreach ([[[TrainingTopic::Ict], [$this->ana->id], '2026-03-02', 'held_on', 'La fecha no puede ser futura.'], [[], [$this->ana->id], '2026-02-01', 'topics', 'Elige al menos un tema.'], [[TrainingTopic::Ict], [], '2026-02-01', 'employee_ids', 'Elige al menos a una persona que asistió.']] as [$topics, $people, $on, $field, $message]) {
+        try {
+            $register($topics, $people, $on);
+            $this->fail('The training was registered.');
+        } catch (ValidationException $e) {
+            expect($e->errors())->toBe([$field => [$message]]);
+        }
+    }
+
+    $this->post(trainingUrl(), trainingForm(['evidence' => trainingPdf()]))->assertSessionHasNoErrors();
+    expect(Training::query()->whereNotNull('evidence_path')->sole()->evidence_path)->toMatch('#^trainings/'.$this->tenant->id.'/[0-9a-f-]{36}\.pdf$#');
+});
