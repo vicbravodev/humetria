@@ -424,3 +424,83 @@ it('cannot ask for a checklist the Comisión has not published', function (): vo
 
     expect(fn () => resolve(RequestChecklist::class)->handle($workplace, Section::Two))->toThrow(ValidationException::class);
 });
+
+it('sends the teleworker page in full: the person, their equipment, their notices and their places', function (): void {
+    $this->travelTo('2026-03-01 18:00:00');
+    $this->employee->update(['job_title' => 'Analista']);
+    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id, 'started_at' => '2026-01-10 18:00:00', 'no_equipment_reason' => null]);
+    $place = Database\Factories\Telework\WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id]);
+    Database\Factories\Telework\ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
+    $laptop = Database\Factories\Telework\EquipmentItemFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id, 'delivered_on' => '2026-01-12', 'status' => App\Modules\Telework\Enums\EquipmentStatus::Refused, 'refusal_reason' => 'Prefiere la suya.', 'responded_at' => '2026-01-13 18:00:00']);
+    $notice = Database\Factories\Telework\WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id]);
+
+    $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $person->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('workCenter', ['id' => $this->center->id, 'name' => $this->center->name])
+        ->where('teleworker', [
+            'id' => $person->id,
+            'name' => 'Ana Ruiz',
+            'jobTitle' => 'Analista',
+            'hasEmail' => true,
+            'status' => 'active',
+            'percentage' => 50,
+            'canJoin' => false,
+            'today' => '2026-03-01',
+            'startedOn' => '2026-01-10',
+            'noEquipmentReason' => null,
+            'endReason' => null,
+            'endedOn' => null,
+            'endNote' => null,
+            'equipment' => [[
+                'id' => $laptop->id,
+                'kind' => $laptop->kind->label(),
+                'description' => $laptop->description,
+                'deliveredOn' => '2026-01-12',
+                'status' => 'refused',
+                'statusLabel' => App\Modules\Telework\Enums\EquipmentStatus::Refused->label(),
+                'refusalReason' => 'Prefiere la suya.',
+                'respondedOn' => '2026-01-13',
+            ]],
+            'notices' => [[
+                'id' => $notice->id,
+                'kind' => $notice->kind->label(),
+                'writtenOn' => $notice->written_on->toDateString(),
+                'occurredOn' => $notice->occurred_on->toDateString(),
+                'description' => $notice->description,
+                'status' => 'Recibido',
+                'reviewedOn' => null,
+            ]],
+            // A sent list waits for the Comisión, not for the person.
+            'workplaces' => [[
+                'id' => $place->id,
+                'address' => 'Calle Hidalgo 45, Centro, Querétaro, Querétaro',
+                'label' => 'En revisión de la Comisión',
+                'status' => 'pending',
+                'statusLabel' => 'Pendiente de validar',
+                'expiresOn' => null,
+            ]],
+        ]));
+});
+
+it('confirms each change to a teleworker in a toast', function (): void {
+    $this->post(registerUrl(), aspirantForm())
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Persona registrada. Su lista de verificación ya está pedida.']]);
+    $teleworker = aspirant();
+    $this->post(route('tenant.telework.teleworkers.workplaces.store', [$this->tenant, $teleworker->id]), homeOffice(['street' => 'Calle Juárez']))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Lugar agregado. Su lista de verificación ya está pedida.']]);
+    $this->post(route('tenant.telework.workplaces.retire', [$this->tenant, Workplace::query()->where('street', 'Calle Juárez')->sole()->id]))
+        ->assertRedirect(route('tenant.telework.teleworkers.show', [$this->tenant, $teleworker->id]))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Lugar retirado. Queda en el historial.']]);
+});
+
+it('offers at most twenty people in the picker', function (): void {
+    EmployeeFactory::new()->count(21)->sequence(fn ($sequence) => ['name' => sprintf('Ana %02d', $sequence->index)])->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+
+    expect($this->getJson(route('tenant.telework.teleworkers.employees', [$this->tenant, $this->center->id, 'q' => 'ana']))->assertOk()->json())->toHaveCount(20);
+});
+
+it('does not register anyone in an archived work center', function (): void {
+    $this->center->update(['archived_at' => now()]);
+
+    $this->post(registerUrl(), aspirantForm())->assertNotFound();
+    expect(Teleworker::query()->count())->toBe(0);
+});

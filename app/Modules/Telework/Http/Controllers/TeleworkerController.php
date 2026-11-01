@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use LogicException;
 
 /**
  * RH registers the people who will telework from a work center, adds their workplaces and gives them their portal link.
@@ -61,7 +62,8 @@ final class TeleworkerController extends Controller
         $center = $this->center($workCenter);
         $query = new RosterQuery(activeInWorkCenter: $center->id, search: $request->string('q')->trim()->limit(100, '')->toString());
 
-        return array_values(array_map(
+        // The items of a page are already a list.
+        return array_values(array_map( // @pest-mutate-ignore: UnwrapArrayValues
             fn (RosterEntry $person): array => ['value' => $person->id, 'label' => $person->name],
             $this->roster->page($query, perPage: 20)->items(),
         ));
@@ -70,7 +72,8 @@ final class TeleworkerController extends Controller
     public function store(RegisterAspirantRequest $request, mixed $tenant, string $workCenter, RegisterAspirant $register): RedirectResponse
     {
         $this->center($workCenter);
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
 
         $teleworker = $register->handle($request->employeeId(), $request->percentage(), $request->addresses(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Persona registrada. Su lista de verificación ya está pedida.']);
@@ -141,14 +144,14 @@ final class TeleworkerController extends Controller
     {
         // The workplaces are read once, for the roster check and the list.
         $teleworker->load('workplaces.applications');
-        $person = $this->roster->find($teleworker->employee_id);
+        $person = $this->roster->find($teleworker->employee_id) ?? throw new LogicException("Teleworker [{$teleworker->id}] has no employee.");
         $zone = config()->string('app.display_timezone');
 
         return [
             'id' => $teleworker->id,
-            'name' => $person->name ?? '',
-            'jobTitle' => $person->jobTitle ?? '',
-            'hasEmail' => $person?->email !== null,
+            'name' => $person->name,
+            'jobTitle' => $person->jobTitle,
+            'hasEmail' => $person->email !== null,
             'status' => $teleworker->status->value,
             'percentage' => $teleworker->telework_percentage,
             'canJoin' => $teleworker->status === TeleworkerStatus::Aspirant && $this->standing->hasOneInForce($teleworker),
@@ -171,7 +174,9 @@ final class TeleworkerController extends Controller
      */
     private function equipment(Teleworker $teleworker, string $zone): array
     {
-        return array_values(EquipmentItem::query()->where('teleworker_id', $teleworker->id)->orderBy('delivered_on')->orderBy('created_at')->orderBy('id')->get()
+        // A fresh get() is already a list, here and in notices().
+        return array_values(EquipmentItem::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->where('teleworker_id', $teleworker->id)->orderBy('delivered_on')->orderBy('created_at')->orderBy('id')->get()
             ->map(fn (EquipmentItem $item): array => [
                 'id' => $item->id,
                 'kind' => $item->kind->label(),
@@ -191,7 +196,8 @@ final class TeleworkerController extends Controller
      */
     private function notices(Teleworker $teleworker, string $zone): array
     {
-        return array_values(WorkerNotice::query()->where('teleworker_id', $teleworker->id)->orderByRaw('reviewed_at IS NOT NULL')->orderByDesc('submitted_at')->orderBy('id')->get()
+        return array_values(WorkerNotice::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->where('teleworker_id', $teleworker->id)->orderByRaw('reviewed_at IS NOT NULL')->orderByDesc('submitted_at')->orderBy('id')->get()
             ->map(fn (WorkerNotice $notice): array => [
                 'id' => $notice->id,
                 'kind' => $notice->kind->label(),
