@@ -289,3 +289,14 @@ it('sends the token, the company and the person through a link that opens', func
         ->where('name', 'Ana Ruiz')
         ->where('canNotify', false));
 });
+
+it('lists the checklists of a workplace in the order they were asked, whatever the order they were stored', function (): void {
+    $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id]);
+    $workplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id]);
+    $later = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => 2, 'requested_at' => '2026-02-20 12:00:00']);
+    $earlier = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $workplace->id, 'section' => 1, 'requested_at' => '2026-02-01 12:00:00']);
+
+    $sent = resolve(PortalPending::class)->for(resolve(OpenPortal::class)->handle($this->token))->sent;
+
+    expect(array_map(fn ($item): string => $item->id, $sent))->toBe([$earlier->id, $later->id]);
+});

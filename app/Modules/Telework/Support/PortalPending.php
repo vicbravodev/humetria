@@ -63,8 +63,9 @@ final readonly class PortalPending
         return new PortalPendingData(
             $items['pending'],
             $items['sent'],
-            array_values($photos->map(fn (EvidenceRequest $request): PendingPhotoRequest => new PendingPhotoRequest($request->id, $lines[$request->workplace_id] ?? '', $request->note))->all()),
-            array_values($visits->map(fn (VisitAuthorization $authorization): PendingVisit => new PendingVisit($authorization->id, $lines[$authorization->workplace_id] ?? ''))->all()),
+            // Both were read among the workplaces of $lines, and a fresh get() is already a list (here and below).
+            array_values($photos->map(fn (EvidenceRequest $request): PendingPhotoRequest => new PendingPhotoRequest($request->id, $lines[$request->workplace_id], $request->note))->all()), // @pest-mutate-ignore: UnwrapArrayValues
+            array_values($visits->map(fn (VisitAuthorization $authorization): PendingVisit => new PendingVisit($authorization->id, $lines[$authorization->workplace_id]))->all()), // @pest-mutate-ignore: UnwrapArrayValues
             $documents,
             $equipment,
         );
@@ -73,7 +74,8 @@ final readonly class PortalPending
     /** @return list<PendingEquipment> The items delivered to the person and not answered yet, oldest delivery first. */
     private function equipment(string $teleworkerId): array
     {
-        return array_values(EquipmentItem::query()->where('teleworker_id', $teleworkerId)->where('status', EquipmentStatus::Pending)->orderBy('delivered_on')->orderBy('id')->get()
+        return array_values(EquipmentItem::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->where('teleworker_id', $teleworkerId)->where('status', EquipmentStatus::Pending)->orderBy('delivered_on')->orderBy('id')->get()
             ->map(fn (EquipmentItem $item): PendingEquipment => new PendingEquipment($item->id, $item->description, $item->kind->label(), $item->delivered_on->toDateString()))->all());
     }
 
@@ -82,7 +84,8 @@ final readonly class PortalPending
     {
         $pending = Acknowledgement::query()->where('employee_id', $portal->employeeId)->whereNull('acknowledged_at')->select('document_id');
 
-        return array_values(TeleworkDocument::query()->inForce()->whereIn('id', $pending)->orderBy('created_at')->orderBy('id')->get()
+        return array_values(TeleworkDocument::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->inForce()->whereIn('id', $pending)->orderBy('created_at')->orderBy('id')->get()
             ->map(fn (TeleworkDocument $document): PendingDocument => new PendingDocument(
                 $document->id,
                 "{$document->kind->label()} · versión {$document->version}",
