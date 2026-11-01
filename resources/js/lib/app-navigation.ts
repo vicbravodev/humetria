@@ -3,6 +3,7 @@ import {
     ClipboardCheck,
     Factory,
     House,
+    Laptop,
     Inbox,
     UserCog,
     Users,
@@ -17,12 +18,17 @@ import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
+import { index as teleworkIndex } from '@/routes/tenant/telework';
+import { index as teleworkDocuments } from '@/routes/tenant/telework/documents';
+import { index as teleworkNotices } from '@/routes/tenant/telework/notices';
+import { edit as teleworkSettings } from '@/routes/tenant/telework/settings';
+import { index as teleworkTrainings } from '@/routes/tenant/telework/trainings';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, CurrentTenant, InCourse, NavItem } from '@/types';
 
 /** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
-export type NavTenant = Pick<CurrentTenant, 'slug' | 'can'>;
+export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'>;
 
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
@@ -33,6 +39,11 @@ export const mainNavItems = (
     tenant: NavTenant | null,
     isSuperadmin: boolean,
 ): NavItem[] => {
+    // The committee's only pages are NOM-037's (under Cumplimiento), so its main sidebar has nothing else.
+    if (tenant?.role === 'committee') {
+        return [];
+    }
+
     if (tenant === null) {
         return isSuperadmin
             ? []
@@ -66,24 +77,54 @@ export const mainNavItems = (
     ];
 };
 
+/** NOM-037's own pages, under its entry: only those the role may open (the server answers 403 to the rest anyway). */
+const telework = (tenant: NavTenant): NavItem => ({
+    title: 'NOM-037',
+    href: teleworkIndex(tenant.slug),
+    icon: Laptop,
+    children: [
+        { title: 'Centros', href: teleworkIndex(tenant.slug) },
+        { title: 'Documentos', href: teleworkDocuments(tenant.slug) },
+        ...(tenant.can.manage_telework
+            ? [{ title: 'Capacitación', href: teleworkTrainings(tenant.slug) }]
+            : []),
+        ...(tenant.can.review_workplaces
+            ? [{ title: 'Avisos', href: teleworkNotices(tenant.slug) }]
+            : []),
+        ...(tenant.can.manage_telework
+            ? [
+                  {
+                      title: 'Configuración',
+                      href: teleworkSettings(tenant.slug),
+                  },
+              ]
+            : []),
+    ],
+});
+
 /**
- * The compliance tools of the current company, for every role: who may change them is the page's to say. NOM-037 and
- * Ley Silla enter here when each gets its first page.
+ * The compliance tools of the current company, for every role: who may change them is the page's to say. The committee
+ * sees only NOM-037. Ley Silla enters here when it gets its first page.
  */
 export const complianceNavItems = (
     tenant: NavTenant | null,
     inCourse = 0,
-): NavItem[] =>
-    tenant === null
-        ? []
-        : [
-              {
-                  title: 'NOM-035',
-                  href: campaigns(tenant.slug),
-                  icon: ClipboardCheck,
-                  badge: inCourse,
-              },
-          ];
+): NavItem[] => {
+    if (tenant === null) {
+        return [];
+    }
+
+    const nom035: NavItem = {
+        title: 'NOM-035',
+        href: campaigns(tenant.slug),
+        icon: ClipboardCheck,
+        badge: inCourse,
+    };
+
+    return tenant.role === 'committee'
+        ? [telework(tenant)]
+        : [nom035, telework(tenant)];
+};
 
 /**
  * The sidebar's "Siguiente obligación": when the soonest evaluation in course closes ("en 11 días", "mañana",

@@ -21,6 +21,7 @@ export default function TraumaForm({
     picker,
     workCenter,
     people,
+    preselected,
     search,
     maxPeople,
     deadline,
@@ -29,11 +30,13 @@ export default function TraumaForm({
     picker: ReactNode;
     workCenter: ChoiceOption;
     people: Paginated<RosterPerson>;
+    /** Who a traumatic-event notice named: it starts ticked. */
+    preselected: { id: string; name: string } | null;
     search: string;
     maxPeople: number;
     deadline: { min: string; suggested: string };
 }) {
-    const choice = useChosenPeople(workCenter.value);
+    const choice = useChosenPeople(workCenter.value, preselected);
     const count = choice.chosen.length;
 
     return (

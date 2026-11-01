@@ -59,3 +59,11 @@ it('describes a work center for a report, archived ones included, and no other c
         mainActivity: 'Manufactura de autopartes',
     ))->and(resolve(WorkCenters::class)->profile($other->id))->toBeNull();
 });
+
+it('lists the 32 states by code for modules that take an address', function (): void {
+    $states = resolve(WorkCenters::class)->states();
+
+    expect($states)->toHaveCount(32)
+        ->and($states['QUE'])->toBe('Querétaro')
+        ->and($states['CMX'])->toBe('Ciudad de México');
+});

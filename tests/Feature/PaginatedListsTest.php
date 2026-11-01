@@ -69,6 +69,53 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.campaigns.report', [$tenant, $closed->id]);
     }, ['shares']],
+    'NOM-037 centers' => ['telework/index', function () {
+        [$tenant] = listsCompany();
+
+        return route('tenant.telework.index', $tenant);
+    }, ['centers']],
+    'NOM-037 roster of a center' => ['telework/center', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.telework.center', [$tenant, $plant->id]);
+    }, ['people']],
+    'checklists to review' => ['telework/reviews', function () {
+        [$tenant, $plant] = listsCompany();
+        App\Modules\Telework\Models\CommitteeAssignment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'user_id' => auth()->id()]);
+
+        return route('tenant.telework.reviews.index', [$tenant, $plant->id]);
+    }, ['applications']],
+    'NOM-037 documents' => ['telework/documents', function () {
+        [$tenant] = listsCompany();
+
+        return route('tenant.telework.documents.index', $tenant);
+    }, ['documents']],
+    'NOM-037 acknowledgements' => ['telework/acknowledgements', function () {
+        [$tenant] = listsCompany();
+        $document = App\Modules\Telework\Models\TeleworkDocument::factory()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.telework.documents.acknowledgements.index', [$tenant, $document->id]);
+    }, ['people']],
+    'NOM-037 trainings and who is due' => ['telework/trainings', function () {
+        [$tenant] = listsCompany();
+
+        return route('tenant.telework.trainings.index', $tenant);
+    }, ['trainings', 'people']],
+    'NOM-037 notices to review' => ['telework/notices', function () {
+        [$tenant] = listsCompany();
+        Database\Factories\Telework\WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.telework.notices.index', $tenant);
+    }, ['notices']],
+    'notices a person sent' => ['telework/portal-notices', function () {
+        [$tenant] = listsCompany();
+        $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        $teleworker = Database\Factories\Telework\TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+        Database\Factories\Telework\WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
+        workIn($tenant);
+
+        return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+    }, ['notices']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

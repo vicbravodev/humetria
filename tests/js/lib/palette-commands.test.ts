@@ -16,11 +16,14 @@ describe('paletteCommands', () => {
             isSuperadmin: false,
             tenant: {
                 slug: 'acme',
+                role: 'owner',
                 can: {
                     manage_organization: true,
                     manage_members: true,
                     manage_campaigns: true,
                     view_trauma_screenings: true,
+                    manage_telework: true,
+                    review_workplaces: true,
                 },
             },
             sidebarExpanded: true,
@@ -103,11 +106,14 @@ describe('paletteCommands inside a company', () => {
                 isSuperadmin: false,
                 tenant: {
                     slug: 'acme',
+                    role: 'owner',
                     can: {
                         manage_organization: manage,
                         manage_members: manage,
                         manage_campaigns: manage,
                         view_trauma_screenings: manage,
+                        manage_telework: manage,
+                        review_workplaces: manage,
                     },
                 },
                 sidebarExpanded: true,

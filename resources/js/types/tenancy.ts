@@ -84,10 +84,12 @@ export type CurrentTenant = TenantSummary &
             manage_members: boolean;
             manage_campaigns: boolean;
             view_trauma_screenings: boolean;
+            manage_telework: boolean;
+            review_workplaces: boolean;
         };
     };
 
-export type TenantRole = 'owner' | 'hr' | 'viewer';
+export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee';
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &

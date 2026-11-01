@@ -4,9 +4,11 @@ import type { RoleOption } from '@/types';
 const HINTS: Record<string, string> = {
     hr: 'Opera las evaluaciones del día a día.',
     viewer: 'Solo consulta, sin cambiar nada.',
+    committee:
+        'Solo ve la NOM-037: revisa y valida los lugares de teletrabajo.',
 };
 
-/** The role an invited person gets, as two option cards (pantallas: Usuarios-Invitar); RH is chosen to begin with. */
+/** The role an invited person gets, as option cards (pantallas: Usuarios-Invitar); RH is chosen to begin with. */
 export default function MemberRoleChoice({
     roles,
     error,

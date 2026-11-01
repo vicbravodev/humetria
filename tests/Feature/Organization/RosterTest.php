@@ -36,6 +36,30 @@ it('lists the active people of a work center by name, with their area, gender an
     ]);
 });
 
+it('lists only the ids of the active people of a work center', function (): void {
+    $kept = rosterEmployee($this->tenant, $this->plant, $this->production);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['deactivated_at' => now()]);
+    rosterEmployee($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), $this->production);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->activeIdsIn($this->plant->id))->toBe([$kept->id]);
+    workIn(Tenant::factory()->create());
+    expect(resolve(Roster::class)->activeIdsIn($this->plant->id))->toBe([]);
+});
+
+it('lists the ids of the active people of several work centers at once, by center', function (): void {
+    $other = WorkCenter::factory()->for($this->tenant)->create();
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+    $a = rosterEmployee($this->tenant, $this->plant, $this->production);
+    $b = rosterEmployee($this->tenant, $other, $this->production);
+    rosterEmployee($this->tenant, $other, $this->production, ['deactivated_at' => now()]);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->activeIdsInMany([$this->plant->id, $other->id, $empty->id]))->toBe([$this->plant->id => [$a->id], $other->id => [$b->id], $empty->id => []]);
+    workIn(Tenant::factory()->create());
+    expect(resolve(Roster::class)->activeIdsInMany([$this->plant->id]))->toBe([$this->plant->id => []]);
+});
+
 it('leaves out deactivated people and other work centers', function (): void {
     rosterEmployee($this->tenant, $this->plant, $this->production, ['deactivated_at' => now()]);
     rosterEmployee($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), $this->production);
@@ -120,9 +144,10 @@ it('narrows the page by name, email or number, and by area', function (): void {
 });
 
 it('gives the ids of everyone a query matches, without paging', function (): void {
-    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López']);
-    $luis = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Luis Mora']);
-    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Baja', 'deactivated_at' => now()]);
+    // Fixed emails: the search also reads them, and a random one could contain «mora».
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'email' => 'ana@acme.mx']);
+    $luis = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Luis Mora', 'email' => 'luis@acme.mx']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Baja', 'email' => 'baja@acme.mx', 'deactivated_at' => now()]);
     workIn($this->tenant);
 
     expect(resolve(Roster::class)->matchingIds(new RosterQuery(activeInWorkCenter: $this->plant->id)))->toBe([$ana->id, $luis->id])

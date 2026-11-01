@@ -33,6 +33,16 @@ function publicRouteNames(): array
         'invitations.accept', // guest: accepts the invitation; throttled, single-use token
         'survey.show', // guest: survey link from the email; the token is the credential; throttled
         'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
+        'portal.show', // guest: la persona teletrabajadora no tiene cuenta; el token es la credencial; throttled
+        'portal.checklist.show', // guest: la lista de verificación de la persona; el token del portal es la credencial; solo ve sus lugares; throttled
+        'portal.checklist.store', // guest: envía la lista una sola vez, bajo candado; el token del portal es la credencial; throttled
+        'portal.evidence.store', // guest: la persona envía las fotos que pidió la Comisión, una sola vez, bajo candado; el token del portal es la credencial; solo sus lugares; throttled
+        'portal.documents.file', // guest: la persona lee el PDF que le pidieron confirmar; el token del portal es la credencial; solo documentos pedidos a ella; throttled
+        'portal.documents.acknowledge', // guest: la persona confirma que leyó, una sola vez, bajo candado; el token del portal es la credencial; throttled
+        'portal.notices.show', // guest: la persona ve sus avisos escritos (6.3, 6.7, 6.9) y lo que envió; el token del portal es la credencial; solo con periodo abierto; throttled
+        'portal.notices.store', // guest: la persona envía un aviso escrito; el token del portal es la credencial; solo con periodo abierto; throttled
+        'portal.equipment.respond', // guest: la persona confirma que recibió un equipo o lo rechaza con su motivo, una sola vez, bajo candado; el token del portal es la credencial; solo su equipo; throttled
+        'portal.visits.confirm', // guest: la persona autoriza por escrito la visita a su lugar; el token del portal es la credencial; solo sus lugares; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
     ];
 }

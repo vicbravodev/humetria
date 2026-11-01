@@ -368,6 +368,23 @@ function staffOf(Tenant $tenant, WorkCenter $workCenter, int $female, int $male 
     return $people;
 }
 
+/** A question of a checklist version, for tests of the NOM-037 checklist. */
+function addQuestion(App\Modules\Telework\Models\Checklist $checklist, int $position, string $favorable, bool $sensitive = false, int $section = 1): App\Modules\Telework\Models\ChecklistQuestion
+{
+    return App\Modules\Telework\Models\ChecklistQuestion::query()->create([
+        'tenant_id' => $checklist->tenant_id,
+        'checklist_id' => $checklist->id,
+        'section' => $section,
+        'position' => $position,
+        'code' => "S{$section}-{$position}",
+        'heading' => 'Espacio',
+        'text' => "Pregunta {$position}",
+        'origin' => 'humetria',
+        'favorable' => $favorable,
+        'sensitive' => $sensitive,
+    ]);
+}
+
 /**
  * Fails when the props of a page hold an individual response, whatever the key it hides under: the id of a stored
  * anonymous response, a map named `answers` (a count by that name passes), or an answer given to an item (an item number or a gate key whose value

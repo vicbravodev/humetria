@@ -21,9 +21,10 @@ mutates(CompanyRoles::class);
 it('defines the company roles and what each one allows', function (): void {
     $permissions = fn (string $role): array => Role::findByName($role)->permissions->pluck('name')->sort()->values()->all();
 
-    expect($permissions('owner'))->toBe(['manage-campaigns', 'manage-members', 'manage-organization', 'view-trauma-screenings'])
-        ->and($permissions('hr'))->toBe(['manage-campaigns', 'manage-organization', 'view-trauma-screenings'])
-        ->and($permissions('viewer'))->toBe([]);
+    expect($permissions('owner'))->toBe(['manage-campaigns', 'manage-members', 'manage-organization', 'manage-telework', 'review-workplaces', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('hr'))->toBe(['manage-campaigns', 'manage-organization', 'manage-telework', 'review-workplaces', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('viewer'))->toBe(['view-telework'])
+        ->and($permissions('committee'))->toBe(['review-workplaces', 'view-telework']);
 });
 
 it('keeps each person\'s role per company: hr in one, viewer in another', function (): void {
@@ -114,4 +115,16 @@ it('rejects an unknown role in an invitation', function (): void {
         ...TenantInvitation::factory()->raw(['tenant_id' => Tenant::factory()->create()->id, 'role' => 'admin']),
         'id' => fake()->uuid(),
     ]))->toThrow(QueryException::class, 'tenant_invitations_role_known');
+});
+
+it('forgets who can review as soon as someone loses their role', function (): void {
+    $tenant = Tenant::factory()->create();
+    $cora = memberOf($tenant, TenantRole::Committee);
+    workIn($tenant);
+    $members = resolve(App\Modules\Tenancy\Contracts\Members::class);
+    expect(array_map(fn ($member): int => $member->userId, $members->reviewers()))->toBe([$cora->id]);
+
+    resolve(CompanyRoles::class)->remove($cora, $tenant);
+
+    expect($members->reviewers())->toBe([]);
 });

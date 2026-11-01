@@ -1,0 +1,68 @@
+Ley Federal de Protección de Datos Personales en Posesión de los Particulares (DOF 20/03/2025; última reforma DOF 14-11-2025).
+Extracto de los artículos 3, fracción VI, 7, 8 y 9, tomado el 2026-10-30 de https://www.diputados.gob.mx/LeyesBiblio/pdf/LFPDPPP.pdf
+(SHA-256 del PDF: 04d67464e1efc0472040e2ff8012ced52c73ff4fc3573c8e2d3477fd976359c6).
+
+VI. Datos personales sensibles: Aquellos datos personales que afecten a la esfera más íntima 
+de la persona titular, o cuya utilización indebida pueda dar origen a discriminación o conlleve 
+un riesgo grave para esta. De manera enunciativa más no limitativa se consideran sensibles 
+los datos personales que puedan revelar as pectos como origen racial o étnico, estado de 
+salud presente o futuro, información genética, creencias religiosas, filosóficas y morales, 
+opiniones políticas y preferencia sexual; 
+Artículo 7. Todo tratamiento de datos personales estará sujeto al consentimiento de la persona titular, 
+salvo las excepciones previstas por la presente Ley. 
+ 
+El consentimiento podrá manifestarse de forma expresa o tácita. Se deberá entender que el 
+consentimiento es expreso cuando la voluntad de la persona titular se manifieste verbalmente, por 
+escrito, por medios electrónicos, ópticos, signos inequívocos o por cualquier otra tecnología.  
+ 
+El consentimiento será tácito cuando habiéndose puesto a disposición de la persona titular el aviso de 
+privacidad, esta no manifieste su voluntad en sentido contrario. 
+ 
+Por regla general será válido el consentimiento tácito, salvo que las disposiciones jurídicas aplicables 
+exijan que la voluntad de la persona titular se manifieste expresamente.  
+ 
+Los datos financieros o patrimoniales requerirán el consentimiento expreso de la person a titular, salvo 
+las excepciones a que se refieren los artículos 9 y 36 de la presente Ley.  
+ 
+El consentimiento podrá ser revocado en cualquier momento sin que se le atribuyan efectos 
+retroactivos. Para revocar el consentimiento, el responsable deberá, en e l aviso de privacidad, establecer 
+los mecanismos y procedimientos para ello. 
+ 
+Artículo 8.  Tratándose de datos personales sensibles, el responsable deberá obtener el 
+consentimiento expreso y por escrito de la persona titular para su tratamiento, a través de  su firma 
+autógrafa, firma electrónica, o cualquier mecanismo de autenticación que al efecto se establezca.  
+ 
+No podrán crearse bases de datos que contengan datos personales sensibles, sin que se justifique la 
+creación de las mismas para finalidades legítim as, concretas y acordes con las actividades o fines 
+explícitos que persigue el sujeto regulado. 
+ 
+Artículo 9. El responsable no estará obligado a recabar el consentimiento de la persona titular para el 
+tratamiento de los datos personales cuando: 
+ 
+I. Una disposición jurídica así lo disponga; 
+ 
+II. Los datos personales figuren en fuentes de acceso público; 
+ 
+III. Los datos personales se sometan a un procedimiento previo de disociación;  
+ 
+IV. Los datos personales se requieran para ejercer un derecho o cumplir obli gaciones derivadas 
+de una relación jurídica entre la persona titular y el responsable; 
+ 
+V. Exista una situación de emergencia que potencialmente pueda dañar a un individuo en su 
+persona o en sus bienes; 
+ 
+VI. Los datos personales sean indispensables para ef ectuar un tratamiento para atención 
+médica, la prevención, diagnóstico, la prestación de asistencia sanitaria, o la gestión de 
+servicios sanitarios, mientras la persona titular no esté en condiciones de otorgar el 
+consentimiento, en los términos que establ ece la Ley General de Salud y demás 
+disposiciones jurídicas aplicables y que dicho tratamiento de datos se realice por una 
+persona sujeta al secreto profesional u obligación equivalente, o 
+ 
+ 
+ 
+ 
+ 
+ 
+VII. Exista una orden judicial, resolución o mandato fundado y mot ivado de autoridad 
+competente. 
+ 

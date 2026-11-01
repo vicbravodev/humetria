@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Actions;
 
 use App\Modules\Organization\Data\EmployeeData;
+use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\EmployeeAttributes;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -25,6 +26,8 @@ final readonly class CreateEmployee
 
             // Only the id: a person's name and contact data stay out of logs.
             Log::info('employee.created', ['employee_id' => $employee->id]);
+
+            event(new EmployeeCreated($employee->tenant_id, $employee->id, $employee->work_center_id));
 
             return $employee;
         });

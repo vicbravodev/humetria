@@ -38,4 +38,11 @@ interface WorkCenters
 
     /** A work center by id, archived ones included, as a report names it; null outside the company. */
     public function profile(string $id): ?WorkCenterProfile;
+
+    /**
+     * The 32 federal entities, for an address another module takes: label by ISO 3166-2:MX code.
+     *
+     * @return array<string, string>
+     */
+    public function states(): array;
 }

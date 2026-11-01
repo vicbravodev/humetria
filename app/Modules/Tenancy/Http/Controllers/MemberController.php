@@ -72,7 +72,7 @@ final class MemberController extends Controller
                 ]),
             'roles' => array_map(
                 fn (TenantRole $role): array => ['value' => $role->value, 'label' => $role->label()],
-                [TenantRole::Hr, TenantRole::Viewer],
+                [TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee],
             ),
         ]);
     }

@@ -85,6 +85,12 @@ it('gives HR no individual response on any page about campaigns, results or peop
     'report' => fn (): string => route('tenant.campaigns.report', [$this->tenant, $this->evaluation->id]),
     'screenings' => fn (): string => route('tenant.campaigns.screenings', [$this->tenant, $this->evaluation->id]),
     'employees' => fn (): string => route('tenant.employees.index', $this->tenant),
+    'NOM-037' => fn (): string => route('tenant.telework.index', $this->tenant),
+    'NOM-037 work center' => fn (): string => route('tenant.telework.center', [$this->tenant, $this->plant->id]),
+    // The NOM-037 reviews show a checklist's answers to the Comisión that judges it, by name and by design (criterio
+    // C-16): they are not HR's pages (a 403 for owner and hr) and their answers are not anonymous Guía II/III ones.
+    'NOM-037 dossier' => fn (): string => route('tenant.telework.dossier', [$this->tenant, $this->plant->id]),
+    'NOM-037 notices' => fn (): string => route('tenant.telework.notices.index', $this->tenant),
 ], [TenantRole::Owner, TenantRole::Hr]);
 
 it('gives whoever opens a shared report no individual response', function (): void {

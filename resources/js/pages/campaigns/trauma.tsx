@@ -13,6 +13,7 @@ import type { ChoiceOption, Paginated, RosterPerson } from '@/types';
 export default function Trauma({
     workCenter,
     people,
+    preselected,
     filters,
     maxPeople,
     minDeadline,
@@ -20,6 +21,7 @@ export default function Trauma({
 }: {
     workCenter: ChoiceOption | null;
     people: Paginated<RosterPerson> | null;
+    preselected: { id: string; name: string } | null;
     filters: { q: string };
     maxPeople: number;
     minDeadline: string;
@@ -81,6 +83,7 @@ export default function Trauma({
                                 picker={picker}
                                 workCenter={workCenter}
                                 people={people}
+                                preselected={preselected}
                                 search={filters.q}
                                 maxPeople={maxPeople}
                                 deadline={{

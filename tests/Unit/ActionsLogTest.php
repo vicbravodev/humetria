@@ -16,6 +16,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Tenancy/Actions/ListUserTenants.php' => 'reads a list',
     'app/Modules/Tenancy/Actions/ListWorkCenters.php' => 'reads a paginated list',
     'app/Modules/Campaigns/Actions/OpenSurvey.php' => 'reads the link; SubmitSurvey logs what changes',
+    'app/Modules/Telework/Actions/OpenPortal.php' => 'reads the portal link; each portal action logs what changes',
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',
     'app/Modules/Campaigns/Actions/QueueSurveyInvitations.php' => 'its callers (launch, resend, invite missing, replacements) log with the counts',

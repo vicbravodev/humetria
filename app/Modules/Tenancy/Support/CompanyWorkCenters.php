@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Support;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterProfile;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -61,6 +62,11 @@ final class CompanyWorkCenters implements WorkCenters
             $workCenter->address(),
             $workCenter->main_activity,
         );
+    }
+
+    public function states(): array
+    {
+        return collect(MexicanState::cases())->mapWithKeys(fn (MexicanState $state): array => [$state->value => $state->label()])->all();
     }
 
     private function summary(WorkCenter $workCenter): WorkCenterSummary
