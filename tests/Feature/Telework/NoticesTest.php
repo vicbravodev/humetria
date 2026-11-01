@@ -540,4 +540,34 @@ describe('the notices page', function (): void {
             ->where('teleworker.notices.1.status', 'Revisado')
             ->where('teleworker.notices.1.reviewedOn', '2026-02-28'));
     });
+
+    it('sends each notice in full', function (): void {
+        $this->employee->update(['job_title' => 'Analista']);
+
+        $this->actingAs($this->hr)->get(route('tenant.telework.notices.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+            ->where('notices.data.0', [
+                'id' => $this->pending->id,
+                'person' => 'Ana Ruiz',
+                'jobTitle' => 'Analista',
+                'workCenter' => $this->center->name,
+                'kindValue' => 'condition_change',
+                'kind' => NoticeKind::ConditionChange->label(),
+                'writtenOn' => '2026-02-27',
+                'occurredOn' => '2026-02-25',
+                'description' => 'Presencié un asalto',
+                'traumaticEvent' => true,
+                'temporary' => false,
+                'newAddress' => null,
+                'submittedOn' => '2026-02-27',
+                'reviewedOn' => null,
+                'reviewNote' => null,
+                'canReview' => true,
+                'trauma' => ['workCenter' => $this->center->id, 'employee' => $this->employee->id],
+            ]));
+    });
+
+    it('confirms the review in a toast', function (): void {
+        $this->actingAs($this->hr)->post(route('tenant.telework.notices.review', [$this->tenant, $this->pending->id]), ['note' => 'Visto.'])
+            ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Revisión registrada.']]);
+    });
 });

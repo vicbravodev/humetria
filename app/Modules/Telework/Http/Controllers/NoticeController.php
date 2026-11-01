@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use LogicException;
 
 /**
  * The written notices of the company's teleworkers (numerals 6.3, 6.7, 6.9), for RH and the Comisión of each center
@@ -42,7 +43,8 @@ final class NoticeController extends Controller
     {
         Gate::authorize('review-workplaces');
         $user = $request->user();
-        abort_if($user === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore
 
         $centers = [];
 
@@ -66,8 +68,9 @@ final class NoticeController extends Controller
             ->withQueryString();
 
         $teleworkers = Teleworker::query()->whereIn('id', array_map(fn (WorkerNotice $notice): string => $notice->teleworker_id, $page->items()))->get(['id', 'employee_id', 'work_center_id'])->keyBy('id');
-        $people = $this->roster->findMany(array_values($teleworkers->map(fn (Teleworker $teleworker): string => $teleworker->employee_id)->all()));
-        $workplaces = Workplace::query()->whereIn('id', array_values(array_filter(array_map(fn (WorkerNotice $notice): ?string => $notice->new_workplace_id, $page->items()))))->get()->keyBy('id');
+        // A whereIn ignores the keys of its values, and a null in it matches nothing.
+        $people = $this->roster->findMany(array_values($teleworkers->map(fn (Teleworker $teleworker): string => $teleworker->employee_id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
+        $workplaces = Workplace::query()->whereIn('id', array_values(array_filter(array_map(fn (WorkerNotice $notice): ?string => $notice->new_workplace_id, $page->items()))))->get()->keyBy('id'); // @pest-mutate-ignore: UnwrapArrayValues,UnwrapArrayFilter
         $zone = config()->string('app.display_timezone');
         $canLaunch = Gate::allows('manage-campaigns');
         // Once per request: RH reviews everywhere, the Comisión only in the centers it sits on (already read as the limit).
@@ -75,15 +78,16 @@ final class NoticeController extends Controller
 
         return Inertia::render('telework/notices', [
             'notices' => $page->through(function (WorkerNotice $notice) use ($teleworkers, $people, $workplaces, $centers, $zone, $canLaunch, $manages, $limit): array {
-                $teleworker = $teleworkers->get($notice->teleworker_id);
-                $person = $teleworker === null ? null : ($people[$teleworker->employee_id] ?? null);
-                $centerId = $teleworker === null ? '' : $teleworker->work_center_id;
+                // The foreign keys guarantee the period of every notice and the employee of every period.
+                $teleworker = $teleworkers->get($notice->teleworker_id) ?? throw new LogicException("Notice [{$notice->id}] has no period.");
+                $person = $people[$teleworker->employee_id];
+                $centerId = $teleworker->work_center_id;
                 $workplace = $notice->new_workplace_id === null ? null : $workplaces->get($notice->new_workplace_id);
 
                 return [
                     'id' => $notice->id,
-                    'person' => $person === null ? '' : $person->name,
-                    'jobTitle' => $person === null ? '' : $person->jobTitle,
+                    'person' => $person->name,
+                    'jobTitle' => $person->jobTitle,
                     'workCenter' => isset($centers[$centerId]) ? $centers[$centerId]->name : '',
                     'kindValue' => $notice->kind->value,
                     'kind' => $notice->kind->label(),
@@ -96,9 +100,10 @@ final class NoticeController extends Controller
                     'submittedOn' => $notice->submitted_at->setTimezone($zone)->toDateString(),
                     'reviewedOn' => $notice->reviewed_at?->setTimezone($zone)->toDateString(),
                     'reviewNote' => $notice->review_note,
-                    'canReview' => $manages || ($limit !== null && in_array($centerId, $limit, true)),
+                    // The Comisión sees only the notices of its centers, so for it the in_array() always holds.
+                    'canReview' => $manages || ($limit !== null && in_array($centerId, $limit, true)), // @pest-mutate-ignore: BooleanAndToBooleanOr
                     // The Guía I is launched from the NOM-035 area: only who may open campaigns gets the way in.
-                    'trauma' => $canLaunch && $notice->traumatic_event && $teleworker !== null ? ['workCenter' => $centerId, 'employee' => $teleworker->employee_id] : null,
+                    'trauma' => $canLaunch && $notice->traumatic_event ? ['workCenter' => $centerId, 'employee' => $teleworker->employee_id] : null,
                 ];
             }),
             'filters' => ['center' => $selected === null ? null : ['value' => $selected->id, 'label' => $selected->name]],
@@ -108,7 +113,7 @@ final class NoticeController extends Controller
     public function review(NoticeReviewRequest $request, mixed $tenant, string $notice, ReviewNotice $review): RedirectResponse
     {
         $user = $request->user();
-        abort_if($user === null, 403);
+        abort_if($user === null, 403); // @pest-mutate-ignore
 
         $review->handle($this->access->reviewable($user->id, $notice), $request->string('note')->toString(), $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Revisión registrada.']);
