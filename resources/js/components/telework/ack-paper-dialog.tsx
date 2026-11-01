@@ -21,6 +21,7 @@ export default function AckPaperDialog({
     documentId,
     chosen,
     all,
+    days,
     onDone,
 }: {
     tenantSlug: string;
@@ -28,6 +29,8 @@ export default function AckPaperDialog({
     chosen: string[];
     /** Everyone pending the search found: sent as a request, never as ids, so there is no cap. */
     all: AckAllMatching | null;
+    /** The days the paper can carry: from publication to today, both in the display timezone. */
+    days: { first: string; today: string };
     onDone: () => void;
 }) {
     const [open, setOpen] = useState(false);
@@ -90,7 +93,7 @@ export default function AckPaperDialog({
                                 role="alert"
                                 message={errors['employee_ids']}
                             />
-                            <AckPaperFields errors={errors} />
+                            <AckPaperFields days={days} errors={errors} />
                             <Button
                                 type="submit"
                                 disabled={processing}

@@ -22,6 +22,7 @@ import type {
 export default function Acknowledgements({
     document,
     progress,
+    today,
     people,
     committee,
     counts,
@@ -31,6 +32,7 @@ export default function Acknowledgements({
 }: {
     document: AckDocument;
     progress: AckProgress;
+    today: string;
     people: Paginated<AckPerson>;
     committee: AckCommitteeMember[];
     counts: Record<AckFilters['status'], number>;
@@ -75,6 +77,7 @@ export default function Acknowledgements({
                             documentId={document.id}
                             chosen={choice.chosen}
                             all={all}
+                            days={{ first: document.publishedOn, today }}
                             onDone={clear}
                         />
                     )}

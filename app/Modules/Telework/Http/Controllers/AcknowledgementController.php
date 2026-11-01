@@ -67,6 +67,8 @@ final class AcknowledgementController extends Controller
                 'publishedOn' => $date($found->created_at),
             ],
             'progress' => $progress->of($found, $audience),
+            // The default paper date: the last day the server accepts, so it never depends on the browser's clock.
+            'today' => CarbonImmutable::now($zone)->toDateString(),
             'people' => $people->through(function (RosterEntry $person) use ($given, $date): array {
                 $ack = $given->get($person->id);
 

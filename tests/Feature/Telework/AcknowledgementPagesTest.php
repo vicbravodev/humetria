@@ -189,6 +189,17 @@ it('needs people or the all-matching flag to record paper acknowledgements', fun
     $this->post(route('tenant.telework.documents.acknowledgements.store', [$this->tenant, $document->id]), ['date' => '2026-05-10', 'note' => 'Hoja'])->assertSessionHasErrors('employee_ids');
 });
 
+it('offers today in the display timezone as the paper date, the last day the server accepts', function (): void {
+    worker('Ana Ruiz');
+    $document = published();
+    // 00:30 UTC on May 11 is still May 10 in Mexico City: the day the server checks the date against.
+    $this->travelTo(CarbonImmutable::parse('2026-05-11 00:30:00', 'UTC'));
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.telework.documents.acknowledgements.index', [$this->tenant, $document->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('document.publishedOn', '2026-05-10')->where('today', '2026-05-10'));
+});
+
 it('refuses a paper date before the document was published', function (): void {
     $ana = worker('Ana');
     $document = published();
