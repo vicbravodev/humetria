@@ -225,7 +225,7 @@ it('refuses to confirm a superseded version from the portal, the panel and on pa
 
     expect(fn () => resolve(Acknowledge::class)->handle($portal, $oldPolicy->id, null))->toThrow(Illuminate\Validation\ValidationException::class)
         ->and(fn () => resolve(Acknowledge::class)->inPanel($cora->id, $oldRisk->id, null))->toThrow(Illuminate\Validation\ValidationException::class)
-        ->and(fn () => resolve(RecordManualAcknowledgements::class)->handle($oldPolicy->id, [$ana->id], CarbonImmutable::now(), 'Hoja', $this->hr->id))->toThrow(Illuminate\Validation\ValidationException::class);
+        ->and(fn () => resolve(RecordManualAcknowledgements::class)->handle($oldPolicy->id, [$ana->id], CarbonImmutable::now(), 'Hoja', $this->hr->id))->toThrow(Illuminate\Validation\ValidationException::class, 'Esta versión ya no está vigente: hay una más reciente.');
     expect(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
 });
 

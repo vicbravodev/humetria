@@ -39,7 +39,9 @@ final readonly class AckAudience
      */
     public function ofMany(array $documents): array
     {
-        $centers = fn (DocumentKind $kind): array => array_values(array_unique(array_map(fn (TeleworkDocument $document): string => $document->work_center_id, array_filter($documents, fn (TeleworkDocument $document): bool => $document->kind === $kind))));
+        // The centers only feed whereIn() queries, and each kind's audience reads only its own documents' centers: a center
+        // of the other kind, a repeated one or the keys change no audience.
+        $centers = fn (DocumentKind $kind): array => array_values(array_unique(array_map(fn (TeleworkDocument $document): string => $document->work_center_id, array_filter($documents, fn (TeleworkDocument $document): bool => $document->kind === $kind)))); // @pest-mutate-ignore: UnwrapArrayFilter,UnwrapArrayUnique,UnwrapArrayValues
         $policyCenters = $centers(DocumentKind::Policy);
         $riskCenters = $centers(DocumentKind::RiskInformation);
 
@@ -88,7 +90,8 @@ final readonly class AckAudience
      */
     public function pendingMatching(TeleworkDocument $document, AckAudienceIds $audience, string $search): array
     {
-        $pending = array_values(array_filter($this->requests($document, $audience)->whereNull('acknowledged_at')->whereNotNull('employee_id')->get(['employee_id'])->map(fn (Acknowledgement $ack): ?string => $ack->employee_id)->all(), is_string(...)));
+        // Read with whereNotNull('employee_id'), so none is null; the ids only feed a roster query.
+        $pending = array_values(array_filter($this->requests($document, $audience)->whereNull('acknowledged_at')->whereNotNull('employee_id')->get(['employee_id'])->map(fn (Acknowledgement $ack): ?string => $ack->employee_id)->all(), is_string(...))); // @pest-mutate-ignore: UnwrapArrayFilter,UnwrapArrayValues
 
         return $this->roster->matchingIds(new RosterQuery(employeeIds: $pending, search: $search));
     }
@@ -98,7 +101,8 @@ final readonly class AckAudience
     {
         return match ($document->kind) {
             DocumentKind::Policy => $this->roster->activeIdsIn($document->work_center_id),
-            DocumentKind::RiskInformation => array_values(Teleworker::query()
+            // A fresh get() is already a list, here and in userIds().
+            DocumentKind::RiskInformation => array_values(Teleworker::query() // @pest-mutate-ignore: UnwrapArrayValues
                 ->where('work_center_id', $document->work_center_id)->where('status', TeleworkerStatus::Active)->get(['employee_id'])->map(fn (Teleworker $period): string => $period->employee_id)->all()),
             default => [],
         };
@@ -113,7 +117,7 @@ final readonly class AckAudience
 
         $reviewers = array_map(fn (MemberSummary $member): int => $member->userId, $this->members->reviewers());
 
-        return array_values(CommitteeAssignment::query()
+        return array_values(CommitteeAssignment::query() // @pest-mutate-ignore: UnwrapArrayValues
             ->where('work_center_id', $document->work_center_id)->whereIn('user_id', $reviewers)->get(['user_id'])->map(fn (CommitteeAssignment $seat): int => $seat->user_id)->all());
     }
 }

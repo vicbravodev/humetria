@@ -40,7 +40,8 @@ final readonly class RecordManualAcknowledgements
             $ids = [];
             foreach (array_chunk($employeeIds, 1000) as $chunk) {
                 $found = Acknowledgement::query()->where('document_id', $documentId)->whereIn('employee_id', $chunk)->whereNull('acknowledged_at')->lockForUpdate()->get(['employee_id']);
-                $ids = [...$ids, ...array_filter($found->map(fn (Acknowledgement $ack): ?string => $ack->employee_id)->all(), is_string(...))];
+                // Found by employee_id, so none is null: the filter only narrows the type.
+                $ids = [...$ids, ...array_filter($found->map(fn (Acknowledgement $ack): ?string => $ack->employee_id)->all(), is_string(...))]; // @pest-mutate-ignore: UnwrapArrayFilter
             }
             sort($ids);
 
