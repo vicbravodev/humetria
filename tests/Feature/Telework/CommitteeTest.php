@@ -113,7 +113,14 @@ it('names the fields in Spanish', function (): void {
 });
 
 it('accepts today as the act date', function (): void {
-    registerCommittee(['constituted_on' => now()->toDateString()])->assertSessionHasNoErrors();
+    registerCommittee(['constituted_on' => now(config()->string('app.display_timezone'))->toDateString()])->assertSessionHasNoErrors();
+});
+
+it('takes today in Mexico City, not in UTC, as the latest act date', function (): void {
+    $this->travelTo('2026-05-11 00:30:00'); // UTC; still 2026-05-10 in Mexico City
+
+    registerCommittee(['constituted_on' => '2026-05-11'])->assertSessionHasErrors('constituted_on');
+    registerCommittee(['constituted_on' => '2026-05-10'])->assertSessionHasNoErrors();
 });
 
 it('rejects a member of another company, a person who cannot review and a repeated id', function (): void {

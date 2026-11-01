@@ -26,7 +26,7 @@ final class CommitteeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'constituted_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'constituted_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()],
             // mimetypes reads the file's content, not its extension.
             'act' => ['nullable', 'file', 'mimetypes:application/pdf', 'max:'.config()->integer('telework.max_document_kb')],
             'member_ids' => ['required', 'array', 'min:1'],
