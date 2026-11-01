@@ -38,7 +38,9 @@ final readonly class VisibleCenters
     public function page(int $userId, int $perPage): LengthAwarePaginator
     {
         $limit = $this->limitedTo($userId);
-        $visible = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && ($limit === null || in_array($center->id, $limit, true))));
+        // array_slice() below numbers what it takes anew, here and in search().
+        $visible = array_values(array_filter( // @pest-mutate-ignore: UnwrapArrayValues
+            $this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && ($limit === null || in_array($center->id, $limit, true))));
         $page = LengthAwarePaginator::resolveCurrentPage();
 
         return (new LengthAwarePaginator(array_slice($visible, ($page - 1) * $perPage, $perPage), count($visible), $perPage, $page, ['path' => LengthAwarePaginator::resolveCurrentPath()]))->withQueryString();
@@ -54,7 +56,7 @@ final readonly class VisibleCenters
         $limit = $this->limitedTo($userId);
         $needle = Str::lower(Str::ascii(trim($query)));
 
-        return array_slice(array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived
+        return array_slice(array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived // @pest-mutate-ignore: UnwrapArrayValues
             && ($limit === null || in_array($center->id, $limit, true))
             && str_contains(Str::lower(Str::ascii($center->name)), $needle))), 0, self::LIMIT);
     }
