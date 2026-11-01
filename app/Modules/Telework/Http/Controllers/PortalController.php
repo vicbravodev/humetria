@@ -45,13 +45,14 @@ final class PortalController extends Controller
             'company' => $portal->company,
             'name' => $portal->name,
             'canNotify' => $portal->teleworkerId !== null,
+            // Each row names the fields of its DTO, which has exactly those: sending the DTOs would send the same JSON.
             'pending' => [
-                'checklists' => array_map($row, $items->checklists),
-                'sent' => array_map($row, $items->sent),
-                'photos' => array_map(fn (PendingPhotoRequest $item): array => ['id' => $item->id, 'workplace' => $item->workplace, 'note' => $item->note], $items->photos),
-                'visits' => array_map(fn (PendingVisit $item): array => ['id' => $item->id, 'workplace' => $item->workplace], $items->visits),
-                'documents' => array_map(fn (PendingDocument $item): array => ['id' => $item->id, 'title' => $item->title, 'publishedOn' => $item->publishedOn], $items->documents),
-                'equipment' => array_map(fn (PendingEquipment $item): array => ['id' => $item->id, 'title' => $item->title, 'kind' => $item->kind, 'deliveredOn' => $item->deliveredOn], $items->equipment),
+                'checklists' => array_map($row, $items->checklists), // @pest-mutate-ignore: UnwrapArrayMap
+                'sent' => array_map($row, $items->sent), // @pest-mutate-ignore: UnwrapArrayMap
+                'photos' => array_map(fn (PendingPhotoRequest $item): array => ['id' => $item->id, 'workplace' => $item->workplace, 'note' => $item->note], $items->photos), // @pest-mutate-ignore: UnwrapArrayMap
+                'visits' => array_map(fn (PendingVisit $item): array => ['id' => $item->id, 'workplace' => $item->workplace], $items->visits), // @pest-mutate-ignore: UnwrapArrayMap
+                'documents' => array_map(fn (PendingDocument $item): array => ['id' => $item->id, 'title' => $item->title, 'publishedOn' => $item->publishedOn], $items->documents), // @pest-mutate-ignore: UnwrapArrayMap
+                'equipment' => array_map(fn (PendingEquipment $item): array => ['id' => $item->id, 'title' => $item->title, 'kind' => $item->kind, 'deliveredOn' => $item->deliveredOn], $items->equipment), // @pest-mutate-ignore: UnwrapArrayMap
             ],
         ]);
     }

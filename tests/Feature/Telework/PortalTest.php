@@ -267,3 +267,25 @@ it('issues one link when a first issue meets the row another request just insert
         ->and(PortalLink::query()->where('employee_id', $other->id)->value('id'))->toBe($winner->id)
         ->and($token)->toBe(PortalLink::tokenFor($this->tenant->id, $other->id, 1, config()->string('app.key')));
 });
+
+it('sends nothing about anyone through a link that no longer opens', function (): void {
+    auth()->logout();
+
+    $this->get(route('portal.show', 'not-a-real-token'))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->component('telework/portal')
+        ->where('unavailable', true)
+        ->where('token', null)
+        ->where('company', null)
+        ->where('name', null)
+        ->where('canNotify', false)
+        ->where('pending', ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]));
+});
+
+it('sends the token, the company and the person through a link that opens', function (): void {
+    $this->get(route('portal.show', $this->token))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('unavailable', false)
+        ->where('token', $this->token)
+        ->where('company', 'Acme')
+        ->where('name', 'Ana Ruiz')
+        ->where('canNotify', false));
+});
