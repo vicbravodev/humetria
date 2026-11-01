@@ -30,7 +30,7 @@ final readonly class RequestChecklist
             return $existing;
         }
 
-        $teleworker = Teleworker::query()->findOrFail($workplace->teleworker_id, ['id', 'work_center_id']);
+        $teleworker = Teleworker::query()->findOrFail($workplace->teleworker_id, ['work_center_id']);
         $checklist = Checklist::latestPublished($teleworker->work_center_id) ?? throw ValidationException::withMessages(['work_center' => 'La Comisión aún no publica la lista']);
 
         try {

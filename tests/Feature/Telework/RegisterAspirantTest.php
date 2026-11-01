@@ -422,7 +422,26 @@ it('cannot ask for a checklist the Comisión has not published', function (): vo
     $workplace = aspirant()->workplaces[0];
     Checklist::query()->update(['status' => ChecklistStatus::Draft, 'published_at' => null]);
 
-    expect(fn () => resolve(RequestChecklist::class)->handle($workplace, Section::Two))->toThrow(ValidationException::class);
+    expect(fn () => resolve(RequestChecklist::class)->handle($workplace, Section::Two))->toThrow(ValidationException::class, 'La Comisión aún no publica la lista');
+});
+
+it('gives back the list still waiting even when the Comisión has no list published any more', function (): void {
+    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
+    $workplace = aspirant()->workplaces[0];
+    $waiting = ChecklistApplication::query()->sole();
+    Checklist::query()->update(['status' => ChecklistStatus::Draft, 'published_at' => null]);
+
+    expect(resolve(RequestChecklist::class)->handle($workplace, Section::One)->id)->toBe($waiting->id);
+});
+
+it('logs each checklist it asks for with ids only', function (): void {
+    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
+    $workplace = aspirant()->workplaces[0];
+    Log::spy();
+
+    $application = resolve(RequestChecklist::class)->handle($workplace, Section::Two);
+
+    Log::shouldHaveReceived('info')->with('telework.checklist_requested', ['application_id' => $application->id, 'workplace_id' => $workplace->id, 'section' => 2, 'checklist_id' => $this->checklist->id])->once();
 });
 
 it('sends the teleworker page in full: the person, their equipment, their notices and their places', function (): void {
