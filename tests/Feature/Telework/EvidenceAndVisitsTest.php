@@ -482,3 +482,33 @@ it('does not validate by visit a workplace whose person answered no list, first 
     expect($visit(ReviewDecision::Valid)->method)->toBe(ReviewMethod::Visit)
         ->and(VisitAuthorization::query()->count())->toBe(4);
 });
+
+it('confirms each step of a visit in a toast', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $toast = fn (string $message): array => ['toast' => ['type' => 'success', 'message' => $message]];
+
+    $this->actingAs($this->cora)->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, $toast('Se pidió la autorización de la visita. La persona la verá en su portal.'));
+    $asked = VisitAuthorization::query()->sole();
+    $this->post(route('tenant.telework.visit-authorizations.cancel', [$this->tenant, $asked->id]))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, $toast('Solicitud de visita cancelada.'));
+
+    $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $path = tempnam(sys_get_temp_dir(), 'vis');
+    file_put_contents($path, "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n");
+    $this->post(route('tenant.telework.visit-authorizations.document.store', [$this->tenant, $authorization->id]), ['document' => new UploadedFile($path, 'autorizacion.pdf', null, null, true)])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, $toast('Autorización guardada.'));
+    $this->post(route('tenant.telework.workplaces.visit.store', [$this->tenant, $this->workplace->id]), ['visit_authorization_id' => $authorization->id, 'visited_on' => '2026-03-09', 'decision' => 'valid'])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, $toast('Visita registrada.'));
+});
+
+it('says a visit needs the written authorization of that workplace, and lets only the assigned Comisión ask for one', function (): void {
+    $other = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
+    $foreign = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $other->id]);
+
+    $this->actingAs($this->cora)->post(route('tenant.telework.workplaces.visit.store', [$this->tenant, $this->workplace->id]), ['visit_authorization_id' => $foreign->id, 'visited_on' => '2026-01-01', 'decision' => 'valid'])
+        ->assertSessionHasErrors(['visit_authorization_id' => 'Se necesita la autorización escrita de la persona.']);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Committee))->post(route('tenant.telework.visit-authorizations.store', [$this->tenant, $this->workplace->id]))->assertNotFound();
+    expect(VisitAuthorization::query()->count())->toBe(1);
+});

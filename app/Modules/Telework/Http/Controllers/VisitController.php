@@ -97,7 +97,8 @@ final class VisitController extends Controller
     private function userId(Request $request): int
     {
         $user = $request->user();
-        abort_if($user === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore
 
         return $user->id;
     }
