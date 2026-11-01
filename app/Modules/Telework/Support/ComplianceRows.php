@@ -190,7 +190,10 @@ final readonly class ComplianceRows
     private function people(array $ids): array
     {
         // Without the aspirants key, the first aspirant creates it and a center without any falls back to 0: equivalent.
-        $people = ['active' => [], 'aspirants' => []]; // @pest-mutate-ignore: RemoveArrayItem
+        $people = [
+            'active' => [],
+            'aspirants' => [], // @pest-mutate-ignore: RemoveArrayItem
+        ];
 
         foreach (Teleworker::query()->whereIn('work_center_id', $ids)->whereIn('status', [TeleworkerStatus::Active, TeleworkerStatus::Aspirant])
             ->get(['id', 'work_center_id', 'status', 'started_at', 'no_equipment_reason']) as $person) {
