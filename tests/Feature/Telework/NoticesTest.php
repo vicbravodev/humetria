@@ -184,6 +184,28 @@ it('lists a person\'s sent notices without any review content', function (): voi
     expect($response->getContent())->not->toContain('Nota-interna');
 });
 
+it('sends the person\'s notices page in full, ten notices at a time, and confirms a sent notice', function (): void {
+    $token = noticeToken();
+    $this->tenant->update(['trade_name' => 'Acme']);
+    foreach (range(1, 11) as $day) {
+        WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'submitted_at' => "2026-02-{$day} 10:00:00"]);
+    }
+    $newest = DB::table('worker_notices')->orderByDesc('submitted_at')->first();
+
+    $this->get(route('portal.notices.show', $token))->assertInertia(fn (Assert $page) => $page
+        ->where('token', $token)
+        ->where('company', 'Acme')
+        ->where('name', 'Ana Ruiz')
+        ->where('states.QUE', 'Querétaro')
+        ->where('today', '2026-03-01')
+        ->where('notices.total', 11)
+        ->where('notices.per_page', 10)
+        ->where('notices.data.0', ['id' => $newest->id, 'kind' => NoticeKind::WorkRisk->label(), 'writtenOn' => $newest->written_on, 'status' => 'Recibido']));
+
+    $this->post(route('portal.notices.store', $token), noticeForm())
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Su aviso fue enviado. La empresa lo recibió.']]);
+});
+
 it('shows the notices area only to a person with an open telework period', function (): void {
     $outsider = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     $other = resolve(IssuePortalLink::class)->handle($outsider->id);
