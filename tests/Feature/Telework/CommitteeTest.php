@@ -472,3 +472,40 @@ it('does not carry the people of one company over to another', function (): void
     expect($mine)->toContain($this->hr->id)->not->toContain($stranger->id)
         ->and($theirs)->toBe([$stranger->id]);
 });
+
+it('sends the members and the candidates as lists, each in full, and the seats without access last', function (): void {
+    $this->cora->update(['name' => 'Ana Comisión']);
+    $this->hr->update(['name' => 'Zoe Recursos']);
+    $gone = memberOf($this->tenant, TenantRole::Committee);
+    $gone->update(['name' => 'Beto Baja']);
+    registerCommittee(['member_ids' => [$this->cora->id, $gone->id]])->assertSessionHasNoErrors();
+    workIn($this->tenant);
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->remove($gone, $this->tenant);
+
+    $this->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('committee.members', [
+            ['id' => $this->cora->id, 'name' => 'Ana Comisión', 'email' => $this->cora->email, 'role' => TenantRole::Committee->label(), 'active' => true],
+            ['id' => $gone->id, 'name' => 'Beto Baja', 'email' => $gone->email, 'role' => 'Sin acceso: ya no tiene un rol de la Comisión', 'active' => false],
+        ])
+        ->where('candidates', [['id' => $this->hr->id, 'name' => 'Zoe Recursos', 'email' => $this->hr->email, 'role' => TenantRole::Hr->label(), 'active' => true]]));
+});
+
+it('confirms each change to the Comisión in a toast', function (): void {
+    $other = memberOf($this->tenant, TenantRole::Committee);
+
+    registerCommittee()->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Comisión registrada. Ya existe el borrador de la lista de verificación.']]);
+    $this->post(route('tenant.telework.committee.members.store', [$this->tenant, $this->center->id]), ['user_id' => $other->id])
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Integrante agregado a la Comisión.']]);
+    $this->delete(route('tenant.telework.committee.members.destroy', [$this->tenant, $this->center->id, $other->id]))
+        ->assertRedirect(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Integrante quitado de la Comisión.']]);
+});
+
+it('closes the Comisión page and its act to a role without view-telework', function (): void {
+    Storage::fake('local');
+    registerCommittee(['act' => pdf()])->assertSessionHasNoErrors();
+    Spatie\Permission\Models\Role::findByName(TenantRole::Committee->value)->revokePermissionTo('view-telework');
+
+    $this->actingAs($this->cora)->get(route('tenant.telework.committee.show', [$this->tenant, $this->center->id]))->assertForbidden();
+    $this->actingAs($this->cora)->get(route('tenant.telework.committee.act', [$this->tenant, $this->center->id]))->assertForbidden();
+});

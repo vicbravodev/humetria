@@ -42,7 +42,9 @@ final class CommitteeController extends Controller
         abort_unless($user !== null && ($canManage || $gate->isMember($user->id, $center->id)), 404);
 
         $committee = SafetyCommittee::query()->where('work_center_id', $center->id)->first();
-        $assigned = array_values(CommitteeAssignment::query()->where('work_center_id', $center->id)->get(['user_id'])->map(fn (CommitteeAssignment $assignment): int => $assignment->user_id)->all());
+        // A fresh get() is already a list; a spread renumbers what it spreads.
+        $assigned = array_values(CommitteeAssignment::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->where('work_center_id', $center->id)->get(['user_id'])->map(fn (CommitteeAssignment $assignment): int => $assignment->user_id)->all());
         $reviewers = $members->reviewers();
         $row = fn (MemberSummary $member): array => ['id' => $member->userId, 'name' => $member->name, 'email' => $member->email, 'role' => $member->role->label(), 'active' => true];
 
@@ -52,7 +54,7 @@ final class CommitteeController extends Controller
                 'constitutedOn' => $committee->constituted_on->toDateString(),
                 'hasAct' => $committee->act_path !== null,
                 'members' => [
-                    ...array_map($row, array_values(array_filter($reviewers, fn (MemberSummary $member): bool => in_array($member->userId, $assigned, true)))),
+                    ...array_map($row, array_values(array_filter($reviewers, fn (MemberSummary $member): bool => in_array($member->userId, $assigned, true)))), // @pest-mutate-ignore: UnwrapArrayValues
                     ...$this->withoutAccess($assigned, $reviewers),
                 ],
             ],
@@ -78,7 +80,8 @@ final class CommitteeController extends Controller
     {
         $active = array_map(fn (MemberSummary $member): int => $member->userId, $reviewers);
 
-        return array_values(User::query()->whereIn('id', array_diff($assigned, $active))->orderBy('name')->orderBy('id')->get(['id', 'name', 'email'])
+        return array_values(User::query()->whereIn('id', array_diff($assigned, $active)) // @pest-mutate-ignore: UnwrapArrayValues
+            ->orderBy('name')->orderBy('id')->get(['id', 'name', 'email'])
             ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => 'Sin acceso: ya no tiene un rol de la Comisión', 'active' => false])
             ->all());
     }
@@ -102,7 +105,8 @@ final class CommitteeController extends Controller
     public function store(CommitteeRequest $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, RegisterCommittee $register): RedirectResponse
     {
         $center = $this->center($workCenters, $workCenter);
-        abort_if($request->user() === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($request->user() === null, 403); // @pest-mutate-ignore
 
         $register->handle($center->id, $request->constitutedOn(), $request->actFile(), $request->memberIds(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Comisión registrada. Ya existe el borrador de la lista de verificación.']);
