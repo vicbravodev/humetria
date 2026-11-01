@@ -22,9 +22,10 @@ final readonly class MoveQuestion
             $ids = ChecklistOrder::ids($checklist);
             $from = array_search($question->id, $ids, true);
             $to = $up ? $from - 1 : $from + 1;
-            $neighbour = $from === false ? null : ChecklistQuestion::query()->where('checklist_id', $checklist->id)->where('id', $ids[$to] ?? null)->first(['section']);
+            // The question was found in its own list, so $from is never false here: the checks only narrow the type.
+            $neighbour = $from === false ? null : ChecklistQuestion::query()->where('checklist_id', $checklist->id)->where('id', $ids[$to] ?? null)->first(['section']); // @pest-mutate-ignore: FalseToTrue
 
-            if ($from === false || $neighbour === null || $neighbour->section !== $question->section) {
+            if ($from === false || $neighbour === null || $neighbour->section !== $question->section) { // @pest-mutate-ignore: FalseToTrue
                 return;
             }
 

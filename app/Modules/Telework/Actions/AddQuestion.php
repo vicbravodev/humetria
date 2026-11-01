@@ -24,7 +24,7 @@ final readonly class AddQuestion
     public function handle(string $checklistId, int $section, string $heading, string $text, Favorable $favorable, ?Requirement $requirement, bool $sensitive): ChecklistQuestion
     {
         return ChecklistOrder::editing($checklistId, function (Checklist $checklist) use ($section, $heading, $text, $favorable, $requirement, $sensitive): ChecklistQuestion {
-            $questions = ChecklistQuestion::query()->where('checklist_id', $checklist->id)->orderBy('position')->get(['id', 'section', 'position', 'code']);
+            $questions = ChecklistQuestion::query()->where('checklist_id', $checklist->id)->orderBy('position')->get(['id', 'section']);
             $prefix = "C{$section}-";
             // Never reuse a code of the center's lineage: older versions (and a question taken out of this draft) keep theirs.
             $last = ChecklistQuestion::query()
@@ -36,7 +36,8 @@ final readonly class AddQuestion
                 'tenant_id' => $checklist->tenant_id,
                 'checklist_id' => $checklist->id,
                 'section' => $section,
-                'position' => $questions->count() + 1,
+                // A free position until renumber() below puts the question after the last of its section.
+                'position' => $questions->count() + 1, // @pest-mutate-ignore: IncrementInteger
                 'code' => $prefix.str_pad((string) ($last + 1), 2, '0', STR_PAD_LEFT),
                 'heading' => $heading,
                 'text' => $text,
@@ -44,7 +45,6 @@ final readonly class AddQuestion
                 'favorable' => $favorable,
                 'requirement' => $requirement,
                 'sensitive' => $sensitive,
-                'base_code' => null,
             ]);
 
             // After the last question of its section.

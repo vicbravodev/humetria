@@ -478,3 +478,26 @@ it('says there is no published list to copy', function (): void {
 
     expect(fn () => resolve(StartChecklistDraft::class)->handle($empty->id))->toThrow(Illuminate\Validation\ValidationException::class, 'Este centro aún no tiene una lista publicada que copiar.');
 });
+
+it('leaves the first question up and the last one down where they are, and logs each move with its direction', function (): void {
+    $order = codes();
+    Log::spy();
+
+    $this->post(qUrl('questions.move', question($order[0])->id), ['direction' => 'up'])->assertRedirect(qUrl('show'));
+    $this->post(qUrl('questions.move', question($order[121])->id), ['direction' => 'down'])->assertRedirect(qUrl('show'));
+    expect(codes())->toBe($order);
+    Log::shouldNotHaveReceived('info', fn (string $message): bool => $message === 'telework.question_moved');
+
+    $this->post(qUrl('questions.move', question('S1-02')->id), ['direction' => 'up']);
+    $this->post(qUrl('questions.move', question('S1-02')->id), ['direction' => 'down']);
+    Log::shouldHaveReceived('info')->with('telework.question_moved', ['checklist_id' => draft()->id, 'question_id' => question('S1-02')->id, 'direction' => 'up'])->once();
+    Log::shouldHaveReceived('info')->with('telework.question_moved', ['checklist_id' => draft()->id, 'question_id' => question('S1-02')->id, 'direction' => 'down'])->once();
+});
+
+it('logs each added question with its code', function (): void {
+    Log::spy();
+
+    $this->post(qUrl('questions.store'), ['section' => 1, 'heading' => 'Mi tema', 'text' => '¿Tiene extintor?', 'favorable' => 'yes', 'sensitive' => false]);
+
+    Log::shouldHaveReceived('info')->with('telework.question_added', ['checklist_id' => draft()->id, 'question_id' => question('C1-01')->id, 'code' => 'C1-01'])->once();
+});
