@@ -72,7 +72,6 @@ final class TeleworkerController extends Controller
     public function store(RegisterAspirantRequest $request, mixed $tenant, string $workCenter, RegisterAspirant $register): RedirectResponse
     {
         // RegisterAspirantRequest::authorize() already answered 404 for a center outside the company, archived or unknown.
-        $this->center($workCenter); // @pest-mutate-ignore: RemoveMethodCall
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
         abort_if($request->user() === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 

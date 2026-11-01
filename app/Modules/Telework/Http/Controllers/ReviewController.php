@@ -99,7 +99,6 @@ final class ReviewController extends Controller
         $found = Str::isUuid($application) ? ChecklistApplication::query()->find($application) : null;
         abort_if($found === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
         $workplace = Workplace::query()->findOrFail($found->workplace_id);
-        $this->access->member($this->userId($request), $this->access->workCenterOf($workplace)); // @pest-mutate-ignore: RemoveMethodCall
 
         $review->handle($workplace, $found, $request->decision(), $request->notes(), $request->actionPlan(), $request->planDueOn(), $this->userId($request));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Decisión registrada.']);
@@ -113,7 +112,6 @@ final class ReviewController extends Controller
         // controller its model.
         $found = Str::isUuid($workplace) ? Workplace::query()->find($workplace) : null;
         abort_if($found === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
-        $this->access->member($this->userId($request), $this->access->workCenterOf($found)); // @pest-mutate-ignore: RemoveMethodCall
 
         $review->handle($found, null, $request->decision(), $request->notes(), $request->actionPlan(), $request->planDueOn(), $this->userId($request));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Comprobación a distancia registrada.']);

@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Modules\Telework\Actions\RequestEvidence;
 use App\Modules\Telework\Http\Requests\EvidenceRequestRequest;
 use App\Modules\Telework\Models\Workplace;
-use App\Modules\Telework\Support\ReviewAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -19,8 +18,6 @@ use Inertia\Inertia;
  */
 final class EvidenceController extends Controller
 {
-    public function __construct(private readonly ReviewAccess $access) {}
-
     public function store(EvidenceRequestRequest $request, mixed $tenant, string $workplace, RequestEvidence $evidence): RedirectResponse
     {
         // EvidenceRequestRequest::authorize() already answered 404 for what is not there and checked the seat: this only
@@ -30,7 +27,6 @@ final class EvidenceController extends Controller
         $user = $request->user();
         // Every route of this controller sits behind the auth middleware: the check only narrows the type.
         abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
-        $this->access->member($user->id, $this->access->workCenterOf($found)); // @pest-mutate-ignore: RemoveMethodCall
 
         $evidence->handle($found, $request->kind(), $request->note(), $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud registrada.']);
