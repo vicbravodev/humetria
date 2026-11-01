@@ -107,7 +107,8 @@ final readonly class SendTeleworkDigests
     {
         $now = CarbonImmutable::now();
         $today = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay();
-        $since = DigestDelivery::query()->where('recipient', $recipient)->where('day', '<', $today->toDateString())->orderByDesc('delivered_at')->first(['delivered_at'])->delivered_at ?? $now->subDay();
+        // first([]) reads every column, delivered_at among them.
+        $since = DigestDelivery::query()->where('recipient', $recipient)->where('day', '<', $today->toDateString())->orderByDesc('delivered_at')->first(['delivered_at'])->delivered_at ?? $now->subDay(); // @pest-mutate-ignore: RemoveArrayItem
         $lines = $this->lines($sections, $centers, $since, $now, $today);
 
         if ($lines === []) {
@@ -117,7 +118,8 @@ final readonly class SendTeleworkDigests
         return DB::transaction(function () use ($recipient, $email, $company, $name, $lines, $centers, $slug, $today, $now): int {
             // The unique key settles two runs racing: only the one that wrote the row sends.
             $written = DB::table('telework_digest_deliveries')->insertOrIgnore([
-                'id' => (string) Str::uuid(),
+                // The query builder turns the uuid into its string itself: the cast only narrows the type.
+                'id' => (string) Str::uuid(), // @pest-mutate-ignore: RemoveStringCast
                 'tenant_id' => $this->companies->current()->id,
                 'recipient' => $recipient,
                 'day' => $today->toDateString(),
@@ -142,7 +144,7 @@ final readonly class SendTeleworkDigests
      */
     private function link(string $slug, ?array $centers): string
     {
-        $centers ??= array_values(Teleworker::query()->distinct()->get(['work_center_id'])->map(fn (Teleworker $teleworker): string => $teleworker->work_center_id)->all());
+        $centers ??= array_values(Teleworker::query()->distinct()->get(['work_center_id'])->map(fn (Teleworker $teleworker): string => $teleworker->work_center_id)->all()); // @pest-mutate-ignore: UnwrapArrayValues
 
         return count($centers) === 1 ? route('tenant.telework.center', [$slug, $centers[0]]) : route('tenant.telework.index', $slug);
     }
@@ -199,7 +201,8 @@ final readonly class SendTeleworkDigests
     {
         $workplaces = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', $this->teleworkers($centers)->where('status', TeleworkerStatus::Active)->select('id'))->get();
 
-        $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all()));
+        // A fresh get() is already a list (here, above and below), and latestReviews() only chunks the ids into a whereIn.
+        $reviews = $this->standing->latestReviews(array_values($workplaces->map(fn (Workplace $workplace): string => $workplace->id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
 
         return count(array_filter($reviews, function (WorkplaceReview $review) use ($since, $now): bool {
             if (! $review->decision->validates()) {
@@ -219,7 +222,7 @@ final readonly class SendTeleworkDigests
      */
     private function trainingDue(?array $centers, CarbonImmutable $today): int
     {
-        $people = array_values($this->teleworkers($centers)->where('status', TeleworkerStatus::Active)->get()->all());
+        $people = array_values($this->teleworkers($centers)->where('status', TeleworkerStatus::Active)->get()->all()); // @pest-mutate-ignore: UnwrapArrayValues
 
         return count(array_filter($this->training->schedule($people), fn (array $row): bool => $this->training->standing($row['due'], $today) !== TrainingStanding::Ok));
     }

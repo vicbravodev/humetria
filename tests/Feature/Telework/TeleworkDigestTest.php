@@ -250,3 +250,31 @@ it('links a Comisión member to the dashboard of its only center, or to the list
 
     expect(digestUrlFor($cora->email))->toBe(route('tenant.telework.index', $this->tenant));
 });
+
+it('adds the digests of the owner and the Comisión, and reaches the Comisión of a company without an owner', function (): void {
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => digestWorkplace($this->center)->teleworker_id]);
+    $orphan = Tenant::factory()->create();
+    $orphanCenter = WorkCenter::factory()->for($orphan)->create();
+    workIn($orphan);
+    $seated = memberOf($orphan, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $orphan->id, 'work_center_id' => $orphanCenter->id, 'user_id' => $seated->id]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $orphan->id, 'teleworker_id' => digestWorkplace($orphanCenter)->teleworker_id]);
+    workIn($this->tenant);
+
+    expect(resolve(SendTeleworkDigests::class)->handle())->toBe(3);
+});
+
+it('counts as new what expired since the last digest, however long ago it went', function (): void {
+    // Validated on 2025-12-18: it expires on 2026-12-18, two days after the first digest and two before the second.
+    digestWorkplace($this->center, '2025-12-18 18:00:00');
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => digestWorkplace($this->center)->teleworker_id]);
+    resolve(SendTeleworkDigests::class)->handle();
+    $this->travelTo('2026-12-20 14:00:00');
+    Notification::fake();
+
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestLinesFor($this->owner->email))->toContain('1 lugar de trabajo venció y quedó pendiente de validar.');
+});
