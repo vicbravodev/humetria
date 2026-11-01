@@ -63,7 +63,8 @@ final class ChecklistController extends Controller
                 'sensitive' => $question->sensitive,
             ])->all(),
             'requirements' => array_map(fn (Requirement $requirement): array => ['value' => $requirement->value, 'label' => $requirement->label()], Requirement::cases()),
-            'missing' => array_map(fn (array $list): array => array_map(fn (Requirement $requirement): string => $requirement->value, $list), $missing),
+            // A backed enum reaches the browser as its value: sending the cases themselves would send the same JSON.
+            'missing' => array_map(fn (array $list): array => array_map(fn (Requirement $requirement): string => $requirement->value, $list), $missing), // @pest-mutate-ignore: UnwrapArrayMap
             'missingLabels' => array_map(fn (array $list): array => array_map(fn (Requirement $requirement): string => $requirement->label(), $list), $missing),
         ]);
     }
@@ -132,7 +133,8 @@ final class ChecklistController extends Controller
     private function userId(Request $request): int
     {
         $user = $request->user();
-        abort_if($user === null, 403);
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore
 
         return $user->id;
     }

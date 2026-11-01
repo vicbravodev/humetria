@@ -23,6 +23,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(AddQuestion::class, UpdateQuestion::class, RemoveQuestion::class, MoveQuestion::class, PublishChecklist::class, StartChecklistDraft::class, Coverage::class, ChecklistController::class, ChecklistAccess::class);
@@ -389,4 +390,65 @@ it('locks the published version while starting a draft, so two starts at once ca
 
     $locks = array_filter($statements, fn (string $sql): bool => str_contains($sql, 'from "checklists"') && str_contains($sql, 'for update'));
     expect($locks)->toHaveCount(2)->and(array_values(array_filter($locks, fn (string $sql): bool => str_contains($sql, 'order by "version" desc'))))->toHaveCount(1);
+});
+
+it('sends each question with every field, the catalog of requirements and the center', function (): void {
+    $first = question('S1-01');
+
+    $this->get(qUrl('show'))->assertInertia(fn (Assert $page) => $page
+        ->where('workCenter', ['id' => $this->center->id, 'name' => $this->center->name])
+        ->where('canStartDraft', false)
+        ->where('questions.0', [
+            'id' => $first->id,
+            'section' => 1,
+            'code' => 'S1-01',
+            'heading' => $first->heading,
+            'text' => $first->text,
+            'origin' => 'dof',
+            'favorable' => $first->favorable->value,
+            'requirement' => $first->requirement?->value,
+            'sensitive' => $first->sensitive,
+        ])
+        ->where('requirements', array_map(fn (Requirement $requirement): array => ['value' => $requirement->value, 'label' => $requirement->label()], Requirement::cases())));
+});
+
+it('lets RH read the published list without offering to start a draft', function (): void {
+    $this->post(qUrl('publish'))->assertSessionHasNoErrors();
+
+    $this->actingAs($this->hr)->get(qUrl('show'))->assertInertia(fn (Assert $page) => $page
+        ->where('checklist.status', 'published')
+        ->where('canEdit', false)
+        ->where('canStartDraft', false));
+});
+
+it('answers 404 for a center whose Comisión has no list yet', function (): void {
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+
+    $this->actingAs($this->hr)->get(route('tenant.telework.checklist.show', [$this->tenant, $empty->id]))->assertNotFound();
+});
+
+it('confirms each change with a toast and comes back to the list', function (): void {
+    $this->post(qUrl('questions.store'), ['section' => 1, 'heading' => 'Mi tema', 'text' => '¿Tiene extintor?', 'favorable' => 'yes', 'sensitive' => false])
+        ->assertRedirect(qUrl('show'))->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Pregunta agregada.']]);
+    $this->put(qUrl('questions.update', question('C1-01')->id), ['text' => 'Otra', 'favorable' => 'yes', 'sensitive' => false, 'requirement' => null])
+        ->assertRedirect(qUrl('show'))->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Pregunta guardada.']]);
+    $this->post(qUrl('questions.move', question('C1-01')->id), ['direction' => 'up'])->assertRedirect(qUrl('show'));
+    $this->delete(qUrl('questions.destroy', question('C1-01')->id))
+        ->assertRedirect(qUrl('show'))->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Pregunta quitada del borrador.']]);
+    $this->post(qUrl('publish'))
+        ->assertRedirect(qUrl('show'))->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Versión 1 publicada.']]);
+    $this->post(qUrl('draft'))
+        ->assertRedirect(qUrl('show'))->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Borrador nuevo listo, copiado de la última versión publicada.']]);
+});
+
+it('warns on publishing which requirements of each section have no question, section I first', function (): void {
+    workIn($this->tenant);
+    ChecklistQuestion::query()->where('checklist_id', draft()->id)->where('section', 1)->where('requirement', Requirement::FamilyViolenceChannel->value)->update(['requirement' => null]);
+    ChecklistQuestion::query()->where('checklist_id', draft()->id)->where('section', 2)->whereIn('requirement', [Requirement::Chair->value, Requirement::Noise->value])->update(['requirement' => null]);
+    $sectionTwo = array_values(array_filter(Requirement::cases(), fn (Requirement $requirement): bool => in_array($requirement, [Requirement::Chair, Requirement::Noise], true)));
+
+    $this->post(qUrl('publish'))->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => [
+        'type' => 'warning',
+        'message' => 'Versión 1 publicada. Sin pregunta para: '.implode('; ', array_map(fn (Requirement $requirement): string => $requirement->label(), [Requirement::FamilyViolenceChannel, ...$sectionTwo])).'.',
+    ]]);
 });
