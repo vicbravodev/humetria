@@ -94,6 +94,54 @@ it('opens from the launcher, shows the answer with what it looked at, its card a
     'dark' => [true],
 ]);
 
+/** An answer that looked the norm up twice, with the markdown a model writes without blank lines. */
+function humiRegulationsStream(): string
+{
+    $criterion = ['norm' => 'NOM-037', 'id' => 'C-01', 'title' => 'La NOM-037 aplica a quien teletrabaja más del 40 % de su jornada', 'source' => 'Norma + STPS', 'text' => "**Qué hacemos.** Una persona entra al padrón con **más de 40 %**.\n\n**Qué dice la ley.** Otra cosa."];
+    $card = json_encode(['render' => 'list', 'title' => 'Normativa', 'rows' => [$criterion], 'link' => null, 'note' => null, 'truncated' => false]);
+    $text = "### ¿A quién aplica?\nA quienes teletrabajan más del 40 %.\nPuntos:\n* Una política\n* Una comisión\n*Fuente: criterio C-01.*";
+    $parts = [
+        ['type' => 'start', 'messageId' => 'm1'],
+        ['type' => 'tool-input-available', 'toolCallId' => 't1', 'toolName' => 'SearchRegulations', 'input' => []],
+        ['type' => 'tool-output-available', 'toolCallId' => 't1', 'output' => $card],
+        ['type' => 'tool-input-available', 'toolCallId' => 't2', 'toolName' => 'SearchRegulations', 'input' => []],
+        ['type' => 'tool-output-available', 'toolCallId' => 't2', 'output' => $card],
+        ['type' => 'text-start', 'id' => 'x1'],
+        ['type' => 'text-delta', 'id' => 'x1', 'delta' => $text],
+        ['type' => 'text-end', 'id' => 'x1'],
+        ['type' => 'finish', 'finishReason' => 'stop'],
+    ];
+
+    return implode('', array_map(fn (array $part): string => 'data: '.json_encode($part)."\n\n", $parts))."data: [DONE]\n\n";
+}
+
+it('draws the markdown of an answer and its norm card, once, and Humi reacts: it floats, and listens when the person writes', function (bool $dark): void {
+    visitPage('dashboard', humiPanelCompany(), $dark)
+        ->assertScript(humiServes(humiRegulationsStream()), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertScript('() => document.querySelectorAll(\'header .humi-bob\').length', 1)
+        ->assertScript('() => document.querySelectorAll(\'header path[d="M148 238 H172"]\').length', 0)
+        ->click('[aria-label="Pregúntale algo a Humi"]')
+        ->assertScript('() => document.querySelectorAll(\'header path[d="M148 238 H172"]\').length', 1)
+        ->click('¿Cómo va la participación?')
+        ->assertSee('¿A quién aplica?')
+        ->assertSee('NOM-037 · C-01')
+        ->assertSee('Norma + STPS')
+        ->assertSee('Una persona entra al padrón con')
+        ->assertScript('() => /###|\*\*|\*Fuente/.test(document.body.innerText)', false)
+        ->assertScript('() => document.body.innerText.split("Consulté la normativa").length - 1', 1)
+        ->assertScript('() => document.querySelectorAll(\'[aria-label="Normativa"]\').length', 1)
+        ->assertScript('() => document.querySelectorAll(\'[aria-label="Normativa"] li\').length', 1)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[aria-label="Normativa"]\')).animationName', 'humi-enter')
+        ->assertScript('() => document.querySelectorAll(\'[role="log"] li\').length > 0', true)
+        ->assertScript('() => document.querySelectorAll(\'[role="log"] em\').length', 1)
+        ->assertScript(cspViolations(), '[]')
+        ->assertNoJavaScriptErrors();
+})->with([
+    'light' => [false],
+    'dark' => [true],
+]);
+
 it('says why Humi cannot answer when it is off for the company, and keeps the person from writing', function (): void {
     $panel = humiPanelCompany();
     TenantAiSettings::factory()->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id, 'enabled' => false]);

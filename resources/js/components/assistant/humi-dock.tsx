@@ -58,7 +58,7 @@ export default function HumiDock() {
             {open && wide && (
                 <aside
                     aria-label="Humi"
-                    className="sticky top-0 h-svh w-[420px] shrink-0 border-l bg-background print:hidden"
+                    className="humi-slide-in sticky top-0 h-svh w-[420px] shrink-0 border-l bg-background print:hidden"
                 >
                     {panel(close)}
                 </aside>

@@ -12,7 +12,7 @@ export default function HumiFailure({
     const refused = failure.reason !== 'error';
 
     return (
-        <div role="alert" className="flex flex-col gap-2">
+        <div role="alert" className="humi-enter flex flex-col gap-2">
             {refused ? (
                 <p className="rounded-lg bg-accent px-3.5 py-3 text-base">
                     {failure.message}

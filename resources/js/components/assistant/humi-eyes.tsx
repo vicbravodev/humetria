@@ -13,6 +13,8 @@ export default function HumiEyes({
     lensId: string;
     blink: boolean;
 }) {
+    // While it calculates its pupils look around, as if reading.
+    const look = blink && expression === 'calcula';
     const face = HUMI_FACES[expression];
     const pupils = face.pupils;
 
@@ -40,22 +42,24 @@ export default function HumiEyes({
                 </g>
             ) : (
                 <g className={blink ? 'humi-blink' : undefined}>
-                    {[pupils.lx, pupils.rx].map((cx) => (
-                        <g key={cx}>
-                            <circle
-                                cx={cx}
-                                cy={pupils.y}
-                                r={pupils.r}
-                                className="fill-(--humi-pupil)"
-                            />
-                            <circle
-                                cx={cx + pupils.off}
-                                cy={pupils.y - pupils.off}
-                                r={pupils.r > 12 ? 4.5 : 3.5}
-                                className="fill-(--humi-eye)"
-                            />
-                        </g>
-                    ))}
+                    <g className={look ? 'humi-look' : undefined}>
+                        {[pupils.lx, pupils.rx].map((cx) => (
+                            <g key={cx}>
+                                <circle
+                                    cx={cx}
+                                    cy={pupils.y}
+                                    r={pupils.r}
+                                    className="fill-(--humi-pupil)"
+                                />
+                                <circle
+                                    cx={cx + pupils.off}
+                                    cy={pupils.y - pupils.off}
+                                    r={pupils.r > 12 ? 4.5 : 3.5}
+                                    className="fill-(--humi-eye)"
+                                />
+                            </g>
+                        ))}
+                    </g>
                 </g>
             )}
             <path

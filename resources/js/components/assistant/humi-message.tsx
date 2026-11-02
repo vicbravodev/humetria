@@ -50,7 +50,13 @@ export default function HumiMessage({
 
     return (
         <div className="flex gap-2.5">
-            <HumiAvatar size={28} expression={finished ? 'listo' : 'calcula'} />
+            <div className="humi-pop h-fit">
+                <HumiAvatar
+                    size={28}
+                    expression={finished ? 'listo' : 'calcula'}
+                    animated={!finished}
+                />
+            </div>
             <div className="flex min-w-0 flex-1 flex-col gap-3">
                 {view.steps.length > 0 && (
                     <ul className="flex flex-col gap-1">
@@ -74,7 +80,7 @@ export default function HumiMessage({
                     ),
                 )}
                 {finished && view.text !== '' && (
-                    <>
+                    <div className="humi-enter flex flex-col gap-3">
                         <HumiMessageActions
                             text={view.text}
                             rating={rating}
@@ -89,7 +95,7 @@ export default function HumiMessage({
                                 variant="chips"
                             />
                         )}
-                    </>
+                    </div>
                 )}
             </div>
         </div>

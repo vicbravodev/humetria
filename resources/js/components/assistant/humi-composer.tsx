@@ -12,12 +12,15 @@ export default function HumiComposer({
     closedText,
     onSend,
     onStop,
+    onWriting,
 }: {
     streaming: boolean;
     /** Why the person cannot write now; null while they can. */
     closedText: string | null;
     onSend: (text: string) => void;
     onStop: () => void;
+    /** The box gains or loses focus: Humi listens while the person is in it. */
+    onWriting: (writing: boolean) => void;
 }) {
     const [text, setText] = useState('');
     const closed = closedText !== null;
@@ -56,6 +59,8 @@ export default function HumiComposer({
                     }
                     onChange={(event) => setText(event.target.value)}
                     onKeyDown={onKeyDown}
+                    onFocus={() => onWriting(true)}
+                    onBlur={() => onWriting(false)}
                     className="[field-sizing:content] max-h-36 min-h-11 flex-1 resize-none rounded-none border-0 bg-transparent px-0 py-2 hover:border-0 focus-visible:outline-0 disabled:bg-transparent"
                 />
                 {streaming ? (

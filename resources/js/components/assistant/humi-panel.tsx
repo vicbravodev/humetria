@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import HumiComposer from '@/components/assistant/humi-composer';
 import HumiHeader from '@/components/assistant/humi-header';
 import HumiThread from '@/components/assistant/humi-thread';
 import { useHumiChat } from '@/hooks/use-humi-chat';
+import { useHumiMood } from '@/hooks/use-humi-mood';
 import type { PageContext } from '@/lib/assistant/chat-request';
 import { contextLabel } from '@/lib/assistant/page-context';
 import { suggestionsFor } from '@/lib/assistant/suggestions';
@@ -41,6 +42,8 @@ export default function HumiPanel({
     const { failure, dismiss } = chat;
     const streaming =
         chat.status === 'streaming' || chat.status === 'submitted';
+    const [writing, setWriting] = useState(false);
+    const expression = useHumiMood(streaming, failure !== null, writing);
 
     useEffect(() => {
         if (failure?.reason !== 'rate' || failure.retryAfter === null) {
@@ -55,6 +58,7 @@ export default function HumiPanel({
     return (
         <div className="flex h-full min-h-0 flex-col bg-background">
             <HumiHeader
+                expression={expression}
                 context={contextLabel(page)}
                 fullPageHref={fullPage ? null : assistantPage.url(slug)}
                 onNew={chat.reset}
@@ -70,6 +74,7 @@ export default function HumiPanel({
                 closedText={closedTextOf(failure?.reason)}
                 onSend={chat.send}
                 onStop={chat.stop}
+                onWriting={setWriting}
             />
         </div>
     );

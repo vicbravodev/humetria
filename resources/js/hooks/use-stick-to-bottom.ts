@@ -23,7 +23,7 @@ export function useStickToBottom(
         const element = list.current;
 
         if (element !== null) {
-            element.scrollTo({ top: element.scrollHeight });
+            element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });
             stuck.current = true;
             setAtEnd(true);
         }
