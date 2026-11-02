@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { pageContextOf } from '@/lib/assistant/page-context';
+import { contextLabel, pageContextOf } from '@/lib/assistant/page-context';
 
 const ID = '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c';
 
@@ -42,5 +42,15 @@ describe('pageContextOf', () => {
         expect(pageContextOf('/admin/acme/campaigns/nueva')).toBeNull();
         expect(pageContextOf('/admin/acme/members')).toBeNull();
         expect(pageContextOf('')).toBeNull();
+    });
+});
+
+describe('contextLabel', () => {
+    it('says what the page is, or that Humi sees the whole compliance', () => {
+        expect(contextLabel(null)).toBe('Cumplimiento general');
+        expect(contextLabel({ kind: 'campaign', id: ID })).toBe('Esta campaña');
+        expect(contextLabel({ kind: 'work_center', id: ID })).toBe(
+            'Este centro de trabajo',
+        );
     });
 });

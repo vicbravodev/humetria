@@ -8,7 +8,9 @@ import {
 } from 'vite-plus/test';
 import {
     latestAnswerId,
+    deleteConversation,
     latestConversationId,
+    readConversation,
     requestStop,
     sendFeedback,
 } from '@/lib/assistant/api';
@@ -154,5 +156,46 @@ describe('assistant api: thumbs, stop and failures', () => {
             }),
         ).toBe(false);
         await expect(requestStop('acme')).resolves.toBeUndefined();
+    });
+});
+
+describe('assistant api: reading and deleting a conversation', () => {
+    const fetcher = vi.fn();
+
+    beforeEach(() => {
+        vi.stubGlobal('fetch', fetcher);
+        vi.stubGlobal('document', { cookie: '' });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        fetcher.mockReset();
+    });
+
+    it('reads what the server keeps of a conversation, or nothing when it cannot', async () => {
+        fetcher.mockResolvedValueOnce(respond({ messages: [] }));
+        expect(await readConversation('acme', 'c-1')).toEqual({ messages: [] });
+        expect(fetcher).toHaveBeenCalledWith(
+            '/admin/acme/assistant/conversations/c-1',
+            expect.anything(),
+        );
+
+        fetcher.mockResolvedValueOnce(respond({}, false));
+        expect(await readConversation('acme', 'c-1')).toBeNull();
+    });
+
+    it('deletes a conversation and says whether the server did', async () => {
+        fetcher.mockResolvedValueOnce(new Response(null, { status: 204 }));
+        expect(await deleteConversation('acme', 'c-1')).toBe(true);
+        expect(fetcher).toHaveBeenCalledWith(
+            '/admin/acme/assistant/conversations/c-1',
+            expect.objectContaining({ method: 'DELETE' }),
+        );
+
+        fetcher.mockResolvedValueOnce(new Response(null, { status: 404 }));
+        expect(await deleteConversation('acme', 'c-1')).toBe(false);
+
+        fetcher.mockRejectedValueOnce(new Error('offline'));
+        expect(await deleteConversation('acme', 'c-1')).toBe(false);
     });
 });

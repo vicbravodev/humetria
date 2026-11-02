@@ -113,3 +113,36 @@ export async function requestStop(slug: string): Promise<void> {
         // The browser already stopped reading the answer.
     }
 }
+
+/** What the server keeps of a conversation: its latest messages, newest first. */
+export async function readConversation(
+    slug: string,
+    conversationId: string,
+): Promise<unknown> {
+    return read(
+        assistant.conversations.show.url({
+            tenant: slug,
+            conversation: conversationId,
+        }),
+    );
+}
+
+/** Deletes a conversation of the person with its messages; whether the server did it. */
+export async function deleteConversation(
+    slug: string,
+    conversationId: string,
+): Promise<boolean> {
+    try {
+        const response = await fetch(
+            assistant.conversations.destroy.url({
+                tenant: slug,
+                conversation: conversationId,
+            }),
+            { method: 'DELETE', headers: headers() },
+        );
+
+        return response.ok;
+    } catch {
+        return false;
+    }
+}

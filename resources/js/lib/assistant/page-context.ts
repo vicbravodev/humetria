@@ -22,3 +22,15 @@ export function pageContextOf(path: string): PageContext {
 
     return center === undefined ? null : { kind: 'work_center', id: center };
 }
+
+/** What the header says Humi is looking at. */
+export function contextLabel(page: PageContext): string {
+    switch (page?.kind) {
+        case 'campaign':
+            return 'Esta campaña';
+        case 'work_center':
+            return 'Este centro de trabajo';
+        default:
+            return 'Cumplimiento general';
+    }
+}
