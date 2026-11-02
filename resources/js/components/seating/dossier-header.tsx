@@ -1,0 +1,29 @@
+import { describeDate } from '@/lib/calendar-date';
+import type { SeatingDossierHeader } from '@/types';
+
+/** The top of the dossier: whose it is, where, and when and by whom it was generated. */
+export default function DossierHeaderBlock({
+    header,
+}: {
+    header: SeatingDossierHeader;
+}) {
+    return (
+        <header className="flex flex-col gap-1">
+            <p className="text-meta text-muted-foreground">
+                Expediente de Ley Silla para la inspección
+            </p>
+            <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em] text-balance">
+                {header.workCenter}
+            </h1>
+            <p className="text-meta">
+                {header.legalName} · RFC {header.rfc}
+            </p>
+            <p className="text-meta">{header.address}</p>
+            <p className="text-meta text-muted-foreground">
+                Generado el{' '}
+                {describeDate(header.generatedOn) ?? header.generatedOn} por{' '}
+                {header.generatedBy}.
+            </p>
+        </header>
+    );
+}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Seating\Http\Controllers\AcknowledgmentRequestController;
 use App\Modules\Seating\Http\Controllers\AssessmentController;
 use App\Modules\Seating\Http\Controllers\DocumentController;
+use App\Modules\Seating\Http\Controllers\DossierController;
 use App\Modules\Seating\Http\Controllers\MeasureController;
 use App\Modules\Seating\Http\Controllers\PauseAgreementController;
 use App\Modules\Seating\Http\Controllers\PlanController;
@@ -86,3 +87,6 @@ Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/regulation/file', [
 // read with the minimum of people per group.
 Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey.launch');
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey');
+
+// The printable dossier of the center for an inspection; every view is audited.
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.dossier');

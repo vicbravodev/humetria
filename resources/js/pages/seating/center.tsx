@@ -1,12 +1,13 @@
-import { Head, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { CalendarCheck, Factory } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import CenterTabs from '@/components/seating/center-tabs';
 import PositionsList from '@/components/seating/positions-list';
 import RequirementsBoard from '@/components/seating/requirements-board';
 import SectorForm from '@/components/seating/sector-form';
+import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/seating';
+import { dossier, index } from '@/routes/tenant/seating';
 import type {
     CenterRequirement,
     Paginated,
@@ -22,6 +23,7 @@ export default function SeatingCenter({
     profile,
     sectors,
     canManage,
+    canAssess,
     positions,
     requirements,
     summary,
@@ -31,6 +33,7 @@ export default function SeatingCenter({
     profile: SeatingProfile | null;
     sectors: SectorOption[];
     canManage: boolean;
+    canAssess: boolean;
     positions: Paginated<PositionRow>;
     requirements: CenterRequirement[];
     summary: RequirementsSummary;
@@ -62,7 +65,15 @@ export default function SeatingCenter({
                                   },
                               ]),
                     ]}
-                />
+                >
+                    {canAssess && (
+                        <Button variant="outline" asChild>
+                            <Link href={dossier([tenantSlug, workCenter.id])}>
+                                Expediente para inspección
+                            </Link>
+                        </Button>
+                    )}
+                </PageHeader>
                 <CenterTabs workCenterId={workCenter.id} tabs={tabs} />
                 <RequirementsBoard
                     workCenterId={workCenter.id}

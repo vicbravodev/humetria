@@ -379,3 +379,25 @@ it('shows the board of a center with its thirteen requirements and its tabs', fu
         ->assertSee('Inventario')
         ->assertSee('Encuesta');
 })->with($looks);
+
+it('shows the printable dossier of a center with a section per requirement and the fine note', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    InternalRegulation::factory()->distributed()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
+
+    visitPage('seating/dossier', "{$url}/seating/centers/{$center->id}/dossier", $dark, $mobile)
+        ->assertSee('Expediente de Ley Silla para la inspección')
+        ->assertSee('R10')
+        ->assertSee('Folio del depósito: CFCRL-2026-0001')
+        ->assertSee('Falta')
+        ->assertSee('no fija una multa propia')
+        ->assertSee('Imprimir o guardar PDF');
+})->with($looks);
+
+it('opens the dossier from the center page', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}")
+        ->click('Expediente para inspección')
+        ->assertSee('Expediente de Ley Silla para la inspección')
+        ->assertNoJavaScriptErrors();
+});

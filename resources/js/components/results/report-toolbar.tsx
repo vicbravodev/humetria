@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
-import PrintButton from '@/components/results/print-button';
+import PrintButton from '@/components/humetria/print-button';
 import ReportBar from '@/components/results/report-bar';
 import ReportDetailsDialog from '@/components/results/report-details-dialog';
 import ShareDialog from '@/components/results/share-dialog';
