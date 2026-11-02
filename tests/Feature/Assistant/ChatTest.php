@@ -58,7 +58,7 @@ function streamedText(string $body): string
     return $text;
 }
 
-function participantOf(object $user, Tenant $tenant): ConversationParticipant
+function humiParticipantOf(object $user, Tenant $tenant): ConversationParticipant
 {
     return ConversationParticipant::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('user_id', $user->getAuthIdentifier())->sole();
 }
@@ -86,7 +86,7 @@ it('keeps the conversation and its two messages once the answer ends, for the pe
     HumiAssistant::fake(['Tu campaña va bien.']);
 
     chat(['message' => '¿Cómo va mi campaña?'])->streamedContent();
-    $participant = participantOf($this->hr, $this->a);
+    $participant = humiParticipantOf($this->hr, $this->a);
     $conversation = ChatConversation::query()->where('participant_id', $participant->id)->sole();
 
     expect(ChatMessage::query()->where('conversation_id', $conversation->id)->pluck('role')->all())->toEqualCanonicalizing(['user', 'assistant']);
@@ -99,7 +99,7 @@ it('records the usage of the message for the company, with no text in it', funct
     $usage = AiUsage::query()->withoutGlobalScopes()->sole();
 
     expect($usage->tenant_id)->toBe($this->a->id)
-        ->and($usage->participant_id)->toBe(participantOf($this->hr, $this->a)->id)
+        ->and($usage->participant_id)->toBe(humiParticipantOf($this->hr, $this->a)->id)
         ->and($usage->stopped)->toBeFalse()
         ->and($usage->conversation_id)->toBe(ChatConversation::query()->sole()->id);
 });

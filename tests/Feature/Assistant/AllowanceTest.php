@@ -23,7 +23,7 @@ function usedTokens(Tenant $tenant, int $tokens, string $at = 'now'): void
     AiUsage::factory()->create(['tenant_id' => $tenant->id, 'input_tokens' => $tokens, 'output_tokens' => 0, 'created_at' => $at]);
 }
 
-function refusal(callable $attempt): AssistantUnavailable
+function allowanceRefusal(callable $attempt): AssistantUnavailable
 {
     try {
         $attempt();
@@ -41,7 +41,7 @@ it('lets a company that never configured Humi use it', function (): void {
 it('refuses a company whose Humi was turned off, with a message that says who to ask', function (): void {
     TenantAiSettings::factory()->create(['tenant_id' => $this->a->id, 'enabled' => false]);
 
-    $refused = refusal(fn () => resolve(CheckAllowance::class)->handle($this->scope));
+    $refused = allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope));
 
     expect($refused->reason)->toBe(AssistantUnavailable::DISABLED)
         ->and($refused->getMessage())->toBe('Humi no está disponible para tu empresa. Pídele a tu administrador que la active.');
@@ -58,7 +58,7 @@ it('refuses at the budget of the month and not one token before', function (): v
     expect(fn () => resolve(CheckAllowance::class)->handle($this->scope))->not->toThrow(AssistantUnavailable::class);
 
     usedTokens($this->a, 1);
-    $refused = refusal(fn () => resolve(CheckAllowance::class)->handle($this->scope));
+    $refused = allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope));
 
     expect($refused->reason)->toBe(AssistantUnavailable::BUDGET)
         ->and($refused->getMessage())->toBe('Tu empresa agotó el uso de Humi de este mes. Se renueva el primer día del mes.');
@@ -82,7 +82,7 @@ it('uses the budget the superadmin set for the company instead of the default', 
     TenantAiSettings::factory()->create(['tenant_id' => $this->a->id, 'monthly_token_budget' => 50]);
     usedTokens($this->a, 50);
 
-    expect(refusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::BUDGET);
+    expect(allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::BUDGET);
 });
 
 it('limits the messages of one person per minute, and says when to come back', function (): void {
@@ -90,7 +90,7 @@ it('limits the messages of one person per minute, and says when to come back', f
     resolve(CheckAllowance::class)->handle($this->scope);
     resolve(CheckAllowance::class)->handle($this->scope);
 
-    $refused = refusal(fn () => resolve(CheckAllowance::class)->handle($this->scope));
+    $refused = allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope));
 
     expect($refused->reason)->toBe(AssistantUnavailable::RATE)
         ->and($refused->retryAfter)->toBeGreaterThan(0)->toBeLessThanOrEqual(60)
@@ -109,7 +109,7 @@ it('limits the messages of one person per day', function (): void {
         $this->travel(2)->minutes();
     }
 
-    expect(refusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::RATE);
+    expect(allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::RATE);
 });
 
 it('does not let the limit of one person stop another of the same company', function (): void {
@@ -126,7 +126,7 @@ it('limits the messages of the whole company per minute', function (): void {
     resolve(CheckAllowance::class)->handle($this->scope);
     resolve(CheckAllowance::class)->handle($second);
 
-    expect(refusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::RATE);
+    expect(allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::RATE);
 });
 
 it('does not spend the limit of a message it refuses', function (): void {
