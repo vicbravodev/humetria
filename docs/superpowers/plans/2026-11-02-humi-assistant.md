@@ -8,6 +8,8 @@
 
 **Tech Stack:** Laravel 13 + Pest 5 (Postgres `testing`), `laravel/ai` ^1.3 (**nuevo**), Inertia 3 + React 19 + TypeScript strictest, Tailwind 4 + shadcn, cliente de streaming (**nuevo**, ver Task 1), Spatie permission (teams), Horizon.
 
+**Estado: implementado** en la rama `claude/humi-handoff-6225b2` (ver «Cambios al implementar» en el spec: el orden y algunos nombres cambiaron al construirlo).
+
 **Spec:** [`docs/superpowers/specs/2026-11-02-humi-assistant-design.md`](../specs/2026-11-02-humi-assistant-design.md). Origen: el paquete `humi-handoff` (prompt, docs 01 a 04). Documentos, maquetas y SVG en `docs/design-system/humi/`. Quien ejecute lee el spec y las maquetas.
 
 ## Global Constraints

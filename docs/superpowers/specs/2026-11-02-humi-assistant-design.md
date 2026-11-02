@@ -168,3 +168,28 @@ proveedor; Ley Silla (entra por registro cuando esté en `main`).
 - Que `LimitCommitteeToTelework` bloquee las rutas de Humi para `committee`.
 - Que el servidor de Sail y el proxy no acumulen la respuesta (prueba manual detrás del proxy).
 - Retención y entrenamiento del proveedor: lo valida el usuario.
+
+## Cambios al implementar (frente al diseño de arriba)
+
+- **Sin middleware del SDK para el presupuesto y la frecuencia:** se piden **antes** de llamar al proveedor
+  (`Actions/CheckAllowance`), que es lo que exige «no llama al proveedor». Solo `Stop` es middleware del agente.
+  La redacción de datos personales es `Support/PersonalDataRedactor`, aplicada al mensaje antes de enviarlo y de guardarlo.
+- **Proveedor y modelo:** el SDK acepta `provider()` y `model()` en el agente (más simple que pasarlos por llamada).
+- **Sin `tenant_id` en las tablas del SDK:** la propiedad sale del participante (único por empresa y usuario); `Conversations`
+  lo verifica en un solo punto. Borrar una conversación es **borrado real** (las tablas del SDK no ocultan filas).
+- **Detener:** `POST …/assistant/chat/stop` sin id (una respuesta por persona a la vez); la bandera la lee `Stop::when` antes de cada paso.
+- **Uso y pulgares sobreviven** a quitar a la persona de la empresa, desligados (`participant_id` nulo): el presupuesto
+  de la empresa sigue contando. Las conversaciones y el participante sí se borran (`MemberRemoved`).
+- **Tarjeta de riesgo:** muestra **personas por nivel** (barra del panel), no una etiqueta de nivel por dominio como en la
+  maqueta: el criterio C-14 manda (nunca «el nivel» de un grupo).
+- **Texto de datos en las herramientas:** va como valor de una línea, sin marcas y recortado (`UntrustedText`), no entre
+  `<dato>`; el bloque `<contexto_pantalla>` sí está delimitado.
+- **Corpus normativo:** son los propios `docs/normas/*/criterios.md` (`config/humi.php` → `regulations`), no extractos
+  copiados: una sola fuente que no se desfasa.
+- **Contexto de pantalla:** el navegador lo saca de la dirección (`lib/assistant/page-context.ts`); el servidor lo valida.
+- **Cliente:** `ai` + `@ai-sdk/react` entran por `lib/assistant/ai-client.ts` porque zod debe ir sin `eval` (la CSP lo
+  prohíbe) **antes** de que el SDK arme sus validadores; el panel se carga bajo demanda.
+- **Consola del superadmin:** `…` de la fila → «Asistente Humi» (`components/tenancy/humi-settings-dialog.tsx`).
+- **Comando `humi:evaluate`** para la evaluación adversarial (README del módulo).
+- **No hecho:** ayuda en la encuesta, aviso proactivo, tablas en el markdown, búsqueda por similitud, y probar el streaming
+  detrás de un proxy real.
