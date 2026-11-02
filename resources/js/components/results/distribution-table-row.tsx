@@ -1,5 +1,5 @@
 import { TableCell, TableRow } from '@/components/ui/table';
-import { percentText } from '@/lib/results';
+import { percentText, total } from '@/lib/results';
 import type { DistributionRow } from '@/types';
 
 /** One group's questionnaires by level: the count and its share of the group. */
@@ -10,7 +10,7 @@ export default function DistributionTableRow({
     row: DistributionRow;
     withAnswered: boolean;
 }) {
-    const total = row.levels.reduce((sum, count) => sum + count, 0);
+    const answered = total(row.levels);
 
     return (
         <TableRow>
@@ -26,7 +26,7 @@ export default function DistributionTableRow({
                 <TableCell key={index} className="text-right tabular-nums">
                     {count}
                     <span className="block text-sm text-muted-foreground">
-                        {percentText(count, total)}
+                        {percentText(count, answered)}
                     </span>
                 </TableCell>
             ))}

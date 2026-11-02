@@ -90,6 +90,22 @@ describe('rankBySeverity', () => {
             'd',
         ]);
     });
+
+    it('breaks a tie in Alto or Muy alto by the share in Muy alto, so the printed report and the screen agree', () => {
+        const rows = [
+            { key: 'a', levels: [5, 0, 0, 5, 0] },
+            { key: 'b', levels: [0, 0, 0, 0, 10] },
+            { key: 'c', levels: [5, 0, 0, 0, 5] },
+            { key: 'd', levels: [5, 0, 0, 0, 5] },
+        ];
+
+        expect(rankBySeverity(rows).map((row) => row.key)).toEqual([
+            'b',
+            'c',
+            'd',
+            'a',
+        ]);
+    });
 });
 
 describe('riskVerdict', () => {

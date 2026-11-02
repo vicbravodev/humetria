@@ -2,8 +2,8 @@ import { Factory, ShieldCheck } from 'lucide-react';
 import FocusCard from '@/components/results/focus-card';
 import ReportCallout from '@/components/results/report-callout';
 import ReportSection from '@/components/results/report-section';
-import { focusDomains, rankByHighRisk } from '@/lib/report';
-import { highRisk, percentText } from '@/lib/results';
+import { focusDomains } from '@/lib/report';
+import { highRisk, percentText, rankBySeverity } from '@/lib/results';
 import type { NomReport, RiskLevelInfo } from '@/types';
 
 /** Where to act first (section 1): the worst domains, the area most exposed and the domain that holds up best. */
@@ -16,8 +16,8 @@ export default function ReportFocus({
 }) {
     const { results, areas } = report;
     const focus = focusDomains(results.domains);
-    const strength = rankByHighRisk(results.domains).at(-1);
-    const [exposed] = rankByHighRisk(
+    const strength = rankBySeverity(results.domains).at(-1);
+    const [exposed] = rankBySeverity(
         areas.visible.map((area) => ({ ...area, levels: area.final })),
     );
     const categoryOf = (key: string | null): string =>

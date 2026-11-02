@@ -1,6 +1,6 @@
 import { TableCell, TableRow } from '@/components/ui/table';
 import { highTone } from '@/lib/report';
-import { highRisk, percentText, shareOf } from '@/lib/results';
+import { highRisk, percentText, shareOf, total } from '@/lib/results';
 import { cn } from '@/lib/utils';
 import type { LevelCounts } from '@/types';
 
@@ -19,7 +19,7 @@ export default function AnnexRow({
     counts: LevelCounts;
     kind: 'final' | 'category' | 'domain';
 }) {
-    const answered = counts.reduce((sum, count) => sum + count, 0);
+    const answered = total(counts);
     const high = Math.round(shareOf(highRisk(counts), answered));
     const tone = highTone(high);
 

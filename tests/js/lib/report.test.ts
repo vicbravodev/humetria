@@ -8,7 +8,6 @@ import {
     highTone,
     mostFrequentLevel,
     nestDomains,
-    rankByHighRisk,
     reportSections,
     sideShares,
     waffleCells,
@@ -23,24 +22,6 @@ function group(
 ): RiskGroup {
     return { key, label: key, category, levels };
 }
-
-describe('rankByHighRisk', () => {
-    it('puts first the largest share in Alto or Muy alto, then the most in Muy alto, keeping ties in order', () => {
-        const rows = [
-            group('a', [5, 0, 0, 5, 0]),
-            group('b', [0, 0, 0, 0, 10]),
-            group('c', [5, 0, 0, 0, 5]),
-            group('d', [5, 0, 0, 0, 5]),
-        ];
-
-        expect(rankByHighRisk(rows).map((row) => row.key)).toEqual([
-            'b',
-            'c',
-            'd',
-            'a',
-        ]);
-    });
-});
 
 describe('focusDomains', () => {
     it('takes up to three domains with someone in Alto or Muy alto, the worst first', () => {

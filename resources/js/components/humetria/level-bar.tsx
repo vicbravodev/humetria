@@ -3,7 +3,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { percentText, shareOf } from '@/lib/results';
+import { percentText, shareOf, total } from '@/lib/results';
 import { cn } from '@/lib/utils';
 import type { LevelCounts, RiskLevelInfo, RiskLevelValue } from '@/types';
 
@@ -31,7 +31,7 @@ export default function LevelBar({
     label: string;
     className?: string;
 }) {
-    const total = counts.reduce((sum, count) => sum + count, 0);
+    const answered = total(counts);
     const description = levels
         .map((level, index) => `${level.label} ${counts[index] ?? 0}`)
         .join(', ');
@@ -60,11 +60,14 @@ export default function LevelBar({
                                     'block h-full min-w-0.5 [-webkit-print-color-adjust:exact] [print-color-adjust:exact]',
                                     FILLS[level.value],
                                 )}
-                                style={{ width: `${shareOf(count, total)}%` }}
+                                style={{
+                                    width: `${shareOf(count, answered)}%`,
+                                }}
                             />
                         </TooltipTrigger>
                         <TooltipContent>
-                            {level.label}: {count} ({percentText(count, total)})
+                            {level.label}: {count} (
+                            {percentText(count, answered)})
                         </TooltipContent>
                     </Tooltip>
                 );

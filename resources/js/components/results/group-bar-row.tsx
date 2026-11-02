@@ -1,5 +1,5 @@
 import LevelBar from '@/components/humetria/level-bar';
-import { highRisk, percentText } from '@/lib/results';
+import { highRisk, percentText, total } from '@/lib/results';
 import type { DistributionRow, RiskLevelInfo } from '@/types';
 
 /** One group as a bar, with its name and the share of its questionnaires in Alto or Muy alto (pantallas: Eval-Activa). */
@@ -10,7 +10,7 @@ export default function GroupBarRow({
     row: DistributionRow;
     levels: RiskLevelInfo[];
 }) {
-    const total = row.levels.reduce((sum, count) => sum + count, 0);
+    const answered = total(row.levels);
 
     return (
         <li className="flex flex-col gap-1.5">
@@ -26,7 +26,7 @@ export default function GroupBarRow({
                 </p>
                 <p className="tabular-nums">
                     <span className="font-semibold">
-                        {percentText(highRisk(row.levels), total)}
+                        {percentText(highRisk(row.levels), answered)}
                     </span>
                     <span className="text-muted-foreground">
                         {' '}

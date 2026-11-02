@@ -1,7 +1,7 @@
 import LevelBar from '@/components/humetria/level-bar';
 import RiskLevel from '@/components/humetria/risk-level';
 import { domainDescription, mostFrequentLevel } from '@/lib/report';
-import { highRisk, percentText, RISK_LEVELS } from '@/lib/results';
+import { RISK_LEVELS, highRisk, percentText, total } from '@/lib/results';
 import { cn } from '@/lib/utils';
 import type { RiskGroup, RiskLevelInfo } from '@/types';
 
@@ -17,7 +17,7 @@ export default function FocusCard({
     rank: number;
     levels: RiskLevelInfo[];
 }) {
-    const answered = domain.levels.reduce((sum, count) => sum + count, 0);
+    const answered = total(domain.levels);
     const high = highRisk(domain.levels);
     const frequent = mostFrequentLevel(domain.levels);
 

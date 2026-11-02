@@ -1,4 +1,4 @@
-import { highRisk, shareOf } from '@/lib/results';
+import { highRisk, rankBySeverity, total } from '@/lib/results';
 import type { AreaResults, LevelCounts, RiskGroup } from '@/types';
 
 /** What each domain of Guías II and III looks at, in a line, for whoever reads the report. */
@@ -25,30 +25,11 @@ const DOMAIN_DESCRIPTIONS: Record<string, string> = {
 const SIDE_SCALE = 80;
 const FOCUS_COUNT = 3;
 
-export function total(counts: LevelCounts): number {
-    return counts.reduce((sum, count) => sum + count, 0);
-}
-
-function highShare(counts: LevelCounts): number {
-    return shareOf(highRisk(counts), total(counts));
-}
-
-/** Groups from the largest share in Alto or Muy alto; ties by how many fall in Muy alto, then in their order. */
-export function rankByHighRisk<T extends { levels: LevelCounts }>(
-    rows: T[],
-): T[] {
-    return rows.toSorted(
-        (a, b) =>
-            highShare(b.levels) - highShare(a.levels) ||
-            (b.levels[4] ?? 0) - (a.levels[4] ?? 0),
-    );
-}
-
 /** Where to act first: up to three domains with someone in Alto or Muy alto, the worst first. */
 export function focusDomains<T extends { levels: LevelCounts }>(
     domains: T[],
 ): T[] {
-    return rankByHighRisk(domains)
+    return rankBySeverity(domains)
         .filter((domain) => highRisk(domain.levels) > 0)
         .slice(0, FOCUS_COUNT);
 }
@@ -108,9 +89,9 @@ export function nestDomains(
     categories: RiskGroup[],
     domains: RiskGroup[],
 ): { category: RiskGroup; domains: RiskGroup[] }[] {
-    return rankByHighRisk(categories).map((category) => ({
+    return rankBySeverity(categories).map((category) => ({
         category,
-        domains: rankByHighRisk(
+        domains: rankBySeverity(
             domains.filter((domain) => domain.category === category.key),
         ),
     }));
