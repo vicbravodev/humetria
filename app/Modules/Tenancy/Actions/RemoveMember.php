@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
 use App\Models\User;
+use App\Modules\Tenancy\Events\MemberRemoved;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,7 @@ final readonly class RemoveMember
 
             $this->roles->remove($person, $tenant);
             $member->delete();
+            event(new MemberRemoved($tenant->id, $person->id));
         });
     }
 }

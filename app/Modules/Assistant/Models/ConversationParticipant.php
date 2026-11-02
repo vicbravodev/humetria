@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Models\ConversationMessage;
 
 /**
  * A person in one company, as the SDK knows who owns a conversation with Humi. One per company and user.
@@ -36,5 +39,21 @@ final class ConversationParticipant extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return MorphMany<Conversation, $this>
+     */
+    public function conversations(): MorphMany
+    {
+        return $this->morphMany(Conversation::class, 'participant');
+    }
+
+    /**
+     * @return MorphMany<ConversationMessage, $this>
+     */
+    public function messages(): MorphMany
+    {
+        return $this->morphMany(ConversationMessage::class, 'participant');
     }
 }

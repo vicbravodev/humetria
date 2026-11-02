@@ -7,6 +7,7 @@ use App\Modules\Assistant\Actions\ResolveParticipant;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 
 mutates(ResolveParticipant::class);
 
@@ -57,4 +58,14 @@ it('refuses a second participant for the same person in the same company', funct
 
     expect(fn () => ConversationParticipant::factory()->for($this->user)->create(['tenant_id' => $this->a->id]))
         ->toThrow(QueryException::class);
+});
+
+it('logs the first time a person talks to Humi in a company, and only then', function (): void {
+    workIn($this->a);
+    Log::spy();
+
+    resolve(ResolveParticipant::class)->handle($this->user->id);
+    resolve(ResolveParticipant::class)->handle($this->user->id);
+
+    Log::shouldHaveReceived('info')->once()->with('assistant.participant_created', ['tenant_id' => $this->a->id, 'user_id' => $this->user->id]);
 });
