@@ -79,6 +79,11 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.seating.center', [$tenant, $plant->id]);
     }, ['positions']],
+    'Ley Silla seats of a center' => ['seating/seats', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.seats.index', [$tenant, $plant->id]);
+    }, ['seats']],
     'Ley Silla people of a position' => ['seating/position', function () {
         [$tenant, $plant] = listsCompany();
         $position = App\Modules\Seating\Models\StandingPosition::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);

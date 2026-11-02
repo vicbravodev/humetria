@@ -1,10 +1,12 @@
-import { Head, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { CalendarCheck, Factory } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import PositionsList from '@/components/seating/positions-list';
 import SectorForm from '@/components/seating/sector-form';
+import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/seating';
+import { index as seats } from '@/routes/tenant/seating/seats';
 import type {
     Paginated,
     PositionRow,
@@ -51,7 +53,13 @@ export default function SeatingCenter({
                                   },
                               ]),
                     ]}
-                />
+                >
+                    <Button variant="outline" asChild>
+                        <Link href={seats([tenantSlug, workCenter.id])}>
+                            Asientos
+                        </Link>
+                    </Button>
+                </PageHeader>
                 <div className="max-w-[880px] card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
                     {canManage ? (
                         <SectorForm

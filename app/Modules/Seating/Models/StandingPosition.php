@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Seating\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\SearchesText;
 use App\Modules\Instruments\Data\SeatPlacement;
 use App\Modules\Seating\Enums\BipedestationType;
 use Carbon\CarbonImmutable;
@@ -52,7 +53,7 @@ use Illuminate\Database\Eloquent\Model;
 final class StandingPosition extends Model
 {
     /** @use HasFactory<StandingPositionFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, SearchesText;
 
     /**
      * @return array<string, string>

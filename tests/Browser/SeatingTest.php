@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Seating\Models\PositionAssignment;
+use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Tenancy\Models\Tenant;
@@ -98,6 +99,28 @@ it('shows what a new position still misses instead of saving it', function (): v
         ->type('continuous_minutes', '240')
         ->type('max_people_at_once', '2')
         ->press('Guardar puesto')
+        ->assertSee('es obligatorio')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows the seat inventory with its form', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    Seat::factory()->restArea()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'quantity' => 4]);
+    $position = StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Cajera', 'max_people_at_once' => 3]);
+
+    visitPage('seating/seats', "{$url}/seating/centers/{$center->id}/seats", $dark, $mobile)
+        ->assertSee('Asientos')
+        ->assertSee('4 × Silla ergonómica ajustable')
+        ->assertSee('Área de descanso')
+        ->assertSee('Cajera (0 de 3)')
+        ->assertSee('Registrar asiento');
+})->with($looks);
+
+it('shows what a new seat still misses instead of registering it', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/seats")
+        ->press('Registrar asiento')
         ->assertSee('es obligatorio')
         ->assertNoJavaScriptErrors();
 });

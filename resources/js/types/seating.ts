@@ -91,3 +91,45 @@ export type PositionPerson = {
     area: string;
     startsOn: string;
 };
+
+export type SeatOption = { value: string; label: string };
+
+/** A seat on the inventory list; the photo link is null for who may not see photos or when there is none. */
+export type SeatRow = {
+    id: string;
+    kindLabel: string;
+    useLabel: string;
+    quantity: number;
+    location: string | null;
+    positionName: string | null;
+    condition: string;
+    conditionLabel: string;
+    signposted: boolean;
+    features: number;
+    photoHref: string | null;
+};
+
+/** A seat opened in the form; `features` says which of the nine characteristics it has, by name. */
+export type SeatEditing = {
+    id: string;
+    kind: string;
+    use: string;
+    quantity: number;
+    location: string | null;
+    positionId: string | null;
+    positionName: string | null;
+    features: Record<string, boolean>;
+    condition: string;
+    signposted: boolean;
+    hasPhoto: boolean;
+};
+
+export type SeatFeatureOption = SeatOption & { hint: string };
+
+/** A position with fewer seats than people at once. */
+export type Shortfall = {
+    positionId: string;
+    name: string;
+    seats: number;
+    maxPeopleAtOnce: number;
+};
