@@ -1,6 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
 import ReviewRow from '@/components/telework/review-row';
@@ -52,12 +52,7 @@ export default function Reviews({
                         ))}
                     </ol>
                 )}
-                <ConsolePagination
-                    page={applications}
-                    label="Páginas de listas"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
+                <Pagination page={applications} label="Páginas de listas" />
             </div>
         </>
     );

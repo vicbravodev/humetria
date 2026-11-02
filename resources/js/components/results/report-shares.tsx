@@ -1,4 +1,4 @@
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import RevokeShareDialog from '@/components/results/revoke-share-dialog';
 import {
     Table,
@@ -60,11 +60,9 @@ export default function ReportShares({
                     ))}
                 </TableBody>
             </Table>
-            <ConsolePagination
+            <Pagination
                 page={shares}
                 label="Páginas de enlaces"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

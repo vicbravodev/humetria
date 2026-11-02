@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
 import DemoRequestsInbox from '@/components/demos/demo-requests-inbox';
 import PageHeader from '@/components/page-header';
@@ -31,7 +31,9 @@ export default function DemoRequests({
                         requests={demoRequests.data}
                     />
                 )}
-                <ConsolePagination
+                <Pagination
+                    previous="Ver más recientes"
+                    next="Ver más antiguas"
                     page={demoRequests}
                     label="Páginas de solicitudes"
                 />

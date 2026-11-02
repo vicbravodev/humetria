@@ -3,7 +3,7 @@ import PeopleBulkBar from '@/components/campaigns/people-bulk-bar';
 import PeopleTable from '@/components/campaigns/people-table';
 import PeopleToolbar from '@/components/campaigns/people-toolbar';
 import PostButton from '@/components/campaigns/post-button';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import CountTabs from '@/components/humetria/count-tabs';
 import Notice from '@/components/humetria/notice';
 import { peopleQuery } from '@/lib/campaigns';
@@ -108,12 +108,7 @@ export default function CampaignPeopleSection({
                     {...(active ? { action } : {})}
                 />
             </div>
-            <ConsolePagination
-                page={people.people}
-                label="Páginas de personas"
-                previous="Anteriores"
-                next="Siguientes"
-            />
+            <Pagination page={people.people} label="Páginas de personas" />
         </section>
     );
 }

@@ -1,5 +1,5 @@
 import { FileText } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { describeDate } from '@/lib/calendar-date';
 import type { Paginated, PortalNotice } from '@/types';
@@ -42,11 +42,9 @@ export default function PortalNoticesList({
                     </li>
                 ))}
             </ul>
-            <ConsolePagination
+            <Pagination
                 page={notices}
                 label="Páginas de avisos"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

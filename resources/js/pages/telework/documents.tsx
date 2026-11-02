@@ -1,6 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { FileText } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
 import DocumentRow from '@/components/telework/document-row';
@@ -59,12 +59,7 @@ export default function Documents({
                         ))}
                     </ol>
                 )}
-                <ConsolePagination
-                    page={documents}
-                    label="Páginas de documentos"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
+                <Pagination page={documents} label="Páginas de documentos" />
             </div>
         </>
     );

@@ -1,4 +1,4 @@
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import DashboardClosedRow from '@/components/tenancy/dashboard-closed-row';
 import {
     Table,
@@ -51,7 +51,9 @@ export default function DashboardClosedTable({
                     ))}
                 </TableBody>
             </Table>
-            <ConsolePagination
+            <Pagination
+                previous="Ver más recientes"
+                next="Ver más antiguas"
                 page={closed}
                 label="Páginas de evaluaciones cerradas"
                 pinned={false}

@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import PageHeader from '@/components/page-header';
 import CompanyCard from '@/components/tenancy/company-card';
 import NoCompanies from '@/components/tenancy/no-companies';
@@ -35,12 +35,7 @@ export default function Companies({
                         ))}
                     </ul>
                 )}
-                <ConsolePagination
-                    page={companies}
-                    label="Páginas de empresas"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
+                <Pagination page={companies} label="Páginas de empresas" />
             </div>
         </>
     );

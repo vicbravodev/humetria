@@ -1,7 +1,7 @@
 import ChosenPeopleActions from '@/components/campaigns/chosen-people-actions';
 import ChosenPeopleField from '@/components/campaigns/chosen-people-field';
 import PersonCheckRow from '@/components/campaigns/person-check-row';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import InputError from '@/components/input-error';
 import type { useChosenPeople } from '@/hooks/use-chosen-people';
 import { useQueryFilters } from '@/hooks/use-query-filters';
@@ -95,12 +95,10 @@ export default function PeopleChecklist({
                     Nadie coincide con la búsqueda.
                 </p>
             )}
-            <ConsolePagination
+            <Pagination
                 page={people}
                 label="Páginas de personas"
                 preserveState
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
             <InputError id="trauma-people-error" message={error} />

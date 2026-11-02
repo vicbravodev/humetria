@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Upload } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import CreateEmployeeSheet from '@/components/organization/create-employee-sheet';
 import EmployeesEmpty from '@/components/organization/employees-empty';
 import EmployeesNotice from '@/components/organization/employees-notice';
@@ -85,12 +85,7 @@ export default function Employees({
                         choices={choices}
                     />
                 )}
-                <ConsolePagination
-                    page={employees}
-                    label="Páginas de empleados"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
+                <Pagination page={employees} label="Páginas de empleados" />
             </div>
         </>
     );

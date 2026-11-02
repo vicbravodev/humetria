@@ -5,7 +5,7 @@ import CampaignHistory from '@/components/campaigns/campaign-history';
 import GuideSizes from '@/components/campaigns/guide-sizes';
 import TraumaEventsSection from '@/components/campaigns/trauma-events-section';
 import WorkCenterCard from '@/components/campaigns/work-center-card';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
 import type {
@@ -80,11 +80,9 @@ export default function Campaigns({
                             ))}
                         </div>
                     )}
-                    <ConsolePagination
+                    <Pagination
                         page={workCenters}
                         label="Páginas de centros de trabajo"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
                 </section>

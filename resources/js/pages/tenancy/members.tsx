@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import PageHeader from '@/components/page-header';
 import InviteMemberDialog from '@/components/tenancy/invite-member-dialog';
 import MembersTable from '@/components/tenancy/members-table';
@@ -46,14 +46,14 @@ export default function Members({
                         invitations={invitations.data}
                         roles={roles}
                     />
-                    <ConsolePagination
+                    <Pagination
                         page={members}
                         label="Páginas de usuarios"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
-                    <ConsolePagination
+                    <Pagination
+                        previous="Ver más recientes"
+                        next="Ver más antiguas"
                         page={invitations}
                         label="Páginas de invitaciones"
                         pinned={false}

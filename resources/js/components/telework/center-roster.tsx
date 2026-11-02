@@ -1,5 +1,5 @@
 import { Users } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import CenterPersonRow from '@/components/telework/roster-person-row';
 import type { Paginated, CenterPerson } from '@/types';
@@ -34,11 +34,9 @@ export default function CenterRoster({
                     ))}
                 </ul>
             )}
-            <ConsolePagination
+            <Pagination
                 page={people}
                 label="Páginas del padrón"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

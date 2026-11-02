@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import DashboardCycleRow from '@/components/tenancy/dashboard-cycle-row';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import type { CycleRow, Paginated } from '@/types';
@@ -44,11 +44,9 @@ export default function DashboardCycle({
             </ul>
             {cycle.last_page > 1 && (
                 <div className="border-t px-5 py-3">
-                    <ConsolePagination
+                    <Pagination
                         page={cycle}
                         label="Páginas de centros de trabajo"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
                 </div>

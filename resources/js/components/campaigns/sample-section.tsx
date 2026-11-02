@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Shuffle } from 'lucide-react';
 import SampleTable from '@/components/campaigns/sample-table';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { redraw } from '@/routes/tenant/campaigns';
@@ -50,12 +50,7 @@ export default function SampleSection({
                 </Form>
             </div>
             <SampleTable people={sample.data} />
-            <ConsolePagination
-                page={sample}
-                label="Páginas de la muestra"
-                previous="Anteriores"
-                next="Siguientes"
-            />
+            <Pagination page={sample} label="Páginas de la muestra" />
         </section>
     );
 }

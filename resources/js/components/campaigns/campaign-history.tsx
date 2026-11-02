@@ -1,5 +1,5 @@
 import ClosedCampaignsTable from '@/components/campaigns/closed-campaigns-table';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import type { CampaignSummary, Paginated } from '@/types';
 
 /** "Historial" (pantalla NOM035): the closed campaigns, a page at a time; nothing before the first one closes. */
@@ -23,7 +23,12 @@ export default function CampaignHistory({
                 tenantSlug={tenantSlug}
                 campaigns={closed.data}
             />
-            <ConsolePagination page={closed} label="Páginas del historial" />
+            <Pagination
+                previous="Ver más recientes"
+                next="Ver más antiguas"
+                page={closed}
+                label="Páginas del historial"
+            />
         </section>
     );
 }

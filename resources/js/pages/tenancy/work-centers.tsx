@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
@@ -78,11 +78,9 @@ export default function WorkCenters({
                         states={canManage ? states : null}
                     />
                 )}
-                <ConsolePagination
+                <Pagination
                     page={workCenters}
                     label="Páginas de centros de trabajo"
-                    previous="Anteriores"
-                    next="Siguientes"
                 />
             </div>
         </>

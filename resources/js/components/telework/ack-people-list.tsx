@@ -1,5 +1,5 @@
 import { Users } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import SearchField from '@/components/humetria/search-field';
 import AckChoiceBar from '@/components/telework/ack-choice-bar';
@@ -77,12 +77,10 @@ export default function AckPeopleList({
                     ))}
                 </ul>
             )}
-            <ConsolePagination
+            <Pagination
                 page={people}
                 label="Páginas de personas"
                 preserveState
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

@@ -1,5 +1,5 @@
 import CampaignCard from '@/components/campaigns/campaign-card';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import type { CampaignSummary, Paginated } from '@/types';
 
 /** The Guía I by event still taking answers, apart from the work centers' evaluations; nothing when there are none. */
@@ -28,7 +28,9 @@ export default function TraumaEventsSection({
                     />
                 ))}
             </div>
-            <ConsolePagination
+            <Pagination
+                previous="Ver más recientes"
+                next="Ver más antiguas"
                 page={events}
                 label="Páginas de Guía I por acontecimiento"
                 pinned={false}

@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import PageHeader from '@/components/page-header';
 import CreateTenantDialog from '@/components/tenancy/create-tenant-dialog';
 import TenantsEmpty from '@/components/tenancy/tenants-empty';
@@ -42,7 +42,12 @@ export default function Tenants({
                         activationMinDate={activationMinDate}
                     />
                 )}
-                <ConsolePagination page={tenants} label="Páginas de empresas" />
+                <Pagination
+                    previous="Ver más recientes"
+                    next="Ver más antiguas"
+                    page={tenants}
+                    label="Páginas de empresas"
+                />
             </div>
         </>
     );

@@ -1,5 +1,5 @@
 import { GraduationCap } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import TrainingRow from '@/components/telework/training-row';
 import type { Paginated, TrainingRow as Row } from '@/types';
@@ -36,11 +36,9 @@ export default function TrainingList({
                     ))}
                 </ol>
             )}
-            <ConsolePagination
+            <Pagination
                 page={trainings}
                 label="Páginas de capacitaciones"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

@@ -1,6 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { HeartHandshake } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
 import ConfidentialBanner from '@/components/results/confidential-banner';
@@ -61,12 +61,7 @@ export default function Screenings({
                     </ol>
                 )}
                 <ScreeningRule />
-                <ConsolePagination
-                    page={people}
-                    label="Páginas de personas"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
+                <Pagination page={people} label="Páginas de personas" />
             </div>
         </>
     );

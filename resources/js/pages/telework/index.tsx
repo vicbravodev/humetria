@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Building2 } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
 import CenterCard from '@/components/telework/center-card';
@@ -44,11 +44,9 @@ export default function TeleworkIndex({
                             ))}
                         </div>
                     )}
-                    <ConsolePagination
+                    <Pagination
                         page={centers}
                         label="Páginas de centros de trabajo"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
                 </section>

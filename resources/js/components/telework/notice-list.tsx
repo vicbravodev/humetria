@@ -1,5 +1,5 @@
 import { FileText } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import NoticeRow from '@/components/telework/notice-row';
 import type { NoticeRow as Row, Paginated } from '@/types';
@@ -34,11 +34,9 @@ export default function NoticeList({
                     ))}
                 </ol>
             )}
-            <ConsolePagination
+            <Pagination
                 page={notices}
                 label="Páginas de avisos"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

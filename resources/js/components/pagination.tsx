@@ -7,17 +7,17 @@ import type { Paginated } from '@/types';
  * The pages of a list: which rows are on screen and the way to the next ones. Pinned to the bottom of the screen
  * while the list scrolls, so turning the page never means scrolling to the end first.
  */
-export default function ConsolePagination({
+export default function Pagination({
     page,
     label,
-    previous = 'Ver más recientes',
-    next = 'Ver más antiguas',
+    previous = 'Anteriores',
+    next = 'Siguientes',
     preserveState = false,
     pinned = true,
 }: {
     page: Paginated<unknown>;
     label: string;
-    /** The buttons' text: by default the consoles' newest-first order. */
+    /** The buttons' text; a list from the newest says "Ver más recientes" and "Ver más antiguas". */
     previous?: string;
     next?: string;
     /** Keep what the page holds that is not in its address, like a selection, when turning pages. */
