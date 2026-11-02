@@ -26,6 +26,11 @@ final readonly class PanelLinks
         return $this->path('tenant.telework.index');
     }
 
+    public function teleworkCenter(string $workCenterId): string
+    {
+        return $this->path('tenant.telework.center', ['workCenter' => $workCenterId]);
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');
