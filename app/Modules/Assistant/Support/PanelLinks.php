@@ -21,6 +21,11 @@ final readonly class PanelLinks
         return $this->path('tenant.campaigns.show', ['campaign' => $campaignId]);
     }
 
+    public function results(string $campaignId): string
+    {
+        return $this->path('tenant.campaigns.results', ['campaign' => $campaignId]);
+    }
+
     /**
      * @param  array<string, string>  $parameters
      */
