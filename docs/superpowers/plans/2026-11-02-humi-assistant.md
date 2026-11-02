@@ -48,12 +48,14 @@ Modificar: `composer.json`/`package.json` (tras aprobación), `bootstrap/provide
 **Interfaces:**
 - Produces: `config('ai.default')`, `config('humi.provider'|'humi.model')` (en `config/humi.php`, valores de `HUMI_PROVIDER`, `HUMI_MODEL`, `HUMI_MONTHLY_TOKEN_BUDGET`, `HUMI_RATE_PER_MINUTE`, `HUMI_RATE_PER_DAY`); una nota en el README con los nombres reales de clases/atributos del SDK usados.
 
-- [ ] **Step 1: Pedir aprobación** del paquete exacto (`laravel/ai` v1.3.0: PHP ^8.3, Laravel 12|13) y del cliente de streaming; **no instalar sin el sí**. Comparar `@ai-sdk/react` (+ `ai` ≈ 8.5 MB sin empaquetar, peer `zod`), `@laravel/stream-react` (≈ 41 kB) y un lector propio del protocolo.
-- [ ] **Step 2: Write the failing test** `it('has the SDK installed and no provider key needed in tests')`: `Laravel\Ai\...` existe y una llamada sin fake lanza (`preventStrayPrompts()`).
-- [ ] **Step 3: Run** `php artisan test --compact tests/Feature/Assistant/SdkTest.php` → FAIL (clase no existe).
-- [ ] **Step 4:** `sail composer require laravel/ai`, publicar con `vendor:publish --provider="Laravel\Ai\AiServiceProvider"`, migrar. Leer `vendor/laravel/ai` y anotar nombres reales (agente, `Promptable`, `RemembersConversations`, `HasMiddleware`, `Stop`, atributos, `usingVercelDataProtocol`, `fake()`); el spec se corrige donde difiera. Crear `config/humi.php` y `.env.example` (sin secretos); `EnvExampleTest` en verde.
-- [ ] **Step 5: Run** la prueba → PASS; `composer test:fast`.
-- [ ] **Step 6: Commit** `Humi: instala laravel/ai y fija sus nombres reales`.
+**Hecha** (aprobados `laravel/ai` v1.3.0 y `@ai-sdk/react` 4.0.164 + `ai` 7.0.160). Nombres del SDK confirmados en el spec («Lo confirmado en el SDK instalado»); correcciones para las tareas siguientes: proveedor y modelo se pasan por llamada, no por atributo (Task 8/10); el almacén ya trae `VerifiesConversationOwnership` y `PaginatesConversations` (Task 9); `Stop` corta por paso (Task 10).
+
+- [x] **Step 1: Pedir aprobación** del paquete exacto y del cliente de streaming.
+- [x] **Step 2: Write the failing test** `tests/Feature/Assistant/SdkTest.php` (SDK instalado, config de Humi, ninguna llamada llega a un proveedor).
+- [x] **Step 3: Run** → FAIL (clase y config inexistentes).
+- [x] **Step 4:** instalar, publicar (migración ajustada a `timestampsTz` y config tipada), `config/humi.php`, `.env.example`.
+- [x] **Step 5: Run** → PASS; `composer test`.
+- [x] **Step 6: Commit** `Humi: instala laravel/ai y @ai-sdk/react y fija los nombres reales del SDK`.
 
 ### Task 2: Esqueleto del módulo y reglas de arquitectura
 

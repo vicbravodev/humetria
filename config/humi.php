@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Provider and model
+    |--------------------------------------------------------------------------
+    |
+    | Humi, the HR assistant, answers with this provider and model. Never fixed in code: the keys of the providers
+    | live in config/ai.php.
+    |
+    */
+
+    'provider' => env('HUMI_PROVIDER', 'anthropic'),
+
+    'model' => env('HUMI_MODEL', 'claude-sonnet-5-5'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Budget and rate limits
+    |--------------------------------------------------------------------------
+    |
+    | The tokens a company may use per calendar month (the superadmin can set another figure for a company), and the
+    | messages per minute and per day of one person in one company; the company as a whole has its own per-minute limit.
+    |
+    */
+
+    'monthly_token_budget' => (int) env('HUMI_MONTHLY_TOKEN_BUDGET', 2_000_000),
+
+    'rate_per_minute' => (int) env('HUMI_RATE_PER_MINUTE', 10),
+
+    'rate_per_day' => (int) env('HUMI_RATE_PER_DAY', 200),
+
+    'tenant_rate_per_minute' => (int) env('HUMI_TENANT_RATE_PER_MINUTE', 30),
+
+];

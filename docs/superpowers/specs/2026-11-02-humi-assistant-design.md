@@ -134,10 +134,37 @@ Ayuda en la encuesta; acciones que cambian datos; avisos proactivos por reglas (
 apagado); búsqueda por similitud con pgvector (v1: búsqueda por texto sobre el corpus); llaves por empresa del
 proveedor; Ley Silla (entra por registro cuando esté en `main`).
 
+## Lo confirmado en el SDK instalado (`laravel/ai` v1.3.0, leído en `vendor/`)
+
+- Agente: `Laravel\Ai\Contracts\{Agent,Conversational,HasTools,HasMiddleware}` con `Promptable` y
+  `Concerns\RemembersConversations`. El trait **ya define** `messages()` (lee del `ConversationStore`): el agente no lo
+  redefine. `tools(): iterable`, `middleware(): array`, `instructions(): Stringable|string`.
+- Herramienta: `Contracts\Tool` con `description()`, `schema(JsonSchema)` y `handle(Request): Stringable|string`
+  (la tarjeta se devuelve como JSON en texto).
+- Proveedor y modelo: los atributos `#[Provider]`/`#[Model]` son estáticos; como deben salir de configuración, se pasan
+  en cada llamada (`stream(..., provider: config('humi.provider'), model: config('humi.model'))`). Sí se usan
+  `#[MaxSteps]`, `#[MaxTokens]` y `#[Timeout]` (`Laravel\Ai\Attributes`).
+- Conversaciones: `continueOrStart(?string $id, object $as)`. El almacén (`Storage\DatabaseConversationStore`) ya
+  implementa `VerifiesConversationOwnership::conversationBelongsTo($id, $participantType, $participantId)` y
+  `PaginatesConversations`. Compara solo tipo y llave del participante: como nuestro participante es único por
+  (empresa, usuario), eso ya implica la empresa; igual se verifica `tenant_id` y se centraliza en
+  `StartOrContinueConversation`. El participante se identifica por `getMorphClass()` y llave primaria.
+- Streaming: `->stream(...)->usingVercelDataProtocol($messageId)->then(callable)` (también `each` y `catch`);
+  `toResponse()` devuelve `response()->stream`.
+- Detener: `Laravel\Ai\Middleware\Stop::when(Closure|bool)` corta **antes de un paso** (por paso, no por token); el corte
+  inmediato del texto lo da el cliente al abortar la petición, y la bandera en caché evita pasos extra.
+- Pruebas: `HumiAssistant::fake($respuestas)` devuelve un `FakeTextGateway` con `preventStrayPrompts()`; `assertPrompted`,
+  `assertNeverPrompted`. Sin fake, la llamada pasa por `Http` y la corta `Http::preventStrayRequests()` (ya activo en
+  `TestCase`), probado en `tests/Feature/Assistant/SdkTest.php`.
+- Tablas publicadas: `agent_conversations` (`id` string 36, participante morph, `title`) y `agent_conversation_messages`
+  (`conversation_id`, participante, `agent`, `role`, `content`, `steps`, `usage`, `meta`, `status`). Sin `tenant_id`; la
+  migración publicada se ajustó a `timestampsTz` (regla del repo) y a config tipada (PHPStan max).
+- Instalado sin dependencias extra de runtime: solo `laravel/ai`; `symfony/yaml` pasó de dev a runtime (misma versión).
+  En npm: `@ai-sdk/react` 4.0.164 y `ai` 7.0.160; `zod` 4.6.7 entró como dependencia par de `ai`.
+
 ## Riesgos y cosas por verificar
 
-- Nombres de clases y atributos del SDK (`laravel/ai` v1.3.0, PHP ^8.3, Laravel 12|13): se leen en `vendor/` al instalar.
-- Forma real de las tablas del SDK y su encaje con `TenantScopedModelsTest`.
+- Encaje de las tablas del SDK con `TenantScopedModelsTest` (no son modelos nuestros).
 - Que `LimitCommitteeToTelework` bloquee las rutas de Humi para `committee`.
 - Que el servidor de Sail y el proxy no acumulen la respuesta (prueba manual detrás del proxy).
 - Retención y entrenamiento del proveedor: lo valida el usuario.
