@@ -6,10 +6,9 @@ namespace App\Modules\Assistant\Actions;
 
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Exceptions\AssistantUnavailable;
-use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\TenantAiSettings;
+use App\Modules\Assistant\Support\MonthlyUsage;
 use App\Modules\Assistant\Support\ScopeGuard;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -24,7 +23,7 @@ final readonly class CheckAllowance
 
     private const int DAY = 86400;
 
-    public function __construct(private ScopeGuard $guard) {}
+    public function __construct(private ScopeGuard $guard, private MonthlyUsage $usage) {}
 
     /**
      * @throws AssistantUnavailable
@@ -38,7 +37,7 @@ final readonly class CheckAllowance
             $this->refuse($scope, AssistantUnavailable::disabled());
         }
 
-        if ($this->usedThisMonth() >= ($settings->monthly_token_budget ?? config()->integer('humi.monthly_token_budget'))) {
+        if ($this->usage->tokens() >= ($settings->monthly_token_budget ?? config()->integer('humi.monthly_token_budget'))) {
             $this->refuse($scope, AssistantUnavailable::budgetUsed());
         }
 
@@ -57,15 +56,6 @@ final readonly class CheckAllowance
         foreach ($limits as [$key, , $decay]) {
             RateLimiter::hit($key, $decay);
         }
-    }
-
-    private function usedThisMonth(): int
-    {
-        // The month starts at midnight in Mexico City; rows are stored in UTC.
-        $start = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfMonth()->utc();
-        $row = AiUsage::query()->toBase()->where('created_at', '>=', $start)->selectRaw('COALESCE(SUM(input_tokens + output_tokens), 0) AS total')->first();
-
-        return filter_var($row->total ?? 0, FILTER_VALIDATE_INT) ?: 0;
     }
 
     /**
