@@ -40,7 +40,7 @@ describe('parseMarkdown: paragraphs and inline marks', () => {
                     text: 'Ver en el panel',
                     href: '/admin/acme/campaigns/1',
                 },
-                { kind: 'text', text: ' o otro o js' },
+                { kind: 'text', text: ' o otro o js)' },
             ],
         });
     });
