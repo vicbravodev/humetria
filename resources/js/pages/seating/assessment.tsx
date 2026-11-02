@@ -5,15 +5,19 @@ import AssessmentFacts from '@/components/seating/assessment-facts';
 import AssessmentForm from '@/components/seating/assessment-form';
 import AssessmentResult from '@/components/seating/assessment-result';
 import AssessmentSign from '@/components/seating/assessment-sign';
+import ReferralsSection from '@/components/seating/referrals-section';
+import RequestLinkButton from '@/components/seating/request-link-button';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/seating';
 import { index as assessments } from '@/routes/tenant/seating/assessments';
+import { resend } from '@/routes/tenant/seating/acknowledgments';
 import type {
     AssessmentCondition,
     AssessmentFact,
     AssessmentRecord,
     MeasureSuggestions,
+    Referral,
 } from '@/types';
 
 export default function SeatingAssessment({
@@ -23,6 +27,9 @@ export default function SeatingAssessment({
     suggestions,
     canSign,
     canEdit,
+    referrals,
+    canRefer,
+    canResend,
 }: {
     assessment: AssessmentRecord;
     facts: AssessmentFact[];
@@ -30,6 +37,9 @@ export default function SeatingAssessment({
     suggestions: MeasureSuggestions | null;
     canSign: boolean;
     canEdit: boolean;
+    referrals: Referral[];
+    canRefer: boolean;
+    canResend: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const { errors } = usePage().props;
@@ -70,7 +80,14 @@ export default function SeatingAssessment({
                                     ?.value ?? '',
                         },
                     ]}
-                />
+                >
+                    {canResend && (
+                        <RequestLinkButton
+                            form={resend.form([tenantSlug, assessment.id])}
+                            label="Reenviar enlace a la persona"
+                        />
+                    )}
+                </PageHeader>
                 {assessment.status === 'signed' && (
                     <AssessmentResult
                         assessment={assessment}
@@ -85,6 +102,13 @@ export default function SeatingAssessment({
                         assessment={assessment}
                         conditions={conditions}
                         editable={canEdit}
+                    />
+                </div>
+                <div className="card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
+                    <ReferralsSection
+                        assessmentId={assessment.id}
+                        referrals={referrals}
+                        canRefer={canRefer}
                     />
                 </div>
                 {canSign && (

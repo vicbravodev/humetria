@@ -188,3 +188,29 @@ export type MeasureSuggestions = {
     label: string;
     measures: { value: string; label: string }[];
 };
+
+/** What the person is asked to confirm in their portal: their current signed assessment, until they do. */
+export type PortalAcknowledgment = {
+    assessmentId: string;
+    level: 'low' | 'medium' | 'high' | null;
+    levelLabel: string | null;
+    signedOn: string | null;
+    measures: string[];
+};
+
+/** A report of a damaged seat; none names the person who sent it. */
+export type SeatReportRow = {
+    id: string;
+    description: string;
+    positionName: string | null;
+    reportedOn: string;
+    resolution: string | null;
+    resolvedOn: string | null;
+};
+
+export type Referral = {
+    id: string;
+    referred: boolean;
+    referredOn: string;
+    note: string | null;
+};

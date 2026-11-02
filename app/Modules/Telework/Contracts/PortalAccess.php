@@ -17,4 +17,10 @@ interface PortalAccess
      * replaced, of a person who left, or of a company that may not be used).
      */
     public function open(string $token): ?PortalIdentity;
+
+    /**
+     * The personal token of an employee of the current company, to build the link to a page of theirs. It is the same one
+     * each time (issuing it never breaks the link the person has) and it is never logged.
+     */
+    public function token(string $employeeId): string;
 }

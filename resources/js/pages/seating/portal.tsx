@@ -1,8 +1,10 @@
 import { Head } from '@inertiajs/react';
 import { CircleCheck } from 'lucide-react';
+import PortalAcknowledgment from '@/components/seating/portal-acknowledgment';
 import PortalInputForm from '@/components/seating/portal-input-form';
+import PortalSeatReport from '@/components/seating/portal-seat-report';
 import PortalShell from '@/components/seating/portal-shell';
-import type { PortalCondition } from '@/types';
+import type { PortalAcknowledgment as Pending, PortalCondition } from '@/types';
 
 export default function SeatingPortal({
     token,
@@ -12,6 +14,8 @@ export default function SeatingPortal({
     footwear,
     discomfort,
     sentOn,
+    acknowledgment,
+    acknowledgedOn,
 }: {
     token: string;
     company: string;
@@ -21,6 +25,10 @@ export default function SeatingPortal({
     discomfort: PortalCondition;
     /** The date of the person's last answer, if they ever sent one. */
     sentOn: string | null;
+    /** The assessment waiting for the person's confirmation, if any. */
+    acknowledgment: Pending | null;
+    /** When the person confirmed their current assessment, if they did. */
+    acknowledgedOn: string | null;
 }) {
     return (
         <PortalShell company={company}>
@@ -37,6 +45,19 @@ export default function SeatingPortal({
                         corresponden.
                     </p>
                 </div>
+                {acknowledgment !== null && (
+                    <PortalAcknowledgment
+                        token={token}
+                        pending={acknowledgment}
+                    />
+                )}
+                {acknowledgedOn !== null && (
+                    <p className="flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-base text-accent-foreground">
+                        <CircleCheck aria-hidden className="size-5 shrink-0" />
+                        Usted confirmó el {acknowledgedOn} que le informaron del
+                        resultado de su evaluación.
+                    </p>
+                )}
                 {sentOn !== null && (
                     <p className="flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-base text-accent-foreground">
                         <CircleCheck aria-hidden className="size-5 shrink-0" />
@@ -50,6 +71,7 @@ export default function SeatingPortal({
                     footwear={footwear}
                     discomfort={discomfort}
                 />
+                <PortalSeatReport token={token} />
             </div>
         </PortalShell>
     );

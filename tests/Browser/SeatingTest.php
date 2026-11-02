@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\SeatingProfile;
+use App\Modules\Seating\Models\SeatReport;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
@@ -221,3 +223,43 @@ it('says what is missing when the Comisión tries to sign an incomplete assessme
         ->assertSee('Falta completar para firmar')
         ->assertNoJavaScriptErrors();
 });
+
+it('lists the seat reports of a center, open and resolved', function (bool $dark, bool $mobile): void {
+    [$url, , , $center] = assessableCenter();
+    SeatReport::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'description' => 'La silla de la caja 2 está floja.']);
+
+    visitPage('seating/reports', "{$url}/seating/centers/{$center->id}/reports", $dark, $mobile)
+        ->assertSee('Reportes de asientos')
+        ->assertSee('La silla de la caja 2 está floja.')
+        ->assertSee('Abiertos')
+        ->assertSee('Resueltos');
+})->with($looks);
+
+it('shows the person the result of their assessment to confirm, and the seat report form', function (bool $dark, bool $mobile): void {
+    [$url, $ana] = seatingPortal();
+    RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
+
+    visitPage('seating/portal', $url, $dark, $mobile)
+        ->assertSee('Evaluamos su trabajo de pie')
+        ->assertSee('Confirmo que me informaron')
+        ->assertSee('Avisar del asiento dañado');
+})->with($looks);
+
+it('confirms from the portal and says so', function (): void {
+    [$url, $ana] = seatingPortal();
+    RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
+
+    visit($url)->press('Confirmo que me informaron')->assertSee('Usted confirmó el')->assertNoJavaScriptErrors();
+});
+
+it('shows the referrals of a person on their assessment, with the form to add one', function (bool $dark, bool $mobile): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $signed = RiskAssessment::factory()->signed()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+    MedicalReferral::factory()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $center->id, 'note' => 'Valoración en medicina del trabajo.']);
+
+    visitPage('seating/assessment', "{$url}/seating/assessments/{$signed->id}", $dark, $mobile)
+        ->assertSee('Canalización')
+        ->assertSee('Se canalizó a atención médica')
+        ->assertSee('Valoración en medicina del trabajo.')
+        ->assertSee('Registrar');
+})->with($looks);

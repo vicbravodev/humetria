@@ -45,3 +45,11 @@ it('answers null for a company that may not be used', function (): void {
 
     expect(resolve(PortalAccess::class)->open($this->token))->toBeNull();
 });
+
+it('gives the token of a person so other tools can link to their pages, the same one each time', function (): void {
+    $access = resolve(PortalAccess::class);
+
+    expect($access->token($this->employee->id))->toBe($this->token)
+        ->and($access->token($this->employee->id))->toBe($this->token)
+        ->and($access->open($access->token($this->employee->id))?->employeeId)->toBe($this->employee->id);
+});

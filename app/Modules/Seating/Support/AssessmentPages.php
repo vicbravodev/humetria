@@ -9,11 +9,13 @@ use App\Modules\Instruments\Data\ConditionDefinition;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Seating\Enums\AssessmentStatus;
+use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * What the assessment pages send to the browser: the people of a center with the state of their assessment, and one
@@ -51,6 +53,7 @@ final readonly class AssessmentPages
             'people' => $page->through(fn (PositionAssignment $assignment): array => $this->row($assignment, $people, $names, $assessments)),
             'search' => $search,
             'canAssess' => $this->access->canAssess($userId, $center->id),
+            'canManage' => Gate::allows('manage-seating'),
         ];
     }
 
@@ -90,7 +93,21 @@ final readonly class AssessmentPages
             'suggestions' => $level === null ? null : ['label' => SuggestedMeasures::LABEL, 'measures' => array_map(fn ($kind): array => ['value' => $kind->value, 'label' => $kind->label()], SuggestedMeasures::for($level))],
             'canSign' => ! $signed && $this->access->canAssess($userId, $assessment->work_center_id),
             'canEdit' => ! $signed && $this->access->canAssess($userId, $assessment->work_center_id),
+            'referrals' => $this->referrals($assessment->employee_id),
+            'canRefer' => Gate::allows('manage-seating') || $this->access->canAssess($userId, $assessment->work_center_id),
+            'canResend' => $signed && Gate::allows('manage-seating'),
         ];
+    }
+
+    /**
+     * The latest referrals of the person (a short summary: a person has few).
+     *
+     * @return list<array{id: string, referred: bool, referredOn: string, note: string|null}>
+     */
+    private function referrals(string $employeeId): array
+    {
+        return array_values(MedicalReferral::query()->where('employee_id', $employeeId)->orderByDesc('referred_on')->orderByDesc('id')->limit(10)->get()
+            ->map(fn (MedicalReferral $referral): array => ['id' => $referral->id, 'referred' => $referral->referred, 'referredOn' => $referral->referred_on->toDateString(), 'note' => $referral->note])->all());
     }
 
     /**

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Http\Controllers\AcknowledgmentRequestController;
 use App\Modules\Seating\Http\Controllers\AssessmentController;
 use App\Modules\Seating\Http\Controllers\PositionController;
+use App\Modules\Seating\Http\Controllers\ReferralController;
 use App\Modules\Seating\Http\Controllers\SeatController;
 use App\Modules\Seating\Http\Controllers\SeatingController;
+use App\Modules\Seating\Http\Controllers\SeatReportController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/seating.
@@ -39,3 +42,11 @@ Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/assessments', [Ass
 Route::get('admin/{tenant:slug}/seating/assessments/{assessment}', [AssessmentController::class, 'show'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.show');
 Route::put('admin/{tenant:slug}/seating/assessments/{assessment}', [AssessmentController::class, 'update'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.update');
 Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/sign', [AssessmentController::class, 'sign'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.sign');
+
+// Confirmation of the risks, reports of damaged seats and referrals. Nothing is deleted: a report is resolved, a referral
+// is recorded, a confirmation is kept.
+Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/acknowledgment-request', [AcknowledgmentRequestController::class, 'resend'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.acknowledgments.resend');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/acknowledgment-requests', [AcknowledgmentRequestController::class, 'batch'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.acknowledgments.batch');
+Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/referrals', [ReferralController::class, 'store'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.referrals.store');
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/reports', [SeatReportController::class, 'index'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.reports.index');
+Route::post('admin/{tenant:slug}/seating/reports/{report}/resolve', [SeatReportController::class, 'resolve'])->where('tenant', $notReserved)->whereUuid('report')->name('tenant.seating.reports.resolve');

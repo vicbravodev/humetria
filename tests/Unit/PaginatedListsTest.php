@@ -21,6 +21,7 @@ const ARRAY_PROPS = [
     'seating/seats:conditions' => 'catálogo fijo: buen estado, por reparar o fuera de servicio',
     'seating/seats:features' => 'catálogo fijo: las nueve características de la Quinta F',
     'seating/seats:shortfalls' => 'resumen corto: los puestos con menos asientos que personas a la vez de un centro',
+    'seating/assessment:referrals' => 'resumen corto: las últimas diez canalizaciones de una persona, que tiene pocas',
     'seating/assessment:facts' => 'catálogo fijo: los once datos del registro de la Quinta C',
     'seating/assessment:conditions' => 'catálogo fijo: las siete condicionantes de la Quinta D con sus tres opciones del DOF',
     'seating/position:types' => 'catálogo fijo: los cuatro tipos de bipedestación',

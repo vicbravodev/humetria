@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support;
 
+use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Data\PortalIdentity;
@@ -14,7 +15,7 @@ use App\Modules\Telework\Exceptions\PortalUnavailable;
  */
 final readonly class TokenPortalAccess implements PortalAccess
 {
-    public function __construct(private OpenPortal $openPortal) {}
+    public function __construct(private OpenPortal $openPortal, private IssuePortalLink $issue) {}
 
     public function open(string $token): ?PortalIdentity
     {
@@ -25,5 +26,10 @@ final readonly class TokenPortalAccess implements PortalAccess
         }
 
         return new PortalIdentity($portal->tenantId, $portal->employeeId, $portal->company, $portal->name);
+    }
+
+    public function token(string $employeeId): string
+    {
+        return $this->issue->handle($employeeId);
     }
 }

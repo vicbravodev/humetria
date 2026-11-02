@@ -200,6 +200,10 @@ return [
     ],
 
     'attributes' => [
+        'referred' => 'respuesta',
+        'referred_on' => 'fecha',
+        'resolution' => 'resolución',
+        'description' => 'descripción',
         'scores' => 'condicionantes',
         'scores.standing_time' => 'tiempo de pie',
         'scores.posture_change' => 'cambio de postura',

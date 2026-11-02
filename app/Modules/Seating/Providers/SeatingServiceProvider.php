@@ -7,8 +7,10 @@ namespace App\Modules\Seating\Providers;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Seating\Events\PersonInputSubmitted;
+use App\Modules\Seating\Events\RiskAssessmentSigned;
 use App\Modules\Seating\Listeners\EndOnDeactivationOrMove;
 use App\Modules\Seating\Listeners\FlagOnPersonInput;
+use App\Modules\Seating\Listeners\RequestOnSignature;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,5 +24,6 @@ final class SeatingServiceProvider extends ServiceProvider
     {
         Event::listen([EmployeeDeactivated::class, EmployeeMoved::class], EndOnDeactivationOrMove::class);
         Event::listen(PersonInputSubmitted::class, FlagOnPersonInput::class);
+        Event::listen(RiskAssessmentSigned::class, RequestOnSignature::class);
     }
 }
