@@ -249,3 +249,32 @@ export type AgreementRow = {
     howAgreed: string;
     evidenceHref: string | null;
 };
+
+export type SeatingDocumentRow = {
+    id: string;
+    kindLabel: string;
+    title: string;
+    documentOn: string;
+    incisos: string[];
+    fileHref: string;
+};
+
+export type RegulationStep = 'signed' | 'deposited' | 'distributed';
+
+/** The internal regulation of a center: its four parts and where it stands. */
+export type RegulationRecord = {
+    status: 'draft' | 'signed' | 'deposited' | 'distributed';
+    statusLabel: string;
+    parts: {
+        risk_factors: string;
+        pauses: string;
+        seat_location: string;
+        usage_rule: string;
+    };
+    signedOn: string | null;
+    depositedOn: string | null;
+    depositFolio: string | null;
+    distributedOn: string | null;
+    fileHref: string | null;
+    nextStep: RegulationStep | null;
+};

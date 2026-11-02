@@ -32,6 +32,8 @@ export default function SeatingAssessment({
     canResend,
     canPropose,
     measureKinds,
+    minutesTitle,
+    canRecordMinutes,
 }: {
     assessment: AssessmentRecord;
     facts: AssessmentFact[];
@@ -44,6 +46,8 @@ export default function SeatingAssessment({
     canResend: boolean;
     canPropose: boolean;
     measureKinds: SeatOption[];
+    minutesTitle: string | null;
+    canRecordMinutes: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const { errors } = usePage().props;
@@ -107,6 +111,9 @@ export default function SeatingAssessment({
                     suggestions={suggestions}
                     canSign={canSign}
                     signError={errors['sign']}
+                    workCenterId={assessment.workCenterId}
+                    minutesTitle={minutesTitle}
+                    canRecordMinutes={canRecordMinutes}
                 />
             </div>
         </>

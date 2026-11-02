@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use App\Modules\Seating\Http\Controllers\AcknowledgmentRequestController;
 use App\Modules\Seating\Http\Controllers\AssessmentController;
+use App\Modules\Seating\Http\Controllers\DocumentController;
 use App\Modules\Seating\Http\Controllers\MeasureController;
 use App\Modules\Seating\Http\Controllers\PauseAgreementController;
 use App\Modules\Seating\Http\Controllers\PlanController;
 use App\Modules\Seating\Http\Controllers\PositionController;
 use App\Modules\Seating\Http\Controllers\ReferralController;
+use App\Modules\Seating\Http\Controllers\RegulationController;
 use App\Modules\Seating\Http\Controllers\SeatController;
 use App\Modules\Seating\Http\Controllers\SeatingController;
 use App\Modules\Seating\Http\Controllers\SeatReportController;
@@ -64,3 +66,16 @@ Route::post('admin/{tenant:slug}/seating/measures/{measure}/cancel', [MeasureCon
 Route::get('admin/{tenant:slug}/seating/measures/{measure}/evidence', [MeasureController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid('measure')->name('tenant.seating.measures.evidence');
 Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/pause-agreements', [PauseAgreementController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.pause-agreements.store');
 Route::get('admin/{tenant:slug}/seating/pause-agreements/{agreement}/evidence', [PauseAgreementController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid('agreement')->name('tenant.seating.pause-agreements.evidence');
+
+// Documents (PDF only) and the internal regulation: drafted, signed by the comisión mixta, deposited and distributed. The
+// system registers these steps; it deposits and sends nothing. Nothing is deleted.
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/documents', [DocumentController::class, 'index'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.documents.index');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/documents', [DocumentController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.documents.store');
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/documents/options', [DocumentController::class, 'options'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.documents.options');
+Route::get('admin/{tenant:slug}/seating/documents/{document}/file', [DocumentController::class, 'file'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.seating.documents.file');
+Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/minutes', [DocumentController::class, 'record'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.minutes');
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/regulation', [RegulationController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.show');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/regulation', [RegulationController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.store');
+Route::put('admin/{tenant:slug}/seating/centers/{workCenter}/regulation', [RegulationController::class, 'update'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.update');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/regulation/advance', [RegulationController::class, 'advance'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.advance');
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/regulation/file', [RegulationController::class, 'file'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.file');

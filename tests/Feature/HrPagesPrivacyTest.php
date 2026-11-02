@@ -87,6 +87,8 @@ it('gives HR no individual response on any page about campaigns, results or peop
     'employees' => fn (): string => route('tenant.employees.index', $this->tenant),
     'Ley Silla' => fn (): string => route('tenant.seating.index', $this->tenant),
     'Ley Silla work center' => fn (): string => route('tenant.seating.center', [$this->tenant, $this->plant->id]),
+    'Ley Silla documents' => fn (): string => route('tenant.seating.documents.index', [$this->tenant, $this->plant->id]),
+    'Ley Silla regulation' => fn (): string => route('tenant.seating.regulation.show', [$this->tenant, $this->plant->id]),
     'Ley Silla plan' => fn (): string => route('tenant.seating.plan', [$this->tenant, $this->plant->id]),
     'Ley Silla reports' => fn (): string => route('tenant.seating.reports.index', [$this->tenant, $this->plant->id]),
     'Ley Silla assessments' => fn (): string => route('tenant.seating.assessments.index', [$this->tenant, $this->plant->id]),

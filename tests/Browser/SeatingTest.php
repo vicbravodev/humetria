@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Models\InternalRegulation;
 use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PauseAgreement;
 use App\Modules\Seating\Models\PersonInput;
@@ -9,6 +10,7 @@ use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\Seat;
+use App\Modules\Seating\Models\SeatingDocument;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\SeatReport;
 use App\Modules\Seating\Models\StandingPosition;
@@ -285,5 +287,45 @@ it('lets the Comisión propose a measure from the assessment', function (): void
     visit("{$url}/seating/assessments/{$signed->id}")
         ->assertSee('Proponer una medida')
         ->assertSee('Sugerencia de Humetría')
+        ->assertNoJavaScriptErrors();
+});
+
+it('lists the documents of a center with their incisos and the form to add one', function (bool $dark, bool $mobile): void {
+    [$url, , , $center] = assessableCenter();
+    SeatingDocument::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'title' => 'Acta de febrero', 'incisos' => ['B', 'C']]);
+
+    visitPage('seating/documents', "{$url}/seating/centers/{$center->id}/documents", $dark, $mobile)
+        ->assertSee('Acta de febrero')
+        ->assertSee('Acta de la Comisión')
+        ->assertSee('B, C')
+        ->assertSee('Guardar documento');
+})->with($looks);
+
+it('shows the regulation before it is drafted, with the notice that it is not legal advice', function (bool $dark, bool $mobile): void {
+    [$url, , , $center] = assessableCenter();
+
+    visitPage('seating/regulation', "{$url}/seating/centers/{$center->id}/regulation", $dark, $mobile)
+        ->assertSee('no es asesoría legal')
+        ->assertSee('Todavía no hay borrador')
+        ->assertSee('Preparar borrador con los datos del centro');
+})->with($looks);
+
+it('shows a drafted regulation with its parts, its progress and the next step', function (bool $dark, bool $mobile): void {
+    [$url, , , $center] = assessableCenter();
+    InternalRegulation::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
+
+    visitPage('seating/regulation', "{$url}/seating/centers/{$center->id}/regulation", $dark, $mobile)
+        ->assertSee('no es asesoría legal')
+        ->assertSee('Borrador')
+        ->assertSee('Registrar la firma de la comisión mixta')
+        ->assertSee('Imprimir o guardar PDF');
+})->with($looks);
+
+it('drafts the regulation from the page', function (): void {
+    [$url, , , $center] = assessableCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/regulation")
+        ->press('Preparar borrador con los datos del centro')
+        ->assertSee('Factores de riesgo')
         ->assertNoJavaScriptErrors();
 });

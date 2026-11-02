@@ -13,6 +13,7 @@ use App\Modules\Seating\Enums\MeasureKind;
 use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
+use App\Modules\Seating\Models\SeatingDocument;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
@@ -97,6 +98,8 @@ final readonly class AssessmentPages
             'referrals' => $this->referrals($assessment->employee_id),
             'canRefer' => Gate::allows('manage-seating') || $this->access->canAssess($userId, $assessment->work_center_id),
             'canResend' => $signed && Gate::allows('manage-seating'),
+            'minutesTitle' => $assessment->recorded_in_document_id === null ? null : SeatingDocument::query()->find($assessment->recorded_in_document_id)?->title,
+            'canRecordMinutes' => $signed && $this->access->canAssess($userId, $assessment->work_center_id),
             'canPropose' => $this->access->canAssess($userId, $assessment->work_center_id),
             'measureKinds' => array_map(fn (MeasureKind $kind): array => ['value' => $kind->value, 'label' => $kind->label()], MeasureKind::cases()),
         ];

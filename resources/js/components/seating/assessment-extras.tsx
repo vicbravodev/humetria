@@ -1,3 +1,4 @@
+import AssessmentMinutes from '@/components/seating/assessment-minutes';
 import AssessmentSign from '@/components/seating/assessment-sign';
 import ProposeMeasureForm from '@/components/seating/propose-measure-form';
 import ReferralsSection from '@/components/seating/referrals-section';
@@ -13,6 +14,9 @@ export default function AssessmentExtras({
     suggestions,
     canSign,
     signError,
+    workCenterId,
+    minutesTitle,
+    canRecordMinutes,
 }: {
     assessmentId: string;
     referrals: Referral[];
@@ -22,6 +26,9 @@ export default function AssessmentExtras({
     suggestions: MeasureSuggestions | null;
     canSign: boolean;
     signError: string | undefined;
+    workCenterId: string;
+    minutesTitle: string | null;
+    canRecordMinutes: boolean;
 }) {
     const first =
         'card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0';
@@ -35,6 +42,16 @@ export default function AssessmentExtras({
                     canRefer={canRefer}
                 />
             </div>
+            {(minutesTitle !== null || canRecordMinutes) && (
+                <div className={first}>
+                    <AssessmentMinutes
+                        assessmentId={assessmentId}
+                        workCenterId={workCenterId}
+                        current={minutesTitle}
+                        canRecord={canRecordMinutes}
+                    />
+                </div>
+            )}
             {canPropose && (
                 <div className={first}>
                     <ProposeMeasureForm
