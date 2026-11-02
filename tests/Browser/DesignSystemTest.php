@@ -48,6 +48,14 @@ it('gives the mobile menu button a 44 px touch target', function (bool $dark): v
         ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
 })->with(['light' => false, 'dark' => true]);
 
+// On a phone only the page's own name shows: the arrows go with the places before it.
+it('leaves no stray arrows in the breadcrumbs on a phone', function (bool $mobile): void {
+    $panel = signInToPanel();
+
+    visitPage('dashboard', $panel, mobile: $mobile)
+        ->assertScript('() => [...document.querySelectorAll(\'nav[aria-label="Ruta"] svg\')].some((arrow) => arrow.getClientRects().length > 0)', ! $mobile);
+})->with(['desktop' => false, 'phone' => true]);
+
 // Lets every running transition settle, so what the next assertion reads is the resting state.
 const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
 

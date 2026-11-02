@@ -48,9 +48,10 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                 {trail.map((crumb, index) => (
                     <Fragment key={`${crumb.title}-${index}`}>
                         {index > 0 && (
+                            // On a phone only the last crumb shows, so its arrows go too.
                             <ChevronRight
                                 aria-hidden
-                                className="size-4 shrink-0 text-muted-foreground"
+                                className="hidden size-4 shrink-0 text-muted-foreground sm:block"
                             />
                         )}
                         <li
