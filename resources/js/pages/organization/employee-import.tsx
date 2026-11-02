@@ -1,9 +1,9 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { Download } from 'lucide-react';
-import { useEffect } from 'react';
 import ImportForm from '@/components/organization/import-form';
 import ImportInstructions from '@/components/organization/import-instructions';
 import ImportSteps from '@/components/organization/import-steps';
+import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { importStep } from '@/lib/employees';
 import { index as employees } from '@/routes/tenant/employees';
@@ -20,33 +20,28 @@ export default function EmployeeImport({
     // Always set here: this page only exists inside a company.
     const tenantSlug = page.props.tenant?.slug ?? '';
 
-    useEffect(() => {
-        setLayoutProps({
-            breadcrumbs: [
-                { title: 'Empleados', href: employees(tenantSlug) },
-                { title: 'Cargar CSV' },
-            ],
-        });
-    }, [tenantSlug]);
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Empleados', href: employees(tenantSlug) },
+            { title: 'Cargar CSV' },
+        ],
+    });
 
     return (
         <>
             <Head title="Cargar empleados" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <header className="flex flex-col gap-[18px]">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em]">
-                            Cargar empleados
-                        </h1>
+                <div className="flex flex-col gap-[18px]">
+                    <PageHeader title="Cargar empleados">
                         <Button variant="ghost" asChild>
                             <a href={template.url(tenantSlug)} download>
                                 <Download />
                                 Descargar plantilla
                             </a>
                         </Button>
-                    </div>
+                    </PageHeader>
                     <ImportSteps step={importStep(page.flash.import)} />
-                </header>
+                </div>
                 <ImportForm
                     tenantSlug={tenantSlug}
                     aside={
