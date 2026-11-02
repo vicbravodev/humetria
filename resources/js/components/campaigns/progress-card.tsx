@@ -18,7 +18,7 @@ export default function ProgressCard({
     const caption = arcCaption(progress);
 
     return (
-        <article className="flex flex-col items-center gap-[18px] rounded-xl border bg-card p-6">
+        <article className="flex flex-col items-center gap-[18px] card p-6">
             <ArcMeter
                 value={progress.completed}
                 max={progress.target}

@@ -16,7 +16,7 @@ export default function ReviewRow({ row }: { row: Row }) {
         <li>
             <Link
                 href={show({ tenant: tenantSlug, application: row.id })}
-                className="flex items-center gap-3 rounded-xl border bg-card px-[22px] py-5 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="flex items-center gap-3 card px-[22px] py-5 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
                 <Initials name={row.person} className="size-10 text-caption" />
                 <div className="flex min-w-0 flex-1 flex-col">

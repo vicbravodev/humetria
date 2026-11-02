@@ -9,10 +9,7 @@ export default function EvaluationHistory({
     campaign: CampaignDetail;
 }) {
     return (
-        <section
-            aria-labelledby="history-title"
-            className="rounded-xl border bg-card p-6"
-        >
+        <section aria-labelledby="history-title" className="card p-6">
             <h2
                 id="history-title"
                 className="mb-[18px] text-lg leading-7 font-semibold"

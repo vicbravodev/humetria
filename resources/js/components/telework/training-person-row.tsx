@@ -10,7 +10,7 @@ export default function TrainingPersonRow({
     person: TrainingPerson;
 }) {
     return (
-        <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-[22px] py-4">
+        <li className="flex flex-wrap items-center justify-between gap-3 card px-[22px] py-4">
             <div className="flex min-w-0 flex-col">
                 <p className="font-medium">{person.name}</p>
                 <p className="text-caption text-muted-foreground">

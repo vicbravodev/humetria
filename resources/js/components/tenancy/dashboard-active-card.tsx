@@ -28,7 +28,7 @@ export default function DashboardActiveCard({
     return (
         <article
             aria-labelledby="active-evaluation"
-            className="@container/active flex flex-col gap-5 rounded-xl border bg-card p-6"
+            className="@container/active flex flex-col gap-5 card p-6"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">

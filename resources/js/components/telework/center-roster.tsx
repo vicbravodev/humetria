@@ -27,7 +27,7 @@ export default function CenterRoster({
             ) : (
                 <ul
                     aria-label="Personas del padrón"
-                    className="overflow-hidden rounded-xl border bg-card"
+                    className="overflow-hidden card"
                 >
                     {people.data.map((person) => (
                         <CenterPersonRow key={person.id} person={person} />

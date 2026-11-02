@@ -31,7 +31,7 @@ export default function ItemsResults({
             {sections.map((section, index) => (
                 <details
                     key={index}
-                    className="group rounded-xl border bg-card p-4 open:pb-5 sm:px-5"
+                    className="group card p-4 open:pb-5 sm:px-5"
                 >
                     <summary className="flex cursor-pointer list-none items-baseline justify-between gap-4 rounded-md font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
                         <span>{section.title ?? section.instruction}</span>

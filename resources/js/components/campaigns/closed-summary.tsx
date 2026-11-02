@@ -20,7 +20,7 @@ export default function ClosedSummary({
     return (
         <section
             aria-label="Resumen"
-            className="grid gap-x-12 gap-y-7 rounded-xl border bg-card p-7 md:grid-cols-[minmax(0,1fr)_auto]"
+            className="grid gap-x-12 gap-y-7 card p-7 md:grid-cols-[minmax(0,1fr)_auto]"
         >
             <div className="flex flex-col justify-center gap-4">
                 <span className="text-sm text-muted-foreground">

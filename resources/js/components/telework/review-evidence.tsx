@@ -11,7 +11,7 @@ export default function ReviewEvidence({ evidence }: { evidence: Evidence[] }) {
     }
 
     return (
-        <section className="overflow-hidden rounded-xl border bg-card">
+        <section className="overflow-hidden card">
             <h2 className="border-b bg-muted px-5 py-3 text-lg font-semibold">
                 Evidencia pedida
             </h2>

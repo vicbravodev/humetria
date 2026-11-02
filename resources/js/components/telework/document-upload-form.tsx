@@ -26,7 +26,7 @@ export default function DocumentUploadForm({
             noValidate
             resetOnSuccess
             onSuccess={() => setKind('')}
-            className="flex flex-col gap-7 rounded-xl border bg-card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0"
+            className="flex flex-col gap-7 card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0"
         >
             {({ processing, errors }) => (
                 <>

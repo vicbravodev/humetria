@@ -21,7 +21,7 @@ export default function Settings({
                     title="Ajustes de NOM-037"
                     description="Cada cuánto se revisan los lugares de teletrabajo y qué consentimiento aceptan las personas."
                 />
-                <div className="rounded-xl border bg-card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
+                <div className="card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
                     <SettingsForm
                         periodMonths={periodMonths}
                         presets={presets}

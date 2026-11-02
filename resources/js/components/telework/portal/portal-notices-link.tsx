@@ -12,7 +12,7 @@ export default function PortalNoticesLink({ token }: { token: string }) {
             </h2>
             <Link
                 href={show.url({ token })}
-                className="flex items-start gap-3.5 rounded-xl border bg-card p-4 hover:bg-accent/50"
+                className="flex items-start gap-3.5 card p-4 hover:bg-accent/50"
             >
                 <IconTile icon={FileText} />
                 <span className="flex flex-col gap-1">

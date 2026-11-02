@@ -29,10 +29,7 @@ export default function RegisterAspirantForm({
                     <AspirantPersonFields route={route} errors={errors} />
                     <InputError message={errors['work_center']} />
                     {Array.from({ length: places }, (_, index) => (
-                        <fieldset
-                            key={index}
-                            className="grid gap-4 rounded-xl border bg-card p-5"
-                        >
+                        <fieldset key={index} className="grid gap-4 card p-5">
                             <legend className="px-1 text-base font-semibold">
                                 {places === 1
                                     ? 'Lugar de trabajo'

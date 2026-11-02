@@ -8,7 +8,7 @@ import type { EquipmentRow } from '@/types';
 /** One item delivered to the person, with the badge of their answer and the reason if they refused it. */
 export default function EquipmentItemRow({ item }: { item: EquipmentRow }) {
     return (
-        <li className="flex items-start gap-3.5 rounded-xl border bg-card p-4">
+        <li className="flex items-start gap-3.5 card p-4">
             <IconTile icon={Armchair} />
             <div className="min-w-0">
                 <p className="text-base font-semibold">{item.description}</p>

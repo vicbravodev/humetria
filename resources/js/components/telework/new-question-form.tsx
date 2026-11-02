@@ -25,7 +25,7 @@ export default function NewQuestionForm({
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}
             options={{ preserveScroll: true }}
             resetOnSuccess
-            className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2"
+            className="grid gap-4 card p-5 sm:grid-cols-2"
         >
             {({ processing, errors }) => (
                 <>

@@ -20,7 +20,7 @@ export default function ReviewSide({ review }: { review: ReviewDetail }) {
                 />
             )}
             {review.canDecide && (
-                <section className="grid gap-4 rounded-xl border bg-card p-5">
+                <section className="grid gap-4 card p-5">
                     <h2 className="text-lg font-semibold">Tu decisión</h2>
                     <ReviewDecisionForm
                         action={store.url({

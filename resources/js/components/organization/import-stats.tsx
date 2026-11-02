@@ -16,7 +16,7 @@ export default function ImportStats({
                 <div
                     key={stat.label}
                     className={cn(
-                        'rounded-xl border bg-card px-5 py-[18px]',
+                        'card px-5 py-[18px]',
                         stat.alert === true && 'border-destructive',
                     )}
                 >

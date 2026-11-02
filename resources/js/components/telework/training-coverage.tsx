@@ -11,7 +11,7 @@ export default function TrainingCoverage({
 }) {
     return (
         <section
-            className="flex flex-col gap-3 rounded-xl border bg-card p-5"
+            className="flex flex-col gap-3 card p-5"
             aria-labelledby="coverage-title"
         >
             <div className="flex items-center gap-3">

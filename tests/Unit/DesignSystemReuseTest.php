@@ -7,7 +7,7 @@ declare(strict_types=1);
  * piece never reaches it. Each case names the markup that gives a copy away and the component that replaces it.
  */
 
-/** @return list<string> the files under resources/js, outside components/humetria, whose source matches */
+/** @return list<string> the files under resources/js, outside components/humetria and the shadcn primitives (components/ui), whose source matches */
 function filesCopying(string $pattern): array
 {
     $found = [];
@@ -15,6 +15,7 @@ function filesCopying(string $pattern): array
 
     foreach ($files as $file) {
         if (! str_contains((string) $file, '/components/humetria/')
+            && ! str_contains((string) $file, '/components/ui/')
             && preg_match($pattern, (string) file_get_contents((string) $file)) === 1) {
             $found[] = $file->getFilename();
         }
@@ -27,4 +28,8 @@ function filesCopying(string $pattern): array
 
 it('draws an icon in its tile with IconTile', function (): void {
     expect(filesCopying('/size-10 (?:shrink-0 )?items-center justify-center rounded-lg bg-accent text-primary/'))->toBe([]);
+});
+
+it('draws a card with the card utility of app.css, as pantallas does with .card', function (): void {
+    expect(filesCopying('/rounded-xl border bg-card/'))->toBe([]);
 });

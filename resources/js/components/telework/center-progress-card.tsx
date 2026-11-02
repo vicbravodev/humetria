@@ -23,7 +23,7 @@ export default function CenterProgressCard({
     return (
         <section
             aria-label="Avance de la tabla de inspección"
-            className="flex flex-col items-center gap-6 rounded-xl border bg-card p-6 sm:flex-row"
+            className="flex flex-col items-center gap-6 card p-6 sm:flex-row"
         >
             <ArcMeter
                 value={progress.done}

@@ -18,7 +18,7 @@ export default function ReviewAnswerGroup({
     }
 
     return (
-        <section className="overflow-hidden rounded-xl border bg-card">
+        <section className="overflow-hidden card">
             <header className="border-b bg-muted px-5 py-3">
                 <h2 className="text-lg font-semibold">
                     {title} ({answers.length})

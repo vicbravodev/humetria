@@ -27,7 +27,7 @@ export default function AckSummary({
     return (
         <section
             aria-label="Avance de las confirmaciones"
-            className="flex flex-col gap-4 rounded-xl border bg-card px-[22px] py-5"
+            className="flex flex-col gap-4 card px-[22px] py-5"
         >
             <div className="flex flex-col gap-2">
                 <p className="font-medium">{progressText(progress)}</p>

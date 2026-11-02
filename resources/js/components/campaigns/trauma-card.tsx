@@ -11,7 +11,7 @@ export default function TraumaCard({ route }: { route: [string, string] }) {
     return (
         <section
             aria-labelledby="trauma-title"
-            className="flex flex-col gap-3.5 rounded-xl border bg-card p-6"
+            className="flex flex-col gap-3.5 card p-6"
         >
             <div className="flex items-center gap-3">
                 <span className="inline-flex size-9 items-center justify-center rounded-[10px] bg-risk-alto-bg text-risk-alto-fg">

@@ -37,7 +37,7 @@ export default function RoleCapabilities() {
     return (
         <section
             aria-labelledby="role-capabilities"
-            className="overflow-hidden rounded-xl border bg-card"
+            className="overflow-hidden card"
         >
             <div className="flex items-center gap-2.5 border-b px-[18px] py-3.5">
                 <ShieldCheck

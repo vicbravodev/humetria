@@ -13,7 +13,7 @@ export default function ReviewDecisionCard({
         record.planDueOn === null ? undefined : describeDate(record.planDueOn);
 
     return (
-        <section className="grid gap-2 rounded-xl border bg-card p-5">
+        <section className="grid gap-2 card p-5">
             <h2 className="text-lg font-semibold">{title}</h2>
             <p className="font-medium">{record.decisionLabel}</p>
             <p className="text-meta text-muted-foreground">

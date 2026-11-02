@@ -30,7 +30,7 @@ export default function WorkCenterCard({
     ];
 
     return (
-        <article className="flex flex-col gap-[18px] rounded-xl border bg-card p-[22px]">
+        <article className="flex flex-col gap-[18px] card p-[22px]">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <h3 className="text-lg leading-[26px] font-semibold">

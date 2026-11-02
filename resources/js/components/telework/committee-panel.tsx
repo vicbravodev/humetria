@@ -26,7 +26,7 @@ export default function CommitteePanel({
     const tenantSlug = useTenantSlug();
     if (committee === null) {
         return canManage ? (
-            <div className="rounded-xl border bg-card p-6">
+            <div className="card p-6">
                 <RegisterCommitteeForm
                     workCenterId={workCenterId}
                     candidates={candidates}
@@ -62,7 +62,7 @@ export default function CommitteePanel({
                 />
             )}
             {canManage && (
-                <div className="rounded-xl border bg-card p-5">
+                <div className="card p-5">
                     <AssignMemberForm
                         workCenterId={workCenterId}
                         candidates={candidates}

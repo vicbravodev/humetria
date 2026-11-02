@@ -24,7 +24,7 @@ export default function PortalNoticesList({
                 {notices.data.map((notice) => (
                     <li
                         key={notice.id}
-                        className="flex items-start gap-3.5 rounded-xl border bg-card p-4"
+                        className="flex items-start gap-3.5 card p-4"
                     >
                         <IconTile icon={FileText} />
                         <div className="flex min-w-0 flex-1 flex-col gap-1">

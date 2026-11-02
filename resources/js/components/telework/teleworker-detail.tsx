@@ -67,7 +67,7 @@ export default function TeleworkerDetail({
                     {teleworker.workplaces.map((workplace) => (
                         <li
                             key={workplace.id}
-                            className="flex items-start gap-3.5 rounded-xl border bg-card p-4"
+                            className="flex items-start gap-3.5 card p-4"
                         >
                             <IconTile icon={Home} />
                             <div className="min-w-0">

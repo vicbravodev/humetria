@@ -14,7 +14,7 @@ export default function ChecklistConsent({
     return (
         <section
             aria-labelledby="consent-title"
-            className="grid gap-3 rounded-xl border bg-card p-4"
+            className="grid gap-3 card p-4"
         >
             <h2
                 id="consent-title"

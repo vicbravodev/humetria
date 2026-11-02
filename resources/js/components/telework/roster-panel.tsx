@@ -24,7 +24,7 @@ export default function RosterPanel({
 
     return (
         <section
-            className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5"
+            className="flex flex-wrap items-center justify-between gap-4 card p-5"
             aria-labelledby="roster-title"
         >
             <div className="flex items-center gap-3">

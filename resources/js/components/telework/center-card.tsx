@@ -16,7 +16,7 @@ export default function CenterCard({ card }: { card: Card }) {
     const progress = progressText(card);
 
     return (
-        <article className="flex flex-col gap-[18px] rounded-xl border bg-card p-[22px]">
+        <article className="flex flex-col gap-[18px] card p-[22px]">
             <div className="flex min-w-0 flex-col gap-0.5">
                 <h3 className="text-lg leading-[26px] font-semibold">
                     {card.name}

@@ -22,7 +22,7 @@ export default function AreaParticipationCard({
     return (
         <section
             aria-labelledby="areas-title"
-            className="grid gap-x-10 gap-y-6 rounded-xl border bg-card p-6 lg:grid-cols-3"
+            className="grid gap-x-10 gap-y-6 card p-6 lg:grid-cols-3"
         >
             <div className="flex flex-col gap-2">
                 <h2

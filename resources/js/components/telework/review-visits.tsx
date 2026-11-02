@@ -19,7 +19,7 @@ export default function ReviewVisits({
 }) {
     const tenantSlug = useTenantSlug();
     return (
-        <section className="overflow-hidden rounded-xl border bg-card">
+        <section className="overflow-hidden card">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted px-5 py-3">
                 <h2 className="text-lg font-semibold">Visitas</h2>
                 {canAsk && (

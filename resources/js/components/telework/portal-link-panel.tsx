@@ -26,7 +26,7 @@ export default function PortalLinkPanel({
     const [copied, copy] = useClipboard();
 
     return (
-        <section className="grid gap-4 rounded-xl border bg-card p-5">
+        <section className="grid gap-4 card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <IconTile icon={hasEmail ? Mail : Link2} />

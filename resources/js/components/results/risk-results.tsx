@@ -54,7 +54,7 @@ export default function RiskResultsSections({
                     caption="Calificación final por área"
                 />
             ) : (
-                <section className="flex flex-col gap-2 rounded-xl border bg-card p-5 sm:p-6">
+                <section className="flex flex-col gap-2 card p-5 sm:p-6">
                     <h2 className="text-lg font-semibold">Por área</h2>
                     <p className="text-sm text-muted-foreground">
                         Ninguna área se muestra: se necesitan al menos 5

@@ -25,7 +25,7 @@ export default function ImportInstructions({
 }) {
     const tenantSlug = useTenantSlug();
     return (
-        <aside className="grid gap-4 rounded-xl border bg-card px-5 py-[18px]">
+        <aside className="grid gap-4 card px-5 py-[18px]">
             <h2 className="text-sm leading-5 font-semibold">Cómo llenarlo</h2>
             <ul className="-mt-2 divide-y">
                 {COLUMNS.map(([label, column]) => (

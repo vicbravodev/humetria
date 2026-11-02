@@ -28,7 +28,7 @@ export default function WorkCenterCard({
     );
 
     return (
-        <article className="flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-[22px] transition-colors duration-150 ease-out hover:border-input">
+        <article className="flex min-w-0 flex-col gap-4 card p-[22px] transition-colors duration-150 ease-out hover:border-input">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <h2 className="text-lg leading-[26px] font-semibold">

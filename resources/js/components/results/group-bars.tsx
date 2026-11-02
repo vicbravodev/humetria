@@ -26,7 +26,7 @@ export default function GroupBars({
     caption: string;
 }) {
     return (
-        <section className="grid break-inside-avoid-page gap-6 rounded-xl border bg-card p-5 sm:p-6 print:border-0 print:p-0">
+        <section className="grid break-inside-avoid-page gap-6 card p-5 sm:p-6 print:border-0 print:p-0">
             <div className="grid gap-x-10 gap-y-6 lg:grid-cols-3">
                 <div className="flex flex-col gap-2">
                     {heading}

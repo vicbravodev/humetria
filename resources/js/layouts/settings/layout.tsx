@@ -52,7 +52,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     })}
                 </nav>
 
-                <div className="flex min-w-0 flex-[999_1_480px] flex-col gap-10 rounded-xl border bg-card p-5 md:p-7">
+                <div className="flex min-w-0 flex-[999_1_480px] flex-col gap-10 card p-5 md:p-7">
                     {children}
                 </div>
             </div>

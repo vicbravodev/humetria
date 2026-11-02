@@ -24,7 +24,7 @@ export default function DocumentRow({
     const items = kind?.items.length ?? 0;
 
     return (
-        <li className="flex flex-col gap-3 rounded-xl border bg-card px-[22px] py-5">
+        <li className="flex flex-col gap-3 card px-[22px] py-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-col">
                     <p className="font-medium">

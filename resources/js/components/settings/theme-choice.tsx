@@ -40,7 +40,7 @@ export default function ThemeChoice() {
                             aria-pressed={chosen}
                             onClick={() => updateAppearance(value)}
                             className={cn(
-                                'flex flex-[1_1_180px] flex-col gap-2.5 rounded-xl border bg-card p-2.5 text-left transition-colors duration-150 ease-out hover:border-input focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                                'flex flex-[1_1_180px] flex-col gap-2.5 card p-2.5 text-left transition-colors duration-150 ease-out hover:border-input focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                                 chosen &&
                                     'border-2 border-primary p-[9px] hover:border-primary',
                             )}

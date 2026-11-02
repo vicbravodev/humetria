@@ -19,7 +19,7 @@ export default function ReviewAnswersView({
                 flagged
             />
             {answers.generalPhotos.length > 0 && (
-                <section className="grid gap-3 rounded-xl border bg-card p-5">
+                <section className="grid gap-3 card p-5">
                     <h2 className="text-lg font-semibold">Fotos del lugar</h2>
                     <ReviewPhotos photos={answers.generalPhotos} />
                 </section>
@@ -35,7 +35,7 @@ export default function ReviewAnswersView({
                 answers={answers.informative}
             />
             {specialNeeds !== null && (
-                <section className="grid gap-1 rounded-xl border bg-card p-5">
+                <section className="grid gap-1 card p-5">
                     <h2 className="text-lg font-semibold">
                         Necesidad especial
                     </h2>

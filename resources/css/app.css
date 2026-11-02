@@ -223,6 +223,16 @@
 }
 
 /*
+ * A card (pantallas: .card): the card fill, a 1 px border and the large radius. Its padding and layout go where it is
+ * used, so a section, a list item or a link can all be one.
+ */
+@utility card {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-card);
+}
+
+/*
  * A small link or control that stands alone ("Ver centros de trabajo", "Salir") keeps its look but takes a touch
  * 44 px tall: an invisible area grows around it (WCAG 2.5.5). Inside a sentence a link needs none.
  */

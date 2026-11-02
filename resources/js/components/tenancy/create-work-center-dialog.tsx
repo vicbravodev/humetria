@@ -40,7 +40,7 @@ export default function CreateWorkCenterDialog({
                             type="button"
                             className="flex min-h-[260px] flex-col items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-dashed border-input bg-muted p-6 text-center transition-colors duration-150 ease-out hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         >
-                            <span className="inline-flex size-11 items-center justify-center rounded-xl border bg-card text-primary">
+                            <span className="inline-flex size-11 items-center justify-center card text-primary">
                                 <Plus aria-hidden className="size-5" />
                             </span>
                             <span className="font-medium">

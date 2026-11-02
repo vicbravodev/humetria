@@ -8,10 +8,7 @@ export default function RosterEnded({
     teleworker: TeleworkerSummary;
 }) {
     return (
-        <section
-            className="grid gap-1 rounded-xl border bg-card p-5"
-            aria-labelledby="roster-title"
-        >
+        <section className="grid gap-1 card p-5" aria-labelledby="roster-title">
             <h2 id="roster-title" className="text-base font-semibold">
                 Teletrabajo terminado
             </h2>

@@ -28,7 +28,7 @@ export default function DemoRequestsInbox({
     };
 
     return (
-        <div className="flex min-h-[520px] flex-wrap overflow-hidden rounded-xl border bg-card">
+        <div className="flex min-h-[520px] flex-wrap overflow-hidden card">
             <ul
                 aria-label="Solicitudes"
                 className="w-full border-b md:max-w-[360px] md:flex-[1_1_300px] md:border-r md:border-b-0"

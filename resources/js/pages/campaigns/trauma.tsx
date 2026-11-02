@@ -75,7 +75,7 @@ export default function Trauma({
                     }
                 />
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] items-start gap-7">
-                    <div className="rounded-xl border bg-card p-6">
+                    <div className="card p-6">
                         {workCenter !== null && people !== null ? (
                             <TraumaForm
                                 // A new list of people for each work center.

@@ -16,10 +16,7 @@ export default function GuideSizes({
     counts: CentersBySize;
 }) {
     return (
-        <section
-            aria-labelledby="guide-sizes"
-            className="overflow-hidden rounded-xl border bg-card"
-        >
+        <section aria-labelledby="guide-sizes" className="overflow-hidden card">
             <div className="flex items-center gap-3 border-b px-5 py-[18px]">
                 <Info
                     aria-hidden

@@ -22,7 +22,7 @@ export default function DashboardNextSteps({
     return (
         <article
             aria-labelledby="next-steps"
-            className="flex flex-col gap-1 rounded-xl border bg-card px-6 pt-6 pb-2.5"
+            className="flex flex-col gap-1 card px-6 pt-6 pb-2.5"
         >
             <div className="flex items-center justify-between gap-3">
                 <h2

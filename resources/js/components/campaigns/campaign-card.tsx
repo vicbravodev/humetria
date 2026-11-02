@@ -25,7 +25,7 @@ export default function CampaignCard({
     const { progress } = campaign;
 
     return (
-        <article className="flex flex-col gap-5 rounded-xl border bg-card p-6 shadow-xs">
+        <article className="flex flex-col gap-5 card p-6 shadow-xs">
             <header className="flex items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-lg leading-7 font-semibold">

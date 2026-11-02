@@ -16,7 +16,7 @@ export default function InvitationCard({
     const { inviter, trade_name: tradeName } = invitation;
 
     return (
-        <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4">
+        <div className="flex items-center gap-3.5 card p-4">
             <Initials
                 name={inviter ?? tradeName}
                 className="size-11 bg-accent text-sm text-primary"
