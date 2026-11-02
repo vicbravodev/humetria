@@ -6,7 +6,11 @@ namespace App\Modules\Assistant\Providers;
 
 use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Models\ConversationParticipant;
+use App\Modules\Assistant\Support\ComplianceReaders;
+use App\Modules\Assistant\Support\Readers\Nom035Reader;
+use App\Modules\Assistant\Support\Readers\Nom037Reader;
 use App\Modules\Tenancy\Events\MemberRemoved;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +20,15 @@ use Illuminate\Support\ServiceProvider;
  */
 final class AssistantServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        // One reader per norm, in the order Humi tells them: a new norm (Ley Silla, violencia laboral…) is one more here.
+        $this->app->singleton(ComplianceReaders::class, fn (Application $app): ComplianceReaders => new ComplianceReaders([
+            $app->make(Nom035Reader::class),
+            $app->make(Nom037Reader::class),
+        ]));
+    }
+
     public function boot(): void
     {
         // The SDK stores the participant's class in each conversation: an alias, so renaming the class keeps the history.

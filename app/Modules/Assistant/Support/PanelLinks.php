@@ -11,6 +11,21 @@ final readonly class PanelLinks
 {
     public function __construct(private Companies $companies) {}
 
+    public function dashboard(): string
+    {
+        return $this->path('tenant.dashboard');
+    }
+
+    public function workCenters(): string
+    {
+        return $this->path('tenant.work-centers.index');
+    }
+
+    public function telework(): string
+    {
+        return $this->path('tenant.telework.index');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');
