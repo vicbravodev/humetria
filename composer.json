@@ -102,7 +102,7 @@
         ],
         "mutate:critical": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only --class=\"$(php scripts/mutation-classes.php --all tests app < /dev/null | grep -vE '\\\\Http\\\\(Controllers|Requests)\\\\|\\\\Notifications\\\\' | paste -sd, -)\""
+            "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only --class=\"$(php scripts/mutation-classes.php tests | grep -vE '\\\\Http\\\\(Controllers|Requests)\\\\|\\\\Notifications\\\\' | paste -sd, -)\""
         ],
         "mutate:full": [
             "Composer\\Config::disableProcessTimeout",
