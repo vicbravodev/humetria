@@ -9,6 +9,12 @@ use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
+use App\Modules\Assistant\Support\ToolRegistry;
+use App\Modules\Assistant\Tools\GetCampaignProgress;
+use App\Modules\Assistant\Tools\GetComplianceOverview;
+use App\Modules\Assistant\Tools\GetRiskResults;
+use App\Modules\Assistant\Tools\ListPendingActions;
+use App\Modules\Assistant\Tools\SearchRegulations;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -26,6 +32,15 @@ final class AssistantServiceProvider extends ServiceProvider
         $this->app->singleton(ComplianceReaders::class, fn (Application $app): ComplianceReaders => new ComplianceReaders([
             $app->make(Nom035Reader::class),
             $app->make(Nom037Reader::class),
+        ]));
+
+        // The tools of Humi: a new module adds its own here.
+        $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
+            GetComplianceOverview::class,
+            GetCampaignProgress::class,
+            GetRiskResults::class,
+            ListPendingActions::class,
+            SearchRegulations::class,
         ]));
     }
 
