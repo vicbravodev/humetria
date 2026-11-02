@@ -7,7 +7,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import type { AreaResult } from '@/types';
 
 const WHOLE_CENTER = 'all';
 
@@ -21,7 +20,7 @@ export default function AreaFilter({
     selected,
 }: {
     url: string;
-    areas: AreaResult[];
+    areas: { id: string; name: string }[];
     /** The area the results are narrowed to; null for the whole center. */
     selected: { value: string } | null;
 }) {

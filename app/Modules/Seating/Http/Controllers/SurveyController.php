@@ -24,6 +24,6 @@ final class SurveyController extends Controller
         $surveys->launch($center->id, $request->closesOn(), $access->userId($request));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Encuesta lanzada. Las personas con correo ya van a recibir su enlace.']);
 
-        return redirect()->route('tenant.seating.center', [$tenant, $center->id]);
+        return redirect()->route('tenant.seating.survey', [$tenant, $center->id]);
     }
 }

@@ -58,6 +58,7 @@ export default function SeatingCenter({
                     <CenterLinks
                         workCenterId={workCenter.id}
                         canAssess={canAssess}
+                        canManage={canManage}
                     />
                 </PageHeader>
                 <div className="max-w-[880px] card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">

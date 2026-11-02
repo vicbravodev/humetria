@@ -6,6 +6,8 @@ use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Organization\Models\Area;
+use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Seating\Models\InternalRegulation;
 use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PauseAgreement;
@@ -343,4 +345,25 @@ it('opens the confidential survey of the seats with its first question about sta
     visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile)
         ->assertSee('Encuesta de Ley Silla')
         ->assertSee('Confidencial');
+})->with($looks);
+
+it('offers to launch the survey of a center that has none', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+
+    visitPage('seating/survey', "{$url}/seating/centers/{$center->id}/survey", $dark, $mobile)
+        ->assertSee('Encuesta confidencial')
+        ->assertSee('Último día para contestar')
+        ->assertSee('Lanzar la encuesta');
+})->with($looks);
+
+it('shows the closed survey counted per question, with the minimum of people', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    $survey = Campaign::factory()->closed()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+    $area = Area::factory()->create(['tenant_id' => $center->tenant_id, 'name' => 'Almacén']);
+    AnonymousResponse::factory()->count(6)->create(['campaign_id' => $survey->id, 'area_id' => $area->id, 'instrument' => 'seating.survey', 'instrument_version' => 'dof-2025-07-17', 'answers' => surveyAnswers('yes')]);
+
+    visitPage('seating/survey', "{$url}/seating/centers/{$center->id}/survey", $dark, $mobile)
+        ->assertSee('Todo el centro de trabajo: 6 respuestas')
+        ->assertSee('SS-01')
+        ->assertSee('Sí 6 · No 0 · No aplica 0');
 })->with($looks);
