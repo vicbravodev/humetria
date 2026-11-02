@@ -55,5 +55,5 @@ void createInertiaApp({
     },
 });
 
-// This will set light / dark mode on load...
+// Applies the saved theme before the first paint.
 initializeTheme();
