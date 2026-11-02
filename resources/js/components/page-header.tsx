@@ -1,7 +1,5 @@
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-
-export type PageFact = { icon: LucideIcon; text: string };
+import type { PageFact } from '@/types';
 
 /**
  * The top of every panel page (pantallas: Panel, Eval-Activa, Empleados): an optional caption, the title with its

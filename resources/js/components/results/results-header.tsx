@@ -1,13 +1,12 @@
 import { Link } from '@inertiajs/react';
 import { Calendar, ClipboardCheck, FileText, Users } from 'lucide-react';
 import PageHeader from '@/components/page-header';
-import type { PageFact } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { instrumentsText } from '@/lib/campaigns';
 import { periodText } from '@/lib/results';
 import { staffText } from '@/lib/work-centers';
-import type { ResultsCampaign } from '@/types';
+import type { PageFact, ResultsCampaign } from '@/types';
 
 /**
  * The top of the results (pantallas: Eval-Cerrada): the work center with the state of its evaluation, its people,

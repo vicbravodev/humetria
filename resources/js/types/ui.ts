@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { BreadcrumbItem } from '@/types/navigation';
 
@@ -19,3 +20,6 @@ export type BadgeVariant =
     | 'warning'
     | 'destructive'
     | 'outline';
+
+/** One fact under a page title, with its icon: "Acta del 2 de marzo de 2026", "3 integrantes". */
+export type PageFact = { icon: LucideIcon; text: string };

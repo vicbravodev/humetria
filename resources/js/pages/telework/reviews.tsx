@@ -4,6 +4,7 @@ import ConsolePagination from '@/components/console-pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/page-header';
 import ReviewRow from '@/components/telework/review-row';
+import { pendingReviewsText } from '@/lib/telework/review';
 import { show } from '@/routes/tenant/telework/committee';
 import type { Paginated, ReviewRow as Row } from '@/types';
 
@@ -33,11 +34,7 @@ export default function Reviews({
                 <PageHeader
                     caption={workCenter.name}
                     title="Listas por revisar"
-                    description={
-                        applications.total === 0
-                            ? 'No hay listas esperando a la Comisión.'
-                            : `${applications.total} ${applications.total === 1 ? 'lista espera' : 'listas esperan'} a la Comisión, la más antigua primero.`
-                    }
+                    description={pendingReviewsText(applications.total)}
                 />
                 {applications.total === 0 ? (
                     <EmptyState icon={ClipboardCheck} title="Todo al día">

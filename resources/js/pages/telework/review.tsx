@@ -1,33 +1,13 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import { CalendarClock, MapPin, User } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import ReviewAnswersView from '@/components/telework/review-answers';
 import ReviewEvidence from '@/components/telework/review-evidence';
 import ReviewSide from '@/components/telework/review-side';
 import ReviewVisits from '@/components/telework/review-visits';
 import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
-import { describeDate } from '@/lib/calendar-date';
+import { reviewFacts } from '@/lib/telework/review';
 import { index } from '@/routes/tenant/telework/reviews';
-import type { PageFact } from '@/components/page-header';
 import type { ReviewDetail } from '@/types';
-
-function reviewFacts(review: ReviewDetail): PageFact[] {
-    const expires =
-        review.workplace.expiresOn === null
-            ? undefined
-            : describeDate(review.workplace.expiresOn);
-
-    return [
-        {
-            icon: User,
-            text: `${review.person.name} · ${review.person.jobTitle}`,
-        },
-        { icon: MapPin, text: review.workplace.address },
-        ...(expires === undefined
-            ? []
-            : [{ icon: CalendarClock, text: `Vigente hasta ${expires}` }]),
-    ];
-}
 
 export default function Review({
     workCenter,
