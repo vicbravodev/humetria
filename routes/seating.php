@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Modules\Seating\Http\Controllers\AcknowledgmentRequestController;
 use App\Modules\Seating\Http\Controllers\AssessmentController;
+use App\Modules\Seating\Http\Controllers\MeasureController;
+use App\Modules\Seating\Http\Controllers\PauseAgreementController;
+use App\Modules\Seating\Http\Controllers\PlanController;
 use App\Modules\Seating\Http\Controllers\PositionController;
 use App\Modules\Seating\Http\Controllers\ReferralController;
 use App\Modules\Seating\Http\Controllers\SeatController;
@@ -50,3 +53,14 @@ Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/acknowledgment-req
 Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/referrals', [ReferralController::class, 'store'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.referrals.store');
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/reports', [SeatReportController::class, 'index'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.reports.index');
 Route::post('admin/{tenant:slug}/seating/reports/{report}/resolve', [SeatReportController::class, 'resolve'])->where('tenant', $notReserved)->whereUuid('report')->name('tenant.seating.reports.resolve');
+
+// The action plan: measures (proposed by the Comisión, followed up by RH, cancelled and never deleted) and the agreements on
+// pauses (a new one is a new row).
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/plan', [PlanController::class, 'index'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.plan');
+Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/measures', [MeasureController::class, 'propose'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.measures.propose');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/measures', [MeasureController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.measures.store');
+Route::put('admin/{tenant:slug}/seating/measures/{measure}', [MeasureController::class, 'update'])->where('tenant', $notReserved)->whereUuid('measure')->name('tenant.seating.measures.update');
+Route::post('admin/{tenant:slug}/seating/measures/{measure}/cancel', [MeasureController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('measure')->name('tenant.seating.measures.cancel');
+Route::get('admin/{tenant:slug}/seating/measures/{measure}/evidence', [MeasureController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid('measure')->name('tenant.seating.measures.evidence');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/pause-agreements', [PauseAgreementController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.pause-agreements.store');
+Route::get('admin/{tenant:slug}/seating/pause-agreements/{agreement}/evidence', [PauseAgreementController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid('agreement')->name('tenant.seating.pause-agreements.evidence');

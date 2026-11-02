@@ -200,6 +200,16 @@ return [
     ],
 
     'attributes' => [
+        'owner_user_id' => 'responsable',
+        'due_on' => 'fecha compromiso',
+        'evidence' => 'evidencia',
+        'pauses_per_shift' => 'pausas por turno',
+        'minutes_each' => 'minutos de cada pausa',
+        'agreed_on' => 'fecha del acuerdo',
+        'how_agreed' => 'cómo se acordó',
+        'assessment_id' => 'evaluación',
+        'position_id' => 'puesto',
+        'status' => 'estado',
         'referred' => 'respuesta',
         'referred_on' => 'fecha',
         'resolution' => 'resolución',

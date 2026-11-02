@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/seating';
 import { index as assessments } from '@/routes/tenant/seating/assessments';
+import { plan } from '@/routes/tenant/seating';
 import { index as reports } from '@/routes/tenant/seating/reports';
 import { index as seats } from '@/routes/tenant/seating/seats';
 import type {
@@ -64,6 +65,13 @@ export default function SeatingCenter({
                                 href={assessments([tenantSlug, workCenter.id])}
                             >
                                 Evaluaciones
+                            </Link>
+                        </Button>
+                    )}
+                    {canAssess && (
+                        <Button variant="outline" asChild>
+                            <Link href={plan([tenantSlug, workCenter.id])}>
+                                Plan de acción
                             </Link>
                         </Button>
                     )}

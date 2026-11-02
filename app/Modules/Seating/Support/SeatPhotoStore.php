@@ -26,25 +26,25 @@ final readonly class SeatPhotoStore
      *
      * @throws ValidationException when the file is not a JPEG or PNG image, or is too heavy.
      */
-    public function store(string $file, string $directory): string
+    public function store(string $file, string $directory, string $field = 'photo'): string
     {
         $bytes = (string) @file_get_contents($file);
 
         if (strlen($bytes) > config()->integer('seating.max_photo_kb') * 1024) {
-            throw ValidationException::withMessages(['photo' => 'La foto debe pesar menos de '.(config()->integer('seating.max_photo_kb') / 1024).' MB.']);
+            throw ValidationException::withMessages([$field => 'El archivo debe pesar menos de '.(config()->integer('seating.max_photo_kb') / 1024).' MB.']);
         }
 
-        $info = getimagesizefromstring($bytes);
+        $info = @getimagesizefromstring($bytes);
         $type = $info === false ? null : $info[2];
 
         if ($info === false || ! in_array($type, [IMAGETYPE_JPEG, IMAGETYPE_PNG], true) || $info[0] * $info[1] > self::MAX_PIXELS) {
-            throw $this->invalid();
+            throw $this->invalid($field);
         }
 
         $image = @imagecreatefromstring($bytes);
 
         if (! $image instanceof GdImage) {
-            throw $this->invalid();
+            throw $this->invalid($field);
         }
 
         $png = $type === IMAGETYPE_PNG;
@@ -56,8 +56,8 @@ final readonly class SeatPhotoStore
         return $path;
     }
 
-    private function invalid(): ValidationException
+    private function invalid(string $field): ValidationException
     {
-        return ValidationException::withMessages(['photo' => 'La foto debe ser una imagen JPG o PNG.']);
+        return ValidationException::withMessages([$field => 'Debe ser una imagen JPG o PNG.']);
     }
 }

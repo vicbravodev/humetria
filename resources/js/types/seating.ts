@@ -214,3 +214,38 @@ export type Referral = {
     referredOn: string;
     note: string | null;
 };
+
+export type MeasureRow = {
+    id: string;
+    kindLabel: string;
+    note: string | null;
+    status: 'planned' | 'in_progress' | 'done' | 'cancelled';
+    statusLabel: string;
+    positionName: string | null;
+    ownerName: string | null;
+    dueOn: string | null;
+    overdue: boolean;
+    hasEvidence: boolean;
+    fromAssessment: boolean;
+    evidenceHref: string | null;
+};
+
+export type MeasureEditing = {
+    id: string;
+    kindLabel: string;
+    status: string;
+    ownerUserId: string | null;
+    dueOn: string | null;
+    hasEvidence: boolean;
+    cancelled: boolean;
+};
+
+export type AgreementRow = {
+    id: string;
+    positionName: string | null;
+    pausesPerShift: number;
+    minutesEach: number;
+    agreedOn: string;
+    howAgreed: string;
+    evidenceHref: string | null;
+};

@@ -8,8 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Modules\Instruments\Contracts\SeatingAssessment;
 use App\Modules\Seating\Actions\SubmitPersonInput;
 use App\Modules\Seating\Enums\AssessmentStatus;
+use App\Modules\Seating\Enums\MeasureStatus;
 use App\Modules\Seating\Http\Requests\PersonInputRequest;
 use App\Modules\Seating\Models\PersonInput;
+use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Support\PrivacyNotice;
@@ -42,13 +44,13 @@ final class PortalController extends Controller
             'footwear' => $this->condition($assessment, 'footwear'),
             'discomfort' => $this->condition($assessment, 'discomfort'),
             'sentOn' => $last?->submitted_at->setTimezone($zone)->toDateString(),
-            // What the person is asked to confirm: the current signed assessment, until they do. The measures of Task 9 join it.
+            // What the person is asked to confirm: the current signed assessment and its measures, until they do.
             'acknowledgment' => $current === null || $confirmed !== null ? null : [
                 'assessmentId' => $current->id,
                 'level' => $current->level?->value,
                 'levelLabel' => $current->level?->label(),
                 'signedOn' => $current->signed_at?->setTimezone($zone)->toDateString(),
-                'measures' => [],
+                'measures' => $this->measuresOf($current),
             ],
             'acknowledgedOn' => $confirmed?->acknowledged_at->setTimezone($zone)->toDateString(),
         ]);
@@ -61,6 +63,20 @@ final class PortalController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Gracias. Recibimos sus respuestas.']);
 
         return to_route('portal.seating.show', $token);
+    }
+
+    /**
+     * The measures that apply to the person: those of their assessment and those of their position, without the cancelled ones.
+     *
+     * @return list<string>
+     */
+    private function measuresOf(RiskAssessment $assessment): array
+    {
+        $kinds = PreventiveMeasure::query()->where('status', '!=', MeasureStatus::Cancelled)
+            ->where(fn ($query) => $query->where('assessment_id', $assessment->id)->orWhere(fn ($own) => $own->whereNull('assessment_id')->where('position_id', $assessment->position_id)))
+            ->orderBy('created_at')->get(['kind'])->map(fn (PreventiveMeasure $measure): string => $measure->kind->label());
+
+        return array_values($kinds->unique()->all());
     }
 
     private function person(string $token, PortalAccess $access): PortalIdentity

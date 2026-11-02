@@ -4,8 +4,7 @@ import PageHeader from '@/components/humetria/page-header';
 import AssessmentFacts from '@/components/seating/assessment-facts';
 import AssessmentForm from '@/components/seating/assessment-form';
 import AssessmentResult from '@/components/seating/assessment-result';
-import AssessmentSign from '@/components/seating/assessment-sign';
-import ReferralsSection from '@/components/seating/referrals-section';
+import AssessmentExtras from '@/components/seating/assessment-extras';
 import RequestLinkButton from '@/components/seating/request-link-button';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -18,6 +17,7 @@ import type {
     AssessmentRecord,
     MeasureSuggestions,
     Referral,
+    SeatOption,
 } from '@/types';
 
 export default function SeatingAssessment({
@@ -30,6 +30,8 @@ export default function SeatingAssessment({
     referrals,
     canRefer,
     canResend,
+    canPropose,
+    measureKinds,
 }: {
     assessment: AssessmentRecord;
     facts: AssessmentFact[];
@@ -40,10 +42,15 @@ export default function SeatingAssessment({
     referrals: Referral[];
     canRefer: boolean;
     canResend: boolean;
+    canPropose: boolean;
+    measureKinds: SeatOption[];
 }) {
     const tenantSlug = useTenantSlug();
     const { errors } = usePage().props;
-    const person = facts.find((fact) => fact.numeral === 'VII')?.value ?? '';
+    const fact = (numeral: string) =>
+        facts.find((item) => item.numeral === numeral)?.value ?? '';
+    const person = fact('VII');
+    const signed = assessment.status === 'signed';
     setLayoutProps({
         breadcrumbs: [
             { title: 'Ley Silla', href: index(tenantSlug) },
@@ -62,24 +69,11 @@ export default function SeatingAssessment({
                 <PageHeader
                     title={person}
                     status={
-                        <Badge
-                            variant={
-                                assessment.status === 'signed'
-                                    ? 'secondary'
-                                    : 'outline'
-                            }
-                        >
+                        <Badge variant={signed ? 'secondary' : 'outline'}>
                             {assessment.statusLabel}
                         </Badge>
                     }
-                    facts={[
-                        {
-                            icon: UserRound,
-                            text:
-                                facts.find((fact) => fact.numeral === 'VIII')
-                                    ?.value ?? '',
-                        },
-                    ]}
+                    facts={[{ icon: UserRound, text: fact('VIII') }]}
                 >
                     {canResend && (
                         <RequestLinkButton
@@ -88,7 +82,7 @@ export default function SeatingAssessment({
                         />
                     )}
                 </PageHeader>
-                {assessment.status === 'signed' && (
+                {signed && (
                     <AssessmentResult
                         assessment={assessment}
                         suggestions={suggestions}
@@ -104,19 +98,16 @@ export default function SeatingAssessment({
                         editable={canEdit}
                     />
                 </div>
-                <div className="card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
-                    <ReferralsSection
-                        assessmentId={assessment.id}
-                        referrals={referrals}
-                        canRefer={canRefer}
-                    />
-                </div>
-                {canSign && (
-                    <AssessmentSign
-                        assessmentId={assessment.id}
-                        error={errors['sign']}
-                    />
-                )}
+                <AssessmentExtras
+                    assessmentId={assessment.id}
+                    referrals={referrals}
+                    canRefer={canRefer}
+                    canPropose={canPropose}
+                    measureKinds={measureKinds}
+                    suggestions={suggestions}
+                    canSign={canSign}
+                    signError={errors['sign']}
+                />
             </div>
         </>
     );

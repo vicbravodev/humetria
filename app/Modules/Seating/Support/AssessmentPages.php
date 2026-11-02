@@ -9,6 +9,7 @@ use App\Modules\Instruments\Data\ConditionDefinition;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Seating\Enums\AssessmentStatus;
+use App\Modules\Seating\Enums\MeasureKind;
 use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
@@ -96,6 +97,8 @@ final readonly class AssessmentPages
             'referrals' => $this->referrals($assessment->employee_id),
             'canRefer' => Gate::allows('manage-seating') || $this->access->canAssess($userId, $assessment->work_center_id),
             'canResend' => $signed && Gate::allows('manage-seating'),
+            'canPropose' => $this->access->canAssess($userId, $assessment->work_center_id),
+            'measureKinds' => array_map(fn (MeasureKind $kind): array => ['value' => $kind->value, 'label' => $kind->label()], MeasureKind::cases()),
         ];
     }
 

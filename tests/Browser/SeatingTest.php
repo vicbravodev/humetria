@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Seating\Models\MedicalReferral;
+use App\Modules\Seating\Models\PauseAgreement;
 use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\PositionAssignment;
+use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\SeatingProfile;
@@ -263,3 +265,25 @@ it('shows the referrals of a person on their assessment, with the form to add on
         ->assertSee('Valoración en medicina del trabajo.')
         ->assertSee('Registrar');
 })->with($looks);
+
+it('shows the action plan with its measures and its pause agreements', function (bool $dark, bool $mobile): void {
+    [$url, , $position, $center] = assessableCenter();
+    PreventiveMeasure::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'position_id' => $position->id, 'kind' => 'task_rotation']);
+    PauseAgreement::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'position_id' => $position->id]);
+
+    visitPage('seating/plan', "{$url}/seating/centers/{$center->id}/plan", $dark, $mobile)
+        ->assertSee('Plan de acción')
+        ->assertSee('Alternar tareas para cambiar de postura')
+        ->assertSee('3 por turno de 10 min')
+        ->assertSee('Registrar un acuerdo de pausas');
+})->with($looks);
+
+it('lets the Comisión propose a measure from the assessment', function (): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $signed = RiskAssessment::factory()->signed()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+
+    visit("{$url}/seating/assessments/{$signed->id}")
+        ->assertSee('Proponer una medida')
+        ->assertSee('Sugerencia de Humetría')
+        ->assertNoJavaScriptErrors();
+});
