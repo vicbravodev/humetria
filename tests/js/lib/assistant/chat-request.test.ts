@@ -1,6 +1,10 @@
 import type { UIMessage } from 'ai';
 import { describe, expect, it } from 'vite-plus/test';
-import { chatBody, lastUserText } from '@/lib/assistant/chat-request';
+import {
+    chatBody,
+    chatContext,
+    lastUserText,
+} from '@/lib/assistant/chat-request';
 
 function message(id: string, role: UIMessage['role'], text: string): UIMessage {
     return { id, role, parts: [{ type: 'text', text }] };
@@ -50,6 +54,16 @@ describe('chatBody', () => {
             message: '¿Cómo va?',
             conversationId: 'c-1',
             pageContext: { kind: 'campaign', id: 'k-1' },
+        });
+    });
+});
+
+describe('chatContext', () => {
+    it('is nothing for a first message on no page, and the conversation and page otherwise', () => {
+        expect(chatContext(null, null)).toEqual({});
+        expect(chatContext('c-1', { kind: 'work_center', id: 'w-1' })).toEqual({
+            conversationId: 'c-1',
+            pageContext: { kind: 'work_center', id: 'w-1' },
         });
     });
 });

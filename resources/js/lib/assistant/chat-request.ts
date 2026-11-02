@@ -21,14 +21,21 @@ export function lastUserText(messages: readonly UIMessage[]): string {
         .join('');
 }
 
+/** What the browser adds to the last message: the conversation it continues and the page the person has open. */
+export function chatContext(
+    conversationId: string | null,
+    page: PageContext,
+): Omit<ChatBody, 'message'> {
+    return {
+        ...(conversationId === null ? {} : { conversationId }),
+        ...(page === null ? {} : { pageContext: page }),
+    };
+}
+
 export function chatBody(
     message: string,
     conversationId: string | null,
     page: PageContext,
 ): ChatBody {
-    return {
-        message,
-        ...(conversationId === null ? {} : { conversationId }),
-        ...(page === null ? {} : { pageContext: page }),
-    };
+    return { message, ...chatContext(conversationId, page) };
 }
