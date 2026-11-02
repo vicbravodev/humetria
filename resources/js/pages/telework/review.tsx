@@ -1,5 +1,5 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import ReviewAnswersView from '@/components/telework/review-answers';
 import ReviewEvidence from '@/components/telework/review-evidence';
 import ReviewSide from '@/components/telework/review-side';

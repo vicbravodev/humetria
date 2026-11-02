@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { Building2 } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import CenterCard from '@/components/telework/center-card';
 import type { CenterCard as Card, Paginated } from '@/types';
 

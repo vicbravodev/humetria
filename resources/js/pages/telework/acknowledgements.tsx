@@ -5,7 +5,7 @@ import AckPanelConfirm from '@/components/telework/ack-panel-confirm';
 import AckPaperDialog from '@/components/telework/ack-paper-dialog';
 import AckPeopleList from '@/components/telework/ack-people-list';
 import AckSummary from '@/components/telework/ack-summary';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { useChosenPeople } from '@/hooks/use-chosen-people';
 import { describeDate } from '@/lib/calendar-date';
 import { liveAll } from '@/lib/telework/acknowledgements';

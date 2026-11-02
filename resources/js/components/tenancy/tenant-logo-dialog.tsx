@@ -1,5 +1,5 @@
 import { Form, Link } from '@inertiajs/react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

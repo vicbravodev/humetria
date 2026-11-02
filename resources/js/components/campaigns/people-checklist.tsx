@@ -1,8 +1,8 @@
 import ChosenPeopleActions from '@/components/campaigns/chosen-people-actions';
 import ChosenPeopleField from '@/components/campaigns/chosen-people-field';
 import PersonCheckRow from '@/components/campaigns/person-check-row';
-import Pagination from '@/components/pagination';
-import InputError from '@/components/input-error';
+import Pagination from '@/components/humetria/pagination';
+import InputError from '@/components/humetria/input-error';
 import type { useChosenPeople } from '@/hooks/use-chosen-people';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import type { Paginated, RosterPerson } from '@/types';

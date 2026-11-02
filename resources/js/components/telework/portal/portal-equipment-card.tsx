@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { Armchair } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import PortalCard from '@/components/telework/portal/portal-card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';

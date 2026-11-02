@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import SettingsForm from '@/components/telework/settings-form';
 
 export default function Settings({

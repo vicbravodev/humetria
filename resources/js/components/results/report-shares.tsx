@@ -1,4 +1,4 @@
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import RevokeShareDialog from '@/components/results/revoke-share-dialog';
 import {
     Table,

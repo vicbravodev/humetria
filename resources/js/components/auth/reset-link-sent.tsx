@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Mail } from 'lucide-react';
 import AuthHeading from '@/components/auth-heading';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { useCountdown } from '@/hooks/use-countdown';
 import { formatCountdown } from '@/lib/countdown';

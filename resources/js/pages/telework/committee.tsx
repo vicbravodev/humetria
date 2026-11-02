@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ClipboardCheck, FileText, ListChecks, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import CommitteePanel from '@/components/telework/committee-panel';
 import { committeeFacts } from '@/lib/telework/committee';
 import { show } from '@/routes/tenant/telework/checklist';

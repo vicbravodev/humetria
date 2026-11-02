@@ -2,7 +2,7 @@ import { Form } from '@inertiajs/react';
 import { UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import EndTeleworkFields from '@/components/telework/end-telework-fields';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

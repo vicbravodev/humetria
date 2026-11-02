@@ -2,7 +2,7 @@ import { Form } from '@inertiajs/react';
 import { ArrowLeft, Building2, Lock } from 'lucide-react';
 import EvaluationBlocked from '@/components/campaigns/evaluation-blocked';
 import PopulationField from '@/components/campaigns/population-field';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { guidesReason } from '@/lib/evaluation-centers';

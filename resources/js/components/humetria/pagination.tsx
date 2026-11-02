@@ -1,5 +1,7 @@
+import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import PageButton from '@/components/page-button';
+import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
@@ -29,6 +31,20 @@ export default function Pagination({
         return null;
     }
 
+    // One step: a link to that page, or the same button disabled when there is no such page.
+    const step = (href: string | null, content: ReactNode) =>
+        href === null ? (
+            <Button variant="outline" disabled>
+                {content}
+            </Button>
+        ) : (
+            <Button variant="outline" asChild>
+                <Link href={href} preserveState={preserveState}>
+                    {content}
+                </Link>
+            </Button>
+        );
+
     return (
         <nav
             aria-label={label}
@@ -43,19 +59,20 @@ export default function Pagination({
                 {page.current_page} de {page.last_page}
             </p>
             <div className="flex flex-wrap gap-2">
-                <PageButton
-                    href={page.prev_page_url}
-                    label={previous}
-                    icon={ChevronLeft}
-                    preserveState={preserveState}
-                />
-                <PageButton
-                    href={page.next_page_url}
-                    label={next}
-                    icon={ChevronRight}
-                    iconAfter
-                    preserveState={preserveState}
-                />
+                {step(
+                    page.prev_page_url,
+                    <>
+                        <ChevronLeft aria-hidden="true" />
+                        {previous}
+                    </>,
+                )}
+                {step(
+                    page.next_page_url,
+                    <>
+                        {next}
+                        <ChevronRight aria-hidden="true" />
+                    </>,
+                )}
             </div>
         </nav>
     );

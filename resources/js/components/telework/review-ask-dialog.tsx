@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Camera, Video } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

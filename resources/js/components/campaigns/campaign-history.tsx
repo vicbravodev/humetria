@@ -1,5 +1,5 @@
 import ClosedCampaignsTable from '@/components/campaigns/closed-campaigns-table';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import type { CampaignSummary, Paginated } from '@/types';
 
 /** "Historial" (pantalla NOM035): the closed campaigns, a page at a time; nothing before the first one closes. */

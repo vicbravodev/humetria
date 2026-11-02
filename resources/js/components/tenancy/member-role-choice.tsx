@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import type { RoleOption } from '@/types';
 
 const HINTS: Record<string, string> = {

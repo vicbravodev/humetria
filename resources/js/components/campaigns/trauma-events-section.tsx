@@ -1,5 +1,5 @@
 import CampaignCard from '@/components/campaigns/campaign-card';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import type { CampaignSummary, Paginated } from '@/types';
 
 /** The Guía I by event still taking answers, apart from the work centers' evaluations; nothing when there are none. */

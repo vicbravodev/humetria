@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { UserPlus } from 'lucide-react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {

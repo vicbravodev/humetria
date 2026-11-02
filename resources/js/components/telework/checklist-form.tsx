@@ -6,7 +6,7 @@ import GeneralPhotos from '@/components/telework/general-photos';
 import ChecklistIntro from '@/components/telework/checklist-intro';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useChecklistForm } from '@/hooks/use-checklist-form';
 import { GENERAL, groupByHeading } from '@/lib/telework/answers';

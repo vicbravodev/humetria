@@ -1,5 +1,5 @@
 import { Form } from '@inertiajs/react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/tenant/telework/visit-authorizations/document';

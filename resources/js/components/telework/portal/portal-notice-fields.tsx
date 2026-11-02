@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import PortalNoticeDates from '@/components/telework/portal/portal-notice-dates';
 import WorkplaceFields from '@/components/telework/workplace-fields';
 import { Checkbox } from '@/components/ui/checkbox';

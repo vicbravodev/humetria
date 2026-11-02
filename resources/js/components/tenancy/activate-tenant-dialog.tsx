@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

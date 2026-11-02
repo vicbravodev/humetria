@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useEffect, useRef, useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import OtpSlots from '@/components/two-factor/otp-slots';
 import { Button } from '@/components/ui/button';
 import { InputOTP } from '@/components/ui/input-otp';

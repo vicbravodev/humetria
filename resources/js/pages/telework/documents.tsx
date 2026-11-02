@@ -1,8 +1,8 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { FileText } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import DocumentRow from '@/components/telework/document-row';
 import DocumentUploadForm from '@/components/telework/document-upload-form';
 import DocumentsToolbar from '@/components/telework/documents-toolbar';

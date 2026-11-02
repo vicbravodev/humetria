@@ -1,5 +1,5 @@
 import { Users } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import CenterPersonRow from '@/components/telework/roster-person-row';
 import type { Paginated, CenterPerson } from '@/types';

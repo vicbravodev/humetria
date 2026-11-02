@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
-import Pagination from '@/components/pagination';
-import PageHeader from '@/components/page-header';
+import Pagination from '@/components/humetria/pagination';
+import PageHeader from '@/components/humetria/page-header';
 import InviteMemberDialog from '@/components/tenancy/invite-member-dialog';
 import MembersTable from '@/components/tenancy/members-table';
 import RoleCapabilities from '@/components/tenancy/role-capabilities';

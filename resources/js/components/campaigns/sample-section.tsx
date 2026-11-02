@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Shuffle } from 'lucide-react';
 import SampleTable from '@/components/campaigns/sample-table';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { redraw } from '@/routes/tenant/campaigns';

@@ -2,7 +2,7 @@ import { Building2, X } from 'lucide-react';
 import { useState } from 'react';
 import Combobox from '@/components/humetria/combobox';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';

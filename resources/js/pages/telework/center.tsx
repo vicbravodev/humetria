@@ -1,6 +1,6 @@
 import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { FileText, Factory, Users } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import CenterNextStep from '@/components/telework/center-next-step';
 import CenterProgressCard from '@/components/telework/center-progress-card';

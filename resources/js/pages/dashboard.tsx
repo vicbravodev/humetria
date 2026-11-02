@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import DashboardBody from '@/components/tenancy/dashboard-body';
 import { Button } from '@/components/ui/button';
 import { greeting, panelSummary } from '@/lib/dashboard';

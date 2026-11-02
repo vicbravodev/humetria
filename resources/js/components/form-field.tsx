@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import {
     InputGroup,

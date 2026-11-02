@@ -1,12 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Upload } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import CreateEmployeeSheet from '@/components/organization/create-employee-sheet';
 import EmployeesEmpty from '@/components/organization/employees-empty';
 import EmployeesNotice from '@/components/organization/employees-notice';
 import EmployeesTable from '@/components/organization/employees-table';
 import EmployeesToolbar from '@/components/organization/employees-toolbar';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { employeeQuery, headcountText } from '@/lib/employees';
 import { options as areaOptions } from '@/routes/tenant/areas';

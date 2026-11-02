@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import PhotoPicker from '@/components/telework/photo-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';

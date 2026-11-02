@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import type { ReplacementPool } from '@/types';
 
 /** The gender of who will not answer, with how many people of it are left outside the sample. */

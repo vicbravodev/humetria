@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
 import DemoRequestsInbox from '@/components/demos/demo-requests-inbox';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import type { DemoRequestRow, Paginated } from '@/types';
 
 export default function DemoRequests({

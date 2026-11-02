@@ -1,6 +1,6 @@
 import { FileSpreadsheet, FileUp } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { importFileHint } from '@/lib/employees';
 import { cn } from '@/lib/utils';
 

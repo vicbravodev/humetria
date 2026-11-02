@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import { ShieldCheck, Sun, UserRound } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { settingsNavItems } from '@/lib/app-navigation';
 import { cn, toUrl } from '@/lib/utils';

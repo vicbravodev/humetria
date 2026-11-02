@@ -2,7 +2,7 @@ import { Head, router, setLayoutProps, usePage } from '@inertiajs/react';
 import TraumaForm from '@/components/campaigns/trauma-form';
 import TraumaNextSteps from '@/components/campaigns/trauma-next-steps';
 import Combobox from '@/components/humetria/combobox';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Label } from '@/components/ui/label';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/campaigns';

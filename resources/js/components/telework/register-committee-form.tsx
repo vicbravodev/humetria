@@ -2,7 +2,7 @@ import { Form } from '@inertiajs/react';
 import { CalendarCheck, FileText } from 'lucide-react';
 import DatePicker from '@/components/humetria/date-picker';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import MemberChoices from '@/components/telework/member-choices';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';

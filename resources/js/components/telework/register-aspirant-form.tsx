@@ -1,7 +1,7 @@
 import { Form, Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import AspirantPersonFields from '@/components/telework/aspirant-person-fields';
 import WorkplaceFields from '@/components/telework/workplace-fields';
 import { Button } from '@/components/ui/button';

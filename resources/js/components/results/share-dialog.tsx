@@ -1,7 +1,7 @@
 import { Form, usePage } from '@inertiajs/react';
 import { Share2 } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import ReportLink from '@/components/results/report-link';
 import { Button } from '@/components/ui/button';
 import {

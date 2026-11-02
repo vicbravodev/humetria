@@ -1,4 +1,4 @@
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import DashboardClosedRow from '@/components/tenancy/dashboard-closed-row';
 import {
     Table,

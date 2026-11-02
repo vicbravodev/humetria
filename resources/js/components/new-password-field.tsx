@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PasswordChecklist from '@/components/humetria/password-checklist';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
+import InputError from '@/components/humetria/input-error';
+import PasswordInput from '@/components/humetria/password-input';
 import { Label } from '@/components/ui/label';
 
 /**

@@ -1,5 +1,5 @@
 import { FileText } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import NoticeRow from '@/components/telework/notice-row';
 import type { NoticeRow as Row, Paginated } from '@/types';

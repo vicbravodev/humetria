@@ -1,5 +1,5 @@
 import { GraduationCap } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import TrainingRow from '@/components/telework/training-row';
 import type { Paginated, TrainingRow as Row } from '@/types';

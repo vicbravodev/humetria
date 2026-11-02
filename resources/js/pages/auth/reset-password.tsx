@@ -1,8 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
 import AuthHeading from '@/components/auth-heading';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import NewPasswordField from '@/components/new-password-field';
-import PasswordInput from '@/components/password-input';
+import PasswordInput from '@/components/humetria/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';

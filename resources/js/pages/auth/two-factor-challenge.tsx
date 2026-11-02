@@ -2,7 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import { KeySquare, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import AuthHeading from '@/components/auth-heading';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import TwoFactorChallengeCode from '@/components/two-factor/two-factor-challenge-code';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

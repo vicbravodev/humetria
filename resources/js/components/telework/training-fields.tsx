@@ -1,6 +1,6 @@
 import Combobox from '@/components/humetria/combobox';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import TrainingAttendeesField from '@/components/telework/training-attendees-field';
 import TrainingTopicsField from '@/components/telework/training-topics-field';
 import { Label } from '@/components/ui/label';

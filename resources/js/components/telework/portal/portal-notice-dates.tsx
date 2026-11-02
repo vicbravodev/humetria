@@ -1,5 +1,5 @@
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import type { NoticeKindValue } from '@/types';
 

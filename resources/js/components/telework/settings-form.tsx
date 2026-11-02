@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { CalendarClock, FileText } from 'lucide-react';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import ReviewPeriodField from '@/components/telework/review-period-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';

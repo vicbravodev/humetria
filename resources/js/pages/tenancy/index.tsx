@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import Pagination from '@/components/pagination';
-import PageHeader from '@/components/page-header';
+import Pagination from '@/components/humetria/pagination';
+import PageHeader from '@/components/humetria/page-header';
 import CreateTenantDialog from '@/components/tenancy/create-tenant-dialog';
 import TenantsEmpty from '@/components/tenancy/tenants-empty';
 import TenantsTable from '@/components/tenancy/tenants-table';

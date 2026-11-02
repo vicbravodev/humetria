@@ -1,7 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import CountTabs from '@/components/humetria/count-tabs';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
 import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
 import WorkCentersGrid from '@/components/tenancy/work-centers-grid';

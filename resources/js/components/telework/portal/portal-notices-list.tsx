@@ -1,6 +1,6 @@
 import { FileText } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import { Badge } from '@/components/ui/badge';
 import { describeDate } from '@/lib/calendar-date';
 import type { Paginated, PortalNotice } from '@/types';

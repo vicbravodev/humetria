@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { ListChecks, Send, Copy } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ChecklistError from '@/components/telework/checklist-error';

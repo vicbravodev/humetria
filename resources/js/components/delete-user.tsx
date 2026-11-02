@@ -1,8 +1,8 @@
 import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
+import InputError from '@/components/humetria/input-error';
+import PasswordInput from '@/components/humetria/password-input';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Calendar, ClipboardCheck, FileText, Users } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { instrumentsText } from '@/lib/campaigns';

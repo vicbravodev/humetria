@@ -1,5 +1,5 @@
 import { Users } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import SearchField from '@/components/humetria/search-field';
 import AckChoiceBar from '@/components/telework/ack-choice-bar';

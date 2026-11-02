@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import RegisterAspirantForm from '@/components/telework/register-aspirant-form';
 import TeleworkerDetail from '@/components/telework/teleworker-detail';
 import { Button } from '@/components/ui/button';

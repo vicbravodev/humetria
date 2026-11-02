@@ -5,9 +5,9 @@ import CampaignHistory from '@/components/campaigns/campaign-history';
 import GuideSizes from '@/components/campaigns/guide-sizes';
 import TraumaEventsSection from '@/components/campaigns/trauma-events-section';
 import WorkCenterCard from '@/components/campaigns/work-center-card';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import type {
     CampaignSummary,
     CentersBySize,

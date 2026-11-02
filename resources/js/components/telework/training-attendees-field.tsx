@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import Combobox from '@/components/humetria/combobox';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import type { Option } from '@/lib/option-search';
 import { serverSource } from '@/lib/server-options';

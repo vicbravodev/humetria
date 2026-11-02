@@ -3,7 +3,7 @@ import { Download } from 'lucide-react';
 import ImportForm from '@/components/organization/import-form';
 import ImportInstructions from '@/components/organization/import-instructions';
 import ImportSteps from '@/components/organization/import-steps';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { importStep } from '@/lib/employees';
 import { index as employees } from '@/routes/tenant/employees';

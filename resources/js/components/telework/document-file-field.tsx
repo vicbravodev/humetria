@@ -1,6 +1,6 @@
 import { Upload } from 'lucide-react';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 
 /** Step 2: the PDF itself. Its content is checked by the server. */
 export default function DocumentFileField({

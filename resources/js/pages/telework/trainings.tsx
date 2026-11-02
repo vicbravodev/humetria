@@ -1,5 +1,5 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import TrainingCoverage from '@/components/telework/training-coverage';
 import TrainingDialog from '@/components/telework/training-dialog';
 import TrainingList from '@/components/telework/training-list';

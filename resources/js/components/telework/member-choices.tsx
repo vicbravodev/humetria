@@ -1,6 +1,6 @@
 import { Users } from 'lucide-react';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { CommitteePerson } from '@/types';

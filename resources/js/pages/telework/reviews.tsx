@@ -1,8 +1,8 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import ReviewRow from '@/components/telework/review-row';
 import { pendingReviewsText } from '@/lib/telework/review';
 import { show } from '@/routes/tenant/telework/committee';

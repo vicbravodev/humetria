@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DECISIONS, decisionNeeds } from '@/lib/telework/review';

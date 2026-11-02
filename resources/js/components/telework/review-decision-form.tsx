@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import ReviewDecisionFields from '@/components/telework/review-decision-fields';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';

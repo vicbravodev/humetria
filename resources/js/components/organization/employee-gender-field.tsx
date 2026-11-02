@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { cn } from '@/lib/utils';
 import type { ChoiceOption } from '@/types';
 

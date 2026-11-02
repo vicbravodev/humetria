@@ -1,5 +1,5 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import NoticeList from '@/components/telework/notice-list';
 import NoticeToolbar from '@/components/telework/notice-toolbar';
 import type { NoticeFilters, NoticeRow, Paginated } from '@/types';

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/humetria/pagination';
 import DashboardCycleRow from '@/components/tenancy/dashboard-cycle-row';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import type { CycleRow, Paginated } from '@/types';
