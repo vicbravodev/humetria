@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    activeChild,
     complianceNavItems,
     mainNavItems,
     navTrail,
@@ -221,5 +222,38 @@ describe('navTrail', () => {
 
     it('has nothing to say outside the sidebar', () => {
         expect(navTrail(sections, '/admin/settings/profile')).toEqual([]);
+    });
+});
+
+describe('activeChild', () => {
+    const children = [
+        { title: 'Centros', href: '/admin/acme/telework' },
+        { title: 'Documentos', href: '/admin/acme/telework/documents' },
+    ];
+
+    it('lights the child of the page itself', () => {
+        expect(
+            activeChild(children, '/admin/acme/telework/documents')?.title,
+        ).toBe('Documentos');
+        expect(activeChild(children, '/admin/acme/telework')?.title).toBe(
+            'Centros',
+        );
+    });
+
+    it('lights the closest child a deeper page hangs from', () => {
+        expect(
+            activeChild(children, '/admin/acme/telework/centers/7/dossier')
+                ?.title,
+        ).toBe('Centros');
+        expect(
+            activeChild(children, '/admin/acme/telework/documents/3')?.title,
+        ).toBe('Documentos');
+    });
+
+    it('lights none outside them', () => {
+        expect(activeChild(children, '/admin/acme/campaigns')).toBeUndefined();
+        expect(
+            activeChild(children, '/admin/acme/teleworkers'),
+        ).toBeUndefined();
     });
 });

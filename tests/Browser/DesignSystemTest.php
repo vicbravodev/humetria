@@ -86,15 +86,63 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
-        // Group label (Plataforma, the only one left to a superadmin) in sentence case at 13 px (pantallas: Panel); items of 44 px at 16 px with 20 px icons.
-        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "none" && label.fontSize === "13px"; }')
+        // Group label (Plataforma, the only one left to a superadmin) as a caption: 13 px in capitals (sidebar con submenú); items of 44 px at 16 px with 20 px icons (a submenu's chevron is 16 px).
+        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "uppercase" && label.fontSize === "13px"; }')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => button.getBoundingClientRect().height >= 44 && getComputedStyle(button).fontSize === "16px")')
-        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] svg\')].every((icon) => icon.getBoundingClientRect().width === 20)')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] > svg:first-child\')].every((icon) => icon.getBoundingClientRect().width === 20)')
         // Active item: a card (card fill, 500) with its icon in sidebar-primary (pantallas: Panel).
         ->assertScript('() => { const active = document.querySelector(\'[data-sidebar="menu-button"][data-active="true"]\'); const probe = document.createElement("span"); probe.style.color = "var(--sidebar-primary)"; probe.style.backgroundColor = "var(--card)"; document.body.append(probe); const primary = getComputedStyle(probe).color; const card = getComputedStyle(probe).backgroundColor; probe.remove(); return getComputedStyle(active).fontWeight === "500" && getComputedStyle(active).backgroundColor === card && getComputedStyle(active.querySelector("svg")).color === primary; }')
         // Page title in h1 (30/38).
         ->assertScript('() => getComputedStyle(document.querySelector("main h1")).fontSize', '30px');
 })->with(['light' => false, 'dark' => true]);
+
+// An entry with pages of its own opens into a submenu (sidebar con submenú, NOM-037), and every future one looks the
+// same: the open parent has no fill, its icon in primary, 600 and a chevron; the children are 40 px pills at 14/20 on a
+// 1 px guide, their text in line with the parent's; only the page's child is filled, at 600, with a 2 px mark.
+const SUBMENU = <<<'JS'
+    () => {
+        const parent = document.querySelector('[data-sidebar="menu-button"][aria-expanded="true"]');
+        const look = getComputedStyle(parent);
+        const label = parent.querySelector('span').getBoundingClientRect().left;
+        const rail = getComputedStyle(document.querySelector('[data-sidebar="menu-sub"]'));
+        const subs = [...document.querySelectorAll('[data-sidebar="menu-sub-button"]')];
+        const active = subs.filter((sub) => sub.getAttribute('aria-current') === 'page');
+        const textAt = (sub) => sub.getBoundingClientRect().left + parseFloat(getComputedStyle(sub).paddingLeft);
+
+        return parent.textContent.includes('NOM-037')
+            && look.backgroundColor === 'rgba(0, 0, 0, 0)' && look.fontWeight === '600'
+            && parent.querySelectorAll('svg').length === 2
+            && rail.borderLeftWidth === '1px'
+            && subs.length === 5 && active.length === 1 && active[0].textContent === 'Centros'
+            && subs.every((sub) => sub.getBoundingClientRect().height === 40
+                && getComputedStyle(sub).fontSize === '14px' && getComputedStyle(sub).lineHeight === '20px'
+                && Math.abs(textAt(sub) - label) <= 1)
+            && getComputedStyle(active[0]).fontWeight === '600'
+            && getComputedStyle(active[0], '::before').width === '2px'
+            && subs.filter((sub) => sub !== active[0]).every((sub) => getComputedStyle(sub).backgroundColor === 'rgba(0, 0, 0, 0)'
+                && getComputedStyle(sub).fontWeight === '400');
+    }
+    JS;
+
+it('opens an entry into its submenu as the sidebar design draws it', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('telework/index', '/admin/acme/telework', $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
+        if ($mobile) {
+            $page->click('[data-sidebar="trigger"]')->assertScript(SETTLED);
+        }
+    })->assertScript(SUBMENU);
+})->with($looks);
+
+it('folds a submenu away from its parent and lights the closest child on a deeper page', function (): void {
+    signInToPanel();
+
+    visit('/admin/acme/telework')
+        ->click('[data-sidebar="menu-button"][aria-expanded="true"]')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="menu-button"][aria-expanded="false"]\')?.textContent.includes("NOM-037") === true && document.querySelector(\'[data-sidebar="menu-sub"]\') === null')
+        ->navigate('/admin/acme/telework/documents')
+        ->assertScript('() => document.querySelector(\'[data-sidebar="menu-sub-button"][aria-current="page"]\')?.textContent', 'Documentos');
+});
 
 it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
     $panel = signInToPanel(superadmin());

@@ -198,3 +198,16 @@ export const navTrail = (
         ? []
         : [{ title: parent.item.title, href: parent.item.href }];
 };
+
+/**
+ * Which child of a sidebar entry is lit on a page: the one that is that page, or else the closest one it hangs from
+ * (the dossier of a center lights "Centros"). One at most, so only one pill shows.
+ */
+export const activeChild = (
+    children: NavItem[],
+    path: string,
+): NavItem | undefined =>
+    children.find((child) => toUrl(child.href) === path) ??
+    children
+        .filter((child) => path.startsWith(`${toUrl(child.href)}/`))
+        .toSorted((a, b) => toUrl(b.href).length - toUrl(a.href).length)[0];
