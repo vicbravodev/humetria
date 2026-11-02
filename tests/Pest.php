@@ -3,12 +3,16 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Assistant\Data\AssistantScope;
+use App\Modules\Assistant\Support\AssistantScopeFactory;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Tools\Request as ToolRequest;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
 
@@ -67,6 +71,31 @@ function ownerOf(Tenant $tenant): User
 function workIn(Tenant $tenant): void
 {
     resolve(TenantContext::class)->set($tenant);
+}
+
+/**
+ * The scope Humi works in for a new person of `$tenant` with `$role`, as the server builds it for a request there.
+ */
+function assistantScopeIn(Tenant $tenant, TenantRole $role = TenantRole::Hr): AssistantScope
+{
+    $user = memberOf($tenant, $role);
+    workIn($tenant);
+
+    return resolve(AssistantScopeFactory::class)->make($user);
+}
+
+/**
+ * Runs a tool of Humi for `$scope` as the model would and decodes the card it answers.
+ *
+ * @param  class-string<Tool>  $tool
+ * @param  array<string, mixed>  $arguments
+ * @return array<string, mixed>
+ */
+function toolCard(string $tool, AssistantScope $scope, array $arguments = []): array
+{
+    $card = json_decode((string) resolve($tool, ['scope' => $scope])->handle(new ToolRequest($arguments)), true, flags: JSON_THROW_ON_ERROR);
+
+    return is_array($card) ? $card : [];
 }
 
 /** The company of a row of another module, which knows it only by its id. */
