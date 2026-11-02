@@ -130,3 +130,20 @@ it('fits each work center of the cycle inside its card at every width', function
         resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="cycle"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
     }
 });
+
+it('fills the width up to 1440 px and centers the page beyond it', function (bool $dark): void {
+    $page = visitPage('dashboard', panelCompany(), $dark);
+    $width = <<<'JS'
+        () => {
+            const body = document.querySelector('[data-slot="page-body"]').getBoundingClientRect();
+            const frame = document.querySelector('main');
+            const inner = frame.getBoundingClientRect().left + frame.clientLeft;
+            const centered = Math.abs((body.left - inner) - (inner + frame.clientWidth - body.right)) <= 1;
+
+            return `${Math.round(body.width) === frame.clientWidth ? 'full' : Math.round(body.width)} ${centered ? 'centered' : 'aside'}`;
+        }
+        JS;
+
+    resizeTo($page, 1280)->assertScript($width, 'full centered');
+    resizeTo($page, 2400)->assertScript($width, '1440 centered');
+})->with(['light' => false, 'dark' => true]);

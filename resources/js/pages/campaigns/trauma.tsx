@@ -60,7 +60,7 @@ export default function Trauma({
     return (
         <>
             <Head title="Guía I por acontecimiento" />
-            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Guía I por acontecimiento"
                     description={

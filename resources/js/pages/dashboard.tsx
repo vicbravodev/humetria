@@ -38,7 +38,7 @@ export default function Dashboard(props: Props) {
     return (
         <>
             <Head title="Panel" />
-            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     caption={props.today}
                     title={greeting(auth.user.name)}

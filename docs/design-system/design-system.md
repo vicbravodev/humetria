@@ -55,6 +55,7 @@ Cinco niveles: **Nulo, Bajo, Medio, Alto y Muy alto**. Usa siempre `RiskLevel`. 
 ## Espacio, forma y profundidad
 
 - Escala de espacio de 4 px: `space-2` dentro de un grupo, `space-4` margen lateral móvil, `space-6` padding de tarjeta, `space-12` entre secciones (activas / cerradas).
+- Ancho de la página: llena el marco hasta **1440 px** y, en un monitor más ancho, queda **centrada** (`data-slot="page-body"` en `AppSidebarLayout`). Ninguna página pone su propio tope de ancho; solo las de formulario o lectura se angostan a 880 px, alineadas a la izquierda, y el texto corrido lleva su propio `max-w` (≈ 620 px). Margen lateral: 16 px en móvil y 40 px desde `md`.
 - `touch-min` (44 px) es el alto mínimo de botones, inputs, filas de checkbox, elementos del sidebar y pestañas. El botón `sm` mide 36 px a la vista, pero su área táctil se extiende a 44.
 - Radio base 10 px (`radius`): `radius-md` 8 px para botones e inputs, `radius-lg` 10 px para tarjetas y opciones, `radius-xl` 14 px para diálogos y `radius-full` para radios y barras. Es un eco de los remates redondos del logo, sin llegar a lo infantil.
 - Profundidad en dos niveles. `shadow-raised`: el panel de la página, que se levanta sobre el marco del sidebar. `shadow-float`: lo que flota sobre la página (popover, select abierto, diálogo, tooltip, toast). Botones, inputs y tarjetas no llevan sombra: su borde basta. En oscuro la sombra no se ve, así que la profundidad sale de un filo superior iluminado y de un marco más oscuro que el panel.

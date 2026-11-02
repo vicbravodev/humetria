@@ -56,7 +56,7 @@ export default function Campaign(props: {
     return (
         <>
             <Head title={`${campaign.kindLabel} · ${campaign.workCenter}`} />
-            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <CampaignPageHeader campaign={campaign} canManage={canManage}>
                     <CampaignHeaderActions
                         tenantSlug={route[0]}

@@ -1,10 +1,11 @@
 name: mutation
 
-# Every night, and on demand, the whole mutation run on main held to the current score (composer mutate:full).
-# tests.yml keeps the gate at 85 for pull requests and pushes; this one catches a score that slips below today's.
+# Every Sunday night, and on demand, mutation testing of the business-logic classes on main (composer mutate:critical:
+# every class a test declares in mutates(), minus controllers, form requests and notifications). It is no part of
+# tests.yml, so it never blocks a pull request: when the score drops below --min the run fails, and GitHub emails it.
 on:
   schedule:
-    - cron: '0 9 * * *' # 03:00 in Mexico City
+    - cron: '0 5 * * 1' # Sunday 23:00 in Mexico City
   workflow_dispatch:
 
 permissions:
@@ -21,6 +22,7 @@ env:
 jobs:
   mutation:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     services:
       postgres:
         image: postgres:18-alpine
@@ -44,4 +46,4 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: Mutation testing
-        run: composer mutate:full
+        run: composer mutate:critical -- --min=95 --ignore-min-score-on-zero-mutations

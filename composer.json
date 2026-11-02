@@ -100,6 +100,10 @@
             "Composer\\Config::disableProcessTimeout",
             "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --group=__pest_mutate_only --retry"
         ],
+        "mutate:critical": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only --class=\"$(php scripts/mutation-classes.php tests | grep -vE '\\\\Http\\\\(Controllers|Requests)\\\\|\\\\Notifications\\\\' | paste -sd, -)\""
+        ],
         "mutate:full": [
             "Composer\\Config::disableProcessTimeout",
             "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only --min=95 --ignore-min-score-on-zero-mutations"

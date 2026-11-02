@@ -8,6 +8,9 @@ Propuesta del 30 oct 2026. 29 pantallas con el design system de Humetría (jade 
 - fuente-claude-design/: los .dc.html del canvas y su canvas.json, tal como están publicados.
 - capturas/: PNG en tema claro, a 1440 px.
 
+## Ancho
+- Los HTML llevan `max-width: 1180px` porque se dibujaron en un lienzo de 1440 px (1440 − 275 del sidebar ≈ 1165). En la app el tope es de 1440 px de contenido, centrado, y lo pone el layout (ver `design-system.md`, Espacio, forma y profundidad).
+
 ## Mapa de pantallas
 | Archivo | Pantalla |
 |---|---|

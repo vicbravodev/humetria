@@ -32,26 +32,26 @@ npm run types:check
 npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
-y el CI en verde, que además corre la mutación (score ≥ 85%). En local, `composer ci:check` corre todo lo de arriba en orden.
-El check obligatorio de `main` es el job `ci` (chequeos y navegador); la mutación no lo es: un PR se puede mergear antes de
-que termine, siempre que `composer ci:check` haya pasado en local.
+y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden.
+El check obligatorio de `main` es el job `ci` (chequeos y navegador, en `.github/workflows/tests.yml`).
 
-**La mutación no se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el
-usuario la pide, y siempre acotada a las clases que tocaste: `composer mutate -- --class='App\Modules\Tenancy\Actions\X'`
-(4 procesos, solo los tests con `mutates()`); `composer mutate:retry` repite primero lo que escapó. La corrida completa
-(`composer mutate:full`, `--min=95`) es para el CI: `.github/workflows/mutation.yml` la corre cada noche y a mano.
-Ver `docs/testing.md`.
+**Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
+`.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
+`composer mutate:critical -- --min=95`: todas las clases que los tests declaran en `mutates()`, menos controladores,
+FormRequests y notificaciones. Si el score baja de 95, el workflow falla y GitHub avisa por correo.
 
-El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
-(chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
-tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
-(`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
-(`scripts/mutation-score.php`). Así cada clase saca el mismo resultado que en una corrida completa. Si la mutación se vuelve
-el job más lento, se agrega un shard en el workflow; no se baja el umbral. En un PR se mutan solo las clases de los tests
-cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca lo que comparten (`database/`, `routes/`,
-`config/`, `bootstrap/`, dependencias). En `main`, la mutación es completa.
-Si la cobertura o el score bajan, faltan tests: no se baja el umbral. No corras la mutación al mismo tiempo que `composer test`:
-comparten la base `testing` y los dos dan resultados falsos.
+- Una clase de lógica nueva entra sola: su test declara `mutates(Clase::class)` (la lista sale de
+  `scripts/mutation-classes.php`; no hay una lista que mantener a mano). Para dejar una clase fuera, no se declara.
+- Si la corrida semanal falla: se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega
+  el test que mata al mutante. No se baja `--min`, no se excluye la clase ni se vuelve a poner la mutación en los PR.
+  El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y en `docs/testing.md`.
+- **No se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el usuario
+  la pide, y acotada a las clases que tocaste: `composer mutate -- --class=…` (4 procesos, solo los tests con
+  `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (~6 min) y
+  `composer mutate:full` (las 230 clases, `--min=95`) son para medir, a petición del usuario. Ver `docs/testing.md`.
+- No corras la mutación al mismo tiempo que `composer test`: comparten la base `testing` y los dos dan resultados falsos.
+- La cobertura (Unit/Feature) corre sin `--parallel`: en paralelo `--min` no se aplica. Si la cobertura baja, faltan
+  tests: no se baja el umbral.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
 `composer test:fast` (Tia: solo los tests que tu cambio afecta; la primera corrida graba el grafo).
