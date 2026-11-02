@@ -1,15 +1,19 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { CalendarCheck, Factory } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
-import CenterLinks from '@/components/seating/center-links';
+import CenterTabs from '@/components/seating/center-tabs';
 import PositionsList from '@/components/seating/positions-list';
+import RequirementsBoard from '@/components/seating/requirements-board';
 import SectorForm from '@/components/seating/sector-form';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/seating';
 import type {
+    CenterRequirement,
     Paginated,
     PositionRow,
+    RequirementsSummary,
     SectorOption,
+    SeatingCenterTab,
     SeatingProfile,
 } from '@/types';
 
@@ -18,15 +22,19 @@ export default function SeatingCenter({
     profile,
     sectors,
     canManage,
-    canAssess,
     positions,
+    requirements,
+    summary,
+    tabs,
 }: {
     workCenter: { id: string; name: string; activity: string };
     profile: SeatingProfile | null;
     sectors: SectorOption[];
     canManage: boolean;
-    canAssess: boolean;
     positions: Paginated<PositionRow>;
+    requirements: CenterRequirement[];
+    summary: RequirementsSummary;
+    tabs: SeatingCenterTab[];
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
@@ -54,13 +62,13 @@ export default function SeatingCenter({
                                   },
                               ]),
                     ]}
-                >
-                    <CenterLinks
-                        workCenterId={workCenter.id}
-                        canAssess={canAssess}
-                        canManage={canManage}
-                    />
-                </PageHeader>
+                />
+                <CenterTabs workCenterId={workCenter.id} tabs={tabs} />
+                <RequirementsBoard
+                    workCenterId={workCenter.id}
+                    requirements={requirements}
+                    summary={summary}
+                />
                 <div className="max-w-[880px] card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
                     {canManage ? (
                         <SectorForm

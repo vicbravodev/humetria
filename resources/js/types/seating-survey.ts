@@ -28,3 +28,30 @@ export type SurveyResults = {
     };
     area: { value: string; label: string } | null;
 };
+
+/** A part of a work center the person may open from its board; `count` is how many records it holds, none for a form. */
+export type SeatingCenterTab = {
+    key: string;
+    label: string;
+    count: number | null;
+};
+
+/** One of the thirteen requirements of a center: where it stands and what is behind it (counts, never a name). */
+export type CenterRequirement = {
+    key: string;
+    number: string;
+    label: string;
+    /** The tab where it is put right; none when it lives outside Ley Silla. */
+    tab: string | null;
+    state: 'met' | 'warning' | 'missing';
+    stateLabel: string;
+    count: number;
+    /** Since when the oldest thing behind it has been waiting, Y-m-d. */
+    since: string | null;
+};
+
+export type RequirementsSummary = {
+    met: number;
+    warning: number;
+    missing: number;
+};

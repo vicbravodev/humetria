@@ -367,3 +367,15 @@ it('shows the closed survey counted per question, with the minimum of people', f
         ->assertSee('SS-01')
         ->assertSee('Sí 6 · No 0 · No aplica 0');
 })->with($looks);
+
+it('shows the board of a center with its thirteen requirements and its tabs', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+
+    visitPage('seating/center', "{$url}/seating/centers/{$center->id}", $dark, $mobile)
+        ->assertSee('Requisitos del centro')
+        ->assertSee('R1')
+        ->assertSee('R13')
+        ->assertSee('Falta')
+        ->assertSee('Inventario')
+        ->assertSee('Encuesta');
+})->with($looks);

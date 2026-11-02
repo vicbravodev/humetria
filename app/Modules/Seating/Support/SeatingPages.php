@@ -40,7 +40,7 @@ final readonly class SeatingPages
     /** The conditions a position answers for its people; the footwear and the discomfort are each person's own. */
     private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses'];
 
-    public function __construct(private VisibleCenters $visible, private Roster $roster, private SeatingAssessment $assessment) {}
+    public function __construct(private VisibleCenters $visible, private Roster $roster, private SeatingAssessment $assessment, private CenterBoard $board) {}
 
     /**
      * @return array<string, mixed>
@@ -85,7 +85,24 @@ final readonly class SeatingPages
             'canManage' => Gate::allows('manage-seating'),
             'canAssess' => Gate::allows('assess-seating'),
             'positions' => $this->positions($center->id),
+            ...$this->board->for($center->id),
+            'tabs' => $this->tabs($center->id),
         ];
+    }
+
+    /**
+     * The parts of the center the person may open, with how many records each holds: seats and positions for whoever sees the
+     * center, the rest for who assesses, the survey for who manages.
+     *
+     * @return list<array{key: string, label: string, count: int|null}>
+     */
+    private function tabs(string $workCenterId): array
+    {
+        $counts = $this->board->counts($workCenterId);
+        $assess = Gate::allows('assess-seating');
+        $tabs = [['positions', 'Puestos', $counts['positions'], true], ['people', 'Personas', $counts['people'], $assess], ['inventory', 'Inventario', $counts['inventory'], true], ['reports', 'Reportes', $counts['reports'], $assess], ['plan', 'Plan', $counts['plan'], $assess], ['regulation', 'Reglamento', null, $assess], ['documents', 'Documentos', $counts['documents'], $assess], ['survey', 'Encuesta', null, Gate::allows('manage-seating')]];
+
+        return array_values(array_map(fn (array $tab): array => ['key' => $tab[0], 'label' => $tab[1], 'count' => $tab[2]], array_filter($tabs, fn (array $tab): bool => $tab[3])));
     }
 
     /**
