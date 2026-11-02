@@ -74,6 +74,17 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.seating.index', $tenant);
     }, ['centers']],
+    'Ley Silla positions of a center' => ['seating/center', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.center', [$tenant, $plant->id]);
+    }, ['positions']],
+    'Ley Silla people of a position' => ['seating/position', function () {
+        [$tenant, $plant] = listsCompany();
+        $position = App\Modules\Seating\Models\StandingPosition::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+        return route('tenant.seating.positions.show', [$tenant, $position->id]);
+    }, ['people']],
     'NOM-037 centers' => ['telework/index', function () {
         [$tenant] = listsCompany();
 

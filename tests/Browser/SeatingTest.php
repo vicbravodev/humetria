@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatingProfile;
+use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Database\Factories\Organization\EmployeeFactory;
 
 $looks = [
     'light desktop' => [false, false],
@@ -49,5 +52,52 @@ it('declares the sector of a center from the page', function (): void {
         ->press('Guardar declaración')
         ->assertSee('Declaración guardada.')
         ->assertSee('Declarado el')
+        ->assertNoJavaScriptErrors();
+});
+
+it('lists the standing positions of a center with their result', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Cajera']);
+
+    visitPage('seating/center', "{$url}/seating/centers/{$center->id}", $dark, $mobile)
+        ->assertSee('Puestos de pie')
+        ->assertSee('Cajera')
+        ->assertSee('Resultado A')
+        ->assertSee('Nuevo puesto');
+})->with($looks);
+
+it('shows the form of a new position with the questions of Figure 1', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+
+    visitPage('seating/position', "{$url}/seating/centers/{$center->id}/positions/create", $dark, $mobile)
+        ->assertSee('Nuevo puesto')
+        ->assertSee('Figura 1: dónde va el asiento')
+        ->assertSee('Guardar puesto');
+})->with($looks);
+
+it('shows a saved position with its result and its people', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    $position = StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Cajera']);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    PositionAssignment::factory()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id]);
+
+    visitPage('seating/position', "{$url}/seating/positions/{$position->id}", $dark, $mobile)
+        ->assertSee('Resultado A')
+        ->assertSee('Se recomienda documentar todas las medidas de cumplimiento.')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Quitar');
+})->with($looks);
+
+it('shows what a new position still misses instead of saving it', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->type('name', 'Cajera')
+        ->type('tasks', 'Cobra de pie.')
+        ->click('Prolongada')
+        ->type('continuous_minutes', '240')
+        ->type('max_people_at_once', '2')
+        ->press('Guardar puesto')
+        ->assertSee('es obligatorio')
         ->assertNoJavaScriptErrors();
 });

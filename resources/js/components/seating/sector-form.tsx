@@ -6,11 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { CHOICE_CLASS } from '@/lib/seating/choice-class';
 import { update } from '@/routes/tenant/seating/profile';
 import type { SectorOption, SeatingProfile } from '@/types';
-
-const CARD =
-    'flex cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[15px] has-checked:py-[11px] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring';
 
 /** The declaration of a center (pantallas: Ajustes): its sector, whether nobody works standing, and a note. */
 export default function SectorForm({
@@ -41,7 +39,10 @@ export default function SectorForm({
                         <fieldset className="grid gap-2 sm:grid-cols-2">
                             <legend className="sr-only">Sector</legend>
                             {sectors.map((sector) => (
-                                <label key={sector.value} className={CARD}>
+                                <label
+                                    key={sector.value}
+                                    className={CHOICE_CLASS}
+                                >
                                     <input
                                         type="radio"
                                         name="sector"
@@ -67,7 +68,7 @@ export default function SectorForm({
                             name="no_standing_positions"
                             value="0"
                         />
-                        <label className={CARD}>
+                        <label className={CHOICE_CLASS}>
                             <input
                                 type="checkbox"
                                 name="no_standing_positions"

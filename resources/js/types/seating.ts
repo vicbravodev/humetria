@@ -19,3 +19,75 @@ export type SeatingProfile = {
     declaredOn: string;
     note: string | null;
 };
+
+export type PlacementValue = 'at_workstation' | 'nearby' | 'within_center';
+
+/** The result of Figura 1 (A, B or C) with the DOF's words; all null while a position has none (industrial, nature does not allow). */
+export type PlacementResult = {
+    placement: PlacementValue | null;
+    placementLetter: 'A' | 'B' | 'C' | null;
+    placementText: string | null;
+};
+
+/** A standing position on the list of a center. */
+export type PositionRow = PlacementResult & {
+    id: string;
+    name: string;
+    typeLabel: string;
+    people: number;
+};
+
+export type AreaConditions = Partial<
+    Record<
+        | 'noise'
+        | 'lighting'
+        | 'ventilation'
+        | 'temperature'
+        | 'vibration'
+        | 'chemicals',
+        string | null
+    >
+>;
+
+export type StandingPosition = PlacementResult & {
+    id: string;
+    name: string;
+    tasks: string;
+    type: string;
+    continuousMinutes: number;
+    canWorkSeated: boolean;
+    hasSpaceForSeat: boolean;
+    needsToBeNearby: boolean;
+    figureOneApplies: boolean;
+    maxPeopleAtOnce: number;
+    areaConditions: AreaConditions;
+    tools: string | null;
+    physicalLoad: string | null;
+    attentionLevel: string | null;
+    defaultStandingTime: number | null;
+    defaultPostureChange: number | null;
+    defaultSurface: number | null;
+    defaultMovementSpace: number | null;
+    defaultPauses: number | null;
+    natureAllows: boolean | null;
+    natureReason: string | null;
+};
+
+export type TypeOption = { value: string; label: string };
+
+/** One condition of Quinta D with the DOF's three options, for the defaults a position gives its people. */
+export type ConditionOption = {
+    key: string;
+    letter: string;
+    title: string;
+    options: { points: number; text: string }[];
+};
+
+/** A person currently holding a position. */
+export type PositionPerson = {
+    assignmentId: string;
+    employeeId: string;
+    name: string;
+    area: string;
+    startsOn: string;
+};

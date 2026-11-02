@@ -1,21 +1,29 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { CalendarCheck, Factory } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
+import PositionsList from '@/components/seating/positions-list';
 import SectorForm from '@/components/seating/sector-form';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/seating';
-import type { SectorOption, SeatingProfile } from '@/types';
+import type {
+    Paginated,
+    PositionRow,
+    SectorOption,
+    SeatingProfile,
+} from '@/types';
 
 export default function SeatingCenter({
     workCenter,
     profile,
     sectors,
     canManage,
+    positions,
 }: {
     workCenter: { id: string; name: string; activity: string };
     profile: SeatingProfile | null;
     sectors: SectorOption[];
     canManage: boolean;
+    positions: Paginated<PositionRow>;
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
@@ -59,6 +67,11 @@ export default function SeatingCenter({
                         </p>
                     )}
                 </div>
+                <PositionsList
+                    workCenterId={workCenter.id}
+                    positions={positions}
+                    canManage={canManage}
+                />
             </div>
         </>
     );

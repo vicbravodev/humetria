@@ -7,8 +7,8 @@ namespace App\Modules\Seating\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Seating\Enums\Sector;
 use App\Modules\Seating\Models\SeatingProfile;
+use App\Modules\Seating\Support\Today;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -28,7 +28,7 @@ final readonly class DeclareProfile
                 'sector' => $sector,
                 'no_standing_positions' => $noStandingPositions,
                 'declared_by' => $userId,
-                'declared_on' => CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString(),
+                'declared_on' => Today::date(),
                 'note' => $note,
             ]);
 
