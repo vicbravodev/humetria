@@ -21,7 +21,11 @@ export default function AppSidebarLayout({
                     <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 </div>
                 {/* The part that cross-fades between pages (app.css, ::view-transition-*(page)). */}
-                <div className="flex flex-1 flex-col [view-transition-name:page]">
+                {/* The page's width: it fills the frame up to 1440 px and is centered beyond that (design-system.md, Layout). */}
+                <div
+                    data-slot="page-body"
+                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col [view-transition-name:page]"
+                >
                     {children}
                 </div>
             </AppContent>

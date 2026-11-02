@@ -32,7 +32,7 @@ export default function EmployeeImport({
     return (
         <>
             <Head title="Cargar empleados" />
-            <div className="flex max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <header className="flex flex-col gap-[18px]">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em]">

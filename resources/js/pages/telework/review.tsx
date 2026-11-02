@@ -51,7 +51,7 @@ export default function Review({
     return (
         <>
             <Head title={`Revisión · ${review.person.name}`} />
-            <div className="flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     caption={workCenter.name}
                     title="Lista de verificación"
