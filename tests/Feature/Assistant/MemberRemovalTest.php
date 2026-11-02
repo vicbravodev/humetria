@@ -9,36 +9,9 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Laravel\Ai\Models\Conversation;
 
 mutates(DeleteMemberConversations::class);
-
-/** A conversation with one message that the participant owns. */
-function conversationOf(ConversationParticipant $participant): Conversation
-{
-    $conversation = Conversation::query()->create([
-        'id' => (string) Str::uuid(),
-        'participant_type' => 'assistant_participant',
-        'participant_id' => $participant->id,
-        'title' => 'Avance',
-    ]);
-    $conversation->messages()->create([
-        'id' => (string) Str::uuid(),
-        'participant_type' => 'assistant_participant',
-        'participant_id' => $participant->id,
-        'agent' => 'HumiAssistant',
-        'role' => 'user',
-        'content' => 'Hola',
-        'attachments' => '[]',
-        'steps' => '[]',
-        'usage' => '[]',
-        'meta' => '[]',
-        'status' => 'completed',
-    ]);
-
-    return $conversation;
-}
 
 it('deletes the conversations and the participant of a person removed from a company, and only theirs', function (): void {
     $a = Tenant::factory()->create();
@@ -51,9 +24,9 @@ it('deletes the conversations and the participant of a person removed from a com
     $removed = ConversationParticipant::factory()->for($member)->create(['tenant_id' => $a->id]);
     $sameUserElsewhere = ConversationParticipant::factory()->for($member)->create(['tenant_id' => $b->id]);
     $colleague = ConversationParticipant::factory()->for($other)->create(['tenant_id' => $a->id]);
-    $gone = conversationOf($removed);
-    $keptElsewhere = conversationOf($sameUserElsewhere);
-    $keptByColleague = conversationOf($colleague);
+    $gone = assistantConversation($removed);
+    $keptElsewhere = assistantConversation($sameUserElsewhere);
+    $keptByColleague = assistantConversation($colleague);
 
     Log::spy();
 
