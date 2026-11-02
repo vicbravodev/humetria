@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
@@ -122,5 +124,41 @@ it('shows what a new seat still misses instead of registering it', function (): 
     visit("{$url}/seating/centers/{$center->id}/seats")
         ->press('Registrar asiento')
         ->assertSee('es obligatorio')
+        ->assertNoJavaScriptErrors();
+});
+
+/** @return array{string, App\Modules\Organization\Models\Employee} The address of the person's Ley Silla page and the person. */
+function seatingPortal(): array
+{
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
+    workIn($tenant);
+
+    return [route('portal.seating.show', resolve(IssuePortalLink::class)->handle($ana->id), absolute: false), $ana];
+}
+
+it('shows the person their own Ley Silla page with the voluntary notice', function (bool $dark, bool $mobile): void {
+    [$url] = seatingPortal();
+
+    visitPage('seating/portal', $url, $dark, $mobile)
+        ->assertSee('Su trabajo de pie, Ana Ruiz')
+        ->assertSee('es voluntario')
+        ->assertSee('Ergonómico, con buen soporte y amortiguación')
+        ->assertSee('Enviar mis respuestas');
+})->with($looks);
+
+it('tells the person when they already answered', function (): void {
+    [$url, $ana] = seatingPortal();
+    PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
+
+    visitPage('seating/portal', $url)->assertSee('Nos contestó el');
+});
+
+it('asks for the acceptance of the notice before saving any health data', function (): void {
+    [$url] = seatingPortal();
+
+    visit($url)
+        ->press('Enviar mis respuestas')
+        ->assertSee('debe ser aceptado')
         ->assertNoJavaScriptErrors();
 });

@@ -200,6 +200,9 @@ return [
     ],
 
     'attributes' => [
+        'accepted' => 'aviso de privacidad',
+        'footwear' => 'calzado',
+        'discomfort' => 'molestias',
         'tasks' => 'tareas',
         'bipedestation_type' => 'tipo de bipedestación',
         'continuous_minutes' => 'minutos continuos de pie',

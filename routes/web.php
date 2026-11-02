@@ -14,6 +14,7 @@ require __DIR__.'/demos.php';
 require __DIR__.'/tenancy.php';
 require __DIR__.'/survey.php';
 require __DIR__.'/portal.php';
+require __DIR__.'/seating-portal.php';
 require __DIR__.'/shared-report.php';
 
 Route::prefix('admin')->group(function () {

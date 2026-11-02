@@ -42,6 +42,8 @@ function publicRouteNames(): array
         'portal.notices.show', // guest: la persona ve sus avisos escritos (6.3, 6.7, 6.9) y lo que envió; el token del portal es la credencial; solo con periodo abierto; throttled
         'portal.notices.store', // guest: la persona envía un aviso escrito; el token del portal es la credencial; solo con periodo abierto; throttled
         'portal.equipment.respond', // guest: la persona confirma que recibió un equipo o lo rechaza con su motivo, una sola vez, bajo candado; el token del portal es la credencial; solo su equipo; throttled
+        'portal.seating.show', // guest: la persona ve su página de Ley Silla; el token del portal es la credencial; solo ve lo suyo; un enlace no válido da 404 sin decir nada más; throttled
+        'portal.seating.inputs.store', // guest: la persona envía su calzado y sus molestias, de forma voluntaria y tras aceptar el aviso; el token del portal es la credencial; throttled
         'portal.visits.confirm', // guest: la persona autoriza por escrito la visita a su lugar; el token del portal es la credencial; solo sus lugares; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
     ];

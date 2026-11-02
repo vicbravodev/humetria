@@ -133,3 +133,9 @@ export type Shortfall = {
     seats: number;
     maxPeopleAtOnce: number;
 };
+
+/** One condition of the portal form: its title and the DOF's option text by points (1 to 3). */
+export type PortalCondition = {
+    title: string;
+    options: Record<string, string>;
+};
