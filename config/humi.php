@@ -36,4 +36,19 @@ return [
 
     'tenant_rate_per_minute' => (int) env('HUMI_TENANT_RATE_PER_MINUTE', 30),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Normative corpus
+    |--------------------------------------------------------------------------
+    |
+    | The criteria documents Humi answers about the norms from, by norm: they hold each criterion with its source and are
+    | the document that rules how Humetría reads the norm (the code follows them). A new norm is one more line here.
+    |
+    */
+
+    'regulations' => [
+        'NOM-035' => 'docs/normas/nom-035/criterios.md',
+        'NOM-037' => 'docs/normas/nom-037/criterios.md',
+    ],
+
 ];
