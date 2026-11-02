@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { passwordChecks } from '@/lib/password-rules';
+import { filledSegments, passwordChecks } from '@/lib/password-rules';
 
 const PRODUCTION =
     'minlength: 12; required: lower; required: upper; required: digit; required: special;';
@@ -43,5 +43,24 @@ describe('passwordChecks', () => {
         expect(passwordChecks('maxlength: 64; allowed: ascii;', 'x')).toEqual(
             [],
         );
+    });
+});
+
+describe('filledSegments', () => {
+    it('fills the four-part meter in proportion to the checks met', () => {
+        expect(filledSegments(passwordChecks(PRODUCTION, ''))).toBe(0);
+        expect(filledSegments(passwordChecks(PRODUCTION, 'abcdefghijK1'))).toBe(
+            3,
+        );
+        expect(
+            filledSegments(passwordChecks(PRODUCTION, 'abcdefghijK1!')),
+        ).toBe(4);
+        expect(
+            filledSegments(passwordChecks('minlength: 8;', '12345678')),
+        ).toBe(4);
+    });
+
+    it('is empty without checks', () => {
+        expect(filledSegments([])).toBe(0);
     });
 });
