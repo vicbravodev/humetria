@@ -5,6 +5,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* `.light` brings the light tokens back inside a dark page (the "Claro" theme miniature). */
+.light,
 :root {
     --radius: 0.625rem; /* 10px */
     --background: #fbfdfc;

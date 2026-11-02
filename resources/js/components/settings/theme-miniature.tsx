@@ -2,14 +2,14 @@ import { cn } from '@/lib/utils';
 
 /**
  * A miniature of the app in a theme: the frame with the sidebar, the panel with a field and a button. Drawn with the
- * design-system tokens, so the dark one sits inside a `.dark` scope.
+ * design-system tokens inside its own `.light` or `.dark` scope, so each keeps its colors whatever the theme in use.
  */
 export default function ThemeMiniature({ dark }: { dark: boolean }) {
     return (
         <span
             className={cn(
                 'flex h-[104px] gap-1.5 overflow-hidden rounded-lg bg-sidebar p-2',
-                dark && 'dark',
+                dark ? 'dark' : 'light',
             )}
         >
             <span className="flex w-[28%] flex-col gap-[5px] pt-1">
