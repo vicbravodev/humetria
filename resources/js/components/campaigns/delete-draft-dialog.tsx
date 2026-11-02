@@ -1,16 +1,6 @@
-import { Form } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
 import { destroy } from '@/routes/tenant/campaigns';
 
 /** Throws a draft away, after saying nobody was invited yet. */
@@ -22,8 +12,8 @@ export default function DeleteDraftDialog({
     campaignId: string;
 }) {
     return (
-        <Dialog>
-            <DialogTrigger asChild>
+        <ConfirmDialog
+            trigger={
                 <Button
                     variant="ghost"
                     className="text-destructive hover:text-destructive"
@@ -31,31 +21,11 @@ export default function DeleteDraftDialog({
                     <Trash2 aria-hidden="true" />
                     Eliminar borrador
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>¿Eliminar este borrador?</DialogTitle>
-                <DialogDescription>
-                    Nadie fue invitado todavía. Podrás preparar otra evaluación
-                    de este centro cuando quieras.
-                </DialogDescription>
-                <Form {...destroy.form([tenantSlug, campaignId])}>
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Eliminar borrador
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+            }
+            title="¿Eliminar este borrador?"
+            description="Nadie fue invitado todavía. Podrás preparar otra evaluación de este centro cuando quieras."
+            confirmLabel="Eliminar borrador"
+            form={destroy.form([tenantSlug, campaignId])}
+        />
     );
 }

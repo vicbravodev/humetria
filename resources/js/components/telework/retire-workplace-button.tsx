@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { retire } from '@/routes/tenant/telework/workplaces';
 
@@ -14,20 +14,20 @@ export default function RetireWorkplaceButton({
     address: string;
 }) {
     return (
-        <ConfirmAction
+        <ConfirmDialog
+            trigger={
+                <Button variant="outline" size="sm">
+                    Retirar lugar
+                </Button>
+            }
             title="¿Retirar este lugar de trabajo?"
             description={`${address} dejará de usarse: ya no se le pedirán listas ni cuenta en la tabla de inspección. Queda en el historial.`}
             confirmLabel="Retirar lugar"
-            destructive
             onConfirm={() =>
                 router.post(
                     retire({ tenant: tenantSlug, workplace: workplaceId }),
                 )
             }
-        >
-            <Button variant="outline" size="sm">
-                Retirar lugar
-            </Button>
-        </ConfirmAction>
+        />
     );
 }

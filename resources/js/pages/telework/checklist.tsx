@@ -4,7 +4,7 @@ import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ChecklistError from '@/components/telework/checklist-error';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import CoverageWarnings from '@/components/telework/coverage-warnings';
 import ChecklistSections from '@/components/telework/checklist-sections';
 import { draft, publish } from '@/routes/tenant/telework/checklist';
@@ -59,17 +59,19 @@ export default function ChecklistPage({
                     ]}
                 >
                     {canEdit && (
-                        <ConfirmAction
+                        <ConfirmDialog
+                            trigger={
+                                <Button>
+                                    <Send aria-hidden />
+                                    Publicar versión {checklist.version}
+                                </Button>
+                            }
                             title={`¿Publicar la versión ${checklist.version}?`}
                             description="Queda como la lista que se contesta en este centro y ya no se puede cambiar: para ajustarla, inicias un borrador nuevo."
                             confirmLabel="Publicar"
                             onConfirm={() => act(publish(target))}
-                        >
-                            <Button>
-                                <Send aria-hidden />
-                                Publicar versión {checklist.version}
-                            </Button>
-                        </ConfirmAction>
+                            destructive={false}
+                        />
                     )}
                     {canStartDraft && (
                         <Button onClick={() => act(draft(target))}>

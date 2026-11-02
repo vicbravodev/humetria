@@ -1,16 +1,5 @@
-import { Form } from '@inertiajs/react';
-import { useState } from 'react';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
 import { destroy } from '@/routes/tenant/campaigns/shares';
 import type { ReportShareRow } from '@/types';
 
@@ -23,11 +12,9 @@ export default function RevokeShareDialog({
     route: [string, string];
     share: ReportShareRow;
 }) {
-    const [open, setOpen] = useState(false);
-
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <ConfirmDialog
+            trigger={
                 <Button
                     variant="outline"
                     size="sm"
@@ -35,35 +22,12 @@ export default function RevokeShareDialog({
                 >
                     Revocar
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>¿Revocar este enlace?</DialogTitle>
-                <DialogDescription>
-                    Quien lo tenga deja de abrir el informe en ese momento. Si
-                    lo necesita otra vez, crea un enlace nuevo.
-                </DialogDescription>
-                <Form
-                    {...destroy.form([...route, share.id])}
-                    options={{ preserveScroll: true }}
-                    onSuccess={() => setOpen(false)}
-                >
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Revocar enlace
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+            }
+            title="¿Revocar este enlace?"
+            description="Quien lo tenga deja de abrir el informe en ese momento. Si lo necesita otra vez, crea un enlace nuevo."
+            confirmLabel="Revocar enlace"
+            form={destroy.form([...route, share.id])}
+            preserveScroll
+        />
     );
 }

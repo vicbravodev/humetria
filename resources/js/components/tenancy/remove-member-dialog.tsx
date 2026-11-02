@@ -1,14 +1,4 @@
-import { Form } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { destroy } from '@/routes/tenant/members';
 import type { MemberRow } from '@/types';
 
@@ -25,34 +15,13 @@ export default function RemoveMemberDialog({
     onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogTitle>¿Quitar el acceso de {member.name}?</DialogTitle>
-                <DialogDescription>
-                    Ya no podrá entrar a esta empresa. Su cuenta sigue
-                    existiendo y puedes invitarle de nuevo cuando quieras.
-                </DialogDescription>
-                <Form
-                    {...destroy.form({ tenant: tenantSlug, member: member.id })}
-                    onSuccess={() => onOpenChange(false)}
-                >
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Quitar acceso
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <ConfirmDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title={`¿Quitar el acceso de ${member.name}?`}
+            description="Ya no podrá entrar a esta empresa. Su cuenta sigue existiendo y puedes invitarle de nuevo cuando quieras."
+            confirmLabel="Quitar acceso"
+            form={destroy.form({ tenant: tenantSlug, member: member.id })}
+        />
     );
 }

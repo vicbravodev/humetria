@@ -1,14 +1,4 @@
-import { Form } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { close } from '@/routes/tenant/campaigns';
 
 /**
@@ -30,37 +20,21 @@ export default function CloseDialog({
     onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogTitle>¿Cerrar la evaluación?</DialogTitle>
-                <DialogDescription>
-                    Los enlaces dejan de funcionar y no se puede volver a abrir.
-                </DialogDescription>
-                {shortBy > 0 && (
-                    <p className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">
-                        Faltan {shortBy} respuestas para el mínimo de la muestra
-                        que pide la norma. Considera extender la fecha o sortear
-                        reemplazos antes de cerrar.
-                    </p>
-                )}
-                <Form {...close.form([tenantSlug, campaignId])}>
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Cerrar evaluación
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <ConfirmDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title="¿Cerrar la evaluación?"
+            description="Los enlaces dejan de funcionar y no se puede volver a abrir."
+            confirmLabel="Cerrar evaluación"
+            form={close.form([tenantSlug, campaignId])}
+        >
+            {shortBy > 0 && (
+                <p className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">
+                    Faltan {shortBy} respuestas para el mínimo de la muestra que
+                    pide la norma. Considera extender la fecha o sortear
+                    reemplazos antes de cerrar.
+                </p>
+            )}
+        </ConfirmDialog>
     );
 }

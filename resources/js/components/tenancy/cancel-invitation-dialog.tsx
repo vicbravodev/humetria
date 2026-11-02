@@ -1,16 +1,5 @@
-import { Form } from '@inertiajs/react';
-import { useState } from 'react';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
 import { cancel } from '@/routes/companies/invitations';
 import type { TenantRow } from '@/types';
 
@@ -22,11 +11,9 @@ export default function CancelInvitationDialog({
     tenant: TenantRow;
     invitationId: string;
 }) {
-    const [open, setOpen] = useState(false);
-
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <ConfirmDialog
+            trigger={
                 <Button
                     variant="ghost"
                     size="sm"
@@ -35,36 +22,12 @@ export default function CancelInvitationDialog({
                 >
                     Cancelar
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>¿Cancelar la invitación?</DialogTitle>
-                <DialogDescription>
-                    El enlace dejará de funcionar.
-                </DialogDescription>
-                <Form
-                    {...cancel.form({
-                        tenant: tenant.id,
-                        invitation: invitationId,
-                    })}
-                    onSuccess={() => setOpen(false)}
-                >
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Volver</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={processing}
-                            >
-                                {processing && <Spinner />}
-                                Cancelar invitación
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+            }
+            title="¿Cancelar la invitación?"
+            description="El enlace dejará de funcionar."
+            confirmLabel="Cancelar invitación"
+            dismissLabel="Volver"
+            form={cancel.form({ tenant: tenant.id, invitation: invitationId })}
+        />
     );
 }

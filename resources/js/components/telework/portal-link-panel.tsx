@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { Check, Copy, Link2, Mail } from 'lucide-react';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,7 +46,12 @@ export default function PortalLinkPanel({
                         </p>
                     </div>
                 </div>
-                <ConfirmAction
+                <ConfirmDialog
+                    trigger={
+                        <Button variant="outline">
+                            Generar enlace para copiar
+                        </Button>
+                    }
                     title="¿Generar un enlace nuevo?"
                     description="El enlace anterior de esta persona dejará de funcionar. El nuevo se muestra una sola vez para que lo copies."
                     confirmLabel="Generar enlace"
@@ -60,11 +65,8 @@ export default function PortalLinkPanel({
                             { preserveScroll: true },
                         )
                     }
-                >
-                    <Button variant="outline">
-                        Generar enlace para copiar
-                    </Button>
-                </ConfirmAction>
+                    destructive={false}
+                />
             </div>
             {newLink !== undefined && (
                 <div className="grid gap-2 rounded-lg border bg-accent/40 p-4">

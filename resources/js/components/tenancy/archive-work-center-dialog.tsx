@@ -1,19 +1,11 @@
-import { Form } from '@inertiajs/react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { archive } from '@/routes/tenant/work-centers';
 import type { WorkCenterRow } from '@/types';
 
-/** Asks for confirmation before taking a work center out of the list. Nothing is deleted. */
+/**
+ * Asks for confirmation before taking a work center out of the list. Nothing is deleted; an evaluation in progress
+ * keeps it, and the dialog says so.
+ */
 export default function ArchiveWorkCenterDialog({
     tenantSlug,
     workCenter,
@@ -26,47 +18,16 @@ export default function ArchiveWorkCenterDialog({
     onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogTitle>¿Archivar {workCenter.name}?</DialogTitle>
-                <DialogDescription>
-                    Dejará de aparecer en la lista. Su historia se conserva y
-                    puedes restaurarlo cuando quieras.
-                </DialogDescription>
-                <Form
-                    {...archive.form({
-                        tenant: tenantSlug,
-                        workCenter: workCenter.id,
-                    })}
-                    onSuccess={() => onOpenChange(false)}
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            {/* An evaluation in progress keeps it: its people are still answering. */}
-                            {errors['work_center'] !== undefined && (
-                                <Alert variant="destructive" className="mb-4">
-                                    <AlertDescription>
-                                        {errors['work_center']}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                            <DialogFooter className="gap-2">
-                                <DialogClose asChild>
-                                    <Button variant="outline">Cancelar</Button>
-                                </DialogClose>
-                                <Button
-                                    type="submit"
-                                    variant="destructive"
-                                    disabled={processing}
-                                >
-                                    {processing && <Spinner />}
-                                    Archivar
-                                </Button>
-                            </DialogFooter>
-                        </>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <ConfirmDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title={`¿Archivar ${workCenter.name}?`}
+            description="Dejará de aparecer en la lista. Su historia se conserva y puedes restaurarlo cuando quieras."
+            confirmLabel="Archivar"
+            form={archive.form({
+                tenant: tenantSlug,
+                workCenter: workCenter.id,
+            })}
+        />
     );
 }

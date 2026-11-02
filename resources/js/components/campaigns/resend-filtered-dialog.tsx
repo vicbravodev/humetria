@@ -1,17 +1,6 @@
-import { Form } from '@inertiajs/react';
-import { useState } from 'react';
 import type { ReactElement } from 'react';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
 import { peopleQuery } from '@/lib/campaigns';
 import { remindable } from '@/lib/evaluation';
 import { resend } from '@/routes/tenant/campaigns';
@@ -35,7 +24,6 @@ export default function ResendFilteredDialog({
     /** The button that opens it; "Reenviar a N personas" when not given. */
     trigger?: ReactElement;
 }) {
-    const [open, setOpen] = useState(false);
     const people = count === 1 ? '1 persona' : `${count} personas`;
 
     if (!remindable(filters.status, count)) {
@@ -43,37 +31,19 @@ export default function ResendFilteredDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {trigger ?? (
+        <ConfirmDialog
+            trigger={
+                trigger ?? (
                     <Button variant="outline">Reenviar a {people}</Button>
-                )}
-            </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>¿Reenviar el enlace?</DialogTitle>
-                <DialogDescription>
-                    Se reenvía su enlace a {people}. Es el mismo de antes: el
-                    que ya tienen sigue sirviendo.
-                </DialogDescription>
-                <Form
-                    {...resend.form([tenantSlug, campaignId])}
-                    transform={() => peopleQuery(filters)}
-                    options={{ preserveScroll: true }}
-                    onSuccess={() => setOpen(false)}
-                >
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                            </DialogClose>
-                            <Button type="submit" disabled={processing}>
-                                {processing && <Spinner />}
-                                Reenviar enlaces
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+                )
+            }
+            title="¿Reenviar el enlace?"
+            description={`Se reenvía su enlace a ${people}. Es el mismo de antes: el que ya tienen sigue sirviendo.`}
+            confirmLabel="Reenviar enlaces"
+            destructive={false}
+            form={resend.form([tenantSlug, campaignId])}
+            transform={() => peopleQuery(filters)}
+            preserveScroll
+        />
     );
 }
