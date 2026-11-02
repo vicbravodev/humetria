@@ -27,7 +27,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
 
     public function find(string $id): ?CampaignRecord
     {
-        $campaign = Str::isUuid($id) ? Campaign::query()->find($id) : null;
+        $campaign = Str::isUuid($id) ? Campaign::query()->whereIn('kind', CampaignKind::nom035())->find($id) : null;
 
         return $campaign === null ? null : $this->records(new Collection([$campaign]))[0];
     }
@@ -36,6 +36,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
     {
         $since = CampaignClock::today()->subDays(self::RECENT_DAYS);
         $campaigns = Campaign::query()
+            ->whereIn('kind', CampaignKind::nom035())
             ->where(fn (Builder $query) => $query->whereIn('status', [CampaignStatus::Draft, CampaignStatus::Active])->orWhere('closed_at', '>=', $since))
             ->get();
         $order = fn (Campaign $campaign): array => match ($campaign->status) {

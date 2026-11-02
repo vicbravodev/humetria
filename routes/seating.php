@@ -14,6 +14,7 @@ use App\Modules\Seating\Http\Controllers\RegulationController;
 use App\Modules\Seating\Http\Controllers\SeatController;
 use App\Modules\Seating\Http\Controllers\SeatingController;
 use App\Modules\Seating\Http\Controllers\SeatReportController;
+use App\Modules\Seating\Http\Controllers\SurveyController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/seating.
@@ -79,3 +80,6 @@ Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/regulation', [Regu
 Route::put('admin/{tenant:slug}/seating/centers/{workCenter}/regulation', [RegulationController::class, 'update'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.update');
 Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/regulation/advance', [RegulationController::class, 'advance'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.advance');
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/regulation/file', [RegulationController::class, 'file'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.regulation.file');
+
+// The confidential survey of a center's seats and rests: launched through Campaigns for everyone in the center.
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey.launch');

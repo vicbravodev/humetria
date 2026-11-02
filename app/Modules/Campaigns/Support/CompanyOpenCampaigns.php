@@ -6,6 +6,7 @@ namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\Campaigns\Data\CampaignsInCourse;
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Models\Campaign;
 
@@ -23,6 +24,7 @@ final class CompanyOpenCampaigns implements OpenCampaigns
     {
         // The soonest to close, carrying how many are in course with it: one query.
         $soonest = Campaign::query()
+            ->whereIn('kind', CampaignKind::nom035())
             ->where('status', CampaignStatus::Active)
             ->orderBy('closes_on')
             ->orderBy('id')

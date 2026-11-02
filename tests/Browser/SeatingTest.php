@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Campaigns\Enums\CampaignKind;
+use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Seating\Models\InternalRegulation;
 use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PauseAgreement;
@@ -329,3 +333,14 @@ it('drafts the regulation from the page', function (): void {
         ->assertSee('Factores de riesgo')
         ->assertNoJavaScriptErrors();
 });
+
+it('opens the confidential survey of the seats with its first question about standing', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $campaign = Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => $tenant->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+    $participant = Participant::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => Participant::hashToken('the-token')]);
+    ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'seating.survey']);
+
+    visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile)
+        ->assertSee('Encuesta de Ley Silla')
+        ->assertSee('Confidencial');
+})->with($looks);
