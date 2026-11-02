@@ -1,6 +1,7 @@
 import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
 
 const selectClass =
@@ -22,13 +23,12 @@ export default function QuestionFields({
         <>
             <div className="grid gap-2 sm:col-span-2">
                 <Label htmlFor={`${prefix}-text`}>Pregunta</Label>
-                <textarea
+                <Textarea
                     id={`${prefix}-text`}
                     name="text"
                     rows={2}
                     defaultValue={question?.text}
                     required
-                    className="w-full rounded-lg border border-input bg-card px-3 py-2 text-[15px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 />
                 <InputError role="alert" message={errors['text']} />
             </div>

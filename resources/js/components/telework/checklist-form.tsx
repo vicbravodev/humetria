@@ -7,6 +7,7 @@ import ChecklistIntro from '@/components/telework/checklist-intro';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
+import { Textarea } from '@/components/ui/textarea';
 import { useChecklistForm } from '@/hooks/use-checklist-form';
 import { GENERAL, groupByHeading } from '@/lib/telework/answers';
 import type { PortalApplication, PortalQuestion } from '@/types';
@@ -68,7 +69,8 @@ export default function ChecklistForm({
                     <Label htmlFor="special-needs" className="text-base">
                         ¿Tiene alguna necesidad especial? (opcional)
                     </Label>
-                    <textarea
+                    <Textarea
+                        className="rounded-lg px-3 py-2 text-lg"
                         id="special-needs"
                         rows={3}
                         maxLength={2000}
@@ -76,7 +78,6 @@ export default function ChecklistForm({
                         onChange={(event) =>
                             form.specialNeeds(event.target.value)
                         }
-                        className="w-full rounded-lg border border-input bg-card px-3 py-2 text-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     />
                 </div>
             )}

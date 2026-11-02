@@ -5,6 +5,7 @@ import InputError from '@/components/input-error';
 import ReviewPeriodField from '@/components/telework/review-period-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { update } from '@/routes/tenant/telework/settings';
 
 /** The two NOM-037 settings of the company, saved together (pantallas: Ajustes). */
@@ -52,12 +53,12 @@ export default function SettingsForm({
                         }
                         description="Lo aceptan las personas antes de contestar datos de salud o subir fotos. Si cambias el texto, se guarda como versión nueva y las aceptaciones anteriores conservan el suyo."
                     >
-                        <textarea
+                        <Textarea
+                            className="min-h-48"
                             name="consent_text"
                             aria-label="Texto del consentimiento"
                             defaultValue={consent.text}
                             rows={10}
-                            className="min-h-48 w-full rounded-md border border-input bg-card px-4 py-3 text-base transition-[color,border-color,box-shadow] duration-150 ease-out hover:border-foreground/60 focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive"
                             aria-invalid={
                                 errors['consent_text'] === undefined
                                     ? undefined

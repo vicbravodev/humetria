@@ -4,12 +4,10 @@ import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { describeDate } from '@/lib/calendar-date';
 import { respond } from '@/routes/portal/equipment';
 import type { PortalEquipment } from '@/types';
-
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
 
 /** An item the company says it delivered: the person confirms they received it, or refuses it with the reason. */
 export default function PortalEquipmentCard({
@@ -50,9 +48,8 @@ export default function PortalEquipmentCard({
                         <Label htmlFor={`reason-${item.id}`}>
                             Motivo por el que no lo acepta
                         </Label>
-                        <textarea
+                        <Textarea
                             id={`reason-${item.id}`}
-                            className={AREA}
                             value={form.data.reason}
                             onChange={(event) =>
                                 form.setData('reason', event.target.value)

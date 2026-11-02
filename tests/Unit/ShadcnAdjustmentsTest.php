@@ -123,3 +123,21 @@ it('folds the sidebar with its own icons, not the starter kit panel icon', funct
 
     expect($offenders)->toBe([]);
 });
+
+it('writes every multi-line field with the Textarea primitive, styled as Input', function (): void {
+    $offenders = [];
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../resources/js', FilesystemIterator::SKIP_DOTS));
+
+    foreach ($files as $file) {
+        if (! str_contains($file->getPathname(), '/components/ui/') && str_contains((string) file_get_contents((string) $file), '<textarea')) {
+            $offenders[] = $file->getFilename();
+        }
+    }
+
+    expect($offenders)->toBe([])
+        ->and(uiComponent('textarea'))
+        ->toContain('min-h-24')
+        ->toContain('hover:border-foreground/60')
+        ->toContain('focus-visible:outline-ring')
+        ->toContain('aria-invalid:shadow-[inset_0_0_0_1px_var(--destructive)]');
+});

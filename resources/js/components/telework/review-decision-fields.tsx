@@ -2,13 +2,12 @@ import { useState } from 'react';
 import DatePicker from '@/components/humetria/date-picker';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { DECISIONS, decisionNeeds } from '@/lib/telework/review';
 import type { ReviewDecisionValue } from '@/types';
 
 const CARD =
     'flex cursor-pointer items-start gap-3 rounded-lg border border-input bg-card px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[15px] has-checked:py-[11px] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring';
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
 
 /** The decision of the Comisión: the three outcomes, the notes, and the plan with its date when it validates with one. */
 export default function ReviewDecisionFields({
@@ -49,10 +48,9 @@ export default function ReviewDecisionFields({
                 <Label htmlFor={`${idPrefix}-notes`}>
                     Notas{needs.notes ? ' (obligatorias)' : ' (opcionales)'}
                 </Label>
-                <textarea
+                <Textarea
                     id={`${idPrefix}-notes`}
                     name="notes"
-                    className={AREA}
                     aria-invalid={
                         errors['notes'] === undefined ? undefined : true
                     }
@@ -65,10 +63,9 @@ export default function ReviewDecisionFields({
                         <Label htmlFor={`${idPrefix}-plan`}>
                             Plan de acción
                         </Label>
-                        <textarea
+                        <Textarea
                             id={`${idPrefix}-plan`}
                             name="action_plan"
-                            className={AREA}
                             aria-invalid={
                                 errors['action_plan'] === undefined
                                     ? undefined

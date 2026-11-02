@@ -1,5 +1,6 @@
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type Props = {
     error?: string | undefined;
@@ -14,7 +15,8 @@ export default function DemoMessageField({ error }: Props) {
                     (opcional)
                 </span>
             </Label>
-            <textarea
+            <Textarea
+                className="min-h-28"
                 id="demo-message"
                 name="message"
                 rows={4}
@@ -24,7 +26,6 @@ export default function DemoMessageField({ error }: Props) {
                 aria-describedby={
                     error === undefined ? undefined : 'demo-message-error'
                 }
-                className="min-h-28 w-full rounded-md border border-input bg-card px-4 py-3 text-base transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive"
             />
             <InputError id="demo-message-error" role="alert" message={error} />
         </div>

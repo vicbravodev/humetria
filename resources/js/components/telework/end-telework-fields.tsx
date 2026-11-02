@@ -1,13 +1,12 @@
 import DatePicker from '@/components/humetria/date-picker';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { END_REASONS } from '@/lib/telework/roster';
 import type { TeleworkerSummary } from '@/types';
 
 const CARD =
     'flex cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[15px] has-checked:py-[11px] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring';
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
 
 /** Why, from which day and the note of ending a period. */
 export default function EndTeleworkFields({
@@ -52,10 +51,9 @@ export default function EndTeleworkFields({
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="end-note">Nota (opcional)</Label>
-                <textarea
+                <Textarea
                     id="end-note"
                     name="note"
-                    className={AREA}
                     aria-invalid={
                         errors['note'] === undefined ? undefined : true
                     }

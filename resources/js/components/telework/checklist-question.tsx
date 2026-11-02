@@ -1,6 +1,7 @@
 import InputError from '@/components/input-error';
 import PhotoPicker from '@/components/telework/photo-picker';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { answerLabel, isUnfavorable } from '@/lib/telework/answers';
 import { cn } from '@/lib/utils';
 import type { PortalAnswer, PortalQuestion } from '@/types';
@@ -68,14 +69,14 @@ export default function ChecklistQuestion({
                     <Label htmlFor={noteId} className="text-base">
                         Describa el riesgo que encontró
                     </Label>
-                    <textarea
+                    <Textarea
+                        className="rounded-lg px-3 py-2 text-lg"
                         id={noteId}
                         rows={3}
                         value={note}
                         maxLength={2000}
                         onChange={(event) => onNote(event.target.value)}
                         aria-invalid={error === undefined ? undefined : true}
-                        className="w-full rounded-lg border border-input bg-card px-3 py-2 text-lg text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     />
                     {canPhotograph && (
                         <PhotoPicker
