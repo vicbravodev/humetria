@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assistant\Providers;
 
+use App\Modules\Assistant\Console\EvaluateAssistant;
 use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
@@ -50,5 +51,9 @@ final class AssistantServiceProvider extends ServiceProvider
         Relation::morphMap(['assistant_participant' => ConversationParticipant::class]);
 
         Event::listen(MemberRemoved::class, DeleteMemberConversations::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([EvaluateAssistant::class]);
+        }
     }
 }
