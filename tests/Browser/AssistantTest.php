@@ -104,3 +104,34 @@ it('says why Humi cannot answer when it is off for the company, and keeps the pe
         ->assertSee('Humi no está disponible para tu empresa. Pídele a tu administrador que la active.')
         ->assertScript('() => document.querySelector(\'textarea\').placeholder', 'Humi no está disponible');
 });
+
+it('lets the superadmin turn Humi off for a company and set its budget from the console', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Asistente Humi')
+        ->assertSee('Humi en Grupo Ejemplo')
+        ->assertSee('Este mes usó 0 tokens.')
+        ->click('Humi está activa para esta empresa')
+        ->type('monthly_token_budget', '5000')
+        ->press('Guardar')
+        ->assertSee('Humi actualizada para la empresa.')
+        ->assertNoJavaScriptErrors();
+
+    $settings = TenantAiSettings::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->sole();
+
+    expect($settings->enabled)->toBeFalse()
+        ->and($settings->monthly_token_budget)->toBe(5000);
+});
+
+it('passes the accessibility and CSP checks with the Humi dialog of the console open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Asistente Humi')->assertSee('Tokens por mes'));
+})->with([
+    'light' => [false, false],
+    'dark' => [true, false],
+    'a phone' => [false, true],
+]);

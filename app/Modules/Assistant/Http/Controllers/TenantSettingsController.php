@@ -10,8 +10,10 @@ use App\Modules\Assistant\Models\TenantAiSettings;
 use App\Modules\Assistant\Support\MonthlyUsage;
 use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 use InvalidArgumentException;
 
 /** What the superadmin sees and sets about Humi for one company, from the console of companies. */
@@ -33,7 +35,7 @@ final readonly class TenantSettingsController
         ]);
     }
 
-    public function update(TenantAiSettingsRequest $request, string $tenant, SetTenantAiSettings $set): Response
+    public function update(TenantAiSettingsRequest $request, string $tenant, SetTenantAiSettings $set): Response|RedirectResponse
     {
         try {
             $set->handle($tenant, $request->enabled(), $request->budget());
@@ -41,7 +43,14 @@ final readonly class TenantSettingsController
             abort(404);
         }
 
-        return response()->noContent();
+        if ($request->wantsJson()) {
+            return response()->noContent();
+        }
+
+        // The form of the console of companies, like its other actions.
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Humi actualizada para la empresa.']);
+
+        return redirect()->route('companies.index');
     }
 
     private function enter(string $tenant): void

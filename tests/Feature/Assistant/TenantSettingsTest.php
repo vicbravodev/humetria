@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Inertia\Support\SessionKey;
 
 mutates(SetTenantAiSettings::class);
 
@@ -101,4 +102,16 @@ it('answers 404 to a company that does not exist', function (): void {
     $this->actingAs(superadmin())->getJson(settingsUrl((string) Str::uuid()))->assertNotFound();
     $this->actingAs(superadmin())->putJson(settingsUrl((string) Str::uuid()), ['enabled' => false])->assertNotFound();
     $this->actingAs(superadmin())->getJson(settingsUrl('no-es-un-id'))->assertNotFound();
+});
+
+it('answers the form of the console like its other actions: back to the list of companies with a toast', function (): void {
+    $this->actingAs(superadmin())
+        ->put(settingsUrl($this->a), ['enabled' => '0', 'monthly_token_budget' => ''])
+        ->assertRedirect(route('companies.index'))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Humi actualizada para la empresa.']]);
+
+    $settings = TenantAiSettings::query()->withoutGlobalScopes()->sole();
+
+    expect($settings->enabled)->toBeFalse()
+        ->and($settings->monthly_token_budget)->toBeNull();
 });
