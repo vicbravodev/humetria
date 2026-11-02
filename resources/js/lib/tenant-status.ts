@@ -1,7 +1,5 @@
 import { countOf } from '@/lib/plural';
-import type { TenantFilters, TenantRow } from '@/types';
-
-type BadgeVariant = 'default' | 'secondary' | 'outline' | 'destructive';
+import type { BadgeVariant, TenantFilters, TenantRow } from '@/types';
 
 const VARIANTS: Record<TenantRow['status'], BadgeVariant> = {
     active: 'default',

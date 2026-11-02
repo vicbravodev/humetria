@@ -1,9 +1,8 @@
 import { countOf } from '@/lib/plural';
-import type { BadgeTone } from '@/lib/telework/review';
-import type { TrainingStandingValue } from '@/types';
+import type { BadgeVariant, TrainingStandingValue } from '@/types';
 
 /** The badge of where a person stands on their yearly training: up to date, soon due, or past due. */
-export function standingTone(status: TrainingStandingValue): BadgeTone {
+export function standingTone(status: TrainingStandingValue): BadgeVariant {
     switch (status) {
         case 'ok':
             return 'success';

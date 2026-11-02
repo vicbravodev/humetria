@@ -1,19 +1,13 @@
 import type {
+    BadgeVariant,
     ReviewAuthorization,
     ReviewDecisionValue,
     ReviewEvidence,
     WorkplaceStatusValue,
 } from '@/types';
 
-export type BadgeTone =
-    | 'default'
-    | 'secondary'
-    | 'success'
-    | 'warning'
-    | 'destructive';
-
 /** The badge of a workplace's status: validated is success, a plan needs a look, not validated is blocked. */
-export function statusTone(status: WorkplaceStatusValue): BadgeTone {
+export function statusTone(status: WorkplaceStatusValue): BadgeVariant {
     switch (status) {
         case 'valid':
             return 'success';
@@ -103,7 +97,7 @@ export function authorizationState(
 
 export const AUTHORIZATION_BADGES: Record<
     AuthorizationState,
-    { label: string; tone: BadgeTone }
+    { label: string; tone: BadgeVariant }
 > = {
     cancelled: { label: 'Cancelada', tone: 'secondary' },
     used: { label: 'Usada', tone: 'secondary' },

@@ -1,10 +1,9 @@
 import { countOf } from '@/lib/plural';
 import { MARITAL_STATUSES } from '@/lib/telework/roster';
-import type { BadgeTone } from '@/lib/telework/review';
-import type { CenterProgress, RowStateValue } from '@/types';
+import type { BadgeVariant, CenterProgress, RowStateValue } from '@/types';
 
 /** The badge of a row of table 10.3: done, partial, missing, or not applicable. */
-export function rowTone(state: RowStateValue): BadgeTone {
+export function rowTone(state: RowStateValue): BadgeVariant {
     switch (state) {
         case 'done':
             return 'success';

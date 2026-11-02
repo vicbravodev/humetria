@@ -2,6 +2,7 @@ import { instrumentsText } from '@/lib/campaigns';
 import { countOf, plural } from '@/lib/plural';
 import { highRisk, percentText } from '@/lib/results';
 import type {
+    BadgeVariant,
     CycleRow,
     DashboardCounts,
     DashboardProgress,
@@ -10,8 +11,6 @@ import type {
 } from '@/types';
 
 export type Kpi = { value: string; caption: string };
-
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'destructive';
 
 /** "Hola, Rita": the first name only. */
 export function greeting(name: string): string {
