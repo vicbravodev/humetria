@@ -6,6 +6,7 @@ namespace App\Modules\Assistant\Agents;
 
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\PageContext;
+use App\Modules\Assistant\Support\StopSwitch;
 use App\Modules\Assistant\Support\ToolRegistry;
 use App\Modules\Assistant\Support\UntrustedText;
 use Laravel\Ai\Attributes\MaxSteps;
@@ -13,8 +14,10 @@ use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Attributes\Timeout;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasMiddleware;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\RemembersConversations as RemembersConversationsContract;
+use Laravel\Ai\Middleware\Stop;
 use Laravel\Ai\Promptable;
 
 /**
@@ -25,13 +28,14 @@ use Laravel\Ai\Promptable;
 #[MaxSteps(6)]
 #[MaxTokens(1500)]
 #[Timeout(60)]
-final class HumiAssistant implements Agent, HasTools, RemembersConversationsContract
+final class HumiAssistant implements Agent, HasMiddleware, HasTools, RemembersConversationsContract
 {
     use Promptable, RemembersConversations;
 
     public function __construct(
         private readonly AssistantScope $scope,
         private readonly ToolRegistry $tools,
+        private readonly StopSwitch $stop,
         private readonly ?PageContext $page = null,
     ) {}
 
@@ -57,6 +61,15 @@ final class HumiAssistant implements Agent, HasTools, RemembersConversationsCont
         $screen = json_encode(['tipo' => $this->page->kind, 'id' => $this->page->id, 'nombre' => UntrustedText::line($this->page->label)], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
 
         return "{$instructions}\n\n<contexto_pantalla>\n{$screen}\n</contexto_pantalla>";
+    }
+
+    /**
+     * @return list<Stop>
+     */
+    public function middleware(): array
+    {
+        // Before each step, so «Detener» keeps it from asking the provider for more.
+        return [Stop::when(fn (): bool => $this->stop->requested($this->scope->participantId))];
     }
 
     public function tools(): iterable

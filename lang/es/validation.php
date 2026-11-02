@@ -207,6 +207,8 @@ return [
         'area' => 'área',
         'closes_on' => 'fecha de cierre',
         'code' => 'código',
+        'pageContext' => 'pantalla',
+        'conversationId' => 'conversación',
         'company' => 'empresa',
         'constituted_on' => 'fecha del acta',
         'covered_items' => 'incisos',
