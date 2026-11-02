@@ -85,6 +85,8 @@ it('gives HR no individual response on any page about campaigns, results or peop
     'report' => fn (): string => route('tenant.campaigns.report', [$this->tenant, $this->evaluation->id]),
     'screenings' => fn (): string => route('tenant.campaigns.screenings', [$this->tenant, $this->evaluation->id]),
     'employees' => fn (): string => route('tenant.employees.index', $this->tenant),
+    'Ley Silla' => fn (): string => route('tenant.seating.index', $this->tenant),
+    'Ley Silla work center' => fn (): string => route('tenant.seating.center', [$this->tenant, $this->plant->id]),
     'NOM-037' => fn (): string => route('tenant.telework.index', $this->tenant),
     'NOM-037 work center' => fn (): string => route('tenant.telework.center', [$this->tenant, $this->plant->id]),
     // The NOM-037 reviews show a checklist's answers to the Comisión that judges it, by name and by design (criterio

@@ -187,6 +187,7 @@ return [
             'not_in' => 'Esa dirección está reservada. Elige otra.',
             'unique' => 'Esa dirección ya la usa otra empresa.',
         ],
+        'sector' => 'sector',
         'state' => [
             'in' => 'Elige un estado de la lista.',
         ],
@@ -238,6 +239,7 @@ return [
         'municipality' => 'municipio o alcaldía',
         'name' => 'nombre',
         'neighborhood' => 'colonia',
+        'no_standing_positions' => 'sin puestos en bipedestación',
         'note' => 'nota',
         'notes' => 'notas',
         'objective' => 'objetivo',

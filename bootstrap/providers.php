@@ -8,6 +8,7 @@ use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
 use App\Modules\Organization\Providers\OrganizationServiceProvider;
 use App\Modules\Responses\Providers\ResponsesServiceProvider;
 use App\Modules\Results\Providers\ResultsServiceProvider;
+use App\Modules\Seating\Providers\SeatingServiceProvider;
 use App\Modules\Telework\Providers\TeleworkServiceProvider;
 use App\Modules\Tenancy\Providers\TenancyServiceProvider;
 use App\Providers\AppServiceProvider;
@@ -26,4 +27,5 @@ return [
     ResponsesServiceProvider::class,
     ResultsServiceProvider::class,
     TeleworkServiceProvider::class,
+    SeatingServiceProvider::class,
 ];

@@ -16,6 +16,7 @@ const ARRAY_PROPS = [
     'dashboard:nextSteps' => 'resumen de pendientes: cinco a lo más, con el total aparte',
     'dashboard:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'campaigns/survey:instruments' => 'las guías que contesta una persona: tres a lo más',
+    'seating/center:sectors' => 'catálogo fijo: los cuatro sectores que declara un centro',
     'telework/settings:presets' => 'catálogo fijo: los periodos predefinidos de la Sección II (cuatro)',
     'telework/checklist:questions' => 'las preguntas de una versión de la lista: un instrumento, 122 en la base',
     'telework/portal-checklist:questions' => 'las preguntas de una sección de la lista: un instrumento',
