@@ -65,6 +65,14 @@ it('leaves no stray arrows in the breadcrumbs on a phone', function (bool $mobil
         ->assertScript('() => [...document.querySelectorAll(\'nav[aria-label="Ruta"] svg\')].some((arrow) => arrow.getClientRects().length > 0)', ! $mobile);
 })->with(['desktop' => false, 'phone' => true]);
 
+// An empty state with a next step (pantallas: Panel) puts its button under the text, not inside the sentence.
+it('gives an empty state its next step under the text', function (bool $mobile): void {
+    $panel = signInToPanel();
+
+    visitPage('dashboard', $panel, mobile: $mobile)
+        ->assertScript('() => { const link = document.querySelector(\'[data-slot="empty-state"] a\'); return link !== null && link.closest("p") === null; }');
+})->with(['desktop' => false, 'phone' => true]);
+
 // Lets every running transition settle, so what the next assertion reads is the resting state.
 const SETTLED = '() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)';
 

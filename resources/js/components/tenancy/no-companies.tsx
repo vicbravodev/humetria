@@ -6,23 +6,24 @@ import { logout } from '@/routes';
 
 export default function NoCompanies() {
     return (
-        <EmptyState icon={Building2} title="Sin acceso a empresas">
+        <EmptyState
+            icon={Building2}
+            title="Sin acceso a empresas"
+            action={
+                <Button asChild variant="outline">
+                    <Link
+                        href={logout()}
+                        as="button"
+                        onClick={() => router.flushAll()}
+                        data-test="logout-button"
+                    >
+                        Cerrar sesión
+                    </Link>
+                </Button>
+            }
+        >
             Aún no tienes acceso a ninguna empresa. Contacta al administrador de
             Humetría.
-            <Button
-                asChild
-                variant="outline"
-                className="mx-auto mt-6 block w-fit"
-            >
-                <Link
-                    href={logout()}
-                    as="button"
-                    onClick={() => router.flushAll()}
-                    data-test="logout-button"
-                >
-                    Cerrar sesión
-                </Link>
-            </Button>
         </EmptyState>
     );
 }

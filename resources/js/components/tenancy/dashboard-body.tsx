@@ -48,14 +48,16 @@ export default function DashboardBody({
             <EmptyState
                 icon={Factory}
                 title="Empieza por tus centros de trabajo"
+                action={
+                    <Button asChild>
+                        <Link href={workCenters(tenantSlug)}>
+                            Ir a centros de trabajo
+                        </Link>
+                    </Button>
+                }
             >
                 Cada evaluación se hace por centro de trabajo. Da de alta el
                 primero para empezar.
-                <Button asChild className="mx-auto mt-6 block w-fit">
-                    <Link href={workCenters(tenantSlug)}>
-                        Ir a centros de trabajo
-                    </Link>
-                </Button>
             </EmptyState>
         );
     }

@@ -50,19 +50,21 @@ export default function Teleworker({
                     <EmptyState
                         icon={ClipboardList}
                         title="La Comisión aún no publica la lista"
+                        action={
+                            <Button asChild variant="outline">
+                                <Link
+                                    href={show({
+                                        tenant: tenantSlug,
+                                        workCenter: workCenter.id,
+                                    })}
+                                >
+                                    Ir a la Comisión
+                                </Link>
+                            </Button>
+                        }
                     >
                         Antes de registrar a alguien, la Comisión de este centro
                         debe publicar su lista de verificación.
-                        <Button asChild variant="outline" className="mt-4">
-                            <Link
-                                href={show({
-                                    tenant: tenantSlug,
-                                    workCenter: workCenter.id,
-                                })}
-                            >
-                                Ir a la Comisión
-                            </Link>
-                        </Button>
                     </EmptyState>
                 )}
             </div>
