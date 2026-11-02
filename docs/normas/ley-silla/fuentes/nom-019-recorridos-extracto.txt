@@ -1,0 +1,66 @@
+NOM-019-STPS-2011 (DOF 13/04/2011), numerales 5.4 a 5.6, 9.3 a 9.5, 9.11 y 9.12, y las funciones del secretario sobre la custodia de actas (8.3), tomados el 2026-11-02 de
+https://platiica.economia.gob.mx/wp-content/uploads/sites/2/PDF_Normas_Publicas/019stps11.pdf (SHA-256 del PDF: 1d764d43715e0bfb4bf0be864073134d1147f424a44be9646a547b6af4e90c9c).
+Extracción automática con PDFKit: las letras de los incisos salen desordenadas en algunos pasajes; el PDF manda.
+
+5.3 Solicitar al sindicato o a los trabajadores, si no hubiera sindicato, la designación de sus representantes
+para participar en la comisión. Dicha designación deberá realizarse con base en las funciones por
+desempeñar.
+5.4 Contar con el acta de constitución de la comisión del centro de trabajo, y de sus actualizaciones,
+cuando se modifique su integración, de conformidad con lo previsto en el numeral 7.4 de esta Norma.
+5.5 Contar con el programa anual de los recorridos de verificación de la comisión, de conformidad con lo
+previsto en los numerales 9.3 a 9.5 de la presente Norma.
+5.6 Contar con las actas de los recorridos de verificación realizados por la comisión, de conformidad con lo
+establecido en el numeral 9.12 de esta Norma.
+5.7 Facilitar a los trabajadores el desempeño de sus funciones como integrantes de la comisión.
+5.8 Proporcionar a la comisión el diagnóstico sobre seguridad y salud en el trabajo, a que se refiere la
+[...]
+Los nombramientos de coordinador, secretario y vocales tendrán una vigencia de dos años, y los de
+coordinador y secretario se alternarán entre los representantes del patrón y de los trabajadores.
+9.2 En caso de ausencia temporal del coordinador o del secretario de la comisión, su cargo será ocupado
+por uno de los vocales, de la representación que corresponda.
+9.3 El programa anual de recorridos de verificación deberá integrase dentro de los treinta días naturales
+siguientes a la constitución de la comisión. Posteriormente, se deberá conformar el programa dentro de los
+primeros treinta días naturales de cada año.
+9.4 En el programa anual se determinarán las prioridades de los recorridos de verificación, con base en las
+áreas con mayor presencia de agentes y condiciones peligrosas o inseguras, y a partir de los incidentes,
+accidentes y enfermedades de trabajo.
+9.5 Los recorridos de verificación previstos en el programa anual de la comisión, se deberán realizar al
+menos con una periodicidad trimestral, a efecto de:
+a) b) Identificar los agentes, condiciones peligrosas o inseguras y actos inseguros en el centro de trabajo;
+Investigar las causas de los accidentes y enfermedades de trabajo que en su caso ocurran, de
+acuerdo con los elementos que les proporcione el patrón y otros que estimen necesarios (Véase
+Guía de Referencia I Investigación de las causas de los accidentes y enfermedades de trabajo);
+c) Determinar las medidas para prevenir riesgos de trabajo, con base en lo dispuesto por el Reglamento
+[...]
+9.11 El seguimiento de las medidas propuestas por la comisión relacionadas con la prevención de riesgos
+de trabajo, deberá efectuarse al menos en forma trimestral.
+9.12 Las actas de los recorridos de verificación deberán contener la información siguiente:
+a) El nombre, denominación o razón social del centro de trabajo;
+b) El domicilio completo (calle, número, colonia, municipio o delegación, ciudad, entidad federativa,
+código postal);
+c) El número de trabajadores del centro de trabajo;
+d) El tipo de recorrido de verificación: ordinario (conforme al programa anual) o extraordinario;
+e) Las fechas y horas de inicio y término del recorrido de verificación;
+f) El área o áreas del centro de trabajo en las que se realizó el recorrido de verificación;
+g) Los agentes, condiciones peligrosas o inseguras y actos inseguros identificados durante el recorrido
+de verificación;
+h) Las causas que, en su caso, se hayan identificado sobre los accidentes y enfermedades de trabajo
+que ocurran;
+i) Las medidas para prevenir los riesgos de trabajo detectados, con base en lo dispuesto por el
+Reglamento y las normas que resulten aplicables;
+j) Las recomendaciones que por consenso se determinen en el seno de la comisión para prevenir,
+reducir o eliminar condiciones peligrosas o inseguras, así como la prioridad con la que deberán
+atenderse;
+k) El seguimiento a las recomendaciones formuladas en los recorridos de verificación anteriores;
+l) El lugar y fecha de conclusión del acta, y
+[...]
+Presentar y entregar las actas de recorridos de verificación al patrón, conjuntamente con el
+coordinador de la comisión;
+i) Mantener bajo custodia copia de:
+1) 2) Las actas de constitución y su actualización;
+Las actas de los recorridos de verificación que correspondan al programa anual de recorridos
+de verificación del ejercicio en curso y del año inmediato anterior;
+3) La evidencia documental sobre la capacitación impartida el ejercicio en curso y el año inmediato
+anterior a los integrantes de la propia comisión, y
+4) La documentación que se relacione con la comisión;
+[...]
