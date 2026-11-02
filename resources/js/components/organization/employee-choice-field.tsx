@@ -34,7 +34,7 @@ export default function EmployeeChoiceField({
                 invalid={error !== undefined}
                 describedBy={error === undefined ? undefined : `${id}-error`}
             />
-            <InputError id={`${id}-error`} role="alert" message={error} />
+            <InputError id={`${id}-error`} message={error} />
         </div>
     );
 }

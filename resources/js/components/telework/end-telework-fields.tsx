@@ -31,7 +31,7 @@ export default function EndTeleworkFields({
                         {reason.label}
                     </label>
                 ))}
-                <InputError role="alert" message={errors['reason']} />
+                <InputError message={errors['reason']} />
             </fieldset>
             <div className="grid gap-2">
                 <Label htmlFor="end-date">Fecha</Label>
@@ -43,11 +43,7 @@ export default function EndTeleworkFields({
                     invalid={errors['ended_on'] !== undefined}
                     describedBy="end-date-error"
                 />
-                <InputError
-                    id="end-date-error"
-                    role="alert"
-                    message={errors['ended_on']}
-                />
+                <InputError id="end-date-error" message={errors['ended_on']} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="end-note">Nota (opcional)</Label>
@@ -58,7 +54,7 @@ export default function EndTeleworkFields({
                         errors['note'] === undefined ? undefined : true
                     }
                 />
-                <InputError role="alert" message={errors['note']} />
+                <InputError message={errors['note']} />
             </div>
         </>
     );

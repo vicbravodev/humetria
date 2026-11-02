@@ -49,7 +49,6 @@ export default function TrainingFields({
                     />
                     <InputError
                         id="training-center-error"
-                        role="alert"
                         message={errors['work_center_id']}
                     />
                 </div>
@@ -64,7 +63,6 @@ export default function TrainingFields({
                     />
                     <InputError
                         id="training-date-error"
-                        role="alert"
                         message={errors['held_on']}
                     />
                 </div>
@@ -84,7 +82,7 @@ export default function TrainingFields({
                         </label>
                     ))}
                 </div>
-                <InputError role="alert" message={errors['modality']} />
+                <InputError message={errors['modality']} />
             </fieldset>
             <TrainingTopicsField topics={topics} error={errors['topics']} />
             <TrainingAttendeesField
@@ -107,7 +105,7 @@ export default function TrainingFields({
                     }
                     className="w-full rounded-md border border-input bg-card px-4 py-2.5 text-base file:mr-3 file:font-medium"
                 />
-                <InputError role="alert" message={errors['evidence']} />
+                <InputError message={errors['evidence']} />
             </div>
         </>
     );

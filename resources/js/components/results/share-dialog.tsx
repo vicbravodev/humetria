@@ -80,7 +80,6 @@ export default function ShareDialog({
                                 </Select>
                                 <InputError
                                     id="share-duration-error"
-                                    role="alert"
                                     message={errors['duration']}
                                 />
                             </div>

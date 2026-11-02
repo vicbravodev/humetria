@@ -22,7 +22,7 @@ export default function AckPaperFields({
                     min={days.first}
                     invalid={errors['date'] !== undefined}
                 />
-                <InputError role="alert" message={errors['date']} />
+                <InputError message={errors['date']} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="ack-note">
@@ -35,7 +35,7 @@ export default function AckPaperFields({
                         errors['note'] === undefined ? undefined : true
                     }
                 />
-                <InputError role="alert" message={errors['note']} />
+                <InputError message={errors['note']} />
             </div>
         </>
     );

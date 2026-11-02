@@ -30,11 +30,7 @@ export default function RosterArea({
             {hint !== undefined && (
                 <p className="text-[14px] text-muted-foreground">{hint}</p>
             )}
-            <InputError
-                id={`roster-${name}-error`}
-                role="alert"
-                message={error}
-            />
+            <InputError id={`roster-${name}-error`} message={error} />
         </div>
     );
 }

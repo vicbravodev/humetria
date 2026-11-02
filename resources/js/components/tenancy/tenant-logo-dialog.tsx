@@ -83,10 +83,7 @@ export default function TenantLogoDialog({
                                     PNG, JPG o WebP de hasta 2 MB y al menos 40
                                     px de alto. Mejor con fondo transparente.
                                 </p>
-                                <InputError
-                                    role="alert"
-                                    message={errors['logo']}
-                                />
+                                <InputError message={errors['logo']} />
                             </div>
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>

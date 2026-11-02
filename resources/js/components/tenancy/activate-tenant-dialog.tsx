@@ -68,7 +68,6 @@ export default function ActivateTenantDialog({
                                 />
                                 <InputError
                                     id="tenant-active_until-error"
-                                    role="alert"
                                     message={errors['active_until']}
                                 />
                             </div>

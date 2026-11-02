@@ -60,7 +60,6 @@ export default function TraumaForm({
                             />
                             <InputError
                                 id="trauma-closes_on-error"
-                                role="alert"
                                 message={errors['closes_on']}
                             />
                         </div>

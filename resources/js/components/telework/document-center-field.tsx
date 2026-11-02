@@ -86,7 +86,7 @@ export default function DocumentCenterField({
                     </ul>
                 </>
             )}
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </SettingRow>
     );
 }

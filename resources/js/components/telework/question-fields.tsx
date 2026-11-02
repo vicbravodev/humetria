@@ -30,7 +30,7 @@ export default function QuestionFields({
                     defaultValue={question?.text}
                     required
                 />
-                <InputError role="alert" message={errors['text']} />
+                <InputError message={errors['text']} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor={`${prefix}-favorable`}>
@@ -46,7 +46,7 @@ export default function QuestionFields({
                     <option value="no">No</option>
                     <option value="informative">Solo informativa</option>
                 </select>
-                <InputError role="alert" message={errors['favorable']} />
+                <InputError message={errors['favorable']} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor={`${prefix}-requirement`}>
@@ -65,7 +65,7 @@ export default function QuestionFields({
                         </option>
                     ))}
                 </select>
-                <InputError role="alert" message={errors['requirement']} />
+                <InputError message={errors['requirement']} />
             </div>
             <label className="flex items-center gap-2 text-[15px] sm:col-span-2">
                 <Input

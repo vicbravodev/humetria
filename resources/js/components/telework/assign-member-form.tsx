@@ -66,7 +66,7 @@ export default function AssignMemberForm({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <InputError role="alert" message={errors['user_id']} />
+                        <InputError message={errors['user_id']} />
                     </div>
                     <Button disabled={processing || candidates.length === 0}>
                         {processing ? <Spinner /> : <UserPlus aria-hidden />}

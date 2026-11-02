@@ -37,7 +37,6 @@ export default function RosterFields({
                     />
                     <InputError
                         id="roster-marital-error"
-                        role="alert"
                         message={errors['marital_status']}
                     />
                 </div>
@@ -61,7 +60,6 @@ export default function RosterFields({
                 />
                 <InputError
                     id="roster-phone-error"
-                    role="alert"
                     message={errors['contact_phone']}
                 />
             </div>

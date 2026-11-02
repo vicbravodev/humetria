@@ -39,8 +39,8 @@ export default function MemberChoices({
                     </li>
                 ))}
             </ul>
-            <InputError role="alert" message={error} />
-            <InputError role="alert" message={centerError} />
+            <InputError message={error} />
+            <InputError message={centerError} />
         </SettingRow>
     );
 }

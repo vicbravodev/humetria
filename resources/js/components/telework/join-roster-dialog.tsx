@@ -56,14 +56,8 @@ export default function JoinRosterDialog({
                                 states={states}
                                 errors={errors}
                             />
-                            <InputError
-                                role="alert"
-                                message={errors['workplaces']}
-                            />
-                            <InputError
-                                role="alert"
-                                message={errors['teleworker']}
-                            />
+                            <InputError message={errors['workplaces']} />
+                            <InputError message={errors['teleworker']} />
                             <Button
                                 type="submit"
                                 disabled={processing}

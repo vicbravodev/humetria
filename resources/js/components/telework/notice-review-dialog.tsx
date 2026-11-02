@@ -61,7 +61,6 @@ export default function NoticeReviewDialog({
                                 />
                                 <InputError
                                     id={`${id}-error`}
-                                    role="alert"
                                     message={errors['note'] ?? errors['notice']}
                                 />
                             </div>

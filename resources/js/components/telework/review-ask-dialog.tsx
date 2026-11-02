@@ -67,7 +67,6 @@ export default function ReviewAskDialog({
                                 </Label>
                                 <Textarea id={`ask-${kind}-note`} name="note" />
                                 <InputError
-                                    role="alert"
                                     message={
                                         errors['note'] ?? errors['workplace']
                                     }

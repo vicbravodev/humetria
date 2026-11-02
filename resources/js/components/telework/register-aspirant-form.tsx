@@ -27,7 +27,7 @@ export default function RegisterAspirantForm({
             {({ processing, errors }) => (
                 <>
                     <AspirantPersonFields route={route} errors={errors} />
-                    <InputError role="alert" message={errors['work_center']} />
+                    <InputError message={errors['work_center']} />
                     {Array.from({ length: places }, (_, index) => (
                         <fieldset
                             key={index}
@@ -45,7 +45,7 @@ export default function RegisterAspirantForm({
                             />
                         </fieldset>
                     ))}
-                    <InputError role="alert" message={errors['workplaces']} />
+                    <InputError message={errors['workplaces']} />
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-[18px]">
                         <Button
                             type="button"

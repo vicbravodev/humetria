@@ -34,7 +34,6 @@ export default function ReviewDecisionForm({
                     <ReviewDecisionFields idPrefix={idPrefix} errors={errors} />
                     {/* What refuses the decision as a whole: the list was already decided, the place is retired, or the person has not answered a list to validate on. */}
                     <InputError
-                        role="alert"
                         message={errors['application'] ?? errors['workplace']}
                     />
                     <Button

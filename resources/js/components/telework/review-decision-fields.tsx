@@ -42,7 +42,7 @@ export default function ReviewDecisionFields({
                         </span>
                     </label>
                 ))}
-                <InputError role="alert" message={errors['decision']} />
+                <InputError message={errors['decision']} />
             </fieldset>
             <div className="grid gap-2">
                 <Label htmlFor={`${idPrefix}-notes`}>
@@ -55,7 +55,7 @@ export default function ReviewDecisionFields({
                         errors['notes'] === undefined ? undefined : true
                     }
                 />
-                <InputError role="alert" message={errors['notes']} />
+                <InputError message={errors['notes']} />
             </div>
             {needs.plan && (
                 <>
@@ -72,10 +72,7 @@ export default function ReviewDecisionFields({
                                     : true
                             }
                         />
-                        <InputError
-                            role="alert"
-                            message={errors['action_plan']}
-                        />
+                        <InputError message={errors['action_plan']} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor={`${idPrefix}-due`}>
@@ -86,10 +83,7 @@ export default function ReviewDecisionFields({
                             name="plan_due_on"
                             invalid={errors['plan_due_on'] !== undefined}
                         />
-                        <InputError
-                            role="alert"
-                            message={errors['plan_due_on']}
-                        />
+                        <InputError message={errors['plan_due_on']} />
                     </div>
                 </>
             )}

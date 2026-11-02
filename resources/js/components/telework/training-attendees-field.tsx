@@ -81,7 +81,7 @@ export default function TrainingAttendeesField({
                     </li>
                 ))}
             </ul>
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </div>
     );
 }

@@ -28,7 +28,7 @@ export default function TrainingTopicsField({
                     </li>
                 ))}
             </ul>
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </fieldset>
     );
 }

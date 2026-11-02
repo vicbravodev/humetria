@@ -82,7 +82,6 @@ export default function ChecklistForm({
                 </div>
             )}
             <InputError
-                role="alert"
                 message={
                     form.errors['application'] ??
                     form.errors['photos'] ??

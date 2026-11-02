@@ -29,6 +29,15 @@ it('renders the login page accessibly', function (bool $dark, bool $mobile): voi
         ->assertScript('() => { const title = getComputedStyle(document.querySelector("h1")); return title.fontSize === "28px" && title.lineHeight === "36px" && title.fontWeight === "600"; }'));
 })->with($looks);
 
+// Every field error is announced when it appears (InputError): a screen reader hears what to fix without hunting for it.
+it('announces a field error as an alert', function (): void {
+    visit('/admin/login')
+        ->type('email', 'nadie@example.com')
+        ->type('password', 'no-es-esta')
+        ->press('Iniciar sesión')
+        ->assertScript('() => new Promise((resolve) => { const look = () => { const alert = document.querySelector(\'p[role="alert"].text-destructive\'); alert === null ? setTimeout(look, 50) : resolve(alert.textContent.length > 0); }; look(); })');
+});
+
 it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
     $panel = signInToPanel();
 

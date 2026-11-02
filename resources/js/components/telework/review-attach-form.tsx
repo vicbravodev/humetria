@@ -38,7 +38,7 @@ export default function ReviewAttachForm({
                         {processing && <Spinner />}
                         Adjuntar PDF
                     </Button>
-                    <InputError role="alert" message={errors['document']} />
+                    <InputError message={errors['document']} />
                 </>
             )}
         </Form>

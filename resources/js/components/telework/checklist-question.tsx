@@ -87,7 +87,7 @@ export default function ChecklistQuestion({
                     )}
                 </div>
             )}
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </fieldset>
     );
 }

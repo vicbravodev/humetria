@@ -39,7 +39,7 @@ export default function DocumentItemsField({
                     </li>
                 ))}
             </ul>
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </SettingRow>
     );
 }

@@ -59,7 +59,7 @@ export default function PopulationField({
                     </span>
                 </label>
             ))}
-            <InputError id="population-error" role="alert" message={error} />
+            <InputError id="population-error" message={error} />
         </fieldset>
     );
 }

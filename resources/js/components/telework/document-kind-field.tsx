@@ -47,7 +47,7 @@ export default function DocumentKindField({
                     </label>
                 ))}
             </fieldset>
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </SettingRow>
     );
 }

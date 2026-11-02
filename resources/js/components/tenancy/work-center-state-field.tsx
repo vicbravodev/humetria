@@ -29,11 +29,7 @@ export default function WorkCenterStateField({
                     error === undefined ? undefined : 'work-center-state-error'
                 }
             />
-            <InputError
-                id="work-center-state-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="work-center-state-error" message={error} />
         </div>
     );
 }

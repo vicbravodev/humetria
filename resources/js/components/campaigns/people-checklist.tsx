@@ -103,7 +103,7 @@ export default function PeopleChecklist({
                 next="Siguientes"
                 pinned={false}
             />
-            <InputError id="trauma-people-error" role="alert" message={error} />
+            <InputError id="trauma-people-error" message={error} />
         </fieldset>
     );
 }

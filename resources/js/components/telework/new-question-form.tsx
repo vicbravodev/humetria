@@ -38,7 +38,7 @@ export default function NewQuestionForm({
                             placeholder="Iluminación, Ruido, Sillas…"
                             required
                         />
-                        <InputError role="alert" message={errors['heading']} />
+                        <InputError message={errors['heading']} />
                     </div>
                     <QuestionFields
                         prefix={`new-${section}`}

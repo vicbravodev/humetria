@@ -89,10 +89,7 @@ export default function AckPaperDialog({
                                     value={id}
                                 />
                             ))}
-                            <InputError
-                                role="alert"
-                                message={errors['employee_ids']}
-                            />
+                            <InputError message={errors['employee_ids']} />
                             <AckPaperFields days={days} errors={errors} />
                             <Button
                                 type="submit"

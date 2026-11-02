@@ -53,11 +53,7 @@ export default function EmployeeGenderField({
             >
                 La norma lo usa para sortear la muestra.
             </p>
-            <InputError
-                id="employee-gender-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="employee-gender-error" message={error} />
         </fieldset>
     );
 }

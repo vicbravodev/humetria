@@ -63,12 +63,11 @@ export default function PortalEquipmentCard({
                         />
                         <InputError
                             id={`reason-${item.id}-error`}
-                            role="alert"
                             message={form.errors.reason}
                         />
                     </div>
                 )}
-                <InputError role="alert" message={form.errors.equipment} />
+                <InputError message={form.errors.equipment} />
                 <div className="mt-2 flex flex-wrap gap-2">
                     {refusing ? (
                         <>

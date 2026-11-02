@@ -49,7 +49,7 @@ export default function FormField({
                     <InputGroupInput {...control} />
                 </InputGroup>
             )}
-            <InputError id={errorId} role="alert" message={error} />
+            <InputError id={errorId} message={error} />
         </div>
     );
 }

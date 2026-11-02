@@ -67,11 +67,7 @@ export default function ImportFileField({
                     }
                 />
             </div>
-            <InputError
-                id="employees-file-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="employees-file-error" message={error} />
         </div>
     );
 }

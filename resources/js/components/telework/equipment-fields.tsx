@@ -27,7 +27,6 @@ export default function EquipmentFields({
                 />
                 <InputError
                     id="equipment-kind-error"
-                    role="alert"
                     message={errors['kind']}
                 />
             </div>
@@ -44,7 +43,6 @@ export default function EquipmentFields({
                 />
                 <InputError
                     id="equipment-description-error"
-                    role="alert"
                     message={errors['description']}
                 />
             </div>
@@ -59,7 +57,6 @@ export default function EquipmentFields({
                 />
                 <InputError
                     id="equipment-date-error"
-                    role="alert"
                     message={errors['delivered_on']}
                 />
             </div>

@@ -28,7 +28,6 @@ export default function PortalNoticeDates({
                 />
                 <InputError
                     id={`${kind}-written_on-error`}
-                    role="alert"
                     message={errors['written_on']}
                 />
             </div>
@@ -45,7 +44,6 @@ export default function PortalNoticeDates({
                 />
                 <InputError
                     id={`${kind}-occurred_on-error`}
-                    role="alert"
                     message={errors['occurred_on']}
                 />
             </div>

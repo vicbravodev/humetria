@@ -84,7 +84,6 @@ export default function WorkplaceFields({
                     />
                     <InputError
                         id={`${stateId}-error`}
-                        role="alert"
                         message={errors[state.error]}
                     />
                 </div>

@@ -40,7 +40,6 @@ export default function RegisterCommitteeForm({
                         />
                         <InputError
                             id="committee-constituted-on-error"
-                            role="alert"
                             message={errors['constituted_on']}
                         />
                     </SettingRow>
@@ -64,7 +63,7 @@ export default function RegisterCommitteeForm({
                             }
                             className="w-full rounded-md border border-input bg-card px-4 py-2.5 text-base file:mr-3 file:font-medium"
                         />
-                        <InputError role="alert" message={errors['act']} />
+                        <InputError message={errors['act']} />
                     </SettingRow>
                     <MemberChoices
                         candidates={candidates}

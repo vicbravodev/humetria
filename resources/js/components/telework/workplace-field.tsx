@@ -35,7 +35,7 @@ export default function WorkplaceField({
                 }
                 {...input}
             />
-            <InputError id={`${id}-error`} role="alert" message={error} />
+            <InputError id={`${id}-error`} message={error} />
         </div>
     );
 }

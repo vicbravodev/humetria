@@ -65,10 +65,7 @@ export default function SettingsForm({
                                     : true
                             }
                         />
-                        <InputError
-                            role="alert"
-                            message={errors['consent_text']}
-                        />
+                        <InputError message={errors['consent_text']} />
                     </SettingRow>
                     <div className="flex justify-end border-t pt-[18px]">
                         <Button disabled={processing}>

@@ -56,10 +56,7 @@ export default function EndTeleworkDialog({
                                 teleworker={teleworker}
                                 errors={errors}
                             />
-                            <InputError
-                                role="alert"
-                                message={errors['teleworker']}
-                            />
+                            <InputError message={errors['teleworker']} />
                             <Button
                                 type="submit"
                                 variant="destructive"

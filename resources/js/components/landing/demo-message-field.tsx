@@ -27,7 +27,7 @@ export default function DemoMessageField({ error }: Props) {
                     error === undefined ? undefined : 'demo-message-error'
                 }
             />
-            <InputError id="demo-message-error" role="alert" message={error} />
+            <InputError id="demo-message-error" message={error} />
         </div>
     );
 }

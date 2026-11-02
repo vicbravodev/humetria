@@ -45,7 +45,7 @@ export default function MemberRoleChoice({
                     </label>
                 ))}
             </div>
-            <InputError id="member-role-error" role="alert" message={error} />
+            <InputError id="member-role-error" message={error} />
         </fieldset>
     );
 }

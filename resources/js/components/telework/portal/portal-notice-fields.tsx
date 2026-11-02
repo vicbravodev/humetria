@@ -38,7 +38,6 @@ export default function PortalNoticeFields({
                 />
                 <InputError
                     id={`${kind}-description-error`}
-                    role="alert"
                     message={errors['description']}
                 />
             </div>
@@ -65,7 +64,7 @@ export default function PortalNoticeFields({
                             states={states}
                             errors={errors}
                         />
-                        <InputError role="alert" message={errors['address']} />
+                        <InputError message={errors['address']} />
                     </div>
                     <div className="flex items-center gap-3">
                         <Checkbox

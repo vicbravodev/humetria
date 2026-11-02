@@ -44,11 +44,7 @@ export default function ReplacementGenderField({
                     </span>
                 </label>
             ))}
-            <InputError
-                id="replacements-gender-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="replacements-gender-error" message={error} />
         </fieldset>
     );
 }

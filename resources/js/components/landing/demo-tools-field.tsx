@@ -34,7 +34,7 @@ export default function DemoToolsField({ error }: Props) {
                     </label>
                 ))}
             </div>
-            <InputError id="demo-tools-error" role="alert" message={error} />
+            <InputError id="demo-tools-error" message={error} />
         </fieldset>
     );
 }

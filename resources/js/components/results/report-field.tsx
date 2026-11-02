@@ -46,7 +46,7 @@ export default function ReportField({
                     aria-describedby={describedBy}
                 />
             )}
-            <InputError id={describedBy} role="alert" message={error} />
+            <InputError id={describedBy} message={error} />
         </div>
     );
 }

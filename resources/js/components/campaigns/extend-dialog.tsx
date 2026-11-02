@@ -62,7 +62,6 @@ export default function ExtendDialog({
                                 />
                                 <InputError
                                     id="extend-closes_on-error"
-                                    role="alert"
                                     message={errors['closes_on']}
                                 />
                             </div>

@@ -74,7 +74,7 @@ export default function ReviewPeriodField({
                     />
                 </div>
             )}
-            <InputError id="period-error" role="alert" message={error} />
+            <InputError id="period-error" message={error} />
         </fieldset>
     );
 }

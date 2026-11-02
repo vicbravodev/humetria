@@ -27,7 +27,6 @@ export default function AspirantPersonFields({
                 />
                 <InputError
                     id="aspirant-employee-error"
-                    role="alert"
                     message={errors['employee_id']}
                 />
             </div>
@@ -55,10 +54,7 @@ export default function AspirantPersonFields({
                 >
                     Más de 40 %, hasta 100 %.
                 </p>
-                <InputError
-                    role="alert"
-                    message={errors['telework_percentage']}
-                />
+                <InputError message={errors['telework_percentage']} />
             </div>
         </div>
     );
