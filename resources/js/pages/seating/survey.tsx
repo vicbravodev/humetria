@@ -43,7 +43,10 @@ export default function SeatingSurvey({
                     facts={[{ icon: Factory, text: workCenter.name }]}
                 />
                 {survey !== null && survey.status === 'active' && (
-                    <SurveyProgress survey={survey} />
+                    <SurveyProgress
+                        survey={survey}
+                        workCenterId={workCenter.id}
+                    />
                 )}
                 {results !== null && (
                     <SurveyResults

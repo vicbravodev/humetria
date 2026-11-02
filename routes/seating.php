@@ -86,6 +86,7 @@ Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/regulation/file', [
 // The confidential survey of a center's seats and rests: launched through Campaigns for everyone in the center, its results
 // read with the minimum of people per group.
 Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey.launch');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/survey/close', [SurveyController::class, 'close'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey.close');
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey');
 
 // The printable dossier of the center for an inspection; every view is audited.

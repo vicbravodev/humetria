@@ -9,6 +9,8 @@ use App\Modules\Campaigns\Contracts\CenterSurveys;
 use App\Modules\Seating\Http\Requests\LaunchSurveyRequest;
 use App\Modules\Seating\Support\CenterAccess;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 /**
@@ -23,6 +25,16 @@ final class SurveyController extends Controller
         $center = $access->find($request, $workCenter);
         $surveys->launch($center->id, $request->closesOn(), $access->userId($request));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Encuesta lanzada. Las personas con correo ya van a recibir su enlace.']);
+
+        return redirect()->route('tenant.seating.survey', [$tenant, $center->id]);
+    }
+
+    public function close(Request $request, mixed $tenant, string $workCenter, CenterAccess $access, CenterSurveys $surveys): RedirectResponse
+    {
+        Gate::authorize('manage-seating');
+        $center = $access->find($request, $workCenter);
+        $surveys->close($center->id);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Encuesta cerrada. Ya puedes ver sus resultados.']);
 
         return redirect()->route('tenant.seating.survey', [$tenant, $center->id]);
     }

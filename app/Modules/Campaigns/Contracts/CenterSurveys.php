@@ -23,6 +23,14 @@ interface CenterSurveys
     public function launch(string $workCenterId, CarbonImmutable $closesOn, int $createdBy): CenterSurvey;
 
     /**
+     * Closes the survey of the center that is still open, before its last day: from then on no link works and its results can
+     * be read.
+     *
+     * @throws ValidationException when the center has no open survey.
+     */
+    public function close(string $workCenterId): CenterSurvey;
+
+    /**
      * The surveys of a center, newest first.
      *
      * @return list<CenterSurvey>

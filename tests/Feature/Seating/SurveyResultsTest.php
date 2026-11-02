@@ -170,3 +170,33 @@ it('answers 403 to the committee and the viewer, and 404 for a center of another
 
     $this->actingAs($this->hr)->get(route('tenant.seating.survey', [$this->tenant, $center->id]))->assertNotFound();
 });
+
+it('lets RH close the survey before its last day, and then shows the results', function (): void {
+    answerSurvey($this->survey, $this->north, 6, surveyAnswers('yes'));
+
+    $this->actingAs($this->hr)->post(route('tenant.seating.survey.close', [$this->tenant, $this->plant->id]))->assertRedirect(route('tenant.seating.survey', [$this->tenant, $this->plant->id]))->assertSessionHasNoErrors();
+
+    expect($this->survey->refresh()->status->value)->toBe('closed');
+    surveyResultsPage($this->actingAs($this->hr))->assertInertia(fn (Assert $page) => $page
+        ->where('survey.status', 'closed')
+        ->where('results.answered', 6)
+        ->where('canLaunch', true));
+    $entry = AuditEntry::query()->where('event', 'campaign.closed')->sole();
+    expect($entry->metadata)->not->toHaveKey('answers');
+});
+
+it('tells RH there is nothing to close when no survey is open', function (): void {
+    closeSeatingSurvey($this->survey);
+
+    $this->actingAs($this->hr)->post(route('tenant.seating.survey.close', [$this->tenant, $this->plant->id]))->assertSessionHasErrors('survey');
+});
+
+it('lets only who manages Ley Silla close the survey, and only of a center of the company', function (): void {
+    foreach ([TenantRole::Committee, TenantRole::Viewer] as $role) {
+        $this->actingAs(memberOf($this->tenant, $role))->post(route('tenant.seating.survey.close', [$this->tenant, $this->plant->id]))->assertForbidden();
+    }
+
+    $foreign = WorkCenter::factory()->for(Tenant::factory()->create(['slug' => 'other']))->create();
+    $this->actingAs($this->hr)->post(route('tenant.seating.survey.close', [$this->tenant, $foreign->id]))->assertNotFound();
+    expect($this->survey->refresh()->status->value)->toBe('active');
+});

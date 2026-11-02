@@ -438,3 +438,25 @@ it('walks the critical path: the Comisión assesses, the person confirms and rep
         ->assertSee('1 persona con evaluación firmada')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows the survey in progress and closes it before its last day', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+
+    visitPage('seating/survey', "{$url}/seating/centers/{$center->id}/survey", $dark, $mobile)
+        ->assertSee('La encuesta está en curso')
+        ->assertSee('Cerrar la encuesta ahora');
+})->with($looks);
+
+it('closes the survey from its page after asking', function (): void {
+    [$url, $center] = seatingCenter();
+    $survey = Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+
+    visit("{$url}/seating/centers/{$center->id}/survey")
+        ->press('Cerrar la encuesta ahora')
+        ->press('Cerrar encuesta')
+        ->assertSee('Resultados protegidos')
+        ->assertNoJavaScriptErrors();
+
+    expect($survey->refresh()->status->value)->toBe('closed');
+});

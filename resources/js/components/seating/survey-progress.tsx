@@ -1,9 +1,16 @@
 import ProgressBar from '@/components/humetria/progress-bar';
+import SurveyCloseDialog from '@/components/seating/survey-close-dialog';
 import { countOf } from '@/lib/plural';
 import type { SurveyRecord } from '@/types';
 
 /** How far the survey has reached while people answer: a count, never who. Results wait for the close. */
-export default function SurveyProgress({ survey }: { survey: SurveyRecord }) {
+export default function SurveyProgress({
+    survey,
+    workCenterId,
+}: {
+    survey: SurveyRecord;
+    workCenterId: string;
+}) {
     return (
         <section className="grid max-w-[880px] gap-3 card p-6">
             <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
@@ -27,6 +34,9 @@ export default function SurveyProgress({ survey }: { survey: SurveyRecord }) {
                     puede deducir quién contestó mirando cómo cambian los
                     números.
                 </p>
+            )}
+            {survey.status === 'active' && (
+                <SurveyCloseDialog workCenterId={workCenterId} />
             )}
         </section>
     );
