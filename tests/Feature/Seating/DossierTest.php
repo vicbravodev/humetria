@@ -185,3 +185,13 @@ it('asks the same queries however many positions, people and seats there are', f
 
     expect(count(DB::getQueryLog()))->toBe($small);
 });
+
+it('counts the signed assessments that have their minutes, in the right number', function (): void {
+    assessedPerson($this, 'Ana Ruiz', RiskLevel::Low);
+    $texts = fn () => collect($this->actingAs($this->hr)->get($this->url)->viewData('page')['props']['rows'])->firstWhere('key', 'r3')['lines'][0]['text'];
+
+    expect($texts())->toBe('0 de 1 evaluación firmada con su acta');
+
+    assessedPerson($this, 'Beto Soto', RiskLevel::Low);
+    expect($texts())->toBe('0 de 2 evaluaciones firmadas con su acta');
+});

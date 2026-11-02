@@ -7,6 +7,7 @@ import RequirementsBoard from '@/components/seating/requirements-board';
 import SectorForm from '@/components/seating/sector-form';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { describeDate } from '@/lib/calendar-date';
 import { dossier, index } from '@/routes/tenant/seating';
 import type {
     CenterRequirement,
@@ -61,7 +62,7 @@ export default function SeatingCenter({
                                   { icon: Factory, text: profile.sectorLabel },
                                   {
                                       icon: CalendarCheck,
-                                      text: `Declarado el ${profile.declaredOn}`,
+                                      text: `Declarado el ${describeDate(profile.declaredOn) ?? profile.declaredOn}`,
                                   },
                               ]),
                     ]}

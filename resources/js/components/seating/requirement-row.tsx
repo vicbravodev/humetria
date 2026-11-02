@@ -23,7 +23,7 @@ export default function RequirementRow({
     const since = requirementSince(requirement);
 
     return (
-        <li className="grid gap-2 py-3 first:pt-0 last:pb-0 @2xl:grid-cols-[3rem_minmax(0,1fr)_auto] @2xl:items-center @2xl:gap-4">
+        <li className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 py-3 first:pt-0 last:pb-0 @2xl:grid-cols-[3rem_minmax(0,1fr)_auto] @2xl:items-center @2xl:gap-4">
             <span className="text-sm font-medium text-muted-foreground tabular-nums">
                 {requirement.number}
             </span>
@@ -46,7 +46,10 @@ export default function RequirementRow({
                     </p>
                 )}
             </div>
-            <Badge variant={VARIANT[requirement.state]}>
+            <Badge
+                className="col-start-2 @2xl:col-start-auto"
+                variant={VARIANT[requirement.state]}
+            >
                 {requirement.stateLabel}
             </Badge>
         </li>

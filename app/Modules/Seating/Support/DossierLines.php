@@ -102,7 +102,7 @@ final class DossierLines
         $total = $facts->signed->count();
         $recorded = $facts->signed->filter(fn (RiskAssessment $assessment): bool => $assessment->recorded_in_document_id !== null)->count();
 
-        return $total === 0 ? [] : [self::line("{$recorded} de {$total} evaluaciones firmadas con su acta")];
+        return $total === 0 ? [] : [self::line("{$recorded} de {$total} ".($total === 1 ? 'evaluación firmada' : 'evaluaciones firmadas').' con su acta')];
     }
 
     /**

@@ -401,3 +401,40 @@ it('opens the dossier from the center page', function (): void {
         ->assertSee('Expediente de Ley Silla para la inspección')
         ->assertNoJavaScriptErrors();
 });
+
+it('walks the critical path: the Comisión assesses, the person confirms and reports a seat from the phone, and RH reads the board and the dossier', function (): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $draft = RiskAssessment::factory()->create([
+        'tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id,
+        'scores' => ['standing_time' => 3, 'posture_change' => 2, 'surface' => 3, 'footwear' => 1, 'movement_space' => 2, 'discomfort' => 1, 'pauses' => 2],
+        'other_aspects' => 'Ninguno.', 'verified_on' => now()->subDay()->toDateString(),
+    ]);
+
+    visit("{$url}/seating/assessments/{$draft->id}")
+        ->press('Firmar evaluación')
+        ->press('Firmar')
+        ->assertSee('14 de 21')
+        ->assertNoJavaScriptErrors();
+
+    $portal = route('portal.seating.show', resolve(IssuePortalLink::class)->handle($ana->id), absolute: false);
+
+    visit($portal)->on()->mobile()
+        ->assertSee('Evaluamos su trabajo de pie')
+        ->press('Confirmo que me informaron')
+        ->assertSee('Usted confirmó el')
+        ->type('description', 'El respaldo de la silla de la caja 2 está flojo.')
+        ->press('Avisar del asiento dañado')
+        ->assertNoJavaScriptErrors();
+
+    expect(SeatReport::query()->where('work_center_id', $center->id)->sole()->description)->toBe('El respaldo de la silla de la caja 2 está flojo.');
+
+    visit("{$url}/seating/centers/{$center->id}")
+        ->assertSee('Requisitos del centro')
+        ->assertSee('R8')
+        ->assertNoJavaScriptErrors();
+
+    visit("{$url}/seating/centers/{$center->id}/dossier")
+        ->assertSee('Expediente de Ley Silla para la inspección')
+        ->assertSee('1 persona con evaluación firmada')
+        ->assertNoJavaScriptErrors();
+});
