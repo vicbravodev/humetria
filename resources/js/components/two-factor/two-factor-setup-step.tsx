@@ -27,7 +27,10 @@ export default function TwoFactorSetupStep({
     return (
         <>
             {errors?.length ? (
-                <AlertError errors={errors} />
+                <AlertError
+                    title="No pudimos preparar la verificación en dos pasos"
+                    errors={errors}
+                />
             ) : (
                 <>
                     <div className="mx-auto flex max-w-md overflow-hidden">
