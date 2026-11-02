@@ -70,5 +70,7 @@ it('answers Committee::isMember and workCenterIds like CommitteeGate', function 
     expect($committee)->toBeInstanceOf(CommitteeGate::class)
         ->and($committee->isMember($cora->id, $center->id))->toBeTrue()
         ->and($committee->isMember($cora->id, $other->id))->toBeFalse()
-        ->and($committee->workCenterIds($cora->id))->toBe([$center->id]);
+        ->and($committee->workCenterIds($cora->id))->toBe([$center->id])
+        ->and($committee->userIdsOf($center->id))->toBe([$cora->id])
+        ->and($committee->userIdsOf($other->id))->toBe([]);
 });

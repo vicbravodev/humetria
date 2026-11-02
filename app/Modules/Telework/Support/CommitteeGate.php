@@ -34,6 +34,14 @@ final readonly class CommitteeGate implements Committee
         return array_values(CommitteeAssignment::query()->where('user_id', $userId)->orderBy('work_center_id')->get(['work_center_id'])->map(fn (CommitteeAssignment $assignment): string => $assignment->work_center_id)->all());
     }
 
+    /** @return list<int> */
+    public function userIdsOf(string $workCenterId): array
+    {
+        $assigned = CommitteeAssignment::query()->where('work_center_id', $workCenterId)->orderBy('user_id')->get(['user_id'])->map(fn (CommitteeAssignment $assignment): int => $assignment->user_id)->all();
+
+        return array_values(array_filter($assigned, $this->isReviewer(...)));
+    }
+
     private function isReviewer(int $userId): bool
     {
         return array_any($this->members->reviewers(), fn (MemberSummary $member): bool => $member->userId === $userId);

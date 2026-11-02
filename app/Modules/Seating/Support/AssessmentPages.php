@@ -16,7 +16,6 @@ use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\SeatingDocument;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -142,7 +141,7 @@ final readonly class AssessmentPages
     {
         $mine = $assessments[$assignment->employee_id] ?? ['draft' => null, 'signed' => null];
         $signed = $mine['signed'];
-        $due = $signed !== null && ($signed->reassessment_due || $signed->signed_at === null || $this->overdue($signed->signed_at));
+        $due = $signed !== null && ($signed->reassessment_due || $signed->signed_at === null || AssessmentTerm::overdue($signed->signed_at));
         [$state, $label] = match (true) {
             $mine['draft'] !== null => ['draft', 'Borrador'],
             $signed === null => ['none', 'Sin evaluar'],
@@ -161,10 +160,5 @@ final readonly class AssessmentPages
             'signedOn' => $signed?->signed_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
             'assessmentId' => ($mine['draft'] ?? $signed)?->id,
         ];
-    }
-
-    private function overdue(CarbonImmutable $signedAt): bool
-    {
-        return $signedAt->addMonths(config()->integer('seating.reassessment_months'))->isPast();
     }
 }

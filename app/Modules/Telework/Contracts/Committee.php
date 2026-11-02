@@ -14,4 +14,11 @@ interface Committee
 
     /** @return list<string> */
     public function workCenterIds(int $userId): array;
+
+    /**
+     * The users who sit on the Comisión of a work center, by id; those who no longer hold a reviewing role are left out.
+     *
+     * @return list<int>
+     */
+    public function userIdsOf(string $workCenterId): array;
 }
