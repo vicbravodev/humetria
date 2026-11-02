@@ -12,6 +12,7 @@ import PageHeader from '@/components/page-header';
 import type { PageFact } from '@/components/page-header';
 import CommitteePanel from '@/components/telework/committee-panel';
 import { describeDate } from '@/lib/calendar-date';
+import { countOf } from '@/lib/plural';
 import { show } from '@/routes/tenant/telework/checklist';
 import { index as documentsIndex } from '@/routes/tenant/telework/documents';
 import { index as reviewsIndex } from '@/routes/tenant/telework/reviews';
@@ -32,7 +33,7 @@ function committeeFacts(committee: Committee | null): PageFact[] {
             : [{ icon: CalendarCheck, text: `Acta del ${written}` }]),
         {
             icon: Users,
-            text: people === 1 ? '1 integrante' : `${people} integrantes`,
+            text: countOf(people, 'integrante', 'integrantes'),
         },
         { icon: ListChecks, text: 'Borrador de la lista listo' },
     ];

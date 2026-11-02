@@ -3,6 +3,7 @@ import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { peopleQuery } from '@/lib/campaigns';
 import { remindable } from '@/lib/evaluation';
+import { countOf } from '@/lib/plural';
 import { resend } from '@/routes/tenant/campaigns';
 import type { PeopleFilters } from '@/types';
 
@@ -24,7 +25,7 @@ export default function ResendFilteredDialog({
     /** The button that opens it; "Reenviar a N personas" when not given. */
     trigger?: ReactElement;
 }) {
-    const people = count === 1 ? '1 persona' : `${count} personas`;
+    const people = countOf(count, 'persona', 'personas');
 
     if (!remindable(filters.status, count)) {
         return null;

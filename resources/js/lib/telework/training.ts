@@ -1,3 +1,4 @@
+import { countOf } from '@/lib/plural';
 import type { BadgeTone } from '@/lib/telework/review';
 import type { TrainingStandingValue } from '@/types';
 
@@ -15,5 +16,5 @@ export function standingTone(status: TrainingStandingValue): BadgeTone {
 
 /** "3 personas" / "1 persona", for the attendees of a training. */
 export function attendeesText(count: number): string {
-    return count === 1 ? '1 persona' : `${count} personas`;
+    return countOf(count, 'persona', 'personas');
 }

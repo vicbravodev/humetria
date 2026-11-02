@@ -1,3 +1,4 @@
+import { countOf } from '@/lib/plural';
 import type { WorkCenterEvaluationStanding } from '@/types';
 
 /** How many people work in a work center: "Sin personal", "1 persona", "48 personas". */
@@ -6,7 +7,7 @@ export function staffText(employees: number): string {
         return 'Sin personal';
     }
 
-    return employees === 1 ? '1 persona' : `${employees} personas`;
+    return countOf(employees, 'persona', 'personas');
 }
 
 /** The NOM-035 guides that apply, written for display; null when none does (nobody works there yet). */

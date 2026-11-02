@@ -1,3 +1,4 @@
+import { countOf } from '@/lib/plural';
 import type {
     CampaignPerson,
     CampaignProgress,
@@ -104,18 +105,17 @@ export function peoplePage(
 /** Where those who did not answer a guide stand: "12 pendientes · 3 sin correo · 2 canceladas por bajas…". */
 export function guideBreakdown(guide: InstrumentProgress): string {
     const parts = [
-        guide.pending > 0 &&
-            `${guide.pending} ${guide.pending === 1 ? 'pendiente' : 'pendientes'}`,
+        guide.pending > 0 && countOf(guide.pending, 'pendiente', 'pendientes'),
         guide.unreachable > 0 && `${guide.unreachable} sin correo`,
         guide.cancelled > 0 &&
-            `${guide.cancelled} ${guide.cancelled === 1 ? 'cancelada' : 'canceladas'} por bajas o cambios de centro`,
+            `${countOf(guide.cancelled, 'cancelada', 'canceladas')} por bajas o cambios de centro`,
     ].filter((part) => part !== false);
 
     return parts.length === 0 ? 'Nadie pendiente' : parts.join(' · ');
 }
 
 function peopleText(count: number): string {
-    return `${count} ${count === 1 ? 'persona' : 'personas'}`;
+    return countOf(count, 'persona', 'personas');
 }
 
 /** What «Invitar a quien falte» will do, before confirming: who it brings up to date and who of them gets a link. */

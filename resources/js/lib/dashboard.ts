@@ -1,4 +1,5 @@
 import { instrumentsText } from '@/lib/campaigns';
+import { countOf, plural } from '@/lib/plural';
 import { highRisk, percentText } from '@/lib/results';
 import type {
     CycleRow,
@@ -11,9 +12,6 @@ import type {
 export type Kpi = { value: string; caption: string };
 
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'destructive';
-
-const plural = (count: number, one: string, many: string): string =>
-    count === 1 ? one : many;
 
 /** "Hola, Rita": the first name only. */
 export function greeting(name: string): string {
@@ -51,7 +49,7 @@ export function closingKpi(daysLeft: number): Kpi {
     }
 
     return {
-        value: plural(daysLeft, '1 día', `${daysLeft} días`),
+        value: countOf(daysLeft, 'día', 'días'),
         caption: 'para el cierre',
     };
 }
@@ -117,7 +115,7 @@ export function nextStepTexts(step: NextStep): {
 }
 
 export function pendingText(count: number): string {
-    return plural(count, '1 pendiente', `${count} pendientes`);
+    return countOf(count, 'pendiente', 'pendientes');
 }
 
 const STANDINGS: Record<

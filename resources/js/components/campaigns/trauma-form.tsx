@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useChosenPeople } from '@/hooks/use-chosen-people';
+import { countOf } from '@/lib/plural';
 import { index } from '@/routes/tenant/campaigns';
 import { create, store } from '@/routes/tenant/campaigns/trauma';
 import type { ChoiceOption, Paginated, RosterPerson } from '@/types';
@@ -87,7 +88,7 @@ export default function TraumaForm({
                             {processing ? <Spinner /> : <Send aria-hidden />}
                             Enviar Guía I
                             {count > 0 &&
-                                ` a ${count} ${count === 1 ? 'persona' : 'personas'}`}
+                                ` a ${countOf(count, 'persona', 'personas')}`}
                         </Button>
                     </div>
                 </>

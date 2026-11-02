@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { instrumentsText } from '@/lib/campaigns';
 import { cycleTexts } from '@/lib/dashboard';
+import { countOf } from '@/lib/plural';
 import type { CycleRow } from '@/types';
 
 /**
@@ -9,7 +10,7 @@ import type { CycleRow } from '@/types';
  */
 export default function DashboardCycleRow({ row }: { row: CycleRow }) {
     const texts = cycleTexts(row);
-    const people = row.workers === 1 ? '1 persona' : `${row.workers} personas`;
+    const people = countOf(row.workers, 'persona', 'personas');
 
     return (
         <li className="grid items-center gap-x-6 gap-y-3 border-t px-5 py-[18px] @[40rem]/cycle:grid-cols-[minmax(180px,1.1fr)_minmax(240px,2fr)_auto]">

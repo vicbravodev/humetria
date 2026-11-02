@@ -1,3 +1,4 @@
+import { countOf } from '@/lib/plural';
 import { MARITAL_STATUSES } from '@/lib/telework/roster';
 import type { BadgeTone } from '@/lib/telework/review';
 import type { CenterProgress, RowStateValue } from '@/types';
@@ -23,13 +24,13 @@ export function progressText({ done, applicable }: CenterProgress): string {
 
 /** The people of a center in one line: "3 personas · 1 aspirante". */
 export function headcountText(teleworkers: number, aspirants: number): string {
-    const people = teleworkers === 1 ? '1 persona' : `${teleworkers} personas`;
+    const people = countOf(teleworkers, 'persona', 'personas');
 
     if (aspirants === 0) {
         return people;
     }
 
-    return `${people} · ${aspirants === 1 ? '1 aspirante' : `${aspirants} aspirantes`}`;
+    return `${people} · ${countOf(aspirants, 'aspirante', 'aspirantes')}`;
 }
 
 /** "Sin listas por revisar", "1 lista por revisar", "4 listas por revisar". */
@@ -38,7 +39,7 @@ export function pendingText(count: number): string {
         return 'Sin listas por revisar';
     }
 
-    return count === 1 ? '1 lista por revisar' : `${count} listas por revisar`;
+    return `${countOf(count, 'lista', 'listas')} por revisar`;
 }
 
 /** The estado civil of a person, as 5.1 words it; a dash when none is on file. */
