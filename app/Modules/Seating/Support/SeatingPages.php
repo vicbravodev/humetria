@@ -83,6 +83,7 @@ final readonly class SeatingPages
             ],
             'sectors' => array_map(fn (Sector $sector): array => ['value' => $sector->value, 'label' => $sector->label()], Sector::cases()),
             'canManage' => Gate::allows('manage-seating'),
+            'canAssess' => Gate::allows('assess-seating'),
             'positions' => $this->positions($center->id),
         ];
     }

@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class AssignPeople
 {
-    public function __construct(private CurrentTenant $tenant, private Roster $roster, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private RecordAudit $audit, private FlagReassessment $flag) {}
 
     /**
      * @param  list<string>  $employeeIds
@@ -54,6 +54,7 @@ final readonly class AssignPeople
                     }
 
                     PositionAssignment::query()->create(['tenant_id' => $this->tenant->id(), 'employee_id' => $employeeId, 'position_id' => $position->id, 'starts_on' => Today::date()]);
+                    $this->flag->handle($employeeId);
                     $added++;
                 }
 

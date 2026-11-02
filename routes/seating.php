@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Http\Controllers\AssessmentController;
 use App\Modules\Seating\Http\Controllers\PositionController;
 use App\Modules\Seating\Http\Controllers\SeatController;
 use App\Modules\Seating\Http\Controllers\SeatingController;
@@ -30,3 +31,11 @@ Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/seats', [SeatContr
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/seats/positions', [SeatController::class, 'positions'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.seats.positions');
 Route::put('admin/{tenant:slug}/seating/seats/{seat}', [SeatController::class, 'update'])->where('tenant', $notReserved)->whereUuid('seat')->name('tenant.seating.seats.update');
 Route::get('admin/{tenant:slug}/seating/seats/{seat}/photo', [SeatController::class, 'photo'])->where('tenant', $notReserved)->whereUuid('seat')->name('tenant.seating.seats.photo');
+
+// The individual assessments (Quinta C and D). Signing is one-way: a signed assessment is final; the person is assessed
+// again with a new draft.
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/assessments', [AssessmentController::class, 'index'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.assessments.index');
+Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/assessments', [AssessmentController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.assessments.store');
+Route::get('admin/{tenant:slug}/seating/assessments/{assessment}', [AssessmentController::class, 'show'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.show');
+Route::put('admin/{tenant:slug}/seating/assessments/{assessment}', [AssessmentController::class, 'update'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.update');
+Route::post('admin/{tenant:slug}/seating/assessments/{assessment}/sign', [AssessmentController::class, 'sign'])->where('tenant', $notReserved)->whereUuid('assessment')->name('tenant.seating.assessments.sign');

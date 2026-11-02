@@ -139,3 +139,52 @@ export type PortalCondition = {
     title: string;
     options: Record<string, string>;
 };
+
+export type AssessmentState = 'none' | 'draft' | 'due' | 'signed';
+
+/** A person of a center with the state of their assessment; `level` is that of the latest signed one. */
+export type AssessmentPerson = {
+    employeeId: string;
+    name: string;
+    positionName: string;
+    state: AssessmentState;
+    stateLabel: string;
+    level: 'low' | 'medium' | 'high' | null;
+    levelLabel: string | null;
+    signedOn: string | null;
+    assessmentId: string | null;
+};
+
+/** One item (I to XI) of the registry of Quinta C. */
+export type AssessmentFact = { numeral: string; label: string; value: string };
+
+/** One of the seven conditions of Quinta D with the DOF's three options. */
+export type AssessmentCondition = {
+    key: string;
+    letter: string;
+    title: string;
+    options: { points: number; text: string }[];
+};
+
+export type AssessmentRecord = {
+    id: string;
+    status: 'draft' | 'signed';
+    statusLabel: string;
+    workCenterId: string;
+    scores: Record<string, number>;
+    verifiedOn: string | null;
+    otherAspects: string | null;
+    total: number | null;
+    level: 'low' | 'medium' | 'high' | null;
+    levelLabel: string | null;
+    signedOn: string | null;
+    reassessmentDue: boolean;
+    personProvidedHealthData: boolean;
+    version: string | null;
+};
+
+/** What Humetría suggests for a level, labelled as a suggestion (the Disposiciones tie no measure to a level). */
+export type MeasureSuggestions = {
+    label: string;
+    measures: { value: string; label: string }[];
+};

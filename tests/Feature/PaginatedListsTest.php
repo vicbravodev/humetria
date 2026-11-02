@@ -79,6 +79,11 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.seating.center', [$tenant, $plant->id]);
     }, ['positions']],
+    'Ley Silla assessments of a center' => ['seating/assessments', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.assessments.index', [$tenant, $plant->id]);
+    }, ['people']],
     'Ley Silla seats of a center' => ['seating/seats', function () {
         [$tenant, $plant] = listsCompany();
 

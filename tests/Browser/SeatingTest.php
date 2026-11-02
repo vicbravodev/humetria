@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\PositionAssignment;
+use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
@@ -160,5 +162,62 @@ it('asks for the acceptance of the notice before saving any health data', functi
     visit($url)
         ->press('Enviar mis respuestas')
         ->assertSee('debe ser aceptado')
+        ->assertNoJavaScriptErrors();
+});
+
+/** @return array{string, App\Modules\Organization\Models\Employee, StandingPosition, WorkCenter} The panel's address, a person in a position, the position and its center; the user sits on the center's Comisión. */
+function assessableCenter(): array
+{
+    [$url, $center] = seatingCenter();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    CommitteeAssignment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'user_id' => auth()->id()]);
+    $position = StandingPosition::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Cajera']);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    PositionAssignment::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'position_id' => $position->id]);
+
+    return [$url, $ana, $position, $center];
+}
+
+it('lists the people to assess with their state', function (bool $dark, bool $mobile): void {
+    [$url, , , $center] = assessableCenter();
+
+    visitPage('seating/assessments', "{$url}/seating/centers/{$center->id}/assessments", $dark, $mobile)
+        ->assertSee('Evaluaciones')
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Sin evaluar')
+        ->assertSee('Evaluar');
+})->with($looks);
+
+it('shows the draft of an assessment with its eleven items and seven conditions', function (bool $dark, bool $mobile): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $draft = RiskAssessment::factory()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+
+    visitPage('seating/assessment', "{$url}/seating/assessments/{$draft->id}", $dark, $mobile)
+        ->assertSee('Ana Ruiz')
+        ->assertSee('Registro de la Comisión')
+        ->assertSee('Las siete condicionantes')
+        ->assertSee('Calzado')
+        ->assertSee('Firmar evaluación');
+})->with($looks);
+
+it('shows a signed assessment as final, with its result and the suggestion', function (bool $dark, bool $mobile): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $signed = RiskAssessment::factory()->signed()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+
+    visitPage('seating/assessment', "{$url}/seating/assessments/{$signed->id}", $dark, $mobile)
+        ->assertSee('7 de 21')
+        ->assertSee('Sugerencia de Humetría')
+        ->assertDontSee('Firmar evaluación')
+        ->assertDontSee('Guardar borrador');
+})->with($looks);
+
+it('says what is missing when the Comisión tries to sign an incomplete assessment', function (): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $draft = RiskAssessment::factory()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+
+    visit("{$url}/seating/assessments/{$draft->id}")
+        ->press('Firmar evaluación')
+        ->press('Firmar')
+        ->assertSee('Falta completar para firmar')
         ->assertNoJavaScriptErrors();
 });

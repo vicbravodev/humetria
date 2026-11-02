@@ -200,6 +200,17 @@ return [
     ],
 
     'attributes' => [
+        'scores' => 'condicionantes',
+        'scores.standing_time' => 'tiempo de pie',
+        'scores.posture_change' => 'cambio de postura',
+        'scores.surface' => 'superficie de trabajo',
+        'scores.footwear' => 'calzado',
+        'scores.movement_space' => 'espacio para moverse',
+        'scores.discomfort' => 'malestares',
+        'scores.pauses' => 'pausas',
+        'scores.*' => 'puntaje',
+        'verified_on' => 'fecha de verificación',
+        'other_aspects' => 'otros aspectos',
         'accepted' => 'aviso de privacidad',
         'footwear' => 'calzado',
         'discomfort' => 'molestias',

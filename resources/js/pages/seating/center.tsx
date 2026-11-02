@@ -6,6 +6,7 @@ import SectorForm from '@/components/seating/sector-form';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/seating';
+import { index as assessments } from '@/routes/tenant/seating/assessments';
 import { index as seats } from '@/routes/tenant/seating/seats';
 import type {
     Paginated,
@@ -19,12 +20,14 @@ export default function SeatingCenter({
     profile,
     sectors,
     canManage,
+    canAssess,
     positions,
 }: {
     workCenter: { id: string; name: string; activity: string };
     profile: SeatingProfile | null;
     sectors: SectorOption[];
     canManage: boolean;
+    canAssess: boolean;
     positions: Paginated<PositionRow>;
 }) {
     const tenantSlug = useTenantSlug();
@@ -54,6 +57,15 @@ export default function SeatingCenter({
                               ]),
                     ]}
                 >
+                    {canAssess && (
+                        <Button variant="outline" asChild>
+                            <Link
+                                href={assessments([tenantSlug, workCenter.id])}
+                            >
+                                Evaluaciones
+                            </Link>
+                        </Button>
+                    )}
                     <Button variant="outline" asChild>
                         <Link href={seats([tenantSlug, workCenter.id])}>
                             Asientos
