@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import PortalChecklistController from '@/actions/App/Modules/Telework/Http/Controllers/PortalChecklistController';
 import { Button } from '@/components/ui/button';
 import type { PortalChecklist } from '@/types';
@@ -16,9 +17,7 @@ export default function PortalChecklistCard({
 }) {
     return (
         <li className="flex items-start gap-3.5 rounded-xl border bg-card p-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                <ClipboardList aria-hidden className="size-5" />
-            </span>
+            <IconTile icon={ClipboardList} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="text-base font-semibold">
                     {checklist.section === 1

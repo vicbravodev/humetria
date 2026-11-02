@@ -1,4 +1,5 @@
 import { FileText } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import NoticeFlags from '@/components/telework/notice-flags';
 import NoticeActions from '@/components/telework/notice-actions';
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +20,7 @@ export default function NoticeRow({
         <li className="flex flex-col gap-3 rounded-xl border bg-card px-[22px] py-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3.5">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                        <FileText aria-hidden className="size-5" />
-                    </span>
+                    <IconTile icon={FileText} />
                     <div className="flex min-w-0 flex-col">
                         <p className="font-medium">{row.kind}</p>
                         <p className="text-caption text-muted-foreground">

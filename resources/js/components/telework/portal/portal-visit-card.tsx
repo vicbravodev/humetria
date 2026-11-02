@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { House } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import PortalEvidenceController from '@/actions/App/Modules/Telework/Http/Controllers/PortalEvidenceController';
 import { Button } from '@/components/ui/button';
 import type { PortalVisit } from '@/types';
@@ -16,9 +17,7 @@ export default function PortalVisitCard({
 
     return (
         <li className="flex items-start gap-3.5 rounded-xl border bg-card p-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                <House aria-hidden className="size-5" />
-            </span>
+            <IconTile icon={House} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="text-base font-semibold">
                     La Comisión pide visitar su lugar de trabajo

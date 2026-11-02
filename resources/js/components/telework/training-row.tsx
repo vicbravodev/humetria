@@ -1,4 +1,5 @@
 import { Download, GraduationCap } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { describeDate } from '@/lib/calendar-date';
@@ -18,9 +19,7 @@ export default function TrainingRow({
         <li className="flex flex-col gap-3 rounded-xl border bg-card px-[22px] py-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3.5">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                        <GraduationCap aria-hidden className="size-5" />
-                    </span>
+                    <IconTile icon={GraduationCap} />
                     <div className="flex min-w-0 flex-col">
                         <p className="font-medium">
                             {describeDate(row.heldOn) ?? row.heldOn}

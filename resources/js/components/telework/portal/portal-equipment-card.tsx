@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { Armchair } from 'lucide-react';
 import { useState } from 'react';
+import IconTile from '@/components/humetria/icon-tile';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -29,9 +30,7 @@ export default function PortalEquipmentCard({
 
     return (
         <li className="flex items-start gap-3.5 rounded-xl border bg-card p-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                <Armchair aria-hidden className="size-5" />
-            </span>
+            <IconTile icon={Armchair} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="text-base font-semibold">{item.title}</p>
                 <p className="text-base text-muted-foreground">

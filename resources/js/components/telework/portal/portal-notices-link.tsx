@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { FileText } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import { show } from '@/routes/portal/notices';
 
 /** The way into the person's written notices (numerals 6.3, 6.7, 6.9). */
@@ -13,9 +14,7 @@ export default function PortalNoticesLink({ token }: { token: string }) {
                 href={show.url({ token })}
                 className="flex items-start gap-3.5 rounded-xl border bg-card p-4 hover:bg-accent/50"
             >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                    <FileText aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={FileText} />
                 <span className="flex flex-col gap-1">
                     <span className="text-base font-semibold">
                         Escribir un aviso

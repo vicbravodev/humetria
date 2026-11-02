@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Home, HeartPulse, TriangleAlert } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import PortalNoticeDialog from '@/components/telework/portal/portal-notice-dialog';
 import PortalNoticesList from '@/components/telework/portal/portal-notices-list';
 import PortalShell from '@/components/telework/portal/portal-shell';
@@ -58,9 +59,7 @@ export default function PortalNotices({
                                 key={kind.value}
                                 className="flex items-start gap-3.5 rounded-xl border bg-card p-4"
                             >
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                                    <Icon aria-hidden className="size-5" />
-                                </span>
+                                <IconTile icon={Icon} />
                                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                                     <p className="text-base font-semibold">
                                         {kind.title}

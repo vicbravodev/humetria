@@ -1,4 +1,5 @@
 import { CalendarCheck, UserCheck } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import EndTeleworkDialog from '@/components/telework/end-telework-dialog';
 import JoinRosterDialog from '@/components/telework/join-roster-dialog';
 import RosterEnded from '@/components/telework/roster-ended';
@@ -29,9 +30,7 @@ export default function RosterPanel({
             aria-labelledby="roster-title"
         >
             <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-primary">
-                    <Icon aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={Icon} />
                 <div>
                     <h2 id="roster-title" className="text-base font-semibold">
                         {aspirant

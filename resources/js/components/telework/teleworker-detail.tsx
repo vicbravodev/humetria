@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { Briefcase, Home, Percent } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import AddWorkplaceDialog from '@/components/telework/add-workplace-dialog';
 import EquipmentSection from '@/components/telework/equipment-section';
 import NoticesSection from '@/components/telework/notices-section';
@@ -76,9 +77,7 @@ export default function TeleworkerDetail({
                             key={workplace.id}
                             className="flex items-start gap-3.5 rounded-xl border bg-card p-4"
                         >
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                                <Home aria-hidden className="size-5" />
-                            </span>
+                            <IconTile icon={Home} />
                             <div className="min-w-0">
                                 <p className="text-base font-semibold">
                                     {workplace.address}

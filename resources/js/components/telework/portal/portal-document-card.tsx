@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { FileText } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
 import { describeDate } from '@/lib/calendar-date';
 import { acknowledge, file } from '@/routes/portal/documents';
@@ -17,9 +18,7 @@ export default function PortalDocumentCard({
 
     return (
         <li className="flex items-start gap-3.5 rounded-xl border bg-card p-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                <FileText aria-hidden className="size-5" />
-            </span>
+            <IconTile icon={FileText} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className="text-base font-semibold">{document.title}</p>
                 <p className="text-base text-muted-foreground">

@@ -1,4 +1,5 @@
 import { ListChecks } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import { Badge } from '@/components/ui/badge';
 import type { TrainingChoice } from '@/types';
 
@@ -14,9 +15,7 @@ export default function TrainingCoverage({
             aria-labelledby="coverage-title"
         >
             <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-primary">
-                    <ListChecks aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={ListChecks} />
                 <div>
                     <h2 id="coverage-title" className="text-base font-semibold">
                         Temas del 8.1 sin cubrir

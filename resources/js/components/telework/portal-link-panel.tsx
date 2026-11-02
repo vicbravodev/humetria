@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Check, Copy, Link2, Mail } from 'lucide-react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,13 +29,7 @@ export default function PortalLinkPanel({
         <section className="grid gap-4 rounded-xl border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-primary">
-                        {hasEmail ? (
-                            <Mail aria-hidden className="size-5" />
-                        ) : (
-                            <Link2 aria-hidden className="size-5" />
-                        )}
-                    </span>
+                    <IconTile icon={hasEmail ? Mail : Link2} />
                     <div>
                         <h2 className="text-base font-semibold">
                             Enlace a su portal
