@@ -15,6 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Models\ConversationMessage;
 use Laravel\Ai\Tools\Request as ToolRequest;
 use Pest\Browser\Api\AwaitableWebpage;
 use Tests\TestCase;
@@ -125,6 +126,27 @@ function assistantConversation(ConversationParticipant $participant, string $tit
     ]);
 
     return $conversation;
+}
+
+/** An answer of Humi in a conversation of the participant, as the SDK stores it; returns its id. */
+function assistantAnswer(ConversationParticipant $participant, string $conversationId, string $content = 'Va bien.'): string
+{
+    $message = ConversationMessage::query()->create([
+        'id' => (string) Str::uuid(),
+        'conversation_id' => $conversationId,
+        'participant_type' => 'assistant_participant',
+        'participant_id' => $participant->id,
+        'agent' => 'HumiAssistant',
+        'role' => 'assistant',
+        'content' => $content,
+        'attachments' => '[]',
+        'steps' => '[]',
+        'usage' => '[]',
+        'meta' => '[]',
+        'status' => 'completed',
+    ]);
+
+    return $message->id;
 }
 
 /** The company of a row of another module, which knows it only by its id. */

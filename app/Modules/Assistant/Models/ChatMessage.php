@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $conversation_id
  * @property string $participant_type
  * @property int $participant_id
+ * @property string $role
  */
 final class ChatMessage extends Model
 {
