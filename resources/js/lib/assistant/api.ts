@@ -74,12 +74,16 @@ export async function latestAnswerId(
         : null;
 }
 
+export type Thumb = {
+    messageId: string;
+    rating: Rating;
+    reason: string | null;
+};
+
 /** A thumb on an answer; whether the server took it. */
 export async function sendFeedback(
     slug: string,
-    messageId: string,
-    rating: Rating,
-    reason: string | null,
+    thumb: Thumb,
 ): Promise<boolean> {
     try {
         const response = await fetch(assistant.feedback.url(slug), {

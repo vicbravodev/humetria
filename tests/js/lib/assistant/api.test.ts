@@ -17,7 +17,7 @@ function respond(body: unknown, ok = true): Response {
     return new Response(JSON.stringify(body), { status: ok ? 200 : 500 });
 }
 
-describe('assistant api', () => {
+describe('assistant api: conversations', () => {
     const fetcher = vi.fn();
 
     beforeEach(() => {
@@ -81,6 +81,20 @@ describe('assistant api', () => {
         expect(await latestAnswerId('acme', 'c-1')).toBeNull();
         fetcher.mockResolvedValueOnce(respond(null));
         expect(await latestAnswerId('acme', 'c-1')).toBeNull();
+    });
+});
+
+describe('assistant api: thumbs, stop and failures', () => {
+    const fetcher = vi.fn();
+
+    beforeEach(() => {
+        vi.stubGlobal('fetch', fetcher);
+        vi.stubGlobal('document', { cookie: 'XSRF-TOKEN=tok%3D' });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        fetcher.mockReset();
     });
 
     it('sends a thumb with the token of the session, and says whether the server took it', async () => {
