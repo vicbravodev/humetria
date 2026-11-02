@@ -189,6 +189,32 @@ describe('parseToolCard: status and lists', () => {
     });
 });
 
+describe('parseToolCard: criteria of a norm', () => {
+    it('reads which criterion a row is, and where it comes from', () => {
+        const card = parseToolCard({
+            ...base,
+            render: 'list',
+            rows: [
+                {
+                    norm: 'NOM-037',
+                    id: 'C-01',
+                    title: 'Aplica a quien teletrabaja',
+                    source: 'Norma + STPS',
+                    text: '**Qué hacemos.** Algo.',
+                },
+                { title: 'Un pendiente' },
+            ],
+        });
+
+        expect(card).toMatchObject({
+            rows: [
+                { ref: 'NOM-037 · C-01', source: 'Norma + STPS' },
+                { ref: null, source: null },
+            ],
+        });
+    });
+});
+
 describe('parseToolCard: what is no card', () => {
     it('is nothing for what is not a card of Humi', () => {
         expect(parseToolCard('no es json')).toBeNull();
