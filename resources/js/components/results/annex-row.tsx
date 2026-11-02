@@ -1,13 +1,9 @@
 import { TableCell, TableRow } from '@/components/ui/table';
 import { highTone } from '@/lib/report';
 import { highRisk, percentText, shareOf, total } from '@/lib/results';
+import { riskText } from '@/lib/risk-tones';
 import { cn } from '@/lib/utils';
 import type { LevelCounts } from '@/types';
-
-const TONES = {
-    very_high: 'text-risk-muy-alto-fg',
-    high: 'text-risk-alto-fg',
-};
 
 /** One group of Anexo A: how many questionnaires fall in each level, the share of each, and the share from Alto up. */
 export default function AnnexRow({
@@ -59,7 +55,7 @@ export default function AnnexRow({
             <TableCell
                 className={cn(
                     'pr-5 text-right font-semibold tabular-nums',
-                    tone !== null && TONES[tone],
+                    tone !== null && riskText(tone),
                 )}
             >
                 {high} %

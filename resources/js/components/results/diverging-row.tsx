@@ -1,12 +1,8 @@
 import LevelBar from '@/components/humetria/level-bar';
 import { highTone, sideShares } from '@/lib/report';
+import { riskText } from '@/lib/risk-tones';
 import { cn } from '@/lib/utils';
 import type { RiskGroup, RiskLevelInfo } from '@/types';
-
-const TONES = {
-    very_high: 'text-risk-muy-alto-fg',
-    high: 'text-risk-alto-fg',
-};
 
 /**
  * A category or a domain on both sides of the axis: to the left, its questionnaires in Nulo to Medio; to the right,
@@ -87,7 +83,7 @@ export default function DivergingRow({
                 className={cn(
                     'text-right font-semibold tabular-nums',
                     category ? 'text-lg' : 'text-[15px]',
-                    tone !== null && !category && TONES[tone],
+                    tone !== null && !category && riskText(tone),
                 )}
             >
                 {Math.round(high)} %
