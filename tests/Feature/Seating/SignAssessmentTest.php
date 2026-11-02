@@ -60,6 +60,29 @@ it('signs: computes the total and the level, records who and when, and publishes
     Event::assertDispatched(RiskAssessmentSigned::class, fn (RiskAssessmentSigned $event): bool => $event->employeeId === $this->ana->id && $event->workCenterId === $this->center->id && $event->level === RiskLevel::Medium);
 });
 
+it('refuses to sign a draft of a position the person no longer holds, and signs it once the draft follows them', function (): void {
+    $this->actingAs($this->cora);
+    $other = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    PositionAssignment::query()->where('employee_id', $this->ana->id)->update(['ends_on' => '2026-02-28']);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $other->id, 'starts_on' => '2026-03-01']);
+
+    $this->post(signUrl())->assertSessionHasErrors('sign');
+    expect($this->draft->refresh()->status->value)->toBe('draft');
+
+    $this->draft->forceFill(['position_id' => $other->id])->save();
+    $this->post(signUrl())->assertSessionHasNoErrors();
+    expect($this->draft->refresh()->status->value)->toBe('signed');
+});
+
+it('refuses to sign the draft of a person with no current position', function (): void {
+    $this->actingAs($this->cora);
+    PositionAssignment::query()->where('employee_id', $this->ana->id)->update(['ends_on' => '2026-02-28']);
+
+    $this->post(signUrl())->assertSessionHasErrors('sign');
+
+    expect($this->draft->refresh()->status->value)->toBe('draft');
+});
+
 it('maps the totals of the DOF to their level at the edges', function (array $scores, int $total, RiskLevel $level): void {
     $this->draft->forceFill(['scores' => $scores])->save();
     $this->actingAs($this->cora);

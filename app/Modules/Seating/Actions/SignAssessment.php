@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Instruments\Contracts\SeatingAssessment;
 use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Events\RiskAssessmentSigned;
+use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Support\AssessmentSnapshot;
 use App\Modules\Telework\Contracts\Committee;
@@ -43,6 +44,12 @@ final readonly class SignAssessment
 
             if ($locked->status === AssessmentStatus::Signed) {
                 return $locked;
+            }
+
+            $held = PositionAssignment::query()->where('employee_id', $locked->employee_id)->whereNull('ends_on')->value('position_id');
+
+            if ($held !== $locked->position_id) {
+                throw ValidationException::withMessages(['sign' => 'La persona ya no ocupa el puesto de esta evaluación: ábrala de nuevo desde la lista de personas para actualizarla.']);
             }
 
             $facts = $this->snapshot->capture($locked, $userId);

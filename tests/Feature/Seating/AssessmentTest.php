@@ -97,6 +97,44 @@ it('keeps one draft per person: starting again opens the same one', function ():
     expect(RiskAssessment::query()->count())->toBe(1);
 });
 
+it('points a pending draft at the position the person holds now, in the same center', function (): void {
+    $this->actingAs($this->cora);
+    startFor($this->ana->id);
+    $draft = RiskAssessment::query()->sole();
+    $other = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Almacenista', 'default_standing_time' => 1, 'default_surface' => null]);
+    PositionAssignment::query()->where('employee_id', $this->ana->id)->update(['ends_on' => '2026-02-28']);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $other->id, 'starts_on' => '2026-03-01']);
+
+    startFor($this->ana->id)->assertRedirect(route('tenant.seating.assessments.show', [$this->tenant, $draft->id]));
+
+    $draft->refresh();
+    expect(RiskAssessment::query()->count())->toBe(1)
+        ->and($draft->position_id)->toBe($other->id)
+        ->and($draft->scores['standing_time'])->toBe(1)
+        ->and($draft->scores)->not->toHaveKey('surface');
+});
+
+it('moves a pending draft with the person to the center and position they hold now', function (): void {
+    $this->actingAs($this->cora);
+    startFor($this->ana->id);
+    $draft = RiskAssessment::query()->sole();
+    $south = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Sur']);
+    $southPosition = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $south->id, 'name' => 'Cajera Sur']);
+    $this->ana->forceFill(['work_center_id' => $south->id])->save();
+    PositionAssignment::query()->where('employee_id', $this->ana->id)->update(['ends_on' => '2026-02-28']);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $southPosition->id, 'starts_on' => '2026-03-01']);
+    $southCora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $south->id, 'user_id' => $southCora->id]);
+
+    $this->actingAs($southCora);
+    startFor($this->ana->id, $south)->assertRedirect(route('tenant.seating.assessments.show', [$this->tenant, $draft->id]))->assertSessionHasNoErrors();
+
+    $draft->refresh();
+    expect(RiskAssessment::query()->count())->toBe(1)
+        ->and($draft->work_center_id)->toBe($south->id)
+        ->and($draft->position_id)->toBe($southPosition->id);
+});
+
 it('refuses a person with no position, from another center, deactivated, or in a position the nature of the work exempts', function (string $case): void {
     $person = match ($case) {
         'no position' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]),

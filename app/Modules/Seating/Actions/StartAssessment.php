@@ -24,6 +24,9 @@ final readonly class StartAssessment
 {
     public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
 
+    /** The conditions the position itself gives (a, b, c, e, g): the person's own (d, f) are theirs. */
+    private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses'];
+
     /**
      * @throws ValidationException when the person is not active in the center or has no position the law reaches.
      */
@@ -45,7 +48,7 @@ final readonly class StartAssessment
             $draft = RiskAssessment::query()->where('employee_id', $employeeId)->where('status', AssessmentStatus::Draft)->first();
 
             if ($draft !== null) {
-                return $draft;
+                return $draft->position_id === $position->id ? $draft : $this->follow($draft, $position, $workCenterId);
             }
 
             $input = PersonInput::query()->where('employee_id', $employeeId)->latest('submitted_at')->first();
@@ -74,5 +77,27 @@ final readonly class StartAssessment
 
             return $assessment;
         });
+    }
+
+    /**
+     * A draft is evidence of nothing yet, so it goes where the person went: a new position, or a new center, gives it the
+     * conditions of the position they hold now (the person's own answers stay). Signing a draft of a position they left would
+     * state facts that are no longer theirs.
+     */
+    private function follow(RiskAssessment $draft, StandingPosition $position, string $workCenterId): RiskAssessment
+    {
+        $own = array_diff_key($draft->scores, array_flip(self::POSITION_CONDITIONS));
+        $given = array_filter([
+            'standing_time' => $position->default_standing_time,
+            'posture_change' => $position->default_posture_change,
+            'surface' => $position->default_surface,
+            'movement_space' => $position->default_movement_space,
+            'pauses' => $position->default_pauses,
+        ], fn (?int $points): bool => $points !== null);
+
+        $draft->update(['position_id' => $position->id, 'work_center_id' => $workCenterId, 'scores' => [...$own, ...$given]]);
+        Log::info('seating.assessment_followed_person', ['assessment_id' => $draft->id, 'work_center_id' => $workCenterId]);
+
+        return $draft;
     }
 }
