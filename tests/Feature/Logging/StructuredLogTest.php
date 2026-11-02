@@ -84,6 +84,8 @@ it('redacts each sensitive key', function (string $key): void {
     'ip', 'confirmed_ip', 'responded_ip',
     // NOM-037: that a person reported a severe traumatic event is health data.
     'traumatic_event',
+    // Ley Silla: a person's footwear, discomfort, pain and the notes about their health are health data.
+    'health_note', 'pain_level', 'referral_note', 'assessment_scores', 'discomfort', 'footwear',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {
