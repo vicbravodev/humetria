@@ -2,9 +2,9 @@ import type { InertiaLinkProps } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import {
     ArrowRight,
+    Menu,
     Monitor,
     Moon,
-    PanelLeft,
     Plus,
     Settings,
     Sun,
@@ -123,7 +123,7 @@ export function paletteCommands({
             label: sidebarExpanded ? 'Contraer menú' : 'Expandir menú',
             keywords: ['barra lateral'],
             group: 'Vista',
-            icon: PanelLeft,
+            icon: Menu,
             run: actions.toggleSidebar,
         },
     ];
