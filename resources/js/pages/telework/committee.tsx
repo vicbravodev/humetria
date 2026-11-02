@@ -1,8 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ClipboardCheck, FileText, ListChecks, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/humetria/page-header';
 import CommitteePanel from '@/components/telework/committee-panel';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { committeeFacts } from '@/lib/telework/committee';
 import { show } from '@/routes/tenant/telework/checklist';
 import { index as documentsIndex } from '@/routes/tenant/telework/documents';
@@ -27,7 +28,7 @@ export default function CommitteePage({
     /** Whoever sits on this Comisión reviews the checklists people send. */
     canReview: boolean;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
 
     return (
         <>
@@ -92,7 +93,6 @@ export default function CommitteePage({
                     )}
                 </PageHeader>
                 <CommitteePanel
-                    tenantSlug={tenantSlug}
                     workCenterId={workCenter.id}
                     committee={committee}
                     candidates={candidates}

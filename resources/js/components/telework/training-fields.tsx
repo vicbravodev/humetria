@@ -4,6 +4,7 @@ import InputError from '@/components/humetria/input-error';
 import TrainingAttendeesField from '@/components/telework/training-attendees-field';
 import TrainingTopicsField from '@/components/telework/training-topics-field';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Option } from '@/lib/option-search';
 import { serverSource } from '@/lib/server-options';
 import { options } from '@/routes/tenant/telework/work-centers';
@@ -16,7 +17,6 @@ type Errors = Partial<Record<string, string>>;
 
 /** The data of a training: center, day, modality, 8.1 topics, attendees and the optional signed list. */
 export default function TrainingFields({
-    tenantSlug,
     center,
     onCenter,
     today,
@@ -24,7 +24,6 @@ export default function TrainingFields({
     modalities,
     errors,
 }: {
-    tenantSlug: string;
     center: Option | null;
     onCenter: (center: Option) => void;
     today: string;
@@ -32,6 +31,7 @@ export default function TrainingFields({
     modalities: TrainingChoice[];
     errors: Errors;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <>
             <div className="grid items-start gap-4 sm:grid-cols-2">
@@ -87,7 +87,6 @@ export default function TrainingFields({
             <TrainingTopicsField topics={topics} error={errors['topics']} />
             <TrainingAttendeesField
                 key={center?.value ?? ''}
-                tenantSlug={tenantSlug}
                 centerId={center?.value ?? ''}
                 error={errors['employee_ids']}
             />

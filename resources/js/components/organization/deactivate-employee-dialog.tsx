@@ -1,19 +1,19 @@
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { deactivate } from '@/routes/tenant/employees';
 import type { EmployeeRow } from '@/types';
 
 /** Asks for confirmation before deactivating an employee. Nothing is deleted. */
 export default function DeactivateEmployeeDialog({
-    tenantSlug,
     employee,
     open,
     onOpenChange,
 }: {
-    tenantSlug: string;
     employee: EmployeeRow;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <ConfirmDialog
             open={open}

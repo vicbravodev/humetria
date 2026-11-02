@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { FileText, HeartHandshake, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { nextStepTexts, pendingText } from '@/lib/dashboard';
 import { report, screenings, show } from '@/routes/tenant/campaigns';
 import type { NextStep } from '@/types';
@@ -11,14 +12,13 @@ const ROUTES = { launch: show, report, screenings };
 
 /** "Lo que sigue" (pantalla Panel): what is waiting on this person, each with the button that takes them there. */
 export default function DashboardNextSteps({
-    tenantSlug,
     steps,
     pending,
 }: {
-    tenantSlug: string;
     steps: NextStep[];
     pending: number;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <article
             aria-labelledby="next-steps"

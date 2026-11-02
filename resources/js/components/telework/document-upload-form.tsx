@@ -6,17 +6,17 @@ import DocumentItemsField from '@/components/telework/document-items-field';
 import DocumentKindField from '@/components/telework/document-kind-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/documents';
 import type { DocumentKindOption } from '@/types';
 
 /** Publishes a document in five steps: kind, PDF, work centers, items covered, confirm (pantallas: Empleados-CSV). */
 export default function DocumentUploadForm({
-    tenantSlug,
     kinds,
 }: {
-    tenantSlug: string;
     kinds: DocumentKindOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     const [kind, setKind] = useState('');
     const chosen = kinds.find((option) => option.value === kind);
 
@@ -37,10 +37,7 @@ export default function DocumentUploadForm({
                         error={errors['kind']}
                     />
                     <DocumentFileField error={errors['document']} />
-                    <DocumentCenterField
-                        tenantSlug={tenantSlug}
-                        error={errors['work_center_ids']}
-                    />
+                    <DocumentCenterField error={errors['work_center_ids']} />
                     <DocumentItemsField
                         key={kind}
                         kind={chosen}

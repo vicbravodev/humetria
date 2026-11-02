@@ -3,16 +3,16 @@ import { useState } from 'react';
 import EmployeeSheet from '@/components/organization/employee-sheet';
 import { Button } from '@/components/ui/button';
 import { SheetTrigger } from '@/components/ui/sheet';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/employees';
 import type { EmployeeChoices } from '@/types';
 
 export default function CreateEmployeeSheet({
-    tenantSlug,
     choices,
 }: {
-    tenantSlug: string;
     choices: EmployeeChoices;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

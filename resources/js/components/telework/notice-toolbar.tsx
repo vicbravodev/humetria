@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import Combobox from '@/components/humetria/combobox';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/telework/notices';
 import { options } from '@/routes/tenant/telework/work-centers';
@@ -8,13 +9,8 @@ import type { NoticeFilters } from '@/types';
 const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 
 /** Narrows the notices to one work center (the Comisión only finds its own). */
-export default function NoticeToolbar({
-    tenantSlug,
-    filters,
-}: {
-    tenantSlug: string;
-    filters: NoticeFilters;
-}) {
+export default function NoticeToolbar({ filters }: { filters: NoticeFilters }) {
+    const tenantSlug = useTenantSlug();
     return (
         <div className="sm:w-64">
             <Combobox

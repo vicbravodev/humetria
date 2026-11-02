@@ -10,11 +10,9 @@ import type { MemberRow as Member, RoleOption } from '@/types';
  * superadmin's console and nobody changes their own access, so neither row offers it.
  */
 export default function MemberRow({
-    tenantSlug,
     member,
     roles,
 }: {
-    tenantSlug: string;
     member: Member;
     roles: RoleOption[];
 }) {
@@ -50,20 +48,14 @@ export default function MemberRow({
                         {member.role_label}
                     </Badge>
                 ) : (
-                    <MemberRoleSelect
-                        tenantSlug={tenantSlug}
-                        member={member}
-                        roles={roles}
-                    />
+                    <MemberRoleSelect member={member} roles={roles} />
                 )}
             </TableCell>
             <TableCell className="text-sm text-muted-foreground">
                 Desde el {member.since}
             </TableCell>
             <TableCell className="w-px text-right">
-                {!fixed && (
-                    <MemberRowActions tenantSlug={tenantSlug} member={member} />
-                )}
+                {!fixed && <MemberRowActions member={member} />}
             </TableCell>
         </TableRow>
     );

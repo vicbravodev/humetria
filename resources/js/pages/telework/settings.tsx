@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
 import SettingsForm from '@/components/telework/settings-form';
 
@@ -13,8 +13,6 @@ export default function Settings({
     maxMonths: number;
     consent: { version: number; text: string };
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
-
     return (
         <>
             <Head title="Ajustes de NOM-037" />
@@ -25,7 +23,6 @@ export default function Settings({
                 />
                 <div className="rounded-xl border bg-card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
                     <SettingsForm
-                        tenantSlug={tenantSlug}
                         periodMonths={periodMonths}
                         presets={presets}
                         maxMonths={maxMonths}

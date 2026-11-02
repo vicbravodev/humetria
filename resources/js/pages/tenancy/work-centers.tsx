@@ -5,6 +5,7 @@ import PageHeader from '@/components/humetria/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
 import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
 import WorkCentersGrid from '@/components/tenancy/work-centers-grid';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/work-centers';
 import type {
     MexicanStateOption,
@@ -26,7 +27,7 @@ export default function WorkCenters({
 }) {
     // Always set here: this page only exists inside a company.
     const { tenant } = usePage().props;
-    const tenantSlug = tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const canManage = tenant?.can.manage_organization ?? false;
 
     return (
@@ -37,12 +38,7 @@ export default function WorkCenters({
                     title="Centros de trabajo"
                     description="Cada centro se evalúa por separado. El número de personas decide qué guías aplican."
                 >
-                    {canManage && (
-                        <CreateWorkCenterDialog
-                            tenantSlug={tenantSlug}
-                            states={states}
-                        />
-                    )}
+                    {canManage && <CreateWorkCenterDialog states={states} />}
                 </PageHeader>
                 {/* Only once there is something archived, or while looking at the archive. */}
                 {(counts.archived > 0 || view === 'archived') && (
@@ -72,7 +68,6 @@ export default function WorkCenters({
                     <WorkCentersEmpty view={view} />
                 ) : (
                     <WorkCentersGrid
-                        tenantSlug={tenantSlug}
                         view={view}
                         workCenters={workCenters.data}
                         states={canManage ? states : null}

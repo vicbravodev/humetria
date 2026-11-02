@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Upload } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
 import CreateEmployeeSheet from '@/components/organization/create-employee-sheet';
@@ -8,6 +8,7 @@ import EmployeesTable from '@/components/organization/employees-table';
 import EmployeesToolbar from '@/components/organization/employees-toolbar';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { employeeQuery, headcountText } from '@/lib/employees';
 import { options as areaOptions } from '@/routes/tenant/areas';
 import { create as importPage } from '@/routes/tenant/employees/import';
@@ -32,7 +33,7 @@ export default function Employees({
     genders: ChoiceOption[];
 }) {
     // Always set here: this page only exists inside a company.
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const choices = {
         workCentersUrl: workCenterOptions.url(tenantSlug),
         areasUrl: areaOptions.url(tenantSlug),
@@ -56,23 +57,15 @@ export default function Employees({
                             Cargar CSV
                         </Link>
                     </Button>
-                    <CreateEmployeeSheet
-                        tenantSlug={tenantSlug}
-                        choices={choices}
-                    />
+                    <CreateEmployeeSheet choices={choices} />
                 </PageHeader>
                 {counts.without_email > 0 && (
                     <EmployeesNotice
-                        tenantSlug={tenantSlug}
                         filters={filters}
                         count={counts.without_email}
                     />
                 )}
-                <EmployeesToolbar
-                    tenantSlug={tenantSlug}
-                    filters={filters}
-                    counts={counts}
-                />
+                <EmployeesToolbar filters={filters} counts={counts} />
                 {employees.data.length === 0 ? (
                     <EmployeesEmpty
                         filtered={filtered}
@@ -80,7 +73,6 @@ export default function Employees({
                     />
                 ) : (
                     <EmployeesTable
-                        tenantSlug={tenantSlug}
                         employees={employees.data}
                         choices={choices}
                     />

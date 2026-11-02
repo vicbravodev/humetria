@@ -1,9 +1,10 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import ReviewRow from '@/components/telework/review-row';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { pendingReviewsText } from '@/lib/telework/review';
 import { show } from '@/routes/tenant/telework/committee';
 import type { Paginated, ReviewRow as Row } from '@/types';
@@ -15,7 +16,7 @@ export default function Reviews({
     workCenter: { id: string; name: string };
     applications: Paginated<Row>;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037' },
@@ -44,11 +45,7 @@ export default function Reviews({
                 ) : (
                     <ol aria-label="Listas" className="flex flex-col gap-3">
                         {applications.data.map((row) => (
-                            <ReviewRow
-                                key={row.id}
-                                tenantSlug={tenantSlug}
-                                row={row}
-                            />
+                            <ReviewRow key={row.id} row={row} />
                         ))}
                     </ol>
                 )}

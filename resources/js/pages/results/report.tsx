@@ -1,9 +1,10 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import ReportDetailsDialog from '@/components/results/report-details-dialog';
 import ReportDocument from '@/components/results/report-document';
 import ReportPending from '@/components/results/report-pending';
 import ReportShares from '@/components/results/report-shares';
 import ReportToolbar from '@/components/results/report-toolbar';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { resultsTrail } from '@/lib/results';
 import type {
     NomReport,
@@ -30,7 +31,7 @@ export default function Report({
     durations: ShareDurationOption[] | null;
     shares: Paginated<ReportShareRow> | null;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: resultsTrail(
             tenantSlug,
@@ -57,7 +58,6 @@ export default function Report({
                         </span>
                     ) : (
                         <ReportDetailsDialog
-                            tenantSlug={tenantSlug}
                             campaignId={campaignId}
                             form={form}
                             complete={false}
@@ -66,11 +66,7 @@ export default function Report({
                 </ReportPending>
                 <ReportDocument report={report} levels={levels} />
                 {shares !== null && (
-                    <ReportShares
-                        tenantSlug={tenantSlug}
-                        campaignId={campaignId}
-                        shares={shares}
-                    />
+                    <ReportShares campaignId={campaignId} shares={shares} />
                 )}
             </div>
         </>

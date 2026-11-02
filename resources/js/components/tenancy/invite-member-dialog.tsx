@@ -14,18 +14,18 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/members/invitations';
 import type { RoleOption } from '@/types';
 
 export default function InviteMemberDialog({
-    tenantSlug,
     tradeName,
     roles,
 }: {
-    tenantSlug: string;
     tradeName: string;
     roles: RoleOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

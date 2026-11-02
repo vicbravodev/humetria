@@ -3,6 +3,7 @@ import Combobox from '@/components/humetria/combobox';
 import CountTabs from '@/components/humetria/count-tabs';
 import { Input } from '@/components/ui/input';
 import { useEmployeeFilters } from '@/hooks/use-employee-filters';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { employeeQuery } from '@/lib/employees';
 import { serverSource } from '@/lib/server-options';
 import { options as areaOptions } from '@/routes/tenant/areas';
@@ -15,14 +16,13 @@ const ALL_AREAS = { value: '', label: 'Todas las áreas' };
 
 /** Narrows the list: text in the name, email or number; a work center; an area; and the active or deactivated people. */
 export default function EmployeesToolbar({
-    tenantSlug,
     filters,
     counts,
 }: {
-    tenantSlug: string;
     filters: EmployeeFilters;
     counts: EmployeeCounts;
 }) {
+    const tenantSlug = useTenantSlug();
     const { text, type, filter } = useEmployeeFilters(tenantSlug, filters);
     const tab = (status: EmployeeFilters['status']) => ({
         count: status === 'active' ? counts.active : counts.inactive,

@@ -10,22 +10,22 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { destroy } from '@/routes/tenant/telework/committee/members';
 import { cn } from '@/lib/utils';
 import type { CommitteePerson } from '@/types';
 
 /** Who sits on the Comisión of the center, with a way to take a seat away (pantallas: Usuarios). */
 export default function CommitteeMembersTable({
-    tenantSlug,
     workCenterId,
     members,
     canManage,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     members: CommitteePerson[];
     canManage: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Table>
             <TableCaption className="sr-only">

@@ -12,17 +12,17 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { end } from '@/routes/tenant/telework/teleworkers';
 import type { TeleworkerSummary } from '@/types';
 
 /** Ends a period with a reason, the day and an optional note. Nothing is deleted: it stays in the history. */
 export default function EndTeleworkDialog({
-    tenantSlug,
     teleworker,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

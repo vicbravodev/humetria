@@ -3,6 +3,7 @@ import { Download, UserCheck } from 'lucide-react';
 import ProgressBar from '@/components/humetria/progress-bar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
 import { progressText } from '@/lib/telework/acknowledgements';
 import { missingLabels } from '@/lib/telework/documents';
@@ -12,14 +13,13 @@ import type { DocumentKindOption, DocumentRow as Row } from '@/types';
 
 /** One version of a document in one work center: its date, what it covers and what it leaves out. */
 export default function DocumentRow({
-    tenantSlug,
     row,
     kind,
 }: {
-    tenantSlug: string;
     row: Row;
     kind: DocumentKindOption | undefined;
 }) {
+    const tenantSlug = useTenantSlug();
     const missing = missingLabels(kind, row.missingItems);
     const items = kind?.items.length ?? 0;
 

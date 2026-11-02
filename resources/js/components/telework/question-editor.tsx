@@ -2,23 +2,23 @@ import { Form } from '@inertiajs/react';
 import QuestionFields from '@/components/telework/question-fields';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { update } from '@/routes/tenant/telework/checklist/questions';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
 
 /** Edits one question of the draft in place. Changing its text takes it off the DOF or Humetría text. */
 export default function QuestionEditor({
-    tenantSlug,
     workCenterId,
     question,
     requirements,
     onDone,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     question: ChecklistQuestion;
     requirements: RequirementOption[];
     onDone: () => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...update.form({

@@ -1,4 +1,4 @@
-import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { FileText, Factory, Users } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import CenterProgressCard from '@/components/telework/center-progress-card';
 import CenterRoster from '@/components/telework/center-roster';
 import CenterTabs from '@/components/telework/center-tabs';
 import ComplianceRows from '@/components/telework/compliance-rows';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { headcountText } from '@/lib/telework/center';
 import { index } from '@/routes/tenant/telework';
 import type {
@@ -41,7 +42,7 @@ export default function TeleworkCenter({
     /** Null for whoever sees counts only (the viewer). */
     people: Paginated<CenterPerson> | null;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037', href: index(tenantSlug) },

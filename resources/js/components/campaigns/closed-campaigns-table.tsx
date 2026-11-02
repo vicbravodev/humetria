@@ -8,6 +8,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { progressCount } from '@/lib/campaigns';
 import { numeralsText, periodText } from '@/lib/evaluation-centers';
 import { results, show } from '@/routes/tenant/campaigns';
@@ -15,12 +16,11 @@ import type { CampaignSummary } from '@/types';
 
 /** The history of closed campaigns (pantalla NOM035): where, which guides, when it ran, who answered, its results. */
 export default function ClosedCampaignsTable({
-    tenantSlug,
     campaigns,
 }: {
-    tenantSlug: string;
     campaigns: CampaignSummary[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Table>
             <TableCaption className="sr-only">

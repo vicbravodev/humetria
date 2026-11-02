@@ -7,6 +7,7 @@ import InviteMissingDialog from '@/components/campaigns/invite-missing-dialog';
 import ReplacementsDialog from '@/components/campaigns/replacements-dialog';
 import ResendFilteredDialog from '@/components/campaigns/resend-filtered-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type {
     CampaignDetail,
     CampaignDialog,
@@ -21,14 +22,12 @@ const PENDING = { status: 'pending', guide: null, area: null, q: '' };
  * has the results so far, inviting whoever is missing, drawing replacements and closing it.
  */
 export default function ActiveCampaignActions({
-    tenantSlug,
     campaign,
     minDeadline,
     replacementPool,
     pending,
     missing,
 }: {
-    tenantSlug: string;
     campaign: CampaignDetail;
     /** The earliest new last day; null once the last day has passed, when it can no longer be extended. */
     minDeadline: string | null;
@@ -38,6 +37,7 @@ export default function ActiveCampaignActions({
     /** Who «Invitar a quien falte» sends a link to. */
     missing: InviteMissingCount;
 }) {
+    const tenantSlug = useTenantSlug();
     const [dialog, setDialog] = useState<CampaignDialog | null>(null);
     const toggle = (name: CampaignDialog) => (open: boolean) =>
         setDialog(open ? name : null);
@@ -59,14 +59,12 @@ export default function ActiveCampaignActions({
             />
             {minDeadline !== null && (
                 <ExtendDialog
-                    tenantSlug={tenantSlug}
                     campaignId={campaign.id}
                     closesOn={campaign.closesOn}
                     min={minDeadline}
                 />
             )}
             <ResendFilteredDialog
-                tenantSlug={tenantSlug}
                 campaignId={campaign.id}
                 filters={PENDING}
                 count={pending}
@@ -84,7 +82,6 @@ export default function ActiveCampaignActions({
                 onOpenChange={toggle('invite')}
             />
             <CloseDialog
-                tenantSlug={tenantSlug}
                 campaignId={campaign.id}
                 shortBy={shortBy}
                 open={dialog === 'close'}
@@ -92,7 +89,6 @@ export default function ActiveCampaignActions({
             />
             {replacementPool !== null && (
                 <ReplacementsDialog
-                    tenantSlug={tenantSlug}
                     campaignId={campaign.id}
                     pool={replacementPool}
                     open={dialog === 'replacements'}

@@ -1,4 +1,5 @@
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { close } from '@/routes/tenant/campaigns';
 
 /**
@@ -6,19 +7,18 @@ import { close } from '@/routes/tenant/campaigns';
  * (III.2 c), and closing is final.
  */
 export default function CloseDialog({
-    tenantSlug,
     campaignId,
     shortBy,
     open,
     onOpenChange,
 }: {
-    tenantSlug: string;
     campaignId: string;
     /** Answers missing to reach the sample; 0 when it is met or there is none. */
     shortBy: number;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <ConfirmDialog
             open={open}

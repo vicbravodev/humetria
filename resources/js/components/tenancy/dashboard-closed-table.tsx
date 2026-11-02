@@ -11,11 +11,9 @@ import type { ClosedEvaluation, Paginated, RiskLevelInfo } from '@/types';
 
 /** "Evaluaciones cerradas" (pantalla Panel): participation and final score of each, with its results and its report. */
 export default function DashboardClosedTable({
-    tenantSlug,
     closed,
     levels,
 }: {
-    tenantSlug: string;
     closed: Paginated<ClosedEvaluation>;
     levels: RiskLevelInfo[];
 }) {
@@ -44,7 +42,6 @@ export default function DashboardClosedTable({
                     {closed.data.map((evaluation) => (
                         <DashboardClosedRow
                             key={evaluation.id}
-                            tenantSlug={tenantSlug}
                             evaluation={evaluation}
                             levels={levels}
                         />

@@ -5,13 +5,7 @@ import NoticeRow from '@/components/telework/notice-row';
 import type { NoticeRow as Row, Paginated } from '@/types';
 
 /** The notices, the ones nobody reviewed first. */
-export default function NoticeList({
-    tenantSlug,
-    notices,
-}: {
-    tenantSlug: string;
-    notices: Paginated<Row>;
-}) {
+export default function NoticeList({ notices }: { notices: Paginated<Row> }) {
     return (
         <section className="grid gap-3" aria-labelledby="notices-title">
             <h2 id="notices-title" className="text-xl font-semibold">
@@ -26,11 +20,7 @@ export default function NoticeList({
             ) : (
                 <ol aria-label="Avisos" className="flex flex-col gap-3">
                     {notices.data.map((row) => (
-                        <NoticeRow
-                            key={row.id}
-                            tenantSlug={tenantSlug}
-                            row={row}
-                        />
+                        <NoticeRow key={row.id} row={row} />
                     ))}
                 </ol>
             )}

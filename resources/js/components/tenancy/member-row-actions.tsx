@@ -11,13 +11,7 @@ import {
 import type { MemberRow } from '@/types';
 
 /** Behind the "…" of someone's row: taking their access away, after confirming. Their role changes in its own cell. */
-export default function MemberRowActions({
-    tenantSlug,
-    member,
-}: {
-    tenantSlug: string;
-    member: MemberRow;
-}) {
+export default function MemberRowActions({ member }: { member: MemberRow }) {
     const [removing, setRemoving] = useState(false);
 
     return (
@@ -46,7 +40,6 @@ export default function MemberRowActions({
                 </DropdownMenuContent>
             </DropdownMenu>
             <RemoveMemberDialog
-                tenantSlug={tenantSlug}
                 member={member}
                 open={removing}
                 onOpenChange={setRemoving}

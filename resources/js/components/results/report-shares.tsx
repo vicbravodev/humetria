@@ -9,18 +9,18 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Paginated, ReportShareRow } from '@/types';
 
 /** The links to the report that still open, each one revocable once confirmed. Nothing when there are none. */
 export default function ReportShares({
-    tenantSlug,
     campaignId,
     shares,
 }: {
-    tenantSlug: string;
     campaignId: string;
     shares: Paginated<ReportShareRow>;
 }) {
+    const tenantSlug = useTenantSlug();
     if (shares.total === 0) {
         return null;
     }

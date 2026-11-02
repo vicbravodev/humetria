@@ -1,4 +1,5 @@
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { archive } from '@/routes/tenant/work-centers';
 import type { WorkCenterRow } from '@/types';
 
@@ -7,16 +8,15 @@ import type { WorkCenterRow } from '@/types';
  * keeps it, and the dialog says so.
  */
 export default function ArchiveWorkCenterDialog({
-    tenantSlug,
     workCenter,
     open,
     onOpenChange,
 }: {
-    tenantSlug: string;
     workCenter: WorkCenterRow;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <ConfirmDialog
             open={open}

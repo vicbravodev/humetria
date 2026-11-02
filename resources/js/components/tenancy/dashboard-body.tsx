@@ -5,6 +5,7 @@ import DashboardClosedTable from '@/components/tenancy/dashboard-closed-table';
 import DashboardCycle from '@/components/tenancy/dashboard-cycle';
 import DashboardHighlights from '@/components/tenancy/dashboard-highlights';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dashboardView } from '@/lib/dashboard';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import type {
@@ -28,14 +29,13 @@ export type DashboardData = {
 
 /** Everything under the panel's header, or the empty state that says what to do first. */
 export default function DashboardBody({
-    tenantSlug,
     canManage,
     data,
 }: {
-    tenantSlug: string;
     canManage: boolean;
     data: DashboardData;
 }) {
+    const tenantSlug = useTenantSlug();
     const view = dashboardView({
         hasWorkCenters: data.hasWorkCenters,
         hasActive: data.active !== null,
@@ -70,17 +70,15 @@ export default function DashboardBody({
                 </EmptyState>
             ) : (
                 <DashboardHighlights
-                    tenantSlug={tenantSlug}
                     active={data.active}
                     steps={data.nextSteps}
                     pending={data.pendingSteps}
                     canManage={canManage}
                 />
             )}
-            <DashboardCycle tenantSlug={tenantSlug} cycle={data.cycle} />
+            <DashboardCycle cycle={data.cycle} />
             {data.closed.total > 0 && (
                 <DashboardClosedTable
-                    tenantSlug={tenantSlug}
                     closed={data.closed}
                     levels={data.levels}
                 />

@@ -3,13 +3,11 @@ import type { ReviewAnswer as Answer } from '@/types';
 
 /** A block of answers under its title; the unfavorable ones come first and are marked. */
 export default function ReviewAnswerGroup({
-    tenantSlug,
     title,
     description,
     answers,
     flagged = false,
 }: {
-    tenantSlug: string;
     title: string;
     description: string;
     answers: Answer[];
@@ -31,7 +29,6 @@ export default function ReviewAnswerGroup({
                 {answers.map((answer) => (
                     <ReviewAnswer
                         key={answer.id}
-                        tenantSlug={tenantSlug}
                         answer={answer}
                         flagged={flagged}
                     />

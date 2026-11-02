@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { peopleQuery } from '@/lib/campaigns';
 import { remindable } from '@/lib/evaluation';
 import { countOf } from '@/lib/plural';
@@ -12,19 +13,18 @@ import type { PeopleFilters } from '@/types';
  * pending people, or those whose link failed: then how many get one is exactly how many are listed.
  */
 export default function ResendFilteredDialog({
-    tenantSlug,
     campaignId,
     filters,
     count,
     trigger,
 }: {
-    tenantSlug: string;
     campaignId: string;
     filters: PeopleFilters;
     count: number;
     /** The button that opens it; "Reenviar a N personas" when not given. */
     trigger?: ReactElement;
 }) {
+    const tenantSlug = useTenantSlug();
     const people = countOf(count, 'persona', 'personas');
 
     if (!remindable(filters.status, count)) {

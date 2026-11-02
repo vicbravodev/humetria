@@ -5,10 +5,8 @@ import type { TeleworkerSummary } from '@/types';
 
 /** The equipment delivered to the person with where each item stands (numerals 5.7 and 5.1 k; criterio C-22). */
 export default function EquipmentSection({
-    tenantSlug,
     teleworker,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
 }) {
     const ended = teleworker.status === 'ended';
@@ -21,7 +19,6 @@ export default function EquipmentSection({
                 </h2>
                 {!ended && (
                     <EquipmentDialog
-                        tenantSlug={tenantSlug}
                         teleworkerId={teleworker.id}
                         today={teleworker.today}
                     />

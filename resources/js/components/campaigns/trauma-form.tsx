@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useChosenPeople } from '@/hooks/use-chosen-people';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { countOf } from '@/lib/plural';
 import { index } from '@/routes/tenant/campaigns';
 import { create, store } from '@/routes/tenant/campaigns/trauma';
@@ -18,7 +19,6 @@ import type { ChoiceOption, Paginated, RosterPerson } from '@/types';
  * `picker` is the work center field, which changes the page rather than the form.
  */
 export default function TraumaForm({
-    tenantSlug,
     picker,
     workCenter,
     people,
@@ -27,7 +27,6 @@ export default function TraumaForm({
     maxPeople,
     deadline,
 }: {
-    tenantSlug: string;
     picker: ReactNode;
     workCenter: ChoiceOption;
     people: Paginated<RosterPerson>;
@@ -37,6 +36,7 @@ export default function TraumaForm({
     maxPeople: number;
     deadline: { min: string; suggested: string };
 }) {
+    const tenantSlug = useTenantSlug();
     const choice = useChosenPeople(workCenter.value, preselected);
     const count = choice.chosen.length;
 

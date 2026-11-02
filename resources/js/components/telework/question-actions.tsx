@@ -2,21 +2,21 @@ import { router } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { destroy, move } from '@/routes/tenant/telework/checklist/questions';
 import type { ChecklistQuestion } from '@/types';
 
 /** Move, edit and remove a question of the draft; removing asks first. */
 export default function QuestionActions({
-    tenantSlug,
     workCenterId,
     question,
     onEdit,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     question: ChecklistQuestion;
     onEdit: () => void;
 }) {
+    const tenantSlug = useTenantSlug();
     const target = {
         tenant: tenantSlug,
         workCenter: workCenterId,

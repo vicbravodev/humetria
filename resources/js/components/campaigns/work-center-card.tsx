@@ -14,12 +14,10 @@ import type { WorkCenterEvaluation } from '@/types';
  * running evaluation or its last one.
  */
 export default function WorkCenterCard({
-    tenantSlug,
     center,
     canManage,
     minGroup,
 }: {
-    tenantSlug: string;
     center: WorkCenterEvaluation;
     canManage: boolean;
     minGroup: number;
@@ -55,13 +53,9 @@ export default function WorkCenterCard({
                 ))}
             </dl>
             {center.openCampaign?.status === 'active' ? (
-                <CenterProgress
-                    tenantSlug={tenantSlug}
-                    campaign={center.openCampaign}
-                />
+                <CenterProgress campaign={center.openCampaign} />
             ) : (
                 <CenterFollowUp
-                    tenantSlug={tenantSlug}
                     center={center}
                     canManage={canManage}
                     minGroup={minGroup}

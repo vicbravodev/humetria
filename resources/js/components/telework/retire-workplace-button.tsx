@@ -1,18 +1,18 @@
 import { router } from '@inertiajs/react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { retire } from '@/routes/tenant/telework/workplaces';
 
 /** Takes a place out of use (the person moved, or it is not apt). It stays in the history: nothing is deleted. */
 export default function RetireWorkplaceButton({
-    tenantSlug,
     workplaceId,
     address,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     address: string;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <ConfirmDialog
             trigger={

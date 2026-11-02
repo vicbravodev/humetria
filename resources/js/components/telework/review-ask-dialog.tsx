@@ -13,18 +13,18 @@ import {
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/evidence';
 
 /** Asks for photos from the person (they send them from their portal) or schedules a remote check. */
 export default function ReviewAskDialog({
-    tenantSlug,
     workplaceId,
     kind,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     kind: 'photos' | 'remote_check';
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const photos = kind === 'photos';
 

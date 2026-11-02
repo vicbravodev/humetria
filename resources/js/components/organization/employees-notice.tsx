@@ -1,20 +1,20 @@
 import { Link } from '@inertiajs/react';
 import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { employeeQuery, withoutEmailText } from '@/lib/employees';
 import { index } from '@/routes/tenant/employees';
 import type { EmployeeFilters } from '@/types';
 
 /** The active people no survey link reaches, since the links go out by email; the action shows only them, or everyone again. */
 export default function EmployeesNotice({
-    tenantSlug,
     filters,
     count,
 }: {
-    tenantSlug: string;
     filters: EmployeeFilters;
     count: number;
 }) {
+    const tenantSlug = useTenantSlug();
     const text = withoutEmailText(count);
     const showing = filters.without_email;
     const href = index.url(tenantSlug, {

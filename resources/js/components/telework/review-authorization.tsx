@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import ReviewAttachForm from '@/components/telework/review-attach-form';
 import ReviewCancelButton from '@/components/telework/review-cancel-button';
 import ReviewVisitDialog from '@/components/telework/review-visit-dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
 import {
     AUTHORIZATION_BADGES,
@@ -16,14 +17,13 @@ function viaLabel(authorization: Authorization): string {
 
 /** One request to visit: waiting for the person, given (and ready to record a visit) or already used. */
 export default function ReviewAuthorization({
-    tenantSlug,
     workplaceId,
     authorization,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     authorization: Authorization;
 }) {
+    const tenantSlug = useTenantSlug();
     const state = authorizationState(authorization);
 
     return (
@@ -60,23 +60,16 @@ export default function ReviewAuthorization({
                 </p>
             )}
             {state === 'waiting' && (
-                <ReviewAttachForm
-                    tenantSlug={tenantSlug}
-                    authorizationId={authorization.id}
-                />
+                <ReviewAttachForm authorizationId={authorization.id} />
             )}
             {state === 'given' && (
                 <ReviewVisitDialog
-                    tenantSlug={tenantSlug}
                     workplaceId={workplaceId}
                     authorizationId={authorization.id}
                 />
             )}
             {(state === 'waiting' || state === 'given') && (
-                <ReviewCancelButton
-                    tenantSlug={tenantSlug}
-                    authorizationId={authorization.id}
-                />
+                <ReviewCancelButton authorizationId={authorization.id} />
             )}
         </li>
     );

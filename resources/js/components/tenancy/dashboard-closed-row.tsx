@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import LevelBar from '@/components/humetria/level-bar';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { instrumentsText } from '@/lib/campaigns';
 import { highRiskShare, participationShare } from '@/lib/dashboard';
 import { report, results } from '@/routes/tenant/campaigns';
@@ -10,14 +11,13 @@ import type { ClosedEvaluation, RiskLevelInfo } from '@/types';
 
 /** A closed evaluation: where, when, who answered, its final score as one bar, and its results and report. */
 export default function DashboardClosedRow({
-    tenantSlug,
     evaluation,
     levels,
 }: {
-    tenantSlug: string;
     evaluation: ClosedEvaluation;
     levels: RiskLevelInfo[];
 }) {
+    const tenantSlug = useTenantSlug();
     const which = `${evaluation.workCenter}, ${evaluation.closedOn}`;
 
     return (

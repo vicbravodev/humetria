@@ -18,12 +18,10 @@ import type { WorkCenterEvaluation } from '@/types';
  * center's card it starts at the second step.
  */
 export default function NewEvaluationDialog({
-    tenantSlug,
     workCenter = null,
     minGroup,
     children,
 }: {
-    tenantSlug: string;
     workCenter?: WorkCenterEvaluation | null;
     minGroup: number;
     /** What opens it. */
@@ -56,14 +54,12 @@ export default function NewEvaluationDialog({
                 </div>
                 {step === 2 && center !== null ? (
                     <EvaluationGuidesStep
-                        tenantSlug={tenantSlug}
                         center={center}
                         minGroup={minGroup}
                         onBack={() => setStep(1)}
                     />
                 ) : (
                     <EvaluationCenterStep
-                        tenantSlug={tenantSlug}
                         chosen={center}
                         onNext={(chosen) => {
                             setCenter(chosen);

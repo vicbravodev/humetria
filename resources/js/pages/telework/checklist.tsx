@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { ListChecks, Send, Copy } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import ChecklistError from '@/components/telework/checklist-error';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import CoverageWarnings from '@/components/telework/coverage-warnings';
 import ChecklistSections from '@/components/telework/checklist-sections';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { draft, publish } from '@/routes/tenant/telework/checklist';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
 
@@ -27,7 +28,7 @@ export default function ChecklistPage({
     requirements: RequirementOption[];
     missingLabels: Record<string, string[]>;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const target = { tenant: tenantSlug, workCenter: workCenter.id };
     const isDraft = checklist.status === 'draft';
     const act = (route: ReturnType<typeof publish>) =>
@@ -83,7 +84,6 @@ export default function ChecklistPage({
                 <ChecklistError />
                 {isDraft && <CoverageWarnings labels={missingLabels} />}
                 <ChecklistSections
-                    tenantSlug={tenantSlug}
                     workCenterId={workCenter.id}
                     questions={questions}
                     requirements={requirements}

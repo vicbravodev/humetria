@@ -1,9 +1,10 @@
-import { Head, router, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, router, setLayoutProps } from '@inertiajs/react';
 import TraumaForm from '@/components/campaigns/trauma-form';
 import TraumaNextSteps from '@/components/campaigns/trauma-next-steps';
 import Combobox from '@/components/humetria/combobox';
 import PageHeader from '@/components/humetria/page-header';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/campaigns';
 import { create } from '@/routes/tenant/campaigns/trauma';
@@ -27,7 +28,7 @@ export default function Trauma({
     minDeadline: string;
     suggestedDeadline: string;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-035', href: index(tenantSlug) },
@@ -79,7 +80,6 @@ export default function Trauma({
                             <TraumaForm
                                 // A new list of people for each work center.
                                 key={workCenter.value}
-                                tenantSlug={tenantSlug}
                                 picker={picker}
                                 workCenter={workCenter}
                                 people={people}

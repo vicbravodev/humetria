@@ -1,7 +1,8 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import DossierHeaderBlock from '@/components/telework/dossier-header';
 import DossierSection from '@/components/telework/dossier-section';
 import DossierToolbar from '@/components/telework/dossier-toolbar';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/telework';
 import type {
     DossierChecklist,
@@ -38,7 +39,7 @@ export default function Dossier({
     evidence: DossierEvidence;
     workCenterId: string;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037', href: index(tenantSlug) },
@@ -51,10 +52,7 @@ export default function Dossier({
         <>
             <Head title={`Expediente · ${header.workCenter}`} />
             <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 print:max-w-none print:p-0">
-                <DossierToolbar
-                    tenantSlug={tenantSlug}
-                    workCenterId={data.workCenterId}
-                />
+                <DossierToolbar workCenterId={data.workCenterId} />
                 <DossierHeaderBlock header={header} />
                 {rows.map((row) => (
                     <DossierSection key={row.numeral} row={row} data={data} />

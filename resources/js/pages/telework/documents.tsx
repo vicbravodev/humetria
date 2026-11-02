@@ -1,4 +1,4 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import { FileText } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
@@ -24,7 +24,6 @@ export default function Documents({
     kinds: DocumentKindOption[];
     canManage: boolean;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
     setLayoutProps({
         breadcrumbs: [{ title: 'NOM-037' }, { title: 'Documentos' }],
     });
@@ -37,10 +36,8 @@ export default function Documents({
                     title="Documentos de NOM-037"
                     description="La política y los demás documentos que pide la norma, en PDF y por centro de trabajo. Cada archivo nuevo es una versión nueva: nada se borra."
                 />
-                {canManage && (
-                    <DocumentUploadForm tenantSlug={tenantSlug} kinds={kinds} />
-                )}
-                <DocumentsToolbar tenantSlug={tenantSlug} filters={filters} />
+                {canManage && <DocumentUploadForm kinds={kinds} />}
+                <DocumentsToolbar filters={filters} />
                 {documents.total === 0 ? (
                     <EmptyState icon={FileText} title="Aún no hay documentos">
                         {canManage
@@ -52,7 +49,6 @@ export default function Documents({
                         {documents.data.map((row) => (
                             <DocumentRow
                                 key={row.id}
-                                tenantSlug={tenantSlug}
                                 row={row}
                                 kind={kinds.find((k) => k.value === row.kind)}
                             />

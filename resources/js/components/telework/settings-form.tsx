@@ -6,22 +6,22 @@ import ReviewPeriodField from '@/components/telework/review-period-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { update } from '@/routes/tenant/telework/settings';
 
 /** The two NOM-037 settings of the company, saved together (pantallas: Ajustes). */
 export default function SettingsForm({
-    tenantSlug,
     periodMonths,
     presets,
     maxMonths,
     consent,
 }: {
-    tenantSlug: string;
     periodMonths: number;
     presets: number[];
     maxMonths: number;
     consent: { version: number; text: string };
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...update.form(tenantSlug)}

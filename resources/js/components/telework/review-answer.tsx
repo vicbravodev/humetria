@@ -4,11 +4,9 @@ import type { ReviewAnswer as Answer } from '@/types';
 
 /** One answer: the question, what the person said, their risk note and the photos of that answer. */
 export default function ReviewAnswer({
-    tenantSlug,
     answer,
     flagged,
 }: {
-    tenantSlug: string;
     answer: Answer;
     flagged: boolean;
 }) {
@@ -34,7 +32,7 @@ export default function ReviewAnswer({
                     {answer.note}
                 </p>
             )}
-            <ReviewPhotos tenantSlug={tenantSlug} photos={answer.photos} />
+            <ReviewPhotos photos={answer.photos} />
         </li>
     );
 }

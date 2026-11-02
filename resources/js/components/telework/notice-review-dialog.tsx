@@ -12,18 +12,18 @@ import {
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { review } from '@/routes/tenant/telework/notices';
 
 /** Reviews a notice with a note. It is done once: the note stays as evidence. */
 export default function NoticeReviewDialog({
-    tenantSlug,
     noticeId,
     person,
 }: {
-    tenantSlug: string;
     noticeId: string;
     person: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const id = `review-note-${noticeId}`;
 

@@ -6,19 +6,19 @@ import InputError from '@/components/humetria/input-error';
 import MemberChoices from '@/components/telework/member-choices';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/committee';
 import type { CommitteePerson } from '@/types';
 
 /** Registers the Comisión of the center: its act date, the act's PDF and who sits on it (pantallas: Ajustes). */
 export default function RegisterCommitteeForm({
-    tenantSlug,
     workCenterId,
     candidates,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     candidates: CommitteePerson[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}

@@ -5,21 +5,21 @@ import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/checklist/questions';
 import type { RequirementOption } from '@/types';
 
 /** Adds a question of the Comisión at the end of a section. */
 export default function NewQuestionForm({
-    tenantSlug,
     workCenterId,
     section,
     requirements,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     section: number;
     requirements: RequirementOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}

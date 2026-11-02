@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import CampaignStatusBadge from '@/components/campaigns/campaign-status-badge';
 import ProgressBar from '@/components/humetria/progress-bar';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import {
     campaignMeta,
     progressCaption,
@@ -16,12 +17,11 @@ import type { CampaignSummary } from '@/types';
  * An open campaign (design system: CampaignCard): how far it is, what state it is in, and the one thing to do next.
  */
 export default function CampaignCard({
-    tenantSlug,
     campaign,
 }: {
-    tenantSlug: string;
     campaign: CampaignSummary;
 }) {
+    const tenantSlug = useTenantSlug();
     const { progress } = campaign;
 
     return (

@@ -8,6 +8,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { update } from '@/routes/tenant/members';
 import type { MemberRow, RoleOption } from '@/types';
 
@@ -16,14 +17,13 @@ import type { MemberRow, RoleOption } from '@/types';
  * busy, and takes no other choice.
  */
 export default function MemberRoleSelect({
-    tenantSlug,
     member,
     roles,
 }: {
-    tenantSlug: string;
     member: MemberRow;
     roles: RoleOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     const [saving, setSaving] = useState<string | null>(null);
 
     return (

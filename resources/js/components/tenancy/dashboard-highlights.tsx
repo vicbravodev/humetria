@@ -5,13 +5,11 @@ import type { ActiveEvaluation, NextStep } from '@/types';
 
 /** The top of the panel, side by side: the evaluation in course that closes soonest and what comes next. */
 export default function DashboardHighlights({
-    tenantSlug,
     active,
     steps,
     pending,
     canManage,
 }: {
-    tenantSlug: string;
     active: ActiveEvaluation | null;
     steps: NextStep[];
     pending: number;
@@ -26,16 +24,11 @@ export default function DashboardHighlights({
                 <DashboardQuietCard />
             ) : (
                 <DashboardActiveCard
-                    tenantSlug={tenantSlug}
                     evaluation={active}
                     canManage={canManage}
                 />
             )}
-            <DashboardNextSteps
-                tenantSlug={tenantSlug}
-                steps={steps}
-                pending={pending}
-            />
+            <DashboardNextSteps steps={steps} pending={pending} />
         </section>
     );
 }

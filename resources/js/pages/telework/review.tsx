@@ -1,10 +1,11 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
 import ReviewAnswersView from '@/components/telework/review-answers';
 import ReviewEvidence from '@/components/telework/review-evidence';
 import ReviewSide from '@/components/telework/review-side';
 import ReviewVisits from '@/components/telework/review-visits';
 import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { reviewFacts } from '@/lib/telework/review';
 import { index } from '@/routes/tenant/telework/reviews';
 import type { ReviewDetail } from '@/types';
@@ -16,7 +17,7 @@ export default function Review({
     workCenter: { id: string; name: string };
     review: ReviewDetail;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037' },
@@ -46,22 +47,17 @@ export default function Review({
                 <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
                     <div className="flex flex-col gap-6">
                         <ReviewAnswersView
-                            tenantSlug={tenantSlug}
                             answers={review.answers}
                             specialNeeds={review.application.specialNeeds}
                         />
-                        <ReviewEvidence
-                            tenantSlug={tenantSlug}
-                            evidence={review.evidence}
-                        />
+                        <ReviewEvidence evidence={review.evidence} />
                         <ReviewVisits
-                            tenantSlug={tenantSlug}
                             workplaceId={review.workplace.id}
                             authorizations={review.authorizations}
                             canAsk={review.workplace.status !== 'retired'}
                         />
                     </div>
-                    <ReviewSide tenantSlug={tenantSlug} review={review} />
+                    <ReviewSide review={review} />
                 </div>
             </div>
         </>

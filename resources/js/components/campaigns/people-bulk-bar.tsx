@@ -31,7 +31,6 @@ export default function PeopleBulkBar({
                 {peopleText(count)} en esta lista
             </span>
             <ResendFilteredDialog
-                tenantSlug={route[0]}
                 campaignId={route[1]}
                 filters={filters}
                 count={count}

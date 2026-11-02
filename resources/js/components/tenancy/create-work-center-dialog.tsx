@@ -3,6 +3,7 @@ import { useState } from 'react';
 import WorkCenterDialog from '@/components/tenancy/work-center-dialog';
 import { Button } from '@/components/ui/button';
 import { DialogTrigger } from '@/components/ui/dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/work-centers';
 import type { MexicanStateOption } from '@/types';
 
@@ -11,14 +12,13 @@ import type { MexicanStateOption } from '@/types';
  * Centros).
  */
 export default function CreateWorkCenterDialog({
-    tenantSlug,
     states,
     tile = false,
 }: {
-    tenantSlug: string;
     states: MexicanStateOption[];
     tile?: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

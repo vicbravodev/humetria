@@ -12,22 +12,22 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { update } from '@/routes/tenant/campaigns/report';
 import type { ReportForm } from '@/types';
 
 /** Where HR writes the parts of the report the platform cannot: objective, activities, conclusions and the rest. */
 export default function ReportDetailsDialog({
-    tenantSlug,
     campaignId,
     form,
     complete,
 }: {
-    tenantSlug: string;
     campaignId: string;
     form: ReportForm;
     /** Whether HR already filled it in: then it is edited, not completed. */
     complete: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

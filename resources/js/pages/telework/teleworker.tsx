@@ -1,10 +1,11 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import RegisterAspirantForm from '@/components/telework/register-aspirant-form';
 import TeleworkerDetail from '@/components/telework/teleworker-detail';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show } from '@/routes/tenant/telework/committee';
 import type { TeleworkerSummary } from '@/types';
 
@@ -19,7 +20,7 @@ export default function Teleworker({
     states: Record<string, string>;
     teleworker: TeleworkerSummary | null;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
 
     return (
         <>
@@ -35,14 +36,9 @@ export default function Teleworker({
                     }
                 />
                 {teleworker !== null ? (
-                    <TeleworkerDetail
-                        tenantSlug={tenantSlug}
-                        teleworker={teleworker}
-                        states={states}
-                    />
+                    <TeleworkerDetail teleworker={teleworker} states={states} />
                 ) : hasChecklist ? (
                     <RegisterAspirantForm
-                        tenantSlug={tenantSlug}
                         workCenterId={workCenter.id}
                         states={states}
                     />

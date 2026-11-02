@@ -1,6 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import Combobox from '@/components/humetria/combobox';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/telework/documents';
 import { options } from '@/routes/tenant/telework/work-centers';
@@ -15,12 +16,11 @@ const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 
 /** Narrows the documents to one work center, and switches between the latest versions and the whole history. */
 export default function DocumentsToolbar({
-    tenantSlug,
     filters,
 }: {
-    tenantSlug: string;
     filters: DocumentFilters;
 }) {
+    const tenantSlug = useTenantSlug();
     const query = (
         center: string | undefined,
         versions: DocumentFilters['versions'],

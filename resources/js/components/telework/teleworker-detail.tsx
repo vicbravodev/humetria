@@ -19,11 +19,9 @@ const STATUS: Record<TeleworkerSummary['status'], string> = {
 
 /** A person who will telework: their workplaces with where each checklist stands, and their portal link (pantalla: Eval-Cerrada). */
 export default function TeleworkerDetail({
-    tenantSlug,
     teleworker,
     states,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
     states: Record<string, string>;
 }) {
@@ -43,20 +41,15 @@ export default function TeleworkerDetail({
                 </li>
                 <li>{STATUS[teleworker.status]}</li>
             </ul>
-            <RosterPanel
-                tenantSlug={tenantSlug}
-                teleworker={teleworker}
-                states={states}
-            />
+            <RosterPanel teleworker={teleworker} states={states} />
             {!ended && (
                 <PortalLinkPanel
-                    tenantSlug={tenantSlug}
                     teleworkerId={teleworker.id}
                     hasEmail={teleworker.hasEmail}
                     newLink={newLink}
                 />
             )}
-            <EquipmentSection tenantSlug={tenantSlug} teleworker={teleworker} />
+            <EquipmentSection teleworker={teleworker} />
             <NoticesSection teleworker={teleworker} />
             <section className="grid gap-3" aria-labelledby="workplaces-title">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -65,7 +58,6 @@ export default function TeleworkerDetail({
                     </h2>
                     {!ended && (
                         <AddWorkplaceDialog
-                            tenantSlug={tenantSlug}
                             teleworkerId={teleworker.id}
                             states={states}
                         />
@@ -99,7 +91,6 @@ export default function TeleworkerDetail({
                             {!ended && workplace.status !== 'retired' && (
                                 <div className="ml-auto shrink-0">
                                     <RetireWorkplaceButton
-                                        tenantSlug={tenantSlug}
                                         workplaceId={workplace.id}
                                         address={workplace.address}
                                     />

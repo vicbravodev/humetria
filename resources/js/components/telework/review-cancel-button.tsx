@@ -1,16 +1,16 @@
 import { Form } from '@inertiajs/react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { cancel } from '@/routes/tenant/telework/visit-authorizations';
 
 /** Cancels a visit request nobody used; it is marked, not deleted. */
 export default function ReviewCancelButton({
-    tenantSlug,
     authorizationId,
 }: {
-    tenantSlug: string;
     authorizationId: string;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...cancel.form({

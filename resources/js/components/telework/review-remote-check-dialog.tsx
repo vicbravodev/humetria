@@ -9,16 +9,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/workplaces/remote-check';
 
 /** Records a remote check the Comisión did (a call, a video) and its decision; it closes the ones asked for. */
 export default function ReviewRemoteCheckDialog({
-    tenantSlug,
     workplaceId,
 }: {
-    tenantSlug: string;
     workplaceId: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

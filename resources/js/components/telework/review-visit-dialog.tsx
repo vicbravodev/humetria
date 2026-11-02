@@ -11,18 +11,18 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/workplaces/visit';
 
 /** Records an in-person visit under an authorization the person already gave, with the decision it led to. */
 export default function ReviewVisitDialog({
-    tenantSlug,
     workplaceId,
     authorizationId,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     authorizationId: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

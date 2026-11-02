@@ -1,4 +1,4 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import { HeartHandshake } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
@@ -6,6 +6,7 @@ import PageHeader from '@/components/humetria/page-header';
 import ConfidentialBanner from '@/components/results/confidential-banner';
 import ScreenedPerson from '@/components/results/screened-person';
 import ScreeningRule from '@/components/results/screening-rule';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { resultsTrail } from '@/lib/results';
 import type {
     Paginated,
@@ -22,7 +23,7 @@ export default function Screenings({
     counts: ScreeningCounts;
     people: Paginated<Person>;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: resultsTrail(tenantSlug, campaign, 'Canalización'),
     });

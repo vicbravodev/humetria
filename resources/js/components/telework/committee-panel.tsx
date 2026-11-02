@@ -4,6 +4,7 @@ import Notice from '@/components/humetria/notice';
 import AssignMemberForm from '@/components/telework/assign-member-form';
 import CommitteeMembersTable from '@/components/telework/committee-members-table';
 import RegisterCommitteeForm from '@/components/telework/register-committee-form';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { act } from '@/routes/tenant/telework/committee';
 import type { Committee, CommitteePerson } from '@/types';
 
@@ -12,23 +13,21 @@ import type { Committee, CommitteePerson } from '@/types';
  * with its people (pantallas: Usuarios, Ajustes).
  */
 export default function CommitteePanel({
-    tenantSlug,
     workCenterId,
     committee,
     candidates,
     canManage,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     committee: Committee | null;
     candidates: CommitteePerson[];
     canManage: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     if (committee === null) {
         return canManage ? (
             <div className="rounded-xl border bg-card p-6">
                 <RegisterCommitteeForm
-                    tenantSlug={tenantSlug}
                     workCenterId={workCenterId}
                     candidates={candidates}
                 />
@@ -57,7 +56,6 @@ export default function CommitteePanel({
                 </EmptyState>
             ) : (
                 <CommitteeMembersTable
-                    tenantSlug={tenantSlug}
                     workCenterId={workCenterId}
                     members={committee.members}
                     canManage={canManage}
@@ -66,7 +64,6 @@ export default function CommitteePanel({
             {canManage && (
                 <div className="rounded-xl border bg-card p-5">
                     <AssignMemberForm
-                        tenantSlug={tenantSlug}
                         workCenterId={workCenterId}
                         candidates={candidates}
                     />

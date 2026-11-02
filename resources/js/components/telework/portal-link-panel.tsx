@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useClipboard } from '@/hooks/use-clipboard';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { link } from '@/routes/tenant/telework/teleworkers';
 
 /**
@@ -13,16 +14,15 @@ import { link } from '@/routes/tenant/telework/teleworkers';
  * hand over in person. A new link replaces the old one, and it is shown only once: only its hash is kept.
  */
 export default function PortalLinkPanel({
-    tenantSlug,
     teleworkerId,
     hasEmail,
     newLink,
 }: {
-    tenantSlug: string;
     teleworkerId: string;
     hasEmail: boolean;
     newLink: string | undefined;
 }) {
+    const tenantSlug = useTenantSlug();
     const [copied, copy] = useClipboard();
 
     return (

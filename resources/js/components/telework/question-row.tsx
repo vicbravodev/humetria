@@ -9,14 +9,12 @@ import type { ChecklistQuestion } from '@/types';
 
 /** One question of the checklist: what it asks, where it comes from and, in a draft, how to change it. */
 export default function QuestionRow({
-    tenantSlug,
     workCenterId,
     question,
     requirementLabel,
     canEdit,
     onEdit,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     question: ChecklistQuestion;
     requirementLabel: string | undefined;
@@ -34,7 +32,6 @@ export default function QuestionRow({
                 </p>
                 {canEdit && (
                     <QuestionActions
-                        tenantSlug={tenantSlug}
                         workCenterId={workCenterId}
                         question={question}
                         onEdit={onEdit}

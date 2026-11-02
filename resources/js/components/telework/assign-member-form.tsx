@@ -11,19 +11,19 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/committee/members';
 import type { CommitteePerson } from '@/types';
 
 /** Seats one more person of the company on the Comisión. */
 export default function AssignMemberForm({
-    tenantSlug,
     workCenterId,
     candidates,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     candidates: CommitteePerson[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}

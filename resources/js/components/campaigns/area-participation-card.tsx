@@ -39,7 +39,6 @@ export default function AreaParticipationCard({
                 </p>
                 {lagging !== null && (
                     <ResendFilteredDialog
-                        tenantSlug={route[0]}
                         campaignId={route[1]}
                         filters={{
                             status: 'pending',

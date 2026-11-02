@@ -1,17 +1,17 @@
 import { Link } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import DashboardCycleRow from '@/components/tenancy/dashboard-cycle-row';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import type { CycleRow, Paginated } from '@/types';
 
 /** "Ciclo de cumplimiento" (pantalla Panel): each work center in use and how far it is in its two years (num. 7.9). */
 export default function DashboardCycle({
-    tenantSlug,
     cycle,
 }: {
-    tenantSlug: string;
     cycle: Paginated<CycleRow>;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <section
             aria-labelledby="cycle"

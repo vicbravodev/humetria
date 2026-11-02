@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Check } from 'lucide-react';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index as workCentersIndex } from '@/routes/tenant/work-centers';
 
 /** The template's columns, as the file names them. */
@@ -16,14 +17,13 @@ const COLUMNS = [
 
 /** How to fill the CSV: its columns and the rules of each, with the work centers it can name. */
 export default function ImportInstructions({
-    tenantSlug,
     maxRows,
     hasWorkCenters,
 }: {
-    tenantSlug: string;
     maxRows: number;
     hasWorkCenters: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <aside className="grid gap-4 rounded-xl border bg-card px-5 py-[18px]">
             <h2 className="text-sm leading-5 font-semibold">Cómo llenarlo</h2>

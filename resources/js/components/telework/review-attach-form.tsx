@@ -2,16 +2,16 @@ import { Form } from '@inertiajs/react';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/visit-authorizations/document';
 
 /** Attaches the paper authorization the person signed (PDF), when they did not confirm it in their portal. */
 export default function ReviewAttachForm({
-    tenantSlug,
     authorizationId,
 }: {
-    tenantSlug: string;
     authorizationId: string;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({

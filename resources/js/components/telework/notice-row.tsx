@@ -7,13 +7,7 @@ import { describeDate } from '@/lib/calendar-date';
 import type { NoticeRow as Row } from '@/types';
 
 /** One written notice: who wrote it, what it says, whether it was reviewed and what can be done next. */
-export default function NoticeRow({
-    tenantSlug,
-    row,
-}: {
-    tenantSlug: string;
-    row: Row;
-}) {
+export default function NoticeRow({ row }: { row: Row }) {
     const reviewed = row.reviewedOn !== null;
 
     return (
@@ -44,7 +38,7 @@ export default function NoticeRow({
                     {row.reviewNote}
                 </p>
             )}
-            <NoticeActions tenantSlug={tenantSlug} row={row} />
+            <NoticeActions row={row} />
         </li>
     );
 }

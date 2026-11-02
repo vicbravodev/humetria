@@ -22,7 +22,6 @@ export default function Members({
 }) {
     // Always set here: this page only exists inside a company.
     const { tenant } = usePage().props;
-    const tenantSlug = tenant?.slug ?? '';
     const tradeName = tenant?.trade_name ?? '';
 
     return (
@@ -33,15 +32,10 @@ export default function Members({
                     title="Usuarios"
                     description={`Quién entra a Humetría por ${tradeName} y qué puede hacer.`}
                 >
-                    <InviteMemberDialog
-                        tenantSlug={tenantSlug}
-                        tradeName={tradeName}
-                        roles={roles}
-                    />
+                    <InviteMemberDialog tradeName={tradeName} roles={roles} />
                 </PageHeader>
                 <div className="flex flex-col gap-3">
                     <MembersTable
-                        tenantSlug={tenantSlug}
                         members={members.data}
                         invitations={invitations.data}
                         roles={roles}

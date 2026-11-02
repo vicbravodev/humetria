@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { instrumentsText } from '@/lib/campaigns';
 import DashboardKpi from '@/components/tenancy/dashboard-kpi';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { closingKpi, missingKpi } from '@/lib/dashboard';
 import { resend, show } from '@/routes/tenant/campaigns';
 import type { ActiveEvaluation } from '@/types';
@@ -15,14 +16,13 @@ import type { ActiveEvaluation } from '@/types';
  * missing, the days left, and the way to follow it up or remind whoever is missing.
  */
 export default function DashboardActiveCard({
-    tenantSlug,
     evaluation,
     canManage,
 }: {
-    tenantSlug: string;
     evaluation: ActiveEvaluation;
     canManage: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     const answered = `${evaluation.completed} de ${evaluation.target} contestaron`;
 
     return (

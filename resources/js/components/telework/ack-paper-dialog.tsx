@@ -12,19 +12,18 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/documents/acknowledgements';
 import type { AckAllMatching } from '@/types';
 
 /** Records, for the people ticked in the list, the confirmations they signed on paper: the day and a note about the sheet. */
 export default function AckPaperDialog({
-    tenantSlug,
     documentId,
     chosen,
     all,
     days,
     onDone,
 }: {
-    tenantSlug: string;
     documentId: string;
     chosen: string[];
     /** Everyone pending the search found: sent as a request, never as ids, so there is no cap. */
@@ -33,6 +32,7 @@ export default function AckPaperDialog({
     days: { first: string; today: string };
     onDone: () => void;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const count = all?.count ?? chosen.length;
 

@@ -1,4 +1,4 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
 import TrainingCoverage from '@/components/telework/training-coverage';
 import TrainingDialog from '@/components/telework/training-dialog';
@@ -30,7 +30,6 @@ export default function Trainings({
     topics: TrainingChoice[];
     modalities: TrainingChoice[];
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
     setLayoutProps({
         breadcrumbs: [{ title: 'NOM-037' }, { title: 'Capacitación' }],
     });
@@ -44,17 +43,16 @@ export default function Trainings({
                     description="Cada persona del padrón se capacita al menos una vez al año, con los temas del numeral 8.1. Aquí registras lo que se impartió; Humetría no imparte la capacitación."
                 >
                     <TrainingDialog
-                        tenantSlug={tenantSlug}
                         filters={filters}
                         today={today}
                         topics={topics}
                         modalities={modalities}
                     />
                 </PageHeader>
-                <TrainingToolbar tenantSlug={tenantSlug} filters={filters} />
+                <TrainingToolbar filters={filters} />
                 <TrainingCoverage uncovered={uncovered} />
                 <TrainingPeople people={people} />
-                <TrainingList tenantSlug={tenantSlug} trainings={trainings} />
+                <TrainingList trainings={trainings} />
             </div>
         </>
     );

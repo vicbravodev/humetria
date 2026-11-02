@@ -1,19 +1,19 @@
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { destroy } from '@/routes/tenant/members';
 import type { MemberRow } from '@/types';
 
 /** Asks for confirmation before taking away someone's access. Their account stays. */
 export default function RemoveMemberDialog({
-    tenantSlug,
     member,
     open,
     onOpenChange,
 }: {
-    tenantSlug: string;
     member: MemberRow;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <ConfirmDialog
             open={open}

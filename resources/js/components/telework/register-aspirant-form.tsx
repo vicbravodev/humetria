@@ -6,19 +6,19 @@ import AspirantPersonFields from '@/components/telework/aspirant-person-fields';
 import WorkplaceFields from '@/components/telework/workplace-fields';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show } from '@/routes/tenant/telework/committee';
 import { store } from '@/routes/tenant/telework/teleworkers';
 
 /** Registers an active person of the center: who, how much of the time they telework, and where (pantalla: Empleados-Alta). */
 export default function RegisterAspirantForm({
-    tenantSlug,
     workCenterId,
     states,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     states: Record<string, string>;
 }) {
+    const tenantSlug = useTenantSlug();
     const [places, setPlaces] = useState(1);
     const route = { tenant: tenantSlug, workCenter: workCenterId };
 

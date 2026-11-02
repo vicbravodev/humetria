@@ -5,13 +5,7 @@ import { evidenceKindLabel } from '@/lib/telework/review';
 import type { ReviewEvidence as Evidence } from '@/types';
 
 /** What the Comisión asked for about this place, whether it arrived, and the photos that did. */
-export default function ReviewEvidence({
-    tenantSlug,
-    evidence,
-}: {
-    tenantSlug: string;
-    evidence: Evidence[];
-}) {
+export default function ReviewEvidence({ evidence }: { evidence: Evidence[] }) {
     if (evidence.length === 0) {
         return null;
     }
@@ -41,11 +35,7 @@ export default function ReviewEvidence({
                             </Badge>
                         </div>
                         <p className="text-meta">{request.note}</p>
-                        <ReviewPhotos
-                            tenantSlug={tenantSlug}
-                            photos={request.photos}
-                            evidence
-                        />
+                        <ReviewPhotos photos={request.photos} evidence />
                     </li>
                 ))}
             </ul>

@@ -1,16 +1,16 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { center } from '@/routes/tenant/telework';
 
 /** What the dossier does on screen and hides on paper: go back to the center and print or save as PDF. */
 export default function DossierToolbar({
-    tenantSlug,
     workCenterId,
 }: {
-    tenantSlug: string;
     workCenterId: string;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
             <Link

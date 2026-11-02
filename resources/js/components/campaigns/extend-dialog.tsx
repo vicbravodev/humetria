@@ -14,20 +14,20 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { extend } from '@/routes/tenant/campaigns';
 
 /** Gives people more days to answer; the last day only moves later. */
 export default function ExtendDialog({
-    tenantSlug,
     campaignId,
     closesOn,
     min,
 }: {
-    tenantSlug: string;
     campaignId: string;
     closesOn: string | null;
     min: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

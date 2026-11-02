@@ -1,5 +1,6 @@
 import CountTabs from '@/components/humetria/count-tabs';
 import ProgressBar from '@/components/humetria/progress-bar';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { ackQuery, progressText } from '@/lib/telework/acknowledgements';
 import { index } from '@/routes/tenant/telework/documents/acknowledgements';
 import type { AckFilters, AckProgress } from '@/types';
@@ -12,18 +13,17 @@ const VIEWS = [
 
 /** How far the confirmations are (written next to the bar) and the views that split the people by state. */
 export default function AckSummary({
-    tenantSlug,
     documentId,
     progress,
     counts,
     filters,
 }: {
-    tenantSlug: string;
     documentId: string;
     progress: AckProgress;
     counts: Record<AckFilters['status'], number>;
     filters: AckFilters;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <section
             aria-label="Avance de las confirmaciones"

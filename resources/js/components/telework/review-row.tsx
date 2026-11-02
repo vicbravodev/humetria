@@ -1,18 +1,14 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import Initials from '@/components/humetria/initials';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
 import { show } from '@/routes/tenant/telework/reviews';
 import type { ReviewRow as Row } from '@/types';
 
 /** One checklist waiting for the Comisión: who sent it, for which place, and since when (pantalla: Canalizacion). */
-export default function ReviewRow({
-    tenantSlug,
-    row,
-}: {
-    tenantSlug: string;
-    row: Row;
-}) {
+export default function ReviewRow({ row }: { row: Row }) {
+    const tenantSlug = useTenantSlug();
     const sent =
         row.submittedOn === null ? undefined : describeDate(row.submittedOn);
 

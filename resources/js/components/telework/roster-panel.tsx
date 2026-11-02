@@ -9,11 +9,9 @@ import type { TeleworkerSummary } from '@/types';
 
 /** Where the person stands in the roster: the way in (an aspirant), the way out (in the roster) or how it ended (pantalla: Eval-Cerrada). */
 export default function RosterPanel({
-    tenantSlug,
     teleworker,
     states,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
     states: Record<string, string>;
 }) {
@@ -48,16 +46,9 @@ export default function RosterPanel({
             </div>
             <div className="flex flex-wrap gap-2">
                 {aspirant && (
-                    <JoinRosterDialog
-                        tenantSlug={tenantSlug}
-                        teleworker={teleworker}
-                        states={states}
-                    />
+                    <JoinRosterDialog teleworker={teleworker} states={states} />
                 )}
-                <EndTeleworkDialog
-                    tenantSlug={tenantSlug}
-                    teleworker={teleworker}
-                />
+                <EndTeleworkDialog teleworker={teleworker} />
             </div>
         </section>
     );

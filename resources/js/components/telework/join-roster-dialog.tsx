@@ -12,19 +12,19 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { join } from '@/routes/tenant/telework/teleworkers';
 import type { TeleworkerSummary } from '@/types';
 
 /** Moves an aspirant into the roster with the data of numeral 5.1; it needs a workplace validated and in force. */
 export default function JoinRosterDialog({
-    tenantSlug,
     teleworker,
     states,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
     states: Record<string, string>;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

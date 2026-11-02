@@ -90,7 +90,6 @@ export default function CampaignPeopleSection({
                 </Notice>
             )}
             <PeopleToolbar
-                tenantSlug={route[0]}
                 url={show.url(route)}
                 filters={filters}
                 instruments={instruments}

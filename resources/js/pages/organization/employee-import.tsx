@@ -5,6 +5,7 @@ import ImportInstructions from '@/components/organization/import-instructions';
 import ImportSteps from '@/components/organization/import-steps';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { importStep } from '@/lib/employees';
 import { index as employees } from '@/routes/tenant/employees';
 import { template } from '@/routes/tenant/employees/import';
@@ -18,7 +19,7 @@ export default function EmployeeImport({
 }) {
     const page = usePage();
     // Always set here: this page only exists inside a company.
-    const tenantSlug = page.props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
 
     setLayoutProps({
         breadcrumbs: [
@@ -43,10 +44,8 @@ export default function EmployeeImport({
                     <ImportSteps step={importStep(page.flash.import)} />
                 </div>
                 <ImportForm
-                    tenantSlug={tenantSlug}
                     aside={
                         <ImportInstructions
-                            tenantSlug={tenantSlug}
                             maxRows={maxRows}
                             hasWorkCenters={hasWorkCenters}
                         />

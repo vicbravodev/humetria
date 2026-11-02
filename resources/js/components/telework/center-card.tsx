@@ -1,6 +1,7 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import ArcMeter from '@/components/humetria/arc-meter';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import {
     headcountText,
     pendingText,
@@ -11,7 +12,7 @@ import type { CenterCard as Card } from '@/types';
 
 /** A work center on the NOM-037 list (pantalla NOM035): its people, how many rows of table 10.3 it meets and what waits. */
 export default function CenterCard({ card }: { card: Card }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const progress = progressText(card);
 
     return (

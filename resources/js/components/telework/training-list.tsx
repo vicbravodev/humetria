@@ -6,10 +6,8 @@ import type { Paginated, TrainingRow as Row } from '@/types';
 
 /** The trainings registered, the newest first. */
 export default function TrainingList({
-    tenantSlug,
     trainings,
 }: {
-    tenantSlug: string;
     trainings: Paginated<Row>;
 }) {
     return (
@@ -28,11 +26,7 @@ export default function TrainingList({
             ) : (
                 <ol aria-label="Capacitaciones" className="flex flex-col gap-3">
                     {trainings.data.map((row) => (
-                        <TrainingRow
-                            key={row.id}
-                            tenantSlug={tenantSlug}
-                            row={row}
-                        />
+                        <TrainingRow key={row.id} row={row} />
                     ))}
                 </ol>
             )}

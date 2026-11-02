@@ -1,16 +1,16 @@
 import { Trash2 } from 'lucide-react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { destroy } from '@/routes/tenant/campaigns';
 
 /** Throws a draft away, after saying nobody was invited yet. */
 export default function DeleteDraftDialog({
-    tenantSlug,
     campaignId,
 }: {
-    tenantSlug: string;
     campaignId: string;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <ConfirmDialog
             trigger={
