@@ -8,11 +8,13 @@ use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
+use App\Modules\Telework\Contracts\Committee;
 use App\Modules\Telework\Events\DocumentPublished;
 use App\Modules\Telework\Listeners\EndOnDeactivation;
 use App\Modules\Telework\Listeners\EndOnMove;
 use App\Modules\Telework\Listeners\RequestOnPublication;
 use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
+use App\Modules\Telework\Support\CommitteeGate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -25,6 +27,11 @@ use Illuminate\Support\ServiceProvider;
  */
 final class TeleworkServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(Committee::class, CommitteeGate::class);
+    }
+
     public function boot(): void
     {
         // As the survey: per link, so a room on one Wi-Fi can use theirs at once, and a generous cap per address against

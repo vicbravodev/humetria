@@ -18,6 +18,9 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     view_trauma_screenings: manage_organization,
     manage_telework: manage_organization,
     review_workplaces: manage_organization,
+    view_seating: true,
+    manage_seating: manage_organization,
+    assess_seating: manage_organization,
 });
 const acme = (
     manageOrganization = true,

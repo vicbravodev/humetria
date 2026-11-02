@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The Comisión de seguridad e higiene sees nothing of the company outside NOM-037 (criterio C-25): inside a company's
- * routes, its members get 403 anywhere but tenant.telework.*. The account pages (settings.*, logout) and the company
+ * The Comisión de seguridad e higiene sees nothing of the company outside NOM-037 and Ley Silla (criterio C-25): inside a
+ * company's routes, its members get 403 anywhere but tenant.telework.* and tenant.seating.*. The account pages (settings.*, logout) and the company
  * switcher live outside that group, so they stay open. Runs after ResolveTenant, which has set the company as the
  * team of Spatie's roles.
  */
@@ -22,7 +22,7 @@ final class LimitCommitteeToTelework
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()?->hasRole(TenantRole::Committee->value) !== true || $request->routeIs('tenant.telework.*')) {
+        if ($request->user()?->hasRole(TenantRole::Committee->value) !== true || $request->routeIs('tenant.telework.*', 'tenant.seating.*')) {
             return $next($request);
         }
 

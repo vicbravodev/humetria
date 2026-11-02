@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support;
 
+use App\Modules\Telework\Contracts\Committee;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\MemberSummary;
@@ -13,7 +14,7 @@ use App\Modules\Tenancy\Data\MemberSummary;
  * and a committee user seeing a center at all, need it. A seat counts only while the person still holds a reviewing
  * role in the company: a demoted or removed member keeps the assignment row (so RH can see and end it) but not the access.
  */
-final readonly class CommitteeGate
+final readonly class CommitteeGate implements Committee
 {
     public function __construct(private Members $members) {}
 
