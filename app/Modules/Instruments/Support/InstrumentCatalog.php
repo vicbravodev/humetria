@@ -11,6 +11,7 @@ use App\Modules\Instruments\Data\TraumaOutcome;
 use App\Modules\Instruments\Support\Nom035\GuideOne;
 use App\Modules\Instruments\Support\Nom035\GuideThree;
 use App\Modules\Instruments\Support\Nom035\GuideTwo;
+use App\Modules\Instruments\Support\Seating\SeatingSurvey;
 use InvalidArgumentException;
 
 final readonly class InstrumentCatalog implements Instruments
@@ -23,6 +24,7 @@ final readonly class InstrumentCatalog implements Instruments
             GuideOne::KEY => GuideOne::definition(),
             GuideTwo::KEY => GuideTwo::definition(),
             GuideThree::KEY => GuideThree::definition(),
+            SeatingSurvey::KEY => SeatingSurvey::definition(),
             default => throw new InvalidArgumentException("Unknown instrument [{$key}]."),
         };
     }

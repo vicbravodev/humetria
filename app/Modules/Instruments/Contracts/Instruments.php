@@ -10,7 +10,7 @@ use App\Modules\Instruments\Data\TraumaOutcome;
 use InvalidArgumentException;
 
 /**
- * The questionnaires the platform applies, by key (nom035.guide-i, nom035.guide-ii, nom035.guide-iii).
+ * The questionnaires the platform applies, by key (nom035.guide-i, nom035.guide-ii, nom035.guide-iii, seating.survey).
  */
 interface Instruments
 {

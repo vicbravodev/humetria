@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -427,4 +428,16 @@ function individualAnswersIn(array $value, string $path = 'props'): array
     }
 
     return $found;
+}
+
+/** @return array<string, string> a complete survey: stands, and every item with the same answer. */
+function surveyAnswers(string $answer = 'yes'): array
+{
+    $answers = ['stands' => 'yes'];
+
+    foreach (resolve(Instruments::class)->definition('seating.survey')->itemNumbers() as $number) {
+        $answers[(string) $number] = $answer;
+    }
+
+    return $answers;
 }
