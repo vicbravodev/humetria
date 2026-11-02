@@ -1,0 +1,189 @@
+Ley Federal del Trabajo, texto vigente (Cámara de Diputados, última reforma DOF 14-05-2026), extraído el 2026-11-02 de
+https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf (SHA-256 del PDF: 12f09393a1951a91c3f57f579bf611b034edf1a5f78cdbfb828e23ff3a9acbf7).
+Solo los artículos de Ley Silla y los de sus sanciones. Extracción automática con PDFKit, por tramos: donde se salta texto aparece una línea en blanco y pueden quedar encabezados de página.
+
+=== Art. 132, primer párrafo y fracción V ===
+Artículo 132.- Son obligaciones de las personas empleadoras:
+Párrafo reformado DOF 19-12-2024
+cualquier otro. El registro de instrumentos o útiles de trabajo deberá hacerse siempre que el
+trabajador lo solicite;
+V.- Proveer el número suficiente de asientos o sillas con respaldo a disposición de todas las
+personas trabajadoras en los sectores de servicios, comercio y centros de trabajo análogos,
+para la ejecución de sus funciones o para el descanso periódico durante la jornada laboral.
+En el caso de descansos periódicos, los asientos o sillas con respaldo deberán estar
+ubicados en áreas específicas que para tal efecto se designen en las mismas instalaciones
+del lugar de trabajo. La misma disposición se observará en los establecimientos industriales
+cuando lo permita la naturaleza del trabajo;
+
+=== Art. 133, primer párrafo y fracción XVII Bis ===
+Artículo 133.- Queda prohibido a las personas empleadoras o a sus representantes:
+Párrafo reformado DOF 30-11-2012, 19-12-2024
+Fracción adicionada DOF 30-11-2012. Reformada DOF 22-06-2018
+XVI. Dar de baja o terminar la relación laboral de un trabajador que tenga la calidad de persona
+desaparecida y cuente con Declaración Especial de Ausencia, en los términos de lo establecido
+en la legislación especial en la materia.
+Fracción adicionada DOF 22-06-2018
+XVII.- Realizar cualquier acto tendiente a ejercer control sobre el sindicato al que pertenezcan sus
+trabajadores;
+Fracción adicionada DOF 01-05-2019. Reformada DOF 19-12-2024
+XVII Bis.- Obligar a las personas trabajadoras a permanecer de pie durante la totalidad de la jornada
+laboral y prohibirles tomar asiento periódicamente durante el desarrollo de sus funciones, y
+Fracción adicionada DOF 19-12-2024
+XVIII. Las demás que establezca esta Ley.
+Fracción adicionada DOF 01-05-2019
+
+=== Art. 172 (asientos para madres trabajadoras; no reformado) ===
+Artículo adicionado DOF 04-06-2019
+Artículo 171.- Los servicios de guardería infantil se prestarán por el Instituto Mexicano del Seguro
+Social, de conformidad con su Ley y disposiciones reglamentarias.
+Artículo 172.- En los establecimientos en que trabajen mujeres, el patrón debe mantener un número
+suficiente de asientos o sillas a disposición de las madres trabajadoras.
+=== Arts. 422 y 423 (fracciones I, V, VIII) ===
+Artículo 422.- Reglamento interior de trabajo es el conjunto de disposiciones obligatorias para
+personas trabajadoras y empleadoras en el desarrollo de los trabajos en una empresa o establecimiento.
+Párrafo reformado DOF 19-12-2024
+No son materia del reglamento las normas de orden técnico y administrativo que formulen
+directamente las empresas para la ejecución de los trabajos.
+Artículo 423.- El reglamento contendrá:
+I.- Horas de entrada y salida de las personas trabajadoras, tiempo destinado para las comidas y
+períodos obligatorios de reposo durante la jornada;
+Fracción reformada DOF 19-12-2024
+II. Lugar y momento en que deben comenzar y terminar las jornadas de trabajo;
+III. Días y horas fijados para hacer la limpieza de los establecimientos, maquinaria, aparatos y
+útiles de trabajo;
+IV. Días y lugares de pago;
+V.- Normas que regulen el derecho de las personas trabajadoras para usar los asientos o sillas con
+respaldo durante la jornada laboral, de conformidad con lo previsto por el artículo 132, fracción
+V;
+Fracción reformada DOF 19-12-2024
+VI. Normas para prevenir los riesgos de trabajo e instrucciones para prestar los primeros auxilios;
+VII. Labores insalubres y peligrosas que no deben desempeñar los menores y la protección que
+deben tener las trabajadoras embarazadas;
+Fracción reformada DOF 31-12-1974
+VIII.- Tiempo y forma en que las personas trabajadoras deben someterse a los exámenes médicos,
+previos o periódicos, y a las medidas profilácticas que dicten las autoridades;
+=== Art. 992 ===
+Artículo 992.- Las violaciones a las normas de trabajo cometidas por los patrones, directivos
+sindicales o por los trabajadores, se sancionarán de conformidad con las disposiciones de este Título,
+independientemente de la responsabilidad que les corresponda por el incumplimiento de sus
+obligaciones, sin perjuicio de las sanciones previstas en otros ordenamientos legales y de las
+consecuencias jurídicas que procedan en materia de bienes y servicios concesionados.
+Párrafo reformado DOF 01-05-2019
+La cuantificación de las sanciones pecuniarias que en el presente Título se establecen, se hará
+tomando como base de cálculo la Unidad de Medida y Actualización, al momento de cometerse la
+violación.
+Párrafo reformado DOF 01-05-2019
+Para la imposición de las sanciones, se tomará en cuenta lo siguiente:
+I. El carácter intencional o no de la acción u omisión constitutiva de la infracción;
+II. La gravedad de la infracción;
+III. Los daños que se hubieren producido o puedan producirse;
+LEY FEDERAL DEL TRABAJO
+CÁMARA DE DIPUTADOS DEL H. CONGRESO DE LA UNIÓN
+Secretaría General
+Secretaría de Servicios Parlamentarios
+Última Reforma DOF 14-05-2026
+396 de 457
+IV. La capacidad económica del infractor; y
+V. La reincidencia del infractor.
+En todos los casos de reincidencia se duplicará la multa impuesta por la infracción anterior.
+Se entiende por reincidencia, para los efectos de esta Ley y demás disposiciones derivadas de ella,
+cada una de las subsecuentes infracciones a un mismo precepto, cometidas dentro de los dos años
+siguientes a la fecha del acta en que se hizo constar la infracción precedente, siempre que ésta no
+hubiese sido desvirtuada.
+Cuando en un solo acto u omisión se afecten a varios trabajadores, se impondrá sanción por cada uno
+de los trabajadores afectados. Si con un solo acto u omisión se incurre en diversas infracciones, se
+aplicarán las sanciones que correspondan a cada una de ellas, de manera independiente.
+Cuando la multa se aplique a un trabajador, ésta no podrá exceder al importe señalado en el artículo
+21 Constitucional.
+Artículo adicionado DOF 04-01-1980. Reformado DOF 30-11-2012
+=== Art. 994 ===
+Artículo 994. Se impondrá multa, por el equivalente a:
+I. De 50 a 250 Unidades de Medida y Actualización, al patrón que no cumpla las disposiciones
+contenidas en los artículos 61, 69, 76 y 77;
+Fracción reformada DOF 01-05-2019
+II. De 250 a 5000 Unidades de Medida y Actualización, al patrón que no cumpla las obligaciones
+que le impone el capítulo VIII del Título Tercero, relativo a la Participación de los Trabajadores
+en las Utilidades de las Empresas;
+Fracción reformada DOF 01-05-2019
+III. De 50 a 1500 Unidades de Medida y Actualización al patrón que no cumpla las obligaciones
+señaladas en el artículo 132, fracciones IV, VII, VIII, IX, X, XII, XIV, XXII y XXVI Bis;
+Fracción reformada DOF 01-05-2019, 04-04-2024
+IV. De 250 a 5000 Unidades de Medida y Actualización, al patrón que no cumpla con lo dispuesto
+por la fracción XV del artículo 132;
+Fracción reformada DOF 01-05-2019
+IV Bis. De 250 a 5000 Unidades de Medida y Actualización, a la persona empleadora obligada que
+incumpla con lo dispuesto por la fracción XXXIV del artículo 132 de esta Ley.
+Fracción adicionada DOF 01-05-2026
+V. De 250 a 5000 Unidades de Medida y Actualización, al patrón que no observe en la instalación
+de sus establecimientos las normas de seguridad e higiene o las medidas que fijen las Leyes
+para prevenir los riesgos de trabajo;
+Fracción reformada DOF 01-05-2019
+VI. De 250 a 5000 Unidades de Medida y Actualización, al patrón que cometa cualquier acto o
+conducta discriminatoria en el centro de trabajo; al que realice actos de hostigamiento sexual o
+LEY FEDERAL DEL TRABAJO
+CÁMARA DE DIPUTADOS DEL H. CONGRESO DE LA UNIÓN
+Secretaría General
+Secretaría de Servicios Parlamentarios
+Última Reforma DOF 14-05-2026
+397 de 457
+que tolere o permita actos de acoso u hostigamiento sexual en contra de sus trabajadores, así
+como al que viole las prohibiciones establecidas en las fracciones IV y V del artículo 133 de la
+Ley, o lo dispuesto en el artículo 357, segundo y tercer párrafo de ésta;
+Fracción reformada DOF 01-05-2019
+VII. De 250 a 2500 Unidades de Medida y Actualización, al patrón que viole las prohibiciones
+contenidas en el artículo 133, fracciones II, VI y VII de esta Ley. Asimismo, por incumplir con los
+requerimientos que le haga la Autoridad Registral y la Autoridad Conciliadora, y
+Fracción reformada DOF 01-05-2019
+VIII.- De 50 a 100 Unidades de Medida y Actualización, al patrón que no comparezca a la audiencia
+de conciliación, en términos del artículo 684 E fracción IV de esta Ley.
+Fracción adicionada DOF 01-05-2019
+Artículo adicionado DOF 04-01-1980. Reformado DOF 30-11-2012
+Artículo 995.- Al patrón que viole las prohibiciones contenidas en el artículo 133 fracciones XIV y XV,
+y las normas que rigen el trabajo de las mujeres y de los menores, se le impondrá una multa equivalente
+de 50 a 2500 veces la Unidad de Medida y Actualización.
+Artículo adicionado DOF 04-01-1980. Reformado DOF 30-11-2012, 01-05-2019
+Artículo 995 Bis.- Al patrón que infrinja lo dispuesto en el artículo 23, primer párrafo de esta Ley, se le
+=== Art. 1002 ===
+Artículo 1002.- Por violaciones a las normas de trabajo no sancionadas en este Título o en alguna
+otra disposición de esta Ley, se impondrá al infractor multa por el equivalente de 50 a 5000 veces la
+Unidad de Medida y Actualización.
+Artículo adicionado DOF 04-01-1980. Reformado DOF 30-11-2012, 01-05-2019
+
+=== Arts. 424, 424 Bis y 425 (formación, depósito y efectos del reglamento interior) ===
+Artículo 424.- En la formación del reglamento se observarán las normas siguientes:
+LEY FEDERAL DEL TRABAJO
+CÁMARA DE DIPUTADOS DEL H. CONGRESO DE LA UNIÓN
+Secretaría General
+Secretaría de Servicios Parlamentarios
+Última Reforma DOF 14-05-2026
+134 de 457
+I. Se formulará por una comisión mixta de representantes de los trabajadores y del patrón;
+II. Si las partes se ponen de acuerdo, cualquiera de ellas, dentro de los ocho días siguientes a su
+firma, lo depositará ante el Centro Federal de Conciliación y Registro Laboral;
+Fracción reformada DOF 01-05-2019
+III. No producirán ningún efecto legal las disposiciones contrarias a esta Ley, a sus reglamentos, y
+a los contratos colectivos y contratos-ley; y
+IV. Los trabajadores o el patrón, en cualquier tiempo, podrán solicitar de los Tribunales federales se
+subsanen las omisiones del reglamento o se revisen sus disposiciones contrarias a esta Ley y
+demás normas de trabajo, de conformidad con las disposiciones contenidas en el procedimiento
+especial colectivo establecido en el artículo 897 y subsecuentes de esta Ley.
+Fracción reformada DOF 01-05-2019
+Artículo 424 Bis.- El Centro Federal de Conciliación y Registro Laboral hará pública, para consulta de
+cualquier persona, el texto íntegro de los reglamentos interiores de trabajo que se encuentren
+depositados ante dicha Autoridad Registral. Asimismo, deberá expedir copias de dichos documentos, en
+términos de lo dispuesto por la Ley General de Transparencia y Acceso a la Información Pública.
+El texto íntegro de los reglamentos interiores de trabajo deberá estar disponible en forma gratuita en
+los sitios de Internet del Centro Federal de Conciliación y Registro Laboral.
+Artículo adicionado DOF 30-11-2012. Reformado DOF 01-05-2019
+Artículo 425.- El reglamento surtirá efectos a partir de la fecha de su depósito. Deberá imprimirse y
+repartirse entre los trabajadores y se fijará en los lugares más visibles del establecimiento.
+CAPITULO VI
+Modificación colectiva de las condiciones de trabajo
+
+=== Arts. 527 (primer párrafo) y 529 (primer párrafo): autoridad federal y local ===
+Artículo 527.- La aplicación de las normas de trabajo corresponde a las autoridades federales,
+cuando se trate de:
+I. Ramas industriales y de servicios:
+[...]
+Artículo 529.- En los casos no previstos por los artículos 527 y 528, la aplicación de las normas de
+trabajo corresponde a las autoridades de las Entidades Federativas.
