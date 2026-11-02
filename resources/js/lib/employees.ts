@@ -1,3 +1,4 @@
+import { countOf } from '@/lib/plural';
 /** How the employees list is narrowed, as the server sends it back: a chosen center or area with its name. */
 export type EmployeeFilters = {
     q: string;
@@ -50,9 +51,6 @@ export function formatMobile(mobile: string): string {
     return parts === null ? mobile : `${parts[1]} ${parts[2]} ${parts[3]}`;
 }
 
-const count = (n: number, one: string, many: string) =>
-    `${n} ${n === 1 ? one : many}`;
-
 /** "90 personas activas en 2 centros de trabajo." */
 export function headcountText({
     active,
@@ -60,7 +58,7 @@ export function headcountText({
 }: Pick<EmployeeCounts, 'active' | 'work_centers'>): string {
     return active === 0
         ? 'Nadie activo por ahora.'
-        : `${count(active, 'persona activa', 'personas activas')} en ${count(work_centers, 'centro de trabajo', 'centros de trabajo')}.`;
+        : `${countOf(active, 'persona activa', 'personas activas')} en ${countOf(work_centers, 'centro de trabajo', 'centros de trabajo')}.`;
 }
 
 /** The notice about people no survey link reaches: the fact, then the way to see them. */
@@ -87,11 +85,11 @@ export function importSummaryText(summary: {
     created: number;
     updated: number;
 }): string {
-    return `Listo para importar ${count(summary.rows, 'empleado', 'empleados')}: ${count(summary.created, 'nuevo', 'nuevos')} y ${count(summary.updated, 'actualizado', 'actualizados')}.`;
+    return `Listo para importar ${countOf(summary.rows, 'empleado', 'empleados')}: ${countOf(summary.created, 'nuevo', 'nuevos')} y ${countOf(summary.updated, 'actualizado', 'actualizados')}.`;
 }
 
 export function importButtonText(rows: number): string {
-    return `Importar ${count(rows, 'empleado', 'empleados')}`;
+    return `Importar ${countOf(rows, 'empleado', 'empleados')}`;
 }
 
 /** How one step of the upload looks next to the current one. */

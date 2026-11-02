@@ -25,7 +25,7 @@ export default function HeroPreview() {
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="font-semibold">Planta Querétaro</p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         120 personas · 3 herramientas
                     </p>
                 </div>
@@ -41,7 +41,7 @@ export default function HeroPreview() {
                     <span className="text-[34px] leading-none font-semibold tracking-[-0.03em] tabular-nums">
                         89
                     </span>
-                    <span className="max-w-[85px] text-[13px] leading-4 text-muted-foreground">
+                    <span className="max-w-[85px] text-caption leading-4 text-muted-foreground">
                         de 120 contestaron
                     </span>
                 </ArcMeter>
@@ -52,7 +52,7 @@ export default function HeroPreview() {
                             data-test={`preview-${tool.key}`}
                             className="flex flex-col gap-1"
                         >
-                            <span className="text-[13px] leading-[18px] text-muted-foreground">
+                            <span className="text-caption text-muted-foreground">
                                 {tool.name}
                             </span>
                             <ProgressBar

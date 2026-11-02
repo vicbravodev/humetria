@@ -1,6 +1,6 @@
 import ReviewStep from '@/components/campaigns/review-step';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { weekChoices } from '@/lib/evaluation';
@@ -54,11 +54,7 @@ export default function DeadlineStep({
                 >
                     Cada enlace funciona hasta las 23:59 de ese día.
                 </p>
-                <InputError
-                    id="campaign-closes_on-error"
-                    role="alert"
-                    message={error}
-                />
+                <InputError id="campaign-closes_on-error" message={error} />
             </div>
         </ReviewStep>
     );

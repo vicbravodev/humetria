@@ -1,5 +1,5 @@
 import { Users } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import CenterPersonRow from '@/components/telework/roster-person-row';
 import type { Paginated, CenterPerson } from '@/types';
@@ -27,18 +27,16 @@ export default function CenterRoster({
             ) : (
                 <ul
                     aria-label="Personas del padrón"
-                    className="overflow-hidden rounded-xl border bg-card"
+                    className="overflow-hidden card"
                 >
                     {people.data.map((person) => (
                         <CenterPersonRow key={person.id} person={person} />
                     ))}
                 </ul>
             )}
-            <ConsolePagination
+            <Pagination
                 page={people}
                 label="Páginas del padrón"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

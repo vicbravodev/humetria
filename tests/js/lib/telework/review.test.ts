@@ -1,3 +1,4 @@
+import { CalendarClock, MapPin, User } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import {
     answerLabel,
@@ -7,6 +8,8 @@ import {
     DECISIONS,
     evidenceKindLabel,
     openEvidence,
+    pendingReviewsText,
+    reviewFacts,
     statusTone,
 } from '@/lib/telework/review';
 import type {
@@ -114,5 +117,47 @@ describe('authorizationState', () => {
 
         expect(found).toBe(state);
         expect(AUTHORIZATION_BADGES[found].label).not.toBe('');
+    });
+});
+
+describe('reviewFacts', () => {
+    const workplace = {
+        id: 'w1',
+        address: 'Av. Juárez 10, Monterrey',
+        status: 'valid' as const,
+        statusLabel: 'Validado',
+        expiresOn: '2027-01-15',
+    };
+    const person = { name: 'Rita Gómez', jobTitle: 'Analista' };
+
+    it('names the person, the place and until when it stays valid', () => {
+        expect(reviewFacts({ person, workplace })).toEqual([
+            { icon: User, text: 'Rita Gómez · Analista' },
+            { icon: MapPin, text: 'Av. Juárez 10, Monterrey' },
+            { icon: CalendarClock, text: 'Vigente hasta 15 de enero de 2027' },
+        ]);
+    });
+
+    it('leaves out the end date while there is none', () => {
+        expect(
+            reviewFacts({
+                person,
+                workplace: { ...workplace, expiresOn: null },
+            }),
+        ).toHaveLength(2);
+    });
+});
+
+describe('pendingReviewsText', () => {
+    it('says how many checklists wait for the Comisión', () => {
+        expect(pendingReviewsText(0)).toBe(
+            'No hay listas esperando a la Comisión.',
+        );
+        expect(pendingReviewsText(1)).toBe(
+            '1 lista espera a la Comisión, la más antigua primero.',
+        );
+        expect(pendingReviewsText(3)).toBe(
+            '3 listas esperan a la Comisión, la más antigua primero.',
+        );
     });
 });

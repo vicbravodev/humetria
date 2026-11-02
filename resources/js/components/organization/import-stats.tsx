@@ -16,7 +16,7 @@ export default function ImportStats({
                 <div
                     key={stat.label}
                     className={cn(
-                        'rounded-xl border bg-card px-5 py-[18px]',
+                        'card px-5 py-[18px]',
                         stat.alert === true && 'border-destructive',
                     )}
                 >
@@ -34,7 +34,7 @@ export default function ImportStats({
                         {stat.value.toLocaleString('es-MX')}
                     </p>
                     {stat.hint !== undefined && (
-                        <p className="text-[13px] leading-[18px] text-muted-foreground">
+                        <p className="text-caption text-muted-foreground">
                             {stat.hint}
                         </p>
                     )}

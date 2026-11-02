@@ -1,8 +1,6 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
-
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
+import { Textarea } from '@/components/ui/textarea';
 
 type Errors = Partial<Record<string, string>>;
 
@@ -23,21 +21,16 @@ export default function RosterArea({
     return (
         <div className="grid gap-2">
             <Label htmlFor={`roster-${name}`}>{label}</Label>
-            <textarea
+            <Textarea
                 id={`roster-${name}`}
                 name={name}
-                className={AREA}
                 aria-invalid={error === undefined ? undefined : true}
                 aria-describedby={`roster-${name}-error`}
             />
             {hint !== undefined && (
                 <p className="text-[14px] text-muted-foreground">{hint}</p>
             )}
-            <InputError
-                id={`roster-${name}-error`}
-                role="alert"
-                message={error}
-            />
+            <InputError id={`roster-${name}-error`} message={error} />
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import Combobox from '@/components/humetria/combobox';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import type { MexicanStateOption } from '@/types';
 
@@ -29,11 +29,7 @@ export default function WorkCenterStateField({
                     error === undefined ? undefined : 'work-center-state-error'
                 }
             />
-            <InputError
-                id="work-center-state-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="work-center-state-error" message={error} />
         </div>
     );
 }

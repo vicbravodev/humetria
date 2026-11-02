@@ -6,12 +6,12 @@ export default function AlertError({
     title,
 }: {
     errors: string[];
-    title?: string;
+    title: string;
 }) {
     return (
         <Alert variant="destructive">
             <AlertCircleIcon />
-            <AlertTitle>{title || 'Something went wrong.'}</AlertTitle>
+            <AlertTitle>{title}</AlertTitle>
             <AlertDescription>
                 <ul className="list-inside list-disc text-sm">
                     {Array.from(new Set(errors)).map((error, index) => (

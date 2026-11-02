@@ -1,5 +1,5 @@
 import Combobox from '@/components/humetria/combobox';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import type { OptionSource } from '@/hooks/use-option-search';
 import type { ChoiceOption } from '@/types';
@@ -34,7 +34,7 @@ export default function EmployeeChoiceField({
                 invalid={error !== undefined}
                 describedBy={error === undefined ? undefined : `${id}-error`}
             />
-            <InputError id={`${id}-error`} role="alert" message={error} />
+            <InputError id={`${id}-error`} message={error} />
         </div>
     );
 }

@@ -9,17 +9,17 @@ export default function DossierHeaderBlock({
 }) {
     return (
         <header className="flex flex-col gap-1">
-            <p className="text-[15px] leading-[22px] text-muted-foreground">
+            <p className="text-meta text-muted-foreground">
                 Expediente de NOM-037 para la inspección
             </p>
             <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em] text-balance">
                 {header.workCenter}
             </h1>
-            <p className="text-[15px] leading-[22px]">
+            <p className="text-meta">
                 {header.legalName} · RFC {header.rfc}
             </p>
-            <p className="text-[15px] leading-[22px]">{header.address}</p>
-            <p className="text-[15px] leading-[22px] text-muted-foreground">
+            <p className="text-meta">{header.address}</p>
+            <p className="text-meta text-muted-foreground">
                 Generado el{' '}
                 {describeDate(header.generatedOn) ?? header.generatedOn} por{' '}
                 {header.generatedBy}.

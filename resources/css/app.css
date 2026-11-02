@@ -5,6 +5,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* `.light` brings the light tokens back inside a dark page (the "Claro" theme miniature). */
+.light,
 :root {
     --radius: 0.625rem; /* 10px */
     --background: #fbfdfc;
@@ -133,6 +135,14 @@
 
 /* Motion and depth: see docs/design-system/design-system.md, "Movimiento" and "Profundidad". */
 @theme {
+    /* The two small sizes of the type scale (tokens-shadcn.md): table headers, badges and hints; page facts and crumbs. */
+    --text-caption: 0.8125rem;
+    --text-caption--line-height: 1.125rem;
+    --text-meta: 0.9375rem;
+    --text-meta--line-height: 1.375rem;
+}
+
+@theme {
     /* Strong curves: Tailwind's ease-out / ease-in-out read as these everywhere. */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -210,6 +220,16 @@
         font-size: 16px;
         line-height: 24px;
     }
+}
+
+/*
+ * A card (pantallas: .card): the card fill, a 1 px border and the large radius. Its padding and layout go where it is
+ * used, so a section, a list item or a link can all be one.
+ */
+@utility card {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-card);
 }
 
 /*

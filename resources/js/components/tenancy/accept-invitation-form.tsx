@@ -1,9 +1,9 @@
 import { Form } from '@inertiajs/react';
 import { Lock } from 'lucide-react';
 import AuthHeading from '@/components/auth-heading';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import NewPasswordField from '@/components/new-password-field';
-import PasswordInput from '@/components/password-input';
+import PasswordInput from '@/components/humetria/password-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

@@ -5,7 +5,7 @@ export default function PasskeysEmptyState() {
             <p className="text-sm font-medium">
                 Aún no tienes llaves de acceso
             </p>
-            <p className="mt-0.5 text-[13px] leading-[18px] text-muted-foreground">
+            <p className="mt-0.5 text-caption text-muted-foreground">
                 Agrega una para entrar sin escribir tu contraseña.
             </p>
         </div>

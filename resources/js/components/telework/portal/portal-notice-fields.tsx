@@ -1,13 +1,11 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import PortalNoticeDates from '@/components/telework/portal/portal-notice-dates';
 import WorkplaceFields from '@/components/telework/workplace-fields';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { noticeExtras } from '@/lib/telework/notices';
 import type { NoticeKindValue } from '@/types';
-
-const AREA =
-    'min-h-28 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
 
 /** The fields of a notice (numerals 6.3, 6.7, 6.9): the two dates, the description, and what its kind adds. */
 export default function PortalNoticeFields({
@@ -28,11 +26,11 @@ export default function PortalNoticeFields({
             <PortalNoticeDates kind={kind} today={today} errors={errors} />
             <div className="grid gap-2">
                 <Label htmlFor={`${kind}-description`}>Descripción</Label>
-                <textarea
+                <Textarea
+                    className="min-h-28"
                     id={`${kind}-description`}
                     name="description"
                     maxLength={3000}
-                    className={AREA}
                     aria-invalid={
                         errors['description'] === undefined ? undefined : true
                     }
@@ -40,7 +38,6 @@ export default function PortalNoticeFields({
                 />
                 <InputError
                     id={`${kind}-description-error`}
-                    role="alert"
                     message={errors['description']}
                 />
             </div>
@@ -67,7 +64,7 @@ export default function PortalNoticeFields({
                             states={states}
                             errors={errors}
                         />
-                        <InputError role="alert" message={errors['address']} />
+                        <InputError message={errors['address']} />
                     </div>
                     <div className="flex items-center gap-3">
                         <Checkbox

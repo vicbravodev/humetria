@@ -4,6 +4,7 @@ import WorkCenterAreas from '@/components/tenancy/work-center-areas';
 import WorkCenterFacts from '@/components/tenancy/work-center-facts';
 import WorkCenterRowActions from '@/components/tenancy/work-center-row-actions';
 import { Badge } from '@/components/ui/badge';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { evaluationStanding } from '@/lib/work-centers';
 import { index as employees } from '@/routes/tenant/employees';
 import type { MexicanStateOption, WorkCenterRow } from '@/types';
@@ -13,22 +14,21 @@ import type { MexicanStateOption, WorkCenterRow } from '@/types';
  * areas and where it stands with its evaluations.
  */
 export default function WorkCenterCard({
-    tenantSlug,
     workCenter,
     states,
 }: {
-    tenantSlug: string;
     workCenter: WorkCenterRow;
     /** The states the edit form offers; null when the person may not change work centers, nor see its people. */
     states: MexicanStateOption[] | null;
 }) {
+    const tenantSlug = useTenantSlug();
     const standing = evaluationStanding(
         workCenter.evaluation,
         workCenter.employees,
     );
 
     return (
-        <article className="flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-[22px] transition-colors duration-150 ease-out hover:border-input">
+        <article className="flex min-w-0 flex-col gap-4 card p-[22px] transition-colors duration-150 ease-out hover:border-input">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <h2 className="text-lg leading-[26px] font-semibold">
@@ -40,7 +40,6 @@ export default function WorkCenterCard({
                 </div>
                 {states !== null && (
                     <WorkCenterRowActions
-                        tenantSlug={tenantSlug}
                         workCenter={workCenter}
                         states={states}
                     />

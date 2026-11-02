@@ -8,12 +8,10 @@ import type {
 
 /** The work centers of one page as cards; among the active ones, the last tile adds another. */
 export default function WorkCentersGrid({
-    tenantSlug,
     view,
     workCenters,
     states,
 }: {
-    tenantSlug: string;
     view: WorkCentersView;
     workCenters: WorkCenterRow[];
     /** The states the forms offer; null when the person may not change work centers. */
@@ -31,17 +29,12 @@ export default function WorkCentersGrid({
             {workCenters.map((workCenter) => (
                 <WorkCenterCard
                     key={workCenter.id}
-                    tenantSlug={tenantSlug}
                     workCenter={workCenter}
                     states={states}
                 />
             ))}
             {view === 'active' && states !== null && (
-                <CreateWorkCenterDialog
-                    tenantSlug={tenantSlug}
-                    states={states}
-                    tile
-                />
+                <CreateWorkCenterDialog states={states} tile />
             )}
         </section>
     );

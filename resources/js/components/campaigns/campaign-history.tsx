@@ -1,13 +1,11 @@
 import ClosedCampaignsTable from '@/components/campaigns/closed-campaigns-table';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import type { CampaignSummary, Paginated } from '@/types';
 
 /** "Historial" (pantalla NOM035): the closed campaigns, a page at a time; nothing before the first one closes. */
 export default function CampaignHistory({
-    tenantSlug,
     closed,
 }: {
-    tenantSlug: string;
     closed: Paginated<CampaignSummary>;
 }) {
     if (closed.total === 0) {
@@ -19,11 +17,13 @@ export default function CampaignHistory({
             <h2 id="history" className="text-lg leading-[26px] font-semibold">
                 Historial
             </h2>
-            <ClosedCampaignsTable
-                tenantSlug={tenantSlug}
-                campaigns={closed.data}
+            <ClosedCampaignsTable campaigns={closed.data} />
+            <Pagination
+                previous="Ver más recientes"
+                next="Ver más antiguas"
+                page={closed}
+                label="Páginas del historial"
             />
-            <ConsolePagination page={closed} label="Páginas del historial" />
         </section>
     );
 }

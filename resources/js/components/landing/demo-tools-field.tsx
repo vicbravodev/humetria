@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { TOOLS } from '@/components/landing/landing-tools';
 
 type Props = {
@@ -34,7 +34,7 @@ export default function DemoToolsField({ error }: Props) {
                     </label>
                 ))}
             </div>
-            <InputError id="demo-tools-error" role="alert" message={error} />
+            <InputError id="demo-tools-error" message={error} />
         </fieldset>
     );
 }

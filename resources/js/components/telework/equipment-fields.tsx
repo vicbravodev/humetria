@@ -1,6 +1,6 @@
 import Combobox from '@/components/humetria/combobox';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EQUIPMENT_KINDS } from '@/lib/telework/equipment';
@@ -27,7 +27,6 @@ export default function EquipmentFields({
                 />
                 <InputError
                     id="equipment-kind-error"
-                    role="alert"
                     message={errors['kind']}
                 />
             </div>
@@ -44,7 +43,6 @@ export default function EquipmentFields({
                 />
                 <InputError
                     id="equipment-description-error"
-                    role="alert"
                     message={errors['description']}
                 />
             </div>
@@ -59,7 +57,6 @@ export default function EquipmentFields({
                 />
                 <InputError
                     id="equipment-date-error"
-                    role="alert"
                     message={errors['delivered_on']}
                 />
             </div>

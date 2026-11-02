@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Lock } from 'lucide-react';
-import ArcMeter from '@/components/humetria/arc-meter';
+import StatusMessage from '@/components/humetria/status-message';
 import { TenantBlockedDialog } from '@/components/tenant-blocked-dialog';
 
 /**
@@ -13,18 +13,12 @@ export default function Blocked() {
     return (
         <>
             <Head title="Acceso en pausa" />
-            <section className="flex flex-col items-center gap-3 px-4 py-16 text-center md:py-24">
-                <ArcMeter value={0} max={1} label="Acceso en pausa" size="sm">
-                    <Lock aria-hidden className="mb-1 size-5 text-primary" />
-                </ArcMeter>
-                <h1 className="text-3xl leading-[38px] font-semibold tracking-[-0.01em]">
-                    Acceso en pausa
-                </h1>
-                <p className="max-w-md text-[17px] leading-6 text-muted-foreground">
+            <div className="flex justify-center px-4 py-16 md:py-24">
+                <StatusMessage icon={Lock} title="Acceso en pausa">
                     Mientras se reactiva, la información de la empresa se
                     conserva tal como está.
-                </p>
-            </section>
+                </StatusMessage>
+            </div>
             {tenant !== null && (
                 <TenantBlockedDialog
                     tradeName={tenant.trade_name}

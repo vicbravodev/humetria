@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import { ShieldCheck, Sun, UserRound } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { settingsNavItems } from '@/lib/app-navigation';
 import { cn, toUrl } from '@/lib/utils';
@@ -40,7 +40,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 href={item.href}
                                 aria-current={current ? 'page' : undefined}
                                 className={cn(
-                                    'flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-[15px] transition-colors duration-150 ease-out hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&>svg]:size-5 [&>svg]:text-muted-foreground',
+                                    'flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-meta transition-colors duration-150 ease-out hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&>svg]:size-5 [&>svg]:text-muted-foreground',
                                     current &&
                                         'bg-card font-medium ring-1 ring-border hover:bg-card [&>svg]:text-primary',
                                 )}
@@ -52,7 +52,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     })}
                 </nav>
 
-                <div className="flex min-w-0 flex-[999_1_480px] flex-col gap-10 rounded-xl border bg-card p-5 md:p-7">
+                <div className="flex min-w-0 flex-[999_1_480px] flex-col gap-10 card p-5 md:p-7">
                     {children}
                 </div>
             </div>

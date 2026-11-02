@@ -11,6 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { reactivate, update } from '@/routes/tenant/employees';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
@@ -18,14 +19,13 @@ type Action = 'edit' | 'deactivate' | 'reactivate';
 
 /** An active employee is edited or deactivated (apart, in the destructive color); a deactivated one is reactivated. */
 export default function EmployeeRowActions({
-    tenantSlug,
     employee,
     choices,
 }: {
-    tenantSlug: string;
     employee: EmployeeRow;
     choices: EmployeeChoices;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState<Action | null>(null);
     const dialog = (action: Action) => ({
         open: open === action,
@@ -100,7 +100,6 @@ export default function EmployeeRowActions({
             />
             <DeactivateEmployeeDialog
                 {...dialog('deactivate')}
-                tenantSlug={tenantSlug}
                 employee={employee}
             />
         </>

@@ -13,17 +13,15 @@ export default function ReviewDecisionCard({
         record.planDueOn === null ? undefined : describeDate(record.planDueOn);
 
     return (
-        <section className="grid gap-2 rounded-xl border bg-card p-5">
+        <section className="grid gap-2 card p-5">
             <h2 className="text-lg font-semibold">{title}</h2>
             <p className="font-medium">{record.decisionLabel}</p>
-            <p className="text-[15px] text-muted-foreground">
+            <p className="text-meta text-muted-foreground">
                 {record.methodLabel} · {describeDate(record.decidedOn)}
             </p>
-            {record.notes !== '' && (
-                <p className="text-[15px] leading-[22px]">{record.notes}</p>
-            )}
+            {record.notes !== '' && <p className="text-meta">{record.notes}</p>}
             {record.actionPlan !== null && (
-                <p className="text-[15px] leading-[22px]">
+                <p className="text-meta">
                     <strong className="font-semibold">Plan:</strong>{' '}
                     {record.actionPlan}
                     {due !== undefined && ` (compromiso: ${due})`}

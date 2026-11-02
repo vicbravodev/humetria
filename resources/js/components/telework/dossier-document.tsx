@@ -13,7 +13,7 @@ export default function DossierDocumentBlock({
     }
 
     return (
-        <div className="flex flex-col gap-1 text-[15px] leading-[22px]">
+        <div className="flex flex-col gap-1 text-meta">
             <p>
                 {document.kind}, versión {document.version} del{' '}
                 {describeDate(document.publishedOn) ?? '—'} (

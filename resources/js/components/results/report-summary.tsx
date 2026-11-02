@@ -4,9 +4,8 @@ import ReportCaption from '@/components/results/report-caption';
 import ReportKpi from '@/components/results/report-kpi';
 import ReportSection from '@/components/results/report-section';
 import WaffleChart from '@/components/results/waffle-chart';
-import { rankByHighRisk } from '@/lib/report';
 import { keyFindings } from '@/lib/report-findings';
-import { highRisk, riskVerdict } from '@/lib/results';
+import { highRisk, rankBySeverity, riskVerdict } from '@/lib/results';
 import type { NomReport, RiskLevelInfo } from '@/types';
 
 /** The report read in a minute (num. 7.7 e): three figures, every questionnaire by its level, and what stands out. */
@@ -18,7 +17,7 @@ export default function ReportSummary({
     levels: RiskLevelInfo[];
 }) {
     const { results, participation, areas } = report;
-    const [worst] = rankByHighRisk(results.domains);
+    const [worst] = rankBySeverity(results.domains);
     const missing = participation.invited - participation.answered;
 
     return (

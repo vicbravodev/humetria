@@ -1,5 +1,7 @@
+import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import PageButton from '@/components/page-button';
+import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
@@ -7,17 +9,17 @@ import type { Paginated } from '@/types';
  * The pages of a list: which rows are on screen and the way to the next ones. Pinned to the bottom of the screen
  * while the list scrolls, so turning the page never means scrolling to the end first.
  */
-export default function ConsolePagination({
+export default function Pagination({
     page,
     label,
-    previous = 'Ver más recientes',
-    next = 'Ver más antiguas',
+    previous = 'Anteriores',
+    next = 'Siguientes',
     preserveState = false,
     pinned = true,
 }: {
     page: Paginated<unknown>;
     label: string;
-    /** The buttons' text: by default the consoles' newest-first order. */
+    /** The buttons' text; a list from the newest says "Ver más recientes" and "Ver más antiguas". */
     previous?: string;
     next?: string;
     /** Keep what the page holds that is not in its address, like a selection, when turning pages. */
@@ -28,6 +30,20 @@ export default function ConsolePagination({
     if (page.last_page <= 1) {
         return null;
     }
+
+    // One step: a link to that page, or the same button disabled when there is no such page.
+    const step = (href: string | null, content: ReactNode) =>
+        href === null ? (
+            <Button variant="outline" disabled>
+                {content}
+            </Button>
+        ) : (
+            <Button variant="outline" asChild>
+                <Link href={href} preserveState={preserveState}>
+                    {content}
+                </Link>
+            </Button>
+        );
 
     return (
         <nav
@@ -43,19 +59,20 @@ export default function ConsolePagination({
                 {page.current_page} de {page.last_page}
             </p>
             <div className="flex flex-wrap gap-2">
-                <PageButton
-                    href={page.prev_page_url}
-                    label={previous}
-                    icon={ChevronLeft}
-                    preserveState={preserveState}
-                />
-                <PageButton
-                    href={page.next_page_url}
-                    label={next}
-                    icon={ChevronRight}
-                    iconAfter
-                    preserveState={preserveState}
-                />
+                {step(
+                    page.prev_page_url,
+                    <>
+                        <ChevronLeft aria-hidden="true" />
+                        {previous}
+                    </>,
+                )}
+                {step(
+                    page.next_page_url,
+                    <>
+                        {next}
+                        <ChevronRight aria-hidden="true" />
+                    </>,
+                )}
             </div>
         </nav>
     );

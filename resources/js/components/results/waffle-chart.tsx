@@ -1,14 +1,8 @@
 import { waffleCells, waffleColumns } from '@/lib/report';
+import { riskFillAt } from '@/lib/risk-tones';
 import { cn } from '@/lib/utils';
 import type { LevelCounts, RiskLevelInfo } from '@/types';
 
-const FILLS = [
-    'bg-risk-nulo',
-    'bg-risk-bajo',
-    'bg-risk-medio',
-    'bg-risk-alto',
-    'bg-risk-muy-alto',
-];
 const ENTRANCE = 1200;
 
 /** Every questionnaire as a square in the color of its final level, from Nulo; an empty square per person missing. */
@@ -53,7 +47,7 @@ export default function WaffleChart({
                         'aspect-square rounded-md hover:outline-2 hover:outline-offset-1 hover:outline-foreground motion-safe:animate-report-pop',
                         level === null
                             ? 'border-[1.5px] border-dashed border-input'
-                            : FILLS[level],
+                            : riskFillAt(level),
                     )}
                     style={{ animationDelay: `${400 + index * step}ms` }}
                 />

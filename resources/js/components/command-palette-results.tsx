@@ -46,7 +46,7 @@ export function CommandPaletteResults({
                 >
                     <span
                         id={`${id}-${group}`}
-                        className="px-2.5 pt-2 pb-1 text-[13px] leading-[18px] font-medium text-muted-foreground"
+                        className="px-2.5 pt-2 pb-1 text-caption font-medium text-muted-foreground"
                     >
                         {group}
                     </span>

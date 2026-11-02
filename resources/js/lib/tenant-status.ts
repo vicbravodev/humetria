@@ -1,6 +1,5 @@
-import type { TenantFilters, TenantRow } from '@/types';
-
-type BadgeVariant = 'default' | 'secondary' | 'outline' | 'destructive';
+import { countOf } from '@/lib/plural';
+import type { BadgeVariant, TenantFilters, TenantRow } from '@/types';
 
 const VARIANTS: Record<TenantRow['status'], BadgeVariant> = {
     active: 'default',
@@ -60,7 +59,7 @@ export function trialLabel(daysLeft: number): string {
 
 /** The console's line under "Empresas": how many there are and, when any, how many trials end this week. */
 export function companiesSummary(total: number, endingSoon: number): string {
-    const companies = total === 1 ? '1 empresa' : `${total} empresas`;
+    const companies = countOf(total, 'empresa', 'empresas');
 
     if (endingSoon === 0) {
         return companies;

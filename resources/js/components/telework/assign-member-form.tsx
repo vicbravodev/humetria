@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { UserPlus } from 'lucide-react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -11,19 +11,19 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/committee/members';
 import type { CommitteePerson } from '@/types';
 
 /** Seats one more person of the company on the Comisión. */
 export default function AssignMemberForm({
-    tenantSlug,
     workCenterId,
     candidates,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     candidates: CommitteePerson[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}
@@ -66,7 +66,7 @@ export default function AssignMemberForm({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <InputError role="alert" message={errors['user_id']} />
+                        <InputError message={errors['user_id']} />
                     </div>
                     <Button disabled={processing || candidates.length === 0}>
                         {processing ? <Spinner /> : <UserPlus aria-hidden />}

@@ -8,19 +8,16 @@ export default function RosterEnded({
     teleworker: TeleworkerSummary;
 }) {
     return (
-        <section
-            className="grid gap-1 rounded-xl border bg-card p-5"
-            aria-labelledby="roster-title"
-        >
+        <section className="grid gap-1 card p-5" aria-labelledby="roster-title">
             <h2 id="roster-title" className="text-base font-semibold">
                 Teletrabajo terminado
             </h2>
-            <p className="text-[15px] text-muted-foreground">
+            <p className="text-meta text-muted-foreground">
                 {teleworker.endReason} ·{' '}
                 {describeDate(teleworker.endedOn ?? '') ?? ''}
             </p>
             {teleworker.endNote !== null && (
-                <p className="text-[15px]">{teleworker.endNote}</p>
+                <p className="text-meta">{teleworker.endNote}</p>
             )}
         </section>
     );

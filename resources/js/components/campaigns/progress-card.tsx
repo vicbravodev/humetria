@@ -18,7 +18,7 @@ export default function ProgressCard({
     const caption = arcCaption(progress);
 
     return (
-        <article className="flex flex-col items-center gap-[18px] rounded-xl border bg-card p-6">
+        <article className="flex flex-col items-center gap-[18px] card p-6">
             <ArcMeter
                 value={progress.completed}
                 max={progress.target}
@@ -28,7 +28,7 @@ export default function ProgressCard({
                 <span className="text-[46px] leading-none font-semibold tracking-[-0.03em] tabular-nums">
                     {progress.completed}
                 </span>
-                <span className="max-w-[116px] text-[13px] leading-4 text-muted-foreground">
+                <span className="max-w-[116px] text-caption leading-4 text-muted-foreground">
                     {caption}
                 </span>
             </ArcMeter>

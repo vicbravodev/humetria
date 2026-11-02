@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { Briefcase, Home, Percent } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import AddWorkplaceDialog from '@/components/telework/add-workplace-dialog';
 import EquipmentSection from '@/components/telework/equipment-section';
 import NoticesSection from '@/components/telework/notices-section';
@@ -18,11 +19,9 @@ const STATUS: Record<TeleworkerSummary['status'], string> = {
 
 /** A person who will telework: their workplaces with where each checklist stands, and their portal link (pantalla: Eval-Cerrada). */
 export default function TeleworkerDetail({
-    tenantSlug,
     teleworker,
     states,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
     states: Record<string, string>;
 }) {
@@ -31,7 +30,7 @@ export default function TeleworkerDetail({
 
     return (
         <div className="flex flex-col gap-6">
-            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[15px] leading-[22px] text-muted-foreground">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-meta text-muted-foreground">
                 <li className="flex items-center gap-1.5">
                     <Briefcase aria-hidden className="size-4" />
                     {teleworker.jobTitle}
@@ -42,20 +41,15 @@ export default function TeleworkerDetail({
                 </li>
                 <li>{STATUS[teleworker.status]}</li>
             </ul>
-            <RosterPanel
-                tenantSlug={tenantSlug}
-                teleworker={teleworker}
-                states={states}
-            />
+            <RosterPanel teleworker={teleworker} states={states} />
             {!ended && (
                 <PortalLinkPanel
-                    tenantSlug={tenantSlug}
                     teleworkerId={teleworker.id}
                     hasEmail={teleworker.hasEmail}
                     newLink={newLink}
                 />
             )}
-            <EquipmentSection tenantSlug={tenantSlug} teleworker={teleworker} />
+            <EquipmentSection teleworker={teleworker} />
             <NoticesSection teleworker={teleworker} />
             <section className="grid gap-3" aria-labelledby="workplaces-title">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -64,7 +58,6 @@ export default function TeleworkerDetail({
                     </h2>
                     {!ended && (
                         <AddWorkplaceDialog
-                            tenantSlug={tenantSlug}
                             teleworkerId={teleworker.id}
                             states={states}
                         />
@@ -74,16 +67,14 @@ export default function TeleworkerDetail({
                     {teleworker.workplaces.map((workplace) => (
                         <li
                             key={workplace.id}
-                            className="flex items-start gap-3.5 rounded-xl border bg-card p-4"
+                            className="flex items-start gap-3.5 card p-4"
                         >
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                                <Home aria-hidden className="size-5" />
-                            </span>
+                            <IconTile icon={Home} />
                             <div className="min-w-0">
                                 <p className="text-base font-semibold">
                                     {workplace.address}
                                 </p>
-                                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-muted-foreground">
+                                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-muted-foreground">
                                     <WorkplaceStatusBadge
                                         status={workplace.status}
                                         label={workplace.statusLabel}
@@ -93,14 +84,13 @@ export default function TeleworkerDetail({
                                         workplace.expiresOn,
                                     )}
                                 </p>
-                                <p className="text-[15px] text-muted-foreground">
+                                <p className="text-meta text-muted-foreground">
                                     Lista: {workplace.label}
                                 </p>
                             </div>
                             {!ended && workplace.status !== 'retired' && (
                                 <div className="ml-auto shrink-0">
                                     <RetireWorkplaceButton
-                                        tenantSlug={tenantSlug}
                                         workplaceId={workplace.id}
                                         address={workplace.address}
                                     />

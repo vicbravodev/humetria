@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -11,21 +11,19 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { review } from '@/routes/tenant/telework/notices';
-
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
 
 /** Reviews a notice with a note. It is done once: the note stays as evidence. */
 export default function NoticeReviewDialog({
-    tenantSlug,
     noticeId,
     person,
 }: {
-    tenantSlug: string;
     noticeId: string;
     person: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const id = `review-note-${noticeId}`;
 
@@ -50,11 +48,10 @@ export default function NoticeReviewDialog({
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor={id}>Nota de la revisión</Label>
-                                <textarea
+                                <Textarea
                                     id={id}
                                     name="note"
                                     maxLength={2000}
-                                    className={AREA}
                                     aria-invalid={
                                         errors['note'] === undefined
                                             ? undefined
@@ -64,7 +61,6 @@ export default function NoticeReviewDialog({
                                 />
                                 <InputError
                                     id={`${id}-error`}
-                                    role="alert"
                                     message={errors['note'] ?? errors['notice']}
                                 />
                             </div>

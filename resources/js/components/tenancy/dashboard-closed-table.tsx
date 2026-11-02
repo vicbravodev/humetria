@@ -1,4 +1,4 @@
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import DashboardClosedRow from '@/components/tenancy/dashboard-closed-row';
 import {
     Table,
@@ -11,11 +11,9 @@ import type { ClosedEvaluation, Paginated, RiskLevelInfo } from '@/types';
 
 /** "Evaluaciones cerradas" (pantalla Panel): participation and final score of each, with its results and its report. */
 export default function DashboardClosedTable({
-    tenantSlug,
     closed,
     levels,
 }: {
-    tenantSlug: string;
     closed: Paginated<ClosedEvaluation>;
     levels: RiskLevelInfo[];
 }) {
@@ -44,14 +42,15 @@ export default function DashboardClosedTable({
                     {closed.data.map((evaluation) => (
                         <DashboardClosedRow
                             key={evaluation.id}
-                            tenantSlug={tenantSlug}
                             evaluation={evaluation}
                             levels={levels}
                         />
                     ))}
                 </TableBody>
             </Table>
-            <ConsolePagination
+            <Pagination
+                previous="Ver más recientes"
+                next="Ver más antiguas"
                 page={closed}
                 label="Páginas de evaluaciones cerradas"
                 pinned={false}

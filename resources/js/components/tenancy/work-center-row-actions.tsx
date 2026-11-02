@@ -11,6 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { restore, update } from '@/routes/tenant/work-centers';
 import type { MexicanStateOption, WorkCenterRow } from '@/types';
 
@@ -21,14 +22,13 @@ type Action = 'edit' | 'archive';
  * destructive color); an archived one is only restored.
  */
 export default function WorkCenterRowActions({
-    tenantSlug,
     workCenter,
     states,
 }: {
-    tenantSlug: string;
     workCenter: WorkCenterRow;
     states: MexicanStateOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState<Action | null>(null);
     const dialog = (action: Action) => ({
         open: open === action,
@@ -94,7 +94,6 @@ export default function WorkCenterRowActions({
             />
             <ArchiveWorkCenterDialog
                 {...dialog('archive')}
-                tenantSlug={tenantSlug}
                 workCenter={workCenter}
             />
         </>

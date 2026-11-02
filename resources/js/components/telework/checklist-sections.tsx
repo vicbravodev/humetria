@@ -10,13 +10,11 @@ import type { ChecklistQuestion, RequirementOption } from '@/types';
 
 /** The checklist by section and heading, each question a row (pantallas: tablas con cabecera muted). */
 export default function ChecklistSections({
-    tenantSlug,
     workCenterId,
     questions,
     requirements,
     canEdit,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     questions: ChecklistQuestion[];
     requirements: RequirementOption[];
@@ -66,7 +64,6 @@ export default function ChecklistSections({
                                             className="px-5 py-4"
                                         >
                                             <QuestionEditor
-                                                tenantSlug={tenantSlug}
                                                 workCenterId={workCenterId}
                                                 question={question}
                                                 requirements={requirements}
@@ -76,7 +73,6 @@ export default function ChecklistSections({
                                     ) : (
                                         <QuestionRow
                                             key={question.id}
-                                            tenantSlug={tenantSlug}
                                             workCenterId={workCenterId}
                                             question={question}
                                             requirementLabel={labelOf(question)}
@@ -91,7 +87,6 @@ export default function ChecklistSections({
                         ))}
                     {canEdit && (
                         <NewQuestionForm
-                            tenantSlug={tenantSlug}
                             workCenterId={workCenterId}
                             section={section}
                             requirements={requirements}

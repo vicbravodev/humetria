@@ -108,7 +108,10 @@ export default function TwoFactorRecoveryCodes({
                 >
                     <div className="mt-3 space-y-3">
                         {errors?.length ? (
-                            <AlertError errors={errors} />
+                            <AlertError
+                                title="No pudimos mostrar tus códigos"
+                                errors={errors}
+                            />
                         ) : (
                             <RecoveryCodesList
                                 ref={codesSectionRef}

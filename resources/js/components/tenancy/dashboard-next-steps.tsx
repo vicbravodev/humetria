@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { FileText, HeartHandshake, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { nextStepTexts, pendingText } from '@/lib/dashboard';
 import { report, screenings, show } from '@/routes/tenant/campaigns';
 import type { NextStep } from '@/types';
@@ -11,18 +12,17 @@ const ROUTES = { launch: show, report, screenings };
 
 /** "Lo que sigue" (pantalla Panel): what is waiting on this person, each with the button that takes them there. */
 export default function DashboardNextSteps({
-    tenantSlug,
     steps,
     pending,
 }: {
-    tenantSlug: string;
     steps: NextStep[];
     pending: number;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <article
             aria-labelledby="next-steps"
-            className="flex flex-col gap-1 rounded-xl border bg-card px-6 pt-6 pb-2.5"
+            className="flex flex-col gap-1 card px-6 pt-6 pb-2.5"
         >
             <div className="flex items-center justify-between gap-3">
                 <h2
@@ -32,7 +32,7 @@ export default function DashboardNextSteps({
                     Lo que sigue
                 </h2>
                 {pending > 0 && (
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {pendingText(pending)}
                     </span>
                 )}
@@ -56,10 +56,10 @@ export default function DashboardNextSteps({
                                     <Icon aria-hidden className="size-[18px]" />
                                 </span>
                                 <span className="flex min-w-0 grow flex-col">
-                                    <span className="text-[15px] leading-[22px] font-medium">
+                                    <span className="text-meta font-medium">
                                         {texts.title}
                                     </span>
-                                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                                    <span className="text-caption text-muted-foreground">
                                         {texts.detail}
                                     </span>
                                 </span>

@@ -25,11 +25,9 @@ const details = (employee: EmployeeRow) =>
         .join(' · ');
 
 export default function EmployeesTable({
-    tenantSlug,
     employees,
     choices,
 }: {
-    tenantSlug: string;
     employees: EmployeeRow[];
     choices: EmployeeChoices;
 }) {
@@ -59,7 +57,7 @@ export default function EmployeesTable({
                                     <p className="font-medium">
                                         {employee.name}
                                     </p>
-                                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                                    <p className="text-caption text-muted-foreground">
                                         {details(employee)}
                                     </p>
                                 </div>
@@ -76,7 +74,6 @@ export default function EmployeesTable({
                         </TableCell>
                         <TableCell className="w-px text-right">
                             <EmployeeRowActions
-                                tenantSlug={tenantSlug}
                                 employee={employee}
                                 choices={choices}
                             />

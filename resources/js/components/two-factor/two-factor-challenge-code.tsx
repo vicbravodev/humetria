@@ -1,5 +1,5 @@
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import OtpSlots from '@/components/two-factor/otp-slots';
 import { InputOTP } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';

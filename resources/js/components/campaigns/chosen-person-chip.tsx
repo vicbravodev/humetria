@@ -10,7 +10,7 @@ export default function ChosenPersonChip({
     onRemove: () => void;
 }) {
     return (
-        <li className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent pr-1.5 pl-1 text-[13px] leading-[18px] font-medium">
+        <li className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent pr-1.5 pl-1 text-caption font-medium">
             <Initials name={name} className="size-6 bg-card text-[11px]" />
             {name}
             <button

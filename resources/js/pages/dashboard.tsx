@@ -1,8 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import DashboardBody from '@/components/tenancy/dashboard-body';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { greeting, panelSummary } from '@/lib/dashboard';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import type {
@@ -32,7 +33,7 @@ type Props = {
 export default function Dashboard(props: Props) {
     const { auth, tenant } = usePage().props;
     // Always set here: this page only exists inside a company.
-    const tenantSlug = tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const canManage = tenant?.can.manage_campaigns ?? false;
 
     return (
@@ -53,11 +54,7 @@ export default function Dashboard(props: Props) {
                         </Button>
                     )}
                 </PageHeader>
-                <DashboardBody
-                    tenantSlug={tenantSlug}
-                    canManage={canManage}
-                    data={props}
-                />
+                <DashboardBody canManage={canManage} data={props} />
             </div>
         </>
     );

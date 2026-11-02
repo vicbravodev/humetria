@@ -3,17 +3,17 @@ import { Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { cancel, resend } from '@/routes/tenant/members/invitations';
 import type { MemberInvitationRow as Invitation } from '@/types';
 
 /** An invitation not accepted yet, under the people with access: resent or cancelled from its row. */
 export default function MemberInvitationRow({
-    tenantSlug,
     invitation,
 }: {
-    tenantSlug: string;
     invitation: Invitation;
 }) {
+    const tenantSlug = useTenantSlug();
     const ids = { tenant: tenantSlug, invitation: invitation.id };
     const expired = invitation.status === 'expired';
 
@@ -26,7 +26,7 @@ export default function MemberInvitationRow({
                     </span>
                     <div className="flex min-w-0 flex-col">
                         <span className="font-medium">{invitation.name}</span>
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             {invitation.email} · {invitation.status_label} ·{' '}
                             {expired ? 'venció' : 'vence'} el{' '}
                             {invitation.expires_on}

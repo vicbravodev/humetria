@@ -11,24 +11,24 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Option } from '@/lib/option-search';
 import { store } from '@/routes/tenant/telework/trainings';
 import type { TrainingChoice, TrainingFilters } from '@/types';
 
 /** Registers a training that was given: Humetría keeps the record, it does not give the training. */
 export default function TrainingDialog({
-    tenantSlug,
     filters,
     today,
     topics,
     modalities,
 }: {
-    tenantSlug: string;
     filters: TrainingFilters;
     today: string;
     topics: TrainingChoice[];
     modalities: TrainingChoice[];
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const [center, setCenter] = useState<Option | null>(filters.center);
 
@@ -55,7 +55,6 @@ export default function TrainingDialog({
                     {({ processing, errors }) => (
                         <>
                             <TrainingFields
-                                tenantSlug={tenantSlug}
                                 center={center}
                                 onCenter={setCenter}
                                 today={today}

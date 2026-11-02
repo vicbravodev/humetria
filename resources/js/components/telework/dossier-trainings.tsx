@@ -14,7 +14,7 @@ export default function DossierTrainings({
     return (
         <div className="flex flex-col gap-3">
             {trainings.length === 0 ? (
-                <p className="text-[15px] leading-[22px]">
+                <p className="text-meta">
                     Sin capacitaciones en los últimos 12 meses.
                 </p>
             ) : (
@@ -36,7 +36,7 @@ export default function DossierTrainings({
                 </DossierTable>
             )}
             {overdue.length > 0 && (
-                <p className="text-[15px] leading-[22px]">
+                <p className="text-meta">
                     Capacitación vencida:{' '}
                     {overdue
                         .map(

@@ -21,7 +21,7 @@ export default function TenantRowView({
                     <Initials name={tenant.trade_name} kind="company" />
                     <div className="flex min-w-0 flex-col">
                         <span className="font-medium">{tenant.trade_name}</span>
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             {tenant.legal_name}
                         </span>
                     </div>
@@ -34,7 +34,7 @@ export default function TenantRowView({
                         {tenant.status_label}
                     </Badge>
                     {tenant.status_date !== null && (
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             {tenant.status_date}
                         </span>
                     )}

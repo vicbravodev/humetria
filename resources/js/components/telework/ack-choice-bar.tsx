@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { countOf } from '@/lib/plural';
 
 /** Who is ticked to record on paper: take at once everyone the pending list found, or take out everyone chosen. */
 export default function AckChoiceBar({
@@ -16,7 +17,7 @@ export default function AckChoiceBar({
     return (
         <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted-foreground">
-                {chosen} {chosen === 1 ? 'elegida' : 'elegidas'}
+                {countOf(chosen, 'elegida', 'elegidas')}
             </p>
             {found > 0 && (
                 <Button

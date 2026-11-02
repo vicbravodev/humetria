@@ -12,7 +12,7 @@ export default function ConfidentialBanner() {
                 Solo la ven las personas autorizadas de tu empresa. No la
                 compartas fuera de quienes atienden.
             </p>
-            <p className="text-[13px] leading-[18px] text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
                 Tu consulta queda registrada
             </p>
         </div>

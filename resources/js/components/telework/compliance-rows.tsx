@@ -10,7 +10,7 @@ export default function ComplianceRows({ rows }: { rows: Row[] }) {
             </h2>
             <ol
                 aria-label="Renglones de la tabla 10.3"
-                className="overflow-hidden rounded-xl border bg-card"
+                className="overflow-hidden card"
             >
                 {rows.map((row) => (
                     <ComplianceRow key={row.numeral} row={row} />

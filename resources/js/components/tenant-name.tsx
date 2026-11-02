@@ -8,11 +8,11 @@ export function TenantName({ tenant }: { tenant: CurrentTenant }) {
         <>
             <Initials name={tenant.trade_name} kind="company" />
             <span className="grid min-w-0 flex-1 leading-tight group-data-[collapsible=icon]:sr-only">
-                <span className="truncate text-[15px] font-semibold">
+                <span className="truncate text-meta font-semibold">
                     {tenant.trade_name}
                 </span>
                 {tenant.trial_days_left !== null && (
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {trialLabel(tenant.trial_days_left)}
                     </span>
                 )}

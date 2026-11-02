@@ -1,7 +1,7 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 /** A part of the report HR writes: a paragraph, or one line for a name or a license. */
 export default function ReportField({
@@ -29,18 +29,13 @@ export default function ReportField({
                 <p className="text-sm text-muted-foreground">{hint}</p>
             )}
             {multiline ? (
-                <textarea
+                <Textarea
                     id={id}
                     name={name}
                     defaultValue={value}
                     rows={4}
                     aria-invalid={error !== undefined}
                     aria-describedby={describedBy}
-                    className={cn(
-                        'w-full rounded-md border border-input bg-card px-4 py-3 text-base transition-[color,border-color,box-shadow] duration-150 ease-out hover:border-foreground/60',
-                        'focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-                        'aria-invalid:border-destructive aria-invalid:shadow-[inset_0_0_0_1px_var(--destructive)]',
-                    )}
                 />
             ) : (
                 <Input
@@ -51,7 +46,7 @@ export default function ReportField({
                     aria-describedby={describedBy}
                 />
             )}
-            <InputError id={describedBy} role="alert" message={error} />
+            <InputError id={describedBy} message={error} />
         </div>
     );
 }

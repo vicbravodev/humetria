@@ -13,14 +13,14 @@ export default function ComplianceRow({ row }: { row: Row }) {
             <div className="flex min-w-0 flex-col gap-0.5">
                 <p className="font-medium">{row.label}</p>
                 {row.detail !== null && (
-                    <p className="text-[15px] leading-[22px] text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         {row.detail}
                     </p>
                 )}
                 {row.href !== null && row.action !== null && (
                     <Link
                         href={row.href}
-                        className="touch-hit mt-1 w-fit rounded-sm text-[15px] font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="touch-hit mt-1 w-fit rounded-sm text-meta font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >
                         {row.action}
                         <span className="sr-only">

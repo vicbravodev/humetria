@@ -1,5 +1,5 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import PageHeader from '@/components/page-header';
+import { Head, setLayoutProps } from '@inertiajs/react';
+import PageHeader from '@/components/humetria/page-header';
 import NoticeList from '@/components/telework/notice-list';
 import NoticeToolbar from '@/components/telework/notice-toolbar';
 import type { NoticeFilters, NoticeRow, Paginated } from '@/types';
@@ -11,7 +11,6 @@ export default function Notices({
     notices: Paginated<NoticeRow>;
     filters: NoticeFilters;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
     setLayoutProps({
         breadcrumbs: [{ title: 'NOM-037' }, { title: 'Avisos' }],
     });
@@ -24,8 +23,8 @@ export default function Notices({
                     title="Avisos de teletrabajo"
                     description="Lo que las personas avisan por escrito: cambios de domicilio (6.7), alteraciones de condiciones o fuerza mayor (6.3) y riesgos de trabajo (6.9). Revisa cada uno y anota qué se hará."
                 />
-                <NoticeToolbar tenantSlug={tenantSlug} filters={filters} />
-                <NoticeList tenantSlug={tenantSlug} notices={notices} />
+                <NoticeToolbar filters={filters} />
+                <NoticeList notices={notices} />
             </div>
         </>
     );

@@ -1,10 +1,12 @@
 import { router } from '@inertiajs/react';
 import { Check, Copy, Link2, Mail } from 'lucide-react';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useClipboard } from '@/hooks/use-clipboard';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { link } from '@/routes/tenant/telework/teleworkers';
 
 /**
@@ -12,41 +14,39 @@ import { link } from '@/routes/tenant/telework/teleworkers';
  * hand over in person. A new link replaces the old one, and it is shown only once: only its hash is kept.
  */
 export default function PortalLinkPanel({
-    tenantSlug,
     teleworkerId,
     hasEmail,
     newLink,
 }: {
-    tenantSlug: string;
     teleworkerId: string;
     hasEmail: boolean;
     newLink: string | undefined;
 }) {
+    const tenantSlug = useTenantSlug();
     const [copied, copy] = useClipboard();
 
     return (
-        <section className="grid gap-4 rounded-xl border bg-card p-5">
+        <section className="grid gap-4 card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-primary">
-                        {hasEmail ? (
-                            <Mail aria-hidden className="size-5" />
-                        ) : (
-                            <Link2 aria-hidden className="size-5" />
-                        )}
-                    </span>
+                    <IconTile icon={hasEmail ? Mail : Link2} />
                     <div>
                         <h2 className="text-base font-semibold">
                             Enlace a su portal
                         </h2>
-                        <p className="text-[15px] text-muted-foreground">
+                        <p className="text-meta text-muted-foreground">
                             {hasEmail
                                 ? 'Se envió a su correo al registrarla.'
                                 : 'Sin correo'}
                         </p>
                     </div>
                 </div>
-                <ConfirmAction
+                <ConfirmDialog
+                    trigger={
+                        <Button variant="outline">
+                            Generar enlace para copiar
+                        </Button>
+                    }
                     title="¿Generar un enlace nuevo?"
                     description="El enlace anterior de esta persona dejará de funcionar. El nuevo se muestra una sola vez para que lo copies."
                     confirmLabel="Generar enlace"
@@ -60,11 +60,8 @@ export default function PortalLinkPanel({
                             { preserveScroll: true },
                         )
                     }
-                >
-                    <Button variant="outline">
-                        Generar enlace para copiar
-                    </Button>
-                </ConfirmAction>
+                    destructive={false}
+                />
             </div>
             {newLink !== undefined && (
                 <div className="grid gap-2 rounded-lg border bg-accent/40 p-4">

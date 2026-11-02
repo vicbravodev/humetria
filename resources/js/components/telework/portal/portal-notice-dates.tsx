@@ -1,5 +1,5 @@
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import type { NoticeKindValue } from '@/types';
 
@@ -28,7 +28,6 @@ export default function PortalNoticeDates({
                 />
                 <InputError
                     id={`${kind}-written_on-error`}
-                    role="alert"
                     message={errors['written_on']}
                 />
             </div>
@@ -45,7 +44,6 @@ export default function PortalNoticeDates({
                 />
                 <InputError
                     id={`${kind}-occurred_on-error`}
-                    role="alert"
                     message={errors['occurred_on']}
                 />
             </div>

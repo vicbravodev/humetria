@@ -1,31 +1,31 @@
 import { Form } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import QuestionFields from '@/components/telework/question-fields';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/checklist/questions';
 import type { RequirementOption } from '@/types';
 
 /** Adds a question of the Comisión at the end of a section. */
 export default function NewQuestionForm({
-    tenantSlug,
     workCenterId,
     section,
     requirements,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     section: number;
     requirements: RequirementOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}
             options={{ preserveScroll: true }}
             resetOnSuccess
-            className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2"
+            className="grid gap-4 card p-5 sm:grid-cols-2"
         >
             {({ processing, errors }) => (
                 <>
@@ -38,7 +38,7 @@ export default function NewQuestionForm({
                             placeholder="Iluminación, Ruido, Sillas…"
                             required
                         />
-                        <InputError role="alert" message={errors['heading']} />
+                        <InputError message={errors['heading']} />
                     </div>
                     <QuestionFields
                         prefix={`new-${section}`}

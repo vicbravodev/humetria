@@ -1,22 +1,22 @@
 import { router } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { destroy, move } from '@/routes/tenant/telework/checklist/questions';
 import type { ChecklistQuestion } from '@/types';
 
 /** Move, edit and remove a question of the draft; removing asks first. */
 export default function QuestionActions({
-    tenantSlug,
     workCenterId,
     question,
     onEdit,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     question: ChecklistQuestion;
     onEdit: () => void;
 }) {
+    const tenantSlug = useTenantSlug();
     const target = {
         tenant: tenantSlug,
         workCenter: workCenterId,
@@ -58,21 +58,21 @@ export default function QuestionActions({
             >
                 <Pencil aria-hidden />
             </Button>
-            <ConfirmAction
+            <ConfirmDialog
+                trigger={
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Quitar ${question.code}`}
+                    >
+                        <Trash2 aria-hidden />
+                    </Button>
+                }
                 title={`¿Quitar ${question.code} del borrador?`}
                 description="La pregunta sale de este borrador. Las versiones ya publicadas no cambian."
                 confirmLabel="Quitar pregunta"
-                destructive
                 onConfirm={() => act(destroy(target))}
-            >
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Quitar ${question.code}`}
-                >
-                    <Trash2 aria-hidden />
-                </Button>
-            </ConfirmAction>
+            />
         </div>
     );
 }

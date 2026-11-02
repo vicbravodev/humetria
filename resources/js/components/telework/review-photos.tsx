@@ -1,18 +1,18 @@
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show } from '@/routes/tenant/telework/photos';
 import { show as showEvidence } from '@/routes/tenant/telework/evidence-photos';
 import type { ReviewPhoto } from '@/types';
 
 /** Thumbnails of the photos a person sent; each opens the full picture, served only to who may see it. */
 export default function ReviewPhotos({
-    tenantSlug,
     photos,
     evidence = false,
 }: {
-    tenantSlug: string;
     photos: ReviewPhoto[];
     /** Photos sent for a request of the Comisión, not those of the checklist. */
     evidence?: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     if (photos.length === 0) {
         return null;
     }

@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import Combobox from '@/components/humetria/combobox';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/telework/trainings';
 import { options } from '@/routes/tenant/telework/work-centers';
@@ -9,12 +10,11 @@ const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 
 /** Narrows the trainings and the roster to one work center. */
 export default function TrainingToolbar({
-    tenantSlug,
     filters,
 }: {
-    tenantSlug: string;
     filters: TrainingFilters;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <div className="sm:w-64">
             <Combobox

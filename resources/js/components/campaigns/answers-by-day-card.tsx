@@ -14,7 +14,7 @@ export default function AnswersByDayCard({
     const days = answers.days;
 
     return (
-        <article className="flex flex-col gap-4 rounded-xl border bg-card p-6 md:col-span-2">
+        <article className="flex flex-col gap-4 card p-6 md:col-span-2">
             <div className="flex flex-col gap-0.5">
                 <h2 className="text-lg leading-7 font-semibold">
                     Respuestas por día

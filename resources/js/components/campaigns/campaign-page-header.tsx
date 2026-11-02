@@ -1,7 +1,7 @@
 import { CalendarDays, ClipboardCheck, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import CampaignStatusBadge from '@/components/campaigns/campaign-status-badge';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { headerFacts } from '@/lib/evaluation';
 import type { CampaignDetail } from '@/types';
 

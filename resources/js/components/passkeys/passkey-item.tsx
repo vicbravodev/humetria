@@ -41,7 +41,7 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
                         </span>
                     )}
                 </p>
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     Agregada {passkey.created_at_diff}
                     {passkey.last_used_at_diff &&
                         ` · usada ${passkey.last_used_at_diff}`}

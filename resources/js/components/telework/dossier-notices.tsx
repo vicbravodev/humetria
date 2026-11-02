@@ -9,7 +9,7 @@ export default function DossierNoticesBlock({
     const total = notices.reviewed + notices.pending;
 
     return (
-        <div className="flex flex-col gap-1 text-[15px] leading-[22px]">
+        <div className="flex flex-col gap-1 text-meta">
             <p>
                 {total === 0
                     ? 'Nadie ha enviado un aviso.'

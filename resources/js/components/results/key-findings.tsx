@@ -13,7 +13,7 @@ export default function KeyFindings({ findings }: { findings: Finding[] }) {
                         <span
                             aria-hidden="true"
                             className={cn(
-                                'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold',
+                                'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-caption font-semibold',
                                 finding.tone === 'risk'
                                     ? 'bg-risk-muy-alto-bg text-risk-muy-alto-fg'
                                     : 'bg-risk-bajo-bg text-risk-bajo-fg',

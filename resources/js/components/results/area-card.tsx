@@ -2,6 +2,7 @@ import LevelBar from '@/components/humetria/level-bar';
 import LevelLegend from '@/components/humetria/level-legend';
 import { areaBuckets, highTone } from '@/lib/report';
 import { highRisk, shareOf } from '@/lib/results';
+import { riskText } from '@/lib/risk-tones';
 import { cn } from '@/lib/utils';
 import type { AreaResult, RiskLevelInfo } from '@/types';
 
@@ -11,11 +12,6 @@ const BUCKETS: RiskLevelInfo[] = [
     { value: 'medium', label: 'Medio', action: '' },
     { value: 'very_high', label: 'Alto o muy alto', action: '' },
 ];
-
-const TONES = {
-    very_high: 'text-risk-muy-alto-fg',
-    high: 'text-risk-alto-fg',
-};
 
 export default function AreaCard({
     area,
@@ -45,12 +41,12 @@ export default function AreaCard({
                     <span
                         className={cn(
                             'text-[32px] leading-9 font-semibold tracking-[-0.01em] tabular-nums',
-                            tone !== null && TONES[tone],
+                            tone !== null && riskText(tone),
                         )}
                     >
                         {share} %
                     </span>
-                    <span className="text-[13px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         alto o muy alto
                     </span>
                 </div>
@@ -65,7 +61,7 @@ export default function AreaCard({
             <LevelLegend
                 levels={BUCKETS}
                 counts={areaBuckets(area.final)}
-                className="gap-x-4 gap-y-1.5 text-[13px]"
+                className="gap-x-4 gap-y-1.5 text-caption"
             />
         </div>
     );

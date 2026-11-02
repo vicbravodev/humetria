@@ -3,6 +3,7 @@ import { Download, UserCheck } from 'lucide-react';
 import ProgressBar from '@/components/humetria/progress-bar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
 import { progressText } from '@/lib/telework/acknowledgements';
 import { missingLabels } from '@/lib/telework/documents';
@@ -12,25 +13,24 @@ import type { DocumentKindOption, DocumentRow as Row } from '@/types';
 
 /** One version of a document in one work center: its date, what it covers and what it leaves out. */
 export default function DocumentRow({
-    tenantSlug,
     row,
     kind,
 }: {
-    tenantSlug: string;
     row: Row;
     kind: DocumentKindOption | undefined;
 }) {
+    const tenantSlug = useTenantSlug();
     const missing = missingLabels(kind, row.missingItems);
     const items = kind?.items.length ?? 0;
 
     return (
-        <li className="flex flex-col gap-3 rounded-xl border bg-card px-[22px] py-5">
+        <li className="flex flex-col gap-3 card px-[22px] py-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-col">
                     <p className="font-medium">
                         {kind?.label ?? row.kind} · versión {row.version}
                     </p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         {row.workCenter.name} · publicada el{' '}
                         {describeDate(row.publishedOn) ?? row.publishedOn}
                     </p>

@@ -1,12 +1,13 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { ListChecks, Send, Copy } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ChecklistError from '@/components/telework/checklist-error';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import CoverageWarnings from '@/components/telework/coverage-warnings';
 import ChecklistSections from '@/components/telework/checklist-sections';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { draft, publish } from '@/routes/tenant/telework/checklist';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
 
@@ -27,7 +28,7 @@ export default function ChecklistPage({
     requirements: RequirementOption[];
     missingLabels: Record<string, string[]>;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const target = { tenant: tenantSlug, workCenter: workCenter.id };
     const isDraft = checklist.status === 'draft';
     const act = (route: ReturnType<typeof publish>) =>
@@ -59,17 +60,19 @@ export default function ChecklistPage({
                     ]}
                 >
                     {canEdit && (
-                        <ConfirmAction
+                        <ConfirmDialog
+                            trigger={
+                                <Button>
+                                    <Send aria-hidden />
+                                    Publicar versión {checklist.version}
+                                </Button>
+                            }
                             title={`¿Publicar la versión ${checklist.version}?`}
                             description="Queda como la lista que se contesta en este centro y ya no se puede cambiar: para ajustarla, inicias un borrador nuevo."
                             confirmLabel="Publicar"
                             onConfirm={() => act(publish(target))}
-                        >
-                            <Button>
-                                <Send aria-hidden />
-                                Publicar versión {checklist.version}
-                            </Button>
-                        </ConfirmAction>
+                            destructive={false}
+                        />
                     )}
                     {canStartDraft && (
                         <Button onClick={() => act(draft(target))}>
@@ -81,7 +84,6 @@ export default function ChecklistPage({
                 <ChecklistError />
                 {isDraft && <CoverageWarnings labels={missingLabels} />}
                 <ChecklistSections
-                    tenantSlug={tenantSlug}
                     workCenterId={workCenter.id}
                     questions={questions}
                     requirements={requirements}

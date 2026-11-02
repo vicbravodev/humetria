@@ -41,7 +41,7 @@ export default function LaunchForm({
         >
             {({ processing, errors }) => (
                 <>
-                    <div className="flex flex-col rounded-xl border bg-card px-6 pt-1 pb-6">
+                    <div className="flex flex-col card px-6 pt-1 pb-6">
                         <ol>
                             <ReviewStep title="Personas y guías">
                                 <p className="text-sm text-muted-foreground">

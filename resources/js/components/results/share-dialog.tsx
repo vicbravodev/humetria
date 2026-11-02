@@ -1,7 +1,7 @@
 import { Form, usePage } from '@inertiajs/react';
 import { Share2 } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import ReportLink from '@/components/results/report-link';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,19 +20,19 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/campaigns/shares';
 import type { ShareDurationOption } from '@/types';
 
 /** Opens a temporary link to the report for someone with no account: from 15 minutes to 48 hours. */
 export default function ShareDialog({
-    tenantSlug,
     campaignId,
     durations,
 }: {
-    tenantSlug: string;
     campaignId: string;
     durations: ShareDurationOption[];
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const link = usePage().flash.reportLink;
 
@@ -80,7 +80,6 @@ export default function ShareDialog({
                                 </Select>
                                 <InputError
                                     id="share-duration-error"
-                                    role="alert"
                                     message={errors['duration']}
                                 />
                             </div>

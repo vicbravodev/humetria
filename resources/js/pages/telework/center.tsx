@@ -1,12 +1,13 @@
-import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { FileText, Factory, Users } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
-import CenterCenterNextStepData from '@/components/telework/center-next-step';
+import CenterNextStep from '@/components/telework/center-next-step';
 import CenterProgressCard from '@/components/telework/center-progress-card';
 import CenterRoster from '@/components/telework/center-roster';
 import CenterTabs from '@/components/telework/center-tabs';
 import ComplianceRows from '@/components/telework/compliance-rows';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { headcountText } from '@/lib/telework/center';
 import { index } from '@/routes/tenant/telework';
 import type {
@@ -41,7 +42,7 @@ export default function TeleworkCenter({
     /** Null for whoever sees counts only (the viewer). */
     people: Paginated<CenterPerson> | null;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037', href: index(tenantSlug) },
@@ -72,13 +73,11 @@ export default function TeleworkCenter({
                         </Button>
                     )}
                 </PageHeader>
-                {nextStep !== null && (
-                    <CenterCenterNextStepData step={nextStep} />
-                )}
+                {nextStep !== null && <CenterNextStep step={nextStep} />}
                 <CenterProgressCard progress={progress} rows={rows} />
                 <CenterTabs tabs={tabs} />
                 {people === null ? (
-                    <p className="text-[15px] text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         Tu rol ve el avance y el estado de cada renglón, sin los
                         datos de las personas.
                     </p>

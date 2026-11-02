@@ -16,10 +16,7 @@ export default function GuideSizes({
     counts: CentersBySize;
 }) {
     return (
-        <section
-            aria-labelledby="guide-sizes"
-            className="overflow-hidden rounded-xl border bg-card"
-        >
+        <section aria-labelledby="guide-sizes" className="overflow-hidden card">
             <div className="flex items-center gap-3 border-b px-5 py-[18px]">
                 <Info
                     aria-hidden
@@ -28,7 +25,7 @@ export default function GuideSizes({
                 <h2 id="guide-sizes" className="grow text-sm font-medium">
                     Qué guía aplica según el tamaño del centro
                 </h2>
-                <span className="text-[13px] leading-[18px] text-muted-foreground max-sm:hidden">
+                <span className="text-caption text-muted-foreground max-sm:hidden">
                     Numeral 2 de la NOM-035
                 </span>
             </div>
@@ -51,7 +48,7 @@ export default function GuideSizes({
                                 {size.guides}
                             </span>
                             {counts[size.key] === 0 && (
-                                <span className="text-[13px] leading-[18px] text-muted-foreground">
+                                <span className="text-caption text-muted-foreground">
                                     Ningún centro
                                 </span>
                             )}
@@ -59,7 +56,7 @@ export default function GuideSizes({
                                 {here.map((center) => (
                                     <li
                                         key={center.id}
-                                        className="inline-flex h-[26px] items-center gap-1.5 rounded-full bg-accent px-2.5 text-[13px] leading-[18px] font-medium text-primary"
+                                        className="inline-flex h-[26px] items-center gap-1.5 rounded-full bg-accent px-2.5 text-caption font-medium text-primary"
                                     >
                                         <Building2
                                             aria-hidden
@@ -69,7 +66,7 @@ export default function GuideSizes({
                                     </li>
                                 ))}
                                 {more > 0 && (
-                                    <li className="inline-flex h-[26px] items-center text-[13px] text-muted-foreground">
+                                    <li className="inline-flex h-[26px] items-center text-caption text-muted-foreground">
                                         y {more} más
                                     </li>
                                 )}

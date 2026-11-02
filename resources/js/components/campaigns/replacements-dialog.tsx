@@ -13,24 +13,24 @@ import { Spinner } from '@/components/ui/spinner';
 import { replacements } from '@/routes/tenant/campaigns';
 import type { ReplacementPool } from '@/types';
 import ReplacementGenderField from '@/components/campaigns/replacement-gender-field';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 
 /**
  * Draws more people into the sample when some of the drawn will not answer (III.2 c): of the same gender as them, so the
  * sample keeps its split (III.1).
  */
 export default function ReplacementsDialog({
-    tenantSlug,
     campaignId,
     pool,
     open,
     onOpenChange,
 }: {
-    tenantSlug: string;
     campaignId: string;
     pool: ReplacementPool[];
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>

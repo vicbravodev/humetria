@@ -86,8 +86,11 @@ Fuera del set de shadcn, pero necesarias para el sistema. Se agregan al mismo `:
 | `body` | 16 / 24 | 400 | Cuerpo e inputs (también en móvil). |
 | `body-strong` | 16 / 24 | 500 | Botones, labels, navegación. |
 | `small` | 14 / 20 | 400 | Metadatos del panel. Nunca en la encuesta. |
+| `meta` | 15 / 22 | 400 | Migas, datos bajo el título de una página y textos secundarios del panel. |
 | `caption` | 13 / 18 | 500, +0.02em, MAYÚSCULAS | Encabezados de tabla y etiquetas de KPI. |
 | `kpi` | 32 / 40 | 600, cifras tabulares | Valor de KPI. |
+
+`caption` y `meta` son tokens de Tailwind (`text-caption`, `text-meta`, en `@theme` de `resources/css/app.css`): fijan tamaño e interlínea; el peso y las mayúsculas van aparte donde se usan. Escribirlos a mano (`text-[13px]`) lo rechaza `tests/Unit/DesignTokensOnlyTest.php`.
 
 Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google`. No se usan otros pesos.
 

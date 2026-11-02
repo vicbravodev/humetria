@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { workplaceField } from '@/lib/workplace-field';
@@ -35,7 +35,7 @@ export default function WorkplaceField({
                 }
                 {...input}
             />
-            <InputError id={`${id}-error`} role="alert" message={error} />
+            <InputError id={`${id}-error`} message={error} />
         </div>
     );
 }

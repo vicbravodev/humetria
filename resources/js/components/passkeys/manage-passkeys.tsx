@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react';
 import { KeyRound, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import SettingRow from '@/components/humetria/setting-row';
 import PasskeyItem from '@/components/passkeys/passkey-item';
 import PasskeysEmptyState from '@/components/passkeys/passkeys-empty-state';
@@ -71,7 +71,7 @@ export default function ManagePasskeys(props: Props) {
                 )}
             </div>
             {page !== null && (
-                <ConsolePagination
+                <Pagination
                     page={page}
                     label="Páginas de llaves de acceso"
                     previous="Más recientes"

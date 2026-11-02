@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -74,7 +74,7 @@ export default function ReviewPeriodField({
                     />
                 </div>
             )}
-            <InputError id="period-error" role="alert" message={error} />
+            <InputError id="period-error" message={error} />
         </fieldset>
     );
 }

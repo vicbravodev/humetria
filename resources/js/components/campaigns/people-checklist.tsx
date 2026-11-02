@@ -1,8 +1,8 @@
 import ChosenPeopleActions from '@/components/campaigns/chosen-people-actions';
 import ChosenPeopleField from '@/components/campaigns/chosen-people-field';
 import PersonCheckRow from '@/components/campaigns/person-check-row';
-import ConsolePagination from '@/components/console-pagination';
-import InputError from '@/components/input-error';
+import Pagination from '@/components/humetria/pagination';
+import InputError from '@/components/humetria/input-error';
 import type { useChosenPeople } from '@/hooks/use-chosen-people';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import type { Paginated, RosterPerson } from '@/types';
@@ -62,7 +62,7 @@ export default function PeopleChecklist({
             />
             <p
                 id="trauma-people-help"
-                className="text-[13px] leading-[18px] text-muted-foreground"
+                className="text-caption text-muted-foreground"
             >
                 Solo personas de {workCenter.label}.
             </p>
@@ -95,15 +95,13 @@ export default function PeopleChecklist({
                     Nadie coincide con la búsqueda.
                 </p>
             )}
-            <ConsolePagination
+            <Pagination
                 page={people}
                 label="Páginas de personas"
                 preserveState
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
-            <InputError id="trauma-people-error" role="alert" message={error} />
+            <InputError id="trauma-people-error" message={error} />
         </fieldset>
     );
 }

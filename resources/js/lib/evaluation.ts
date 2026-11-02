@@ -1,5 +1,6 @@
 import { fromCalendarDate, toCalendarDate } from '@/lib/calendar-date';
 import { instrumentsText } from '@/lib/campaigns';
+import { countOf } from '@/lib/plural';
 import type {
     AnswerDay,
     AreaParticipation,
@@ -50,7 +51,7 @@ export function weekChoices(
     suggested: string,
 ): { label: string; date: string }[] {
     return [1, 2, 3].map((weeks) => ({
-        label: weeks === 1 ? '1 semana' : `${weeks} semanas`,
+        label: countOf(weeks, 'semana', 'semanas'),
         date: addDays(suggested, (weeks - 2) * 7),
     }));
 }
@@ -178,7 +179,7 @@ export function headerFacts(campaign: CampaignDetail): HeaderFact[] {
 
 /** "1 persona", "30 personas". */
 export function peopleText(count: number): string {
-    return count === 1 ? '1 persona' : `${count} personas`;
+    return countOf(count, 'persona', 'personas');
 }
 
 /** Whether a reminder can go to the people a list shows: only pending ones, or those whose link failed, and someone. */

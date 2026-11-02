@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import type { RoleOption } from '@/types';
 
 const HINTS: Record<string, string> = {
@@ -45,7 +45,7 @@ export default function MemberRoleChoice({
                     </label>
                 ))}
             </div>
-            <InputError id="member-role-error" role="alert" message={error} />
+            <InputError id="member-role-error" message={error} />
         </fieldset>
     );
 }

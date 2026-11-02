@@ -11,18 +11,18 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/teleworkers/workplaces';
 
 /** One more place where the person teleworks; its first checklist is requested at once. */
 export default function AddWorkplaceDialog({
-    tenantSlug,
     teleworkerId,
     states,
 }: {
-    tenantSlug: string;
     teleworkerId: string;
     states: Record<string, string>;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

@@ -1,15 +1,20 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-/** What a list shows before it has anything: an icon of what will be here, a title and what makes it appear. */
+/**
+ * What a list shows before it has anything: an icon of what will be here, a title, what makes it appear and, when
+ * there is one, the button to the next step.
+ */
 export default function EmptyState({
     icon: Icon,
     title,
     children,
+    action,
 }: {
     icon: LucideIcon;
     title: string;
     children: ReactNode;
+    action?: ReactNode;
 }) {
     return (
         <section
@@ -23,6 +28,7 @@ export default function EmptyState({
                 {title}
             </h2>
             <p className="mt-1 max-w-md text-muted-foreground">{children}</p>
+            {action !== undefined && <div className="mt-6">{action}</div>}
         </section>
     );
 }

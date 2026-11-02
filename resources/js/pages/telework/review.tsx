@@ -1,33 +1,14 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import { CalendarClock, MapPin, User } from 'lucide-react';
-import PageHeader from '@/components/page-header';
+import { Head, setLayoutProps } from '@inertiajs/react';
+import PageHeader from '@/components/humetria/page-header';
 import ReviewAnswersView from '@/components/telework/review-answers';
 import ReviewEvidence from '@/components/telework/review-evidence';
 import ReviewSide from '@/components/telework/review-side';
 import ReviewVisits from '@/components/telework/review-visits';
 import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
-import { describeDate } from '@/lib/calendar-date';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { reviewFacts } from '@/lib/telework/review';
 import { index } from '@/routes/tenant/telework/reviews';
-import type { PageFact } from '@/components/page-header';
 import type { ReviewDetail } from '@/types';
-
-function reviewFacts(review: ReviewDetail): PageFact[] {
-    const expires =
-        review.workplace.expiresOn === null
-            ? undefined
-            : describeDate(review.workplace.expiresOn);
-
-    return [
-        {
-            icon: User,
-            text: `${review.person.name} · ${review.person.jobTitle}`,
-        },
-        { icon: MapPin, text: review.workplace.address },
-        ...(expires === undefined
-            ? []
-            : [{ icon: CalendarClock, text: `Vigente hasta ${expires}` }]),
-    ];
-}
 
 export default function Review({
     workCenter,
@@ -36,7 +17,7 @@ export default function Review({
     workCenter: { id: string; name: string };
     review: ReviewDetail;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-037' },
@@ -66,22 +47,17 @@ export default function Review({
                 <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
                     <div className="flex flex-col gap-6">
                         <ReviewAnswersView
-                            tenantSlug={tenantSlug}
                             answers={review.answers}
                             specialNeeds={review.application.specialNeeds}
                         />
-                        <ReviewEvidence
-                            tenantSlug={tenantSlug}
-                            evidence={review.evidence}
-                        />
+                        <ReviewEvidence evidence={review.evidence} />
                         <ReviewVisits
-                            tenantSlug={tenantSlug}
                             workplaceId={review.workplace.id}
                             authorizations={review.authorizations}
                             canAsk={review.workplace.status !== 'retired'}
                         />
                     </div>
-                    <ReviewSide tenantSlug={tenantSlug} review={review} />
+                    <ReviewSide review={review} />
                 </div>
             </div>
         </>

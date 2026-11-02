@@ -58,24 +58,31 @@ export function highRisk(counts: LevelCounts): number {
     return counts.slice(3).reduce((sum, count) => sum + count, 0);
 }
 
-function total(counts: LevelCounts): number {
+/** How many questionnaires a group has, across the five levels. */
+export function total(counts: LevelCounts): number {
     return counts.reduce((sum, count) => sum + count, 0);
 }
 
-/** Groups from the worst off: by their share in Alto or Muy alto, then from Medio up; ties keep their order. */
+/**
+ * Groups from the worst off: by their share in Alto or Muy alto, then in Muy alto, then from Medio up; ties keep their
+ * order. The screen and the printed report both rank with it, so they name the same group.
+ */
 export function rankBySeverity<T extends { levels: LevelCounts }>(
     rows: T[],
 ): T[] {
-    const severity = (row: T): [number, number] => [
-        shareOf(highRisk(row.levels), total(row.levels)),
-        shareOf(needingAction(row.levels), total(row.levels)),
-    ];
+    const severity = ({ levels }: T): number[] =>
+        [highRisk(levels), levels[4] ?? 0, needingAction(levels)].map((count) =>
+            shareOf(count, total(levels)),
+        );
 
     return rows.toSorted((a, b) => {
-        const [highA, actionA] = severity(a);
-        const [highB, actionB] = severity(b);
+        const [severityA, severityB] = [severity(a), severity(b)];
 
-        return highB - highA || actionB - actionA;
+        return (
+            severityA
+                .map((share, index) => (severityB[index] ?? 0) - share)
+                .find((difference) => difference !== 0) ?? 0
+        );
     });
 }
 

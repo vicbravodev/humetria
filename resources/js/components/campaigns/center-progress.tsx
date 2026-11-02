@@ -1,18 +1,18 @@
 import { Link } from '@inertiajs/react';
 import ArcMeter from '@/components/humetria/arc-meter';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { openCampaignLine } from '@/lib/evaluation-centers';
 import { show } from '@/routes/tenant/campaigns';
 import type { CampaignSummary } from '@/types';
 
 /** A running evaluation on its work center's card (pantalla NOM035): the arch, who answered, when it closes. */
 export default function CenterProgress({
-    tenantSlug,
     campaign,
 }: {
-    tenantSlug: string;
     campaign: CampaignSummary;
 }) {
+    const tenantSlug = useTenantSlug();
     const completed = campaign.progress?.completed ?? 0;
     const target = campaign.progress?.target ?? 0;
     const answered = `${completed} de ${target}`;
@@ -32,7 +32,7 @@ export default function CenterProgress({
                     </span>{' '}
                     contestaron
                 </p>
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     {openCampaignLine(campaign)}
                 </p>
             </div>

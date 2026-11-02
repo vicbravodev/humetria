@@ -1,16 +1,16 @@
 import { Link } from '@inertiajs/react';
 import Notice from '@/components/humetria/notice';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show } from '@/routes/tenant/campaigns';
 import type { WorkCenterEvaluation } from '@/types';
 
 /** Why a work center cannot start an evaluation now: one is already open, or nobody works there yet. */
 export default function EvaluationBlocked({
-    tenantSlug,
     center,
 }: {
-    tenantSlug: string;
     center: WorkCenterEvaluation;
 }) {
+    const tenantSlug = useTenantSlug();
     const open = center.openCampaign;
 
     if (open === null) {

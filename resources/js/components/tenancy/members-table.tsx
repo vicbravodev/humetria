@@ -16,12 +16,10 @@ import type {
 
 /** Who has access, then the invitations still open, in one table (pantallas: Usuarios). */
 export default function MembersTable({
-    tenantSlug,
     members,
     invitations,
     roles,
 }: {
-    tenantSlug: string;
     members: MemberRow[];
     invitations: Invitation[];
     roles: RoleOption[];
@@ -45,7 +43,6 @@ export default function MembersTable({
                 {members.map((member) => (
                     <MemberRowView
                         key={member.id}
-                        tenantSlug={tenantSlug}
                         member={member}
                         roles={roles}
                     />
@@ -53,7 +50,6 @@ export default function MembersTable({
                 {invitations.map((invitation) => (
                     <MemberInvitationRow
                         key={invitation.id}
-                        tenantSlug={tenantSlug}
                         invitation={invitation}
                     />
                 ))}

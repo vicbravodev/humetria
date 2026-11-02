@@ -1,9 +1,10 @@
-import { Head, router, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, router, setLayoutProps } from '@inertiajs/react';
 import TraumaForm from '@/components/campaigns/trauma-form';
 import TraumaNextSteps from '@/components/campaigns/trauma-next-steps';
 import Combobox from '@/components/humetria/combobox';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { serverSource } from '@/lib/server-options';
 import { index } from '@/routes/tenant/campaigns';
 import { create } from '@/routes/tenant/campaigns/trauma';
@@ -27,7 +28,7 @@ export default function Trauma({
     minDeadline: string;
     suggestedDeadline: string;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
             { title: 'NOM-035', href: index(tenantSlug) },
@@ -74,12 +75,11 @@ export default function Trauma({
                     }
                 />
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] items-start gap-7">
-                    <div className="rounded-xl border bg-card p-6">
+                    <div className="card p-6">
                         {workCenter !== null && people !== null ? (
                             <TraumaForm
                                 // A new list of people for each work center.
                                 key={workCenter.value}
-                                tenantSlug={tenantSlug}
                                 picker={picker}
                                 workCenter={workCenter}
                                 people={people}
@@ -94,7 +94,7 @@ export default function Trauma({
                         ) : (
                             <div className="grid gap-4 sm:grid-cols-2">
                                 {picker}
-                                <p className="self-end text-[13px] leading-[18px] text-muted-foreground sm:pb-3">
+                                <p className="self-end text-caption text-muted-foreground sm:pb-3">
                                     Elige dónde pasó para ver a su gente.
                                 </p>
                             </div>

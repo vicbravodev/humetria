@@ -41,3 +41,16 @@ export function passwordChecks(rules: string, value: string): PasswordCheck[] {
             : [{ label: check.label, met: check.pattern.test(value) }];
     });
 }
+
+const SEGMENTS = 4;
+
+/** How many of the meter's four segments the checks met fill. */
+export function filledSegments(checks: PasswordCheck[]): number {
+    if (checks.length === 0) {
+        return 0;
+    }
+
+    return Math.round(
+        (checks.filter((check) => check.met).length / checks.length) * SEGMENTS,
+    );
+}

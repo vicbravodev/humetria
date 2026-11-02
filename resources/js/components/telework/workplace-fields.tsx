@@ -1,5 +1,5 @@
 import Combobox from '@/components/humetria/combobox';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import WorkplaceField from '@/components/telework/workplace-field';
 import { Label } from '@/components/ui/label';
 import { workplaceField } from '@/lib/workplace-field';
@@ -84,7 +84,6 @@ export default function WorkplaceFields({
                     />
                     <InputError
                         id={`${stateId}-error`}
-                        role="alert"
                         message={errors[state.error]}
                     />
                 </div>

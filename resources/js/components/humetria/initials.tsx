@@ -1,4 +1,4 @@
-import { useInitials } from '@/hooks/use-initials';
+import { initials } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
 /**
@@ -14,8 +14,6 @@ export default function Initials({
     kind?: 'person' | 'company';
     className?: string;
 }) {
-    const initials = useInitials();
-
     return (
         <span
             aria-hidden

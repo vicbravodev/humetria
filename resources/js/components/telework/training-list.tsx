@@ -1,15 +1,13 @@
 import { GraduationCap } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import TrainingRow from '@/components/telework/training-row';
 import type { Paginated, TrainingRow as Row } from '@/types';
 
 /** The trainings registered, the newest first. */
 export default function TrainingList({
-    tenantSlug,
     trainings,
 }: {
-    tenantSlug: string;
     trainings: Paginated<Row>;
 }) {
     return (
@@ -28,19 +26,13 @@ export default function TrainingList({
             ) : (
                 <ol aria-label="Capacitaciones" className="flex flex-col gap-3">
                     {trainings.data.map((row) => (
-                        <TrainingRow
-                            key={row.id}
-                            tenantSlug={tenantSlug}
-                            row={row}
-                        />
+                        <TrainingRow key={row.id} row={row} />
                     ))}
                 </ol>
             )}
-            <ConsolePagination
+            <Pagination
                 page={trainings}
                 label="Páginas de capacitaciones"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

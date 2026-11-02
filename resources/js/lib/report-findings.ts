@@ -1,5 +1,10 @@
-import { rankByHighRisk, total } from '@/lib/report';
-import { highRisk, percentText, riskVerdict } from '@/lib/results';
+import {
+    highRisk,
+    percentText,
+    rankBySeverity,
+    riskVerdict,
+    total,
+} from '@/lib/results';
 import type { AreaResults, NomReport, RiskGroup, RiskResults } from '@/types';
 
 /** A finding of the summary: where the risk is, or what holds up. */
@@ -46,7 +51,7 @@ function focusFinding(domain: RiskGroup): Finding {
 }
 
 function areaFinding(areas: AreaResults): Finding | null {
-    const [worst] = rankByHighRisk(
+    const [worst] = rankBySeverity(
         areas.visible.map((area) => ({ ...area, levels: area.final })),
     );
 
@@ -76,7 +81,7 @@ export function keyFindings(
     results: RiskResults,
     areas: AreaResults,
 ): Finding[] {
-    const ranked = rankByHighRisk(results.domains);
+    const ranked = rankBySeverity(results.domains);
     const worst = ranked[0];
     const best = ranked.at(-1);
 

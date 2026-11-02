@@ -1,8 +1,8 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import AuthHeading from '@/components/auth-heading';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import PasskeyVerify from '@/components/passkeys/passkey-verify';
-import PasswordInput from '@/components/password-input';
+import PasswordInput from '@/components/humetria/password-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';

@@ -38,10 +38,10 @@ export default function ReportDomains({
                     <span className="hidden md:block">
                         <ReportCaption>Categoría y dominio</ReportCaption>
                     </span>
-                    <span className="pr-2.5 text-right text-[13px] text-muted-foreground">
+                    <span className="pr-2.5 text-right text-caption text-muted-foreground">
                         ← Nulo, bajo o medio
                     </span>
-                    <span className="pl-2.5 text-[13px] font-semibold text-risk-muy-alto-fg">
+                    <span className="pl-2.5 text-caption font-semibold text-risk-muy-alto-fg">
                         Alto o muy alto →
                     </span>
                     <span className="text-right">
@@ -61,15 +61,15 @@ export default function ReportDomains({
                 <div className="flex flex-wrap justify-between gap-3 border-t pt-4">
                     <LevelLegend
                         levels={levels}
-                        className="gap-x-[18px] text-[13px] text-muted-foreground"
+                        className="gap-x-[18px] text-caption text-muted-foreground"
                     />
-                    <span className="text-[13px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         Escala de 0 a {scale} % por lado. Pasa el cursor sobre
                         una barra para ver el detalle.
                     </span>
                 </div>
             </div>
-            <p className="max-w-[820px] text-[13px] leading-[18px] text-muted-foreground">
+            <p className="max-w-[820px] text-caption text-muted-foreground">
                 Cada categoría se califica con su propia escala ({report.guide},
                 numeral {report.guide.replace('Guía ', '')}.3). Por eso su
                 porcentaje puede no coincidir con el de sus dominios.

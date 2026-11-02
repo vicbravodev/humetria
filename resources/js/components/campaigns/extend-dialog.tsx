@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { useState } from 'react';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,20 +14,20 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { extend } from '@/routes/tenant/campaigns';
 
 /** Gives people more days to answer; the last day only moves later. */
 export default function ExtendDialog({
-    tenantSlug,
     campaignId,
     closesOn,
     min,
 }: {
-    tenantSlug: string;
     campaignId: string;
     closesOn: string | null;
     min: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (
@@ -62,7 +62,6 @@ export default function ExtendDialog({
                                 />
                                 <InputError
                                     id="extend-closes_on-error"
-                                    role="alert"
                                     message={errors['closes_on']}
                                 />
                             </div>

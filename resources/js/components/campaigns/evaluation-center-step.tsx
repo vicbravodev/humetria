@@ -4,6 +4,7 @@ import { DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useEvaluationCandidate } from '@/hooks/use-evaluation-candidate';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { serverSource } from '@/lib/server-options';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type { WorkCenterEvaluation } from '@/types';
@@ -13,14 +14,13 @@ import type { WorkCenterEvaluation } from '@/types';
  * page's `candidate`, asked for alone once it is chosen.
  */
 export default function EvaluationCenterStep({
-    tenantSlug,
     chosen,
     onNext,
 }: {
-    tenantSlug: string;
     chosen: WorkCenterEvaluation | null;
     onNext: (center: WorkCenterEvaluation) => void;
 }) {
+    const tenantSlug = useTenantSlug();
     const { choice, found, loading, choose } = useEvaluationCandidate(chosen);
 
     return (
@@ -40,7 +40,7 @@ export default function EvaluationCenterStep({
                     placeholder="Elige un centro"
                     onChange={choose}
                 />
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     La NOM-035 se evalúa por centro de trabajo: su número de
                     personas decide qué guías aplican.
                 </p>

@@ -1,8 +1,9 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import Combobox from '@/components/humetria/combobox';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Option } from '@/lib/option-search';
 import { serverSource } from '@/lib/server-options';
 import { addChoice, removeChoice } from '@/lib/telework/choices';
@@ -13,14 +14,13 @@ import { employees } from '@/routes/tenant/telework/teleworkers';
  * center there is nobody to search; changing the center starts the list again (the parent keys this by center).
  */
 export default function TrainingAttendeesField({
-    tenantSlug,
     centerId,
     error,
 }: {
-    tenantSlug: string;
     centerId: string;
     error: string | undefined;
 }) {
+    const tenantSlug = useTenantSlug();
     const [chosen, setChosen] = useState<Option[]>([]);
 
     return (
@@ -29,7 +29,7 @@ export default function TrainingAttendeesField({
                 Asistentes
             </label>
             {centerId === '' ? (
-                <p className="text-[15px] text-muted-foreground">
+                <p className="text-meta text-muted-foreground">
                     Elige primero el centro de trabajo.
                 </p>
             ) : (
@@ -81,7 +81,7 @@ export default function TrainingAttendeesField({
                     </li>
                 ))}
             </ul>
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </div>
     );
 }

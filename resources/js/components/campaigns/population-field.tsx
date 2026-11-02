@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { sampleSize } from '@/lib/campaigns';
 
 /**
@@ -59,7 +59,7 @@ export default function PopulationField({
                     </span>
                 </label>
             ))}
-            <InputError id="population-error" role="alert" message={error} />
+            <InputError id="population-error" message={error} />
         </fieldset>
     );
 }

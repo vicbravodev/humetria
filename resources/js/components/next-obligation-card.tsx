@@ -19,10 +19,8 @@ export function NextObligationCard() {
             data-test="next-obligation"
             className="mx-3 mb-2.5 flex flex-col gap-2 rounded-xl border p-3 group-data-[collapsible=icon]:hidden"
         >
-            <h2 className="text-[13px] leading-[18px] font-medium">
-                Siguiente obligación
-            </h2>
-            <p className="text-[13px] leading-[18px] text-muted-foreground">
+            <h2 className="text-caption font-medium">Siguiente obligación</h2>
+            <p className="text-caption text-muted-foreground">
                 {obligation.lead}{' '}
                 <b className="font-semibold text-foreground">
                     {obligation.when}

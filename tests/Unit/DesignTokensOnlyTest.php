@@ -92,3 +92,20 @@ it('uses no raw colors in the frontend', function () {
 
     expect($violations)->toBe([]);
 });
+
+// The two small sizes of the type scale go by their token (resources/css/app.css, docs/design-system/tokens-shadcn.md):
+// text-caption is 13/18 and text-meta 15/22. Written by hand they drift (13 px with a 16 px leading, 15 px with none).
+// components/ui stays out, as above: the shadcn primitives keep their own spelling, pinned by ShadcnAdjustmentsTest.
+it('writes the caption and meta sizes with their tokens', function (): void {
+    $offenders = [];
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../resources/js', FilesystemIterator::SKIP_DOTS));
+
+    foreach ($files as $file) {
+        if (! str_contains((string) $file, '/components/ui/')
+            && preg_match('/text-\[(?:13|15)px\]/', (string) file_get_contents((string) $file)) === 1) {
+            $offenders[] = $file->getFilename();
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});

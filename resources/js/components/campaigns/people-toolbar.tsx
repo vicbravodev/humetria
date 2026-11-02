@@ -8,6 +8,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useQueryFilters } from '@/hooks/use-query-filters';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { peopleQuery } from '@/lib/campaigns';
 import { serverSource } from '@/lib/server-options';
 import { options as areaOptions } from '@/routes/tenant/areas';
@@ -18,16 +19,15 @@ const ALL_AREAS = { value: '', label: 'Todas las áreas' };
 
 /** Narrows the people of a campaign: text in the name, email or number; one area; one guide. Where they stand is the tabs'. */
 export default function PeopleToolbar({
-    tenantSlug,
     url,
     filters,
     instruments,
 }: {
-    tenantSlug: string;
     url: string;
     filters: PeopleFilters;
     instruments: InstrumentProgress[];
 }) {
+    const tenantSlug = useTenantSlug();
     const { text, type, filter } = useQueryFilters(url, filters, peopleQuery);
 
     return (

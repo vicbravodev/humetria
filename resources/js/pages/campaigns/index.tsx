@@ -5,9 +5,9 @@ import CampaignHistory from '@/components/campaigns/campaign-history';
 import GuideSizes from '@/components/campaigns/guide-sizes';
 import TraumaEventsSection from '@/components/campaigns/trauma-events-section';
 import WorkCenterCard from '@/components/campaigns/work-center-card';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/page-header';
+import PageHeader from '@/components/humetria/page-header';
 import type {
     CampaignSummary,
     CentersBySize,
@@ -30,7 +30,6 @@ export default function Campaigns({
 }) {
     // Always set here: this page only exists inside a company.
     const { tenant } = usePage().props;
-    const tenantSlug = tenant?.slug ?? '';
     const canManage = tenant?.can.manage_campaigns ?? false;
 
     return (
@@ -48,12 +47,7 @@ export default function Campaigns({
                         </span>
                     }
                 >
-                    {canManage && (
-                        <CampaignActions
-                            tenantSlug={tenantSlug}
-                            minGroup={minGroup}
-                        />
-                    )}
+                    {canManage && <CampaignActions minGroup={minGroup} />}
                 </PageHeader>
                 <section
                     aria-label="Centros de trabajo"
@@ -72,7 +66,6 @@ export default function Campaigns({
                             {workCenters.data.map((center) => (
                                 <WorkCenterCard
                                     key={center.id}
-                                    tenantSlug={tenantSlug}
                                     center={center}
                                     canManage={canManage}
                                     minGroup={minGroup}
@@ -80,17 +73,15 @@ export default function Campaigns({
                             ))}
                         </div>
                     )}
-                    <ConsolePagination
+                    <Pagination
                         page={workCenters}
                         label="Páginas de centros de trabajo"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
                 </section>
                 <GuideSizes centers={workCenters.data} counts={centersBySize} />
-                <TraumaEventsSection tenantSlug={tenantSlug} events={events} />
-                <CampaignHistory tenantSlug={tenantSlug} closed={closed} />
+                <TraumaEventsSection events={events} />
+                <CampaignHistory closed={closed} />
             </div>
         </>
     );

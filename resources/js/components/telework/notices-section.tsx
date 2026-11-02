@@ -15,17 +15,14 @@ export default function NoticesSection({
                 Avisos de la persona
             </h2>
             {teleworker.notices.length === 0 ? (
-                <p className="flex items-center gap-3 rounded-xl border bg-card p-4 text-[15px] text-muted-foreground">
+                <p className="flex items-center gap-3 card p-4 text-meta text-muted-foreground">
                     <FileText aria-hidden className="size-5 shrink-0" />
                     Esta persona aún no ha enviado avisos.
                 </p>
             ) : (
                 <ul className="grid gap-3">
                     {teleworker.notices.map((notice) => (
-                        <li
-                            key={notice.id}
-                            className="rounded-xl border bg-card p-4"
-                        >
+                        <li key={notice.id} className="card p-4">
                             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base font-semibold">
                                 {notice.kind}
                                 <Badge
@@ -38,7 +35,7 @@ export default function NoticesSection({
                                     {notice.status}
                                 </Badge>
                             </p>
-                            <p className="mt-1 text-[15px] text-muted-foreground">
+                            <p className="mt-1 text-meta text-muted-foreground">
                                 Escrito el{' '}
                                 {describeDate(notice.writtenOn) ??
                                     notice.writtenOn}
@@ -46,7 +43,7 @@ export default function NoticesSection({
                                 {describeDate(notice.occurredOn) ??
                                     notice.occurredOn}
                             </p>
-                            <p className="mt-1 text-[15px] whitespace-pre-line">
+                            <p className="mt-1 text-meta whitespace-pre-line">
                                 {notice.description}
                             </p>
                         </li>

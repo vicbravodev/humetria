@@ -13,7 +13,7 @@ export default function ChecklistGroup({
     form: ReturnType<typeof useChecklistForm>;
 }) {
     return (
-        <section className="grid gap-1 rounded-xl border bg-card px-4 pt-4">
+        <section className="grid gap-1 card px-4 pt-4">
             <h2 className="text-xl font-semibold">{heading}</h2>
             {questions.map((question) => (
                 <ChecklistQuestion

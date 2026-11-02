@@ -38,7 +38,6 @@ export default function ReportToolbar({
         >
             {form !== null && complete && (
                 <ReportDetailsDialog
-                    tenantSlug={route.tenantSlug}
                     campaignId={route.campaignId}
                     form={form}
                     complete
@@ -46,7 +45,6 @@ export default function ReportToolbar({
             )}
             {durations !== null && (
                 <ShareDialog
-                    tenantSlug={route.tenantSlug}
                     campaignId={route.campaignId}
                     durations={durations}
                 />

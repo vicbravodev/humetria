@@ -1,5 +1,5 @@
 import { Users } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import TrainingPersonRow from '@/components/telework/training-person-row';
 import type { Paginated, TrainingPerson } from '@/types';
@@ -33,11 +33,9 @@ export default function TrainingPeople({
                     ))}
                 </ol>
             )}
-            <ConsolePagination
+            <Pagination
                 page={people}
                 label="Páginas de personas"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

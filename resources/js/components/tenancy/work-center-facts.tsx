@@ -12,15 +12,13 @@ export default function WorkCenterFacts({
     return (
         <dl className="grid grid-cols-3 gap-3 border-y py-3.5">
             <div className="flex flex-col">
-                <dt className="text-[13px] leading-[18px] text-muted-foreground">
-                    Personal
-                </dt>
+                <dt className="text-caption text-muted-foreground">Personal</dt>
                 <dd className="text-[22px] leading-[30px] font-semibold tabular-nums">
                     {workCenter.employees}
                 </dd>
             </div>
             <div className="flex flex-col">
-                <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                <dt className="text-caption text-muted-foreground">
                     Guías NOM-035
                 </dt>
                 <dd className="text-[22px] leading-[30px] font-semibold">
@@ -28,7 +26,7 @@ export default function WorkCenterFacts({
                 </dd>
             </div>
             <div className="flex flex-col">
-                <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                <dt className="text-caption text-muted-foreground">
                     Siguiente evaluación
                 </dt>
                 <dd className="pt-1 text-sm font-medium">{next}</dd>

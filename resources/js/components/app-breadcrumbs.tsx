@@ -44,13 +44,14 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
 
     return (
         <nav aria-label="Ruta" className="min-w-0">
-            <ol className="flex min-w-0 items-center gap-1.5 text-[15px] leading-[22px]">
+            <ol className="flex min-w-0 items-center gap-1.5 text-meta">
                 {trail.map((crumb, index) => (
                     <Fragment key={`${crumb.title}-${index}`}>
                         {index > 0 && (
+                            // On a phone only the last crumb shows, so its arrows go too.
                             <ChevronRight
                                 aria-hidden
-                                className="size-4 shrink-0 text-muted-foreground"
+                                className="hidden size-4 shrink-0 text-muted-foreground sm:block"
                             />
                         )}
                         <li

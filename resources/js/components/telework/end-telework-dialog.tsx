@@ -2,7 +2,7 @@ import { Form } from '@inertiajs/react';
 import { UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import EndTeleworkFields from '@/components/telework/end-telework-fields';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,17 +12,17 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { end } from '@/routes/tenant/telework/teleworkers';
 import type { TeleworkerSummary } from '@/types';
 
 /** Ends a period with a reason, the day and an optional note. Nothing is deleted: it stays in the history. */
 export default function EndTeleworkDialog({
-    tenantSlug,
     teleworker,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (
@@ -56,10 +56,7 @@ export default function EndTeleworkDialog({
                                 teleworker={teleworker}
                                 errors={errors}
                             />
-                            <InputError
-                                role="alert"
-                                message={errors['teleworker']}
-                            />
+                            <InputError message={errors['teleworker']} />
                             <Button
                                 type="submit"
                                 variant="destructive"

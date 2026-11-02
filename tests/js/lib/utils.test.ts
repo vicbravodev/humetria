@@ -24,6 +24,13 @@ describe('cn', () => {
         expect(cn('text-red-500', 'text-blue-500')).toBe('text-blue-500');
     });
 
+    it('reads the type scale tokens as sizes, so a color next to them stays', () => {
+        expect(cn('text-caption', 'text-muted-foreground')).toBe(
+            'text-caption text-muted-foreground',
+        );
+        expect(cn('text-meta', 'text-caption')).toBe('text-caption');
+    });
+
     it('keeps non-conflicting Tailwind classes', () => {
         expect(cn('px-2', 'py-4')).toBe('px-2 py-4');
     });

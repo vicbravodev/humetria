@@ -23,7 +23,7 @@ export default function ReportHeader({ report }: { report: NomReport }) {
                 <Logo kind="seal" className="h-4" />
             </div>
             <div className="flex flex-col gap-2.5">
-                <p className="text-[13px] leading-[18px] font-medium tracking-[0.06em] text-primary uppercase">
+                <p className="text-caption font-medium tracking-[0.06em] text-primary uppercase">
                     NOM-035-STPS-2018 ·{' '}
                     {report.guide.replace('Guía', 'Guía de referencia')} ·
                     Numeral 7.7

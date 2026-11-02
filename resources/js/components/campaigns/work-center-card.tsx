@@ -14,12 +14,10 @@ import type { WorkCenterEvaluation } from '@/types';
  * running evaluation or its last one.
  */
 export default function WorkCenterCard({
-    tenantSlug,
     center,
     canManage,
     minGroup,
 }: {
-    tenantSlug: string;
     center: WorkCenterEvaluation;
     canManage: boolean;
     minGroup: number;
@@ -32,7 +30,7 @@ export default function WorkCenterCard({
     ];
 
     return (
-        <article className="flex flex-col gap-[18px] rounded-xl border bg-card p-[22px]">
+        <article className="flex flex-col gap-[18px] card p-[22px]">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <h3 className="text-lg leading-[26px] font-semibold">
@@ -47,7 +45,7 @@ export default function WorkCenterCard({
             <dl className="grid grid-cols-3 gap-3 border-b pb-[18px]">
                 {facts.map(([term, value]) => (
                     <div key={term} className="flex flex-col gap-0.5">
-                        <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                        <dt className="text-caption text-muted-foreground">
                             {term}
                         </dt>
                         <dd className="font-medium tabular-nums">{value}</dd>
@@ -55,13 +53,9 @@ export default function WorkCenterCard({
                 ))}
             </dl>
             {center.openCampaign?.status === 'active' ? (
-                <CenterProgress
-                    tenantSlug={tenantSlug}
-                    campaign={center.openCampaign}
-                />
+                <CenterProgress campaign={center.openCampaign} />
             ) : (
                 <CenterFollowUp
-                    tenantSlug={tenantSlug}
                     center={center}
                     canManage={canManage}
                     minGroup={minGroup}

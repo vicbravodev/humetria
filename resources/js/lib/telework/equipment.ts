@@ -1,6 +1,5 @@
-import type { BadgeTone } from '@/lib/telework/review';
 import type { Option } from '@/lib/option-search';
-import type { EquipmentStatusValue } from '@/types';
+import type { BadgeVariant, EquipmentStatusValue } from '@/types';
 
 /** The kinds of equipment of numeral 5.7, in the order RH reads them. */
 export const EQUIPMENT_KINDS: Option[] = [
@@ -12,7 +11,7 @@ export const EQUIPMENT_KINDS: Option[] = [
 ];
 
 /** The badge of an item: waiting for the person is a look, received is done, refused is a stop. */
-export function equipmentTone(status: EquipmentStatusValue): BadgeTone {
+export function equipmentTone(status: EquipmentStatusValue): BadgeVariant {
     switch (status) {
         case 'pending':
             return 'warning';

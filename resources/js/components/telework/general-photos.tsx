@@ -10,7 +10,7 @@ export default function GeneralPhotos({
     onPhotos: (files: File[]) => void;
 }) {
     return (
-        <section className="grid gap-2 rounded-xl border bg-card p-4">
+        <section className="grid gap-2 card p-4">
             <h2 className="text-xl font-semibold">
                 Fotos del lugar (opcional)
             </h2>

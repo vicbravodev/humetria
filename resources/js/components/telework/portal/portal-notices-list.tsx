@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react';
-import ConsolePagination from '@/components/console-pagination';
+import IconTile from '@/components/humetria/icon-tile';
+import Pagination from '@/components/humetria/pagination';
 import { Badge } from '@/components/ui/badge';
 import { describeDate } from '@/lib/calendar-date';
 import type { Paginated, PortalNotice } from '@/types';
@@ -23,11 +24,9 @@ export default function PortalNoticesList({
                 {notices.data.map((notice) => (
                     <li
                         key={notice.id}
-                        className="flex items-start gap-3.5 rounded-xl border bg-card p-4"
+                        className="flex items-start gap-3.5 card p-4"
                     >
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                            <FileText aria-hidden className="size-5" />
-                        </span>
+                        <IconTile icon={FileText} />
                         <div className="flex min-w-0 flex-1 flex-col gap-1">
                             <p className="text-base font-semibold">
                                 {notice.kind}
@@ -42,11 +41,9 @@ export default function PortalNoticesList({
                     </li>
                 ))}
             </ul>
-            <ConsolePagination
+            <Pagination
                 page={notices}
                 label="Páginas de avisos"
-                previous="Anteriores"
-                next="Siguientes"
                 pinned={false}
             />
         </section>

@@ -2,9 +2,10 @@ import { Form } from '@inertiajs/react';
 import { ArrowLeft, Building2, Lock } from 'lucide-react';
 import EvaluationBlocked from '@/components/campaigns/evaluation-blocked';
 import PopulationField from '@/components/campaigns/population-field';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { guidesReason } from '@/lib/evaluation-centers';
 import { staffText } from '@/lib/work-centers';
 import { store } from '@/routes/tenant/campaigns';
@@ -15,16 +16,15 @@ import type { WorkCenterEvaluation } from '@/types';
  * sample or everyone. Going on creates the draft, where the date and the sending are the third step.
  */
 export default function EvaluationGuidesStep({
-    tenantSlug,
     center,
     minGroup,
     onBack,
 }: {
-    tenantSlug: string;
     center: WorkCenterEvaluation;
     minGroup: number;
     onBack: () => void;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form {...store.form(tenantSlug)} noValidate>
             {({ processing, errors }) => (
@@ -66,10 +66,7 @@ export default function EvaluationGuidesStep({
                                 />
                             )
                         ) : (
-                            <EvaluationBlocked
-                                tenantSlug={tenantSlug}
-                                center={center}
-                            />
+                            <EvaluationBlocked center={center} />
                         )}
                         <p className="flex items-start gap-2.5 text-sm text-muted-foreground">
                             <Lock

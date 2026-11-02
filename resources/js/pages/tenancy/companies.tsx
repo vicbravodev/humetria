@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
-import PageHeader from '@/components/page-header';
+import Pagination from '@/components/humetria/pagination';
+import PageHeader from '@/components/humetria/page-header';
 import CompanyCard from '@/components/tenancy/company-card';
 import NoCompanies from '@/components/tenancy/no-companies';
 import type { CompanyLink, Paginated } from '@/types';
@@ -35,12 +35,7 @@ export default function Companies({
                         ))}
                     </ul>
                 )}
-                <ConsolePagination
-                    page={companies}
-                    label="Páginas de empresas"
-                    previous="Anteriores"
-                    next="Siguientes"
-                />
+                <Pagination page={companies} label="Páginas de empresas" />
             </div>
         </>
     );

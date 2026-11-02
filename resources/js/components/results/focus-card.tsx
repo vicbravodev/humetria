@@ -1,7 +1,7 @@
 import LevelBar from '@/components/humetria/level-bar';
 import RiskLevel from '@/components/humetria/risk-level';
 import { domainDescription, mostFrequentLevel } from '@/lib/report';
-import { highRisk, percentText, RISK_LEVELS } from '@/lib/results';
+import { RISK_LEVELS, highRisk, percentText, total } from '@/lib/results';
 import { cn } from '@/lib/utils';
 import type { RiskGroup, RiskLevelInfo } from '@/types';
 
@@ -17,7 +17,7 @@ export default function FocusCard({
     rank: number;
     levels: RiskLevelInfo[];
 }) {
-    const answered = domain.levels.reduce((sum, count) => sum + count, 0);
+    const answered = total(domain.levels);
     const high = highRisk(domain.levels);
     const frequent = mostFrequentLevel(domain.levels);
 
@@ -30,7 +30,7 @@ export default function FocusCard({
             style={{ animationDelay: `${(rank - 1) * 100}ms` }}
         >
             <div className="flex items-start justify-between gap-3">
-                <span className="text-[13px] font-semibold text-muted-foreground">
+                <span className="text-caption font-semibold text-muted-foreground">
                     #{rank}
                 </span>
                 <RiskLevel
@@ -42,7 +42,7 @@ export default function FocusCard({
                 <h3 className="text-xl leading-7 font-semibold">
                     {domain.label}
                 </h3>
-                <span className="text-[13px] text-muted-foreground">
+                <span className="text-caption text-muted-foreground">
                     {category}
                 </span>
                 <span className="mt-1 text-sm text-muted-foreground">

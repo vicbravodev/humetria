@@ -5,6 +5,7 @@ import ImportActions from '@/components/organization/import-actions';
 import ImportErrors from '@/components/organization/import-errors';
 import ImportFileField from '@/components/organization/import-file-field';
 import ImportStats from '@/components/organization/import-stats';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/employees/import';
 
 /**
@@ -12,13 +13,12 @@ import { store } from '@/routes/tenant/employees/import';
  * The page keeps its state across the check, so the chosen file is still there to confirm.
  */
 export default function ImportForm({
-    tenantSlug,
     aside,
 }: {
-    tenantSlug: string;
     /** How to fill the file, beside it. */
     aside: ReactNode;
 }) {
+    const tenantSlug = useTenantSlug();
     const summary = usePage().flash.import;
     const confirm = useRef<HTMLInputElement>(null);
     // Which button sent the form: the hidden field is set before the form reads its values.

@@ -3,11 +3,13 @@ import { Send } from 'lucide-react';
 import type { ReactNode } from 'react';
 import PeopleChecklist from '@/components/campaigns/people-checklist';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useChosenPeople } from '@/hooks/use-chosen-people';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { countOf } from '@/lib/plural';
 import { index } from '@/routes/tenant/campaigns';
 import { create, store } from '@/routes/tenant/campaigns/trauma';
 import type { ChoiceOption, Paginated, RosterPerson } from '@/types';
@@ -17,7 +19,6 @@ import type { ChoiceOption, Paginated, RosterPerson } from '@/types';
  * `picker` is the work center field, which changes the page rather than the form.
  */
 export default function TraumaForm({
-    tenantSlug,
     picker,
     workCenter,
     people,
@@ -26,7 +27,6 @@ export default function TraumaForm({
     maxPeople,
     deadline,
 }: {
-    tenantSlug: string;
     picker: ReactNode;
     workCenter: ChoiceOption;
     people: Paginated<RosterPerson>;
@@ -36,6 +36,7 @@ export default function TraumaForm({
     maxPeople: number;
     deadline: { min: string; suggested: string };
 }) {
+    const tenantSlug = useTenantSlug();
     const choice = useChosenPeople(workCenter.value, preselected);
     const count = choice.chosen.length;
 
@@ -59,7 +60,6 @@ export default function TraumaForm({
                             />
                             <InputError
                                 id="trauma-closes_on-error"
-                                role="alert"
                                 message={errors['closes_on']}
                             />
                         </div>
@@ -87,7 +87,7 @@ export default function TraumaForm({
                             {processing ? <Spinner /> : <Send aria-hidden />}
                             Enviar Guía I
                             {count > 0 &&
-                                ` a ${count} ${count === 1 ? 'persona' : 'personas'}`}
+                                ` a ${countOf(count, 'persona', 'personas')}`}
                         </Button>
                     </div>
                 </>

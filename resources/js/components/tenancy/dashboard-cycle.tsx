@@ -1,21 +1,21 @@
 import { Link } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
+import Pagination from '@/components/humetria/pagination';
 import DashboardCycleRow from '@/components/tenancy/dashboard-cycle-row';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import type { CycleRow, Paginated } from '@/types';
 
 /** "Ciclo de cumplimiento" (pantalla Panel): each work center in use and how far it is in its two years (num. 7.9). */
 export default function DashboardCycle({
-    tenantSlug,
     cycle,
 }: {
-    tenantSlug: string;
     cycle: Paginated<CycleRow>;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <section
             aria-labelledby="cycle"
-            className="@container/cycle overflow-hidden rounded-xl border bg-card"
+            className="@container/cycle overflow-hidden card"
         >
             <div className="flex flex-wrap items-center justify-between gap-4 px-5 pt-5 pb-4">
                 <div className="flex flex-col gap-0.5">
@@ -44,11 +44,9 @@ export default function DashboardCycle({
             </ul>
             {cycle.last_page > 1 && (
                 <div className="border-t px-5 py-3">
-                    <ConsolePagination
+                    <Pagination
                         page={cycle}
                         label="Páginas de centros de trabajo"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
                 </div>

@@ -1,6 +1,8 @@
 import { instrumentsText } from '@/lib/campaigns';
+import { countOf, plural } from '@/lib/plural';
 import { highRisk, percentText } from '@/lib/results';
 import type {
+    BadgeVariant,
     CycleRow,
     DashboardCounts,
     DashboardProgress,
@@ -10,14 +12,34 @@ import type {
 
 export type Kpi = { value: string; caption: string };
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'destructive';
+// Titles people put before their name; "Ma." is María, not a title, so it stays.
+const TITLES = new Set([
+    'dr',
+    'dra',
+    'lic',
+    'ing',
+    'mtro',
+    'mtra',
+    'arq',
+    'prof',
+    'profa',
+    'sr',
+    'sra',
+    'srita',
+    'c.p',
+]);
 
-const plural = (count: number, one: string, many: string): string =>
-    count === 1 ? one : many;
-
-/** "Hola, Rita": the first name only. */
+/** "Hola, Rita": the first name only, past any title (Dr., Lic., Ing.). */
 export function greeting(name: string): string {
-    const first = name.trim().split(/\s+/)[0] ?? '';
+    const first =
+        name
+            .trim()
+            .split(/\s+/)
+            .find(
+                (word) =>
+                    word !== '' &&
+                    !TITLES.has(word.toLowerCase().replace(/\.$/, '')),
+            ) ?? '';
 
     return first === '' ? 'Hola' : `Hola, ${first}`;
 }
@@ -51,7 +73,7 @@ export function closingKpi(daysLeft: number): Kpi {
     }
 
     return {
-        value: plural(daysLeft, '1 día', `${daysLeft} días`),
+        value: countOf(daysLeft, 'día', 'días'),
         caption: 'para el cierre',
     };
 }
@@ -117,7 +139,7 @@ export function nextStepTexts(step: NextStep): {
 }
 
 export function pendingText(count: number): string {
-    return plural(count, '1 pendiente', `${count} pendientes`);
+    return countOf(count, 'pendiente', 'pendientes');
 }
 
 const STANDINGS: Record<

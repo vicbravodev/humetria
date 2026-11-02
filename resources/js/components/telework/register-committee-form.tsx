@@ -2,23 +2,23 @@ import { Form } from '@inertiajs/react';
 import { CalendarCheck, FileText } from 'lucide-react';
 import DatePicker from '@/components/humetria/date-picker';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import MemberChoices from '@/components/telework/member-choices';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/committee';
 import type { CommitteePerson } from '@/types';
 
 /** Registers the Comisión of the center: its act date, the act's PDF and who sits on it (pantallas: Ajustes). */
 export default function RegisterCommitteeForm({
-    tenantSlug,
     workCenterId,
     candidates,
 }: {
-    tenantSlug: string;
     workCenterId: string;
     candidates: CommitteePerson[];
 }) {
+    const tenantSlug = useTenantSlug();
     return (
         <Form
             {...store.form({ tenant: tenantSlug, workCenter: workCenterId })}
@@ -40,7 +40,6 @@ export default function RegisterCommitteeForm({
                         />
                         <InputError
                             id="committee-constituted-on-error"
-                            role="alert"
                             message={errors['constituted_on']}
                         />
                     </SettingRow>
@@ -48,7 +47,7 @@ export default function RegisterCommitteeForm({
                         icon={FileText}
                         title="Acta en PDF"
                         status={
-                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[13px] text-muted-foreground">
+                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-caption text-muted-foreground">
                                 Opcional
                             </span>
                         }
@@ -64,7 +63,7 @@ export default function RegisterCommitteeForm({
                             }
                             className="w-full rounded-md border border-input bg-card px-4 py-2.5 text-base file:mr-3 file:font-medium"
                         />
-                        <InputError role="alert" message={errors['act']} />
+                        <InputError message={errors['act']} />
                     </SettingRow>
                     <MemberChoices
                         candidates={candidates}

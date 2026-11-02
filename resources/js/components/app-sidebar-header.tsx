@@ -57,7 +57,7 @@ export function AppSidebarHeader({
                     <span className="hidden flex-1 text-left lg:inline">
                         Buscar o ir a…
                     </span>
-                    <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-[13px] leading-[18px] lg:inline">
+                    <kbd className="hidden rounded border bg-muted px-1.5 font-sans text-caption lg:inline">
                         ⌘K
                     </kbd>
                 </Button>

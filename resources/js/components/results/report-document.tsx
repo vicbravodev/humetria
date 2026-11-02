@@ -36,7 +36,7 @@ export default function ReportDocument({
             )}
             <ReportIncises report={report} />
             <ReportAnnex report={report} levels={levels} />
-            <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-[13px] text-muted-foreground">
+            <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-caption text-muted-foreground">
                 <span>
                     Resultados agregados y confidenciales. Ningún dato permite
                     identificar a una persona.

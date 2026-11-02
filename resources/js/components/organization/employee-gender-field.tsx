@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { cn } from '@/lib/utils';
 import type { ChoiceOption } from '@/types';
 
@@ -49,15 +49,11 @@ export default function EmployeeGenderField({
             </div>
             <p
                 id="employee-gender-help"
-                className="text-[13px] leading-[18px] text-muted-foreground"
+                className="text-caption text-muted-foreground"
             >
                 La norma lo usa para sortear la muestra.
             </p>
-            <InputError
-                id="employee-gender-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="employee-gender-error" message={error} />
         </fieldset>
     );
 }

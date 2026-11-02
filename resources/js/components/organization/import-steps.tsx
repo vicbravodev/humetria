@@ -48,7 +48,7 @@ export default function ImportSteps({ step }: { step: 1 | 2 | 3 }) {
                         >
                             <span
                                 className={cn(
-                                    'inline-flex size-7 items-center justify-center rounded-full text-[13px] font-semibold',
+                                    'inline-flex size-7 items-center justify-center rounded-full text-caption font-semibold',
                                     MARK[state],
                                 )}
                             >

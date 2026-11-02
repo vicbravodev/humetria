@@ -11,7 +11,7 @@ export default function CompanyCard({ company }: { company: CompanyLink }) {
     return (
         <Link
             href={dashboard(company.slug)}
-            className="flex min-h-[72px] items-center gap-3 rounded-xl border bg-card px-4 py-3 transition-colors duration-150 ease-out hover:border-input focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="flex min-h-[72px] items-center gap-3 card px-4 py-3 transition-colors duration-150 ease-out hover:border-input focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
             <Initials
                 name={company.trade_name}

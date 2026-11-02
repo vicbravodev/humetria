@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -23,7 +23,7 @@ export default function DemoTextField({ name, label, error, ...input }: Props) {
                 aria-invalid={error === undefined ? undefined : true}
                 aria-describedby={error === undefined ? undefined : errorId}
             />
-            <InputError id={errorId} role="alert" message={error} />
+            <InputError id={errorId} message={error} />
         </div>
     );
 }

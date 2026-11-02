@@ -41,6 +41,14 @@ describe('greeting', () => {
         expect(greeting('  Rita ')).toBe('Hola, Rita');
         expect(greeting('')).toBe('Hola');
     });
+
+    it('skips a title before the name, but not a shortened name', () => {
+        expect(greeting('Dr. Guillermo Delgado')).toBe('Hola, Guillermo');
+        expect(greeting('lic Ana Pérez')).toBe('Hola, Ana');
+        expect(greeting('Mtra. Dra. Sofía Ruiz')).toBe('Hola, Sofía');
+        expect(greeting('Ma. Elena Pérez')).toBe('Hola, Ma.');
+        expect(greeting('Ing.')).toBe('Hola');
+    });
 });
 
 describe('panelSummary', () => {

@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import NewEvaluationDialog from '@/components/campaigns/new-evaluation-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { centerFollowUp } from '@/lib/evaluation-centers';
 import { results, show } from '@/routes/tenant/campaigns';
 import type { WorkCenterEvaluation } from '@/types';
@@ -10,16 +11,15 @@ import type { WorkCenterEvaluation } from '@/types';
  * way to its results, its draft or a new evaluation.
  */
 export default function CenterFollowUp({
-    tenantSlug,
     center,
     canManage,
     minGroup,
 }: {
-    tenantSlug: string;
     center: WorkCenterEvaluation;
     canManage: boolean;
     minGroup: number;
 }) {
+    const tenantSlug = useTenantSlug();
     const draft = center.openCampaign;
 
     return (
@@ -37,7 +37,7 @@ export default function CenterFollowUp({
                         </>
                     )}
                 </p>
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     {centerFollowUp(center)}
                 </p>
             </div>
@@ -62,7 +62,6 @@ export default function CenterFollowUp({
                 )}
                 {canManage && center.eligible && (
                     <NewEvaluationDialog
-                        tenantSlug={tenantSlug}
                         workCenter={center}
                         minGroup={minGroup}
                     >

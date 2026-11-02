@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { UserCheck } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import RosterFields from '@/components/telework/roster-fields';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,19 +12,19 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { join } from '@/routes/tenant/telework/teleworkers';
 import type { TeleworkerSummary } from '@/types';
 
 /** Moves an aspirant into the roster with the data of numeral 5.1; it needs a workplace validated and in force. */
 export default function JoinRosterDialog({
-    tenantSlug,
     teleworker,
     states,
 }: {
-    tenantSlug: string;
     teleworker: TeleworkerSummary;
     states: Record<string, string>;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (
@@ -56,14 +56,8 @@ export default function JoinRosterDialog({
                                 states={states}
                                 errors={errors}
                             />
-                            <InputError
-                                role="alert"
-                                message={errors['workplaces']}
-                            />
-                            <InputError
-                                role="alert"
-                                message={errors['teleworker']}
-                            />
+                            <InputError message={errors['workplaces']} />
+                            <InputError message={errors['teleworker']} />
                             <Button
                                 type="submit"
                                 disabled={processing}

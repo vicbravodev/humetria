@@ -24,12 +24,12 @@ export default function ReportIncise({
                         {title}
                     </h3>
                     {pending && (
-                        <span className="rounded-md bg-risk-medio-bg px-2.5 py-[3px] text-[13px] font-medium text-risk-medio-fg">
+                        <span className="rounded-md bg-risk-medio-bg px-2.5 py-[3px] text-caption font-medium text-risk-medio-fg">
                             Pendiente de capturar
                         </span>
                     )}
                 </div>
-                <div className="text-[15px] leading-[22px]">{children}</div>
+                <div className="text-meta">{children}</div>
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import PasswordChecklist from '@/components/settings/password-checklist';
+import PasswordChecklist from '@/components/humetria/password-checklist';
+import InputError from '@/components/humetria/input-error';
+import PasswordInput from '@/components/humetria/password-input';
 import { Label } from '@/components/ui/label';
 
 /** The current password, the new one with what it still needs, and the new one again. */
@@ -43,7 +43,11 @@ export default function NewPasswordFields({
                     aria-describedby="password-checklist"
                     onChange={(event) => onPasswordChange(event.target.value)}
                 />
-                <PasswordChecklist rules={passwordRules} value={password} />
+                <PasswordChecklist
+                    id="password-checklist"
+                    rules={passwordRules}
+                    value={password}
+                />
                 <InputError message={errors['password']} />
             </div>
             <div className="flex flex-col gap-1.5">

@@ -10,14 +10,14 @@ export default function TrainingPersonRow({
     person: TrainingPerson;
 }) {
     return (
-        <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-[22px] py-4">
+        <li className="flex flex-wrap items-center justify-between gap-3 card px-[22px] py-4">
             <div className="flex min-w-0 flex-col">
                 <p className="font-medium">{person.name}</p>
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     {person.jobTitle} · {person.workCenter}
                 </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-[15px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 text-meta text-muted-foreground">
                 <span>
                     {person.lastTrainingOn === null
                         ? 'Sin capacitación'

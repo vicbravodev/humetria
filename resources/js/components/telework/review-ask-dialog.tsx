@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Camera, Video } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,18 +12,19 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/evidence';
 
 /** Asks for photos from the person (they send them from their portal) or schedules a remote check. */
 export default function ReviewAskDialog({
-    tenantSlug,
     workplaceId,
     kind,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     kind: 'photos' | 'remote_check';
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
     const photos = kind === 'photos';
 
@@ -64,13 +65,8 @@ export default function ReviewAskDialog({
                                         ? 'Qué debe fotografiar'
                                         : 'Qué se va a comprobar'}
                                 </Label>
-                                <textarea
-                                    id={`ask-${kind}-note`}
-                                    name="note"
-                                    className="min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                                />
+                                <Textarea id={`ask-${kind}-note`} name="note" />
                                 <InputError
-                                    role="alert"
                                     message={
                                         errors['note'] ?? errors['workplace']
                                     }

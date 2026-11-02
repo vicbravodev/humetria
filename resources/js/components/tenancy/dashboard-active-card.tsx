@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { instrumentsText } from '@/lib/campaigns';
 import DashboardKpi from '@/components/tenancy/dashboard-kpi';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { closingKpi, missingKpi } from '@/lib/dashboard';
 import { resend, show } from '@/routes/tenant/campaigns';
 import type { ActiveEvaluation } from '@/types';
@@ -15,20 +16,19 @@ import type { ActiveEvaluation } from '@/types';
  * missing, the days left, and the way to follow it up or remind whoever is missing.
  */
 export default function DashboardActiveCard({
-    tenantSlug,
     evaluation,
     canManage,
 }: {
-    tenantSlug: string;
     evaluation: ActiveEvaluation;
     canManage: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     const answered = `${evaluation.completed} de ${evaluation.target} contestaron`;
 
     return (
         <article
             aria-labelledby="active-evaluation"
-            className="@container/active flex flex-col gap-5 rounded-xl border bg-card p-6"
+            className="@container/active flex flex-col gap-5 card p-6"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
@@ -55,7 +55,7 @@ export default function DashboardActiveCard({
                     <span className="text-[39px] leading-none font-semibold tracking-[-0.03em] tabular-nums">
                         {evaluation.completed}
                     </span>
-                    <span className="max-w-[98px] text-[13px] leading-4 text-muted-foreground">
+                    <span className="max-w-[98px] text-caption leading-4 text-muted-foreground">
                         de {evaluation.target} contestaron
                     </span>
                 </ArcMeter>

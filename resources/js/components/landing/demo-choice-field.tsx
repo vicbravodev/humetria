@@ -1,4 +1,4 @@
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { cn } from '@/lib/utils';
 
 export type DemoChoice = {
@@ -53,7 +53,7 @@ export default function DemoChoiceField({
                     </label>
                 ))}
             </div>
-            <InputError id={errorId} role="alert" message={error} />
+            <InputError id={errorId} message={error} />
         </fieldset>
     );
 }

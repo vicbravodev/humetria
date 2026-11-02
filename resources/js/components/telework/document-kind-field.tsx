@@ -1,6 +1,6 @@
 import { FileText } from 'lucide-react';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import type { DocumentKindOption } from '@/types';
 
 const CARD =
@@ -39,7 +39,7 @@ export default function DocumentKindField({
                         <span>
                             {kind.label}
                             {kind.numeral !== null && (
-                                <span className="block text-[13px] text-muted-foreground">
+                                <span className="block text-caption text-muted-foreground">
                                     Numeral {kind.numeral}
                                 </span>
                             )}
@@ -47,7 +47,7 @@ export default function DocumentKindField({
                     </label>
                 ))}
             </fieldset>
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </SettingRow>
     );
 }

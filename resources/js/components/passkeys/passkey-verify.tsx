@@ -2,7 +2,7 @@ import type { UrlMethodPair } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
 import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { KeyRound } from 'lucide-react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -64,7 +64,7 @@ export default function PasskeyVerify({
                 )}
             </div>
 
-            <div className="flex items-center gap-3 text-[13px] leading-[18px] text-muted-foreground">
+            <div className="flex items-center gap-3 text-caption text-muted-foreground">
                 <span aria-hidden className="h-px flex-1 bg-border" />
                 {copy.separator}
                 <span aria-hidden className="h-px flex-1 bg-border" />

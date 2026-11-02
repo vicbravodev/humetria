@@ -33,7 +33,7 @@ export default function ResultsOverview({
     return (
         <section
             aria-label="Resumen"
-            className="grid gap-x-12 gap-y-7 rounded-xl border bg-card p-5 sm:p-7 lg:grid-cols-2"
+            className="grid gap-x-12 gap-y-7 card p-5 sm:p-7 lg:grid-cols-2"
         >
             <div className="flex flex-col gap-4">
                 <p className="text-sm text-muted-foreground">{caption}</p>
@@ -60,7 +60,7 @@ export default function ResultsOverview({
                             participation.invited,
                         )}
                     </span>
-                    <span className="max-w-[100px] text-[13px] leading-4 text-muted-foreground">
+                    <span className="max-w-[100px] text-caption leading-4 text-muted-foreground">
                         {answered}
                     </span>
                 </ArcMeter>

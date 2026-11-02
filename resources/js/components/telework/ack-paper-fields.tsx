@@ -1,9 +1,7 @@
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
-
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
+import { Textarea } from '@/components/ui/textarea';
 
 /** The day the people signed (today unless changed, never before publication) and a note about the sheet. */
 export default function AckPaperFields({
@@ -24,21 +22,20 @@ export default function AckPaperFields({
                     min={days.first}
                     invalid={errors['date'] !== undefined}
                 />
-                <InputError role="alert" message={errors['date']} />
+                <InputError message={errors['date']} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="ack-note">
                     Nota (por ejemplo, la hoja de firmas)
                 </Label>
-                <textarea
+                <Textarea
                     id="ack-note"
                     name="note"
-                    className={AREA}
                     aria-invalid={
                         errors['note'] === undefined ? undefined : true
                     }
                 />
-                <InputError role="alert" message={errors['note']} />
+                <InputError message={errors['note']} />
             </div>
         </>
     );

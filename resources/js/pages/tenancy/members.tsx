@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
-import ConsolePagination from '@/components/console-pagination';
-import PageHeader from '@/components/page-header';
+import Pagination from '@/components/humetria/pagination';
+import PageHeader from '@/components/humetria/page-header';
 import InviteMemberDialog from '@/components/tenancy/invite-member-dialog';
 import MembersTable from '@/components/tenancy/members-table';
 import RoleCapabilities from '@/components/tenancy/role-capabilities';
@@ -22,7 +22,6 @@ export default function Members({
 }) {
     // Always set here: this page only exists inside a company.
     const { tenant } = usePage().props;
-    const tenantSlug = tenant?.slug ?? '';
     const tradeName = tenant?.trade_name ?? '';
 
     return (
@@ -33,27 +32,22 @@ export default function Members({
                     title="Usuarios"
                     description={`Quién entra a Humetría por ${tradeName} y qué puede hacer.`}
                 >
-                    <InviteMemberDialog
-                        tenantSlug={tenantSlug}
-                        tradeName={tradeName}
-                        roles={roles}
-                    />
+                    <InviteMemberDialog tradeName={tradeName} roles={roles} />
                 </PageHeader>
                 <div className="flex flex-col gap-3">
                     <MembersTable
-                        tenantSlug={tenantSlug}
                         members={members.data}
                         invitations={invitations.data}
                         roles={roles}
                     />
-                    <ConsolePagination
+                    <Pagination
                         page={members}
                         label="Páginas de usuarios"
-                        previous="Anteriores"
-                        next="Siguientes"
                         pinned={false}
                     />
-                    <ConsolePagination
+                    <Pagination
+                        previous="Ver más recientes"
+                        next="Ver más antiguas"
                         page={invitations}
                         label="Páginas de invitaciones"
                         pinned={false}

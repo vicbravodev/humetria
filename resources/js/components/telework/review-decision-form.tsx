@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import ReviewDecisionFields from '@/components/telework/review-decision-fields';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -34,7 +34,6 @@ export default function ReviewDecisionForm({
                     <ReviewDecisionFields idPrefix={idPrefix} errors={errors} />
                     {/* What refuses the decision as a whole: the list was already decided, the place is retired, or the person has not answered a list to validate on. */}
                     <InputError
-                        role="alert"
                         message={errors['application'] ?? errors['workplace']}
                     />
                     <Button

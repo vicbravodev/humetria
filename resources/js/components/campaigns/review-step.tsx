@@ -26,7 +26,7 @@ export default function ReviewStep({
                     />
                 </span>
             ) : (
-                <span className="inline-flex size-7 items-center justify-center rounded-full border-[1.5px] border-primary text-[13px] font-semibold text-primary">
+                <span className="inline-flex size-7 items-center justify-center rounded-full border-[1.5px] border-primary text-caption font-semibold text-primary">
                     {number}
                 </span>
             )}

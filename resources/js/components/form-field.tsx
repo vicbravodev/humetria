@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import {
     InputGroup,
@@ -49,7 +49,7 @@ export default function FormField({
                     <InputGroupInput {...control} />
                 </InputGroup>
             )}
-            <InputError id={errorId} role="alert" message={error} />
+            <InputError id={errorId} message={error} />
         </div>
     );
 }

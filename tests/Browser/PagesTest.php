@@ -85,6 +85,14 @@ it('renders the appearance settings', function (bool $dark, bool $mobile): void 
     visitPage('settings/appearance', '/admin/settings/appearance', $dark, $mobile);
 })->with('looks');
 
+// Each miniature keeps its own theme's colors, so "Claro" still looks light while the page is dark.
+it('draws each theme miniature in its own colors whatever the theme in use', function (bool $dark): void {
+    $this->actingAs(User::factory()->create());
+
+    visitPage('settings/appearance', '/admin/settings/appearance', $dark)
+        ->assertScript('() => [...document.querySelectorAll(\'[aria-labelledby="theme-title"] .bg-sidebar\')].map((miniature) => getComputedStyle(miniature).backgroundColor).join(" ")', 'rgb(242, 246, 245) rgb(11, 18, 17) rgb(242, 246, 245) rgb(11, 18, 17)');
+})->with(['light' => false, 'dark' => true]);
+
 it('renders the security settings once the password is confirmed', function (bool $dark, bool $mobile): void {
     $this->actingAs(User::factory()->create());
 

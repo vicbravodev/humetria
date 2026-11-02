@@ -7,6 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { countOf } from '@/lib/plural';
 import type { EmployeeImportSummary } from '@/types';
 
 /** Every row with a problem, as the spreadsheet numbers it, so the file can be fixed and uploaded again. */
@@ -24,7 +25,7 @@ export default function ImportErrors({
                     id="import-errors"
                     className="text-lg leading-[26px] font-semibold"
                 >
-                    Corrige {count === 1 ? '1 fila' : `${count} filas`}
+                    Corrige {countOf(count, 'fila', 'filas')}
                 </h2>
                 <p role="alert" className="text-sm text-muted-foreground">
                     No se importó nada: corrige el archivo y vuelve a subirlo.

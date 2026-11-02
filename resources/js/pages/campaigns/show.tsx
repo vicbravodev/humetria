@@ -59,7 +59,6 @@ export default function Campaign(props: {
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <CampaignPageHeader campaign={campaign} canManage={canManage}>
                     <CampaignHeaderActions
-                        tenantSlug={route[0]}
                         campaign={campaign}
                         canManage={canManage}
                         minDeadline={props.minDeadline}

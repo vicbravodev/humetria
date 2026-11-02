@@ -1,6 +1,7 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import ArcMeter from '@/components/humetria/arc-meter';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import {
     headcountText,
     pendingText,
@@ -11,11 +12,11 @@ import type { CenterCard as Card } from '@/types';
 
 /** A work center on the NOM-037 list (pantalla NOM035): its people, how many rows of table 10.3 it meets and what waits. */
 export default function CenterCard({ card }: { card: Card }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const progress = progressText(card);
 
     return (
-        <article className="flex flex-col gap-[18px] rounded-xl border bg-card p-[22px]">
+        <article className="flex flex-col gap-[18px] card p-[22px]">
             <div className="flex min-w-0 flex-col gap-0.5">
                 <h3 className="text-lg leading-[26px] font-semibold">
                     {card.name}
@@ -24,7 +25,7 @@ export default function CenterCard({ card }: { card: Card }) {
             </div>
             <dl className="grid grid-cols-2 gap-3 border-b pb-[18px]">
                 <div className="flex flex-col gap-0.5">
-                    <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                    <dt className="text-caption text-muted-foreground">
                         Teletrabajo
                     </dt>
                     <dd className="font-medium">
@@ -32,7 +33,7 @@ export default function CenterCard({ card }: { card: Card }) {
                     </dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                    <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                    <dt className="text-caption text-muted-foreground">
                         Comisión
                     </dt>
                     <dd className="font-medium">
@@ -53,7 +54,7 @@ export default function CenterCard({ card }: { card: Card }) {
                             {progress}
                         </span>
                     </p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         de la tabla de inspección
                     </p>
                 </div>

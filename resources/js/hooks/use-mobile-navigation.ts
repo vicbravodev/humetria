@@ -4,7 +4,7 @@ export type CleanupFn = () => void;
 
 export function useMobileNavigation(): CleanupFn {
     return useCallback(() => {
-        // Remove pointer-events style from body...
+        // A menu closed by navigating can leave the body without pointer events: give them back.
         document.body.style.removeProperty('pointer-events');
     }, []);
 }

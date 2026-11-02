@@ -116,7 +116,7 @@ export default function DemoRequestForm() {
                         {processing && <Spinner />}
                         Agendar demo
                     </Button>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         Usamos tus datos solo para contactarte.
                     </p>
                 </>

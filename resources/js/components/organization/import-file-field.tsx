@@ -1,6 +1,6 @@
 import { FileSpreadsheet, FileUp } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { importFileHint } from '@/lib/employees';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +43,7 @@ export default function ImportFileField({
                     <span className="truncate font-medium">
                         {name ?? 'Arrastra aquí tu CSV o elígelo'}
                     </span>
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {importFileHint(name, rows)}
                     </span>
                 </label>
@@ -67,11 +67,7 @@ export default function ImportFileField({
                     }
                 />
             </div>
-            <InputError
-                id="employees-file-error"
-                role="alert"
-                message={error}
-            />
+            <InputError id="employees-file-error" message={error} />
         </div>
     );
 }

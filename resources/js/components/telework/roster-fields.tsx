@@ -1,5 +1,5 @@
 import Combobox from '@/components/humetria/combobox';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import RosterArea from '@/components/telework/roster-area';
 import WorkplaceFields from '@/components/telework/workplace-fields';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,6 @@ export default function RosterFields({
                     />
                     <InputError
                         id="roster-marital-error"
-                        role="alert"
                         message={errors['marital_status']}
                     />
                 </div>
@@ -61,7 +60,6 @@ export default function RosterFields({
                 />
                 <InputError
                     id="roster-phone-error"
-                    role="alert"
                     message={errors['contact_phone']}
                 />
             </div>

@@ -1,9 +1,10 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import AreaFilter from '@/components/results/area-filter';
 import ResultsBody from '@/components/results/results-body';
 import ResultsHeader from '@/components/results/results-header';
 import ResultsOverview from '@/components/results/results-overview';
 import TraumaSummary from '@/components/results/trauma-summary';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { resultsTrail } from '@/lib/results';
 import { report, results as resultsRoute } from '@/routes/tenant/campaigns';
 import type {
@@ -37,7 +38,7 @@ export default function Results({
     levels: RiskLevelInfo[];
     trauma: ScreeningCounts | null;
 }) {
-    const tenantSlug = usePage().props.tenant?.slug ?? '';
+    const tenantSlug = useTenantSlug();
     const area = filters.area;
     setLayoutProps({
         breadcrumbs: resultsTrail(tenantSlug, campaign, 'Resultados'),

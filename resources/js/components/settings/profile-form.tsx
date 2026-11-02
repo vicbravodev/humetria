@@ -1,7 +1,7 @@
 import { Form, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Initials from '@/components/humetria/initials';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,7 +68,7 @@ export default function ProfileForm({
                             {mustVerifyEmail && (
                                 <p
                                     id="email-help"
-                                    className="text-[13px] leading-[18px] text-muted-foreground"
+                                    className="text-caption text-muted-foreground"
                                 >
                                     Si lo cambias, te pediremos confirmarlo.
                                 </p>

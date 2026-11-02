@@ -11,18 +11,18 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/teleworkers/equipment';
 
 /** Registers an item delivered to the person; they confirm having received it from their portal. */
 export default function EquipmentDialog({
-    tenantSlug,
     teleworkerId,
     today,
 }: {
-    tenantSlug: string;
     teleworkerId: string;
     today: string;
 }) {
+    const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
     return (

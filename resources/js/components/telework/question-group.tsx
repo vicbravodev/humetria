@@ -5,6 +5,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { countOf } from '@/lib/plural';
 
 /**
  * One heading of the checklist, open or folded as the page says: its rows only exist while it is open, so a list of 122
@@ -27,13 +28,13 @@ export default function QuestionGroup({
         <Collapsible
             open={open}
             onOpenChange={onOpenChange}
-            className="overflow-hidden rounded-xl border bg-card"
+            className="overflow-hidden card"
         >
             <h3>
-                <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 bg-muted px-5 py-2.5 text-left text-[13px] leading-[18px] font-medium text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:ring-inset">
+                <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 bg-muted px-5 py-2.5 text-left text-caption font-medium text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:ring-inset">
                     <span className="min-w-0 flex-1">{heading}</span>
                     <span className="shrink-0 font-normal">
-                        {count} {count === 1 ? 'pregunta' : 'preguntas'}
+                        {countOf(count, 'pregunta', 'preguntas')}
                     </span>
                     <ChevronDown
                         aria-hidden

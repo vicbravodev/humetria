@@ -1,4 +1,5 @@
 import { ListChecks } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import { Badge } from '@/components/ui/badge';
 import type { TrainingChoice } from '@/types';
 
@@ -10,18 +11,16 @@ export default function TrainingCoverage({
 }) {
     return (
         <section
-            className="flex flex-col gap-3 rounded-xl border bg-card p-5"
+            className="flex flex-col gap-3 card p-5"
             aria-labelledby="coverage-title"
         >
             <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-primary">
-                    <ListChecks aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={ListChecks} />
                 <div>
                     <h2 id="coverage-title" className="text-base font-semibold">
                         Temas del 8.1 sin cubrir
                     </h2>
-                    <p className="text-[15px] text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         {uncovered === null
                             ? 'Elige un centro de trabajo para ver qué temas no se han cubierto en los últimos 12 meses.'
                             : uncovered.length === 0

@@ -2,10 +2,11 @@ import { Building2, X } from 'lucide-react';
 import { useState } from 'react';
 import Combobox from '@/components/humetria/combobox';
 import SettingRow from '@/components/humetria/setting-row';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Option } from '@/lib/option-search';
 import { serverSource } from '@/lib/server-options';
 import { addCenter, removeCenter } from '@/lib/telework/documents';
@@ -13,12 +14,11 @@ import { options } from '@/routes/tenant/telework/work-centers';
 
 /** Step 3: the work centers that get this version: all those in use, or the ones searched and added one by one. */
 export default function DocumentCenterField({
-    tenantSlug,
     error,
 }: {
-    tenantSlug: string;
     error: string | undefined;
 }) {
+    const tenantSlug = useTenantSlug();
     const [chosen, setChosen] = useState<Option[]>([]);
     const [all, setAll] = useState(false);
 
@@ -86,7 +86,7 @@ export default function DocumentCenterField({
                     </ul>
                 </>
             )}
-            <InputError role="alert" message={error} />
+            <InputError message={error} />
         </SettingRow>
     );
 }

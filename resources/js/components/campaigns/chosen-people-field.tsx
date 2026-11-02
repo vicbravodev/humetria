@@ -28,7 +28,7 @@ export default function ChosenPeopleField({
                     />
                 ))}
                 {chips.unnamed > 0 && (
-                    <li className="inline-flex h-8 items-center rounded-full bg-accent px-2.5 text-[13px] font-medium">
+                    <li className="inline-flex h-8 items-center rounded-full bg-accent px-2.5 text-caption font-medium">
                         +{chips.unnamed} más
                     </li>
                 )}

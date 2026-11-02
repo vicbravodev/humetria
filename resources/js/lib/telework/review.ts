@@ -1,19 +1,18 @@
+import { CalendarClock, MapPin, User } from 'lucide-react';
+import { describeDate } from '@/lib/calendar-date';
+import { plural } from '@/lib/plural';
 import type {
+    BadgeVariant,
+    PageFact,
+    ReviewDetail,
     ReviewAuthorization,
     ReviewDecisionValue,
     ReviewEvidence,
     WorkplaceStatusValue,
 } from '@/types';
 
-export type BadgeTone =
-    | 'default'
-    | 'secondary'
-    | 'success'
-    | 'warning'
-    | 'destructive';
-
 /** The badge of a workplace's status: validated is success, a plan needs a look, not validated is blocked. */
-export function statusTone(status: WorkplaceStatusValue): BadgeTone {
+export function statusTone(status: WorkplaceStatusValue): BadgeVariant {
     switch (status) {
         case 'valid':
             return 'success';
@@ -103,10 +102,36 @@ export function authorizationState(
 
 export const AUTHORIZATION_BADGES: Record<
     AuthorizationState,
-    { label: string; tone: BadgeTone }
+    { label: string; tone: BadgeVariant }
 > = {
     cancelled: { label: 'Cancelada', tone: 'secondary' },
     used: { label: 'Usada', tone: 'secondary' },
     given: { label: 'Autorizada', tone: 'success' },
     waiting: { label: 'Esperando a la persona', tone: 'warning' },
 };
+
+/** Under a review's title: whose workplace it is, where, and until when it stays valid. */
+export function reviewFacts({
+    person,
+    workplace,
+}: Pick<ReviewDetail, 'person' | 'workplace'>): PageFact[] {
+    const expires =
+        workplace.expiresOn === null
+            ? undefined
+            : describeDate(workplace.expiresOn);
+
+    return [
+        { icon: User, text: `${person.name} · ${person.jobTitle}` },
+        { icon: MapPin, text: workplace.address },
+        ...(expires === undefined
+            ? []
+            : [{ icon: CalendarClock, text: `Vigente hasta ${expires}` }]),
+    ];
+}
+
+/** How many checklists wait for the Comisión, the oldest first. */
+export function pendingReviewsText(total: number): string {
+    return total === 0
+        ? 'No hay listas esperando a la Comisión.'
+        : `${total} ${plural(total, 'lista espera', 'listas esperan')} a la Comisión, la más antigua primero.`;
+}

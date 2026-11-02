@@ -3,23 +3,23 @@ import { House } from 'lucide-react';
 import ReviewAuthorization from '@/components/telework/review-authorization';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/visit-authorizations';
 import type { ReviewAuthorization as Authorization } from '@/types';
 
 /** The visits to the place: ask the person to authorize one, attach their paper, record the visit. */
 export default function ReviewVisits({
-    tenantSlug,
     workplaceId,
     authorizations,
     canAsk,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     authorizations: Authorization[];
     canAsk: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
-        <section className="overflow-hidden rounded-xl border bg-card">
+        <section className="overflow-hidden card">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted px-5 py-3">
                 <h2 className="text-lg font-semibold">Visitas</h2>
                 {canAsk && (
@@ -48,7 +48,7 @@ export default function ReviewVisits({
                 )}
             </header>
             {authorizations.length === 0 ? (
-                <p className="px-5 py-4 text-[15px] text-muted-foreground">
+                <p className="px-5 py-4 text-meta text-muted-foreground">
                     Una visita necesita la autorización escrita de la persona.
                 </p>
             ) : (
@@ -56,7 +56,6 @@ export default function ReviewVisits({
                     {authorizations.map((authorization) => (
                         <ReviewAuthorization
                             key={authorization.id}
-                            tenantSlug={tenantSlug}
                             workplaceId={workplaceId}
                             authorization={authorization}
                         />

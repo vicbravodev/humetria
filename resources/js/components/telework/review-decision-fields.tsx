@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import DatePicker from '@/components/humetria/date-picker';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { DECISIONS, decisionNeeds } from '@/lib/telework/review';
 import type { ReviewDecisionValue } from '@/types';
 
 const CARD =
     'flex cursor-pointer items-start gap-3 rounded-lg border border-input bg-card px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[15px] has-checked:py-[11px] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring';
-const AREA =
-    'min-h-24 w-full rounded-md border border-input bg-card px-4 py-3 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive';
 
 /** The decision of the Comisión: the three outcomes, the notes, and the plan with its date when it validates with one. */
 export default function ReviewDecisionFields({
@@ -43,21 +42,20 @@ export default function ReviewDecisionFields({
                         </span>
                     </label>
                 ))}
-                <InputError role="alert" message={errors['decision']} />
+                <InputError message={errors['decision']} />
             </fieldset>
             <div className="grid gap-2">
                 <Label htmlFor={`${idPrefix}-notes`}>
                     Notas{needs.notes ? ' (obligatorias)' : ' (opcionales)'}
                 </Label>
-                <textarea
+                <Textarea
                     id={`${idPrefix}-notes`}
                     name="notes"
-                    className={AREA}
                     aria-invalid={
                         errors['notes'] === undefined ? undefined : true
                     }
                 />
-                <InputError role="alert" message={errors['notes']} />
+                <InputError message={errors['notes']} />
             </div>
             {needs.plan && (
                 <>
@@ -65,20 +63,16 @@ export default function ReviewDecisionFields({
                         <Label htmlFor={`${idPrefix}-plan`}>
                             Plan de acción
                         </Label>
-                        <textarea
+                        <Textarea
                             id={`${idPrefix}-plan`}
                             name="action_plan"
-                            className={AREA}
                             aria-invalid={
                                 errors['action_plan'] === undefined
                                     ? undefined
                                     : true
                             }
                         />
-                        <InputError
-                            role="alert"
-                            message={errors['action_plan']}
-                        />
+                        <InputError message={errors['action_plan']} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor={`${idPrefix}-due`}>
@@ -89,10 +83,7 @@ export default function ReviewDecisionFields({
                             name="plan_due_on"
                             invalid={errors['plan_due_on'] !== undefined}
                         />
-                        <InputError
-                            role="alert"
-                            message={errors['plan_due_on']}
-                        />
+                        <InputError message={errors['plan_due_on']} />
                     </div>
                 </>
             )}

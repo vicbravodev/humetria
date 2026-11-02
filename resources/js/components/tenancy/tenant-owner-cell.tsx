@@ -19,7 +19,7 @@ export default function TenantOwnerCell({ tenant }: { tenant: TenantRow }) {
             {owner !== null && (
                 <div className="flex flex-col">
                     <span>{owner.name}</span>
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {owner.email}
                     </span>
                 </div>

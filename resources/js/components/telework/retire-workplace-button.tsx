@@ -1,33 +1,33 @@
 import { router } from '@inertiajs/react';
-import ConfirmAction from '@/components/telework/confirm-action';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { retire } from '@/routes/tenant/telework/workplaces';
 
 /** Takes a place out of use (the person moved, or it is not apt). It stays in the history: nothing is deleted. */
 export default function RetireWorkplaceButton({
-    tenantSlug,
     workplaceId,
     address,
 }: {
-    tenantSlug: string;
     workplaceId: string;
     address: string;
 }) {
+    const tenantSlug = useTenantSlug();
     return (
-        <ConfirmAction
+        <ConfirmDialog
+            trigger={
+                <Button variant="outline" size="sm">
+                    Retirar lugar
+                </Button>
+            }
             title="¿Retirar este lugar de trabajo?"
             description={`${address} dejará de usarse: ya no se le pedirán listas ni cuenta en la tabla de inspección. Queda en el historial.`}
             confirmLabel="Retirar lugar"
-            destructive
             onConfirm={() =>
                 router.post(
                     retire({ tenant: tenantSlug, workplace: workplaceId }),
                 )
             }
-        >
-            <Button variant="outline" size="sm">
-                Retirar lugar
-            </Button>
-        </ConfirmAction>
+        />
     );
 }

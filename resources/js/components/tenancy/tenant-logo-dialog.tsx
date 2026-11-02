@@ -1,5 +1,5 @@
 import { Form, Link } from '@inertiajs/react';
-import InputError from '@/components/input-error';
+import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -83,10 +83,7 @@ export default function TenantLogoDialog({
                                     PNG, JPG o WebP de hasta 2 MB y al menos 40
                                     px de alto. Mejor con fondo transparente.
                                 </p>
-                                <InputError
-                                    role="alert"
-                                    message={errors['logo']}
-                                />
+                                <InputError message={errors['logo']} />
                             </div>
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>

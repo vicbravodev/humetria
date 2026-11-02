@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import LevelBar from '@/components/humetria/level-bar';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { instrumentsText } from '@/lib/campaigns';
 import { highRiskShare, participationShare } from '@/lib/dashboard';
 import { report, results } from '@/routes/tenant/campaigns';
@@ -10,14 +11,13 @@ import type { ClosedEvaluation, RiskLevelInfo } from '@/types';
 
 /** A closed evaluation: where, when, who answered, its final score as one bar, and its results and report. */
 export default function DashboardClosedRow({
-    tenantSlug,
     evaluation,
     levels,
 }: {
-    tenantSlug: string;
     evaluation: ClosedEvaluation;
     levels: RiskLevelInfo[];
 }) {
+    const tenantSlug = useTenantSlug();
     const which = `${evaluation.workCenter}, ${evaluation.closedOn}`;
 
     return (
@@ -25,7 +25,7 @@ export default function DashboardClosedRow({
             <TableCell>
                 <div className="flex flex-col">
                     <span className="font-medium">{evaluation.workCenter}</span>
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {instrumentsText(evaluation.instruments)}
                     </span>
                 </div>
@@ -36,7 +36,7 @@ export default function DashboardClosedRow({
             </TableCell>
             <TableCell className="whitespace-normal">
                 {evaluation.final === null ? (
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         Menos respuestas que el mínimo para mostrarla
                     </span>
                 ) : (
@@ -47,7 +47,7 @@ export default function DashboardClosedRow({
                             label="Distribución por nivel de riesgo"
                             className="h-2 rounded-full"
                         />
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             <b className="font-semibold text-foreground">
                                 {highRiskShare(evaluation.final)}
                             </b>{' '}
