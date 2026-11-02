@@ -86,6 +86,7 @@ export type CurrentTenant = TenantSummary &
             view_trauma_screenings: boolean;
             manage_telework: boolean;
             review_workplaces: boolean;
+            use_assistant: boolean;
         };
     };
 

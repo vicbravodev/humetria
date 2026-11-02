@@ -67,6 +67,10 @@ final class RedactSensitiveData implements ProcessorInterface
             'street',
             // NOM-037: that a person reported a severe traumatic event is health data.
             'traumatic_event',
+            // Humi: what a person asks the assistant, and what it answers, is never a log's business.
+            'assistant_message',
+            'prompt',
+            'user_message',
         ];
 
         foreach ($data as $key => $value) {

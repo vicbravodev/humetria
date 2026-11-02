@@ -401,6 +401,52 @@
 }
 
 /* A report prints alone: no sidebar, no top bar, no panel frame, and anything marked print:hidden stays on screen. */
+/* Humi, the assistant: the colors of its face follow the theme, and it floats and blinks softly. */
+:root {
+    --humi-eye: var(--primary-foreground);
+    --humi-pupil: var(--foreground);
+    --humi-mouth: var(--primary-foreground);
+}
+
+.dark {
+    --humi-eye: var(--foreground);
+    --humi-pupil: var(--primary-foreground);
+}
+
+@keyframes humi-bob {
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes humi-blink {
+    93%,
+    100% {
+        transform: scaleY(1);
+    }
+
+    96% {
+        transform: scaleY(0.1);
+    }
+}
+
+.humi-bob {
+    animation: humi-bob 3.4s ease-in-out infinite;
+}
+
+.humi-blink {
+    animation: humi-blink 4s infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .humi-bob,
+    .humi-blink {
+        animation: none;
+    }
+}
+
 @media print {
     *,
     ::before,
