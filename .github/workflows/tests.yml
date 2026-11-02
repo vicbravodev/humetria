@@ -18,8 +18,8 @@ env:
   DB_PASSWORD: password
 
 # The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
-# requires only the ci job, which waits for every other job and holds the mutation score: a job can be added or renamed
-# without touching the settings.
+# requires only the ci job, which waits for every other job: a job can be added or renamed without touching the
+# settings. Mutation testing is not here: mutation.yml runs it every week, and it never blocks a pull request.
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -78,62 +78,9 @@ jobs:
       - name: Browser tests
         run: composer test:browser
 
-  # Mutation is the slowest check, so it splits into shards that mutate side by side. Every shard runs all the mutation
-  # tests, as one full run would, and mutates only its share of the classes (scripts/mutation-classes.php); then
-  # ci holds their total to --min, as one run would. A new shard goes in the matrix, the job name, SHARD
-  # and the outputs.
-  mutation:
-    name: mutation (${{ matrix.shard }}/4)
-    runs-on: ubuntu-latest
-    services: *postgres
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
-    outputs:
-      mutations_1: ${{ steps.mutate.outputs.mutations_1 }}
-      mutations_2: ${{ steps.mutate.outputs.mutations_2 }}
-      mutations_3: ${{ steps.mutate.outputs.mutations_3 }}
-      mutations_4: ${{ steps.mutate.outputs.mutations_4 }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          # The pull request mutates only what its diff against the base branch touched.
-          fetch-depth: 0
-
-      - uses: ./.github/actions/setup
-
-      - name: Mutation testing
-        id: mutate
-        shell: bash
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          SHARD: ${{ matrix.shard }}
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            classes=$(git diff --name-only "origin/$BASE_REF...HEAD" | php scripts/mutation-classes.php --shard="$SHARD/4" tests app)
-          else
-            classes=$(php scripts/mutation-classes.php --all --shard="$SHARD/4" tests app < /dev/null)
-          fi
-
-          if [ -z "$classes" ]; then
-            echo "Nothing to mutate in shard $SHARD."
-            exit 0
-          fi
-
-          echo "Shard $SHARD mutates:"
-          printf '%s\n' "$classes"
-          vendor/bin/pest --mutate --parallel --exclude-testsuite=Browser --group=__pest_mutate_only \
-            --class="$(printf '%s\n' "$classes" | paste -sd, -)" --colors=never | tee mutation.log
-          # Without its counts this shard would weigh nothing in the total, and the total would pass without it.
-          mutations=$(grep -m1 -E '^ *Mutations:' mutation.log) || { echo "Pest printed no Mutations: line."; exit 1; }
-          echo "mutations_$SHARD=$mutations" >> "$GITHUB_OUTPUT"
-
-  # The required check: every job passed and the shards' mutation score, added up, reaches --min. A shard with nothing
-  # to mutate (a pull request that touches no mutated class) passes, and the total of no mutations passes too.
+  # The required check: every job passed.
   ci:
-    needs: [checks, browser, mutation]
+    needs: [checks, browser]
     # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
     if: always()
     runs-on: ubuntu-latest
@@ -148,17 +95,3 @@ jobs:
             echo "$failed"
             exit 1
           fi
-
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
-        with:
-          php-version: '8.5'
-          coverage: none
-
-      - name: Total mutation score
-        env:
-          MUTATIONS: ${{ toJSON(needs.mutation.outputs) }}
-        run: printf '%s' "$MUTATIONS" | jq -r '.[]' | php scripts/mutation-score.php 85

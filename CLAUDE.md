@@ -32,26 +32,19 @@ npm run types:check
 npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
-y el CI en verde, que además corre la mutación (score ≥ 85%). En local, `composer ci:check` corre todo lo de arriba en orden.
-El check obligatorio de `main` es el job `ci` (chequeos y navegador); la mutación no lo es: un PR se puede mergear antes de
-que termine, siempre que `composer ci:check` haya pasado en local.
+y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden.
+El check obligatorio de `main` es el job `ci` (chequeos y navegador). **La mutación no corre en los PR ni bloquea el merge**:
+`.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano) sobre las clases de lógica de negocio
+(`composer mutate:critical`: todo lo que los tests declaran en `mutates()`, menos controladores, FormRequests y
+notificaciones) con `--min=95`; si el score baja, el workflow falla y GitHub avisa por correo.
 
 **La mutación no se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el
 usuario la pide, y siempre acotada a las clases que tocaste: `composer mutate -- --class='App\Modules\Tenancy\Actions\X'`
-(4 procesos, solo los tests con `mutates()`); `composer mutate:retry` repite primero lo que escapó. La corrida completa
-(`composer mutate:full`, `--min=95`) es para el CI: `.github/workflows/mutation.yml` la corre cada noche y a mano.
-Ver `docs/testing.md`.
+(4 procesos, solo los tests con `mutates()`); `composer mutate:retry` repite primero lo que escapó. Ver `docs/testing.md`.
 
-El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos
-(chequeos + Unit/Feature con cobertura, navegador y mutación). La mutación se parte en shards: cada uno corre todos los
-tests con `mutates()` (`--group=__pest_mutate_only`), como una corrida completa, y muta solo su parte de las clases
-(`--class`, de `scripts/mutation-classes.php`); el job `ci` suma los shards y aplica `--min=85` al total
-(`scripts/mutation-score.php`). Así cada clase saca el mismo resultado que en una corrida completa. Si la mutación se vuelve
-el job más lento, se agrega un shard en el workflow; no se baja el umbral. En un PR se mutan solo las clases de los tests
-cuyo `mutates()` alcanza un archivo que tocó el diff, o todas si el diff toca lo que comparten (`database/`, `routes/`,
-`config/`, `bootstrap/`, dependencias). En `main`, la mutación es completa.
-Si la cobertura o el score bajan, faltan tests: no se baja el umbral. No corras la mutación al mismo tiempo que `composer test`:
-comparten la base `testing` y los dos dan resultados falsos.
+El CI (`.github/workflows/tests.yml`) lo reparte en jobs paralelos (chequeos + Unit/Feature con cobertura, y navegador).
+Si la cobertura o el score semanal bajan, faltan tests: no se baja el umbral. No corras la mutación al mismo tiempo que
+`composer test`: comparten la base `testing` y los dos dan resultados falsos.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
 `composer test:fast` (Tia: solo los tests que tu cambio afecta; la primera corrida graba el grafo).
