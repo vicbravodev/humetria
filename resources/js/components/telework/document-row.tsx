@@ -30,7 +30,7 @@ export default function DocumentRow({
                     <p className="font-medium">
                         {kind?.label ?? row.kind} · versión {row.version}
                     </p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         {row.workCenter.name} · publicada el{' '}
                         {describeDate(row.publishedOn) ?? row.publishedOn}
                     </p>

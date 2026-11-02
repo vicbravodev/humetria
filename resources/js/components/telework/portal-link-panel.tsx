@@ -39,7 +39,7 @@ export default function PortalLinkPanel({
                         <h2 className="text-base font-semibold">
                             Enlace a su portal
                         </h2>
-                        <p className="text-[15px] text-muted-foreground">
+                        <p className="text-meta text-muted-foreground">
                             {hasEmail
                                 ? 'Se envió a su correo al registrarla.'
                                 : 'Sin correo'}

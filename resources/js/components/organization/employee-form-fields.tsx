@@ -72,7 +72,7 @@ export default function EmployeeFormFields({
                     inputMode="tel"
                     maxLength={20}
                 />
-                <p className="-mt-2 text-[13px] leading-[18px] text-muted-foreground">
+                <p className="-mt-2 text-caption text-muted-foreground">
                     Con al menos uno de los dos basta. Hoy el enlace de la
                     encuesta se envía por correo.
                 </p>

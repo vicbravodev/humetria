@@ -32,7 +32,7 @@ export default function DashboardNextSteps({
                     Lo que sigue
                 </h2>
                 {pending > 0 && (
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {pendingText(pending)}
                     </span>
                 )}
@@ -56,10 +56,10 @@ export default function DashboardNextSteps({
                                     <Icon aria-hidden className="size-[18px]" />
                                 </span>
                                 <span className="flex min-w-0 grow flex-col">
-                                    <span className="text-[15px] leading-[22px] font-medium">
+                                    <span className="text-meta font-medium">
                                         {texts.title}
                                     </span>
-                                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                                    <span className="text-caption text-muted-foreground">
                                         {texts.detail}
                                     </span>
                                 </span>

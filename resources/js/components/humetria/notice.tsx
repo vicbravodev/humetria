@@ -19,7 +19,7 @@ export default function Notice({
             className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl bg-warning px-5 py-3.5 text-warning-foreground"
         >
             <CircleAlert aria-hidden className="size-5 shrink-0" />
-            <p className="min-w-0 flex-1 text-[15px] leading-[22px] [&_strong]:font-semibold">
+            <p className="min-w-0 flex-1 text-meta [&_strong]:font-semibold">
                 {children}
             </p>
             {action}

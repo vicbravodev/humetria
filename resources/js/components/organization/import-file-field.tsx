@@ -43,7 +43,7 @@ export default function ImportFileField({
                     <span className="truncate font-medium">
                         {name ?? 'Arrastra aquí tu CSV o elígelo'}
                     </span>
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {importFileHint(name, rows)}
                     </span>
                 </label>

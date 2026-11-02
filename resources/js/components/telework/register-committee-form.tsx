@@ -47,7 +47,7 @@ export default function RegisterCommitteeForm({
                         icon={FileText}
                         title="Acta en PDF"
                         status={
-                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[13px] text-muted-foreground">
+                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-caption text-muted-foreground">
                                 Opcional
                             </span>
                         }

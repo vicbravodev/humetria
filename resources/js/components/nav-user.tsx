@@ -31,7 +31,7 @@ export function NavUser() {
                                 <span className="truncate">
                                     {auth.user.name}
                                 </span>
-                                <span className="truncate text-[13px] text-muted-foreground">
+                                <span className="truncate text-caption text-muted-foreground">
                                     {auth.isSuperadmin
                                         ? 'Superadmin'
                                         : auth.user.email}

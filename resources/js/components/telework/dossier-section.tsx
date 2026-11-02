@@ -25,7 +25,7 @@ export default function DossierSection({
                         {row.label}
                     </h2>
                     {row.detail !== null && (
-                        <p className="text-[15px] leading-[22px] text-muted-foreground">
+                        <p className="text-meta text-muted-foreground">
                             {row.detail}
                         </p>
                     )}

@@ -8,7 +8,7 @@ export function CommandPaletteFooter() {
     return (
         <div
             aria-hidden
-            className="hidden items-center gap-4 border-t bg-muted px-4 py-2.5 text-[13px] leading-[18px] text-muted-foreground sm:flex"
+            className="hidden items-center gap-4 border-t bg-muted px-4 py-2.5 text-caption text-muted-foreground sm:flex"
         >
             <span className="flex items-center gap-1.5">
                 <kbd className={KEY}>

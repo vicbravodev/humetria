@@ -40,9 +40,7 @@ export default function ReviewEvidence({
                                 {request.fulfilled ? 'Atendida' : 'Pendiente'}
                             </Badge>
                         </div>
-                        <p className="text-[15px] leading-[22px]">
-                            {request.note}
-                        </p>
+                        <p className="text-meta">{request.note}</p>
                         <ReviewPhotos
                             tenantSlug={tenantSlug}
                             photos={request.photos}

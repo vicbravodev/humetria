@@ -33,14 +33,14 @@ export default function CenterProgressCard({
                 <span className="text-[44px] leading-[44px] font-semibold tabular-nums">
                     {progress.done}
                 </span>
-                <span className="text-[13px] leading-[18px] text-muted-foreground">
+                <span className="text-caption text-muted-foreground">
                     de {progress.applicable} renglones
                 </span>
             </ArcMeter>
             <dl className="grid w-full grid-cols-2 gap-x-6 gap-y-3 sm:w-auto sm:min-w-[220px]">
                 {counts.map(([term, value]) => (
                     <div key={term} className="flex flex-col gap-0.5">
-                        <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                        <dt className="text-caption text-muted-foreground">
                             {term}
                         </dt>
                         <dd className="text-lg font-semibold tabular-nums">

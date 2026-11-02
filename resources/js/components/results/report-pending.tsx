@@ -22,7 +22,7 @@ export default function ReportPending({
 
     return (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-risk-medio-bg py-3.5 pr-4 pl-5 text-risk-medio-fg motion-safe:animate-report-rise print:hidden">
-            <p className="flex items-center gap-3 text-[15px] leading-[22px]">
+            <p className="flex items-center gap-3 text-meta">
                 <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
                 <span>
                     <b className="font-semibold">{lead}:</b> {parts}

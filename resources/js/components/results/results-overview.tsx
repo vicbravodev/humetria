@@ -60,7 +60,7 @@ export default function ResultsOverview({
                             participation.invited,
                         )}
                     </span>
-                    <span className="max-w-[100px] text-[13px] leading-4 text-muted-foreground">
+                    <span className="max-w-[100px] text-caption leading-4 text-muted-foreground">
                         {answered}
                     </span>
                 </ArcMeter>

@@ -22,13 +22,13 @@ export default function ReviewRow({
                 href={show({ tenant: tenantSlug, application: row.id })}
                 className="flex items-center gap-3 rounded-xl border bg-card px-[22px] py-5 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-                <Initials name={row.person} className="size-10 text-[13px]" />
+                <Initials name={row.person} className="size-10 text-caption" />
                 <div className="flex min-w-0 flex-1 flex-col">
                     <p className="font-medium">{row.person}</p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         {row.jobTitle} · {row.workplace}
                     </p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         {row.section === 1
                             ? 'Primera lista'
                             : 'Revisión periódica'}

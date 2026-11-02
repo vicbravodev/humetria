@@ -41,7 +41,7 @@ export function AppSidebar() {
                         <Logo className="h-7" />
                         {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
                         {auth.isSuperadmin && tenant === null && (
-                            <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-[13px] leading-[18px] font-medium text-warning-foreground">
+                            <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-caption font-medium text-warning-foreground">
                                 Consola
                             </span>
                         )}

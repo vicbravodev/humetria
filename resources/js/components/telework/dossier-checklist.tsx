@@ -22,7 +22,7 @@ export default function DossierChecklistBlock({
     }
 
     return (
-        <div className="flex flex-col gap-2 text-[15px] leading-[22px]">
+        <div className="flex flex-col gap-2 text-meta">
             <p>
                 Versión {checklist.version} publicada el{' '}
                 {describeDate(checklist.publishedOn ?? '') ?? '—'}.

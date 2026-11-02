@@ -29,7 +29,7 @@ export default function TrainingAttendeesField({
                 Asistentes
             </label>
             {centerId === '' ? (
-                <p className="text-[15px] text-muted-foreground">
+                <p className="text-meta text-muted-foreground">
                     Elige primero el centro de trabajo.
                 </p>
             ) : (

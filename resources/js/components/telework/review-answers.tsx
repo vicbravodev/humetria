@@ -47,7 +47,7 @@ export default function ReviewAnswersView({
                     <h2 className="text-lg font-semibold">
                         Necesidad especial
                     </h2>
-                    <p className="text-[15px] leading-[22px]">{specialNeeds}</p>
+                    <p className="text-meta">{specialNeeds}</p>
                 </section>
             )}
         </div>

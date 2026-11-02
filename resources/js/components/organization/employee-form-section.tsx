@@ -10,7 +10,7 @@ export default function EmployeeFormSection({
 }) {
     return (
         <section className="grid gap-4">
-            <h3 className="text-[13px] leading-[18px] font-medium text-muted-foreground">
+            <h3 className="text-caption font-medium text-muted-foreground">
                 {title}
             </h3>
             {children}

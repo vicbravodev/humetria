@@ -25,7 +25,7 @@ export default function NoticeFlags({ row }: { row: NoticeRow }) {
                 </ul>
             )}
             {row.newAddress !== null && (
-                <p className="text-[15px] leading-[22px] text-muted-foreground">
+                <p className="text-meta text-muted-foreground">
                     Nuevo domicilio: {row.newAddress}
                 </p>
             )}

@@ -37,7 +37,7 @@ export default function CenterFollowUp({
                         </>
                     )}
                 </p>
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     {centerFollowUp(center)}
                 </p>
             </div>

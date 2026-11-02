@@ -61,7 +61,7 @@ export default function DemoRequestDetail({
             </div>
             <dl className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-4 border-y py-[18px]">
                 <div className="flex flex-col gap-0.5">
-                    <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                    <dt className="text-caption text-muted-foreground">
                         Correo
                     </dt>
                     <dd className="text-sm font-medium break-all">
@@ -69,7 +69,7 @@ export default function DemoRequestDetail({
                     </dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                    <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                    <dt className="text-caption text-muted-foreground">
                         WhatsApp
                     </dt>
                     <dd className="text-sm font-medium tabular-nums">
@@ -78,7 +78,7 @@ export default function DemoRequestDetail({
                 </div>
                 {facts.map((fact) => (
                     <div key={fact.term} className="flex flex-col gap-0.5">
-                        <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                        <dt className="text-caption text-muted-foreground">
                             {fact.term}
                         </dt>
                         <dd className="text-sm font-medium">{fact.value}</dd>
@@ -86,9 +86,7 @@ export default function DemoRequestDetail({
                 ))}
             </dl>
             <div className="flex flex-col gap-2">
-                <h3 className="text-[13px] leading-[18px] text-muted-foreground">
-                    Mensaje
-                </h3>
+                <h3 className="text-caption text-muted-foreground">Mensaje</h3>
                 <p className="max-w-[640px] whitespace-pre-line">
                     {request.message ?? (
                         <span className="text-muted-foreground">

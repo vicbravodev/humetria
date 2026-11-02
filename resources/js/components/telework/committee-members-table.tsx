@@ -50,7 +50,7 @@ export default function CommitteeMembersTable({
                                     <span className="font-medium">
                                         {member.name}
                                     </span>
-                                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                                    <span className="text-caption text-muted-foreground">
                                         {member.email}
                                     </span>
                                 </div>

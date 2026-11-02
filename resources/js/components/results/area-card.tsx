@@ -46,7 +46,7 @@ export default function AreaCard({
                     >
                         {share} %
                     </span>
-                    <span className="text-[13px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         alto o muy alto
                     </span>
                 </div>
@@ -61,7 +61,7 @@ export default function AreaCard({
             <LevelLegend
                 levels={BUCKETS}
                 counts={areaBuckets(area.final)}
-                className="gap-x-4 gap-y-1.5 text-[13px]"
+                className="gap-x-4 gap-y-1.5 text-caption"
             />
         </div>
     );

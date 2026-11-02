@@ -94,7 +94,7 @@ export default function Trauma({
                         ) : (
                             <div className="grid gap-4 sm:grid-cols-2">
                                 {picker}
-                                <p className="self-end text-[13px] leading-[18px] text-muted-foreground sm:pb-3">
+                                <p className="self-end text-caption text-muted-foreground sm:pb-3">
                                     Elige dónde pasó para ver a su gente.
                                 </p>
                             </div>

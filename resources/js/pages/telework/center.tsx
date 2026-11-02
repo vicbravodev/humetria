@@ -76,7 +76,7 @@ export default function TeleworkCenter({
                 <CenterProgressCard progress={progress} rows={rows} />
                 <CenterTabs tabs={tabs} />
                 {people === null ? (
-                    <p className="text-[15px] text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         Tu rol ve el avance y el estado de cada renglón, sin los
                         datos de las personas.
                     </p>

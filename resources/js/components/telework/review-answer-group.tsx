@@ -25,9 +25,7 @@ export default function ReviewAnswerGroup({
                 <h2 className="text-lg font-semibold">
                     {title} ({answers.length})
                 </h2>
-                <p className="text-[15px] text-muted-foreground">
-                    {description}
-                </p>
+                <p className="text-meta text-muted-foreground">{description}</p>
             </header>
             <ul className="divide-y">
                 {answers.map((answer) => (

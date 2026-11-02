@@ -31,7 +31,7 @@ export default function QuestionGroup({
             className="overflow-hidden rounded-xl border bg-card"
         >
             <h3>
-                <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 bg-muted px-5 py-2.5 text-left text-[13px] leading-[18px] font-medium text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:ring-inset">
+                <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 bg-muted px-5 py-2.5 text-left text-caption font-medium text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:ring-inset">
                     <span className="min-w-0 flex-1">{heading}</span>
                     <span className="shrink-0 font-normal">
                         {countOf(count, 'pregunta', 'preguntas')}

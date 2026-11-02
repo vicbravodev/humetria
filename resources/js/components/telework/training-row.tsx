@@ -25,7 +25,7 @@ export default function TrainingRow({
                         <p className="font-medium">
                             {describeDate(row.heldOn) ?? row.heldOn}
                         </p>
-                        <p className="text-[13px] leading-[18px] text-muted-foreground">
+                        <p className="text-caption text-muted-foreground">
                             {row.workCenter.name} · {row.modality} ·{' '}
                             {attendeesText(row.attendees)}
                         </p>

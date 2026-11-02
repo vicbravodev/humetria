@@ -30,7 +30,7 @@ export default function FocusCard({
             style={{ animationDelay: `${(rank - 1) * 100}ms` }}
         >
             <div className="flex items-start justify-between gap-3">
-                <span className="text-[13px] font-semibold text-muted-foreground">
+                <span className="text-caption font-semibold text-muted-foreground">
                     #{rank}
                 </span>
                 <RiskLevel
@@ -42,7 +42,7 @@ export default function FocusCard({
                 <h3 className="text-xl leading-7 font-semibold">
                     {domain.label}
                 </h3>
-                <span className="text-[13px] text-muted-foreground">
+                <span className="text-caption text-muted-foreground">
                     {category}
                 </span>
                 <span className="mt-1 text-sm text-muted-foreground">

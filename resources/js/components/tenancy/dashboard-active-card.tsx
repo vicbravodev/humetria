@@ -55,7 +55,7 @@ export default function DashboardActiveCard({
                     <span className="text-[39px] leading-none font-semibold tracking-[-0.03em] tabular-nums">
                         {evaluation.completed}
                     </span>
-                    <span className="max-w-[98px] text-[13px] leading-4 text-muted-foreground">
+                    <span className="max-w-[98px] text-caption leading-4 text-muted-foreground">
                         de {evaluation.target} contestaron
                     </span>
                 </ArcMeter>

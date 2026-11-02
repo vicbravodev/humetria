@@ -28,7 +28,7 @@ export default function EquipmentSection({
                 )}
             </div>
             {teleworker.equipment.length === 0 ? (
-                <p className="flex items-center gap-3 rounded-xl border bg-card p-4 text-[15px] text-muted-foreground">
+                <p className="flex items-center gap-3 rounded-xl border bg-card p-4 text-meta text-muted-foreground">
                     <Armchair aria-hidden className="size-5 shrink-0" />
                     {teleworker.noEquipmentReason ??
                         'Aún no hay equipo registrado para esta persona.'}

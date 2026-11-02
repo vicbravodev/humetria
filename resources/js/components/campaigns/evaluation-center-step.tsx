@@ -40,7 +40,7 @@ export default function EvaluationCenterStep({
                     placeholder="Elige un centro"
                     onChange={choose}
                 />
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     La NOM-035 se evalúa por centro de trabajo: su número de
                     personas decide qué guías aplican.
                 </p>

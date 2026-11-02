@@ -37,7 +37,7 @@ export default function ReviewAuthorization({
                 </Badge>
             </div>
             {authorization.authorized && (
-                <p className="text-[15px] text-muted-foreground">
+                <p className="text-meta text-muted-foreground">
                     {viaLabel(authorization)}
                     {authorization.hasDocument && (
                         <>

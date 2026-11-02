@@ -68,7 +68,7 @@ export default function ProfileForm({
                             {mustVerifyEmail && (
                                 <p
                                     id="email-help"
-                                    className="text-[13px] leading-[18px] text-muted-foreground"
+                                    className="text-caption text-muted-foreground"
                                 >
                                     Si lo cambias, te pediremos confirmarlo.
                                 </p>

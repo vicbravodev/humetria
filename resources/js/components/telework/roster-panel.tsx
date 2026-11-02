@@ -38,7 +38,7 @@ export default function RosterPanel({
                             ? 'Aún no está en el padrón'
                             : 'En el padrón de teletrabajo'}
                     </h2>
-                    <p className="text-[15px] text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         {rosterHint(
                             teleworker.status,
                             teleworker.canJoin,

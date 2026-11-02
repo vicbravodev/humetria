@@ -47,7 +47,7 @@ export default function WorkCenterCard({
             <dl className="grid grid-cols-3 gap-3 border-b pb-[18px]">
                 {facts.map(([term, value]) => (
                     <div key={term} className="flex flex-col gap-0.5">
-                        <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                        <dt className="text-caption text-muted-foreground">
                             {term}
                         </dt>
                         <dd className="font-medium tabular-nums">{value}</dd>

@@ -21,7 +21,7 @@ export default function TrainingCoverage({
                     <h2 id="coverage-title" className="text-base font-semibold">
                         Temas del 8.1 sin cubrir
                     </h2>
-                    <p className="text-[15px] text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         {uncovered === null
                             ? 'Elige un centro de trabajo para ver qué temas no se han cubierto en los últimos 12 meses.'
                             : uncovered.length === 0

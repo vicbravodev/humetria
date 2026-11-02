@@ -36,7 +36,7 @@ export default function AckSummary({
                     max={progress.expected}
                     label="Personas que confirmaron"
                 />
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     Cuenta a quienes hoy deben confirmar: si alguien se da de
                     baja, deja de contar.
                 </p>

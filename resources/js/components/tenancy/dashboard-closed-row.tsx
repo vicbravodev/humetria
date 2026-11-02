@@ -25,7 +25,7 @@ export default function DashboardClosedRow({
             <TableCell>
                 <div className="flex flex-col">
                     <span className="font-medium">{evaluation.workCenter}</span>
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         {instrumentsText(evaluation.instruments)}
                     </span>
                 </div>
@@ -36,7 +36,7 @@ export default function DashboardClosedRow({
             </TableCell>
             <TableCell className="whitespace-normal">
                 {evaluation.final === null ? (
-                    <span className="text-[13px] leading-[18px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                         Menos respuestas que el mínimo para mostrarla
                     </span>
                 ) : (
@@ -47,7 +47,7 @@ export default function DashboardClosedRow({
                             label="Distribución por nivel de riesgo"
                             className="h-2 rounded-full"
                         />
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             <b className="font-semibold text-foreground">
                                 {highRiskShare(evaluation.final)}
                             </b>{' '}

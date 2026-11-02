@@ -33,7 +33,7 @@ export default function InvitationCard({
                     )}
                 </span>
                 <span className="font-semibold">{tradeName}</span>
-                <span className="text-[13px] leading-[18px] text-muted-foreground">
+                <span className="text-caption text-muted-foreground">
                     como {invitation.role_label} ·{' '}
                     {roleSummary(invitation.role)}
                 </span>

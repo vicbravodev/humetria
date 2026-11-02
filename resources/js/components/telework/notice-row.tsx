@@ -24,7 +24,7 @@ export default function NoticeRow({
                     </span>
                     <div className="flex min-w-0 flex-col">
                         <p className="font-medium">{row.kind}</p>
-                        <p className="text-[13px] leading-[18px] text-muted-foreground">
+                        <p className="text-caption text-muted-foreground">
                             {row.person} · {row.workCenter} · escrito el{' '}
                             {describeDate(row.writtenOn) ?? row.writtenOn},
                             ocurrió el{' '}
@@ -36,12 +36,10 @@ export default function NoticeRow({
                     {reviewed ? 'Revisado' : 'Por revisar'}
                 </Badge>
             </div>
-            <p className="text-[15px] leading-[22px] whitespace-pre-line">
-                {row.description}
-            </p>
+            <p className="text-meta whitespace-pre-line">{row.description}</p>
             <NoticeFlags row={row} />
             {row.reviewNote !== null && (
-                <p className="rounded-lg bg-muted px-3.5 py-3 text-[15px] leading-[22px]">
+                <p className="rounded-lg bg-muted px-3.5 py-3 text-meta">
                     Revisión del{' '}
                     {describeDate(row.reviewedOn ?? '') ?? row.reviewedOn}:{' '}
                     {row.reviewNote}

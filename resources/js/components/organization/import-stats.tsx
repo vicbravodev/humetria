@@ -34,7 +34,7 @@ export default function ImportStats({
                         {stat.value.toLocaleString('es-MX')}
                     </p>
                     {stat.hint !== undefined && (
-                        <p className="text-[13px] leading-[18px] text-muted-foreground">
+                        <p className="text-caption text-muted-foreground">
                             {stat.hint}
                         </p>
                     )}

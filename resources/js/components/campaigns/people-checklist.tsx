@@ -62,7 +62,7 @@ export default function PeopleChecklist({
             />
             <p
                 id="trauma-people-help"
-                className="text-[13px] leading-[18px] text-muted-foreground"
+                className="text-caption text-muted-foreground"
             >
                 Solo personas de {workCenter.label}.
             </p>

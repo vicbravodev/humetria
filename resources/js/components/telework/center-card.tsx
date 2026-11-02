@@ -24,7 +24,7 @@ export default function CenterCard({ card }: { card: Card }) {
             </div>
             <dl className="grid grid-cols-2 gap-3 border-b pb-[18px]">
                 <div className="flex flex-col gap-0.5">
-                    <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                    <dt className="text-caption text-muted-foreground">
                         Teletrabajo
                     </dt>
                     <dd className="font-medium">
@@ -32,7 +32,7 @@ export default function CenterCard({ card }: { card: Card }) {
                     </dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                    <dt className="text-[13px] leading-[18px] text-muted-foreground">
+                    <dt className="text-caption text-muted-foreground">
                         Comisión
                     </dt>
                     <dd className="font-medium">
@@ -53,7 +53,7 @@ export default function CenterCard({ card }: { card: Card }) {
                             {progress}
                         </span>
                     </p>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         de la tabla de inspección
                     </p>
                 </div>

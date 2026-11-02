@@ -32,13 +32,13 @@ export default function ImportInstructions({
                     <li key={column} className="flex items-center gap-2 py-2">
                         <Check aria-hidden className="size-4 text-primary" />
                         <span className="flex-1 text-sm">{label}</span>
-                        <span className="text-[13px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             {column}
                         </span>
                     </li>
                 ))}
             </ul>
-            <ul className="grid list-disc gap-1.5 pl-4 text-[13px] leading-[18px] text-muted-foreground">
+            <ul className="grid list-disc gap-1.5 pl-4 text-caption text-muted-foreground">
                 <li>
                     Una fila por persona, hasta{' '}
                     {maxRows.toLocaleString('es-MX')}. Correo y celular: al

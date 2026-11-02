@@ -27,11 +27,11 @@ export default function CenterPersonRow({ person }: { person: CenterPerson }) {
                         {person.name}
                     </Link>
                 )}
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     {person.jobTitle} · {person.percentage} % en teletrabajo
                 </p>
                 {personal.length > 0 && (
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                         {personal.join(' · ')}
                     </p>
                 )}
@@ -41,7 +41,7 @@ export default function CenterPersonRow({ person }: { person: CenterPerson }) {
                     <Badge variant="outline">Aspirante</Badge>
                 )}
                 {person.workplaces.length === 0 ? (
-                    <span className="text-[15px] text-muted-foreground">
+                    <span className="text-meta text-muted-foreground">
                         Sin lugar de trabajo
                     </span>
                 ) : (

@@ -36,7 +36,7 @@ export default function DivergingRow({
                     'col-span-full pr-4 pb-1.5 md:col-span-1 md:pb-0',
                     category
                         ? 'leading-[22px] font-semibold'
-                        : 'pl-5 text-[15px] leading-5',
+                        : 'pl-5 text-meta leading-5',
                 )}
             >
                 {group.label}
@@ -82,7 +82,7 @@ export default function DivergingRow({
             <span
                 className={cn(
                     'text-right font-semibold tabular-nums',
-                    category ? 'text-lg' : 'text-[15px]',
+                    category ? 'text-lg' : 'text-meta',
                     tone !== null && !category && riskText(tone),
                 )}
             >

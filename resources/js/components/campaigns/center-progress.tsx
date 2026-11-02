@@ -32,7 +32,7 @@ export default function CenterProgress({
                     </span>{' '}
                     contestaron
                 </p>
-                <p className="text-[13px] leading-[18px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                     {openCampaignLine(campaign)}
                 </p>
             </div>

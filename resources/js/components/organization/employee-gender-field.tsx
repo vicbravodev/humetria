@@ -49,7 +49,7 @@ export default function EmployeeGenderField({
             </div>
             <p
                 id="employee-gender-help"
-                className="text-[13px] leading-[18px] text-muted-foreground"
+                className="text-caption text-muted-foreground"
             >
                 La norma lo usa para sortear la muestra.
             </p>

@@ -24,7 +24,7 @@ export default function DemoRequestItem({
             >
                 <span className="flex items-baseline justify-between gap-2">
                     <span className="font-medium">{request.name}</span>
-                    <span className="shrink-0 text-[13px] leading-[18px] text-muted-foreground tabular-nums">
+                    <span className="shrink-0 text-caption text-muted-foreground tabular-nums">
                         {request.received_at}
                     </span>
                 </span>

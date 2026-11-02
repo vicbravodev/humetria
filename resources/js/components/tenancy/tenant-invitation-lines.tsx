@@ -9,14 +9,14 @@ export default function TenantInvitationLines({
     return (
         <div className="flex flex-col">
             <span>{invitation.name}</span>
-            <span className="text-[13px] leading-[18px] text-muted-foreground">
+            <span className="text-caption text-muted-foreground">
                 {invitation.email}
             </span>
             <span
                 className={
                     invitation.status === 'pending'
-                        ? 'text-[13px] leading-[18px] text-muted-foreground'
-                        : 'text-[13px] leading-[18px] text-destructive'
+                        ? 'text-caption text-muted-foreground'
+                        : 'text-caption text-destructive'
                 }
             >
                 {invitation.status_label}

@@ -36,7 +36,7 @@ export default function TraumaNextSteps() {
                         </span>
                         <span className="flex flex-col">
                             <span className="text-sm font-medium">{title}</span>
-                            <span className="text-[13px] leading-[18px] text-muted-foreground">
+                            <span className="text-caption text-muted-foreground">
                                 {text}
                             </span>
                         </span>

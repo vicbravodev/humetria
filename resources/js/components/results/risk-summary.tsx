@@ -26,7 +26,7 @@ export default function RiskSummary({
                 className="h-3.5 rounded-full"
             />
             <LevelLegend levels={levels} counts={results.final} />
-            <p className="text-[13px] leading-[18px] text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
                 Cada cuestionario se califica por sí solo; no se promedian.
             </p>
         </div>

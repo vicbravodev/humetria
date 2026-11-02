@@ -55,14 +55,14 @@ export default function RoleCapabilities() {
                         className="flex flex-col gap-2 border-l px-[18px] py-4"
                     >
                         <h3 className="font-semibold">{role.name}</h3>
-                        <p className="text-[13px] leading-[18px] text-muted-foreground">
+                        <p className="text-caption text-muted-foreground">
                             {role.summary}
                         </p>
                         <ul className="mt-1 flex flex-col gap-1">
                             {role.can.map((item) => (
                                 <li
                                     key={item}
-                                    className="flex items-center gap-1.5 text-[13px] leading-[18px]"
+                                    className="flex items-center gap-1.5 text-caption"
                                 >
                                     <Check
                                         aria-hidden

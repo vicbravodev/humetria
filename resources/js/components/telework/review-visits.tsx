@@ -48,7 +48,7 @@ export default function ReviewVisits({
                 )}
             </header>
             {authorizations.length === 0 ? (
-                <p className="px-5 py-4 text-[15px] text-muted-foreground">
+                <p className="px-5 py-4 text-meta text-muted-foreground">
                     Una visita necesita la autorización escrita de la persona.
                 </p>
             ) : (

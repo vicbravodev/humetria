@@ -26,7 +26,7 @@ export default function MemberInvitationRow({
                     </span>
                     <div className="flex min-w-0 flex-col">
                         <span className="font-medium">{invitation.name}</span>
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             {invitation.email} · {invitation.status_label} ·{' '}
                             {expired ? 'venció' : 'vence'} el{' '}
                             {invitation.expires_on}

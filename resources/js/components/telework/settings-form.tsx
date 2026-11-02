@@ -47,7 +47,7 @@ export default function SettingsForm({
                         icon={FileText}
                         title="Consentimiento"
                         status={
-                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[13px] text-muted-foreground">
+                            <span className="rounded-full bg-muted px-2.5 py-0.5 text-caption text-muted-foreground">
                                 Versión {consent.version}
                             </span>
                         }

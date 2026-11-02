@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
 
 const selectClass =
-    'h-11 w-full rounded-lg border border-input bg-card px-3 text-[15px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+    'h-11 w-full rounded-lg border border-input bg-card px-3 text-meta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 /** The fields a question is written with; `prefix` keeps ids unique when several forms are open. */
 export default function QuestionFields({
@@ -67,7 +67,7 @@ export default function QuestionFields({
                 </select>
                 <InputError message={errors['requirement']} />
             </div>
-            <label className="flex items-center gap-2 text-[15px] sm:col-span-2">
+            <label className="flex items-center gap-2 text-meta sm:col-span-2">
                 <Input
                     type="checkbox"
                     name="sensitive"

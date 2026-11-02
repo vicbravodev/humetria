@@ -32,7 +32,7 @@ export default function ReportSection({
                         {title}
                     </h2>
                     {aside !== undefined && (
-                        <span className="text-[13px] text-muted-foreground">
+                        <span className="text-caption text-muted-foreground">
                             {aside}
                         </span>
                     )}

@@ -13,7 +13,7 @@ export default function DossierCommitteeBlock({
     }
 
     return (
-        <div className="flex flex-col gap-1 text-[15px] leading-[22px]">
+        <div className="flex flex-col gap-1 text-meta">
             <p>
                 Acta de constitución del{' '}
                 {describeDate(committee.constitutedOn) ?? '—'}

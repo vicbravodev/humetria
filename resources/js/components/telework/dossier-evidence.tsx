@@ -21,7 +21,7 @@ export default function DossierEvidenceBlock({
 }) {
     if (row.state === 'not_applicable') {
         return (
-            <p className="text-[15px] leading-[22px] text-muted-foreground">
+            <p className="text-meta text-muted-foreground">
                 {inapplicableText(row.numeral)}
             </p>
         );

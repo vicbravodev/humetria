@@ -19,7 +19,7 @@ export default function RiskLevel({
     return (
         <span
             className={cn(
-                'inline-flex items-center gap-1.5 rounded-md px-2 py-[3px] text-[13px] leading-[18px] font-medium tracking-normal whitespace-nowrap normal-case',
+                'inline-flex items-center gap-1.5 rounded-md px-2 py-[3px] text-caption font-medium tracking-normal whitespace-nowrap normal-case',
                 riskLabel(level),
             )}
         >

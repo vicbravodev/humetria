@@ -39,7 +39,7 @@ export default function DocumentKindField({
                         <span>
                             {kind.label}
                             {kind.numeral !== null && (
-                                <span className="block text-[13px] text-muted-foreground">
+                                <span className="block text-caption text-muted-foreground">
                                     Numeral {kind.numeral}
                                 </span>
                             )}

@@ -31,7 +31,7 @@ export default function TeleworkerDetail({
 
     return (
         <div className="flex flex-col gap-6">
-            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[15px] leading-[22px] text-muted-foreground">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-meta text-muted-foreground">
                 <li className="flex items-center gap-1.5">
                     <Briefcase aria-hidden className="size-4" />
                     {teleworker.jobTitle}
@@ -83,7 +83,7 @@ export default function TeleworkerDetail({
                                 <p className="text-base font-semibold">
                                     {workplace.address}
                                 </p>
-                                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-muted-foreground">
+                                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-muted-foreground">
                                     <WorkplaceStatusBadge
                                         status={workplace.status}
                                         label={workplace.statusLabel}
@@ -93,7 +93,7 @@ export default function TeleworkerDetail({
                                         workplace.expiresOn,
                                     )}
                                 </p>
-                                <p className="text-[15px] text-muted-foreground">
+                                <p className="text-meta text-muted-foreground">
                                     Lista: {workplace.label}
                                 </p>
                             </div>

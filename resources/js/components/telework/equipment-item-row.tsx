@@ -13,7 +13,7 @@ export default function EquipmentItemRow({ item }: { item: EquipmentRow }) {
             </span>
             <div className="min-w-0">
                 <p className="text-base font-semibold">{item.description}</p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-muted-foreground">
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-muted-foreground">
                     <Badge variant={equipmentTone(item.status)}>
                         {item.statusLabel}
                     </Badge>
@@ -21,7 +21,7 @@ export default function EquipmentItemRow({ item }: { item: EquipmentRow }) {
                     {describeDate(item.deliveredOn) ?? item.deliveredOn}
                 </p>
                 {item.refusalReason !== null && (
-                    <p className="mt-1 text-[15px]">
+                    <p className="mt-1 text-meta">
                         Motivo: {item.refusalReason}
                     </p>
                 )}

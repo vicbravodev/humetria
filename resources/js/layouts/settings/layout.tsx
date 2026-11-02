@@ -40,7 +40,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 href={item.href}
                                 aria-current={current ? 'page' : undefined}
                                 className={cn(
-                                    'flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-[15px] transition-colors duration-150 ease-out hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&>svg]:size-5 [&>svg]:text-muted-foreground',
+                                    'flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-meta transition-colors duration-150 ease-out hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&>svg]:size-5 [&>svg]:text-muted-foreground',
                                     current &&
                                         'bg-card font-medium ring-1 ring-border hover:bg-card [&>svg]:text-primary',
                                 )}

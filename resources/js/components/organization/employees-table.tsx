@@ -59,7 +59,7 @@ export default function EmployeesTable({
                                     <p className="font-medium">
                                         {employee.name}
                                     </p>
-                                    <p className="text-[13px] leading-[18px] text-muted-foreground">
+                                    <p className="text-caption text-muted-foreground">
                                         {details(employee)}
                                     </p>
                                 </div>
