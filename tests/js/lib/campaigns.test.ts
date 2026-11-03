@@ -4,6 +4,7 @@ import {
     inviteMissingSummary,
     guideBreakdown,
     instrumentsText,
+    measuringGuide,
     peoplePage,
     peopleQuery,
     progressCaption,
@@ -234,5 +235,33 @@ describe('inviteMissingSummary', () => {
         expect(inviteMissingSummary({ people: 4, links: 2 })).toBe(
             'Se pondrá al día a 4 personas. Se enviará un enlace a 2 personas; las demás no tienen correo.',
         );
+    });
+});
+
+describe('measuringGuide', () => {
+    const guide = (key: string) => ({
+        key,
+        title: key,
+        invited: 0,
+        completed: 0,
+        pending: 0,
+        unreachable: 0,
+        cancelled: 0,
+    });
+
+    it('is the last guide: the one that measures the evaluation', () => {
+        expect(
+            measuringGuide([
+                guide('nom035.guide-i'),
+                guide('nom035.guide-iii'),
+            ]),
+        ).toBe('nom035.guide-iii');
+        expect(measuringGuide([guide('nom035.guide-i')])).toBe(
+            'nom035.guide-i',
+        );
+    });
+
+    it('is none without guides', () => {
+        expect(measuringGuide([])).toBeNull();
     });
 });

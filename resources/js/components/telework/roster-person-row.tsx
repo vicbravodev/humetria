@@ -28,7 +28,8 @@ export default function CenterPersonRow({ person }: { person: CenterPerson }) {
                     </Link>
                 )}
                 <p className="text-caption text-muted-foreground">
-                    {person.jobTitle} · {person.percentage} % en teletrabajo
+                    {person.jobTitle} · {person.percentage}&nbsp;% en
+                    teletrabajo
                 </p>
                 {personal.length > 0 && (
                     <p className="text-caption text-muted-foreground">

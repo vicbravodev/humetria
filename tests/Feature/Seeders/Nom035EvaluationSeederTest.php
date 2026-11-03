@@ -215,3 +215,9 @@ it('lets owner and HR see the Guía I channeling list, and hides it from the vie
     $visit(Nom035EvaluationSeeder::MEMBER_EMAILS[1])->assertOk();
     $visit(Nom035EvaluationSeeder::MEMBER_EMAILS[2])->assertNotFound();
 });
+
+it('gives each work center its own main activity, as a company would write it', function (): void {
+    $activities = WorkCenter::query()->withoutGlobalScopes()->pluck('main_activity');
+
+    expect($activities)->toHaveCount(5)->and($activities->unique())->toHaveCount(5);
+});

@@ -112,7 +112,7 @@ final class Nom035EvaluationSeeder extends Seeder
         $areas = [];
 
         foreach ($this->plans() as $plan) {
-            $center = WorkCenterFactory::new()->createOne(['tenant_id' => $tenant->id, 'name' => $plan['name']]);
+            $center = WorkCenterFactory::new()->createOne(['tenant_id' => $tenant->id, 'name' => $plan['name'], 'main_activity' => $plan['activity']]);
             $this->staff($tenant->id, $center->id, $plan['areas'], $areas);
             $totals = $plan['name'] === self::CENTER_30 ? self::guideTwoTotals() : self::guideThreeTotals();
             $links = (new Nom035EvaluationScenario($totals, self::GUIDE_ONE_YES))
@@ -129,16 +129,16 @@ final class Nom035EvaluationSeeder extends Seeder
     }
 
     /**
-     * @return list<array{name: string, areas: array<string, int>, sample: bool, state: 'draft'|'active'|'closed', guideOne: int, guideOneStart: int, risk: int}>
+     * @return list<array{name: string, activity: string, areas: array<string, int>, sample: bool, state: 'draft'|'active'|'closed', guideOne: int, guideOneStart: int, risk: int}>
      */
     private function plans(): array
     {
         return [
-            ['name' => self::CENTER_15, 'areas' => ['Producción' => 8, 'Almacén' => 4, 'Administración' => 3], 'sample' => false, 'state' => 'active', 'guideOne' => 9, 'guideOneStart' => 0, 'risk' => 0],
-            ['name' => self::CENTER_16, 'areas' => ['Almacén' => 10, 'Administración' => 6], 'sample' => false, 'state' => 'draft', 'guideOne' => 0, 'guideOneStart' => 0, 'risk' => 0],
-            ['name' => self::CENTER_30, 'areas' => ['Ventas' => 12, 'Operaciones' => 10, 'Finanzas' => 5, 'Dirección' => 3], 'sample' => false, 'state' => 'closed', 'guideOne' => 30, 'guideOneStart' => 0, 'risk' => 30],
-            ['name' => self::CENTER_51, 'areas' => ['Ventas' => 20, 'Operaciones' => 18, 'Administración' => 13], 'sample' => false, 'state' => 'active', 'guideOne' => 25, 'guideOneStart' => 21, 'risk' => self::ANSWERED_AT_CENTER_51],
-            ['name' => self::CENTER_100, 'areas' => ['Producción' => 40, 'Almacén' => 25, 'Calidad' => 20, 'Mantenimiento' => 15], 'sample' => true, 'state' => 'closed', 'guideOne' => 92, 'guideOneStart' => 0, 'risk' => 80],
+            ['name' => self::CENTER_15, 'activity' => 'Reparación de maquinaria industrial', 'areas' => ['Producción' => 8, 'Almacén' => 4, 'Administración' => 3], 'sample' => false, 'state' => 'active', 'guideOne' => 9, 'guideOneStart' => 0, 'risk' => 0],
+            ['name' => self::CENTER_16, 'activity' => 'Almacenamiento y distribución', 'areas' => ['Almacén' => 10, 'Administración' => 6], 'sample' => false, 'state' => 'draft', 'guideOne' => 0, 'guideOneStart' => 0, 'risk' => 0],
+            ['name' => self::CENTER_30, 'activity' => 'Servicios administrativos y comerciales', 'areas' => ['Ventas' => 12, 'Operaciones' => 10, 'Finanzas' => 5, 'Dirección' => 3], 'sample' => false, 'state' => 'closed', 'guideOne' => 30, 'guideOneStart' => 0, 'risk' => 30],
+            ['name' => self::CENTER_51, 'activity' => 'Venta de refacciones al mayoreo', 'areas' => ['Ventas' => 20, 'Operaciones' => 18, 'Administración' => 13], 'sample' => false, 'state' => 'active', 'guideOne' => 25, 'guideOneStart' => 21, 'risk' => self::ANSWERED_AT_CENTER_51],
+            ['name' => self::CENTER_100, 'activity' => 'Manufactura de autopartes', 'areas' => ['Producción' => 40, 'Almacén' => 25, 'Calidad' => 20, 'Mantenimiento' => 15], 'sample' => true, 'state' => 'closed', 'guideOne' => 92, 'guideOneStart' => 0, 'risk' => 80],
         ];
     }
 

@@ -21,6 +21,7 @@ export default function CampaignHeaderActions({
     minDeadline,
     replacementPool,
     pending,
+    guide,
     missing,
 }: {
     campaign: CampaignDetail;
@@ -28,6 +29,7 @@ export default function CampaignHeaderActions({
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
     pending: number;
+    guide: string | null;
     missing: InviteMissingCount;
 }) {
     const tenantSlug = useTenantSlug();
@@ -46,6 +48,7 @@ export default function CampaignHeaderActions({
                 minDeadline={minDeadline}
                 replacementPool={replacementPool}
                 pending={pending}
+                guide={guide}
                 missing={missing}
             />
         );

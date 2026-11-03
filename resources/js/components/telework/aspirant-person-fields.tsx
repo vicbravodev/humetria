@@ -52,7 +52,7 @@ export default function AspirantPersonFields({
                     id="aspirant-percentage-hint"
                     className="text-sm text-muted-foreground"
                 >
-                    Más de 40 %, hasta 100 %.
+                    Más de 40&nbsp;%, hasta 100&nbsp;%.
                 </p>
                 <InputError message={errors['telework_percentage']} />
             </div>

@@ -65,7 +65,7 @@ describe('keyFindings', () => {
             {
                 tone: 'risk',
                 title: 'Liderazgo es el foco principal',
-                detail: '15 de 20 cuestionarios (75 %) quedan en alto o muy alto; 12 de ellos en muy alto.',
+                detail: '15 de 20 cuestionarios (75\u00a0%) quedan en alto o muy alto; 12 de ellos en muy alto.',
             },
             {
                 tone: 'risk',
@@ -75,7 +75,7 @@ describe('keyFindings', () => {
             {
                 tone: 'strength',
                 title: 'Relaciones es la fortaleza',
-                detail: 'Solo 15 % en alto o muy alto. Es la base para construir el programa.',
+                detail: 'Solo 15\u00a0% en alto o muy alto. Es la base para construir el programa.',
             },
         ]);
     });
@@ -95,7 +95,7 @@ describe('keyFindings', () => {
             {
                 tone: 'risk',
                 title: 'Liderazgo es el foco principal',
-                detail: '5 de 20 cuestionarios (25 %) quedan en alto o muy alto.',
+                detail: '5 de 20 cuestionarios (25\u00a0%) quedan en alto o muy alto.',
             },
             {
                 tone: 'strength',
@@ -116,7 +116,7 @@ describe('keyFindings', () => {
             {
                 tone: 'strength',
                 title: 'Ningún dominio en riesgo alto o muy alto',
-                detail: 'Ningún cuestionario queda en riesgo alto o muy alto; 2 de 20 (10 %) quedan en riesgo medio.',
+                detail: 'Ningún cuestionario queda en riesgo alto o muy alto; 2 de 20 (10\u00a0%) quedan en riesgo medio.',
             },
         ]);
     });

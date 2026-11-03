@@ -71,6 +71,15 @@ final class Campaign extends Model
     }
 
     /**
+     * The guide that measures the campaign (Guía II or III in an evaluation, Guía I otherwise): the one «contestó» is
+     * counted by in the meter, the standing tabs, the areas and the days.
+     */
+    public function measuringGuide(): ?string
+    {
+        return array_last($this->instruments);
+    }
+
+    /**
      * @return HasMany<Participant, $this>
      */
     public function participants(): HasMany
