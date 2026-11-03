@@ -75,7 +75,7 @@ export default function AreaParticipationCard({
                                 </strong>{' '}
                                 <span className="text-muted-foreground">
                                     de {area.total} ·{' '}
-                                    {percent(area.answered, area.total)} %
+                                    {percent(area.answered, area.total)}&nbsp;%
                                 </span>
                             </span>
                         </div>

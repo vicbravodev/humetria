@@ -37,7 +37,7 @@ export default function TeleworkerDetail({
                 </li>
                 <li className="flex items-center gap-1.5">
                     <Percent aria-hidden className="size-4" />
-                    {teleworker.percentage} % en teletrabajo
+                    {teleworker.percentage}&nbsp;% en teletrabajo
                 </li>
                 <li>{STATUS[teleworker.status]}</li>
             </ul>

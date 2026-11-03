@@ -19,20 +19,20 @@ import { index, show } from '@/routes/tenant/campaigns';
 
 describe('percentText', () => {
     it('rounds a share to a whole percent', () => {
-        expect(percentText(1, 3)).toBe('33 %');
-        expect(percentText(2, 3)).toBe('67 %');
-        expect(percentText(5, 5)).toBe('100 %');
+        expect(percentText(1, 3)).toBe('33\u00a0%');
+        expect(percentText(2, 3)).toBe('67\u00a0%');
+        expect(percentText(5, 5)).toBe('100\u00a0%');
     });
 
     it('is 0 % of nothing', () => {
-        expect(percentText(0, 0)).toBe('0 %');
+        expect(percentText(0, 0)).toBe('0\u00a0%');
     });
 });
 
 describe('participationText', () => {
     it('says how many answered of how many were invited', () => {
         expect(participationText({ answered: 11, invited: 12 })).toBe(
-            '11 de 12 (92 %)',
+            '11 de 12 (92\u00a0%)',
         );
     });
 });
@@ -111,13 +111,13 @@ describe('rankBySeverity', () => {
 describe('riskVerdict', () => {
     it('says how many are in Alto or Muy alto', () => {
         expect(riskVerdict([2, 6, 3, 3, 15])).toBe(
-            '18 de 29 cuestionarios (62 %) quedan en riesgo alto o muy alto.',
+            '18 de 29 cuestionarios (62\u00a0%) quedan en riesgo alto o muy alto.',
         );
     });
 
     it('says when none is, but some are in Medio', () => {
         expect(riskVerdict([2, 6, 2, 0, 0])).toBe(
-            'Ningún cuestionario queda en riesgo alto o muy alto; 2 de 10 (20 %) quedan en riesgo medio.',
+            'Ningún cuestionario queda en riesgo alto o muy alto; 2 de 10 (20\u00a0%) quedan en riesgo medio.',
         );
     });
 
@@ -139,7 +139,7 @@ describe('worstGroupText', () => {
 
     it('names the group with the largest share in Alto or Muy alto', () => {
         expect(worstGroupText(groups, 'dominio')).toBe(
-            'El dominio que más pesa es Carga de trabajo, con 80 % en riesgo alto o muy alto.',
+            'El dominio que más pesa es Carga de trabajo, con 80\u00a0% en riesgo alto o muy alto.',
         );
     });
 
@@ -151,7 +151,9 @@ describe('worstGroupText', () => {
 
 describe('unfavorableText', () => {
     it('says how many answered a question unfavorably', () => {
-        expect(unfavorableText(7, 29)).toBe('7 de 29 desfavorables (24 %)');
+        expect(unfavorableText(7, 29)).toBe(
+            '7 de 29 desfavorables (24\u00a0%)',
+        );
     });
 });
 

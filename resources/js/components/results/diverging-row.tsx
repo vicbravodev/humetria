@@ -86,7 +86,7 @@ export default function DivergingRow({
                     tone !== null && !category && riskText(tone),
                 )}
             >
-                {Math.round(high)} %
+                {Math.round(high)}&nbsp;%
             </span>
         </div>
     );

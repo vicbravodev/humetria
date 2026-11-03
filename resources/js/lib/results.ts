@@ -17,9 +17,9 @@ export const RISK_LEVELS: RiskLevelValue[] = [
     'very_high',
 ];
 
-/** The share of a count, rounded to a whole percent: "45 %" (es-MX writes a space before it). */
+/** The share of a count, rounded to a whole percent: "45 %" (es-MX writes a space before it, a non-breaking one so the sign never wraps alone). */
 export function percentText(count: number, total: number): string {
-    return `${total === 0 ? 0 : Math.round((count / total) * 100)} %`;
+    return `${total === 0 ? 0 : Math.round((count / total) * 100)}\u00a0%`;
 }
 
 /** How many answered, of how many were invited: "11 de 12 (92 %)". */
