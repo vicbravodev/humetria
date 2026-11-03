@@ -34,3 +34,11 @@ export type HandlerRow = {
 
 /** How many people would receive a complaint against this kind of person. */
 export type CoverageRow = { kind: string; label: string; count: number };
+
+/** Where else a person may go with a complaint: the federal labor inspection. */
+export type ExternalAlternative = {
+    name: string;
+    email: string;
+    phone: string;
+    note: string;
+};

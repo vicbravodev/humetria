@@ -103,3 +103,25 @@ it('designates a handler from the page and shows them in the list', function ():
         ->assertSee('Ana Recursos')
         ->assertNoJavaScriptErrors();
 });
+
+it('opens the public form of the channel with what to read first, and leaves no cookie', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial']);
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+
+    visitPage('complaints-public/form', "/c/{$channel->access_code}", $dark, $mobile)
+        ->assertSee('Acme Industrial')
+        ->assertSee('Quejas y denuncias')
+        ->assertSee('Cómo se atiende')
+        ->assertSee('Qué protegemos y qué no')
+        ->assertScript('() => document.cookie', '');
+})->with($looks);
+
+it('says the channel is paused and offers the other way, or that the link is gone', function (string $case): void {
+    $tenant = Tenant::factory()->create();
+    $code = $case === 'paused' ? ComplaintChannel::factory()->forTenant($tenant->id)->paused()->create()->access_code : 'ZZZZZZZZZZZZZZZZ';
+
+    visitPage('complaints-public/unavailable', "/c/{$code}")
+        ->assertSee($case === 'paused' ? 'El canal no está disponible por ahora' : 'Este enlace no está disponible')
+        ->assertSee('Otra vía')
+        ->assertSee('Inspección Federal del Trabajo');
+})->with(['paused', 'gone']);

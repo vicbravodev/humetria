@@ -6,9 +6,13 @@ namespace App\Modules\Complaints\Providers;
 
 use App\Modules\Complaints\Contracts\ComplaintChannels;
 use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
+use App\Modules\Complaints\Support\AddressKey;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
 use App\Modules\Tenancy\Events\MemberRemoved;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -26,5 +30,8 @@ final class ComplaintsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(MemberRemoved::class, EndHandlerOnMemberRemoval::class);
+
+        // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
+        RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));
     }
 }

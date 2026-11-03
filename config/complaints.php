@@ -47,6 +47,7 @@ return [
 
     'rate_limits' => [
         'submissions_per_hour' => (int) env('COMPLAINTS_SUBMISSIONS_PER_HOUR', 5),
+        'views_per_hour' => (int) env('COMPLAINTS_VIEWS_PER_HOUR', 300),
         'follow_ups_per_hour' => (int) env('COMPLAINTS_FOLLOW_UPS_PER_HOUR', 30),
         'daily_cap' => (int) env('COMPLAINTS_DAILY_CAP', 200),
     ],
