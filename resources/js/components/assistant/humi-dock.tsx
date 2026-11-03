@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { lazy, Suspense, useState } from 'react';
+import { type AnimationEvent, lazy, Suspense, useState } from 'react';
 import HumiLauncher from '@/components/assistant/humi-launcher';
 import {
     Sheet,
@@ -25,8 +25,11 @@ export default function HumiDock() {
     const wide = useMediaQuery('(min-width: 1280px)');
     const [open, setOpen] = useState(false);
     const [closedOnce, setClosedOnce] = useState(false);
+    const [leaving, setLeaving] = useState(false);
 
-    useHumiShortcut(() => setOpen((was) => !was));
+    useHumiShortcut(() =>
+        open && wide ? setLeaving(true) : setOpen((was) => !was),
+    );
 
     if (tenant === undefined || tenant === null || !tenant.can.use_assistant) {
         return null;
@@ -35,6 +38,14 @@ export default function HumiDock() {
     const close = () => {
         setOpen(false);
         setClosedOnce(true);
+    };
+    // The docked panel slides out first and is removed when that motion ends (its own, not its children's).
+    const dockedClose = () => setLeaving(true);
+    const removeDocked = (event: AnimationEvent<HTMLElement>) => {
+        if (leaving && event.target === event.currentTarget) {
+            setLeaving(false);
+            close();
+        }
     };
     const panel = (onClose: (() => void) | null) => (
         <Suspense fallback={null}>
@@ -58,9 +69,10 @@ export default function HumiDock() {
             {open && wide && (
                 <aside
                     aria-label="Humi"
-                    className="sticky top-0 h-svh w-[420px] shrink-0 border-l bg-background print:hidden"
+                    onAnimationEnd={removeDocked}
+                    className={`${leaving ? 'humi-slide-out' : 'humi-slide-in'} sticky top-0 h-svh w-[420px] shrink-0 border-l bg-background print:hidden`}
                 >
-                    {panel(close)}
+                    {panel(dockedClose)}
                 </aside>
             )}
             {!wide && (

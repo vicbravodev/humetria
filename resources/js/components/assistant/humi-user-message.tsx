@@ -7,7 +7,7 @@ export default function HumiUserMessage({ message }: { message: UIMessage }) {
         .join('');
 
     return (
-        <div className="flex justify-end">
+        <div className="humi-enter flex justify-end">
             <p className="max-w-[85%] rounded-lg bg-accent px-3.5 py-3 text-base leading-6 break-words whitespace-pre-wrap">
                 {text}
             </p>

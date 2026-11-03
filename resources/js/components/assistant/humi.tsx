@@ -53,11 +53,16 @@ export default function Humi({
                     d="M60 276 V170 A100 100 0 0 1 260 170 V276 A24 24 0 0 1 236 300 H84 A24 24 0 0 1 60 276 Z"
                     className="fill-primary"
                 />
-                <HumiEyes
-                    expression={expression}
-                    lensId={lensId}
-                    blink={animated}
-                />
+                <g
+                    key={expression}
+                    className={animated ? 'humi-change' : undefined}
+                >
+                    <HumiEyes
+                        expression={expression}
+                        lensId={lensId}
+                        blink={animated}
+                    />
+                </g>
             </g>
         </svg>
     );

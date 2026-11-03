@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { parseMarkdown } from '@/lib/assistant/markdown';
+import { leadOf, parseMarkdown, plainText } from '@/lib/assistant/markdown';
 
 describe('parseMarkdown: paragraphs and inline marks', () => {
     it('splits paragraphs at blank lines and keeps a line break inside one as a space', () => {
@@ -95,5 +95,86 @@ describe('parseMarkdown: lists and headings', () => {
                 inline: [{ kind: 'text', text: 'Está en **liderazg' }],
             },
         ]);
+    });
+});
+
+describe('parseMarkdown: what a model writes without blank lines', () => {
+    it('reads a heading that is followed by its text on the next line', () => {
+        expect(
+            parseMarkdown('### ¿A quién aplica?\nA quienes teletrabajan.'),
+        ).toEqual([
+            {
+                kind: 'paragraph',
+                inline: [{ kind: 'strong', text: '¿A quién aplica?' }],
+            },
+            {
+                kind: 'paragraph',
+                inline: [{ kind: 'text', text: 'A quienes teletrabajan.' }],
+            },
+        ]);
+    });
+
+    it('reads a list that comes right after a sentence, and the sentence that follows a list', () => {
+        expect(parseMarkdown('Puntos:\n* uno\n* dos\nCierre.')).toEqual([
+            { kind: 'paragraph', inline: [{ kind: 'text', text: 'Puntos:' }] },
+            {
+                kind: 'list',
+                ordered: false,
+                items: [
+                    [{ kind: 'text', text: 'uno' }],
+                    [{ kind: 'text', text: 'dos' }],
+                ],
+            },
+            { kind: 'paragraph', inline: [{ kind: 'text', text: 'Cierre.' }] },
+        ]);
+    });
+
+    it('marks italics, and leaves a lone asterisk and a product as text', () => {
+        expect(
+            parseMarkdown('*Fuente: criterio C-01.* Son 5 * 3 * 2 horas.'),
+        ).toEqual([
+            {
+                kind: 'paragraph',
+                inline: [
+                    { kind: 'em', text: 'Fuente: criterio C-01.' },
+                    { kind: 'text', text: ' Son 5 * 3 * 2 horas.' },
+                ],
+            },
+        ]);
+    });
+});
+
+describe('leadOf', () => {
+    it('is the first paragraph of a criterion without its label', () => {
+        expect(
+            leadOf(
+                '**Qué hacemos.** Una persona entra al padrón con **más de 40 %**.\n\n**Qué dice la ley.** Otra cosa.',
+            ),
+        ).toEqual([
+            { kind: 'text', text: 'Una persona entra al padrón con ' },
+            { kind: 'strong', text: 'más de 40 %' },
+            { kind: 'text', text: '.' },
+        ]);
+    });
+
+    it('keeps a first paragraph that has no label, and has nothing when the text starts with a list', () => {
+        expect(leadOf('Solo texto.')).toEqual([
+            { kind: 'text', text: 'Solo texto.' },
+        ]);
+        expect(leadOf('- uno\n- dos')).toEqual([]);
+        expect(leadOf('')).toEqual([]);
+    });
+});
+
+describe('plainText', () => {
+    it('is what a screen reader should say: the words, without the marks', () => {
+        expect(
+            plainText(
+                '### ¿A quién aplica?\nCon **más de 40 %** y `C-01`.\n* Una política\n* *Una* comisión\n[Ver](/admin/acme)',
+            ),
+        ).toBe(
+            '¿A quién aplica?\nCon más de 40 % y C-01.\nUna política\nUna comisión\nVer',
+        );
+        expect(plainText('')).toBe('');
     });
 });

@@ -9,7 +9,7 @@ export default function HumiToolStep({
     done: boolean;
 }) {
     return (
-        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+        <li className="humi-enter flex items-center gap-2 text-sm text-muted-foreground">
             {done ? (
                 <Check aria-hidden className="size-4 shrink-0 text-primary" />
             ) : (

@@ -16,7 +16,7 @@ export default function HumiCardFrame({
 }) {
     return (
         <section
-            className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+            className="humi-enter flex flex-col gap-3 rounded-lg border bg-card p-4"
             aria-label={title}
         >
             <h3 className="text-caption font-medium tracking-wide text-muted-foreground uppercase">

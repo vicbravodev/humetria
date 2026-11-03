@@ -38,6 +38,9 @@ export type StatusRow = {
 };
 
 export type ListRow = {
+    /** Which criterion of which norm it is («NOM-037 · C-01»), for what comes from the norms. */
+    ref: string | null;
+    source: string | null;
     title: string;
     detail: string | null;
     due: string | null;
@@ -180,7 +183,12 @@ function listRow(row: object): ListRow | null {
         return null;
     }
 
+    const norm = text(row, 'norm');
+    const id = text(row, 'id');
+
     return {
+        ref: norm !== null && id !== null ? `${norm} · ${id}` : null,
+        source: text(row, 'source'),
         title,
         detail: text(row, 'detail') ?? text(row, 'text'),
         due: text(row, 'due'),

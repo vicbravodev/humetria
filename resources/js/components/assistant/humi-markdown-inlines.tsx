@@ -9,6 +9,8 @@ function renderInline(node: Inline, key: number) {
                     {node.text}
                 </strong>
             );
+        case 'em':
+            return <em key={key}>{node.text}</em>;
         case 'code':
             return (
                 <code

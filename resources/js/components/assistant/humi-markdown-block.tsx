@@ -6,7 +6,7 @@ import type { Block } from '@/lib/assistant/markdown';
 export default memo(function HumiMarkdownBlock({ block }: { block: Block }) {
     if (block.kind === 'paragraph') {
         return (
-            <p>
+            <p className="humi-enter">
                 <HumiMarkdownInlines nodes={block.inline} />
             </p>
         );
@@ -16,7 +16,11 @@ export default memo(function HumiMarkdownBlock({ block }: { block: Block }) {
 
     return (
         <List
-            className={block.ordered ? 'list-decimal pl-5' : 'list-disc pl-5'}
+            className={
+                block.ordered
+                    ? 'humi-enter list-decimal pl-5'
+                    : 'humi-enter list-disc pl-5'
+            }
         >
             {block.items.map((item, index) => (
                 <li key={index}>

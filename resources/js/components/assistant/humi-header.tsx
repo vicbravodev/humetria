@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Ellipsis, Maximize2, Plus, X } from 'lucide-react';
 import HumiAvatar from '@/components/assistant/humi-avatar';
+import type { HumiExpression } from '@/lib/assistant/humi-expressions';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -14,11 +15,13 @@ import {
  * Inside a sheet the sheet brings its own close button, so none is drawn here.
  */
 export default function HumiHeader({
+    expression,
     context,
     fullPageHref,
     onNew,
     onClose,
 }: {
+    expression: HumiExpression;
     context: string;
     fullPageHref: string | null;
     onNew: () => void;
@@ -26,7 +29,7 @@ export default function HumiHeader({
 }) {
     return (
         <header className="flex items-center gap-3 border-b px-4 py-3 pr-14">
-            <HumiAvatar size={40} />
+            <HumiAvatar size={40} expression={expression} animated />
             <div className="min-w-0 flex-1">
                 <h2 className="text-base leading-5 font-semibold">Humi</h2>
                 <p className="truncate text-sm text-muted-foreground">
