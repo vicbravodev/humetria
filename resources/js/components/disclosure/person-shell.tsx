@@ -1,4 +1,5 @@
 import { Lock } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
 
@@ -9,10 +10,12 @@ import Logo from '@/components/humetria/logo';
 export default function PersonShell({
     company,
     label,
+    icon: Icon = Lock,
     children,
 }: {
     company: string;
     label: string;
+    icon?: LucideIcon;
     children: ReactNode;
 }) {
     return (
@@ -22,7 +25,7 @@ export default function PersonShell({
                     {company}
                 </p>
                 <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">
-                    <Lock aria-hidden="true" className="size-4" />
+                    <Icon aria-hidden="true" className="size-4" />
                     {label}
                 </p>
             </header>

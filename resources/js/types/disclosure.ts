@@ -165,3 +165,27 @@ export type PageLinkData = {
 };
 
 export type PageLinkProps = { link: PageLinkData | null };
+
+/** A work center as the public page lists it: its name, nothing else. */
+export type PublicCenter = { id: string; name: string };
+
+export type PublicCentersProps = {
+    token: string;
+    company: string;
+    centers: Paginated<PublicCenter>;
+    filters: { q: string };
+};
+
+export type PublicCenterProps = {
+    token: string;
+    company: string;
+    center: PublicCenter;
+    /** Whether the company has another center to choose from. */
+    others: boolean;
+    /** The policy in force in the center; null while it has none. */
+    policy: {
+        version: number;
+        publishedOn: string;
+        sections: PolicyTextSection[];
+    } | null;
+};

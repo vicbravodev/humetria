@@ -256,3 +256,63 @@ it('creates the link and replaces it from the page', function (): void {
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Enlace nuevo. El anterior ya no abre');
 });
+
+/** The address of the public page of the workers of a company with two centers, one with a published policy. */
+function workersPageUrl(bool $policy = true): string
+{
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'legal_name' => 'Acme Manufacturas S.A. de C.V.']);
+    $hr = memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
+    $north = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Sur']);
+    workIn($tenant);
+
+    if ($policy) {
+        $draft = resolve(StartPolicyDraft::class)->handle(null);
+        resolve(SaveDraft::class)->handle($draft->id, array_map(fn (array $section): array => [
+            'key' => $section['key'],
+            'text' => in_array($section['key'], ['responsibles', 'resources'], true) ? 'La dirección de Recursos Humanos.' : $section['text'],
+            'items' => $section['items'],
+        ], $draft->content));
+        resolve(PublishPolicy::class)->handle($draft->id, [$north->id], ['a', 'b', 'c'], true, $hr->id);
+    }
+
+    return route('workers.show', (string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle($hr->id)->token(), absolute: false);
+}
+
+it('shows the people the centers of their company to choose from', function (bool $dark, bool $mobile): void {
+    visitPage('disclosure-public/centers', workersPageUrl(), $dark, $mobile)
+        ->assertSee('¿En qué centro de trabajo está?')
+        ->assertSee('Planta Norte')
+        ->assertSee('Planta Sur');
+})->with($looks);
+
+it('shows the people the policy of their center', function (bool $dark, bool $mobile): void {
+    $url = workersPageUrl();
+
+    visitPage('disclosure-public/center', "{$url}/centers/".WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->firstOrFail()->id, $dark, $mobile)
+        ->assertSee('Planta Norte')
+        ->assertSee('Política de prevención')
+        ->assertSee('Acme Manufacturas S.A. de C.V.')
+        ->assertSee('Es obligación de supervisores, gerentes y directores')
+        ->assertSee('Otro centro de trabajo');
+})->with($looks);
+
+it('says a center has no policy yet', function (): void {
+    $url = workersPageUrl(policy: false);
+
+    visit("{$url}/centers/".WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Sur')->firstOrFail()->id)
+        ->assertSee('Este centro de trabajo todavía no publica su política de prevención.');
+});
+
+it('shows a link that does not open the page that says so and names nobody', function (bool $dark, bool $mobile): void {
+    visitPage('disclosure-public/inactive', '/workers/'.str_repeat('a', 43), $dark, $mobile)
+        ->assertSee('Este enlace ya no está activo')
+        ->assertSee('Pídale a Recursos Humanos de su empresa el enlace vigente.')
+        ->assertDontSee('Acme');
+})->with($looks);
+
+it('keeps the public page free of cookies and of policy violations', function (): void {
+    visit(workersPageUrl())
+        ->assertScript('() => document.cookie', '')
+        ->assertScript(cspViolations(), '[]');
+});

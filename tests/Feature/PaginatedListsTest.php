@@ -197,6 +197,13 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.disclosure.dissemination', $tenant);
     }, ['people']],
+    'the public page of the workers' => ['disclosure-public/centers', function () {
+        [$tenant] = listsCompany();
+        WorkCenter::factory()->for($tenant)->create();
+        workIn($tenant);
+
+        return route('workers.show', (string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(auth()->id() ?? 0)->token());
+    }, ['centers']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

@@ -16,6 +16,6 @@ final class PageUrl
     {
         $token = $link->token();
 
-        return $token === null ? null : url("workers/{$token}");
+        return $token === null ? null : route('workers.show', $token);
     }
 }
