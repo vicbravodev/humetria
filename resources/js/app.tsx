@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { cspNonce } from '@/lib/csp-nonce';
+import { isStandalone } from '@/lib/page-frame';
 import { pageTransition } from '@/lib/page-transition';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
@@ -16,18 +17,12 @@ const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
+        // The survey, the portals, shared reports and the error page have their own frame, outside the panel.
+        if (isStandalone(name)) {
+            return null;
+        }
+
         switch (true) {
-            // The survey has its own frame (SurveyShell), outside the panel.
-            case name === 'landing':
-            case name === 'campaigns/survey':
-            // The person's portal has its own frame (PortalShell): no account, no panel.
-            case name.startsWith('telework/portal'):
-            case name === 'seating/portal':
-            // A report opened from a temporary link: no panel, nobody signed in.
-            case name === 'results/shared-report':
-            // An error page stands alone: the address may not even be a page of the panel.
-            case name === 'error':
-                return null;
             case name.startsWith('auth/'):
             case name === 'tenancy/accept-invitation':
                 return AuthLayout;

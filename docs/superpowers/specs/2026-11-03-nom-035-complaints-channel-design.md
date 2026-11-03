@@ -1,8 +1,7 @@
 # NOM-035: canal de quejas y denuncias confidencial (8.1 b, 6.4, 6.5)
 
-Fecha: 2026-11-03. Estado: propuesta (pendiente de aprobación). Es el trabajo 4 de
-[`docs/normas/nom-035/gaps-pendientes.md`](../../normas/nom-035/gaps-pendientes.md). Solo diseño: no hay código, migración
-ni prueba todavía. El plan de implementación se escribe al aprobarse este documento y responderse las «Preguntas abiertas».
+Fecha: 2026-11-03. Estado: implementado (ver al final «Decisiones al implementar»). Fue el trabajo 4 de
+`docs/normas/nom-035/gaps-pendientes.md`, ya cerrado: sus criterios quedaron como C-40 a C-49 en `criterios.md`.
 
 Anexos obligatorios:
 
@@ -714,3 +713,51 @@ Responde todas juntas; cada una trae mi recomendación por defecto («usa los de
 Se aceptaron **todos los valores por defecto** de «Preguntas abiertas», incluida la declaración de
 `bacon/bacon-qr-code` en `composer.json` cuando el diseño la necesita (dependencia ya presente por Fortify).
 Orden de implementación: Programa de intervención y Canal de quejas (en paralelo), Política y portal al final.
+
+## Decisiones al implementar (2026-11-03)
+
+Se implementó con los valores por defecto aceptados y la descomposición en 17 commits. Donde el diseño chocó con el código
+o con `CLAUDE.md`, se eligió lo más conservador. Lo que cambió respecto del texto de arriba:
+
+**El spike de privacidad salió bien, sin Plan B.** Las rutas `/c/*` quitan de la pila `web` (con `withoutMiddleware`) las
+cookies, la sesión, el token de falsificación, la impersonación y el `HandleInertiaRequests` del panel, y usan uno propio que
+no comparte nada. Una prueba afirma sin `Set-Cookie`, sin fila en `sessions` (con el driver `database`), sin dirección,
+navegador ni `Referer` en ninguna tabla. Dos hallazgos del navegador: el tema claro/oscuro escribía la cookie `appearance`
+desde JavaScript (ya no escribe en `/c/*`), y la página de error 429 de esas rutas habla de «usted».
+
+**Más conservador que el diseño**
+
+- **Asignaciones con día, no con hora.** `complaint_assignments` guarda `assigned_on` y `ended_on` (fechas), no
+  `assigned_at`: la asignación que hace el sistema al recibir la queja habría guardado la hora exacta de un envío anónimo.
+- **El retiro de la persona no guarda hora.** Retirar cierra el caso con la resolución «retirada» y `closed_at` nulo; la
+  entrada del hilo es un mensaje de la persona (solo el día). Un `check` lo permite solo para ese caso.
+- **El boleto lleva el segundo, no el minuto.** Con el minuto, el piso de 3 segundos no se podía respetar; el boleto sigue sin
+  estado y no se guarda en ningún lado.
+- **Las líneas de log de lo que hace la persona no llevan el id del caso**, y la asignación del sistema al recibir no escribe
+  log ni bitácora; el aviso por correo a la persona no pasa por la cola (un aviso encolado dejaría la dirección en el payload).
+- **Sin centro, la queja va a las encargadas de toda la empresa.** La cobertura que se muestra es la de ese alcance; el
+  servidor valida el par (opción, centro) exacto.
+- **El último encargado no se puede quitar mientras el canal está abierto**, y quien se queda sin casos los deja «sin
+  encargada»: se reasignan solo cuando quien administra lo pide, nunca a quien el conflicto excluye ni a quien no los tenía.
+- **La purga corre para todas las empresas, también las bloqueadas**, y reemplaza la referencia y la clave por valores que
+  nadie recibió (las columnas siguen `not null`); la identidad queda «anónima» y «contra quién» en «no sé».
+
+**Cambios menores**
+
+- **El correo de solo escritura es un campo aparte del contacto de la persona confidencial.** El diseño decía que en modo
+  confidencial el correo era el contacto visible; se prefirió no mezclar un dato que nadie ve con uno que sí.
+- **Acusar recibo escribe también un mensaje automático a la persona** («Acusamos recibo de su queja…»), además de la
+  entrada del historial. Se puede cerrar sin nota.
+- **El tope diario por canal cuenta los casos del día en la base** (`received_on`) en vez de una llave de caché, y avisa a quien
+  administra una vez al día (la llave de «ya avisé» es del canal y la fecha). Se agregó un límite por hora de consultas de
+  la página (300), además de los de envío (5) y seguimiento (30).
+- **Menú.** «Quejas» es una entrada propia de Cumplimiento (Casos, Canal, Quién atiende), no un hijo de NOM-035, para no
+  tocar el submenú de otro trabajo en curso.
+- **Impresión.** Imprimir un caso o la evidencia primero registra la bitácora (un POST) y luego abre el diálogo del navegador.
+- **Recordatorios.** Los de plazo (acuse, respuesta) y el de «sin movimiento desde hace 90 días» van en el mismo barrido
+  horario, una vez al día por persona.
+- **Dependencia.** `bacon/bacon-qr-code` (ya instalada por Fortify, v3.1.1) quedó declarada en `composer.json`, aprobada.
+
+**Hallazgo de la prueba central.** Al correr la vida completa de dos casos hasta la purga, un `check` del aviso 6.5 (nombre y
+fecha obligatorios) impedía purgar un aviso: se corrigió con la migración `let_a_purged_notice_lose_its_name_and_date`.
+

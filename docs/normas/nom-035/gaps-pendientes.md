@@ -22,10 +22,9 @@ campañas en borrador, activas y cerradas. No manda correos; imprime los enlaces
 | # | Trabajo | Numerales | Tamaño |
 |---|---|---|---|
 | 3 | Política de prevención, difusión y portal de la persona trabajadora | 5.1, 5.7, 7.8 | M–L |
-| 4 | Canal de quejas y denuncias | 8.1 b, 6.4 | L, necesita diseño de privacidad |
 
 El Programa de intervención ya existe (C-30 a C-36 de `criterios.md`). Si el segmento de centros de hasta 15 personas pesa
-en el producto, el 3 y el 4 suben: esos centros deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2, y hoy solo cubrimos el 5.5.
+en el producto, el 3 sube: esos centros deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2, y hoy cubrimos el 5.5 y el mecanismo de quejas (8.1 b).
 
 ## 3. Política, difusión y portal de la persona trabajadora (5.1, 5.7, 7.8)
 
@@ -38,16 +37,6 @@ con el mínimo por grupo, C-23).
 
 **Revisar antes de diseñar.** El módulo Telework ya tiene avisos con acuse y un portal por enlace. Los módulos no
 pueden importarse entre sí: o se sube a un contrato público, o se duplica con cuidado.
-
-## 4. Canal de quejas y denuncias (8.1 b, 6.4)
-
-**Hoy.** Nada.
-
-**Falta.** Enlace o QR por empresa, con opción anónima, categorías y seguimiento de cada caso con acceso restringido.
-El escrito de la persona sobre un acontecimiento (6.5) cabe aquí como campo opcional, no como flujo aparte.
-
-**Decidir en el diseño.** Quién recibe las quejas, cómo se garantiza la confidencialidad y si el anonimato es total.
-Debe respetar el invariante de privacidad: nada que ligue a una persona con una respuesta de Guía II o III.
 
 ## Fuera de alcance, por ahora
 

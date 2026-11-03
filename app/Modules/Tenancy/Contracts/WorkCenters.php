@@ -27,6 +27,14 @@ interface WorkCenters
      */
     public function activePage(int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator;
 
+    /**
+     * The work centers in use whose name has what was typed (case and accents aside), by name, up to a limit: for a field
+     * that searches them on the server.
+     *
+     * @return list<WorkCenterSummary>
+     */
+    public function search(string $query, int $limit = 20): array;
+
     /** A work center in use (not archived) by id; null when archived or outside the company. */
     public function findActive(string $id): ?WorkCenterSummary;
 

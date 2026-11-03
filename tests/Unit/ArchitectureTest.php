@@ -146,3 +146,25 @@ foreach (['Actions', 'Models', 'Support'] as $layer) {
         ->expect("App\\Modules\\Seating\\{$layer}")
         ->toOnlyBeUsedIn(['App\Modules\Seating', 'Database\Factories\Seating']);
 }
+
+/*
+ * Complaints (the NOM-035 channel for complaints and reports) holds the most delicate data of the platform: a report can be
+ * against HR or the owner. Like Telework and Seating, its boundaries are spelled out on their own.
+ */
+$complaintsInternals = internalNamespacesOf('Complaints');
+
+it('has the Complaints namespaces the architecture rules target', function () use ($complaintsInternals): void {
+    expect($complaintsInternals)->toContain('App\Modules\Complaints\Actions', 'App\Modules\Complaints\Models', 'App\Modules\Complaints\Support', 'App\Modules\Complaints\Http');
+});
+
+foreach (['Actions', 'Models'] as $layer) {
+    arch("Complaints {$layer} do not depend on HTTP")
+        ->expect("App\\Modules\\Complaints\\{$layer}")
+        ->not->toUse(['Illuminate\Http', 'Inertia', 'request', 'session', 'auth']);
+}
+
+foreach (['Actions', 'Models', 'Support'] as $layer) {
+    arch("Complaints {$layer} are not used by the shared kernel")
+        ->expect("App\\Modules\\Complaints\\{$layer}")
+        ->toOnlyBeUsedIn(['App\Modules\Complaints', 'Database\Factories\Complaints']);
+}
