@@ -62,6 +62,22 @@ final class EmployeeCsv
         };
     }
 
+    /**
+     * A date as a spreadsheet writes it, AAAA-MM-DD or DD/MM/AAAA, as AAAA-MM-DD; null when it is neither or does not exist.
+     */
+    public static function date(string $text): ?string
+    {
+        if (preg_match('#\A(\d{4})-(\d{2})-(\d{2})\z#', $text, $iso) === 1) {
+            [, $year, $month, $day] = $iso;
+        } elseif (preg_match('#\A(\d{1,2})/(\d{1,2})/(\d{4})\z#', $text, $mexican) === 1) {
+            [, $day, $month, $year] = $mexican;
+        } else {
+            return null;
+        }
+
+        return checkdate((int) $month, (int) $day, (int) $year) ? sprintf('%04d-%02d-%02d', $year, $month, $day) : null;
+    }
+
     /** Text as UTF-8 without a byte order mark: a file that is not valid UTF-8 is read as Windows-1252, as Excel saves it. */
     private static function utf8(string $content): string
     {

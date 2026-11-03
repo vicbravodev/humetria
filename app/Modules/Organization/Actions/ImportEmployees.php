@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Organization\Actions;
 
+use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Data\EmployeeImportPlan;
 use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\EmployeeAttributes;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 final readonly class ImportEmployees
 {
-    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea) {}
+    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade) {}
 
     /**
      * Writes a valid plan in one transaction: every row or none.
@@ -26,20 +28,23 @@ final readonly class ImportEmployees
     public function handle(EmployeeImportPlan $plan): array
     {
         return DB::transaction(function () use ($plan): array {
-            /** One lookup per area name, not per row. */
+            /** One lookup per area name and per category and level, not per row. */
             $areas = [];
+            $grades = [];
 
             foreach ($plan->rows as $row) {
                 $area = $areas[mb_strtolower($row->data->area)] ??= $this->findOrCreateArea->handle($row->data->area);
-                $attributes = EmployeeAttributes::from($row->data, $area);
+                $attributes = [
+                    ...EmployeeAttributes::from($row->data, $area),
+                    ...EmployeeAttributes::payScale($row->data, $this->grade($row->data, $grades), $row->absent),
+                ];
 
                 if ($row->existingId === null) {
-                    $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes, ...EmployeeAttributes::payScale($row->data, null)]);
+                    $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
                     event(new EmployeeCreated($created->tenant_id, $created->id, $row->data->workCenterId));
                 } else {
                     $employee = Employee::query()->findOrFail($row->existingId);
                     $from = $employee->work_center_id;
-                    // The import does not read the pay scale columns yet: it leaves them as they are.
                     $employee->update($attributes);
 
                     // As moving them by hand: an open evaluation of the old work center lets them go (criterio C-24).
@@ -55,5 +60,19 @@ final readonly class ImportEmployees
 
             return $counts;
         });
+    }
+
+    /**
+     * The row's job grade, looked up once per category and level.
+     *
+     * @param  array<string, JobGrade|null>  $grades
+     */
+    private function grade(EmployeeData $data, array &$grades): ?JobGrade
+    {
+        if ($data->jobCategory === null || $data->jobLevel === null) {
+            return null;
+        }
+
+        return $grades[mb_strtolower($data->jobCategory).'|'.mb_strtolower($data->jobLevel)] ??= $this->findOrCreateJobGrade->handle($data->jobCategory, $data->jobLevel);
     }
 }

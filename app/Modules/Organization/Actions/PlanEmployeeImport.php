@@ -8,9 +8,12 @@ use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Data\EmployeeImportPlan;
 use App\Modules\Organization\Data\EmployeeImportRow;
 use App\Modules\Organization\Enums\Gender;
+use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Support\EmployeeCsv;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -24,6 +27,9 @@ final class PlanEmployeeImport
 {
     /** @var array<string, string> work center id by folded name */
     private array $centers = [];
+
+    /** @var array<string, string> state code by folded name and by folded code */
+    private array $states = [];
 
     /** @var array<string, string> employee id by email */
     private array $byEmail = [];
@@ -67,6 +73,11 @@ final class PlanEmployeeImport
             }
         }
 
+        foreach ($this->workCenters->states() as $code => $label) {
+            $this->states[self::fold($label)] = $code;
+            $this->states[self::fold($code)] = $code;
+        }
+
         foreach (Employee::query()->get(['id', 'email', 'employee_number']) as $employee) {
             if ($employee->email !== null) {
                 $this->byEmail[$employee->email] = $employee->id;
@@ -94,8 +105,10 @@ final class PlanEmployeeImport
             'job_title' => $row['puesto'] ?? '',
             'employee_number' => ($row['numero_de_empleado'] ?? '') === '' ? null : $row['numero_de_empleado'],
         ]);
+        $payScale = $this->payScale($row);
         $rules = Arr::except(EmployeeRequest::fieldRules(), ['gender', 'work_center_id']);
-        $messages = array_values(Validator::make($input, $rules)->errors()->all());
+        $messages = array_values(Validator::make([...$input, ...$payScale['input']], $rules)->errors()->all());
+        $messages = [...$messages, ...$payScale['messages']];
 
         if ($gender === null) {
             $messages[] = 'El género debe ser Mujer, Hombre u Otro.';
@@ -125,12 +138,59 @@ final class PlanEmployeeImport
             area: self::text($input, 'area'),
             jobTitle: self::text($input, 'job_title'),
             employeeNumber: $number,
-            jobCategory: null,
-            jobLevel: null,
-            hiredOn: null,
-            staffGroup: null,
-            state: null,
-        ), $existingId), []];
+            jobCategory: self::text($payScale['input'], 'job_category') ?: null,
+            jobLevel: self::text($payScale['input'], 'job_level') ?: null,
+            hiredOn: $payScale['hiredOn'],
+            staffGroup: $payScale['group'],
+            state: self::text($payScale['input'], 'state') ?: null,
+        ), $existingId, $payScale['absent']), []];
+    }
+
+    /**
+     * What the pay scale columns say, for the validator as the form would send it (empty is none), with what the file
+     * gets wrong, and the columns it does not have.
+     *
+     * @param  array<string, string>  $row
+     * @return array{input: array<string, string|null>, messages: list<string>, hiredOn: CarbonImmutable|null, group: StaffGroup|null, absent: list<string>}
+     */
+    private function payScale(array $row): array
+    {
+        $messages = [];
+        $hired = trim($row['fecha_de_ingreso'] ?? '');
+        $hiredOn = $hired === '' ? null : EmployeeCsv::date($hired);
+        $groupText = trim($row['grupo'] ?? '');
+        $group = $groupText === '' ? null : StaffGroup::fromSpanish($groupText);
+        $stateText = trim($row['estado'] ?? '');
+        $state = $stateText === '' ? null : ($this->states[self::fold($stateText)] ?? null);
+
+        foreach ([
+            [$hired !== '' && $hiredOn === null, 'La fecha de ingreso debe ser AAAA-MM-DD o DD/MM/AAAA.'],
+            [$groupText !== '' && $group === null, 'El grupo debe ser Sindicalizado o Confianza.'],
+            [$stateText !== '' && $state === null, "No hay un estado «{$stateText}»."],
+        ] as [$wrong, $message]) {
+            if ($wrong) {
+                $messages[] = $message;
+            }
+        }
+
+        return [
+            'input' => [
+                'job_category' => trim($row['categoria'] ?? '') ?: null,
+                'job_level' => trim($row['nivel'] ?? '') ?: null,
+                'hired_on' => $hiredOn,
+                'staff_group' => $group?->value,
+                'state' => $state,
+            ],
+            'messages' => $messages,
+            'hiredOn' => $hiredOn === null ? null : CarbonImmutable::parse($hiredOn),
+            'group' => $group,
+            'absent' => array_keys(array_filter([
+                'job_grade_id' => ! array_key_exists('categoria', $row) && ! array_key_exists('nivel', $row),
+                'hired_on' => ! array_key_exists('fecha_de_ingreso', $row),
+                'staff_group' => ! array_key_exists('grupo', $row),
+                'state' => ! array_key_exists('estado', $row),
+            ])),
+        ];
     }
 
     /**
