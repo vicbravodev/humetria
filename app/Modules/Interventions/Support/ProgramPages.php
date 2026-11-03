@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Support;
 
+use App\Modules\Campaigns\Contracts\CampaignRecords;
+use App\Modules\Campaigns\Contracts\EvaluationSchedule;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Data\RiskLevel;
@@ -41,7 +43,7 @@ final readonly class ProgramPages
 {
     private const int ACTIONS_PER_PAGE = 10;
 
-    public function __construct(private RiskResults $results, private WorkCenters $workCenters, private Instruments $instruments, private Members $members, private Companies $companies) {}
+    public function __construct(private RiskResults $results, private WorkCenters $workCenters, private Instruments $instruments, private Members $members, private Companies $companies, private CampaignRecords $campaigns, private EvaluationSchedule $schedule, private GuideCatalog $catalog) {}
 
     /**
      * @return array<string, mixed>
@@ -52,6 +54,8 @@ final readonly class ProgramPages
         $areas = $program === null ? [] : $this->results->areaGroups($campaign);
         $items = $program === null ? [] : array_values(ProgramItem::query()->where('program_id', $program->id)->get()->all());
         $filters = ['item' => $this->itemFilter($itemFilter, $items), 'status' => ActionStatus::tryFrom($statusFilter ?? '')?->value];
+        // The closed evaluations of the center that came after this one: the candidates to follow up the measures (8.4 e).
+        $later = $program === null ? [] : $this->laterEvaluations($campaign);
 
         return [
             'campaign' => [
@@ -62,10 +66,13 @@ final readonly class ProgramPages
                 'guide' => $guide === null ? null : $this->instruments->definition($guide)->shortTitle,
             ],
             'requirement' => $program === null ? $this->requirement($campaign) : null,
-            'program' => $program === null ? null : $this->program($program, $items, ProgramAction::query()->where('program_id', $program->id)->get(['id', 'item_id', 'status', 'due_on'])->all()),
+            'program' => $program === null ? null : $this->program($program, $items, $later, ProgramAction::query()->where('program_id', $program->id)->get(['id', 'item_id', 'status', 'due_on'])->all()),
             'actions' => $program === null ? null : $this->actions($program, $areas, $filters, $items, $canManage ? fn (string $actionId, string $entryId): string => route('tenant.campaigns.program.evidence', [$this->companies->current()->slug, $campaign->id, $actionId, $entryId]) : null),
             'filters' => $filters,
             'catalog' => $canManage ? self::catalog() : null,
+            'manualOptions' => $canManage && $program !== null && $guide !== null ? $this->manualOptions($guide, $items) : null,
+            'followUpEvaluations' => $canManage && $program !== null ? array_map(fn (CampaignRecord $record): array => self::evaluation($record), $later) : null,
+            'followUpSuggestion' => $canManage && $program !== null && $later === [] ? $this->followUpSuggestion($campaign->workCenterId) : null,
             'areaOptions' => $canManage && $program !== null ? $this->areaOptions($areas, $items) : null,
             'members' => $canManage ? array_map(fn ($member): array => ['id' => $member->userId, 'name' => $member->name], $this->members->all()) : null,
             'can' => ['manage' => $canManage],
@@ -91,10 +98,11 @@ final readonly class ProgramPages
 
     /**
      * @param  list<ProgramItem>  $items
+     * @param  list<CampaignRecord>  $later  the closed evaluations of the center that came after the Programa's own
      * @param  array<int, ProgramAction>  $actions  every action of the Programa: its row, state and due day
      * @return array<string, mixed>
      */
-    private function program(Program $program, array $items, array $actions): array
+    private function program(Program $program, array $items, array $later, array $actions): array
     {
         usort($items, fn (ProgramItem $a, ProgramItem $b): int => self::order($a) <=> self::order($b));
         $today = ProgramClock::today();
@@ -121,8 +129,84 @@ final readonly class ProgramPages
                 'level' => self::level($row['item']->highest_level),
                 'manual' => $row['item']->origin === ItemOrigin::Manual,
                 'state' => self::labeled($row['state']),
+                'analysis' => $row['item']->analysis,
+                'missingAnalysis' => in_array($row['item']->highest_level, [RiskLevel::High, RiskLevel::VeryHigh], true) && trim($row['item']->analysis ?? '') === '',
+                'followUp' => self::followUp($row['item'], $later),
             ], $rows),
         ];
+    }
+
+    /**
+     * @param  list<CampaignRecord>  $later
+     * @return array<string, mixed>
+     */
+    private static function followUp(ProgramItem $item, array $later): array
+    {
+        $evaluation = array_find($later, fn (CampaignRecord $record): bool => $record->id === $item->follow_up_campaign_id);
+
+        return [
+            'dueOn' => $item->follow_up_due_on?->toDateString(),
+            'dueOnLabel' => $item->follow_up_due_on === null ? null : ProgramClock::day($item->follow_up_due_on),
+            'doneOn' => $item->follow_up_done_on?->toDateString(),
+            'doneOnLabel' => $item->follow_up_done_on === null ? null : ProgramClock::day($item->follow_up_done_on),
+            'result' => $item->follow_up_result,
+            'evaluation' => $evaluation === null ? null : self::evaluation($evaluation),
+        ];
+    }
+
+    /**
+     * @return array{id: string, label: string}
+     */
+    private static function evaluation(CampaignRecord $record): array
+    {
+        return ['id' => $record->id, 'label' => 'Cerrada el '.$record->closedOn];
+    }
+
+    /**
+     * The closed evaluations of the work center that closed after this one, the latest first.
+     *
+     * @return list<CampaignRecord>
+     */
+    private function laterEvaluations(CampaignRecord $campaign): array
+    {
+        $closed = $this->campaigns->closedAt($campaign->workCenterId);
+        $own = array_find_key($closed, fn (CampaignRecord $record): bool => $record->id === $campaign->id);
+
+        return $own === null ? [] : array_slice($closed, 0, $own);
+    }
+
+    /**
+     * The day the next evaluation of the center is due (num. 7.9), for the date of a follow-up: only while this Programa's
+     * evaluation is the latest and the next one has not started.
+     *
+     * @return array{date: string, label: string}|null
+     */
+    private function followUpSuggestion(string $workCenterId): ?array
+    {
+        $standing = $this->schedule->forWorkCenters([$workCenterId])[$workCenterId] ?? null;
+
+        return $standing !== null && in_array($standing->state, ['due', 'overdue'], true) && $standing->date !== null && $standing->day !== null
+            ? ['date' => $standing->date, 'label' => $standing->day]
+            : null;
+    }
+
+    /**
+     * What HR can still add: the places of the guide that are not rows yet.
+     *
+     * @param  list<ProgramItem>  $items
+     * @return list<array{scope: string, key: string, label: string, category: string|null}>
+     */
+    private function manualOptions(string $guide, array $items): array
+    {
+        $options = [];
+
+        foreach ($this->catalog->groups($guide) as $group) {
+            if (! array_any($items, fn (ProgramItem $item): bool => $item->scope === $group['scope'] && $item->scope_key === $group['key'])) {
+                $options[] = ['scope' => $group['scope']->value, 'key' => $group['key'], 'label' => $group['label'], 'category' => $group['category']];
+            }
+        }
+
+        return $options;
     }
 
     /**

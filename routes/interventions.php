@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Interventions\Http\Controllers\ActionController;
+use App\Modules\Interventions\Http\Controllers\ItemController;
 use App\Modules\Interventions\Http\Controllers\ProgramController;
 use App\Modules\Interventions\Http\Controllers\ProgressController;
 use Illuminate\Support\Facades\Route;
@@ -22,3 +23,8 @@ Route::put('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}', 
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/progress', [ProgressController::class, 'store'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.progress.store');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/cancel', [ProgressController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.actions.cancel');
 Route::get('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/progress/{entry}/evidence', [ProgressController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action', 'entry'])->name('tenant.campaigns.program.evidence');
+
+// The rows: HR adds one from the catalog of the guide, writes its analysis and its follow-up evaluation (num. 8.4 e).
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/items', [ItemController::class, 'store'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.campaigns.program.items.store');
+Route::put('admin/{tenant:slug}/campaigns/{campaign}/program/items/{item}/analysis', [ItemController::class, 'analysis'])->where('tenant', $notReserved)->whereUuid(['campaign', 'item'])->name('tenant.campaigns.program.items.analysis');
+Route::put('admin/{tenant:slug}/campaigns/{campaign}/program/items/{item}/follow-up', [ItemController::class, 'followUp'])->where('tenant', $notReserved)->whereUuid(['campaign', 'item'])->name('tenant.campaigns.program.items.follow-up');

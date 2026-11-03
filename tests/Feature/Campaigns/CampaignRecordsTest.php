@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Campaigns\Contracts\CampaignRecords;
+use App\Modules\Campaigns\Contracts\EvaluationSchedule;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Campaigns\Data\ComplianceCycle;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
@@ -12,6 +13,7 @@ use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Support\CompanyCampaignRecords;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
 
 mutates(CompanyCampaignRecords::class);
@@ -157,4 +159,31 @@ it('tells where each work center stands in its two-year cycle', function (): voi
         $onlyTrauma->work_center_id => new ComplianceCycle('never', null, null, 0),
         $never => new ComplianceCycle('never', null, null, 0),
     ]);
+});
+
+it('lists the closed evaluations of one work center, the latest first, with no other center, kind or company', function (): void {
+    $center = WorkCenter::factory()->for($this->tenant)->create();
+    $older = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'closed_at' => '2025-03-01 12:00:00']);
+    $latest = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'closed_at' => '2026-11-01 12:00:00']);
+    Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id]); // Another center.
+    Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]); // Still running.
+    Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'status' => 'closed', 'closed_at' => '2026-11-02 12:00:00']);
+    Campaign::factory()->closed()->create(); // Another company's.
+    workIn($this->tenant);
+
+    expect(array_map(fn (CampaignRecord $record): string => $record->id, resolve(CampaignRecords::class)->closedAt($center->id)))->toBe([$latest->id, $older->id]);
+});
+
+it('gives the day of the next evaluation as a date, besides how it is written', function (): void {
+    $center = WorkCenter::factory()->for($this->tenant)->create();
+    $running = WorkCenter::factory()->for($this->tenant)->create();
+    Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'closed_at' => '2026-11-19 18:00:00']);
+    Campaign::factory()->active('2026-11-30')->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $running->id]);
+    workIn($this->tenant);
+
+    $standings = resolve(EvaluationSchedule::class)->forWorkCenters([$center->id, $running->id]);
+
+    expect($standings[$center->id]->day)->toBe('19 nov 2028')
+        ->and($standings[$center->id]->date)->toBe('2028-11-19')
+        ->and($standings[$running->id]->date)->toBe('2026-11-30');
 });
