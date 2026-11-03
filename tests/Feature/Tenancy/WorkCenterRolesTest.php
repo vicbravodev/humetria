@@ -13,7 +13,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(WorkCenterController::class, ResolveTenant::class, TenantContext::class);
 
-it('shares the role and what it allows with every page of the company', function (TenantRole $role, bool $organization, bool $members, bool $campaigns): void {
+it('shares the role and what it allows with every page of the company', function (TenantRole $role, bool $organization, bool $members, bool $campaigns, bool $viewSeating): void {
     $tenant = Tenant::factory()->create();
 
     $this->actingAs(memberOf($tenant, $role))
@@ -21,11 +21,11 @@ it('shares the role and what it allows with every page of the company', function
         ->assertInertia(fn (Assert $page) => $page
             ->where('tenant.role', $role->value)
             ->where('tenant.role_label', $role->label())
-            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns, 'manage_telework' => $campaigns, 'review_workplaces' => $campaigns, 'use_assistant' => true]));
+            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns, 'manage_telework' => $campaigns, 'review_workplaces' => $campaigns, 'view_seating' => $viewSeating, 'manage_seating' => $campaigns, 'assess_seating' => $campaigns, 'use_assistant' => true]));
 })->with([
-    'owner' => [TenantRole::Owner, true, true, true],
-    'hr' => [TenantRole::Hr, true, false, true],
-    'viewer' => [TenantRole::Viewer, false, false, false],
+    'owner' => [TenantRole::Owner, true, true, true, true],
+    'hr' => [TenantRole::Hr, true, false, true, true],
+    'viewer' => [TenantRole::Viewer, false, false, false, true],
 ]);
 
 it('asks Spatie what the current person may do in the company', function (TenantRole $role, bool $organization, bool $members, bool $campaigns): void {

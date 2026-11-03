@@ -59,6 +59,7 @@ final class SurveyInvitation extends Notification
             SurveyEmail::Invitation => ['Su opinión sobre su trabajo · evaluación confidencial', 'Contestar la evaluación'],
             SurveyEmail::Reminder => [self::daysLeft($daysLeft).' para contestar su evaluación', 'Continuar la evaluación'],
             SurveyEmail::Trauma => ['Una evaluación breve después de lo ocurrido', 'Contestar la Guía I'],
+            SurveyEmail::Seating => ['Unos minutos sobre los asientos y las pausas en su trabajo', 'Contestar la encuesta'],
         };
 
         return (new MailMessage)

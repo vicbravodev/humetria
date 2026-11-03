@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Results\Providers;
 
 use App\Modules\Campaigns\Events\CampaignClosed;
+use App\Modules\Results\Contracts\AnswerDistributions;
 use App\Modules\Results\Contracts\EvaluationResults;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Listeners\SendClosingSummary;
+use App\Modules\Results\Support\AnswerDistribution;
 use App\Modules\Results\Support\CompanyEvaluationResults;
 use App\Modules\Results\Support\CompanyRiskResults;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -21,6 +23,7 @@ final class ResultsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(EvaluationResults::class, CompanyEvaluationResults::class);
+        $this->app->bind(AnswerDistributions::class, AnswerDistribution::class);
         $this->app->bind(RiskResults::class, CompanyRiskResults::class);
     }
 
