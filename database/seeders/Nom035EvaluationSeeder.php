@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
 use Database\Factories\Campaigns\Nom035EvaluationScenario;
+use Database\Factories\Interventions\ProgramScenario;
 use Database\Factories\Organization\AreaFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Tenancy\TenantFactory;
@@ -27,6 +28,9 @@ use Illuminate\Support\Facades\Bus;
  * | 30          | 30     | I, II             | closed, all answered: a person on every limit of II.3 c    |
  * | 51          | 51     | I, III (everyone) | active, half answered: the smallest center that takes III  |
  * | 100         | 100    | I, III (sample)   | closed: n = 80 (III.1), a person on every limit of III.3 c |
+ *
+ * The two closed ones also have their Programa de intervención: a draft at the 30-person center, and at the 100-person one a
+ * Programa under way (done, running, overdue, planned and cancelled actions, with steps and an analysis).
  *
  * It sends no email (the invitation job is faked), so it can run anywhere; the links of the active campaigns are printed.
  * Run it on a fresh database: `sail artisan migrate:fresh --seed --seeder=Nom035EvaluationSeeder`.
@@ -110,9 +114,11 @@ final class Nom035EvaluationSeeder extends Seeder
         $owner = $this->members($tenant);
         resolve(Companies::class)->enter($tenant->id);
         $areas = [];
+        $centers = [];
 
         foreach ($this->plans() as $plan) {
             $center = WorkCenterFactory::new()->createOne(['tenant_id' => $tenant->id, 'name' => $plan['name'], 'main_activity' => $plan['activity']]);
+            $centers[$plan['name']] = $center->id;
             $this->staff($tenant->id, $center->id, $plan['areas'], $areas);
             $totals = $plan['name'] === self::CENTER_30 ? self::guideTwoTotals() : self::guideThreeTotals();
             $links = (new Nom035EvaluationScenario($totals, self::GUIDE_ONE_YES))
@@ -126,6 +132,11 @@ final class Nom035EvaluationSeeder extends Seeder
                 }
             }
         }
+
+        // The Programa de intervención of the two closed evaluations: one only drafted, the other well on its way.
+        $programs = new ProgramScenario;
+        $programs->draft($centers[self::CENTER_30], $owner->id);
+        $programs->run($centers[self::CENTER_100], $owner->id);
     }
 
     /**

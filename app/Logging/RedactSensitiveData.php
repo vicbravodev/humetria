@@ -76,6 +76,10 @@ final class RedactSensitiveData implements ProcessorInterface
             'referral_note',
             // NOM-035: where a person was referred for a clinical assessment says something about their health.
             'institution',
+            // NOM-035 Programa de intervención: what HR writes may name a person, so it never reaches a log.
+            'analysis',
+            'cancelled_reason',
+            'follow_up_result',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',

@@ -1,8 +1,7 @@
 # NOM-035: Programa de intervención (5.4, 8.3, 8.4, 8.5 e inciso g del 7.7)
 
-Fecha: 2026-11-03. Estado: propuesta (pendiente de aprobación; sin decisiones del usuario todavía). Es el trabajo 2 de
-[`gaps-pendientes.md`](../../normas/nom-035/gaps-pendientes.md); el plan de implementación se escribe al aprobarse este
-documento. Todavía no hay código, migración ni prueba.
+Fecha: 2026-11-03. Estado: **implementado** (rama `worktree-agent-ab606e7970291ec4c`, 14 commits; ver «Decisiones al implementar»).
+Era el trabajo 2 de [`gaps-pendientes.md`](../../normas/nom-035/gaps-pendientes.md) y ya salió de ahí.
 
 Anexos obligatorios:
 
@@ -526,3 +525,56 @@ Respóndelas todas juntas; cada una trae mi recomendación por defecto («usa lo
 Se aceptaron **todos los valores por defecto** de «Preguntas abiertas», incluida la declaración de
 `bacon/bacon-qr-code` en `composer.json` cuando el diseño la necesita (dependencia ya presente por Fortify).
 Orden de implementación: Programa de intervención y Canal de quejas (en paralelo), Política y portal al final.
+
+## Decisiones al implementar (2026-11-03)
+
+El usuario aceptó todos los defaults. Lo que sigue es lo que el código hace distinto de lo que el documento supone, o lo que
+el documento dejaba al constructor, con la opción más conservadora cuando había conflicto.
+
+**Conflictos con el código o con CLAUDE.md**
+
+- **El menú de NOM-035 cambia de comportamiento.** Con submenú, «NOM-035» deja de ser un enlace: abre y pliega «Evaluaciones» y
+  «Programas» (como NOM-037). Se actualizó `tests/Browser/CampaignsTest.php` (ahora entra por «Evaluaciones») y el contador de
+  evaluaciones en curso se conserva como `[data-sidebar="menu-badge"]` en el padre, así que `DashboardTest` no cambió. Plegado, el
+  padre sigue yendo a su primera página.
+- **Los conteos de consultas de Resultados (16 → 19) y del informe (18 → 21) suben**: la tarjeta y el inciso g leen el Programa.
+  Siguen siendo fijos, sin importar cuántas filas o acciones haya.
+- **`RoleStorageTest`, `WorkCenterRolesTest` y las fixtures de Vitest** ganaron los dos permisos
+  nuevos (`view-interventions`, `manage-interventions`) y los dos `can` del front: es comportamiento nuevo, no una prueba aflojada.
+- **Dependencias.** Ninguna nueva. `Interventions` solo usa contratos y `Data` de otros módulos; para lo que faltaba se
+  agregaron a Campaigns `CampaignRecords::closedAt(centro)` y `EvaluationStanding::date` (el día de la siguiente evaluación como
+  fecha, para sugerir la evaluación posterior), cada uno con su prueba.
+
+**Desviaciones del plan de commits**
+
+- Las pantallas (panel lateral, diálogos, pestañas) llegan en el commit 11 y no repartidas en los 6 a 9; esos commits traen el
+  backend con sus pruebas de props. La navegación («Programas») llega también en el 11: antes no había una página a la que
+  apuntar. La tarjeta de Resultados llega en el 12, con el puerto `ProgramOutlines` del que depende.
+- No se creó `Events/ProgramDrafted`: nadie lo escucha (YAGNI); se agrega cuando el trabajo 3 lo pida.
+- El resumen de la lista de Programas cuenta los cuatro estados (sin acciones, en curso, con vencidas, terminado). «Sin Programa»
+  no se cuenta: no se sabe sin leer los resultados de cada evaluación; en la lista, cada evaluación sin Programa lo dice.
+
+**Reglas que el documento no fijaba**
+
+- `clinical_care` es de nivel 3 **y** el nivel 3 es solo `clinical_care` (check en la base en los dos sentidos); `other` es de nivel 1
+  o 2. Un cambio de tipo ajusta el nivel en el formulario.
+- Avances: además de las transiciones del diseño, un avance `en curso → en curso` es una nota de seguimiento (el control de avances
+  sirve para eso). `Hecha` pide día no futuro (en hora de México) y reabrir borra el día de cierre; el historial lo conserva.
+- Cancelar solo aplica a acciones planeadas o en curso: una hecha se reabre primero.
+- «Lo que pide la Tabla» separa en dos líneas «revisar la política» (`policy_review`) y «reforzar su aplicación y difusión»
+  (`policy_dissemination`); el análisis queda cubierto cuando **cada** fila en Alto o Muy alto lo tiene.
+- El catálogo de categorías y dominios para las filas agregadas sale de calificar un cuestionario completo (`GuideCatalog`),
+  porque `Instruments` no expone un catálogo; las claves y etiquetas no dependen de lo contestado.
+- La evaluación posterior solo se enlaza con una evaluación cerrada del mismo centro que cerró **después** de la del Programa; la
+  sugerencia de fecha solo aparece mientras no haya una posterior.
+- El informe y el enlace temporal nombran las áreas visibles y no dicen cuántas quedan ocultas; con todas ocultas, dicen «Áreas».
+- `ProgramProgress::standing` es el único lugar que deriva estados: la página, la lista, el informe y los recordatorios lo usan.
+- Los recordatorios usan la plantilla de correo por omisión (como los de Ley Silla), no una vista propia; el titular que además es
+  responsable de una acción recibe un solo correo. No hay tabla de entregas, como pedía el diseño.
+- La evidencia copia con cuidado el almacenamiento privado de Ley Silla (`InterventionFiles`, `EvidenceStore`); extraerlo a
+  lo compartido queda como deuda para su propio PR.
+- El Programa de ejemplo del seeder (`ProgramScenario`, bajo `database/factories/Interventions` para poder usar las acciones del
+  módulo) cubre el centro de 100 personas con acciones hechas, en curso, vencidas, planeadas y canceladas, avances y análisis, y el
+  de 30 solo con el borrador; no incluye una fila agregada por RH porque en ese centro todas las categorías y dominios salen en riesgo.
+
+**Atributos de validación.** Los nombres de los campos nuevos están en `lang/es/validation.php`.

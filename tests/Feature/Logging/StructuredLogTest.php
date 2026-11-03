@@ -90,6 +90,8 @@ it('redacts each sensitive key', function (string $key): void {
     'prompt', 'user_message', 'assistant_message',
     // NOM-035: where a person was referred for a clinical assessment says something about their health.
     'institution',
+    // NOM-035 Programa de intervención: what HR writes may name a person, so it never reaches a log.
+    'analysis', 'follow_up_result', 'cancelled_reason',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {

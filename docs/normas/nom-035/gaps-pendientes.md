@@ -21,25 +21,11 @@ campañas en borrador, activas y cerradas. No manda correos; imprime los enlaces
 
 | # | Trabajo | Numerales | Tamaño |
 |---|---|---|---|
-| 2 | Programa de intervención | 5.4, 8.3, 8.4, 8.5; inciso g del 7.7 | L |
 | 3 | Política de prevención, difusión y portal de la persona trabajadora | 5.1, 5.7, 7.8 | M–L |
 | 4 | Canal de quejas y denuncias | 8.1 b, 6.4 | L, necesita diseño de privacidad |
 
-El 2 es el que más se nota: hoy un cliente que cierra una evaluación con riesgo alto
-llega a «se requiere un Programa» y no tiene dónde seguir. Si el segmento de centros de hasta 15 personas pesa en el
-producto, el 3 y el 4 suben: esos centros deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2, y hoy solo cubrimos el 5.5.
-
-## 2. Programa de intervención (5.4, 8.3, 8.4, 8.5)
-
-**Hoy.** El diagnóstico termina en «se requiere un Programa» según el nivel de riesgo (C-15). No hay programa.
-
-**Falta.** Un programa que se crea desde una evaluación cerrada, con una fila por dominio o categoría en riesgo medio o
-más:
-
-- áreas o personas sujetas, tipo de acción y nivel (1, 2 o 3, numeral 8.5);
-- fecha, responsable, avance y evaluación posterior;
-- recordatorios por correo (el patrón de los resúmenes existentes);
-- alimenta el inciso g del informe 7.7 (acciones de intervención), que hoy no tiene de dónde leer.
+El Programa de intervención ya existe (C-30 a C-36 de `criterios.md`). Si el segmento de centros de hasta 15 personas pesa
+en el producto, el 3 y el 4 suben: esos centros deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2, y hoy solo cubrimos el 5.5.
 
 ## 3. Política, difusión y portal de la persona trabajadora (5.1, 5.7, 7.8)
 

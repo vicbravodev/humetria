@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.3 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.4 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -359,8 +359,9 @@ canalizarlos para su atención (num. 5.5); llevar el registro de sus nombres (nu
 ### C-29. Informe del numeral 7.7 y enlace temporal · Norma + Humetría
 
 **Qué hacemos.** El informe se arma con lo que la plataforma sabe: datos del centro (a), método (d) y resultados (e).
-RH captura objetivo (b), actividades (c), conclusiones (f), recomendaciones y acciones de intervención (g) y el
-responsable con su cédula, «en su caso» (h). Se imprime o se guarda como PDF desde el navegador.
+RH captura objetivo (b), actividades (c), conclusiones (f), recomendaciones (g) y el responsable con su cédula, «en su
+caso» (h); las acciones de intervención del inciso g se imprimen del Programa (C-30 a C-36), tal como está el día en que
+se abre el informe. Se imprime o se guarda como PDF desde el navegador.
 
 Para que alguien sin cuenta lo lea (la dirección de la empresa, un auditor), quien gestiona evaluaciones crea un
 **enlace temporal** de 15 minutos a 48 horas. Solo se guarda el hash del enlace; se muestra una vez. Se puede revocar,
@@ -405,6 +406,111 @@ organizacional deberá realizarse, al menos, cada dos años» (num. 7.9).
 
 ---
 
+## G. Programa de intervención
+
+### C-30. Un Programa por evaluación cerrada; una fila por categoría, dominio y calificación final en Medio o más · Norma + STPS + Interpretación
+
+**Qué hacemos.** Cuando una evaluación con Guía II o III se cierra, el sistema redacta un **borrador** del Programa de
+intervención con una fila por cada lugar donde al menos un cuestionario cayó en Medio, Alto o Muy alto: la calificación
+final, cada categoría y cada dominio. La fila guarda el nivel más alto presente, no cifras: las cifras se leen de
+Resultados, con el mínimo vigente (C-23). Si ningún cuestionario quedó en Medio o más, no se crea Programa y la página
+dice que la norma no pide uno. Con menos cuestionarios que el mínimo no se deriva nada: el Programa nace sin filas y RH
+agrega las que quiera, de la lista de la guía (esas filas no llevan nivel ni cifras y no cuentan para C-34). Un Programa
+por evaluación, nunca copiado: en cada ciclo (C-26) se hace otro.
+
+**Qué dice la norma.** «Si los resultados de las evaluaciones (…) determinan la necesidad de acciones de control, se
+deberán implementar a través de un Programa de intervención que cumpla con el numeral 8.4» (num. 8.3). Las Tablas 4 y 7
+piden el Programa en Medio, Alto y Muy alto. La STPS: «los casos que caigan en niveles de riesgo Medio, Alto y Muy alto
+deben ser atendidos a través del Programa de acciones de control» [STPS-1, pregunta 12; STPS-2, preguntas 2 y 8].
+
+**Interpretación.** El DOF no dice si la regla va por el nivel final o por cada grupo, y la STPS menciona los tres
+(«calificación del dominio, la categoría y la final»): tomamos el nivel más alto presente en cualquiera de ellos.
+
+### C-31. Contenido de cada acción · Norma
+
+**Qué hacemos.** Cada acción lleva los seis puntos del numeral 8.4: las áreas o personas sujetas (a; ver C-33), el tipo de
+acción y la medida (b), las fechas programadas (c: inicio opcional y fecha límite obligatoria), el control de avances (d;
+ver C-35), la evaluación posterior «en su caso» (e: por fila, como nota con fecha, sin comparar automáticamente contra la
+evaluación anterior) y el responsable de su ejecución (f: un miembro de la empresa, que recibe los recordatorios, o un
+nombre). El **catálogo de tipos de acción es de Humetría**, no del DOF (sale de los textos de las Tablas 4 y 7 y de 8.1,
+8.2 y 8.5) y así se rotula en pantalla. La acción se puede copiar a otras filas como acciones independientes.
+
+**Qué dice la norma.** «El programa de intervención deberá contener, al menos: a) Las áreas de trabajo y/o los
+trabajadores sujetos al programa; b) El tipo de acciones y las medidas de control que deberán adoptarse; c) Las fechas
+programadas para su realización; d) El control de los avances de la implementación del programa; e) La evaluación
+posterior a la aplicación de las medidas de control, en su caso; y f) El responsable de su ejecución» (num. 8.4).
+
+**Interpretación.** En la tabla 10.2, el texto «Esta disposición (numeral 8.5) sólo aplica para aquellos centros de
+trabajo que desarrollen y utilicen métodos diferentes a los contenidos en la Guía de referencia III» está impreso con
+«8.5», pero se refiere al 7.5 (validación de métodos propios). Lo leemos como errata: el 8.5 aplica a todo Programa.
+
+### C-32. Niveles 1, 2 y 3 · Norma
+
+**Qué hacemos.** Cada acción es de nivel 1 (organizacional), 2 (grupal) o 3 (individual). El tercero es **atención clínica
+o terapéutica** y exige declarar quién la da: médico, psicólogo o psiquiatra; no hay otro tipo en el nivel 3 ni la
+atención clínica en otro nivel. Se redacta como **servicio disponible** («convenio con institución, atención psicológica a
+solicitud»), nunca como «a quién»: la atención de cada persona se registra en la canalización (C-28).
+
+**Qué dice la norma.** Acciones «según aplique» en tres niveles: primero, organizacional (política de prevención,
+organización del trabajo); segundo, grupal (información, sensibilización, apoyo social); tercero, individual, cuando hay
+signos o síntomas, con intervenciones clínicas o terapéuticas, que «deberán ser realizadas invariablemente por un médico,
+psicólogo o psiquiatra según corresponda» (num. 8.5).
+
+### C-33. Sujetos: el centro o áreas visibles, nunca personas · Humetría (sustentado en 8.4 a y C-22)
+
+**Qué hacemos.** Una acción es para **todo el centro de trabajo** o para **áreas**, y solo de las que Resultados muestra
+(con el mínimo y la supresión complementaria de C-23). Un área oculta, inexistente o de otra empresa se rechaza con el
+mismo mensaje. El panel muestra, junto a cada área y para esa fila, cuántos cuestionarios del área están en Medio o más
+(lo mismo que Resultados al filtrar por esa área). No hay selector de personas ni ninguna tabla del Programa con llave a
+empleado, invitación o token. En el informe solo se nombran las áreas que se muestran hoy, y ni cuántas quedan ocultas.
+
+**Qué dice la norma.** El numeral 8.4 a pide «las áreas de trabajo y/o los trabajadores sujetos al programa»: el «y/o»
+permite cumplirlo con áreas. **Por qué.** Elegir a las personas de una acción por un resultado de la Guía II o III las
+ligaría con su respuesta (C-22).
+
+### C-34. Qué pide la Tabla según el nivel más alto · Norma (II.4, III.4) + Interpretación
+
+**Qué hacemos.** Con el nivel más alto del resultado, la página muestra la lista **«Lo que pide la Tabla»** con Cubierto,
+Falta u Opcional:
+
+- desde Medio: revisar la política de prevención y los programas, y reforzar su aplicación y difusión (dos líneas);
+- desde Alto: el análisis de cada categoría y dominio (cubierto cuando cada fila en Alto o Muy alto lo tiene escrito) y una
+  campaña de sensibilización;
+- en Muy alto: evaluaciones específicas; en Alto, la Tabla dice que el Programa «podrá incluir» una, así que se muestra
+  como opcional.
+
+«Cubierto» solo dice que hay una acción no cancelada de ese tipo: no juzga si basta, no bloquea nada y no es un «apto».
+
+**Qué dice la norma.** Tablas 4 y 7, columna «Acción».
+
+**Interpretación.** Usamos el nivel más alto de todo el resultado, y los tipos de acción que cubren cada línea son los de
+nuestro catálogo (C-31).
+
+### C-35. Evidencia y conservación · Norma
+
+**Qué hacemos.** Nada del Programa se borra: una acción se **cancela con motivo** y queda en el historial. El control de
+avances es de solo inserción: cada avance lleva el día, el estado al que pasó, una nota y, si hay, un archivo (PDF o
+imagen) de evidencia (convocatoria, lista de asistencia). El archivo vive en un disco privado, lo abren solo owner y RH, se
+audita cada apertura y no sale en el informe ni en el enlace temporal; se avisa al subirlo que una lista de asistencia
+lleva nombres. Las imágenes se recodifican y pierden los metadatos de la cámara.
+
+**Qué dice la norma.** Llevar los registros de «las medidas de control adoptadas cuando el resultado (…) lo señale» (num.
+5.8 b); conservar las evidencias y registros, impresos o electrónicos, «al menos durante un año» (num. 10.4). La STPS
+acepta como evidencia de las actividades la convocatoria, las listas de asistencia y los resultados [STPS-1, pregunta 18].
+
+### C-36. Recordatorios · Humetría
+
+**Qué hacemos.** Cada lunes a las 9:30 (hora de México) el titular recibe un correo con **solo conteos**: acciones
+vencidas, acciones que vencen en los próximos 14 días, filas sin acciones, Programas sin responsable y evaluaciones
+posteriores vencidas; cada responsable que es miembro recibe sus acciones vencidas y por vencer. Nunca va un título, una
+descripción ni un nombre (el texto libre puede traer datos de una persona). No se manda nada si todo está en orden, y una
+empresa bloqueada no recibe nada.
+
+**Por qué.** La norma no pone plazos para el Programa más allá de la evaluación (C-26): el aviso de 14 días y el correo
+semanal son nuestros.
+
+---
+
 ## Cómo se prueba
 
 Cada criterio que la plataforma aplica tiene pruebas automáticas que fallan si deja de cumplirse. Las de calificación
@@ -432,7 +538,14 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-14, C-15, C-23 | `tests/Feature/Results/RiskDistributionTest.php` (conteo por nivel, 4/5, supresión complementaria, preguntas con menos de 5), `tests/Feature/Results/ResultsPageTest.php` (filtro por área, ninguna respuesta en las props, número de consultas) |
 | C-27 | `tests/Feature/Results/ResultsPageTest.php` (sin resultados con la evaluación abierta) |
 | C-28 | `tests/Feature/Results/ScreeningsPageTest.php` (solo owner y RH, bitácora), `tests/Feature/Results/ResultsPageTest.php` (consulta no la ve), `tests/Feature/Results/ScreeningReferralsTest.php` (registro de la canalización: estados, bitácora, sin datos en el log, aislamiento entre empresas) |
-| C-29 | `tests/Feature/Results/ReportTest.php` (incisos a–h), `tests/Feature/Results/ReportSharesTest.php` (15 min a 48 h, hash, vencido, revocado, empresa bloqueada, sin Guía I) |
+| C-29 | `tests/Feature/Results/ReportTest.php` (incisos a–h), `tests/Feature/Results/ReportSharesTest.php` (15 min a 48 h, hash, vencido, revocado, empresa bloqueada, sin Guía I), `tests/Feature/Results/ReportProgramTest.php` (el Programa en el inciso g, también por enlace temporal, sin archivos ni notas) |
+| C-30 | `tests/Unit/Results/RiskBreakdownTest.php` (la regla de qué requiere Programa), `tests/Feature/Interventions/CreateProgramTest.php` (filas, sin Programa, bajo el mínimo, 4 contra 5, idempotencia), `tests/Feature/Interventions/DraftProgramOnCloseTest.php` |
+| C-31 | `tests/Feature/Interventions/SaveActionTest.php`, `tests/Feature/Interventions/ActionsHttpTest.php`, `tests/Feature/Interventions/ItemsTest.php` (análisis, evaluación posterior, filas agregadas), `tests/Feature/Interventions/SchemaTest.php` (los checks de la base) |
+| C-32 | `tests/Feature/Interventions/SaveActionTest.php` (nivel 3 con profesional, atención clínica solo en nivel 3), `tests/Feature/Interventions/SchemaTest.php` |
+| C-33 | `tests/Feature/Interventions/SaveActionTest.php` (áreas visibles, oculta, inexistente, de otra empresa), `tests/Feature/Interventions/SchemaTest.php` (ninguna tabla con llave a persona), `tests/Feature/Interventions/ProgramOutlinesTest.php` (solo las áreas que se muestran) |
+| C-34 | `tests/Unit/Interventions/TableChecklistTest.php` (cada nivel contra lo que pide), `tests/Feature/Interventions/CopyActionTest.php` |
+| C-35 | `tests/Feature/Interventions/RecordProgressTest.php` (estados, cancelar con motivo), `tests/Feature/Interventions/EvidenceTest.php` (archivo privado, permisos, bitácora, sin ruta en las props), `tests/Feature/Interventions/SchemaTest.php` (el historial no se edita) |
+| C-36 | `tests/Feature/Interventions/DigestsTest.php`, `tests/Feature/ScheduleTest.php` (lunes 9:30) |
 
 C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
@@ -443,7 +556,6 @@ Obligaciones de la norma que dependen del cliente o que Humetría todavía no ge
 
 - política de prevención (5.1, Guía IV);
 - difusión de información (5.7);
-- programa de intervención y medidas de control (8.3 a 8.5);
 - mecanismo de quejas (8.1 b);
 - integración al diagnóstico de seguridad y salud de la NOM-030 (7.6).
 
@@ -473,3 +585,4 @@ acceso propio para los trabajadores.
 | 1.1 | 2026-10-29 | Se agrega «Cómo se prueba» y la errata «pertenencia e, inestabilidad» a C-21. Ningún criterio cambia. |
 | 1.2 | 2026-10-30 | Resultados: C-23 detalla la supresión complementaria y el mínimo por pregunta; nuevos C-27 (resultados solo con la evaluación cerrada), C-28 (lista de canalización) y C-29 (informe 7.7 y enlace temporal). |
 | 1.3 | 2026-11-03 | C-28 suma el registro de la canalización por persona (canalizada, atendida, día e institución), con bitácora; «exámenes médicos y evaluaciones psicológicas (5.6)» sale de lo que no se cubre. |
+| 1.4 | 2026-11-03 | Sección G, Programa de intervención: nuevos C-30 a C-36 (una fila por categoría, dominio y calificación final en Medio o más; contenido de la acción; niveles; sujetos; qué pide la Tabla; evidencia y conservación; recordatorios). C-29 suma que el inciso g imprime el Programa. El programa de intervención sale de lo que no se cubre. |
