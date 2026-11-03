@@ -1,0 +1,28 @@
+ESTADO: Tabasco
+IMPUESTO: Impuesto sobre Nóminas
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial (Congreso del Estado de Tabasco)
+
+LEY Y ARTÍCULOS
+Ley de Hacienda del Estado de Tabasco, Capítulo Tercero "Del Impuesto sobre Nóminas": arts. 26 (objeto), 27 a 27-C (sujetos, intermediarios, obra pública), 29 (base), 30 (tasa), 31 (pago), 34 (no sujeción), 35 (exentos), 36 (subsidio por discapacidad).
+
+FUENTE OFICIAL
+Ley de Hacienda del Estado de Tabasco, PDF en el portal del Congreso del Estado (el nombre del archivo dice "Enero-2023", pero el contenido está actualizado hasta abril de 2026):
+https://congresotabasco.gob.mx/wp-content/uploads/2026/06/Ley-de-Hacienda-del-Estado-de-Tabasco-Enero-2023.pdf
+Se llega desde la página de leyes del Congreso: https://congresotabasco.gob.mx/leyes/
+Ojo: el PDF https://tabasco.gob.mx/leyes/estatales/ley/pdf/309 es la ley original/2014 (tasa 2.5%, arts. 22-30) y está desactualizado; no usarlo.
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Encabezado: Decreto 254, P.O. 8723 suplemento N, 11-abr-2026 (cambia otros capítulos, no el ISN). El art. 30 se reformó por última vez por el Decreto 033, P.O. 8586 "L", 18-dic-2024. El Decreto 190 (P.O. 8692 "D", 24-dic-2025, vigente desde 1-ene-2026) no cambió el art. 30.
+
+RESUMEN
+Tasa (art. 30): sobre el monto total de los pagos, aun cuando no excedan del valor diario de la UMA. Fracción I, 3.0% para los Poderes de la Federación y del Estado, dependencias, entidades, órganos autónomos y municipios. Fracción II, 3.5% para los demás sujetos ("los demás sujetos pasivos de la relación jurídico tributaria"). Vigente desde 2025 por la reforma del 18-dic-2024; sin cambio visto para 2026.
+Sujeto (art. 27): personas físicas o jurídicas colectivas que hagan los pagos del art. 26, incluidas las que actúen bajo dirección de un patrón, contratista, intermediario o tercero. Quien contrate servicios de personal con un tercero debe retener y enterar (art. 27-B); el adjudicatario de obra pública retiene a sus subcontratistas (art. 27-C).
+Base (art. 29): monto total de los pagos del art. 26, que abarcan todas las contraprestaciones ordinarias o extraordinarias, con cualquier nombre: viáticos (solo si son ingresos acumulables), gastos de representación, comisiones, premios, gratificaciones, primas y cualquier otra prestación. Pago mensual a más tardar el día 20 (art. 31).
+No sujeción (art. 34): indemnizaciones por riesgos y enfermedades profesionales; PTU; jubilaciones y pensiones; gastos funerarios; viáticos comprobados dentro del margen del art. 152 del Reglamento de la LISR. Exentos (art. 35): sindicatos y agrupaciones de trabajadores, clubes y asociaciones sociales, partidos, beneficencia.
+Estímulo (art. 36): subsidio de 100% del impuesto pagado por la remuneración de cada trabajador con discapacidad (80% o más de incapacidad, con constancia IMSS); no acumulable con otros beneficios.
+Tratamiento de lo que pidieron: PTU, excluida (art. 34, II); indemnizaciones por riesgo de trabajo, excluidas; indemnización por despido o terminación, no mencionada, queda dentro de la base por silencio; aguinaldo, prima vacacional, vales de despensa y fondo de ahorro, no mencionados en el texto (la definición dice "gratificaciones, primas y cualquier otra prestación"), así que quedan incluidos por silencio. Esa lectura es inferencia, no texto expreso.
+Ley de Ingresos 2026 de Tabasco: no localicé el texto publicado; por verificar si trae estímulos al ISN.
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada).

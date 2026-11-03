@@ -1,0 +1,37 @@
+ESTADO: Ciudad de Mexico
+IMPUESTO: Impuesto sobre Nominas (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (Consejeria Juridica y de Servicios Legales, texto vigente; Gaceta Oficial)
+
+LEY Y ARTICULOS
+- Codigo Fiscal de la Ciudad de Mexico, Titulo Tercero, Capitulo V "Del Impuesto sobre Nominas", arts. 156 a 161:
+  156 sujetos y erogaciones; 156 Bis aviso de subcontratacion; 157 no se causa; 158 TASA; 159 causacion y pago; art. 278 (reduccion).
+- Ley de Ingresos de la CDMX para 2026, art. 9: la parte del incremento de tasa del art. 158 que corresponde a las alcaldias va al Fondo Adicional de Financiamiento de las Alcaldias.
+
+URLS OFICIALES
+- Codigo Fiscal, texto vigente (Consejeria Juridica, "Ultima reforma publicada en la G.O. CDMX el 19 de diciembre de 2025"; pagina https://data.consejeria.cdmx.gob.mx/index.php/leyes/codigos/1575-codigofiscaldelaciudaddemexico-2025):
+  https://data.consejeria.cdmx.gob.mx/images/leyes/2025/2026/210126/CODIGO_FISCAL_DE_LA_CDMX_26.1.pdf
+- Ley de Ingresos 2026 (Gaceta Oficial 19-dic-2025):
+  https://servidoresx3.finanzas.cdmx.gob.mx/documentos/LeyIngresos_2026.pdf
+- Gaceta Oficial 12-mar-2025 (Reglas de la Tesoreria sobre el art. 278; confirma 4% y la reduccion; copia en el portal de la alcaldia Milpa Alta):
+  https://www.milpa-alta.cdmx.gob.mx/gob_abierto/pdf/gacetas/2025/03/gaceta_1317.pdf
+
+ULTIMA REFORMA VISTA
+- Codigo Fiscal: 19-dic-2025. El art. 158 lleva la nota "Articulo reformado G.O.CDMX 27/12/24" (decreto del 27-dic-2024 que reformo el Codigo para 2025). Esa es la reforma que subio la tasa a 4%; el texto leido no trae el transitorio de vigencia, pero el Codigo cita 4% en las Reglas del 12-mar-2025 y en el texto vigente 2026.
+
+RESUMEN
+Tasa (art. 158): 4% sobre el monto total de las erogaciones por remuneraciones al trabajo personal subordinado. Cita corta: "la tasa del 4%". En 2024 (version de transparencia de Finanzas) era 3%; el 4% rige desde la reforma de 27-dic-2024 (aplicable al ejercicio 2025 y siguientes) y se mantiene en 2026.
+Sujetos (art. 156): personas fisicas y morales que en la CDMX hagan erogaciones en dinero o especie por trabajo personal subordinado, sin importar la designacion.
+Base (art. 158): monto total de las erogaciones por remuneraciones (art. 156 enumera sueldos y salarios, tiempo extra, premios/primas/bonos/estimulos/incentivos, compensaciones, gratificaciones y aguinaldos, participacion patronal al fondo de ahorros, primas de antiguedad, comisiones, pagos a administradores y consejeros).
+Pago (art. 159): mensual, a mas tardar el dia 17 del mes siguiente.
+
+TRATO DE CONCEPTOS
+- Art. 156 incluye como remuneracion: aguinaldos y la participacion patronal al fondo de ahorros. La PTU no esta en esa lista y el art. 157 fr. XIII la excluye.
+- Art. 157, no se causa por: instrumentos y materiales de trabajo; aportaciones al SAR; gastos funerarios; jubilaciones, pensiones e indemnizaciones por riesgos de trabajo; aportaciones INFONAVIT/FOVISSSTE; cuotas IMSS/ISSSTE; aportaciones adicionales de retiro y planes de pension; gastos de representacion y viaticos; alimentacion, habitacion y despensas onerosas; intereses subsidiados; primas de seguros obligatorios; prevision social regular y permanente concedida en general; PTU; personas contratadas con discapacidad; personas trabajadoras del hogar. Deben estar registrados en contabilidad.
+- Prima vacacional: no se nombra (entra como remuneracion salarial; inferencia). Indemnizaciones por despido o terminacion: no estan excluidas expresamente (solo las de riesgo de trabajo): tratar como "por confirmar". Despensas: excluidas sin tope numerico en el texto ("despensas onerosas"). Fondo de ahorro: la aportacion patronal esta en el art. 156 como remuneracion; el art. 157 no lo excluye salvo como prevision social general.
+
+REDUCCIONES (art. 278)
+- Empresas que acrediten haber incrementado 33% su planta laboral en los 12 meses anteriores, o que inicien operaciones: "reduccion equivalente al 1% ... sobre la tasa prevista en el art. 158". El texto es ambiguo: lo mas natural es 1 punto porcentual (tasa efectiva 3%), pero NO esta confirmado si es 1 punto o 1% del impuesto; POR VERIFICAR antes de usar. Aplica en el ISN; la reduccion por inicio de operaciones solo en el primer ejercicio; la de planta laboral mientras se mantenga el porcentaje adicional de empleos. Valores reformados por G.O. 27-dic-2024 (antes eran otros porcentajes y se derogaron parrafos). Se opta en la declaracion mensual (Reglas de la Tesoreria, G.O. 12-mar-2025). No acumulable con otros beneficios sobre el mismo concepto y ejercicio.
+
+2027
+- Sin cambio publicado a la fecha.

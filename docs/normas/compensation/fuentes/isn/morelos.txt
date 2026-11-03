@@ -1,0 +1,42 @@
+ESTADO: Morelos
+IMPUESTO: Impuesto sobre erogaciones por remuneraciones al trabajo personal (antes "Impuesto sobre Nóminas")
+LEY: Ley General de Hacienda del Estado de Morelos, Título Segundo, Capítulo Séptimo Bis
+ARTÍCULOS: objeto 58 BIS-1; sujetos 58 BIS-2; base 58 BIS-3; TASA 58 BIS-4; pago 58 BIS-5; exenciones 58 BIS-6; (58 BIS-9 destino a fondo)
+URLS OFICIALES (Consejería Jurídica del Poder Ejecutivo, Marco Jurídico de Morelos, y Periódico Oficial):
+  Texto consolidado: https://marcojuridico.morelos.gob.mx/documentos/2823/download   (portada: "Última Reforma: 03-02-2026")
+  Decreto de la reforma de la tasa: Decreto 997, Periódico Oficial "Tierra y Libertad" 6506 Extraordinaria, 22-dic-2025:
+    https://periodico.morelos.gob.mx/obtenerPDF/2025/6506.pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA EN EL TEXTO: 03-02-2026 (portada del consolidado; esa reforma, Decreto 1004, agregó los Arts. 84 BIS-4 y 84 BIS-5, no tocó el impuesto).
+  El Art. 58 BIS-4 fue reformado por el Decreto 997 (P.O. 6506 Ext. del 22-dic-2025), vigencia 1-ene-2026.
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO en fuente oficial (consolidado del Marco Jurídico más el Decreto 997 en el Periódico Oficial).
+
+RESUMEN
+- Tasa 2026: 3.0% sobre el monto total de las erogaciones por remuneraciones al trabajo personal (Art. 58 BIS-4).
+  Cita: "se determinará aplicando la tasa del 3.0% sobre el monto total de las erogaciones". Tasa única, sin escala.
+- Desde cuándo: 1-ene-2026 (Decreto 997 de 22-dic-2025, transitorio segundo: entra en vigor el 1-ene-2026). Historial en las notas del consolidado:
+  2% (desde 1-ene-2014), 2.5% (desde 1-ene-2025, Decreto 24, P.O. 6382 Ext. 31-dic-2024), 3.0% (desde 1-ene-2026).
+  El dictamen del Congreso en el propio P.O. 6506 muestra que la iniciativa pedía 4.25% y la Comisión de Hacienda lo redujo a 3.0%.
+- Objeto (Art. 58 BIS-1): pagos en efectivo o en especie por remuneraciones al trabajo personal prestado en el estado, incluso por
+  patrones sin domicilio en Morelos con personal en sucursales, bodegas o agencias; lista de 16 conceptos "ordinarios o extraordinarios".
+- Sujetos (Art. 58 BIS-2): personas físicas y morales que pagan; responsables solidarios quienes reciben el trabajo aunque el pago lo haga otro;
+  Federación, Estado y municipios también pagan.
+- Base (Art. 58 BIS-3): monto total de las contraprestaciones por remuneraciones al trabajo personal; se causa al momento del pago.
+- Pago (Art. 58 BIS-5): a más tardar el día 17 del mes siguiente; la declaración se presenta aun sin erogaciones.
+- Tratamiento de conceptos:
+  * Aguinaldo: INCLUIDO expresamente (Art. 58 BIS-1 fr. V "Gratificaciones y aguinaldos"); no figura en las exenciones.
+  * Prima vacacional: no se nombra; cae en "Premios, primas, bonos, estímulos e incentivos" (fr. III) o en la fr. XVI "cualquier otra erogación". Sin exención.
+  * Vales de despensa: listados como remuneración (fr. XII), pero el Art. 58 BIS-6 fr. I inc. p) exenta las despensas en dinero o en especie
+    cuando su monto mensual no rebase el 30% del valor del salario mínimo al mes (el excedente queda gravado).
+  * Fondo de ahorro: la participación patronal al fondo de ahorros es objeto (fr. VI), pero el inc. j) exenta el ahorro integrado con depósito
+    igual del trabajador y de la empresa (y cantidades para fines sociales y sindicales); sin esa paridad, queda gravado. Todo debe estar comprobado.
+  * PTU: listada como objeto (fr. VIII, "Pagos de Participación de los trabajadores en las utilidades"); el inciso a) de la fr. I del Art. 58 BIS-6
+    figura "Derogado" y no hay exención de PTU en la lista, por lo que se lee como GRAVADA. Por verificar con la Secretaría de Administración y Finanzas.
+  * Indemnizaciones: exentas las de riesgos o enfermedades de trabajo (inc. b) y "indemnizaciones y primas por rescisión o terminación de la relación laboral"
+    incluidos anticipos (inc. d). Nota: las primas de antigüedad sí son objeto (fr. VII).
+  * Otras exentas: pensiones y jubilaciones, viáticos comprobados, aportaciones INFONAVIT/retiro/seguridad social, remuneraciones a mayores de 60 años o
+    personas con discapacidad, premios de asistencia y puntualidad hasta 10% del salario base, tiempo extra dentro de topes legales, alimentación y
+    habitación con cargo al salario, uniformes, becas, primas de seguros a cargo del trabajador.
+- Exención por empresas de nueva creación (inc. d de la fr. II del Art. 58 BIS-6): durante 12 meses, con al menos 5 empleos permanentes y solicitud en el primer mes.
+- Cambio publicado para 2027: sin cambio publicado a la fecha.

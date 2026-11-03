@@ -1,0 +1,42 @@
+ESTADO: Baja California Sur
+IMPUESTO: Impuesto sobre Nominas (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (decreto publicado en el Boletin Oficial + texto consolidado del Congreso)
+
+LEY Y ARTICULOS
+- Ley de Hacienda del Estado de Baja California Sur, Capitulo Cuarto "Del Impuesto sobre Nominas", arts. 33 a 40.
+  - 33 objeto; 34 sujetos; 35 base y exclusiones; 36 TASA; 37 causacion y pago.
+- Decreto 3262 (reforma el art. 36), Boletin Oficial del Gobierno del Estado, Tomo LII, No. 90-BIS extraordinario, 31-dic-2025 (pag. impresa 23).
+
+URLS OFICIALES
+- Texto consolidado del Congreso (.doc; pie "Ultima Reforma BOGE.90-BIS Extraordinario 31-Diciembre-2025"):
+  https://www.cbcs.gob.mx/LEYES-BCS/LHaciendaBCS.doc   (pagina del Congreso: https://www.cbcs.gob.mx/index.php/cmply/1517-ley-hacienda-bcs)
+- Boletin Oficial 90-BIS (PDF escaneado; el decreto 3262 esta en la pagina 23):
+  https://finanzas.bcs.gob.mx/wp-content/themes/voice/assets/images/boletines/2025/90bis.pdf
+- Dictamen de la Comision de Asuntos Fiscales (11-dic-2025) con exposicion de motivos:
+  https://www.cbcs.gob.mx/SESIONES/PORDINARIO21XVII/11-DICIEMBRE-2025-EXTRA/IPUNTO.pdf
+
+ULTIMA REFORMA VISTA
+- 31-dic-2025 (BOGE 90-BIS), Decreto 3262; entra en vigor el 1-ene-2026.
+
+RESUMEN
+Tasa (art. 36): 3% sobre el monto total de los pagos del art. 33 efectuados en el mes calendario anterior, "aun cuando no exceda del valor diario de la UMA". Cita corta: "en razon del 3%". Vigente desde 1-ene-2026 (Decreto 3262). Hasta el 31-dic-2025 era 2.5% (el dictamen dice que estaba asi desde marzo de 2006 y que la mayoria de las entidades usa 3%).
+Objeto (art. 33): pagos en dinero o en especie por remuneraciones al trabajo personal subordinado, dentro del Estado, sin importar la denominacion.
+Sujetos (art. 34): personas fisicas o morales que hagan los pagos, aunque no tengan domicilio en el Estado; retencion por quien recibe personal de intermediarios (arts. 13-15 LFT).
+Base (art. 35): monto total de los pagos del art. 33.
+Pago (art. 37): causacion al hacer la erogacion; entero mensual a mas tardar el dia 15 del mes siguiente; declaracion definitiva.
+
+TRATO DE CONCEPTOS
+- Art. 33 enumera como remuneraciones gravadas: sueldos y salarios, tiempo extra, premios, primas, bonos, estimulos, gratificaciones, AGUINALDOS, participacion patronal al FONDO DE AHORRO, primas de antiguedad, PTU, comisiones, ayuda para despensas o transporte, primas de seguros de gastos medicos o de vida, honorarios asimilables.
+- Art. 35, NO forman parte de la base: instrumentos y herramientas de trabajo; cuotas IMSS e INFONAVIT; VALES DE DESPENSA canjeables por articulos de primera necesidad hasta 40% del valor diario de la UMA (el excedente paga); aportaciones al SAR y aportaciones adicionales del patron; indemnizaciones por riesgo y enfermedades profesionales; jubilaciones y pensiones; gastos funerarios; viaticos.
+- Prima vacacional: no se nombra (entra como remuneracion salarial; inferencia). Indemnizaciones por despido/terminacion: NO estan en la lista de exclusiones (solo las de riesgo profesional) y no se nombran en el art. 33; tratarlas como "por confirmar".
+- Choque aparente PTU / fondo de ahorro: el art. 33 los lista como remuneracion y el art. 35 no los excluye: quedan incluidos segun el texto.
+
+ESTIMULOS / REDUCCIONES
+- No hay tasa diferenciada en la Ley de Hacienda. Una busqueda del buscador menciono que la iniciativa de Ley de Ingresos 2026 contempla un estimulo de 100% para empleadores que contraten personas con discapacidad o de 60 anios o mas: POR VERIFICAR (solo se vio el resumen de una iniciativa, no la Ley de Ingresos 2026 aprobada).
+
+2027
+- Sin cambio publicado a la fecha.
+
+NOTA
+- El portal de tramites del Estado (tramites.bcs.gob.mx) ya dice 3%, pero cita arts. 33-40; es consistente con el decreto. Las versiones PDF de la Ley de Hacienda en contraloria.bcs.gob.mx y finanzas.bcs.gob.mx estan desactualizadas (2010 y 2017, dicen 2.5%): no usarlas.

@@ -1,0 +1,42 @@
+ESTADO: Campeche
+IMPUESTO: Impuesto sobre Nominas (ISN) + Impuesto Adicional para la Preservacion del Patrimonio Cultural, Infraestructura y Deporte
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (texto consolidado del compendio oficial, "documento de consulta"); estimulos por verificar
+
+LEY Y ARTICULOS
+- Ley de Hacienda del Estado de Campeche, Titulo Segundo:
+  - Capitulo III "Del Impuesto sobre Nominas", arts. 20 a 28: 20 objeto; 21 sujetos; 22 subcontratacion; 23 base; 24 TASA; 25 pago; 26 obligaciones; 27 dictamen; 28 exenciones.
+  - Capitulo VII "Impuesto Adicional ...", arts. 53-A a 53-G: 53-A objeto (el pago del ISN); 53-C base (monto del pago de ISN); 53-D TASA 33%; 53-E pago conjunto; 53-G destino.
+
+URLS OFICIALES
+- Ley de Hacienda, texto consolidado (Consejeria Juridica del Estado, "Documento de consulta, ultima reforma publicada en el P.O.E. 29/diciembre/2025"):
+  https://consejeria.campeche.gob.mx/pagina/LEXIUSCAMPECHE/docs/est/100047.pdf
+- Periodico Oficial No. 2565, Segunda y Tercera Seccion, 29-dic-2025 (Ley de Ingresos 2026, Decreto 182; Decreto 185 reforma a la Ley de Hacienda):
+  https://periodicooficial.campeche.gob.mx/sipoec/public/periodicos/202512/PO2565SS29122025.pdf
+
+ULTIMA REFORMA VISTA
+- Ley de Hacienda: Decreto 185, P.O. No. 2565 Tercera Seccion, 29-dic-2025 (en el capitulo de ISN afecto el art. 27, dictamen). La tasa del art. 24 fue reformada por Decreto 7, P.O. No. 1553 Segunda Seccion, 5-nov-2021 (la fecha exacta de vigencia no aparece en el texto visto; el texto vigente es de 3%).
+
+RESUMEN
+Tasa ISN (art. 24): 3% sobre la base del art. 23. Cita corta: "la tasa del 3%".
+Impuesto adicional (art. 53-D): 33% aplicado al monto del ISN a pagar (no a la nomina). Se paga junto con el ISN (art. 53-E). Efecto: 3% x 1.33 = 3.99% de la nomina gravada. La Ley de Ingresos 2026 sigue previendo el impuesto adicional (transitorio Decimo y tabuladores "Impuesto sobre Nominas e Impuesto Adicional"). Importante: el calculo de costo debe sumar ambos.
+Objeto (art. 20): erogaciones en efectivo o especie por remuneraciones al servicio personal subordinado prestado en Campeche, sin importar la denominacion; incluye expresamente salarios, sobresueldos, asimilados, viaticos y gastos de representacion, aguinaldo, comisiones, premios, gratificaciones, ayudas para despensa, PTU, aportacion patronal al fondo de ahorro, ayudas habitacionales, primas vacacionales, dominicales y de antiguedad, y prevision social en los terminos del Codigo Fiscal del Estado; tambien pagos a socios, administradores, consejeros y a prestadores de servicios por los que no se paga IVA.
+Sujetos (art. 21): personas fisicas, morales y unidades economicas residentes, y no residentes por servicios prestados en el Estado; Federacion, Estado, municipios y organismos publicos.
+Base (art. 23): monto total de las erogaciones del art. 20.
+Pago (art. 25): definitivo, a mas tardar el dia 20 del mes siguiente. Dictamen (art. 27): obligatorio si el anio anterior hubo promedio mensual de 100 o mas trabajadores o de 1 millon de pesos o mas en remuneraciones.
+
+TRATO DE CONCEPTOS (art. 28, no gravado, y art. 20 arriba)
+- Aguinaldo, prima vacacional, ayudas de despensa, PTU: expresamente en el objeto (art. 20) y NO en las exenciones: incluidos.
+- Fondo de ahorro: la aportacion patronal esta en el objeto, pero es exenta si es igual o menor a la del trabajador y se entrega anualmente (art. 28 fr. VII).
+- Indemnizaciones por terminacion de la relacion laboral y por riesgos de trabajo: exentas (fr. I). Pensiones/jubilaciones (fr. II); gastos funerarios (fr. III).
+- Pagos a trabajadores con discapacidad, adultos mayores de 65 y domesticos (fr. IV-D); cuotas patronales IMSS/INFONAVIT/ISSSTE/SAR (fr. V); viaticos comprobados (fr. VI); comedor (fr. VIII); herramientas y uniformes de trabajo y deportivos (fr. IX); becas educacionales (fr. X).
+- Los conceptos exentos deben estar registrados en la contabilidad.
+
+ESTIMULOS / REDUCCIONES
+- Ley para el Fomento de las Actividades Economicas y Empresariales en el Estado de Campeche, arts. 7 y 8: estimulo (exencion temporal del ISN) con resolucion favorable de la Secretaria de Administracion y Finanzas; la Ley de Ingresos 2026 (transitorio Decimo) lo extiende al impuesto adicional "en los mismos terminos". NO se leyo esa ley de fomento: porcentajes y plazos POR VERIFICAR. No hay tasa reducida general para micro/pequenas en la Ley de Hacienda.
+
+2027
+- Sin cambio publicado a la fecha.
+
+LIMITES DE LA VERIFICACION
+- El texto de la Consejeria es "documento de consulta"; la fuente con validez es el Periodico Oficial. Se confirmo la tasa del art. 24 y el 33% del art. 53-D en el consolidado a 29-dic-2025; no se reviso uno por uno los decretos del Periodico Oficial 2565 para la Ley de Hacienda (solo el de Ley de Ingresos 2026). Las copias de 2021 en transparenciafiscal.campeche.gob.mx y seafi.campeche.gob.mx estan desactualizadas.

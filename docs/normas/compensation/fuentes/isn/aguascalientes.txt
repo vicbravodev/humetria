@@ -1,0 +1,53 @@
+ESTADO: Aguascalientes
+IMPUESTO: Impuesto sobre Nómina (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (texto consolidado oficial + Ley de Ingresos 2026 publicada en el Periodico Oficial)
+
+LEY Y ARTICULOS
+- Ley de Hacienda del Estado de Aguascalientes, Titulo Segundo, Capitulo VII "Del Impuesto Sobre Nominas", arts. 63 a 70 Ter.
+  - Art. 63 objeto y erogaciones no gravadas; art. 64 sujetos; art. 65 retencion; art. 66 base; art. 67 TASA; art. 68 pago.
+- Ley de Ingresos del Estado de Aguascalientes para 2026, art. 41 (estimulo fiscal al ISN).
+
+URLS OFICIALES
+- Ley de Hacienda (texto consolidado, Normateca del Gobierno del Estado):
+  https://eservicios2.aguascalientes.gob.mx/NormatecaAdministrador/archivos/EDO-18-27.pdf
+- Ley de Ingresos 2026 (consolidada, Normateca):
+  https://eservicios2.aguascalientes.gob.mx/NormatecaAdministrador/archivos/EDO-18-220.pdf
+- Ley de Ingresos 2026 como se publico (Periodico Oficial extraordinario, 26-dic-2025, Decreto 373):
+  https://eservicios2.aguascalientes.gob.mx/PeriodicoOficial/Archivos/10666.pdf
+
+ULTIMA REFORMA VISTA
+- Ley de Hacienda: portada del texto dice "Ultima Reforma Publicada ... 26 de mayo de 2025". El art. 67 (tasa) fue reformado por P.O. 31-dic-2022 (en vigor 1-ene-2023); los arts. 63 (parrafo 1, fracs. VII y XII, ultimo parrafo) por P.O. 27-dic-2024.
+- Ley de Ingresos 2026: publicada 26-dic-2025; la consolidada indica ultimas reformas P.O. extraordinario 23-jun-2026.
+
+RESUMEN
+Tasa (art. 67): 2.5% sobre los pagos en dinero, en especie o en servicios por remuneraciones al trabajo personal, mes por mes. Cita corta: "la tasa del 2.5%". Vigente desde 1-ene-2023 y sin cambio en el texto visto para 2026. (Un transitorio de 2019 dejaba 3% para 2020-2021 y 2% despues; la reforma de 2022 lo subio a 2.5%.) Fuentes secundarias que dicen 3% para 2024 contradicen el texto oficial; no se usan.
+Objeto (art. 63): erogaciones por trabajo personal subordinado, salarios y demas prestaciones de la relacion laboral y asimilados a salarios (LISR), prestados en el Estado, sin importar la denominacion.
+Sujetos (art. 64): personas fisicas y morales, asociaciones en participacion, fideicomisos, Federacion, Estado, municipios y organismos autonomos, aunque no tengan domicilio en el Estado.
+Base (art. 66): monto de las erogaciones por pago al trabajo personal (art. 63). La Ley de Ingresos de cada anio puede dar deducciones, subsidios y estimulos que se aplican a la base.
+Pago (art. 68): declaracion mensual, a mas tardar el dia 17 del mes siguiente (dias habiles extra segun sexto digito del RFC estatal); pago definitivo.
+Retencion (art. 65): quien contrata servicios de personal con terceros retiene sobre el 50% de los pagos (sin IVA) a la tasa del art. 67; solo aplica a servicios especializados/obras en los terminos de la LFT para acreditarlo.
+
+TRATO DE CONCEPTOS (art. 63, lista de lo que NO causa el impuesto)
+- PTU: excluida (fr. I).
+- Indemnizaciones por riesgos de trabajo: excluidas (fr. II). Pensiones y jubilaciones: excluidas (fr. III).
+- Indemnizaciones y primas de retiro por rescision o terminacion: excluidas hasta 90 veces el salario minimo general por anio de servicio; el excedente paga (fr. IV).
+- Aportaciones SAR, INFONAVIT, ISSSTE/ISSSTEEA, cuotas IMSS patronales: excluidas (fr. VII).
+- Fondo de ahorro: excluido si es deposito igual de trabajador y empresa y no se puede retirar mas de 2 veces al anio; si no, integra la base (fr. VIII).
+- Premios de asistencia/puntualidad: excluidos si cada uno no pasa de 10% del salario base (fr. IX). Tiempo extra: excluido si no pasa de 3 horas diarias ni 3 veces por semana (fr. X).
+- Alimentacion y habitacion con cargo al salario: excluidas (fr. XI).
+- Comedor, bono de transporte, uniformes, becas: excluidos hasta 15% del salario minimo general mensual del Estado por trabajador, con CFDI y materialidad (fr. XII).
+- Primas de seguros de gastos medicos o de vida: excluidas (fr. XIII).
+- Despensas (dinero o especie): excluidas hasta 40% del salario minimo general vigente en el Estado; el excedente integra la base (fr. XIV y ultimo parrafo).
+- Instrumentos y materiales de trabajo (fr. XV); remuneraciones a trabajadores con discapacidad (fr. XVI); gastos funerarios (fr. V); viaticos y gastos de representacion comprobados (fr. VI).
+- Aguinaldo y prima vacacional: NO aparecen en la lista de exclusiones y el objeto abarca "salarios y demas prestaciones", asi que quedan gravados (inferencia del texto; el articulo no los nombra).
+- Para excluir cualquier concepto debe estar registrado en la contabilidad.
+
+TASA DIFERENCIADA / ESTIMULOS 2026 (Ley de Ingresos 2026, art. 41)
+- Descuento de 50% del ISN que resulte a pagar, solo por las erogaciones de: madres solteras de nuevo ingreso (1 anio desde contratacion); migrantes retornados (3 anios); mayores de 60; primer empleo (1 anio); personas con discapacidad. Requiere pago en tiempo y forma; no acumulable con otros estimulos; sin devolucion ni compensacion. Tasa efectiva en esos trabajadores: 1.25%.
+
+2027
+- Sin cambio publicado a la fecha (la Ley de Ingresos 2027 aun no aparece publicada; no se hallo reforma a la Ley de Hacienda posterior a la de mayo de 2025 en las busquedas hechas).
+
+LIMITES DE LA VERIFICACION
+- Los hosts tramites.aguascalientes.gob.mx y eservicios.aguascalientes.gob.mx no respondieron desde este entorno (conexion rechazada); se uso eservicios2 (Normateca) y el Periodico Oficial. No se puede descartar una reforma a la Ley de Hacienda posterior a mayo de 2025 que el consolidado aun no refleje; una busqueda dirigida no encontro ninguna que toque el ISN.

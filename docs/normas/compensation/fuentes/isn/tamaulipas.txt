@@ -1,0 +1,29 @@
+ESTADO: Tamaulipas
+IMPUESTO: Impuesto sobre Remuneraciones al Trabajo Personal Subordinado
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial (Congreso del Estado y Periódico Oficial)
+
+LEY Y ARTÍCULOS
+Ley de Hacienda para el Estado de Tamaulipas, Capítulo V: arts. 45 (objeto y conceptos), 46 (sujetos), 47 (base), 48 (determinación presuntiva), 49 (tasa), 50 (pago), 51 (obligaciones), 52 (exentos).
+
+FUENTES OFICIALES
+1. Ley de Hacienda, "Documento de consulta" del Congreso de Tamaulipas, última reforma aplicada P.O. No. 19 del 12-feb-2026:
+   https://congresotamaulipas.gob.mx/Parlamentario/Archivos/Leyes/Ley%20de%20Hacienda%2012-feb-2026-2-1.pdf
+2. Periódico Oficial, Edición Vespertina No. 150, 16-dic-2025 (reforma de la Ley de Hacienda, Ley de Ingresos 2026 y Presupuesto de Egresos 2026):
+   https://po.tamaulipas.gob.mx/wp-content/uploads/2025/12/cl-150-161225_EV.pdf
+3. Versión anterior del Congreso (última reforma P.O. 72, 17-jun-2025), usada para comparar la tasa:
+   https://www.congresotamaulipas.gob.mx/Parlamentario/Archivos/Leyes/Ley%20de%20Hacienda%2017-06-2025%20f-e.pdf
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Para el ISN: P.O. Edición Vespertina 150, 16-dic-2025 (reformó art. 45 fr. XV, 46, 48, 51 y 52 incisos k, l y m), en vigor desde 1-ene-2026 según su transitorio. La ley en conjunto: P.O. 19, 12-feb-2026.
+
+RESUMEN
+Tasa (art. 49): se calcula aplicando a la base "la tasa del 3 por ciento". El texto de jun-2025 ya decía 3%; la reforma de dic-2025 no la cambió. Sin tasa diferenciada ni sobretasa en la ley. El art. 60 del Presupuesto de Egresos 2026 (en el P.O. 150) solo destina el 1% de lo recaudado de ese 3% a seguridad pública; no es un cargo adicional.
+Sujeto: personas físicas o morales que paguen, aun sin domicilio fiscal en el estado; Federación, Estado, municipios y paraestatales están obligados (art. 46). Quien contrate servicios especializados debe dar aviso en 15 días hábiles (art. 46 y 51 Sexies).
+Base (art. 47): total de remuneraciones del art. 45 menos los conceptos exentos del art. 52. El art. 45 enumera sueldos, tiempo extra, premios y bonos, compensaciones, gratificaciones y aguinaldos, participación patronal al fondo de ahorro, primas de antigüedad, PTU, comisiones, comedor, vales de despensa, transporte, primas de seguros, asimilados a salarios y cualquier otra erogación por trabajo subordinado. Pago mensual a más tardar el día 15 del mes siguiente (art. 50).
+Exentos (art. 52, I): PTU solo hasta 15 días de salario mínimo del área de la capital por trabajador al año; indemnizaciones por riesgo de trabajo; pensiones y jubilaciones; primas de antigüedad, retiro e indemnizaciones por terminación de la relación laboral hasta 90 salarios mínimos por año de servicio (el excedente paga); gastos funerarios; viáticos comprobados; aportaciones de seguridad social; ahorro con aportación igual del trabajador y el patrón (requisitos de deducibilidad ISR); alimentación y habitación onerosas; despensas en especie (los vales, bonos o similares quedan expresamente fuera de la exención desde la reforma de dic-2025); seguros de vida de técnicos o dirigentes; remuneraciones a personas con discapacidad (inciso m, nuevo). Exentos como contribuyentes (art. 52, II y III): asociaciones de asistencia social, instituciones sin fines de lucro, asociaciones religiosas, civiles educativas con RVOE, clubes de servicio, y personas físicas con hasta 2 concesiones individuales de transporte.
+Tratamiento de lo que pidieron: aguinaldo, incluido (art. 45, V; sin exención); prima vacacional, no mencionada, queda dentro por la cláusula general; vales de despensa, incluidos (art. 45, XII; no exentos); fondo de ahorro, exento si hay aportación igual; PTU, incluida salvo hasta 15 salarios mínimos de tope; indemnizaciones por despido, exentas hasta 90 salarios mínimos por año de servicio.
+Las derogaciones de dic-2025 quitaron los arts. 51 Bis a 51 Quinquies, fracciones VIII, IX y XI del art. 51 y el párrafo derogado del art. 46. Ley de Ingresos 2026: no vi estímulos al ISN en su texto (solo la facultad general del art. 21 para otorgar estímulos).
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada).

@@ -1,0 +1,40 @@
+ESTADO: Estado de Mexico
+IMPUESTO: Impuesto sobre Erogaciones por Remuneraciones al Trabajo Personal (ISERTP)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (texto vigente del Codigo en el portal de legislacion del Gobierno del Estado + Ley de Ingresos 2026 en Gaceta del Gobierno)
+
+FUENTES OFICIALES (leidas en PDF):
+1) Codigo Financiero del Estado de Mexico y Municipios, texto vigente (encabezado: "Ultima reforma POGG 01 de octubre de 2026")
+   https://legislacion.edomex.gob.mx/sites/legislacion.edomex.gob.mx/files/files/pdf/cod/vig/codvig007.pdf
+2) Decreto 238, Ley de Ingresos del Estado de Mexico para el Ejercicio Fiscal 2026 (Gaceta del Gobierno, 17-dic-2025, Seccion Segunda, Tomo CCXX No. 113)
+   https://oficialiamayor.edomex.gob.mx/sites/oficialiamayor.edomex.gob.mx/files/files/leyes/LEY-DE-INGRESOS-2026.pdf
+Nota: curl directo a estos hosts da timeout desde esta red; el PDF se obtuvo con la herramienta de fetch y se convirtio a texto localmente.
+
+ULTIMA REFORMA VISTA: Codigo Financiero, "Ultima reforma POGG 01 de octubre de 2026" (segun el encabezado de cada pagina). No identifique que articulos cambio esa reforma; el art. 57 sigue en 3.0%.
+
+LEY Y ARTICULOS DE LA TASA: Codigo Financiero, Titulo Tercero, Cap. Primero, Seccion Primera, arts. 56 a 59 (objeto/remuneraciones: 56; tasa: 57; pago: 58; no pago: 59). Subsidios: Ley de Ingresos 2026, art. 11.
+
+TASA 2026: 3.0% (art. 57, primer parrafo).
+  Cita: "se determinara aplicando la tasa del 3.0% sobre el monto total de los pagos efectuados"
+- Tasa unica; no vi tasas diferenciadas por tamano.
+- Cuota para personas FISICAS con hasta 4 trabajadores (art. 57, 2o y 3er parrafos): en lugar de la tasa, 250 pesos por trabajador, aplicable solo a pagos del mes y hasta el equivalente a 1.5 salarios minimos mensuales por trabajador.
+- Retencion a contratantes de servicios de contribuyentes de otra entidad cuyo trabajo se preste en el Estado: misma tasa 3.0% (art. 56, 2o-3er parrafo).
+- Desde cuando: la tasa 3.0% ya estaba en el texto vigente 2026; no verifique en que ano subio de 2.5% a 3.0% (copias antiguas del Codigo decian 2.5%). La cuota de 250 pesos para fisicas hasta 4 trabajadores aparece en el texto vigente leido; un dictamen en Gaceta de dic-2025 la menciona, no confirme la fecha exacta de entrada en vigor.
+
+SUBSIDIOS (Ley de Ingresos 2026, art. 11, resumen; requieren cumplir Reglas de Caracter General de la Secretaria de Finanzas):
+- 100% por 60 meses: empresas que muden su fuente de empleo al Estado en 2026; quienes inicien operaciones con domicilio fiscal en el Estado en 2026; quienes incrementen plantilla en 2026 (sobre la plantilla mas alta declarada en 2025, solo plazas nuevas).
+- 100% por 36 meses: empleos nuevos para trabajadores de 60 anos o mas; empleos para recien egresados de carrera 2024-2026.
+- 100% por 24 meses: primer empleo, comunidades indigenas, liberados/amnistia, trabajadoras del hogar, repatriados.
+- 100% por 12 meses: mujeres jefas de familia titulares de unidades con hasta 3 empleados; produccion cinematografica/audiovisual; promocion de deporte, musica, teatro, danza y artes.
+- 100% por 24 meses: organizaciones sin fines de lucro de proteccion animal.
+- 50% por 24 meses: maquiladoras de exportacion.
+- Son subsidios sobre el impuesto causado, no cambian la tasa del art. 57.
+
+RESUMEN (en mis palabras):
+- Sujeto (art. 56): personas fisicas y morales que paguen en efectivo, especie o servicio remuneraciones por trabajo personal prestado en el territorio del Estado, sin importar la denominacion.
+- Base (art. 57): monto total de los pagos por remuneraciones al trabajo personal del art. 56.
+- Lista de remuneraciones gravadas (art. 56) incluye expresamente: sueldos y salarios; tiempo extraordinario; premios, bonos e incentivos; compensaciones; gratificaciones y AGUINALDOS (fr. V); participacion patronal al FONDO DE AHORRO (fr. VI); primas de antiguedad; participacion de los trabajadores en las UTILIDADES, o sea PTU (fr. VIII); comisiones; comedor/comida (fr. XII); DESPENSA en efectivo, especie o vales (fr. XIII); transporte; primas de seguros de gastos medicos o vida; asimilados a salarios; y cualquier otra analoga (fr. XVII). La prima vacacional no aparece con ese nombre; entra por la fr. XVII (analogas) y por el concepto amplio, es lectura mia.
+- Exclusiones (art. 59, "otorgadas de manera general"): becas educacionales y deportivas; indemnizaciones por despido o terminacion de la relacion laboral, riesgos o enfermedades profesionales (fr. V); pensiones, jubilaciones y gastos funerarios; pagos a personas con discapacidad o enfermedades graves (conforme a reglas de la Secretaria); instituciones de asistencia privada; pagos por trabajo independiente que causen IVA. Varias fracciones estan derogadas (I, II, IV, VII, IX).
+- Pago (art. 58): a mas tardar el dia 10 del mes siguiente.
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (revise el texto vigente y no encontre en fuente oficial una iniciativa o decreto 2027 con otra tasa; la Ley de Ingresos 2027 se publica normalmente en diciembre).

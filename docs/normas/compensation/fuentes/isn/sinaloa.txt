@@ -1,0 +1,33 @@
+ESTADO: Sinaloa
+IMPUESTO: Impuesto sobre Nóminas (remuneración al trabajo personal subordinado)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial, con una salvedad (ver al final)
+
+LEY Y ARTÍCULOS
+Ley de Hacienda del Estado de Sinaloa, Título Primero, Capítulo III "Impuesto sobre Nóminas": arts. 17, 17-BIS (retención), 18 (base y tarifa), 19 (pago), 21 (obligaciones), 22 (exenciones), 24.
+
+FUENTES OFICIALES
+1. Texto de la ley (portal RETyS, Gobierno de Sinaloa, "TEXTO VIGENTE", última reforma que aparece: P.O. No. 009 del 20-ene-2023):
+   https://retys.sinaloa.gob.mx/Content/Archivos/112015082023LEY%20DE%20HACIENDA%20DEL%20ESTADO%20DE%20SINALOA%2023.pdf
+2. Tarifa tal como la publica hoy el Portal Fiscal estatal (Preguntas frecuentes, "¿Cómo se determina el Impuesto sobre Nóminas?", cita el art. 18):
+   https://portalfiscal.sinaloa.gob.mx/preguntas-frecuentes/
+3. Fragmento RETyS con "Última reforma P.O. No. 074 del 17-jun-2024" (solo cubre el capítulo de apuestas y sorteos, art. 34 bis y ss.; no toca el ISN):
+   https://retys.sinaloa.gob.mx/Content/Archivos/120017072024LEY%20DE%20HACIENDA%20DEL%20ESTADO%20DE%20SINALOA%20ART.doc
+4. Exposición de motivos e iniciativa de Ley de Ingresos y Presupuesto de Egresos 2026 (portal de transparencia de Sinaloa): no propone cambio de tasa del ISN; solo estima la recaudación (3,420,946,223 pesos):
+   https://media.transparencia.sinaloa.gob.mx/uploads/files/1/Exposici_n_de_Motivos_e_Iniciativa_2026.pdf
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Texto íntegro leído: última reforma 20-ene-2023 (P.O. 009). Las reformas del régimen mensual y de la tarifa del art. 18 que aparecen anotadas son del Decreto 436 (P.O. 156 BIS, 25-dic-2019). El único cambio posterior que vi (17-jun-2024) no afecta el ISN.
+
+RESUMEN
+Tasa: no es plana, es una tarifa progresiva mensual (art. 18). Sobre la base mensual de erogaciones: de 0.01 a 500,000.00, 2.40% sin cuota fija; de 500,000.01 a 700,000.00, cuota fija 12,000.00 más 2.60% del excedente; de 700,000.01 a 900,000.00, cuota fija 17,200.00 más 2.80% del excedente; de 900,000.01 en adelante, cuota fija 22,800.00 más 3.00% del excedente. El art. 18 dice además que sobre este impuesto "no se causará impuesto adicional alguno": no hay sobretasas (educación, asistencia, etc.) en la ley de hacienda leída. Vigente desde la reforma de 2016/2019 de este artículo; sin cambio visto para 2026.
+Sujeto: personas físicas y morales que, aun con domicilio fuera del estado, hagan en Sinaloa erogaciones por trabajo personal subordinado o asimilado a salarios (art. 17). Los entes públicos quedan fuera solo por asimilados a salarios. El art. 17-BIS obliga a retener a quien contrate servicios de personal.
+Base: monto total de erogaciones mensuales por remuneración al trabajo personal subordinado, incluidos honorarios asimilados a salarios (art. 18). Pago mensual a más tardar el día 17 del mes siguiente (art. 19); trimestral si la nómina mensual no excede 10 UMA diarias x 30.
+Exclusiones (art. 22, I): participación de los trabajadores en las utilidades; prima vacacional; indemnización por riesgo de trabajo; pensiones y jubilaciones; indemnización por rescisión o terminación de la relación de trabajo; gastos funerarios; gastos de representación y viáticos comprobados; trabajadores domésticos; aguinaldo y gratificaciones generales solo hasta 1 UMA diaria x 30 por trabajador al año (el excedente sí grava); gastos de previsión social hasta el monto exento o no gravable para ISR (esto cubre, en esa medida, vales de despensa y fondo de ahorro). Quedan exentos como contribuyentes (art. 22, II): instituciones sin fines de lucro, agrupaciones de trabajadores/profesionales/empresarios, partidos, asociaciones políticas y religiosas.
+Tratamiento de lo que pidieron: aguinaldo, incluido salvo hasta 30 UMA; prima vacacional, excluida; vales de despensa y fondo de ahorro, excluidos hasta lo exento para ISR (art. 22, I, j); PTU, excluida; indemnizaciones por terminación o rescisión, excluidas.
+
+SALVEDAD (por qué no es "confirmado" sin reservas)
+No pude abrir la versión consolidada del Congreso de Sinaloa (la página de leyes estatales devolvió 404 y la ruta directa del PDF no existe) ni revisar el Periódico Oficial 2024-2026 artículo por artículo. La tarifa sí está confirmada para 2026 en el Portal Fiscal estatal, pero queda "por verificar" que no haya habido una reforma del art. 22 (exclusiones) después de ene-2023. Nota: la guía https://tramites1.sinaloa.gob.mx/impuestos_estatales/ayudas/leyisn.pdf (tasa 1.5%) es un documento viejo de la dependencia y no debe usarse.
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada).

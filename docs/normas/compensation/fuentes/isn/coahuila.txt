@@ -1,0 +1,38 @@
+ESTADO: Coahuila de Zaragoza
+IMPUESTO: Impuesto Sobre Nominas (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (texto del Congreso del Estado con transitorios por decreto)
+
+LEY Y ARTICULOS
+- Ley de Hacienda para el Estado de Coahuila de Zaragoza (no el Codigo Fiscal), Titulo Segundo, Capitulo Tercero "Del Impuesto sobre Nominas", arts. 21 a 32:
+  21 objeto; 22 sujetos; 23 base; 24 TASA; 25 pago; 26 sucursales; 30-31 estimulos por adultos mayores y personas con discapacidad; 32 exenciones.
+
+URL OFICIAL
+- Congreso del Estado de Coahuila (encabezado: "Ultima reforma publicada en el Periodico Oficial: 30 de diciembre de 2025"):
+  https://www.congresocoahuila.gob.mx/transparencia/03/Leyes_Coahuila/coa25.pdf
+
+ULTIMA REFORMA VISTA
+- Ley: 30-dic-2025 (Decreto 420, en vigor 1-ene-2026; no toca el capitulo de ISN). El art. 24 (tasa) fue reformado por P.O. No. 88 de 3-nov-2023, Decreto 563, en vigor 1-ene-2024.
+
+RESUMEN
+Tasa (art. 24): 3% sobre el monto total de las erogaciones gravadas. Cita corta: "el 3%". Vigente desde 1-ene-2024 (la tasa anterior no se verifico en el texto leido; solo se leyo la reforma de 2023). Sin cambio para 2026 en el texto.
+Objeto (art. 21): erogaciones por salarios por servicio personal subordinado (en terminos de la LFT) mas asimilados a salarios: remuneraciones de funcionarios y trabajadores publicos, honorarios a consejeros y administradores, honorarios a prestadores preponderantes, ingresos de quienes opten por tributar como salarios, pagos a cooperativas o terceros que proporcionen personal (con retencion).
+Sujetos (art. 22): quienes realicen esas erogaciones.
+Base (art. 23): monto total de las erogaciones por salarios por servicio personal subordinado, mas los asimilables del art. 21.
+Pago (art. 25): declaracion mensual y pago dentro de los primeros 17 dias naturales del mes siguiente. Quien tiene domicilio fiscal en otro estado debe señalar domicilio en Coahuila y registrar sucursales (art. 26).
+
+TRATO DE CONCEPTOS (art. 32, exentas)
+- Indemnizaciones por rescision o terminacion de la relacion de trabajo y por riesgos de trabajo; pensiones y jubilaciones: exentas.
+- PTU: exenta. Instrumentos de trabajo, herramientas y ropa: exentos.
+- Ahorro: exento si es deposito semanal o mensual igual de trabajador y empresa; tambien lo otorgado por el patron para fines sociales o sindicales.
+- Aportaciones INFONAVIT e IMSS: exentas.
+- Premios de asistencia y puntualidad hasta 10% del salario base; tiempo extra que no rebase 3 horas diarias ni 3 veces por semana y no pactado como tiempo fijo.
+- Viaticos comprobados (ISR); alimentacion y habitacion, asi como DESPENSAS en especie o dinero (sin tope); gastos funerarios; contraprestaciones a trabajadores domesticos.
+- Aguinaldo y prima vacacional: no aparecen en la lista de exenciones y el objeto es "salarios" en terminos de la LFT: gravados (inferencia; no se nombran).
+
+ESTIMULOS / REDUCCIONES (arts. 30 y 31)
+- Empresas con adultos mayores o personas con discapacidad en su planta: no pagan el impuesto por esos trabajadores, y ademas reduccion del impuesto causado por los demas trabajadores: 20% si esas personas son del 8% al 10% de la planta; 25% si mas de 10% hasta 14%; 30% si mas de 14% hasta 20%; 50% si mas de 20%. Requiere desglose en la declaracion, constancias y estar al corriente en obligaciones fiscales.
+- Los estimulos de la Ley de Ingresos 2026 no se revisaron: POR VERIFICAR si hay estimulos adicionales al ISN en esa ley.
+
+2027
+- Sin cambio publicado a la fecha.

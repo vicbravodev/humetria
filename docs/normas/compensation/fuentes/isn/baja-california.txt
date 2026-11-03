@@ -1,0 +1,42 @@
+ESTADO: Baja California
+IMPUESTO: Impuesto sobre Remuneraciones al Trabajo Personal (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial, con una salvedad (ver LIMITES)
+
+LEY Y ARTICULOS
+- Ley de Hacienda del Estado de Baja California, Titulo Segundo, Capitulo XV, Seccion Primera "Del Impuesto sobre Remuneraciones al Trabajo Personal", arts. 151-13 a 151-20.
+  - 151-13 objeto; 151-14 base y periodicidad; 151-15 sujetos; 151-16 TASA; 151-18 que se considera remuneracion y exclusiones; 151-19 pago.
+- Ley de Ingresos del Estado para 2026, Capitulo II, art. 3: solo dice que lo recaudado va al gasto publico y que entes publicos federales y municipales son sujetos del art. 151-15. NO fija tasa ni sobretasa (a diferencia de ejercicios anteriores).
+
+URLS OFICIALES
+- Ley de Hacienda (Congreso del Estado, "Ultima reforma P.O. No. 72, Indice, 22-Dic-2023"):
+  https://www.congresobc.gob.mx/Documentos/ProcesoParlamentario/Leyes/TOMO_II/20231222_LEYHACES.PDF
+- Ley de Ingresos 2026 (Congreso, "Ultima Reforma P.O. No. 10, Numero Especial, 17-Feb-2026"):
+  https://www.congresobc.gob.mx/Documentos/ProcesoParlamentario/Leyes/TOMO_II/20260217_LEYINGRESOSESTADO2026.PDF
+- Ley de Ingresos 2026 publicada (Periodico Oficial Tomo CXXXII No. 75, 23-dic-2025):
+  https://www.bajacalifornia.gob.mx/Documentos/transparenciafiscal/ley-ingresos/Ley%20de%20Ingresos%202026.pdf
+
+ULTIMA REFORMA VISTA
+- Ley de Hacienda: 22-dic-2023 (Decreto 361, P.O. No. 72), en vigor 1-ene-2024; reformo, entre otros, el art. 151-16 y los arts. 175, 178-181 (estimulos).
+- Ley de Ingresos 2026: ultima reforma 17-feb-2026 (el texto de ISN no cambia).
+
+RESUMEN
+Tasa (art. 151-16): 4.25% aplicado al total de los pagos del empleador, por los periodos del art. 151-14. Cita corta: "una tasa del 4.25%". Es la tasa unica en el texto de la Ley de Hacienda desde 1-ene-2024; antes la Ley de Ingresos daba 1.80% mas sobretasas de 1.20% y 1.25% (suman 4.25%). Para 2026 la Ley de Ingresos ya no fija tasa. La pagina de tramites de la Secretaria de Hacienda de BC aun dice 1.80%: esta desactualizada y no se usa.
+Objeto (151-13): pagos por remuneraciones al trabajo personal prestado dentro del Estado, bajo la direccion o dependencia de un tercero.
+Sujetos (151-15): personas fisicas y morales domiciliadas en el Estado o con agencia, sucursal o representacion, y quienes sin domicilio paguen por trabajo prestado en el Estado.
+Base y periodo (151-14): monto total de los pagos, aunque no excedan el valor diario de la UMA. Contribuyentes que en el ejercicio previo tuvieron hasta 25 trabajadores (promedio mensual) o estan en su primer ejercicio: pago trimestral; los demas, mensual.
+Pago (151-19): a mas tardar el dia 25 del mes siguiente (o abril, julio, octubre, enero si es trimestral).
+
+TRATO DE CONCEPTOS (art. 151-18)
+- Remuneracion = salarios y demas cantidades que se entregan al trabajador como contraprestacion por su trabajo.
+- NO forman parte: prestaciones de prevision social, PTU e indemnizaciones por terminacion de la relacion laboral. Prevision social se define como erogaciones generales a favor de trabajadores para satisfacer contingencias o mejorar su calidad de vida (definicion generica; no nombra despensas ni fondo de ahorro).
+- Aguinaldo, prima vacacional, vales de despensa, fondo de ahorro: el articulo NO los nombra. Aguinaldo y prima vacacional entran como contraprestacion salarial (inferencia); despensas y fondo de ahorro dependen de que se califiquen como prevision social (sin tope numerico en el texto). Tratarlos como "por confirmar con criterio de la autoridad".
+
+ESTIMULOS / REDUCCIONES
+- Los estimulos de los arts. 175, 180 y 181 de la Ley de Hacienda fueron reformados o derogados por el Decreto 361 (22-dic-2023). Los transitorios cuarto y quinto dejan en pie los ya otorgados hasta que terminen (a la proporcion de la tasa de 1.80% a la que fueron otorgados) y aplican por ultima vez al ISN causado a diciembre de 2023 / cuarto trimestre 2023. Para 2026 no se hallo en texto oficial una reduccion general para micro o pequenas empresas; estimulos por proyecto de inversion (Ley de Fomento a la Competitividad y Desarrollo Economico) quedan POR VERIFICAR, no se leyo esa ley.
+
+2027
+- Sin cambio publicado a la fecha (la Ley de Ingresos 2027 aun no esta publicada).
+
+LIMITES DE LA VERIFICACION
+- La version consolidada mas nueva de la Ley de Hacienda que se localizo en el portal del Congreso es la de 22-dic-2023 (las rutas de archivo para fechas 2024-2026 no existen). La Ley de Ingresos 2026 (consolidada a 17-feb-2026) no contiene sobretasas ni tasa de ISN. Es poco probable pero no descartable una reforma de 2024-2025 al art. 151-16 no consolidada en esa ruta.

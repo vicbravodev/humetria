@@ -1,0 +1,34 @@
+ESTADO: Durango
+IMPUESTO: Impuesto Sobre Nominas
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (texto del Congreso del Estado); un punto accesorio queda POR VERIFICAR (ver "Duda abierta")
+
+FUENTES OFICIALES (leidas en PDF):
+1) Ley de Hacienda del Estado de Durango, texto del H. Congreso; encabezado "FECHA DE ULTIMA REFORMA: DEC. 304 P.O. 100 DEL 14 DE DICIEMBRE DE 2025" (con fe de erratas P.O. 19 Ext. del 26-dic-2025)
+   https://congresodurango.gob.mx/Archivos/legislacion/LEY%20DE%20HACIENDA%20DEL%20ESTADO%20DE%20DURANGO.pdf
+2) Dictamen de la Ley de Ingresos del Estado de Durango 2026 (Congreso del Estado)
+   https://congresodurango.gob.mx/Archivos/LXX/LEYES-INGRESOS/2026/INGRESOS%20ESTADO%20DE%20DURANGO%202026.pdf
+3) (Historia de la tasa) Dictamen Ley de Ingresos 2023:
+   https://congresodurango.gob.mx/Archivos/LXIX/LEYESINGRESOS/2023/DICTAMEN%20LEY%20DE%20INGRESOS%20DEL%20ESTADO%202023.pdf
+
+ULTIMA REFORMA VISTA: Decreto 304, P.O. 100 del 14-dic-2025 (con fe de erratas del 26-dic-2025).
+
+LEY Y ARTICULOS: Ley de Hacienda del Estado de Durango, Titulo Segundo, Cap. I "Del Impuesto Sobre Nominas", arts. 3 a 13. Objeto 3 y 4; sujetos 5; base 6; TASA 7; causacion y pago 8; exenciones de pago 11; no sujetos 12; exencion discrecional 13.
+
+TASA 2026: 3% (art. 7: "la tasa del 3%" aplicada a la base del art. 6).
+- Desde cuando: el dictamen de la Ley de Ingresos 2023 describe el aumento de 2% a 3% para ese ejercicio (aumento de un punto porcentual). Por tanto 3% desde 2023 y sigue en el texto vigente leido.
+- Duda abierta: ese dictamen 2023 dice que se mantendria la tasa de 2% para contribuyentes con hasta 10 trabajadores (microempresas). En el texto vigente de la Ley de Hacienda que lei, el art. 7 solo dice 3%, y no hay mencion de una tasa de 2% por numero de trabajadores en ningun articulo del capitulo, ni en el dictamen de Ley de Ingresos 2026. No pude confirmar en texto de ley que la tasa de 2% para micro exista hoy; con el texto leido, la tasa general es 3% sin diferenciacion. POR VERIFICAR si hay alguna regla de caracter general o decreto aparte que aplique 2% a micro.
+- Art. 13: el Titular del Ejecutivo puede exentar total o parcialmente a empresas de nueva creacion o con desempeno estimulable (Ley de Fomento Economico). Ley de Ingresos 2026, apartado E, inciso c): los anos de exencion del impuesto bajo ese esquema seran de hasta seis anos. Estimulos de 75% en otros supuestos de la Ley de Fomento (incisos a y b, no especifican el ISN en lo que lei).
+- Ley de Ingresos 2026 art. 3: autoriza pago a plazos del ISN hasta en 36 parcialidades (con recargos).
+
+RESUMEN (en mis palabras):
+- Objeto (art. 3): pagos en dinero o especie por trabajo personal subordinado prestado en el estado. Las remuneraciones incluyen toda contraprestacion ordinaria o extraordinaria; el texto nombra expresamente viaticos, comisiones, premios, gratificaciones, FONDO DE AHORRO, donativos, primas, AGUINALDO, tiempo extra, DESPENSAS, alimentacion. Tambien honorarios a personas que prestan servicios preponderantemente a un prestatario sin IVA, y asimilados a salarios (art. 4).
+- Sujetos (art. 5): quien efectua los pagos; responsables solidarios quienes reciben el servicio si el pagador reside fuera del estado.
+- Base (art. 6): monto total de los pagos, integrado por cuota diaria, comisiones, premios, gratificaciones, percepciones, anticipos, rendimientos, alimentacion, habitacion, primas dominicales, VACACIONALES y de antiguedad, horas extras, prestaciones en especie y cualquier otra cantidad por sus servicios.
+- Excluidos de la base (art. 6, deben estar registrados en contabilidad): herramientas y ropa de trabajo; AHORRO si hay deposito igual de trabajador y empresa (si se constituye de otra forma o se puede retirar mas de 2 veces al ano, integra la base); aportaciones adicionales de seguro de retiro/cesantia/vejez; aportaciones a IMSS, INFONAVIT, ISSSTE, SAR, pensiones; alimentacion y habitacion onerosas (al menos 20% de la UMA diaria); DESPENSAS solo hasta 40% de la UMA diaria (el exceso integra la base); premios de asistencia y puntualidad hasta 10% de la UMA diaria cada uno; aportaciones para fines sociales/planes de pensiones; tiempo extra dentro de los margenes de la LFT.
+- No se causa por (art. 11): indemnizaciones por riesgos de trabajo; pensiones y jubilaciones; gastos funerarios; PTU (fr. IV); indemnizaciones por rescision laboral (fr. V); viaticos comprobados.
+- Por tanto: aguinaldo incluido (arts. 3 y 6, sin exclusion); prima vacacional incluida (art. 6); fondo de ahorro incluido salvo ahorro con deposito igual (art. 6 II); despensa incluida solo por el exceso de 40% UMA diaria; PTU excluida; indemnizaciones por rescision excluidas.
+- Pago (art. 8): a mas tardar el dia 17 del mes siguiente.
+- No sujetos (art. 12): entidades federativas y municipios (salvo descentralizados), beneficencia, educacion publica, ejidos, sindicatos y organismos sin fines de lucro, etc.
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (no encontre iniciativa o decreto 2027 en fuente oficial; la Ley de Ingresos 2027 aun no se publica al 2026-11-03).

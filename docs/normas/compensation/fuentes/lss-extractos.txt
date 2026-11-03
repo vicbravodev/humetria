@@ -1,0 +1,37 @@
+Ley del Seguro Social (texto vigente, última reforma DOF 15-01-2026; la reforma no toca cuotas ni topes).
+https://www.diputados.gob.mx/LeyesBiblio/pdf/LSS.pdf (SHA-256 8a28a16e1dce1f8e666f4cce5ed19745bc912b2ab1ca49787d5d4bef229398ed)
+Consultado: 2026-11-03. Resumen por artículo (no es copia del texto).
+
+Art. 25 (párr. 2): para las prestaciones en especie de pensionados y beneficiarios (enf. y mat.) la cuota total es 1.5 % del SBC;
+   al patrón le corresponde 1.05 %, a los trabajadores 0.375 % y al Estado 0.075 %.
+Art. 27: el SBC se integra con cuota diaria, gratificaciones, percepciones, alimentación, habitación, primas, comisiones,
+   prestaciones en especie y cualquier otra cantidad por su trabajo. Excluye (resumen): instrumentos de trabajo (I); ahorro si el
+   depósito es igual del trabajador y la empresa y no se retira más de dos veces al año (II); aportaciones adicionales del patrón al
+   retiro (III); cuotas del patrón, aportaciones al Infonavit y PTU (IV); alimentación y habitación onerosas (V); despensas
+   en especie o dinero hasta el 40 % del salario mínimo general diario del DF, léase UMA (VI); premios por asistencia y puntualidad
+   hasta 10 % del SBC (VII); aportaciones para planes de pensiones que cumplan los requisitos de la CONSAR (VIII); tiempo
+   extraordinario dentro de los márgenes de la LFT (IX). Deben estar registrados en la contabilidad del patrón. En VI, VII y IX,
+   si se rebasa el porcentaje solo se integra el excedente.
+Art. 28: el SBC con que se inscribe el asegurado tiene como límite superior 25 veces el salario mínimo general del DF (UMA, ver
+   dof-desindexacion-2016.txt) y como límite inferior el salario mínimo general del área geográfica.
+Art. 30 fr. I: los elementos fijos y las retribuciones periódicas de cuantía previamente conocida se suman.
+Art. 71-72: la prima de riesgos de trabajo se determina por la siniestralidad de la empresa: Prima = [(S/365)+V x (I+D)] x (F/N) + M,
+   con V = 28, F = 2.3 (2.2 con sistema de administración y seguridad acreditado por la STPS), M = 0.005 (prima mínima).
+Art. 73: al inscribirse por primera vez o cambiar de actividad se paga la prima media de la clase: I 0.54355 %, II 1.13065 %,
+   III 2.59840 %, IV 4.65325 %, V 7.58875 %.
+Art. 74: la prima se revisa cada año y solo puede subir o bajar hasta un punto respecto de la anterior, con mínimo de 0.5 % y
+   máximo de 15 % del SBC.
+Art. 106: enfermedades y maternidad, en especie. Fr. I: cuota diaria patronal por asegurado de 13.9 % del salario mínimo (UMA);
+   fr. II: para SBC mayor a tres veces el salario mínimo (UMA), cuota adicional patronal de 6 % y obrera de 2 % sobre la diferencia.
+   El texto vigente NO trae las cifras finales (20.40 % y 1.10 %/0.40 %): salen del Transitorio Décimo Noveno de la ley de 1995
+   (ver abajo).
+Art. 107: prestaciones en dinero: cuota de 1 % del SBC; al patrón 70 % (0.70 % del SBC), al trabajador 25 %, al Gobierno 5 %.
+Art. 147: invalidez y vida: patrones 1.75 % y trabajadores 0.625 % del SBC.
+Art. 168 fr. I: retiro, 2 % del SBC a cargo del patrón. Fr. II a): cesantía y vejez, cuota patronal por rango de SBC (tabla del texto =
+   valores de 2030, ver lss-transitorio-2020-cesantia-vejez.txt); b) trabajadores 1.125 %.
+Art. 211: guarderías y prestaciones sociales: 1 % del SBC, íntegramente a cargo del patrón (art. 212).
+
+Transitorio Décimo Noveno (ley publicada en el DOF 21-dic-1995, en vigor en 1997): la tasa de la fr. I del art. 106 sube 0.65
+   puntos cada 1 de julio de 1998 a 2007 (13.9 + 10 x 0.65 = 20.40 %); las tasas de la fr. II bajan cada 1 de julio de 1998 a 2007
+   0.49 puntos la patronal (6 - 4.9 = 1.10 %) y 0.16 la obrera (2 - 1.6 = 0.40 %). Las cifras 20.40 / 1.10 / 0.40 coinciden con el
+   cuadro A.3 del IMSS (imss-informe-anexo-a.txt).

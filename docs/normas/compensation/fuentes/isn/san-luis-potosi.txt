@@ -1,0 +1,48 @@
+ESTADO: San Luis Potosí
+IMPUESTO: Impuesto sobre Erogaciones por Remuneraciones al Trabajo Personal
+LEY: Ley de Hacienda para el Estado de San Luis Potosí (Decreto 254, POE 31-dic-1998), Capítulo del impuesto
+ARTÍCULOS: objeto Art. 20; sujetos Art. 21; base Art. 22; TASA Art. 23; pago Art. 24; obligaciones Art. 25; exceptuados Art. 27; incentivos Art. 28
+URL OFICIAL (texto consolidado del Instituto de Investigaciones Legislativas, publicado en el listado "Leyes" del Congreso del Estado):
+  http://congresosanluis.gob.mx/sites/default/files/unpload/legislacion/leyes/2026/02/Ley%20de%20Hacienda%20del%20Estado%20%28al%2030%20enero%202026%29.pdf
+  (listado: https://congresosanluis.gob.mx/legislacion/leyes , fila "Ley de Hacienda para el Estado de San Luis Potosi", última reforma 2026-01-30)
+Soporte adicional:
+  Ley de Ingresos 2026 (Decreto 0337, POE 24-dic-2025): https://contraloria-seeipg.slp.gob.mx/documentos/DECRETO%200337%20LEY%20DE%20INGRESOS%20DEL%20ESTADO%20DE%20SAN%20LUIS%20POTOSI%202026%20(24-DIC-2025).pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA EN EL TEXTO: 30-ene-2026 (portada del texto consolidado). Del Art. 23 en particular: P.O. 16-dic-2021.
+  El Art. 24 aparece reformado el 26-dic-2024 (pago a más tardar el día 17).
+  Nota del propio texto: la edición electrónica no es versión oficial; la validez jurídica la da el Periódico Oficial "Plan de San Luis".
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO en fuente oficial (texto consolidado del Congreso). Salvedad menor: no se leyó el P.O. de
+la reforma del 30-ene-2026; la portada la reporta como última y el Art. 23 sigue con 3%.
+
+RESUMEN
+- Tasa: 3% sobre la base del Art. 22. Cita: "aplicando la tasa del tres por ciento sobre la base que señala el artículo anterior".
+  Tasa única; sin escala ni sobretasa.
+- Desde cuándo: el Art. 23 aparece reformado en P.O. 16-dic-2021. El texto no dice la tasa anterior (otras fuentes no oficiales dicen 2.5%); se toma
+  3% vigente de 2022 en adelante solo por la fecha de la reforma. El Decreto 0337 (Ley de Ingresos 2026, POE 24-dic-2025)
+  reforma de esta ley los Arts. 36 Sexties, 38, 64, 84, 85, 88, 89, 90 y 121, no los Arts. 20 a 28.
+- Objeto (Art. 20): erogaciones en efectivo o en especie por remuneraciones al trabajo personal subordinado prestado en el estado
+  (y, fr. II, por trabajo personal en general), incluso con patrón o beneficiario domiciliado fuera; comprende sueldos y salarios
+  (cuota diaria, gratificaciones, bonos, bonificaciones, percepciones, habitación, primas, comisiones, prestaciones en especie),
+  honorarios, emolumentos, pagos a consejeros, administradores y fiduciarios y cualquier otra de la misma naturaleza.
+- Sujetos (Art. 21): quienes hacen las erogaciones y los gobiernos federal, estatal y municipal y organismos.
+- Base (Art. 22): monto total de las erogaciones por remuneraciones al trabajo personal (Art. 20).
+- Pago (Art. 24, reforma 26-dic-2024): declaración mensual a más tardar el día 17 del mes siguiente (antes el 15).
+- Tratamiento de conceptos:
+  * Aguinaldo: no se nombra; se cubre con "gratificaciones, bonos, ... primas ... cualquier otra de la misma naturaleza" (Art. 20).
+    No figura entre los exceptuados del Art. 27. Por verificar criterio de la autoridad.
+  * Prima vacacional: no se nombra; "primas" (Art. 20), sin excepción en el Art. 27. Mismo caveat.
+  * Despensa: Art. 27 fr. I inc. a exceptúa "ayuda o vales para despensa y vales de restaurantes" y alimentación, sin tope en el texto,
+    siempre que estén registrados en la contabilidad del patrón.
+  * Fondo de ahorro: exceptuado (Art. 27 fr. I inc. a) las aportaciones del patrón; además inc. i): el ahorro integrado con cantidad igual
+    del trabajador y del patrón, sin retiros de más de dos veces al año, de lo contrario integra salario.
+  * PTU: exceptuada (inc. f).
+  * Indemnizaciones: exceptuadas las de rescisión o terminación (inc. b) y las de riesgos de trabajo y enfermedades profesionales (inc. c).
+  * Otras exceptuadas: seguros de vida y de gastos médicos mayores, colegiaturas y becas, membresías, pensiones y jubilaciones,
+    viáticos comprobados, aportaciones a IMSS, INFONAVIT, ISSSTE, IPE, ISSFAM, gastos funerarios, planes de pensiones; erogaciones de
+    instituciones de beneficencia, ejidos y organizaciones rurales; pagos a trabajadores independientes sujetos a IVA.
+- Incentivos: Art. 27 fr. IV, el patrón que contrate personas con discapacidad (80% o más) deduce 100% del impuesto causado por esas
+  remuneraciones; Art. 28, empresas de nueva creación pueden recibir incentivos de hasta el 100% del impuesto por hasta tres años.
+- Obligación adicional: dictamen por contador público (Art. 25 fr. VII) con más de 200 trabajadores promedio mensual o más de $10 millones
+  de erogaciones por este concepto en el ejercicio.
+- Cambio publicado para 2027: sin cambio publicado a la fecha. Nota: el gobernador declaró públicamente que la tasa no cambiaría en 2026 (nota de prensa, no usada como fuente).

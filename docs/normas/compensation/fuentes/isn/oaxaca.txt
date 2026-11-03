@@ -1,0 +1,49 @@
+ESTADO: Oaxaca
+IMPUESTO: Impuesto Sobre Erogaciones por Remuneraciones al Trabajo Personal
+LEYES Y ARTÍCULOS:
+  - Ley Estatal de Hacienda (POE 15-dic-2012), Título/Capítulo Noveno: objeto Art. 63; sujetos Art. 64; base Art. 65; TASA Art. 66;
+    excepciones al cálculo Art. 67; exentos Art. 68; obligaciones Art. 69.
+  - Ley de Ingresos del Estado de Oaxaca para el Ejercicio Fiscal 2026 (Decreto 880, PPOE Extra 10-dic-2025): estímulos Arts. 17, 18, 19 y 20.
+URLS OFICIALES:
+  Ley Estatal de Hacienda, texto vigente (Secretaría de Finanzas): https://www.finanzasoaxaca.gob.mx/pdf/asistencia/leyes_fiscales/VIGENTES/pdf/LEY_ESTATAL_DE_HACIENDA%202026.pdf
+  Ley de Ingresos 2026 (Secretaría de Finanzas): https://www.finanzasoaxaca.gob.mx/pdf/asistencia/leyes_fiscales/VIGENTES/pdf/LEY_DE_INGRESOS_DEL_ESTADO_DE_OAXACA_2026.pdf
+  Ley de Ingresos 2026, texto original del Decreto 880 (Congreso del Estado): https://www.congresooaxaca.gob.mx/docs66.congresooaxaca.gob.mx/legislacion_estatal/Ley_de_Ingresos_del_Estado_de_Oaxaca_para_el_ejercicio_fiscal_2025_(Txt_orig_dto_880_aprob_LXVI_Legis_8_dic_2025_PO_Extra_10_dic_2025).pdf
+  Exposición de motivos de la reforma de dic-2025 (Congreso): https://www.congresooaxaca.gob.mx/docs66.congresooaxaca.gob.mx/gaceta/20251115ext/9.pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA EN EL TEXTO: Ley Estatal de Hacienda, "Ultima Reforma 10-12-2025" (Decreto 884, PPOE Extra 10-dic-2025, vigencia 1-ene-2026).
+  El Art. 66 lleva anotadas las reformas del Decreto 1666 (PPOE Extra 31-dic-2015) y del Decreto 884 (10-dic-2025); la exposición de motivos de 2025
+  dice que la "tasa vigente es del 3 por ciento" y el Art. 66 reformado repite 3%. Los cambios de 2025 al impuesto fueron la determinación presuntiva (Art. 63, 65) y la obligación de llevar contabilidad (Art. 69 fr. V).
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO en fuente oficial.
+
+RESUMEN
+- Tasa 2026: 3% sobre la base del Art. 65. Cita: "aplicando la tasa del 3 por ciento sobre la base que señala el artículo 65". Tasa única en la ley.
+- Desde cuándo: el texto solo anota la reforma del Art. 66 por Decreto 1666 (31-dic-2015) y no dice la tasa anterior. Otra publicación de Finanzas (no usada como fuente
+  primaria) liga el cambio de tasa a 2016. No se afirma aquí desde cuándo es 3%; sí que rige en 2026.
+- Estímulos 2026 (Ley de Ingresos, vigentes solo en el ejercicio 2026; reducen el impuesto a pagar, no cambian la tasa de la ley):
+  * Art. 17: 50% a quienes inicien operaciones empresariales en 2026 en Oaxaca y generen más de 50 empleos directos, durante los dos primeros años de calendario;
+    25% en el tercero. No aplica a empresas que ya operaban antes de 2026 ni a escisiones, fusiones o cambios de razón social, domicilio o actividad.
+  * Art. 18: 25% para microempresas con 1 a 10 trabajadores y 10% para pequeñas empresas con 11 a 50 trabajadores; requisitos: estar al corriente en
+    impuestos estatales y declarar un número de trabajadores no menor al del bimestre anterior.
+  * Art. 19: estímulo de 100% de recargos y multas del impuesto (generados en 2026 y antes), con solicitud por correo y entero a más tardar el 17-dic-2026.
+  * Art. 20: estímulo de 100% de accesorios para entes públicos retenedores.
+- Objeto (Art. 63): erogaciones en efectivo o en especie por remuneraciones al trabajo personal prestado en el estado bajo dirección o dependencia de un patrón o
+  por subcontratación de servicios especializados, aun si las partes tienen domicilio fiscal fuera del estado; incluye pagos por servicios prestados en el estado
+  aunque las partes estén fuera; adiciones de 2025: erogaciones determinadas presuntivamente.
+- Sujetos (Art. 64): personas físicas, morales o unidades económicas que hacen las erogaciones, y los gobiernos federal, estatal y municipal y entes públicos.
+- Base (Art. 65): monto total de las erogaciones por remuneraciones al trabajo personal (Art. 63). Concepto amplio: cuota diaria, gratificaciones, percepciones, habitación, primas,
+  fondo de ahorro no registrado ante la CONSAR, comisiones, prestaciones en especie, honorarios, emolumentos y cualquier otra de la misma naturaleza.
+- Pago (Art. 66): se causa al pagar las remuneraciones; declaración bimestral definitiva en los primeros 17 días de marzo, mayo, julio, septiembre, noviembre y enero.
+- Tratamiento de conceptos:
+  * Aguinaldo: no se nombra; entra por "gratificaciones, percepciones, primas" (Art. 63) y no figura entre las excepciones del Art. 67. Por verificar criterio de la autoridad.
+  * Prima vacacional: no se nombra; "primas" (Art. 63), sin excepción. Mismo caveat.
+  * Vales de despensa: excluidos solo si se entregan por monederos electrónicos autorizados por el SAT y no rebasan 40% del salario mínimo general diario de la CDMX (Art. 67 fr. XIII).
+  * Fondo de ahorro: el pago de fondo de ahorro NO registrado ante la CONSAR es remuneración (Art. 63); se exceptúan las aportaciones del patrón al fondo de ahorro cuando
+    esté registrado ante la CONSAR (Art. 67 fr. I) y el ahorro con aportación igual de trabajador y patrón, con tope del 13% del salario y de 1.3 veces el salario mínimo general
+    elevado al año, sin retiros más de una vez al año (fr. XV).
+  * PTU: exceptuada (Art. 67 fr. IX).
+  * Indemnizaciones: exceptuadas las de rescisión o terminación de la relación laboral (fr. IV) y las de riesgo de trabajo y enfermedades profesionales (fr. V).
+  * Otras exceptuadas: aportaciones de retiro, tiempo extra hasta 3 horas diarias y 3 veces por semana, alimentación y habitación con tope de 10% del salario y requisitos,
+    pensiones, viáticos comprobados, herramientas, cuotas patronales IMSS/INFONAVIT/ISSSTE, gastos funerarios; membresías, colegiaturas, seguros y gastos médicos con tope de un salario mínimo
+    por trabajador al bimestre. Todo debe estar registrado en la contabilidad (Art. 67, último párrafo).
+- Cambio publicado para 2027: sin cambio publicado a la fecha.

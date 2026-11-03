@@ -1,0 +1,29 @@
+ESTADO: Yucatán
+IMPUESTO: Impuesto sobre Erogaciones por Remuneración al Trabajo Personal
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial (Diario Oficial y portal de la Agencia de Administración Fiscal)
+
+LEY Y ARTÍCULOS
+Ley General de Hacienda del Estado de Yucatán, Título Segundo, Capítulo III: arts. 21 (objeto), 22 (sujetos), 22 Bis a 22 Quater (retención), 23 (base), 24 (tasa), 25 (causación), 26 (pago), 27 (exenciones), 27 A a 27 D (estímulos). Decreto 147/2025 (estímulo a micro y pequeñas empresas).
+
+FUENTES OFICIALES
+1. Ley General de Hacienda, texto consolidado de la Agencia de Administración Fiscal de Yucatán, "Última Reforma en el D.O. 26-diciembre-2025":
+   https://aafy.yucatan.gob.mx/legislaciones/LGHEY_Ultima_Reforma_26diciembre2025.pdf
+2. Decreto 138/2025 que modifica la Ley General de Hacienda, Diario Oficial No. 35,877, 26-dic-2025 (reforma el art. 24):
+   https://aafy.yucatan.gob.mx/legislaciones/Decreto.1382025.porelquesemodificalaLeyGeneral_deHacienda_delEstadodeYucatan.pdf
+3. Decreto 147/2025, estímulo fiscal para micro y pequeñas empresas, Diario Oficial No. 35,879, 31-dic-2025:
+   https://aafy.yucatan.gob.mx/legislaciones/Decreto_1472025.pdf
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Decreto 138/2025, Diario Oficial 26-dic-2025 (expedido el 11-dic-2025); en vigor desde el 1-ene-2026 (transitorio primero del Decreto 138/2025; solo los arts. 11, 20-I y 22 Quater entran el 1-jul-2026). El considerando del Decreto 147/2025 confirma el aumento: "se incrementó del 3% al 3.75%".
+
+RESUMEN
+Tasa (art. 24): "El impuesto se determinará aplicando a la base la tasa del 3.75%". Subió de 3% a 3.75% para 2026. Sobretasa en el mismo artículo: 1% adicional (queda en 4.75%) para erogaciones a favor de trabajadores de los Poderes Legislativo, Ejecutivo y Judicial, de organismos autónomos y de organismos o empresas de la administración pública estatal; no aplica a universidades e instituciones de educación superior autónomas.
+Estímulos que cambian la tasa efectiva: Decreto 147/2025 (art. 2): a las personas físicas y morales micro (1 a 10 trabajadores) y pequeñas (11 a 50 trabajadores) se les reduce del impuesto el 0.75% de la base, es decir todo el aumento; la tasa efectiva queda en 3%. Aplica al impuesto causado de enero a diciembre de 2026; excluye organismos autónomos y entes públicos; hay que presentar declaración mensual con el número de trabajadores (por subordinación y por asimilados); no se acumula con el art. 27 A de la Ley; el decreto estará vigente hasta el 31-ene-2027. Art. 27 A: no pagan el impuesto durante su primer año de actividades en el estado (con exclusiones del art. 27 B). Art. 27 C: nuevos empleos permanentes exentos un año. El Decreto 138/2025 también excusó durante 2026 la retención por subcontratación de servicios especializados (transitorio segundo).
+Sujeto (art. 22): personas físicas, morales y unidades económicas, residentes o no en Yucatán, que hagan las erogaciones del art. 21.
+Base (art. 23): monto total de las erogaciones del art. 21: remuneración al trabajo personal subordinado (salarios y demás contraprestaciones de una relación laboral, incluidas comisiones, premios, gratificaciones, primas dominicales, vacacionales y por antigüedad, y cualquier otra contraprestación) y honorarios asimilables a salarios prestados en el estado. Pago mensual a más tardar el día 10 del mes siguiente (art. 26).
+Exenciones (art. 27, I): indemnizaciones por rescisión o terminación de la relación laboral; indemnizaciones por riesgos de trabajo; pensiones y jubilaciones; participación de los trabajadores en las utilidades; gastos funerarios; trabajadores domésticos. Exentos como contribuyentes (fr. II): instituciones sin fines de lucro para asistencia social, cultural o deporte no profesional, sindicatos y cámaras, beneficencia, partidos, ejidos y comunidades, empresas sociales y unidades agrícolas de la mujer campesina.
+Tratamiento de lo que pidieron: PTU, excluida; indemnizaciones por terminación o rescisión, excluidas; prima vacacional, incluida (nombrada en el art. 21); aguinaldo, vales de despensa y fondo de ahorro, no nombrados ni exentos, así que quedan en la base por la cláusula "cualquier otra contraprestación" (inferencia por silencio, por verificar).
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha en fuente oficial, salvo que el Decreto 147/2025 vence el 31-ene-2027: si no se emite un estímulo nuevo, la tasa efectiva de micro y pequeñas pasaría a 3.75% desde el impuesto causado de enero de 2027. No localicé iniciativa 2027 (búsqueda limitada).

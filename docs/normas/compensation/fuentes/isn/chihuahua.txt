@@ -1,0 +1,45 @@
+ESTADO: Chihuahua
+IMPUESTO: Impuesto sobre Nominas (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (texto de la Biblioteca Legislativa del Congreso con el transitorio del Decreto de 24-dic-2025)
+
+LEY Y ARTICULOS
+- Ley de Hacienda del Estado de Chihuahua, Capitulo IV "Impuestos sobre Nominas y Asimilables", Seccion Unica, arts. 72 a 78 (la tasa esta en la Ley de Hacienda, no en el Codigo Fiscal):
+  72 objeto; 73 sujetos; 74 base; 75 TASA (3%); 76 pago; 77 erogaciones exentas; 78 determinacion estimativa.
+- Transitorio SEGUNDO del Decreto LXVIII/RFLYC/0462/2025 I P.O. (reforma al Codigo Fiscal, Ley Estatal de Derechos, Ley de Hacienda y Ley de Coordinacion Fiscal), publicado en el P.O. No. 103 del 24-dic-2025 (transitorio primero: en vigor el 1-ene-2026): para 2026 y 2027 la tasa es 4% "en lugar de" la del art. 75.
+
+URLS OFICIALES
+- Ley de Hacienda del Estado de Chihuahua (Congreso, "Ultima Reforma POE 2025.12.24/No. 103"):
+  https://www.congresochihuahua2.gob.mx/biblioteca/leyes/archivosLeyes/1442.pdf
+- Ley de Ingresos 2026 (Decreto LXVIII/APLIE/0459/2025 I P.O., anexo al P.O. 103 de 24-dic-2025):
+  https://chihuahua.gob.mx/sites/default/atach2/periodico-oficial/anexos/2025-12/ANEXO%20103-2025%20DECRETO%20N%C2%B0%20LXVIII-APLIE-0459-2025%20I%20P.O.%20LEY%20DE%20INGRESOS%20DEL%20ESTADO%20DE%20CHIHUAHUA.pdf  (no se abrio; solo referenciada por el buscador)
+- Formato oficial de declaracion 2026 SH-001-26 (Secretaria de Hacienda; coincide con 4%):
+  https://ipagos.chihuahua.gob.mx/ayuda/formatos/NOMINAS_(2026)_(SH-001-26).pdf
+
+ULTIMA REFORMA VISTA
+- 24-dic-2025 (P.O. No. 103), en vigor 1-ene-2026. El art. 75 sigue diciendo 3%; lo que cambia la tasa efectiva es el transitorio.
+
+RESUMEN
+Tasa: 4% durante 2026 y 2027 (transitorio segundo; cita corta: "se aplicara la tasa del 4%"). A partir de 2028 vuelve el 3% del art. 75, salvo nueva reforma. Antecedentes en el mismo texto: transitorio del Decreto de 2021 fijo 4% en 2022 y 3.5% en 2023. El texto del transitorio ordena aplicar los ingresos adicionales preferentemente a inversion publica productiva. Las contribuciones extraordinarias (decretos 266/94 y 842/2012) se calculan sobre el ISN al 3%, no al 4%.
+Aviso: la prensa del Congreso reporta que una diputada anuncio una accion de inconstitucionalidad contra el alza (fuente del Congreso, no se verifico su presentacion ni resultado). Mientras no haya resolucion, la norma rige.
+Objeto (art. 72): egresos en efectivo o especie, habituales o accidentales, por remuneracion al trabajo personal subordinado generados en el Estado o percibidos por personas domiciliadas en el; incluye sobresueldos, viaticos, gastos de representacion, comisiones, primas, gratificaciones, rendimientos y analogos.
+Sujetos (art. 73): personas fisicas y morales, mexicanas o extranjeras, Federacion, Estado, municipios, organismos, entes autonomos y unidades economicas.
+Base (art. 74): monto total de los pagos del art. 72. Se aplica la tasa al monto mensual, sin las erogaciones exentas del art. 77.
+Pago (art. 76): mensual, a mas tardar el dia 15 del mes siguiente.
+
+TRATO DE CONCEPTOS (art. 77, exentos; deben ser erogados por el patron y estar en la contabilidad)
+- PTU: exenta (fr. I). Indemnizaciones por riesgos y enfermedades profesionales (fr. II), por cese o separacion (fr. IV), primas de antiguedad (fr. VI), jubilaciones (fr. III), gastos funerarios (fr. V): exentos.
+- Viaticos y gastos de representacion con requisitos de deducibilidad ISR (fr. VII).
+- Comedor, bono de transporte, uniformes, festejos y convivios, becas, otorgados con caracter general y pagados totalmente por el patron (fr. VIII).
+- Fondo de ahorro: exento si la aportacion de la empresa es igual a la del trabajador; el excedente integra la base (fr. IX).
+- Despensas por vales: exentas si no rebasan 40% de la UMA y se dan en forma general (fr. X).
+- Aguinaldo y prima vacacional: no aparecen en exenciones y el art. 72 abarca gratificaciones y cualquier contraprestacion de la relacion laboral: gravados (inferencia; no se nombran).
+
+ESTIMULOS
+- La Ley de Ingresos 2026 puede traer estimulos: no se leyo: POR VERIFICAR. La Ley de Hacienda no trae tasa diferenciada para micro/pequenas.
+
+2027
+- Ya publicado: el mismo transitorio fija 4% tambien para 2027. Para 2027 no hay otro cambio publicado a la fecha.
+
+NOTA
+- La ficha de tramites tramites.chihuahua.gob.mx dice 3% "a partir de 2024": no refleja el transitorio de dic-2025; no usar.

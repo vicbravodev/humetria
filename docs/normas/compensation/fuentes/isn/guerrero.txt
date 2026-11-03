@@ -1,0 +1,35 @@
+ESTADO: Guerrero
+IMPUESTO: Impuesto Sobre Remuneraciones al Trabajo Personal (+ impuestos adicionales del 15% que se cobran sobre el)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (compilado del Congreso del Estado). La tasa efectiva con adicionales (4.35%) es calculo mio a partir de los articulos leidos: ver "Tasa efectiva".
+
+FUENTES OFICIALES (leidas en PDF):
+1) Ley Numero 419 de Hacienda del Estado de Guerrero, compilado del H. Congreso; encabezado "ULTIMAS MODIFICACIONES ... PERIODICO OFICIAL EDICION No. 102 ALCANCE II, 23 DE DICIEMBRE DE 2025"
+   https://congresogro.gob.mx/legislacion/ordinarias/ARCHI/ley-de-hacienda-del-estado-de-guerrero-419.pdf
+2) Ley Numero 468 de Ingresos del Estado de Guerrero para el Ejercicio Fiscal 2026
+   https://congresogro.gob.mx/legislacion/leyes-ingresos/2026/ley-numero-468-de-ingresos-del-estado-de-guerrero-para-el-ejercicio-fiscal-2026-f915e.pdf
+
+ULTIMA REFORMA VISTA: P.O. Edicion 102 Alcance II, 23-dic-2025 (en este capitulo derogo un parrafo del art. 45 fr. IV; no toca la tasa). El art. 44 (tasa) fue reformado por P.O. Edicion 105 Alcance I, 31-dic-2024.
+
+LEY Y ARTICULOS: Ley 419 de Hacienda, Titulo Primero, Cap. VI "Impuesto sobre Remuneraciones al Trabajo Personal": objeto art. 38; base art. 39; sujetos art. 40; retencion art. 41; TASA art. 44; declaracion art. 45; exenciones art. 50. Adicionales: Cap. VII, arts. 51, 53 y 54.
+
+TASA 2026: 3% (art. 44: "El impuesto se determinara aplicando la tasa del 3%."). La Ley de Ingresos 2026 registra el rubro "3% sobre remuneraciones al trabajo personal".
+- Desde cuando: art. 44 reformado el 31-dic-2024 (vigente en 2025); mismo 3% en 2026. No verifique la tasa anterior en el texto leido (la Ley 428 anterior decia 2.0%, y es una version abrogada).
+
+IMPUESTOS ADICIONALES (importante para el costo real):
+- Art. 51: impuesto adicional de fomento educativo y asistencia social, tasa 15%, aplicado sobre varios conceptos, entre ellos (inciso e) el impuesto sobre remuneraciones al trabajo personal.
+- Art. 53: impuesto adicional para fomentar el turismo, 15%, sobre los conceptos del art. 51.
+- Art. 54: impuesto adicional de recuperacion ecologica y forestal, 15%, sobre los conceptos del art. 51.
+- Art. 55: los adicionales se pagan en el mismo acto que la contribucion base. Art. 56: si hay retencion de la base, tambien se retienen los adicionales.
+- El art. 52 (caminos, 15%) se aplica solo a derechos, no al ISN.
+- Tasa efectiva: 3% x (1 + 0.15 + 0.15 + 0.15) = 3% x 1.45 = 4.35% de la base. Este calculo es mio, a partir de que los tres adicionales (51, 53 y 54) tienen como base el impuesto sobre remuneraciones; recomiendo confirmarlo con la Secretaria de Finanzas (formato de declaracion) antes de sembrarlo. La Ley de Ingresos 2026 art. 17 menciona los adicionales de los arts. 51, 53 y 54 al hablar de la aportacion estatal a municipios, lo que es consistente con que existan.
+- Estimulos (Ley de Ingresos 2026, art. 6): la Secretaria de Finanzas puede autorizar, conforme a la Ley de Fomento Economico 487: estimulo de 25% (10 a 15 empleos nuevos), 35% (16 a 75), 45% (76 a 100), 55% (101 a 125), 65% (126 a 250) y hasta 80% (mas de 250) del impuesto para empresas nuevas o ampliadas; 15% para micro y pequenas que generen 5 a 9 empleos; 5% adicional si el 40% de la plantilla es mujeres o 5% son personas con discapacidad, adultos mayores o primer empleo. Son discrecionales y por empleos nuevos; no cambian la tasa general.
+
+RESUMEN (en mis palabras):
+- Objeto (art. 38): pagos en efectivo o especie por trabajo personal subordinado prestado en el estado, aunque quien paga resida fuera; incluye la Zona Federal Maritimo Terrestre del litoral.
+- Base (art. 39): total de remuneraciones, que incluye todas las prestaciones ordinarias o extraordinarias, con mencion expresa de sueldos y salarios, PRIMAS VACACIONALES, viaticos, comisiones, gratificaciones, tiempo extra, premios por asistencia, bonos, estimulos, compensaciones, AGUINALDO, DESPENSAS en efectivo y especie, honorarios asimilados y pagos a administradores y consejeros. Se restan las erogaciones exentas del art. 50. Se causa al hacer la erogacion.
+- Exentas (art. 50, deben estar en la contabilidad): PTU (a); indemnizaciones por riesgos profesionales; pensiones y jubilaciones; indemnizaciones por rescision o terminacion laboral (d); gastos funerarios; becas; servicios de transporte; pagos a discapacitados; primas de seguros de gastos medicos o vida; aportaciones SAR y cajas o FONDOS DE AHORRO cuando cumplan requisitos de deducibilidad del ISR (j); herramientas; aportaciones INFONAVIT; cuotas IMSS/ISSSTE; intereses por creditos al personal; pagos a ascendientes/descendientes con salario menor a 1 UMA mensual de contribuyentes RIF. Fr. II: personas fisicas agricolas, ganaderas, silvicolas y de pesca con ingresos menores a 20 UMA anuales.
+- Por tanto: aguinaldo incluido; prima vacacional incluida; despensa incluida (sin tope en el texto); fondo de ahorro excluido si cumple requisitos de la LISR; PTU excluida; indemnizaciones por terminacion excluidas.
+- Pago (art. 45 fr. IV): declaracion mensual a mas tardar el dia 17 del mes siguiente.
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (no encontre iniciativa o decreto 2027 en fuente oficial; la Ley de Ingresos 2027 aun no esta publicada al 2026-11-03).

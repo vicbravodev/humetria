@@ -1,0 +1,53 @@
+ESTADO: Puebla
+IMPUESTO: Impuesto Sobre Erogaciones por Remuneraciones al Trabajo Personal (ISERTP)
+LEYES Y ARTÍCULOS:
+  - Ley de Hacienda para el Estado Libre y Soberano de Puebla (exp. POE 6-dic-2019): sujetos Art. 11, objeto Art. 12, base Art. 13,
+    Art. 14 (la tasa se fija en la Ley de Ingresos del ejercicio; lista de conceptos que no se toman en cuenta), Art. 17 (no causan).
+  - Ley de Ingresos del Estado de Puebla para el Ejercicio Fiscal 2026: TASA en el Art. 16; estímulos Arts. 120 y 121; Transitorio Sexto.
+URLS OFICIALES (Orden Jurídico Poblano, Gobierno del Estado):
+  Ley de Hacienda: https://ojp.puebla.gob.mx/legislacion-del-estado/item/download/7789_d874b176dd9ccf4b0a3233bb2f183cd4
+    (ficha: https://ojp.puebla.gob.mx/legislacion-del-estado/item/145-ley-de-hacienda-para-el-estado-libre-y-soberano-de-puebla )
+  Ley de Ingresos 2026: https://ojp.puebla.gob.mx/media/k2/attachments/Ley_de_Ingresos_del_Estado_de_Puebla,_para_el_Ejercicio_Fiscal_2026_EV_27112025.pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA: Ley de Hacienda, 5-ago-2024 (la ficha del OJP al 2026-11-03 sigue ofreciendo el archivo "T5_05082024");
+  la reforma no tocó el capítulo de este impuesto (fue hospedaje, Arts. 22-30). Ley de Ingresos 2026: publicada 27-nov-2025.
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO en fuente oficial (texto de la Ley de Ingresos 2026 y de la Ley de Hacienda).
+
+RESUMEN
+- Tasa 2026: 3% (Ley de Ingresos 2026, Art. 16). Cita: "la tasa del. 3%" (el texto trae el punto tal cual).
+  La Ley de Hacienda no fija la tasa, la remite a la Ley de Ingresos de cada año; por eso hay que revisar la de cada ejercicio.
+- Desde cuándo: este documento solo prueba que rige en 2026 (ejercicio fiscal 2026, publicada 27-nov-2025). No se verificó en
+  fuente oficial el historial (otras fuentes dicen 3% desde 2019); no se afirma aquí.
+- Estímulos 2026 (Ley de Ingresos, Art. 120), sobre el impuesto que causen las remuneraciones de las personas indicadas:
+  * hasta 4 trabajadores: reducción de 25%;
+  * personas con discapacidad: 100%;
+  * trabajadores de 60 años en adelante: 100%;
+  * nuevas contrataciones de personas sin registro previo en el IMSS para puestos de nueva creación: 100%.
+  Art. 121: pago anual en una sola exhibición (a más tardar el 17 de febrero) con reducción de 4% sobre el monto estimado.
+  Los estímulos se aplican con las Reglas de Carácter General (solicitud por escrito, estar al corriente, etc.).
+  Transitorio Sexto: en 2026 no se paga por nómina de entes públicos pagada con Fondos de Aportaciones Federales (Art. 25, fr. I, II y VI LCF)
+  cuando el PEF no prevea recursos para ese impuesto. Transitorio Octavo: reducciones de adeudos anteriores (no afecta la tasa).
+- Sujetos (Ley de Hacienda Art. 11): personas físicas, morales y unidades económicas que hacen las erogaciones.
+- Objeto (Art. 12): erogaciones en el territorio de Puebla por pagos y remuneraciones por servicios subordinados (cuota diaria,
+  gratificaciones, percepciones, alimentación, habitación, primas, comisiones, prestaciones en especie y cualquier otra
+  contraprestación en efectivo análoga); rendimientos de cooperativistas, anticipos de socios, pagos a consejeros y
+  administradores, honorarios sujetos a horario y honorarios asimilados a salarios por opción.
+- Base (Art. 13): monto total de las erogaciones del Art. 12.
+- Tratamiento de conceptos:
+  * Aguinaldo: no se nombra; entra por "gratificaciones / percepciones / primas" del Art. 12 y no figura entre las exclusiones de los
+    Arts. 14 y 17. Interpretación: gravado; por verificar criterio de la autoridad estatal.
+  * Prima vacacional: no se nombra; cae en "primas" (Art. 12 inc. f), sin exclusión.
+  * Despensa: Art. 14 fr. VIII solo excluye la despensa entregada por monedero electrónico autorizado por el SAT y hasta 40%
+    del salario mínimo general vigente en el estado; el excedente se grava y la despensa en efectivo se grava completa.
+    También deben cumplirse los requisitos de la LISR y estar registrada en contabilidad.
+  * Ahorro / fondo de ahorro: Art. 14 fr. II excluye "el ahorro" en términos de la LISR.
+  * PTU: excluida (Art. 14 fr. IV, junto con aportaciones al INFONAVIT).
+  * Indemnizaciones: no causan las de riesgos o enfermedades profesionales (Art. 17 fr. I) y las de finiquito, rescisión o
+    terminación anticipada de la relación laboral conforme a la ley o contratos (Art. 17 fr. VIII).
+  * Otras exclusiones: herramientas de trabajo, aportaciones de seguro de retiro, alimentación y habitación (con requisitos
+    de onerosidad y tope de 40% del sueldo), premios de asistencia y puntualidad hasta 10% del sueldo, aportaciones a planes de
+    pensiones (Art. 14); jubilaciones, gastos funerarios, domésticos, y nóminas de instituciones empresariales, partidos,
+    beneficencia gratuita y asociaciones religiosas (Art. 17).
+  * Condición general del Art. 14: las exclusiones solo valen si están registradas en la contabilidad del contribuyente.
+- Cambio publicado para 2027: sin cambio publicado a la fecha (no se encontró Ley de Ingresos 2027 ni decreto publicado al 2026-11-03).

@@ -1,0 +1,28 @@
+ESTADO: Hidalgo
+IMPUESTO: Impuesto Sobre Nominas
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (compilado del Congreso del Estado)
+
+FUENTES OFICIALES (leidas en PDF):
+1) Ley de Hacienda del Estado de Hidalgo, compilado del H. Congreso (Instituto de Estudios Legislativos); encabezado "ULTIMA REFORMA PUBLICADA EN EL ALCANCE UNO DEL PERIODICO OFICIAL: 31 DE DICIEMBRE DE 2025"
+   https://www.congreso-hidalgo.gob.mx/biblioteca_legislativa/leyes_cintillo/Ley%20de%20Hacienda%20del%20Estado%20de%20Hidalgo.pdf
+2) Ley de Ingresos del Estado de Hidalgo para el Ejercicio Fiscal 2026 (compilado del Congreso; el encabezado de pagina dice "2025" por error, el titulo del texto dice 2026):
+   https://www.congreso-hidalgo.gob.mx/biblioteca_legislativa/leyes_cintillo/Ley%20de%20Ingresos%20del%20Estado%20Libre%20y%20Soberano%20de%20Hidalgo%20para%20el%20Ejercicio%20Fiscal%202026.pdf
+
+ULTIMA REFORMA VISTA: P.O. Alcance Uno del 31-dic-2025 (reformo, entre otros, el parrafo del art. 22 sobre entes publicos y el inciso II.b del art. 27; no cambio el art. 24). Reformas previas al capitulo: P.O. 31-dic-2021 y 29-dic-2023.
+
+LEY Y ARTICULOS: Ley de Hacienda del Estado de Hidalgo, Titulo Segundo, Cap. Tercero "Del Impuesto Sobre Nominas", arts. 21 a 27. Objeto 21; sujeto 22; base 23; TASA 24; pago 25; excepciones 27.
+
+TASA 2026: 3% (art. 24: "se pagara aplicando a la base ... la tasa del 3%").
+- Tasa unica, sin diferenciada ni sobretasa en el texto; la Ley de Ingresos 2026 solo estima la recaudacion (2,810,101,443 pesos) y no menciona estimulos del ISN en lo que busque (grep de "nomina", "estimulo", "subsidio").
+- Desde cuando: no verifique el ano en que se fijo el 3%; esta vigente en el texto con reforma al 31-dic-2025, sin cambio en el art. 24 segun las notas de reforma.
+
+RESUMEN (en mis palabras):
+- Objeto (art. 21): erogaciones en efectivo o especie para remunerar trabajo personal subordinado prestado en el estado, sin importar su nombre; incluye pagos a obreros, empleados, asimilados a salarios, directivos, consejeros y comisarios, y rendimientos o anticipos de cooperativas. Se consideran todas las contraprestaciones ordinarias o extraordinarias, entre ellas sueldos y salarios, tiempo extra, premios, primas, bonos, estimulos, compensaciones, gratificaciones y AGUINALDOS (fr. V), primas de antiguedad y ciertas comisiones.
+- Sujeto (art. 22): quien realiza los pagos; retencion a quien contrate servicios especializados de empresas de fuera del estado que proporcionen trabajadores; la Federacion, Estado, municipios y entes publicos pagan.
+- Base (art. 23): monto total de los pagos del mes por remuneraciones al trabajo personal subordinado.
+- Pago (art. 25): mensual, a mas tardar el dia 17 del mes siguiente; declaracion obligatoria aun sin base.
+- No causan impuesto (art. 27, fr. I): indemnizaciones por rescision o terminacion laboral; PTU; indemnizaciones por riesgos profesionales; pensiones y jubilaciones; gastos funerarios; aportaciones a seguridad social y fondos de retiro; pagos a trabajadores domesticos; FONDO DE AHORRO con deposito igual de trabajador y empresa (el excedente del patron si paga); DESPENSAS, alimentacion y transporte en conjunto hasta 40% del total del salario y otorgados en general a todos los trabajadores. Fr. II: no lucrativas (asistencia social, etc.), asociaciones religiosas, uniones agricolas, ejidos, camaras, sindicatos, asociaciones patronales y colegios de profesionistas.
+- Por tanto: aguinaldo incluido (art. 21 V); PTU excluida (27 I b); indemnizaciones excluidas (27 I a); fondo de ahorro excluido solo con deposito igual (27 I h), el excedente integra la base; despensa excluida hasta el limite conjunto de 40% del salario (27 I i). Prima vacacional: no se nombra expresamente; entra por el concepto amplio de "todas las contraprestaciones" (art. 21), lectura mia.
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (no encontre iniciativa o decreto 2027 en fuente oficial; la Ley de Ingresos 2027 aun no esta publicada al 2026-11-03).

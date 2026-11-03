@@ -1,0 +1,12 @@
+DECRETO de desindexación del salario mínimo. DOF 27/01/2016. https://dof.gob.mx/nota_detalle_popup.php?codigo=5423663
+Consultado: 2026-11-03.
+
+- Reforma el art. 26 B (el INEGI calcula la UMA "como unidad de cuenta, índice, base, medida o referencia" para las obligaciones
+  de las leyes federales y locales) y el art. 123 A fr. VI (el salario mínimo "no podrá ser utilizado como índice, unidad, base,
+  medida o referencia para fines ajenos a su naturaleza").
+- Transitorio Tercero (resumen): desde su entrada en vigor, todas las menciones al salario mínimo como unidad de cuenta, índice,
+  base, medida o referencia en leyes federales y locales se entienden referidas a la UMA.
+- Transitorio Cuarto: el Congreso y las legislaturas debían adecuar sus leyes en un año; la LSS conserva en su texto "salario
+  mínimo general diario para el Distrito Federal" (arts. 27 fr. VI, 28, 106) y por este transitorio se leen como UMA.
+Confirmación del IMSS: el Informe al Ejecutivo Federal 2022-2023, Anexo A, dice que desde 2017 la cuota fija y el excedente del
+seguro de enfermedades y maternidad, y el límite superior del SBC "considera[n] el valor de la UMA" (ver imss-informe-anexo-a.txt).

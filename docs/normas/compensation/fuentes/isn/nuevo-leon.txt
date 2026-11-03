@@ -1,0 +1,46 @@
+ESTADO: Nuevo León
+IMPUESTO: Impuesto sobre Nóminas
+LEY: Ley de Hacienda del Estado de Nuevo León, Título correspondiente al Impuesto Sobre Nóminas
+ARTÍCULOS: objeto Arts. 154 y 154 Bis; sujetos Art. 155; base Art. 156; TASA Art. 157; pago Art. 158; exentos Art. 160
+URL OFICIAL (texto de la ley en el portal del Congreso del Estado):
+  https://www.hcnl.gob.mx/trabajo_legislativo/leyes/pdf/LEY%20DE%20HACIENDA%20DEL%20ESTADO%20DE%20NUEVO%20LEON.pdf
+  (página índice: https://www.hcnl.gob.mx/trabajo_legislativo/leyes/leyes/ley_de_hacienda_del_estado_de_nuevo_leon/ ; indica "Última Reforma: 25 de Enero 2023")
+Soporte del rechazo del alza 2026 (Congreso de NL, Comisión de Presupuesto):
+  Dictamen Exp. 20754/LXXVII (16-dic-2025): https://www.hcnl.gob.mx/trabajo_legislativo/pdf/lxxvii/P_20754%20-%20Ley%20de%20Hacienda%20del%20Estado.pdf
+  Dictamen Ley de Ingresos 2026 Exp. 20752/LXXVII: https://www.hcnl.gob.mx/trabajo_legislativo/pdf/lxxvii/AP_20752%20Ley%20de%20Ingresos%20del%20Estado%202026.pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA EN EL TEXTO: P.O. núm. 14 del 25-ene-2023 (el Art. 157 en particular: "REFORMADO, P.O. 29 de diciembre de 2017").
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO 3% en fuente oficial, con una salvedad: no se localizó el Periódico Oficial de
+diciembre 2025 ni la votación del Pleno; la conclusión de que el alza a 4% NO se aprobó se apoya en (1) el texto
+consolidado del Congreso que sigue con 3% y última reforma 25-ene-2023, (2) el dictamen de la Comisión de Presupuesto
+del 16-dic-2025 con acuerdo "NO ES DE APROBARSE" la iniciativa que reformaba el Art. 157, y (3) el dictamen de la
+Ley de Ingresos 2026, que ajusta los ingresos para no contar el aumento (recorta unos 6 mil millones de pesos
+proyectados). Conviene recheck en el P.O. de NL si se necesita certeza absoluta.
+
+RESUMEN
+- Tasa: Art. 157 fija 3% sobre la base del Art. 156. Cita: "se causará a una tasa del 3%".
+  Tasa única; sin diferenciada ni reducción general para micro/pequeñas en el texto.
+- Propuesta 2026 (no vigente): el Ejecutivo presentó el 24-nov-2025 un paquete que subía el Art. 157 de 3% a 4%
+  (con acreditamiento del 100% del incremento por aportaciones a seguridad y movilidad, según el dictamen de la Ley de
+  Ingresos). El dictamen de la Comisión de Presupuesto del 16-dic-2025 propuso no aprobarla por el efecto en la inversión
+  y el empleo formal. Si el Pleno la hubiera aprobado, habría que revisar un decreto en el P.O.; no se encontró.
+- Objeto (Art. 154): pagos en efectivo, servicios o especie por remuneraciones al trabajo personal subordinado en el
+  estado; incluye honorarios a personas físicas que prestan servicios preponderantemente a un prestatario sin IVA; el
+  Art. 154 Bis (adic. 23-dic-2021) incluye todo lo asimilado a salarios según el Art. 94 de la LISR.
+- Sujetos (Art. 155): personas físicas, morales o unidades económicas que hacen los pagos; también Federación, Estado,
+  municipios y entidades públicas.
+- Base (Art. 156): monto total de los pagos del Art. 154.
+- Pago (Art. 158): a más tardar el día 17 del mes siguiente.
+- Tratamiento de conceptos:
+  * Aguinaldo: incluido expresamente en el Art. 154 (lista de "primas, aguinaldo, tiempo extra...").
+  * Prima vacacional: no se nombra; cae en "primas ... y otros conceptos de naturaleza semejante" (Art. 154), sin exención en el Art. 160.
+  * Despensas, alimentación y fondo de ahorro: el Art. 154 los lista como remuneración, pero el Art. 160 fr. I inciso g los EXENTA.
+    Se aplica la exención específica. Sin tope ni condición en el texto.
+  * PTU: exenta (Art. 160 fr. I inc. a).
+  * Indemnizaciones: exentas por riesgos o enfermedades profesionales (inc. b) y por rescisión o terminación (inc. d).
+  * Otras exentas: pensiones y jubilaciones, gastos funerarios, viáticos comprobados, remuneraciones a personas con
+    discapacidad; erogaciones de beneficencia, cámaras, sindicatos, colegios, instituciones educativas con RVOE y asociaciones religiosas.
+- Estímulo: Art. 159 Bis, acreditamiento del 85% de apoyos a obras literarias o artísticas de autores nuevoleoneses
+  (tope anual de $15 millones del total de estímulos; no cambia la tasa general).
+- Cambio publicado para 2027: sin cambio publicado a la fecha.
