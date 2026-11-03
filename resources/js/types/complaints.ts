@@ -121,3 +121,33 @@ export type CaseDetail = {
     onHold: boolean;
     resolution: string | null;
 };
+
+/** One line of the thread of a case, the newest first. */
+export type CaseEntryRow = {
+    id: string;
+    kind:
+        | 'reporter_message'
+        | 'handler_message'
+        | 'internal_note'
+        | 'status_change'
+        | 'assignment_change'
+        | 'recusal';
+    /** Who: a handler by name, «La persona» for the one who presented it, nobody for the system. */
+    author: string | null;
+    /** The day, Y-m-d; the person's messages carry no hour. */
+    when: string | null;
+    time: string | null;
+    text: string | null;
+};
+
+/** What the handler may do with the case as it stands. */
+export type CaseCan = {
+    acknowledge: boolean;
+    review: boolean;
+    write: boolean;
+    close: boolean;
+    reopen: boolean;
+};
+
+/** The ways a handler closes a case. «Retirada por la persona» is the person's. */
+export type CaseResolutionOption = { value: string; label: string };

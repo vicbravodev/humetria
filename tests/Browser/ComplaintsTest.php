@@ -345,3 +345,56 @@ it('opens a case from the inbox', function (): void {
         ->assertSee('Lo que cuenta la persona')
         ->assertNoJavaScriptErrors();
 });
+
+it('works a case from the page: acknowledges it, writes to the person, takes a note and closes it', function (): void {
+    [$url, $case] = handlerWithCases();
+
+    visit("{$url}/complaints/cases/{$case->id}")
+        ->press('Acusar recibo')
+        ->assertSee('Acuse enviado.')
+        ->assertSee('Acusamos recibo de su queja')
+        ->fill('#case-message', 'Gracias por avisarnos, revisaremos lo que cuenta.')
+        ->press('Enviar a la persona')
+        ->assertSee('Mensaje enviado a la persona.')
+        ->fill('#case-note', 'Hablé con el jefe de turno.')
+        ->press('Guardar nota')
+        ->assertSee('Nota interna (la persona no la ve)')
+        ->press('Pasar a revisión')
+        ->assertSee('El caso pasó a revisión.')
+        ->click('Cerrar el caso')
+        ->click('Se tomaron medidas')
+        ->click('[role="dialog"] form button')
+        ->assertSee('Caso cerrado.')
+        ->assertSee('Abrir de nuevo')
+        ->assertNoJavaScriptErrors();
+
+    expect($case->refresh()->status->value)->toBe('closed');
+});
+
+it('shows a worked case with its thread, in light, dark and on a phone', function (bool $dark, bool $mobile): void {
+    [$url, $case] = handlerWithCases();
+    $owner = App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $case->tenant_id)->firstOrFail()->user_id;
+    $position = 0;
+    foreach ([['handler_message', 'Acusamos recibo de su queja.'], ['internal_note', 'Hablé con el jefe de turno.']] as [$kind, $text]) {
+        App\Modules\Complaints\Models\ComplaintEntry::factory()->create(['tenant_id' => $case->tenant_id, 'complaint_id' => $case->id, 'position' => ++$position, 'kind' => $kind, 'body' => $text, 'author_id' => $owner]);
+    }
+    App\Modules\Complaints\Models\ComplaintEntry::factory()->fromReporter('2026-10-02')->create(['tenant_id' => $case->tenant_id, 'complaint_id' => $case->id, 'position' => 3, 'body' => 'Sigue pasando esta semana.']);
+
+    visitPage('complaints/show', "{$url}/complaints/cases/{$case->id}", $dark, $mobile)
+        ->assertSee('Sigue pasando esta semana.')
+        ->assertSee('Mensaje de la persona')
+        ->assertSee('Nota interna (la persona no la ve)')
+        ->assertSee('Escribir a la persona');
+})->with($looks);
+
+it('steps aside from a case, which then no longer opens', function (): void {
+    [$url, $case] = handlerWithCases();
+
+    visit("{$url}/complaints/cases/{$case->id}")
+        ->click('Excusarme')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Te excusaste del caso.')
+        ->assertNoJavaScriptErrors();
+
+    visit("{$url}/complaints/cases/{$case->id}")->assertSee('404');
+});

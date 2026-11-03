@@ -14,6 +14,16 @@ enum ComplaintResolution: string
     case Withdrawn = 'withdrawn';
     case DiscardedSpam = 'discarded_spam';
 
+    /**
+     * What a handler may close a case with: everything but the withdrawal, which is the person's to give.
+     *
+     * @return list<self>
+     */
+    public static function handlerChoices(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $resolution): bool => $resolution !== self::Withdrawn));
+    }
+
     public function label(): string
     {
         return match ($this) {

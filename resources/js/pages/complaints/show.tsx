@@ -1,6 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import CaseAccess from '@/components/complaints/case-access';
+import CaseActions from '@/components/complaints/case-actions';
+import CaseComposer from '@/components/complaints/case-composer';
+import CaseThread from '@/components/complaints/case-thread';
 import CaseFacts from '@/components/complaints/case-facts';
 import CaseIdentity from '@/components/complaints/case-identity';
 import CaseStateBadge from '@/components/complaints/case-state-badge';
@@ -10,14 +13,29 @@ import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/complaints';
-import type { CaseDetail } from '@/types';
+import type { Option } from '@/lib/option-search';
+import type {
+    CaseCan,
+    CaseDetail,
+    CaseEntryRow,
+    CaseResolutionOption,
+    Paginated,
+} from '@/types';
 
 export default function Case({
     case: detail,
     access,
+    entries,
+    can,
+    candidates,
+    resolutions,
 }: {
     case: CaseDetail;
     access: string[];
+    entries: Paginated<CaseEntryRow>;
+    can: CaseCan;
+    candidates: Option[];
+    resolutions: CaseResolutionOption[];
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -44,9 +62,18 @@ export default function Case({
                         </Link>
                     </Button>
                 </PageHeader>
+                <CaseActions
+                    caseId={detail.id}
+                    can={can}
+                    onHold={detail.onHold}
+                    candidates={candidates}
+                    resolutions={resolutions}
+                />
                 <CaseFacts detail={detail} />
                 <CaseWords detail={detail} />
                 <CaseIdentity detail={detail} />
+                {can.write && <CaseComposer caseId={detail.id} />}
+                <CaseThread entries={entries} />
                 <CaseAccess names={access} />
             </div>
         </>

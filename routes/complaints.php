@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Complaints\Http\Controllers\CaseActionController;
 use App\Modules\Complaints\Http\Controllers\CenterOptionsController;
 use App\Modules\Complaints\Http\Controllers\ChannelController;
 use App\Modules\Complaints\Http\Controllers\ComplaintController;
@@ -32,3 +33,15 @@ Route::post('admin/{tenant:slug}/complaints/unassigned/route', [UnassignedContro
 Route::get('admin/{tenant:slug}/complaints', [ComplaintController::class, 'index'])->where('tenant', $notReserved)->name('tenant.complaints.index');
 Route::get('admin/{tenant:slug}/complaints/cases/{complaint}', [ComplaintController::class, 'show'])->where('tenant', $notReserved)->name('tenant.complaints.cases.show');
 Route::get('admin/{tenant:slug}/complaints/centers/options', CenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.complaints.centers.options');
+
+// What a handler does with a case they have; each finds the case among the assigned ones and answers 404 otherwise.
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/acknowledge', [CaseActionController::class, 'acknowledge'])->where('tenant', $notReserved)->name('tenant.complaints.cases.acknowledge');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/review', [CaseActionController::class, 'review'])->where('tenant', $notReserved)->name('tenant.complaints.cases.review');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/messages', [CaseActionController::class, 'message'])->where('tenant', $notReserved)->name('tenant.complaints.cases.messages.store');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/notes', [CaseActionController::class, 'note'])->where('tenant', $notReserved)->name('tenant.complaints.cases.notes.store');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/share', [CaseActionController::class, 'share'])->where('tenant', $notReserved)->name('tenant.complaints.cases.share');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/recuse', [CaseActionController::class, 'recuse'])->where('tenant', $notReserved)->name('tenant.complaints.cases.recuse');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/hold', [CaseActionController::class, 'hold'])->where('tenant', $notReserved)->name('tenant.complaints.cases.hold');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/close', [CaseActionController::class, 'close'])->where('tenant', $notReserved)->name('tenant.complaints.cases.close');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/reopen', [CaseActionController::class, 'reopen'])->where('tenant', $notReserved)->name('tenant.complaints.cases.reopen');
+Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/export', [CaseActionController::class, 'export'])->where('tenant', $notReserved)->name('tenant.complaints.cases.export');

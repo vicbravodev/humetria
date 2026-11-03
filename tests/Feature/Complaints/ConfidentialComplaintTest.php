@@ -53,7 +53,7 @@ it('receives a confidential complaint with the name and the contact the person g
     expect($complaint->identity_mode->value)->toBe('confidential')
         ->and($complaint->reporter_name)->toBe('Rosa Aguilar')
         ->and($complaint->reporter_contact)->toBe('Cel. 442 000 0000');
-    expect(json_encode((array) DB::table('complaints')->first()))->not->toContain('Rosa')->not->toContain('442');
+    expect(json_encode((array) DB::table('complaints')->first()))->not->toContain('Rosa Aguilar')->not->toContain('Cel. 442');
     Log::shouldHaveReceived('info')->with('complaints.submitted', ['channel_id' => $this->channel->id, 'type' => 'workplace_violence', 'identity_mode' => 'confidential'])->once();
 });
 

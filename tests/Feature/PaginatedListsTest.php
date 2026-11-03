@@ -163,6 +163,14 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.complaints.index', $tenant);
     }, ['cases']],
+    'a complaint\'s thread' => ['complaints/show', function () {
+        [$tenant] = listsCompany();
+        $channel = App\Modules\Complaints\Models\ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+        $complaint = App\Modules\Complaints\Models\Complaint::factory()->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
+        App\Modules\Complaints\Models\ComplaintAssignment::factory()->create(['tenant_id' => $tenant->id, 'complaint_id' => $complaint->id, 'user_id' => auth()->id()]);
+
+        return route('tenant.complaints.cases.show', [$tenant, $complaint->id]);
+    }, ['entries']],
     'notices a person sent' => ['telework/portal-notices', function () {
         [$tenant] = listsCompany();
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
