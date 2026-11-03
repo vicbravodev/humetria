@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Interventions\Actions\CreateProgram;
+use App\Modules\Interventions\Actions\SaveProgramResponsible;
+use App\Modules\Interventions\Http\Requests\ResponsibleRequest;
 use App\Modules\Interventions\Models\Program;
 use App\Modules\Interventions\Support\ProgramPages;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +34,10 @@ final class ProgramController extends Controller
         $program = Program::query()->where('campaign_id', $found->id)->first();
         $audit->handle('interventions.program_viewed', metadata: ['campaign_id' => $found->id]);
 
-        return Inertia::render('interventions/show', $pages->show($found, $program, $request->user()?->can('manage-interventions') ?? false));
+        $item = $request->query('item');
+        $status = $request->query('status');
+
+        return Inertia::render('interventions/show', $pages->show($found, $program, $request->user()?->can('manage-interventions') ?? false, is_string($item) ? $item : null, is_string($status) ? $status : null));
     }
 
     public function store(Request $request, mixed $tenant, string $campaign, CreateProgram $create): RedirectResponse
@@ -45,6 +50,15 @@ final class ProgramController extends Controller
             : ['type' => 'success', 'message' => 'Programa creado. Completa las acciones de cada fila.']);
 
         return redirect()->route('tenant.campaigns.program', [$tenant, $found->id]);
+    }
+
+    public function responsible(ResponsibleRequest $request, mixed $tenant, string $campaign, SaveProgramResponsible $save): RedirectResponse
+    {
+        $program = Program::query()->where('campaign_id', $campaign)->firstOrFail();
+        $save->handle($program->id, $request->userId(), $request->name());
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Responsable guardado.']);
+
+        return redirect()->route('tenant.campaigns.program', [$tenant, $campaign]);
     }
 
     /** Another company's evaluation is not found, the same 404 as one that does not exist. */

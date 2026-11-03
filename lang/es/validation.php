@@ -201,6 +201,13 @@ return [
 
     'attributes' => [
         'title' => 'título',
+        'level' => 'nivel',
+        'subjects' => 'a quién va dirigida',
+        'area_ids' => 'áreas',
+        'area_ids.*' => 'área',
+        'starts_on' => 'fecha de inicio',
+        'responsible_user_id' => 'responsable',
+        'professional' => 'profesional',
         'document_on' => 'fecha del documento',
         'incisos' => 'incisos',
         'incisos.*' => 'inciso',

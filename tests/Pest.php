@@ -446,6 +446,26 @@ function closedEvaluationWith(Tenant $tenant, array $answers, int $count = 5, st
 }
 
 /**
+ * A closed evaluation of `$tenant` whose Guía II was answered `$value` by as many anonymous questionnaires as each area
+ * of `$sizes` says (area name => questionnaires).
+ *
+ * @param  array<string, int>  $sizes
+ * @return array{App\Modules\Campaigns\Models\Campaign, array<string, App\Modules\Organization\Models\Area>}
+ */
+function closedEvaluationInAreas(Tenant $tenant, array $sizes, string $value = 'always'): array
+{
+    $campaign = App\Modules\Campaigns\Models\Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-ii'], 'workers' => 30]);
+    $areas = [];
+
+    foreach ($sizes as $name => $count) {
+        $areas[$name] = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id, 'name' => $name]);
+        App\Modules\Responses\Models\AnonymousResponse::factory()->count($count)->create(['campaign_id' => $campaign->id, 'area_id' => $areas[$name]->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035Answers('nom035.guide-ii', $value)]);
+    }
+
+    return [$campaign, $areas];
+}
+
+/**
  * A complete Guía I with "yes" on the items given and "no" on the rest. With no "yes" in section I (items 1 to 6) it
  * ends there, as GR.I a) says.
  *
