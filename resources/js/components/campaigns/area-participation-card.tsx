@@ -11,10 +11,13 @@ import type { AreaParticipation } from '@/types';
  */
 export default function AreaParticipationCard({
     route,
+    guide,
     areas,
 }: {
     /** The company's slug and the campaign's id. */
     route: [string, string];
+    /** The guide that measures the evaluation: who answered is counted by it. */
+    guide: string | null;
     areas: AreaParticipation[];
 }) {
     const lagging = laggingArea(areas);
@@ -42,7 +45,7 @@ export default function AreaParticipationCard({
                         campaignId={route[1]}
                         filters={{
                             status: 'pending',
-                            guide: null,
+                            guide,
                             area: { value: lagging.id, label: lagging.name },
                             q: '',
                         }}

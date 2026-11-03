@@ -273,6 +273,10 @@ enmendaduras» y «comprobar que la cantidad de cuestionarios entregados corresp
 respondidos, y que a su vez corresponda con el tamaño mínimo de la muestra». El avance de la campaña muestra esa
 comparación y avisa mientras la muestra no se alcance.
 
+**Quién «contestó».** Contestó quien terminó la guía que mide la evaluación (la II o la III; la I si es la única).
+El medidor, las pestañas por estado, la participación por área y las respuestas por día cuentan lo mismo y dan el
+mismo número. La Guía I se sigue con el filtro de guía; «Todas las guías» pide a quien terminó cada una.
+
 ### C-19. Orden de las guías · Interpretación
 
 **Qué hacemos.** La encuesta ofrece primero la Guía I y después la Guía II o III, pero cada guía se puede contestar

@@ -198,8 +198,8 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('43 pendientes')
         ->assertSee('Participación por área')
         ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', 'Pendientes')
-        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '60')
-        ->assertSee('Página 1 de 3');
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '43')
+        ->assertSee('Página 1 de 2');
 })->with($looks);
 
 it('narrows who answered a guide and searches them by name', function (): void {
@@ -241,7 +241,7 @@ it('shows how the sending of the links goes until it ends, and offers to resend 
 
     foreach (['sent', 'sent', 'failed', 'queued'] as $status) {
         $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_batch' => $campaign->invitation_batch, 'invitation_status' => $status]);
-        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
     }
 
     $page = visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
@@ -262,7 +262,7 @@ it('sends the link again only to whom it failed', function (): void {
 
     foreach (['sent', 'failed', 'failed'] as $status) {
         $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_status' => $status]);
-        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
     }
 
     visit("/admin/acme/campaigns/{$campaign->id}")
@@ -288,10 +288,10 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
     staffOf($tenant, $plant, female: 1);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Recordar a 60')
+        ->click('Recordar a 53')
         ->assertSee('Es el mismo de antes: el que ya tienen sigue sirviendo.')
         ->click('Reenviar enlaces')
-        ->assertSee('Enlace reenviado a 60 personas.')
+        ->assertSee('Enlace reenviado a 53 personas.')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
         // Nothing goes out before confirming: it says who gets a link.
@@ -306,7 +306,7 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
         ->assertSeeIn('[role=dialog]', 'No falta nadie por invitar.')
         ->assertScript('document.querySelector("[role=dialog] button[type=submit]").disabled', true)
         ->click('[role=dialog] button:has-text("Cancelar")')
-        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '61')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '53')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Sortear reemplazos")')
         ->assertSee('del mismo género de quienes no contestarán')

@@ -306,7 +306,7 @@ it('lists who still has a guide pending, by name, with where each stands, only t
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('filters', ['status' => 'pending', 'guide' => null, 'area' => null, 'q' => ''])
+            ->where('filters', ['status' => 'pending', 'guide' => 'nom035.guide-ii', 'area' => null, 'q' => ''])
             ->where('people.total', 1)
             ->where('people.data', [[
                 'id' => $ana->id, 'name' => 'Ana López', 'area' => 'Producción', 'reachable' => true, 'inSample' => false,
@@ -324,12 +324,13 @@ it('lists who still has a guide pending, by name, with where each stands, only t
 
 it('narrows the people by where they stand, counting each standing', function (): void {
     $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
-    personIn($campaign, 'Pendiente', ['nom035.guide-i' => InstrumentStatus::Pending]);
-    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '5512345678']);
+    $waiting = ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending];
+    personIn($campaign, 'Pendiente', $waiting);
+    personIn($campaign, 'Sin correo', $waiting, ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '5512345678']);
     personIn($campaign, 'Contestó', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
-    personIn($campaign, 'Falló', ['nom035.guide-i' => InstrumentStatus::Pending], ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
-    personIn($campaign, 'En cola', ['nom035.guide-i' => InstrumentStatus::Pending], ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Queued, 'invited_at' => null]);
+    personIn($campaign, 'Falló', $waiting, ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
+    personIn($campaign, 'En cola', $waiting, ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Queued, 'invited_at' => null]);
 
     expect(peopleNames($this, $this->hr, $campaign, ['status' => 'unreachable']))->toBe(['Sin correo'])
         ->and(peopleNames($this, $this->hr, $campaign, ['status' => 'failed']))->toBe(['Falló'])
@@ -488,6 +489,48 @@ it('counts who answered in each area, of everyone still in the campaign, only to
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page->where('areas', null));
+});
+
+it('counts who answered the same way in the meter, the standing tabs, the areas and the days', function (): void {
+    Carbon::setTestNow('2026-10-29 18:00:00');
+    $campaign = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $campaign->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Active, 'launched_at' => '2026-10-27 15:00:00', 'closes_on' => '2026-10-31']);
+    $sales = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ventas']);
+    $ops = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Operaciones']);
+    // Guía II is the one that measures the evaluation: «Contestó» is having answered it, whatever happened with Guía I.
+    $onlyTwo = ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Completed];
+    $both = ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed];
+    $onlyOne = ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Pending];
+
+    foreach (['Ana', 'Beto', 'Ceci', 'Dora'] as $name) {
+        personIn($campaign, $name, $onlyTwo, employee: ['area_id' => $sales->id]);
+    }
+
+    personIn($campaign, 'Eva', $both, employee: ['area_id' => $sales->id]);
+    personIn($campaign, 'Fer', $onlyOne, employee: ['area_id' => $ops->id]);
+    personIn($campaign, 'Gus', $onlyTwo, employee: ['area_id' => $ops->id]);
+    personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled], employee: ['area_id' => $ops->id]);
+    $url = route('tenant.campaigns.show', [$this->tenant, $campaign->id]);
+
+    // Six people answered Guía II; only one of them also Guía I.
+    $this->actingAs($this->hr)->get($url)
+        ->assertInertia(function (Assert $page): void {
+            $props = $page->toArray()['props'];
+            $answered = collect($props['standings'])->firstWhere('value', 'answered')['count'];
+
+            expect($props['campaign']['progress']['completed'])->toBe(6)
+                ->and($answered)->toBe(6)
+                ->and(array_sum(array_column($props['areas'], 'answered')))->toBe(6)
+                ->and(array_sum(array_column($props['answersByDay']['days'], 'answers')))->toBe(6)
+                ->and($props['filters']['guide'])->toBe('nom035.guide-ii');
+        });
+
+    // Choosing «Todas las guías» asks for who answered every one of them.
+    $this->actingAs($this->hr)->get("{$url}?guide=all&status=answered")
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.guide', 'all')
+            ->where('standings.3.count', 1)
+            ->where('people.total', 1));
 });
 
 it('counts the people who finished each day from launch to the last day, once enough of them did', function (): void {
