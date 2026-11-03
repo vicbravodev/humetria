@@ -48,6 +48,8 @@ function publicRouteNames(): array
         'portal.seating.reports.store', // guest: la persona reporta un asiento dañado sin que se guarde quién; el token del portal es la credencial; throttled
         'portal.visits.confirm', // guest: la persona autoriza por escrito la visita a su lugar; el token del portal es la credencial; solo sus lugares; throttled
         'complaints.public.show', // guest: la persona presenta su queja sin cuenta, sin sesión y sin cookies; el código del canal es la credencial de la empresa; un código inválido o un canal sin activar dan el mismo 404; throttled por una huella de la dirección
+        'complaints.public.centers', // guest: busca los centros de trabajo de la empresa del código para el formulario; solo con el canal abierto; el código es la credencial de la empresa; throttled
+        'complaints.public.store', // guest: la persona envía su queja sin cuenta, sin sesión y sin cookies; boleto firmado, trampa para bots y tope por dirección y por día; el código es la credencial de la empresa
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
     ];
 }

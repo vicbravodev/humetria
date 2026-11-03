@@ -67,3 +67,18 @@ it('lists the 32 states by code for modules that take an address', function (): 
         ->and($states['QUE'])->toBe('Querétaro')
         ->and($states['CMX'])->toBe('Ciudad de México');
 });
+
+it('searches the company\'s work centers in use by name, without caring for case or accents, up to a limit', function (): void {
+    $tenant = Tenant::factory()->create();
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Monterrey']);
+    WorkCenter::factory()->for($tenant)->archived()->create(['name' => 'Planta Queretana']);
+    WorkCenter::factory()->for(Tenant::factory()->create())->create(['name' => 'Planta Querétaro Ajena']);
+    workIn($tenant);
+    $centers = resolve(WorkCenters::class);
+
+    expect(array_map(fn (WorkCenterSummary $center): string => $center->name, $centers->search('QUERETARO')))->toBe(['Planta Querétaro'])
+        ->and(array_map(fn (WorkCenterSummary $center): string => $center->name, $centers->search('')))->toBe(['Planta Monterrey', 'Planta Querétaro'])
+        ->and($centers->search('planta', 1))->toHaveCount(1)
+        ->and($centers->search('nada'))->toBe([]);
+});

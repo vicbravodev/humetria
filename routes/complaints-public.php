@@ -7,8 +7,12 @@ use App\Http\Middleware\EndRevokedImpersonation;
 use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\Complaints\Http\Controllers\PublicCentersController;
 use App\Modules\Complaints\Http\Controllers\PublicChannelController;
+use App\Modules\Complaints\Http\Controllers\PublicComplaintController;
+use App\Modules\Complaints\Http\Middleware\GuardPublicSubmission;
 use App\Modules\Complaints\Http\Middleware\HandlePublicChannelRequests;
+use App\Modules\Complaints\Http\Middleware\OpenChannelForSubmission;
 use App\Modules\Complaints\Http\Middleware\PrivateChannelResponse;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -34,4 +38,10 @@ Route::withoutMiddleware([
     HandleInertiaRequests::class,
 ])->middleware([HandlePublicChannelRequests::class, PrivateChannelResponse::class])->group(function (): void {
     Route::get('c/{code}', [PublicChannelController::class, 'show'])->middleware('throttle:complaints-view')->name('complaints.public.show');
+    Route::get('c/{code}/centers', PublicCentersController::class)
+        ->middleware(['throttle:complaints-view', OpenChannelForSubmission::class])
+        ->name('complaints.public.centers');
+    Route::post('c/{code}', [PublicComplaintController::class, 'store'])
+        ->middleware(['throttle:complaints-submit', OpenChannelForSubmission::class, GuardPublicSubmission::class])
+        ->name('complaints.public.store');
 });

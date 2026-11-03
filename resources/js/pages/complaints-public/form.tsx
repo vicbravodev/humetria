@@ -1,15 +1,17 @@
 import { Head } from '@inertiajs/react';
-import AnonymityLimits from '@/components/complaints-public/anonymity-limits';
-import HowItWorks from '@/components/complaints-public/how-it-works';
+import AlternativeCard from '@/components/complaints-public/alternative-card';
+import ComplaintForm from '@/components/complaints-public/complaint-form';
 import PublicShell from '@/components/complaints-public/public-shell';
-import type { ExternalAlternative } from '@/types';
+import type { ExternalAlternative, PublicFormProps } from '@/types';
 
 export default function Form({
     company,
     procedure,
     acknowledgeWithinDays,
     resolveWithinDays,
-}: {
+    alternative,
+    ...form
+}: PublicFormProps & {
     company: string;
     procedure: string;
     acknowledgeWithinDays: number;
@@ -31,12 +33,15 @@ export default function Form({
                         traumático severo.
                     </p>
                 </div>
-                <HowItWorks
-                    procedure={procedure}
-                    acknowledgeWithinDays={acknowledgeWithinDays}
-                    resolveWithinDays={resolveWithinDays}
+                <ComplaintForm
+                    form={form}
+                    words={{
+                        procedure,
+                        acknowledgeWithinDays,
+                        resolveWithinDays,
+                    }}
                 />
-                <AnonymityLimits />
+                <AlternativeCard alternative={alternative} />
             </div>
         </PublicShell>
     );

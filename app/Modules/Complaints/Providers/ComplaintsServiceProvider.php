@@ -8,6 +8,8 @@ use App\Modules\Complaints\Contracts\ComplaintChannels;
 use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
 use App\Modules\Complaints\Support\AddressKey;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
+use App\Modules\Complaints\Support\RandomReferenceSource;
+use App\Modules\Complaints\Support\ReferenceSource;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -25,6 +27,7 @@ final class ComplaintsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ComplaintChannels::class, CompanyComplaintChannels::class);
+        $this->app->bind(ReferenceSource::class, RandomReferenceSource::class);
     }
 
     public function boot(): void
@@ -33,5 +36,6 @@ final class ComplaintsServiceProvider extends ServiceProvider
 
         // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
         RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));
+        RateLimiter::for('complaints-submit', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)));
     }
 }

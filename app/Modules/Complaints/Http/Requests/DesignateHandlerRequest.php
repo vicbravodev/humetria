@@ -26,7 +26,7 @@ final class DesignateHandlerRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', $this->canHandle(...), $this->notYetDesignated(...)],
-            'work_center_id' => ['nullable', 'uuid', $this->isActiveCenter(...)],
+            'work_center_id' => ['nullable', 'bail', 'uuid', $this->isActiveCenter(...)],
         ];
     }
 

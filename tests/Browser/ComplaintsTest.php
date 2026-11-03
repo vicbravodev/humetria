@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
 use App\Modules\Tenancy\Models\Tenant;
@@ -125,3 +126,61 @@ it('says the channel is paused and offers the other way, or that the link is gon
         ->assertSee('Otra vía')
         ->assertSee('Inspección Federal del Trabajo');
 })->with(['paused', 'gone']);
+
+/** A company with an open channel and an owner who handles it, so every option of the form is offered but the management's. */
+function openChannelWithHandler(): ComplaintChannel
+{
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial']);
+    $owner = ownerOf($tenant);
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $owner->id]);
+
+    return ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+}
+
+it('walks the form step by step and hands back a reference and a key once', function (bool $mobile): void {
+    // A robot is quicker than any person: the three seconds of the ticket have their own tests.
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+    $page = $mobile ? visit("/c/{$channel->access_code}")->on()->mobile() : visit("/c/{$channel->access_code}");
+
+    $page->click('Quiero presentar una queja')
+        ->assertSee('¿Qué quiere informar?')
+        ->click('Denuncia de violencia laboral')
+        ->press('Continuar')
+        ->assertSee('¿Qué pasó?')
+        ->press('Continuar')
+        ->assertSee('Cuéntenos un poco más')
+        ->fill('#complaint-description', 'Mi jefe me grita todos los días frente a mis compañeros y me amenaza.')
+        ->press('Continuar')
+        ->assertSee('¿Dónde y de quién se trata?')
+        ->assertSee('Por ahora la empresa no tiene a nadie independiente')
+        ->press('Continuar')
+        ->assertSee('Elija de quién se trata')
+        ->click('Mi jefa o jefe inmediato')
+        ->press('Continuar')
+        ->assertSee('Revise antes de enviar')
+        ->assertSee('Anónima: sin nombre ni contacto')
+        ->assertNoAccessibilityIssues(1)
+        ->press('Enviar mi queja')
+        ->assertSee('Recibimos su queja')
+        ->assertSee('Referencia')
+        ->assertSee('Clave')
+        ->assertScript('() => document.cookie', '')
+        ->assertNoJavaScriptErrors();
+
+    expect(Complaint::query()->withoutGlobalScopes()->count())->toBe(1)
+        ->and(Complaint::query()->withoutGlobalScopes()->first()?->description)->toContain('me grita');
+})->with([[false], [true]]);
+
+it('shows the form steps without accessibility issues and with room for a finger', function (): void {
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")->on()->mobile()
+        ->click('Quiero presentar una queja')
+        ->assertNoAccessibilityIssues(1)
+        ->assertScript(smallTouchTargets(), '')
+        ->click('Queja por una práctica opuesta a un entorno favorable')
+        ->press('Continuar')
+        ->assertNoAccessibilityIssues(1)
+        ->assertScript(smallTouchTargets(), '');
+});

@@ -148,3 +148,40 @@ it('keys the limits by a keyed hash of the address, never the address', function
         ->and($key)->toStartWith('complaints:')
         ->and($key)->toBe('complaints:'.hash_hmac('sha256', MARKER_IP, config()->string('app.key')));
 });
+
+it('gives the form what it needs to ask, and which options nobody independent would receive', function (): void {
+    $this->travelTo('2026-11-20 18:00:00');
+
+    openChannelPage($this)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('code', $this->channel->access_code)
+            ->where('today', '2026-11-20')
+            ->where('descriptionLimits', ['min' => 20, 'max' => 5000])
+            ->has('types', 3)
+            ->where('types.0.value', 'unfavorable_practice')
+            ->where('types.2.value', 'traumatic_event_notice')
+            ->has('kinds', 6)
+            ->where('kinds.2', ['value' => 'hr', 'label' => 'Recursos humanos', 'available' => true])
+            ->where('kinds.3', ['value' => 'management', 'label' => 'La dirección o el dueño', 'available' => false])
+            ->has('categories', 10)
+            ->where('categories.0', ['value' => 'harassment', 'label' => 'Hostigamiento', 'type' => 'workplace_violence'])
+            ->has('ticket'));
+});
+
+it('gives a ticket the submission accepts, and none that names the person', function (): void {
+    $this->travelTo('2026-11-20 18:00:00');
+    $ticket = openChannelPage($this)->viewData('page')['props']['ticket'] ?? null;
+
+    $this->travel(5)->seconds();
+
+    expect($ticket)->toBeString()
+        ->and(resolve(App\Modules\Complaints\Support\TicketSigner::class)->isValid($ticket, $this->channel->access_code))->toBeTrue()
+        ->and($ticket)->not->toContain(MARKER_IP);
+});
+
+it('does not tell the page who handles the complaints, or how many', function (): void {
+    $response = openChannelPage($this)->assertOk();
+
+    expect(json_encode($response->viewData('page')['props']))->not->toContain($this->owner->email)->not->toContain($this->owner->name);
+});

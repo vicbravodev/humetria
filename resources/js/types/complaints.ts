@@ -42,3 +42,33 @@ export type ExternalAlternative = {
     phone: string;
     note: string;
 };
+
+export type ComplaintTypeOption = {
+    value: string;
+    label: string;
+    hint: string;
+};
+
+export type ComplaintKindOption = {
+    value: string;
+    label: string;
+    available: boolean;
+};
+
+export type ComplaintCategoryOption = {
+    value: string;
+    label: string;
+    type: string;
+};
+
+/** What the public form needs from the server, besides the channel's words. */
+export type PublicFormProps = {
+    code: string;
+    ticket: string;
+    types: ComplaintTypeOption[];
+    kinds: ComplaintKindOption[];
+    categories: ComplaintCategoryOption[];
+    descriptionLimits: { min: number; max: number };
+    /** Today in the company's time zone, Y-m-d: the last day something can have happened. */
+    today: string;
+};

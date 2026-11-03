@@ -26,6 +26,9 @@ final class CompanyMembers implements Members
     /** @var array<string, list<MemberSummary>> */
     private array $handling = [];
 
+    /** @var array<string, list<MemberSummary>> */
+    private array $managing = [];
+
     public function __construct(private readonly CurrentTenant $current, private readonly CompanyRoles $roles) {}
 
     public function all(): array
@@ -41,6 +44,7 @@ final class CompanyMembers implements Members
         $this->memo = [];
         $this->reviewing = [];
         $this->handling = [];
+        $this->managing = [];
     }
 
     /** @return list<MemberSummary> */
@@ -66,6 +70,11 @@ final class CompanyMembers implements Members
     public function complaintHandlers(): array
     {
         return $this->handling[$this->current->id()] ??= $this->withPermission('handle-complaints');
+    }
+
+    public function complaintManagers(): array
+    {
+        return $this->managing[$this->current->id()] ??= $this->withPermission('manage-complaint-channel');
     }
 
     /** @return list<MemberSummary> */

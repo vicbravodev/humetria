@@ -34,6 +34,14 @@ interface Members
      */
     public function complaintHandlers(): array;
 
+    /**
+     * The members whose role has the `manage-complaint-channel` permission (owner and hr), by name: who administers the
+     * complaints channel.
+     *
+     * @return list<MemberSummary>
+     */
+    public function complaintManagers(): array;
+
     /** A person of the current company by user id; null when they belong to another company or none. */
     public function find(int $userId): ?MemberSummary;
 }
