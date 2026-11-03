@@ -91,6 +91,14 @@ final class RedactSensitiveData implements ProcessorInterface
             'respondent_kind',
             'respondent_text',
             'ticket',
+            // NOM-035 policy and disclosure: the link of the page of the workers (a credential), a person's own link, the words of a
+            // policy and the note of a paper acknowledgment never reach a log.
+            'acknowledgment_note',
+            'page_url',
+            'personal_link',
+            'policy_text',
+            'sections',
+            'worker_page_link',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',
