@@ -628,3 +628,17 @@ it('gives each part of the 7.7 report the width of the phone to read', function 
 
     resizeTo($page, 375)->assertScript($narrowest.' >= 300')->assertScript(spilledOut(), '');
 });
+
+it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out when they do not fit', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii')]);
+    // The rows the shown links sit on: none when the list is left out, one when it fits; never two or three.
+    $rows = '() => new Set([...document.querySelectorAll("nav[aria-label=\'Secciones del informe\'] a")].filter((link) => link.offsetParent !== null).map((link) => Math.round(link.getBoundingClientRect().top))).size <= 1';
+
+    $page = visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/report");
+
+    foreach ([800, 1024, 1100, 1280, 1440, 1600] as $width) {
+        resizeTo($page, $width)->assertScript($rows, true);
+    }
+});
