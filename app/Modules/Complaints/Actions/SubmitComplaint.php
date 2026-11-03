@@ -37,6 +37,7 @@ final readonly class SubmitComplaint
         private ReferenceSource $references,
         private Members $members,
         private Companies $companies,
+        private AssignComplaint $assign,
     ) {}
 
     /**
@@ -61,25 +62,28 @@ final readonly class SubmitComplaint
             $reference = $this->references->next();
 
             try {
-                DB::transaction(fn () => Complaint::query()->create([
-                    'tenant_id' => $this->tenant->id(),
-                    'channel_id' => $channel->id,
-                    'reference' => $reference,
-                    'access_key_hash' => hash('sha256', $key),
-                    'type' => $input->type,
-                    'category' => $input->category,
-                    'respondent_kind' => $input->respondentKind,
-                    'work_center_id' => $input->workCenterId,
-                    'identity_mode' => $input->identityMode,
-                    'status' => ComplaintStatus::New,
-                    'description' => $input->description,
-                    'respondent_text' => $input->respondentText,
-                    'reporter_name' => $input->reporterName,
-                    'reporter_contact' => $input->reporterContact,
-                    'involved_text' => $input->involvedText,
-                    'occurred_on' => $input->occurredOn,
-                    'received_on' => $day,
-                ]));
+                DB::transaction(function () use ($channel, $input, $key, $day, $reference): void {
+                    $complaint = Complaint::query()->create([
+                        'tenant_id' => $this->tenant->id(),
+                        'channel_id' => $channel->id,
+                        'reference' => $reference,
+                        'access_key_hash' => hash('sha256', $key),
+                        'type' => $input->type,
+                        'category' => $input->category,
+                        'respondent_kind' => $input->respondentKind,
+                        'work_center_id' => $input->workCenterId,
+                        'identity_mode' => $input->identityMode,
+                        'status' => ComplaintStatus::New,
+                        'description' => $input->description,
+                        'respondent_text' => $input->respondentText,
+                        'reporter_name' => $input->reporterName,
+                        'reporter_contact' => $input->reporterContact,
+                        'involved_text' => $input->involvedText,
+                        'occurred_on' => $input->occurredOn,
+                        'received_on' => $day,
+                    ]);
+                    $this->assign->handle($complaint);
+                });
 
                 return $reference;
             } catch (UniqueConstraintViolationException $collision) {

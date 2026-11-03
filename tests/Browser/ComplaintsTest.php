@@ -96,7 +96,7 @@ it('designates a handler from the page and shows them in the list', function ():
 
     visit("{$url}/complaints/handlers")
         ->click('#handler-person')
-        ->type('[role="combobox"][aria-controls="handler-person-options"]', 'ana')
+        ->type('[role="combobox"][aria-controls="handler-person-options"]', 'recursos')
         ->assertSee('Ana Recursos')
         ->keys('[role="combobox"][aria-controls="handler-person-options"]', 'Enter')
         ->press('Designar')
@@ -240,4 +240,29 @@ it('asks for the day and the name of the notice of a traumatic event, and sends 
 
     $complaint = Complaint::query()->withoutGlobalScopes()->sole();
     expect($complaint->type->value)->toBe('traumatic_event_notice')->and($complaint->reporter_name)->toBe('Rosa Aguilar')->and($complaint->occurred_on)->not->toBeNull();
+});
+
+it('warns of the complaints nobody holds, with the button that assigns them again', function (bool $dark, bool $mobile): void {
+    [$url, $tenant] = complaintsPanel();
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    Complaint::factory()->count(2)->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
+
+    visitPage('complaints/channel', "{$url}/complaints/channel", $dark, $mobile)
+        ->assertSee('2 casos sin encargada.')
+        ->assertSee('Asignar de nuevo');
+})->with($looks);
+
+it('assigns again the complaints nobody holds from the page', function (): void {
+    [$url, $tenant] = complaintsPanel();
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $tenant->id)->firstOrFail()->user_id]);
+    $complaint = Complaint::factory()->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
+
+    visit("{$url}/complaints/channel")
+        ->press('Asignar de nuevo')
+        ->assertSee('Los casos sin encargada se asignaron.')
+        ->assertDontSee('sin encargada.')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Complaints\Models\ComplaintAssignment::query()->withoutGlobalScopes()->where('complaint_id', $complaint->id)->count())->toBe(1);
 });

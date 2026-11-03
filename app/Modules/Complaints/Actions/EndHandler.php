@@ -8,7 +8,9 @@ use App\Actions\RecordAudit;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
 use App\Modules\Complaints\Support\ActiveHandlers;
+use App\Modules\Complaints\Support\EndedAssignments;
 use App\Modules\Complaints\Support\HandlerNotices;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class EndHandler
 {
-    public function __construct(private RecordAudit $audit, private ActiveHandlers $active, private HandlerNotices $notices) {}
+    public function __construct(private RecordAudit $audit, private ActiveHandlers $active, private HandlerNotices $notices, private EndedAssignments $ended, private CurrentTenant $tenant) {}
 
     public function handle(ComplaintHandler $handler): void
     {
@@ -30,6 +32,11 @@ final readonly class EndHandler
 
             $handler->update(['ended_at' => now()]);
             $this->audit->handle('complaint_handler.ended', $handler);
+
+            // Someone who still handles another scope keeps their cases; otherwise what they held is left without them.
+            if (! ComplaintHandler::query()->where('user_id', $handler->user_id)->whereNull('ended_at')->exists()) {
+                $this->ended->of($this->tenant->id(), $handler->user_id, 'handler_ended');
+            }
         });
 
         Log::info('complaints.handler_ended', ['handler_id' => $handler->id]);

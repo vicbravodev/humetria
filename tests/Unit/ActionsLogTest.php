@@ -19,6 +19,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Telework/Actions/OpenPortal.php' => 'reads the portal link; each portal action logs what changes',
     'app/Modules/Complaints/Actions/OpenChannel.php' => 'reads the channel by its code; each action on a complaint logs what changes',
     // Steps of a logged action: the action that calls them writes the line, with the counts.
+    'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',
     'app/Modules/Campaigns/Actions/QueueSurveyInvitations.php' => 'its callers (launch, resend, invite missing, replacements) log with the counts',
     'app/Modules/Tenancy/Actions/SendInvitationEmail.php' => 'only queues the email; InviteMember, InviteOwner and ResendInvitation log it',

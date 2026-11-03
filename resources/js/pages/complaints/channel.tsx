@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
+import UnassignedNotice from '@/components/complaints/unassigned-notice';
 import ChannelTabs from '@/components/complaints/channel-tabs';
 import ChannelActions from '@/components/complaints/channel-actions';
 import ChannelLinkCard from '@/components/complaints/channel-link-card';
@@ -12,10 +13,13 @@ export default function Channel({
     channel,
     settings,
     bounds,
+    unassigned,
 }: {
     channel: ChannelState;
     settings: ChannelSettings;
     bounds: ChannelBounds;
+    /** How many open complaints nobody holds. */
+    unassigned: number;
 }) {
     const badge = channelBadge(channel.status);
 
@@ -36,6 +40,7 @@ export default function Channel({
                     )}
                 </PageHeader>
                 <ChannelTabs active="channel" />
+                <UnassignedNotice count={unassigned} />
                 {channel.url !== null && (
                     <ChannelLinkCard
                         url={channel.url}

@@ -60,7 +60,7 @@ export default function HandlersTable({
                         <TableCell className="text-right">
                             <ConfirmDialog
                                 title={`¿Dejar de asignar quejas a ${handler.name}?`}
-                                description="Deja de recibir quejas nuevas y se avisa a las demás personas que atienden. Lo que ya tiene asignado sigue siendo suyo hasta que lo cierre o lo comparta."
+                                description="Deja de recibir quejas nuevas y se avisa a las demás personas que atienden. Los casos que tenía asignados quedan sin encargada hasta que se asignen de nuevo."
                                 confirmLabel="Quitar"
                                 form={destroy.form({
                                     tenant: tenantSlug,
