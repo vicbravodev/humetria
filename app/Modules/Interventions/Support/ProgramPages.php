@@ -66,7 +66,7 @@ final readonly class ProgramPages
                 'guide' => $guide === null ? null : $this->instruments->definition($guide)->shortTitle,
             ],
             'requirement' => $program === null ? $this->requirement($campaign) : null,
-            'program' => $program === null ? null : $this->program($program, $items, $later, ProgramAction::query()->where('program_id', $program->id)->get(['id', 'item_id', 'status', 'due_on'])->all()),
+            'program' => $program === null ? null : $this->program($program, $items, $later, ProgramAction::query()->where('program_id', $program->id)->get(['id', 'item_id', 'status', 'due_on', 'kind'])->all()),
             'actions' => $program === null ? null : $this->actions($program, $areas, $filters, $items, $canManage ? fn (string $actionId, string $entryId): string => route('tenant.campaigns.program.evidence', [$this->companies->current()->slug, $campaign->id, $actionId, $entryId]) : null),
             'filters' => $filters,
             'catalog' => $canManage ? self::catalog() : null,
@@ -113,6 +113,15 @@ final readonly class ProgramPages
             $rows[] = ['item' => $item, 'state' => ProgramProgress::rowState($statuses), 'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null];
         }
 
+        $kinds = array_values(array_map(fn (ProgramAction $action): ActionKind => $action->kind, array_filter($actions, fn (ProgramAction $action): bool => $action->status !== ActionStatus::Cancelled)));
+        $analysisRows = [];
+
+        foreach ($items as $item) {
+            if ($item->origin === ItemOrigin::Results && $item->highest_level !== null) {
+                $analysisRows[] = ['level' => $item->highest_level, 'written' => trim($item->analysis ?? '') !== ''];
+            }
+        }
+
         $overdue = array_any($actions, fn (ProgramAction $action): bool => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), $today));
 
         return [
@@ -120,6 +129,7 @@ final readonly class ProgramPages
             'highestLevel' => self::level($program->highest_level),
             'responsible' => $program->responsible_name === null ? null : ['name' => $program->responsible_name, 'userId' => $program->responsible_user_id],
             'state' => self::labeled(ProgramProgress::programState($rows, $overdue)),
+            'requirements' => TableChecklist::for($program->highest_level, $kinds, $analysisRows),
             'meter' => ProgramProgress::meter(array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, $actions))),
             'items' => array_map(fn (array $row): array => [
                 'id' => $row['item']->id,

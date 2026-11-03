@@ -208,6 +208,8 @@ return [
         'starts_on' => 'fecha de inicio',
         'responsible_user_id' => 'responsable',
         'professional' => 'profesional',
+        'item_ids' => 'filas',
+        'item_ids.*' => 'fila',
         'scope' => 'tipo de fila',
         'scope_key' => 'fila',
         'analysis' => 'análisis',

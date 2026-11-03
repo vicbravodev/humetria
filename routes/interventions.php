@@ -18,6 +18,7 @@ Route::put('admin/{tenant:slug}/campaigns/{campaign}/program/responsible', [Prog
 // The actions of the Programa, added to a row and edited. An action is cancelled with a reason, never deleted.
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/items/{item}/actions', [ActionController::class, 'store'])->where('tenant', $notReserved)->whereUuid(['campaign', 'item'])->name('tenant.campaigns.program.actions.store');
 Route::put('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}', [ActionController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.actions.update');
+Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/copies', [ActionController::class, 'copy'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.actions.copy');
 
 // The control of progress (num. 8.4 d): a step is recorded, never edited or deleted; an action is cancelled with a reason.
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/progress', [ProgressController::class, 'store'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.progress.store');
