@@ -8,6 +8,7 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Results\Contracts\RiskResults;
+use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Results\Support\CompanyRiskResults;
 use App\Modules\Tenancy\Models\Tenant;
@@ -115,4 +116,54 @@ it('carries no answer of any person: only counts, labels and names', function ()
     $json = json_encode(breakdownOf($this->closed), JSON_THROW_ON_ERROR);
 
     expect($json)->not->toContain('answers')->not->toContain('participant')->not->toContain('employee');
+});
+
+/** @return list<AreaRisk> */
+function areaGroupsOf(Campaign $campaign): array
+{
+    $record = resolve(CampaignRecords::class)->find($campaign->id);
+    expect($record)->toBeInstanceOf(CampaignRecord::class);
+
+    return resolve(RiskResults::class)->areaGroups($record);
+}
+
+it('gives the levels of each area shown by final score, category and domain, from one read of the answers', function (): void {
+    anonymousGuideTwo($this->closed, $this->production, 6, 'never');
+    anonymousGuideTwo($this->closed, $this->sales, 5, 'always');
+
+    $areas = areaGroupsOf($this->closed);
+    $production = array_find($areas, fn (AreaRisk $area): bool => $area->id === $this->production->id);
+    $sales = array_find($areas, fn (AreaRisk $area): bool => $area->id === $this->sales->id);
+
+    expect($areas)->toHaveCount(2)
+        ->and($production?->name)->toBe('Producción')
+        ->and($production?->answered)->toBe(6)
+        ->and($production?->final)->toBe([0, 0, 6, 0, 0])
+        ->and($sales?->final)->toBe([0, 0, 0, 0, 5])
+        ->and($sales?->categories)->not->toBeEmpty()
+        ->and(array_sum($sales?->domains[0]->levels ?? []))->toBe(5);
+});
+
+it('lists only the areas shown, with the complementary suppression of Resultados', function (array $sizes, int $shown): void {
+    $areas = array_map(fn (int $size, int $index): Area => tap(Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => "Área {$index}"]), fn (Area $area) => anonymousGuideTwo($this->closed, $area, $size)), $sizes, array_keys($sizes));
+
+    expect(areaGroupsOf($this->closed))->toHaveCount($shown)->and($areas)->toHaveCount(count($sizes));
+})->with([
+    'a hidden group under the minimum drags the smallest shown one: the rest would reveal it' => [[10, 4], 0],
+    'two hidden that add up to less than the minimum drag the shown one too' => [[10, 2, 2], 0],
+    'a drag leaves the larger ones' => [[6, 6, 5, 4], 2],
+    'hidden ones that reach the minimum drag none' => [[6, 5, 3, 2], 2],
+    'all shown' => [[6, 5, 5], 3],
+]);
+
+it('gives no area when the center is under the minimum, is open or applies only the Guía I', function (): void {
+    anonymousGuideTwo($this->closed, $this->production, 4);
+    $open = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    anonymousGuideTwo($open, $this->production, 10);
+    $trauma = Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $trauma->update(['status' => 'closed', 'closed_at' => now()]);
+
+    expect(areaGroupsOf($this->closed))->toBe([])
+        ->and(areaGroupsOf($open))->toBe([])
+        ->and(areaGroupsOf($trauma))->toBe([]);
 });

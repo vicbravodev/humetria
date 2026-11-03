@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Results\Contracts;
 
 use App\Modules\Campaigns\Data\CampaignRecord;
+use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
 
 /**
@@ -19,4 +20,13 @@ interface RiskResults
      * shown and how many stay hidden. The state says why there are no figures when there are none.
      */
     public function forCampaign(CampaignRecord $campaign, ?string $areaId = null): RiskBreakdown;
+
+    /**
+     * The areas shown, with their levels by final score, category and domain: the same areas as `forCampaign` (minimum and
+     * complementary suppression applied), from one read of the answers. Empty without figures: open, not scored or
+     * under the minimum.
+     *
+     * @return list<AreaRisk>
+     */
+    public function areaGroups(CampaignRecord $campaign): array;
 }
