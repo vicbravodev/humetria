@@ -22,3 +22,6 @@ Route::get('admin/{tenant:slug}/disclosure/policy/versions/{document}', [PolicyC
 Route::get('admin/{tenant:slug}/disclosure/dissemination', [DisseminationController::class, 'index'])->where('tenant', $notReserved)->name('tenant.disclosure.dissemination');
 Route::post('admin/{tenant:slug}/disclosure/dissemination/{document}/acknowledgments', [DisseminationController::class, 'record'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.dissemination.acknowledgments.store');
 Route::post('admin/{tenant:slug}/disclosure/dissemination/{document}/reminders', [DisseminationController::class, 'remind'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.dissemination.reminders.store');
+
+// The physical means (poster, bulletin, leaflet, meeting) RH records as evidence of the disclosure (num. 10.2); never changed or deleted.
+Route::post('admin/{tenant:slug}/disclosure/dissemination/records', [DisseminationController::class, 'storeRecord'])->where('tenant', $notReserved)->name('tenant.disclosure.dissemination.records.store');

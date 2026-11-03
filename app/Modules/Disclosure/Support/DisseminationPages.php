@@ -7,11 +7,14 @@ namespace App\Modules\Disclosure\Support;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Models\Acknowledgment;
+use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * What the page of the disclosure receives (criterio C-53): the version it follows, how many people confirmed it, and the
@@ -22,7 +25,7 @@ final readonly class DisseminationPages
 {
     private const int PER_PAGE = 15;
 
-    public function __construct(private AckProgress $progress, private Roster $roster) {}
+    public function __construct(private AckProgress $progress, private Roster $roster, private WorkCenters $workCenters) {}
 
     /**
      * @param  'all'|'pending'|'confirmed'  $status
@@ -30,10 +33,11 @@ final readonly class DisseminationPages
      */
     public function show(?string $versionId, string $status, string $search): array
     {
+        $records = $this->records();
         $version = $versionId === null ? $this->published()->orderByDesc('version')->first() : $this->published()->findOrFail($versionId);
 
         if ($version === null) {
-            return ['version' => null, 'versions' => [], 'progress' => null, 'counts' => null, 'filters' => ['status' => $status, 'q' => $search], 'people' => $this->roster->page(new RosterQuery(employeeIds: []), self::PER_PAGE), 'today' => Days::today(), 'publishedDay' => null];
+            return ['version' => null, 'versions' => [], 'progress' => null, 'counts' => null, 'filters' => ['status' => $status, 'q' => $search], 'people' => $this->roster->page(new RosterQuery(employeeIds: []), self::PER_PAGE), 'today' => Days::today(), 'publishedDay' => null, 'records' => $records];
         }
 
         $people = $this->roster->page(new RosterQuery(employeeIds: $this->progress->requested($version, $status), search: $search), self::PER_PAGE);
@@ -64,6 +68,7 @@ final readonly class DisseminationPages
             }),
             'today' => Days::today(),
             'publishedDay' => $version->published_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'records' => $records,
         ];
     }
 
@@ -73,5 +78,29 @@ final readonly class DisseminationPages
     private function published(): Builder
     {
         return Document::query()->where('kind', DocumentKind::Policy)->where('status', DocumentStatus::Published);
+    }
+
+    /**
+     * The physical means recorded, the newest first, five at a time.
+     *
+     * @return LengthAwarePaginator<int, array{id: string, workCenter: string, mediumLabel: string, items: list<string>, doneOn: string, note: string|null}>
+     */
+    private function records(): LengthAwarePaginator
+    {
+        $names = [];
+
+        foreach ($this->workCenters->all() as $center) {
+            $names[$center->id] = $center->name;
+        }
+
+        return DisseminationRecord::query()->orderByDesc('done_on')->orderByDesc('id')->paginate(config()->integer('disclosure.records_per_page'), pageName: 'records')->withQueryString()
+            ->through(fn (DisseminationRecord $record): array => [
+                'id' => $record->id,
+                'workCenter' => $names[$record->work_center_id] ?? '',
+                'mediumLabel' => $record->medium->label(),
+                'items' => $record->covered_items,
+                'doneOn' => Days::calendar($record->done_on),
+                'note' => $record->note,
+            ]);
     }
 }

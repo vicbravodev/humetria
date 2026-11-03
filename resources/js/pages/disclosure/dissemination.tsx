@@ -4,6 +4,7 @@ import AckList from '@/components/disclosure/ack-list';
 import DisclosureTabs from '@/components/disclosure/disclosure-tabs';
 import DisseminationSummary from '@/components/disclosure/dissemination-summary';
 import EmptyState from '@/components/humetria/empty-state';
+import RecordsSection from '@/components/disclosure/records-section';
 import PageHeader from '@/components/humetria/page-header';
 import type { DisseminationProps } from '@/types';
 
@@ -15,6 +16,7 @@ export default function Dissemination({
     people,
     today,
     publishedDay,
+    records,
 }: DisseminationProps) {
     setLayoutProps({
         breadcrumbs: [{ title: 'NOM-035' }, { title: 'Política y difusión' }],
@@ -61,6 +63,7 @@ export default function Dissemination({
                         />
                     </>
                 )}
+                <RecordsSection records={records} today={today} />
             </div>
         </>
     );

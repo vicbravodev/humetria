@@ -17,7 +17,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class Board
 {
-    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private Requirements $requirements) {}
+    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private Requirements $requirements) {}
 
     /**
      * @return array{summary: array{met: int, notice: int, missing: int}, centers: LengthAwarePaginator<int, array<string, mixed>>}
@@ -27,12 +27,14 @@ final readonly class Board
         $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived));
         $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
         $policies = $this->policies->inForce($ids);
+        $recorded = $this->delivery->recordedItems($ids);
+        $acknowledgments = $this->delivery->acknowledgments($policies);
 
         $rows = [];
         $states = [];
 
         foreach ($centers as $center) {
-            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null));
+            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null, $acknowledgments[$center->id] ?? null, $recorded[$center->id] ?? []));
             $state = $this->overall($requirements);
             $states[] = $state->value;
             $rows[] = $this->row($center, $requirements, $state);

@@ -136,4 +136,16 @@ export type DisseminationProps = {
     /** Today and the day of publication, as Y-m-d, to bound the day of a paper confirmation. */
     today: string;
     publishedDay: string | null;
+    records: Paginated<DisseminationRecordRow>;
+};
+
+/** A physical or in-person means RH recorded as evidence of the disclosure. */
+export type DisseminationRecordRow = {
+    id: string;
+    workCenter: string;
+    mediumLabel: string;
+    /** The incisos of 5.7 (a to f) it covered. */
+    items: string[];
+    doneOn: string;
+    note: string | null;
 };

@@ -197,3 +197,27 @@ it('records paper acknowledgments of the people ticked', function (): void {
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Se registró 1 acuse en papel.');
 });
+
+it('opens the form to record a means of disclosure', function (): void {
+    $url = signInToPanel();
+    askedForBrowser(1);
+
+    visit("{$url}/disclosure/dissemination")
+        ->assertSee('Aún no registras ningún medio')
+        ->press('Registrar un medio')
+        ->assertSee('Cómo se dio a conocer')
+        ->assertSee('Qué cubrió (numeral 5.7)')
+        ->press('Cancelar')
+        ->assertDontSee('Cómo se dio a conocer');
+});
+
+it('shows the physical means recorded', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    askedForBrowser(1);
+    App\Modules\Disclosure\Models\DisseminationRecord::factory()->covering(['a', 'b'])->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->firstOrFail()->id, 'work_center_id' => WorkCenter::query()->firstOrFail()->id, 'note' => 'Comedor']);
+
+    visitPage('disclosure/dissemination', "{$url}/disclosure/dissemination", $dark, $mobile)
+        ->assertSee('Medios físicos')
+        ->assertSee('Cartel')
+        ->assertSee('Registrar un medio');
+})->with($looks);

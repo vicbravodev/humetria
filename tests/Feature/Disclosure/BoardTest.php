@@ -96,6 +96,9 @@ it('takes, for each center, the highest version that reached it', function (): v
 
 it('leaves a center created after the publication without policy, and an archived one out', function (): void {
     publishedPolicy($this, null);
+    foreach ([$this->north, $this->south] as $center) {
+        App\Modules\Disclosure\Models\DisseminationRecord::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+    }
     WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Nueva']);
     WorkCenter::factory()->for($this->tenant)->archived()->create(['name' => 'Planta Cerrada']);
 
@@ -111,6 +114,7 @@ it('counts every center in the summary and lists them ten at a time, by name', f
         WorkCenter::factory()->for($this->tenant)->create(['name' => sprintf('Centro %02d', $number)]);
     }
     publishedPolicy($this, [$this->north->id]);
+    App\Modules\Disclosure\Models\DisseminationRecord::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id]);
 
     $this->actingAs($this->hr)->get(route('tenant.disclosure.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
@@ -126,6 +130,7 @@ it('counts every center in the summary and lists them ten at a time, by name', f
 
 it('gives each center the overall state of its worst row', function (): void {
     publishedPolicy($this, [$this->north->id], ['a']);
+    App\Modules\Disclosure\Models\DisseminationRecord::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id]);
 
     $this->actingAs($this->hr)->get(route('tenant.disclosure.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page

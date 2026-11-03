@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Disclosure\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Disclosure\Actions\RecordDissemination;
 use App\Modules\Disclosure\Actions\RecordManualAcknowledgments;
 use App\Modules\Disclosure\Actions\RemindPending;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
+use App\Modules\Disclosure\Http\Requests\DisseminationRecordRequest;
 use App\Modules\Disclosure\Http\Requests\ManualAcknowledgmentsRequest;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Support\AckProgress;
@@ -65,6 +67,14 @@ final class DisseminationController extends Controller
         Gate::authorize('manage-disclosure');
         $count = $remind->handle($document);
         Inertia::flash('toast', ['type' => 'success', 'message' => $count === 1 ? 'Se recordará a 1 persona.' : "Se recordará a {$count} personas."]);
+
+        return redirect()->route('tenant.disclosure.dissemination', $tenant);
+    }
+
+    public function storeRecord(DisseminationRecordRequest $request, mixed $tenant, RecordDissemination $record): RedirectResponse
+    {
+        $record->handle($request->string('work_center_id')->toString(), $request->string('medium')->toString(), $request->items(), $request->string('done_on')->toString(), $request->string('note')->toString(), $request->userId());
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Medio registrado.']);
 
         return redirect()->route('tenant.disclosure.dissemination', $tenant);
     }

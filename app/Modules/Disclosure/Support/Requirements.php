@@ -19,7 +19,7 @@ final readonly class Requirements
      */
     public function for(CenterFacts $facts): array
     {
-        return [...$this->policy($facts->policy)];
+        return [...$this->policy($facts->policy), ...$this->delivery($facts)];
     }
 
     /**
@@ -44,5 +44,33 @@ final readonly class Requirements
             new Requirement('D1', '5.1', 'Política de prevención por escrito', RequirementState::Met, "Versión {$policy->version}, publicada el ".Days::moment($policy->publishedAt).'.'),
             new Requirement('D2', '5.1 a, b y c', 'Declara la prevención de los factores de riesgo, de la violencia laboral y la promoción de un entorno favorable', $declares === null ? RequirementState::Met : RequirementState::Notice, $declares),
         ];
+    }
+
+    /**
+     * D3: the policy in force is in front of the people (the page is active or a physical means covered it) and, as a notice and
+     * not a requirement, how many confirmed it (criteria C-52 and C-53). Not judged without a policy: D1 already says it.
+     *
+     * @return list<Requirement>
+     */
+    private function delivery(CenterFacts $facts): array
+    {
+        if ($facts->policy === null) {
+            return [];
+        }
+
+        if (! $facts->delivered('a')) {
+            return [new Requirement('D3', '5.1, 5.7 a', 'La política está a la vista de las personas', RequirementState::Missing, 'La política no está a la vista de las personas: publique la página o registre un medio físico (cartel, boletín, folleto).')];
+        }
+
+        $acks = $facts->acknowledgments ?? ['active' => 0, 'confirmed' => 0];
+
+        if ($acks['active'] === 0) {
+            return [new Requirement('D3', '5.1, 5.7 a', 'La política está a la vista de las personas', RequirementState::Met, null)];
+        }
+
+        $said = "{$acks['confirmed']} de {$acks['active']} ".($acks['active'] === 1 ? 'persona confirmó' : 'personas confirmaron');
+        $all = $acks['confirmed'] === $acks['active'];
+
+        return [new Requirement('D3', '5.1, 5.7 a', 'La política está a la vista de las personas', $all ? RequirementState::Met : RequirementState::Notice, $all ? "{$said}." : "{$said}; la norma no pide el acuse.")];
     }
 }

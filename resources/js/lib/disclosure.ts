@@ -131,3 +131,34 @@ export const selectionText = (count: number): string =>
     count === 0
         ? 'Ninguna persona elegida'
         : `${countOf(count, 'persona', 'personas')} ${plural(count, 'elegida', 'elegidas')}`;
+
+/** The six things numeral 5.7 asks to disclose, by inciso: what a physical means can cover. */
+export const ITEMS_57: { value: string; label: string }[] = [
+    { value: 'a', label: 'La política de prevención' },
+    {
+        value: 'b',
+        label: 'Las medidas contra las prácticas opuestas al entorno favorable y la violencia laboral',
+    },
+    {
+        value: 'c',
+        label: 'Las medidas y acciones de prevención y de control de los factores de riesgo',
+    },
+    {
+        value: 'd',
+        label: 'Los mecanismos para presentar quejas y denunciar violencia laboral',
+    },
+    { value: 'e', label: 'Los resultados de la evaluación' },
+    {
+        value: 'f',
+        label: 'Las posibles alteraciones a la salud por los factores de riesgo',
+    },
+];
+
+/** How information was put in front of the people outside the page, as RH records it. */
+export const MEDIA: { value: string; label: string }[] = [
+    { value: 'poster', label: 'Cartel' },
+    { value: 'bulletin', label: 'Boletín' },
+    { value: 'brochure', label: 'Folleto' },
+    { value: 'meeting', label: 'Reunión' },
+    { value: 'other', label: 'Otro medio' },
+];

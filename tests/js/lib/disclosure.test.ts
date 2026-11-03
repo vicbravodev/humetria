@@ -4,6 +4,8 @@ import {
     addCenter,
     boardHeadline,
     INCISOS,
+    ITEMS_57,
+    MEDIA,
     joinLines,
     progressText,
     removeCenter,
@@ -163,5 +165,25 @@ describe('selectionText', () => {
         expect(selectionText(0)).toBe('Ninguna persona elegida');
         expect(selectionText(1)).toBe('1 persona elegida');
         expect(selectionText(12)).toBe('12 personas elegidas');
+    });
+});
+
+describe('what a physical means can cover', () => {
+    it('lists the six incisos of 5.7 and the five means', () => {
+        expect(ITEMS_57.map(({ value }) => value)).toEqual([
+            'a',
+            'b',
+            'c',
+            'd',
+            'e',
+            'f',
+        ]);
+        expect(MEDIA.map(({ value }) => value)).toEqual([
+            'poster',
+            'bulletin',
+            'brochure',
+            'meeting',
+            'other',
+        ]);
     });
 });
