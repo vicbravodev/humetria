@@ -158,6 +158,9 @@ it('walks the form step by step and hands back a reference and a key once', func
         ->assertSee('Elija de quién se trata')
         ->click('Mi jefa o jefe inmediato')
         ->press('Continuar')
+        ->assertSee('¿Cómo quiere ir?')
+        ->assertNoAccessibilityIssues(1)
+        ->press('Continuar')
         ->assertSee('Revise antes de enviar')
         ->assertSee('Anónima: sin nombre ni contacto')
         ->assertNoAccessibilityIssues(1)
@@ -183,4 +186,58 @@ it('shows the form steps without accessibility issues and with room for a finger
         ->press('Continuar')
         ->assertNoAccessibilityIssues(1)
         ->assertScript(smallTouchTargets(), '');
+});
+
+it('sends a confidential complaint with the name that only its handlers read', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")
+        ->click('Quiero presentar una queja')
+        ->click('Queja por una práctica opuesta a un entorno favorable')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Las cargas de trabajo del turno de noche son excesivas desde hace meses.')
+        ->press('Continuar')
+        ->click('Una compañera o compañero')
+        ->press('Continuar')
+        ->click('[name="identity_mode"][value="confidential"]')
+        ->press('Continuar')
+        ->assertSee('Escriba su nombre.')
+        ->fill('#reporter-name', 'Rosa Aguilar')
+        ->press('Continuar')
+        ->assertSee('Confidencial, con su nombre (Rosa Aguilar)')
+        ->press('Enviar mi queja')
+        ->assertSee('Recibimos su queja')
+        ->assertNoJavaScriptErrors();
+
+    expect(Complaint::query()->withoutGlobalScopes()->sole()->reporter_name)->toBe('Rosa Aguilar');
+});
+
+it('asks for the day and the name of the notice of a traumatic event, and sends it', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")
+        ->click('Quiero presentar una queja')
+        ->click('Aviso de un acontecimiento traumático severo')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Presencié un accidente en el que un compañero perdió la mano en la prensa.')
+        ->press('Continuar')
+        ->assertSee('Indique la fecha en que ocurrió.')
+        ->click('#complaint-date')
+        ->click('[data-day] button[tabindex="0"]')
+        ->press('Continuar')
+        ->assertSee('¿Dónde ocurrió?')
+        ->assertDontSee('¿De quién se trata?')
+        ->press('Continuar')
+        ->assertSee('Este aviso necesita su nombre')
+        ->fill('#reporter-name', 'Rosa Aguilar')
+        ->press('Continuar')
+        ->assertSee('Fecha en que ocurrió')
+        ->press('Enviar mi queja')
+        ->assertSee('Recibimos su queja')
+        ->assertNoJavaScriptErrors();
+
+    $complaint = Complaint::query()->withoutGlobalScopes()->sole();
+    expect($complaint->type->value)->toBe('traumatic_event_notice')->and($complaint->reporter_name)->toBe('Rosa Aguilar')->and($complaint->occurred_on)->not->toBeNull();
 });

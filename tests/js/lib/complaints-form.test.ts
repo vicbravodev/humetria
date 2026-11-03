@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    changesForType,
     emptyDraft,
     payload,
     problemWith,
@@ -16,10 +17,27 @@ const written = (length: number) => ({
 describe('stepAfter and stepBefore', () => {
     it('move one step and stop at both ends', () => {
         expect(stepAfter('intro')).toBe('type');
-        expect(stepAfter('whom')).toBe('review');
+        expect(stepAfter('whom')).toBe('identity');
+        expect(stepAfter('identity')).toBe('review');
         expect(stepAfter('review')).toBe('review');
-        expect(stepBefore('review')).toBe('whom');
+        expect(stepBefore('review')).toBe('identity');
+        expect(stepBefore('identity')).toBe('whom');
         expect(stepBefore('intro')).toBe('intro');
+    });
+});
+
+describe('changesForType', () => {
+    it('clears the category and, for the notice of a traumatic event, goes with the name and against nobody in particular', () => {
+        expect(changesForType('workplace_violence')).toEqual({
+            type: 'workplace_violence',
+            category: '',
+        });
+        expect(changesForType('traumatic_event_notice')).toEqual({
+            type: 'traumatic_event_notice',
+            category: '',
+            identityMode: 'confidential',
+            respondentKind: 'unknown',
+        });
     });
 });
 
@@ -65,6 +83,61 @@ describe('problemWith', () => {
         ).toBeUndefined();
     });
 
+    it('asks for the day a traumatic event happened, and only for that notice', () => {
+        const notice = { ...written(30), type: 'traumatic_event_notice' };
+
+        expect(problemWith('story', notice, limits)).toBe(
+            'Indique la fecha en que ocurrió.',
+        );
+        expect(
+            problemWith(
+                'story',
+                { ...notice, occurredOn: '2026-11-10' },
+                limits,
+            ),
+        ).toBeUndefined();
+        expect(
+            problemWith(
+                'story',
+                { ...written(30), type: 'workplace_violence' },
+                limits,
+            ),
+        ).toBeUndefined();
+    });
+
+    it('asks for the name of who goes with it, and never lets the notice go anonymous', () => {
+        const confidential = {
+            ...emptyDraft,
+            identityMode: 'confidential' as const,
+        };
+
+        expect(problemWith('identity', confidential, limits)).toBe(
+            'Escriba su nombre.',
+        );
+        expect(
+            problemWith(
+                'identity',
+                { ...confidential, reporterName: '   ' },
+                limits,
+            ),
+        ).toBe('Escriba su nombre.');
+        expect(
+            problemWith(
+                'identity',
+                { ...confidential, reporterName: 'Rosa' },
+                limits,
+            ),
+        ).toBeUndefined();
+        expect(problemWith('identity', emptyDraft, limits)).toBeUndefined();
+        expect(
+            problemWith(
+                'identity',
+                { ...emptyDraft, type: 'traumatic_event_notice' },
+                limits,
+            ),
+        ).toContain('necesita su nombre');
+    });
+
     it('asks nothing on the steps that only read or review', () => {
         expect(problemWith('intro', emptyDraft, limits)).toBeUndefined();
         expect(problemWith('review', emptyDraft, limits)).toBeUndefined();
@@ -95,7 +168,47 @@ describe('payload', () => {
             respondent_kind: 'coworker',
             respondent_text: 'Luis',
             identity_mode: 'anonymous',
+            reporter_name: '',
+            reporter_contact: '',
+            involved_text: '',
             website: '',
         });
+    });
+
+    it('sends the name and the contact only when the person chose to give them', () => {
+        const draft = {
+            ...emptyDraft,
+            type: 'workplace_violence',
+            reporterName: ' Rosa ',
+            reporterContact: ' 442 000 ',
+            involvedText: 'Luis',
+        };
+
+        expect(payload(draft, 't')).toMatchObject({
+            identity_mode: 'anonymous',
+            reporter_name: '',
+            reporter_contact: '',
+            involved_text: '',
+        });
+        expect(
+            payload({ ...draft, identityMode: 'confidential' }, 't'),
+        ).toMatchObject({
+            identity_mode: 'confidential',
+            reporter_name: 'Rosa',
+            reporter_contact: '442 000',
+            involved_text: '',
+        });
+    });
+
+    it('sends the people involved only with the notice of a traumatic event', () => {
+        const notice = {
+            ...emptyDraft,
+            type: 'traumatic_event_notice',
+            identityMode: 'confidential' as const,
+            reporterName: 'Rosa',
+            involvedText: ' Luis ',
+        };
+
+        expect(payload(notice, 't').involved_text).toBe('Luis');
     });
 });

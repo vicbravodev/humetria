@@ -3,6 +3,7 @@ import DatePicker from '@/components/humetria/date-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Draft } from '@/lib/complaints/form';
+import { NOTICE } from '@/lib/complaints/form';
 import type { ComplaintCategoryOption } from '@/types';
 
 /** Step 2: what happened, when (about) and, if known, what kind of thing it is. */
@@ -46,7 +47,9 @@ export default function StoryStep({
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="complaint-date">
-                    ¿Cuándo pasó, más o menos? (opcional)
+                    {draft.type === NOTICE
+                        ? '¿Cuándo ocurrió?'
+                        : '¿Cuándo pasó, más o menos? (opcional)'}
                 </Label>
                 <DatePicker
                     id="complaint-date"

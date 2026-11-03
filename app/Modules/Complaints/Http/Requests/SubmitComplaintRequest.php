@@ -41,11 +41,14 @@ final class SubmitComplaintRequest extends FormRequest
             'type' => ['required', Rule::enum(ComplaintType::class)],
             'category' => ['nullable', Rule::in(array_map(fn (ComplaintCategory $category): string => $category->value, $type === null ? [] : ComplaintCategory::of($type)))],
             'description' => ['required', 'string', 'min:'.config()->integer('complaints.description.min'), 'max:'.config()->integer('complaints.description.max')],
-            'occurred_on' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:'.Dates::today()->toDateString()],
+            'occurred_on' => [Rule::requiredIf($type === ComplaintType::TraumaticEventNotice), 'nullable', 'date_format:Y-m-d', 'before_or_equal:'.Dates::today()->toDateString()],
             'work_center_id' => ['nullable', 'bail', 'uuid', $this->isActiveCenter(...)],
             'respondent_kind' => ['required', Rule::enum(RespondentKind::class), $this->someoneIndependentReceives(...)],
             'respondent_text' => ['nullable', 'string', 'max:'.config()->integer('complaints.free_text_max')],
-            'identity_mode' => ['required', Rule::in([IdentityMode::Anonymous->value])],
+            'identity_mode' => ['required', Rule::in($type === ComplaintType::TraumaticEventNotice ? [IdentityMode::Confidential->value] : array_map(fn (IdentityMode $mode): string => $mode->value, IdentityMode::cases()))],
+            'reporter_name' => [Rule::requiredIf($this->string('identity_mode')->toString() === IdentityMode::Confidential->value), 'prohibited_if:identity_mode,anonymous', 'nullable', 'string', 'max:150', 'regex:/\S/u'],
+            'reporter_contact' => ['prohibited_if:identity_mode,anonymous', 'nullable', 'string', 'max:200'],
+            'involved_text' => ['prohibited_unless:type,traumatic_event_notice', 'nullable', 'string', 'max:'.config()->integer('complaints.free_text_max')],
         ];
     }
 
@@ -58,7 +61,7 @@ final class SubmitComplaintRequest extends FormRequest
     {
         $category = $this->string('category')->toString();
         $occurredOn = $this->string('occurred_on')->toString();
-        $text = trim($this->string('respondent_text')->toString());
+        $text = $this->trimmedOrNull('respondent_text');
 
         return new ComplaintInput(
             ComplaintType::from($this->string('type')->toString()),
@@ -67,9 +70,19 @@ final class SubmitComplaintRequest extends FormRequest
             $occurredOn === '' ? null : CarbonImmutable::parse($occurredOn),
             $this->workCenterId(),
             RespondentKind::from($this->string('respondent_kind')->toString()),
-            $text === '' ? null : $text,
+            $text,
             IdentityMode::from($this->string('identity_mode')->toString()),
+            $this->trimmedOrNull('reporter_name'),
+            $this->trimmedOrNull('reporter_contact'),
+            $this->trimmedOrNull('involved_text'),
         );
+    }
+
+    private function trimmedOrNull(string $key): ?string
+    {
+        $text = trim($this->string($key)->toString());
+
+        return $text === '' ? null : $text;
     }
 
     private function workCenterId(): ?string

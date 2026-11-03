@@ -1,8 +1,9 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Draft } from '@/lib/complaints/form';
+import { reviewRows } from '@/lib/complaints/review';
 import type { ComplaintKindOption, ComplaintTypeOption } from '@/types';
 
-/** Step 4: what will be sent, to read once more. Sending is the person's decision, here and nowhere else. */
+/** Step 5: what will be sent, to read once more. Sending is the person's decision, here and nowhere else. */
 export default function ReviewStep({
     draft,
     types,
@@ -17,16 +18,7 @@ export default function ReviewStep({
     const messages = Object.values(errors).filter(
         (message): message is string => message !== undefined,
     );
-    const rows = [
-        ['Qué informa', types.find((type) => type.value === draft.type)?.label],
-        ['Lo que pasó', draft.description.trim()],
-        ['Centro de trabajo', draft.workCenter?.label ?? 'Sin indicar'],
-        [
-            'De quién se trata',
-            kinds.find((kind) => kind.value === draft.respondentKind)?.label,
-        ],
-        ['Cómo va', 'Anónima: sin nombre ni contacto'],
-    ];
+    const rows = reviewRows(draft, types, kinds);
 
     return (
         <div className="flex flex-col gap-5">

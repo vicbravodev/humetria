@@ -1,11 +1,8 @@
 import AnonymityLimits from '@/components/complaints-public/anonymity-limits';
+import ComplaintStep from '@/components/complaints-public/complaint-step';
 import HowItWorks from '@/components/complaints-public/how-it-works';
 import ReceiptCard from '@/components/complaints-public/receipt-card';
-import ReviewStep from '@/components/complaints-public/step-review';
 import StepNav from '@/components/complaints-public/step-nav';
-import StoryStep from '@/components/complaints-public/step-story';
-import StepType from '@/components/complaints-public/step-type';
-import WhomStep from '@/components/complaints-public/step-whom';
 import { Button } from '@/components/ui/button';
 import { useComplaintForm } from '@/hooks/use-complaint-form';
 import type { PublicFormProps } from '@/types';
@@ -48,40 +45,7 @@ export default function ComplaintForm({
 
     return (
         <>
-            {state.step === 'type' && (
-                <StepType
-                    types={form.types}
-                    value={state.draft.type}
-                    onChange={(type) => state.change({ type, category: '' })}
-                />
-            )}
-            {state.step === 'story' && (
-                <StoryStep
-                    draft={state.draft}
-                    categories={form.categories.filter(
-                        (category) => category.type === state.draft.type,
-                    )}
-                    limits={form.descriptionLimits}
-                    today={form.today}
-                    onChange={state.change}
-                />
-            )}
-            {state.step === 'whom' && (
-                <WhomStep
-                    code={form.code}
-                    kinds={form.kinds}
-                    draft={state.draft}
-                    onChange={state.change}
-                />
-            )}
-            {state.step === 'review' && (
-                <ReviewStep
-                    draft={state.draft}
-                    types={form.types}
-                    kinds={form.kinds}
-                    errors={state.errors}
-                />
-            )}
+            <ComplaintStep form={form} state={state} />
             <StepNav
                 step={state.step}
                 problem={state.problem}

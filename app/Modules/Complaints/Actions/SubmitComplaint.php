@@ -74,6 +74,9 @@ final readonly class SubmitComplaint
                     'status' => ComplaintStatus::New,
                     'description' => $input->description,
                     'respondent_text' => $input->respondentText,
+                    'reporter_name' => $input->reporterName,
+                    'reporter_contact' => $input->reporterContact,
+                    'involved_text' => $input->involvedText,
                     'occurred_on' => $input->occurredOn,
                     'received_on' => $day,
                 ]));

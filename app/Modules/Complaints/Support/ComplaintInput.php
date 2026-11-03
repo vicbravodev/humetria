@@ -22,5 +22,8 @@ final readonly class ComplaintInput
         public RespondentKind $respondentKind,
         public ?string $respondentText,
         public IdentityMode $identityMode,
+        public ?string $reporterName = null,
+        public ?string $reporterContact = null,
+        public ?string $involvedText = null,
     ) {}
 }
