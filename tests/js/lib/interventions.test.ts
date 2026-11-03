@@ -3,6 +3,7 @@ import {
     activeTab,
     meterText,
     programStartText,
+    programTools,
     programTrail,
     requirementText,
     SCOPE_LABELS,
@@ -12,7 +13,7 @@ import {
     tabHref,
 } from '@/lib/interventions';
 import { index, show } from '@/routes/tenant/campaigns';
-import type { ProgramAction } from '@/types';
+import type { ProgramAction, ProgramPageProps } from '@/types';
 
 const action = (overrides: Partial<ProgramAction> = {}): ProgramAction => ({
     id: 'a1',
@@ -178,5 +179,59 @@ describe('requirementText', () => {
                 detail: '3 de 3 filas',
             }),
         ).toBe('Cubierto · 3 de 3 filas');
+    });
+});
+
+describe('programTools', () => {
+    const page = (overrides: Partial<ProgramPageProps>): ProgramPageProps => ({
+        campaign: {
+            id: 'c1',
+            workCenter: 'Planta',
+            kindLabel: 'Evaluación NOM-035',
+            closedOn: '19 nov 2026',
+            guide: 'Guía II',
+        },
+        program: null,
+        requirement: null,
+        actions: null,
+        filters: { item: null, status: null },
+        catalog: { kinds: [], levels: [], professionals: [] },
+        manualOptions: [],
+        followUpEvaluations: [{ id: 'e1', label: 'Cerrada el 1 nov 2028' }],
+        followUpSuggestion: { date: '2028-11-19', label: '19 nov 2028' },
+        areaOptions: [],
+        members: [],
+        today: '2026-11-20',
+        can: { manage: true },
+        ...overrides,
+    });
+
+    it('gives whoever writes the Programa the choices of every form', () => {
+        expect(programTools(page({}))).toEqual({
+            catalog: { kinds: [], levels: [], professionals: [] },
+            areas: [],
+            members: [],
+            manualOptions: [],
+            evaluations: [{ id: 'e1', label: 'Cerrada el 1 nov 2028' }],
+            suggestion: '2028-11-19',
+            today: '2026-11-20',
+        });
+    });
+
+    it('gives whoever only reads it nothing, the server sending no tools', () => {
+        expect(
+            programTools(page({ catalog: null, can: { manage: false } })),
+        ).toBeNull();
+        expect(programTools(page({ members: null }))).toBeNull();
+        expect(programTools(page({ areaOptions: null }))).toBeNull();
+        expect(programTools(page({ manualOptions: null }))).toBeNull();
+    });
+
+    it('has no suggestion and no evaluations when the server sends none', () => {
+        expect(
+            programTools(
+                page({ followUpEvaluations: null, followUpSuggestion: null }),
+            ),
+        ).toMatchObject({ evaluations: [], suggestion: undefined });
     });
 });

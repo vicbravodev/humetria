@@ -535,7 +535,9 @@ el documento dejaba al constructor, con la opción más conservadora cuando hab�
 
 - **El menú de NOM-035 cambia de comportamiento.** Con submenú, «NOM-035» deja de ser un enlace: abre y pliega «Evaluaciones» y
   «Programas» (como NOM-037). Se actualizó `tests/Browser/CampaignsTest.php` (ahora entra por «Evaluaciones») y el contador de
-  evaluaciones en curso se conserva como `[data-sidebar="menu-badge"]` en el padre, así que `DashboardTest` no cambió. Plegado, el
+  evaluaciones en curso se conserva como `[data-sidebar="menu-badge"]` en el padre, así que `DashboardTest` no cambió. En
+  `tests/Browser/DesignSystemTest.php` el plegado de un submenú dejaba de apuntar al primer botón plegado (ahora hay dos
+  submenús): busca el de NOM-037 entre todos, con la misma aserción de fondo. Plegado, el
   padre sigue yendo a su primera página.
 - **Los conteos de consultas de Resultados (16 → 19) y del informe (18 → 21) suben**: la tarjeta y el inciso g leen el Programa.
   Siguen siendo fijos, sin importar cuántas filas o acciones haya.
