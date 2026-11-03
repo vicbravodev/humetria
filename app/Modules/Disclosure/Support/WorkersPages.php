@@ -6,6 +6,9 @@ namespace App\Modules\Disclosure\Support;
 
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Models\Document;
+use App\Modules\Instruments\Data\RiskLevel;
+use App\Modules\Results\Data\RiskBreakdown;
+use App\Modules\Results\Data\RiskGroup;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -17,7 +20,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class WorkersPages
 {
-    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies) {}
+    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private ResultsStanding $results) {}
 
     /**
      * The centers in use, by name, ten at a time, narrowed by a search done on the server.
@@ -41,7 +44,7 @@ final readonly class WorkersPages
     /**
      * What one center publishes: the policy in force there.
      *
-     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, publishedOn: string}|null>}
+     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, publishedOn: string}|null>, results: array<string, mixed>|null}
      */
     public function center(WorkCenterSummary $center): array
     {
@@ -58,6 +61,7 @@ final readonly class WorkersPages
                 'sections' => PolicyText::sections($document->content, $this->workCenters->profile($center->id)->legalName ?? ''),
             ],
             'blocks' => $this->blocks($center),
+            'results' => $this->resultsOf($center),
         ];
     }
 
@@ -82,5 +86,44 @@ final readonly class WorkersPages
         }
 
         return $blocks;
+    }
+
+    /**
+     * The results block (5.7 e, 7.8; criterio C-54): null where 7.8 does not apply (a center of up to 15 people); else its title
+     * and, once RH published them, the counts of the latest published evaluation, of the whole center, as Results gave them
+     * with the minimum applied. Below it the figures are not sent, nor how many answered. Never an area.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resultsOf(WorkCenterSummary $center): ?array
+    {
+        $fact = $this->results->forCenters([$center->id])[$center->id] ?? null;
+
+        if ($fact === null || ! $fact->applies) {
+            return null;
+        }
+
+        $breakdown = $fact->shownBreakdown;
+        $published = null;
+
+        if ($fact->shown !== null && $breakdown !== null && in_array($breakdown->state, [RiskBreakdown::AVAILABLE, RiskBreakdown::BELOW_MINIMUM], true)) {
+            $published = $breakdown->state === RiskBreakdown::BELOW_MINIMUM
+                ? ['state' => 'below_minimum', 'closedOn' => $fact->shown->closedOn]
+                : [
+                    'state' => 'available',
+                    'closedOn' => $fact->shown->closedOn,
+                    'levels' => array_map(fn (RiskLevel $level): array => ['value' => $level->value, 'label' => $level->label()], RiskLevel::cases()),
+                    'guide' => in_array('nom035.guide-iii', $fact->shown->instruments, true) ? 'iii' : 'ii',
+                    'answered' => $breakdown->answered,
+                    'final' => $breakdown->final,
+                    'categories' => array_map(fn (RiskGroup $group): array => ['key' => $group->key, 'label' => $group->label, 'levels' => $group->levels], $breakdown->categories),
+                    'domains' => array_map(fn (RiskGroup $group): array => ['key' => $group->key, 'label' => $group->label, 'category' => $group->category, 'levels' => $group->levels], $breakdown->domains),
+                ];
+        }
+
+        return [
+            'title' => $fact->guide === 'iii' ? 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional' : 'Resultados de la identificación y análisis de los factores de riesgo psicosocial',
+            'published' => $published,
+        ];
     }
 }

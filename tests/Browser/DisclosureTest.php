@@ -343,3 +343,35 @@ it('writes a block, saves it and publishes it', function (): void {
         ->assertSee('Publicado: versión 1.')
         ->assertSee('Las quejas las atiende la Comisión.');
 });
+
+it('shows the evaluations RH can publish to the people', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    [$campaign] = closedEvaluationInAreas($tenant, ['Producción' => 6, 'Ventas' => 6]);
+    $campaign->update(['work_center_id' => $plant->id]);
+
+    visitPage('disclosure/results', "{$url}/disclosure/results", $dark, $mobile)
+        ->assertSee('Resultados para las personas')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('Sin publicar')
+        ->assertSee('Publicar');
+})->with($looks);
+
+it('publishes results and the people read them on their page, of the whole center', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    staffOf($tenant, $plant, 20);
+    [$campaign] = closedEvaluationInAreas($tenant, ['Producción' => 6, 'Ventas' => 6]);
+    $campaign->update(['work_center_id' => $plant->id]);
+    resolve(App\Modules\Disclosure\Actions\PublishResults::class)->handle($campaign->id, App\Models\User::query()->firstOrFail()->id);
+    $link = route('workers.center', [(string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id)->token(), $plant->id], absolute: false);
+
+    visitPage('disclosure-public/center', $link, false, true)
+        ->assertSee('Resultados de la identificación y análisis de los factores de riesgo psicosocial')
+        ->assertSee('Calificación final (12 cuestionarios)')
+        ->assertSee('no son un promedio');
+});

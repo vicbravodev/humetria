@@ -1,5 +1,6 @@
 import type { Paginated } from './demos';
 import type { Choice } from './interventions';
+import type { RiskLevelValue } from './results';
 
 /** A section of a policy as the page edits and shows it: plain text, a list of items and how they are marked. */
 export type PolicySectionData = {
@@ -184,6 +185,8 @@ export type PublicCenterProps = {
     others: boolean;
     /** What the company published for b, c, d and f in the center, by inciso; null while there is nothing. */
     blocks: Record<string, PublicBlockText | null>;
+    /** The results block (5.7 e); null where 7.8 does not apply, a center of up to 15 people. */
+    results: PublicResults | null;
     /** The policy in force in the center; null while it has none. */
     policy: {
         version: number;
@@ -216,3 +219,41 @@ export type ContentsProps = {
 
 /** What the company published for a block of 5.7 in a center: the words and the day. */
 export type PublicBlockText = { text: string; publishedOn: string };
+
+/** A category or a domain in the results of a center: how many questionnaires fall in each level. */
+export type PublicRiskGroup = {
+    key: string;
+    label: string;
+    levels: number[];
+};
+
+/** The results the company published for a center, of the whole center and with the minimum applied. */
+export type PublicResults = {
+    title: string;
+    published:
+        | { state: 'below_minimum'; closedOn: string }
+        | {
+              state: 'available';
+              closedOn: string;
+              guide: 'ii' | 'iii';
+              answered: number;
+              levels: { value: RiskLevelValue; label: string }[];
+              final: number[];
+              categories: PublicRiskGroup[];
+              domains: PublicRiskGroup[];
+          }
+        | null;
+};
+
+/** A closed evaluation on the screen that publishes results to the people. */
+export type ResultsRow = {
+    id: string;
+    workCenter: string;
+    closedOn: string | null;
+    guide: string;
+    state: 'published' | 'unpublished';
+    publishedOn: string | null;
+    canPublish: boolean;
+};
+
+export type ResultsProps = { evaluations: Paginated<ResultsRow> };

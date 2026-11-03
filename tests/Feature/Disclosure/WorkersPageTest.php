@@ -199,7 +199,7 @@ it('hands the page nothing of a person: no names, emails, ids, tokens of others 
     $json = json_encode($props) ?: '';
 
     expect($json)->not->toContain($this->hr->email)->not->toContain($this->hr->name)->not->toContain($this->tenant->id)
-        ->and(array_keys($props))->toEqualCanonicalizing(['name', 'token', 'company', 'center', 'others', 'policy', 'blocks']);
+        ->and(array_keys($props))->toEqualCanonicalizing(['name', 'token', 'company', 'center', 'others', 'policy', 'blocks', 'results']);
 });
 
 it('hands the list of centers only their names and ids', function (): void {

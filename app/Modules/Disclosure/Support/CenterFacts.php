@@ -24,6 +24,7 @@ final readonly class CenterFacts
         public bool $pageActive = false,
         public ?string $linkExpiresOn = null,
         public array $contents = [],
+        public ?ResultsFact $results = null,
     ) {}
 
     public function hasContent(string $item): bool

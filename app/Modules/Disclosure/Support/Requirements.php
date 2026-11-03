@@ -6,6 +6,7 @@ namespace App\Modules\Disclosure\Support;
 
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\RequirementState;
+use App\Modules\Results\Data\RiskBreakdown;
 
 /**
  * The requirements the board judges for a work center (criterio C-50 onward), from what is recorded about it: the single
@@ -26,7 +27,9 @@ final readonly class Requirements
             ...$this->block($facts, 'D4', DocumentKind::ViolenceMeasures),
             ...$this->block($facts, 'D5', DocumentKind::PreventionMeasures),
             ...$this->block($facts, 'D6', DocumentKind::ComplaintMechanism),
+            ...$this->results($facts),
             ...$this->block($facts, 'D8', DocumentKind::HealthEffects),
+            ...$this->revision($facts),
             ...$this->link($facts),
         ];
     }
@@ -112,5 +115,78 @@ final readonly class Requirements
             ? new Requirement($code, $numeral, $kind->label(), RequirementState::Met, null)
             : new Requirement($code, $numeral, $kind->label(), RequirementState::Missing, 'Está publicada, pero no está a la vista de las personas: publique la página o registre un medio físico que la cubra.'),
         ];
+    }
+
+    /**
+     * D7: the results of the latest closed evaluation are published to the people (num. 5.7 e and 7.8; criterio C-54). It does not
+     * apply to a center of up to 15 people nor to an evaluation of only the Guía I. Publishing is RH's act, so a closed evaluation
+     * nobody published is missing.
+     *
+     * @return list<Requirement>
+     */
+    private function results(CenterFacts $facts): array
+    {
+        $fact = $facts->results;
+        $row = fn (RequirementState $state, ?string $detail): array => [new Requirement('D7', '5.7 e, 7.8', 'Resultados disponibles para las personas', $state, $detail)];
+
+        if ($fact === null) {
+            return [];
+        }
+
+        if (! $fact->applies) {
+            return $row(RequirementState::NotApplicable, $fact->latest === null ? 'El numeral 7.8 no aplica a centros de hasta 15 personas (numeral 2 a).' : 'La evaluación solo aplicó la Guía I: no hay cifras que publicar.');
+        }
+
+        if ($fact->latest === null) {
+            return $row(RequirementState::Missing, 'Aún no hay una evaluación cerrada.');
+        }
+
+        if (! $fact->latestPublished) {
+            return $fact->shown === null
+                ? $row(RequirementState::Missing, "La evaluación cerrada el {$fact->latest->closedOn} no se ha publicado a las personas.")
+                : $row(RequirementState::Notice, "Hay una evaluación cerrada el {$fact->latest->closedOn}, más reciente que la publicada, sin publicar.");
+        }
+
+        return $fact->shownBreakdown?->state === RiskBreakdown::BELOW_MINIMUM
+            ? $row(RequirementState::Notice, 'Publicada, pero con muy pocas respuestas: las cifras no se muestran para proteger la confidencialidad.')
+            : $row(RequirementState::Met, null);
+    }
+
+    /**
+     * D9: Tablas 4 y 7 ask to review the policy and reinforce its disclosure when the risk is medium or more, and for more
+     * disclosure when it is low (criterio C-56). Only when Results can say (with too few questionnaires it cannot, and nothing is
+     * said), and only while the policy in force is older than the closing of the evaluation.
+     *
+     * @return list<Requirement>
+     */
+    private function revision(CenterFacts $facts): array
+    {
+        $fact = $facts->results;
+        $breakdown = $fact?->latestBreakdown;
+
+        if ($fact === null || $fact->latest === null || $breakdown === null || $breakdown->state !== RiskBreakdown::AVAILABLE || $facts->policy === null) {
+            return [];
+        }
+
+        $policyDay = $facts->policy->publishedAt->setTimezone(config()->string('app.display_timezone'))->toDateString();
+
+        if ($fact->latest->closedDate === null || $policyDay >= $fact->latest->closedDate) {
+            return [];
+        }
+
+        $closed = "La evaluación cerrada el {$fact->latest->closedOn}";
+
+        return match (true) {
+            $breakdown->needingProgram() !== [] => [new Requirement('D9', 'Tablas 4 y 7', 'Revisar la política tras la evaluación', RequirementState::Notice, "{$closed} tiene riesgo medio o más y la política vigente es anterior: revise la política y refuerce su aplicación y difusión.")],
+            self::hasLowRisk($breakdown) => [new Requirement('D9', 'Tablas 4 y 7', 'Revisar la política tras la evaluación', RequirementState::Notice, "{$closed} tiene riesgo bajo y la política vigente es anterior: dé mayor difusión a la política.")],
+            default => [],
+        };
+    }
+
+    /** Whether some questionnaire of the final score, a category or a domain is in Bajo (the second level, after Nulo). */
+    private static function hasLowRisk(RiskBreakdown $breakdown): bool
+    {
+        return ($breakdown->final[1] ?? 0) > 0
+            || array_any([...$breakdown->categories, ...$breakdown->domains], fn ($group): bool => ($group->levels[1] ?? 0) > 0);
     }
 }

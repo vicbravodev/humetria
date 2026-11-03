@@ -20,7 +20,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class Board
 {
-    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private Requirements $requirements) {}
+    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private ResultsStanding $results, private Requirements $requirements) {}
 
     /**
      * @return array{summary: array{met: int, notice: int, missing: int}, centers: LengthAwarePaginator<int, array<string, mixed>>}
@@ -32,6 +32,7 @@ final readonly class Board
         $policies = $this->policies->inForce($ids);
         $recorded = $this->delivery->recordedItems($ids);
         $contents = $this->contents($ids);
+        $results = $this->results->forCenters($ids);
         $acknowledgments = $this->delivery->acknowledgments($policies);
         $link = PageLink::query()->first();
         $active = $link !== null && $link->status() === PageLinkStatus::Active;
@@ -41,7 +42,7 @@ final readonly class Board
         $states = [];
 
         foreach ($centers as $center) {
-            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null, $acknowledgments[$center->id] ?? null, $recorded[$center->id] ?? [], $active, $expires, $contents[$center->id] ?? []));
+            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null, $acknowledgments[$center->id] ?? null, $recorded[$center->id] ?? [], $active, $expires, $contents[$center->id] ?? [], $results[$center->id] ?? null));
             $state = $this->overall($requirements);
             $states[] = $state->value;
             $rows[] = $this->row($center, $requirements, $state);

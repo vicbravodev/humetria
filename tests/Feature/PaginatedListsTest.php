@@ -191,6 +191,12 @@ it('sends each list of records as a paginator', function (string $component, Clo
     }, ['notices']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
+    'the results for the people' => ['disclosure/results', function () {
+        [$tenant, $plant] = listsCompany();
+        Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+        return route('tenant.disclosure.results', $tenant);
+    }, ['evaluations']],
     'the policy acknowledgments' => ['disclosure/dissemination', function () {
         [$tenant] = listsCompany();
         $policy = App\Modules\Disclosure\Models\Document::factory()->published()->policy()->create(['tenant_id' => $tenant->id]);

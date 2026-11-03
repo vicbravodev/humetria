@@ -63,7 +63,7 @@ function boardRows(object $test, string $name): array
 it('says «Falta» for a center with no policy, and judges only what does not need a policy', function (): void {
     $rows = boardRows($this, 'Planta Norte');
 
-    expect(array_keys($rows))->toBe(['D1', 'D4', 'D5', 'D6', 'D8'])
+    expect(array_keys($rows))->toBe(['D1', 'D4', 'D5', 'D6', 'D7', 'D8'])
         ->and($rows['D1'])->toMatchArray(['numeral' => '5.1', 'state' => ['value' => 'missing', 'label' => 'Falta'], 'detail' => 'Aún no hay una política publicada para este centro.']);
 });
 

@@ -7,6 +7,7 @@ import {
     index,
     page,
     policy,
+    results,
 } from '@/routes/tenant/disclosure';
 
 export type DisclosureTab =
@@ -14,6 +15,7 @@ export type DisclosureTab =
     | 'policy'
     | 'dissemination'
     | 'contents'
+    | 'results'
     | 'page';
 
 /**
@@ -50,6 +52,11 @@ export default function DisclosureTabs({ active }: { active: DisclosureTab }) {
                               label: 'Contenidos',
                               href: contents(tenantSlug),
                               active: active === 'contents',
+                          },
+                          {
+                              label: 'Resultados',
+                              href: results(tenantSlug),
+                              active: active === 'results',
                           },
                           {
                               label: 'Página',
