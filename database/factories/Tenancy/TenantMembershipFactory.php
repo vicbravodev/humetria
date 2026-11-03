@@ -20,6 +20,9 @@ use Illuminate\Support\Collection;
  */
 final class TenantMembershipFactory extends Factory
 {
+    /** Named here so the factory also works when used on its own, as other modules' factories do. */
+    protected $model = TenantMembership::class;
+
     private TenantRole $role = TenantRole::Owner;
 
     /**
