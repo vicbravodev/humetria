@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.2 · 30 de octubre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.3 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -344,6 +344,11 @@ Guías II y III. Los resultados aparecen al cerrarla y ya no cambian.
 **Qué hacemos.** Owner y RH ven quiénes requieren valoración clínica, con su área y el día en que contestaron. El rol
 de consulta no la ve, ni contada. Cada consulta de la lista queda en la bitácora.
 
+Por cada persona registran la constancia de su canalización: **canalizada** o **atendida** (sin registro, sigue
+**pendiente**), el día y la institución, sin diagnóstico ni notas. Cada cambio queda en la bitácora con quién lo hizo y
+el estado; el log solo dice que se guardó un registro, sin la persona, el estado ni la institución. El registro vive
+en la misma empresa y apunta a la Guía I (identificada a propósito), nunca a una respuesta de las Guías II o III.
+
 **Qué dice la norma.** Identificar a los trabajadores que fueron sujetos a acontecimientos traumáticos severos y
 canalizarlos para su atención (num. 5.5); llevar el registro de sus nombres (num. 5.8 c).
 
@@ -422,7 +427,7 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-26 | `tests/Feature/Campaigns/CampaignPagesTest.php` (última evaluación y fecha límite) |
 | C-14, C-15, C-23 | `tests/Feature/Results/RiskDistributionTest.php` (conteo por nivel, 4/5, supresión complementaria, preguntas con menos de 5), `tests/Feature/Results/ResultsPageTest.php` (filtro por área, ninguna respuesta en las props, número de consultas) |
 | C-27 | `tests/Feature/Results/ResultsPageTest.php` (sin resultados con la evaluación abierta) |
-| C-28 | `tests/Feature/Results/ScreeningsPageTest.php` (solo owner y RH, bitácora), `tests/Feature/Results/ResultsPageTest.php` (consulta no la ve) |
+| C-28 | `tests/Feature/Results/ScreeningsPageTest.php` (solo owner y RH, bitácora), `tests/Feature/Results/ResultsPageTest.php` (consulta no la ve), `tests/Feature/Results/ScreeningReferralsTest.php` (registro de la canalización: estados, bitácora, sin datos en el log, aislamiento entre empresas) |
 | C-29 | `tests/Feature/Results/ReportTest.php` (incisos a–h), `tests/Feature/Results/ReportSharesTest.php` (15 min a 48 h, hash, vencido, revocado, empresa bloqueada, sin Guía I) |
 
 C-20 (sin ficha de la Guía V) se cumple por ausencia.
@@ -435,9 +440,11 @@ Obligaciones de la norma que dependen del cliente o que Humetría todavía no ge
 - política de prevención (5.1, Guía IV);
 - difusión de información (5.7);
 - programa de intervención y medidas de control (8.3 a 8.5);
-- exámenes médicos y evaluaciones psicológicas (5.6);
 - mecanismo de quejas (8.1 b);
 - integración al diagnóstico de seguridad y salud de la NOM-030 (7.6).
+
+Los exámenes médicos y las evaluaciones psicológicas (5.6) los hace un tercero: Humetría deja la constancia de la
+canalización y de la atención (C-28), no los practica ni guarda su resultado.
 
 La consulta de los trabajadores (7.8) se cumple con el informe impreso o publicado por la empresa: no hay todavía un
 acceso propio para los trabajadores.
@@ -461,3 +468,4 @@ acceso propio para los trabajadores.
 | 1 | 2026-10-29 | Primera versión, con base en el DOF del 23/10/2018 y las preguntas frecuentes de la STPS (partes uno y dos). |
 | 1.1 | 2026-10-29 | Se agrega «Cómo se prueba» y la errata «pertenencia e, inestabilidad» a C-21. Ningún criterio cambia. |
 | 1.2 | 2026-10-30 | Resultados: C-23 detalla la supresión complementaria y el mínimo por pregunta; nuevos C-27 (resultados solo con la evaluación cerrada), C-28 (lista de canalización) y C-29 (informe 7.7 y enlace temporal). |
+| 1.3 | 2026-11-03 | C-28 suma el registro de la canalización por persona (canalizada, atendida, día e institución), con bitácora; «exámenes médicos y evaluaciones psicológicas (5.6)» sale de lo que no se cubre. |

@@ -21,24 +21,14 @@ campañas en borrador, activas y cerradas. No manda correos; imprime los enlaces
 
 | # | Trabajo | Numerales | Tamaño |
 |---|---|---|---|
-| 1 | Registro de canalización | 5.5, 5.6, 5.8 c | S–M |
 | 2 | Programa de intervención | 5.4, 8.3, 8.4, 8.5; inciso g del 7.7 | L |
 | 3 | Política de prevención, difusión y portal de la persona trabajadora | 5.1, 5.7, 7.8 | M–L |
 | 4 | Canal de quejas y denuncias | 8.1 b, 6.4 | L, necesita diseño de privacidad |
 | 5 | Retoques de usabilidad | — | S |
 
-El 1 va primero por pequeño. El 2 es el que más se nota: hoy un cliente que cierra una evaluación con riesgo alto
+El 2 es el que más se nota: hoy un cliente que cierra una evaluación con riesgo alto
 llega a «se requiere un Programa» y no tiene dónde seguir. Si el segmento de centros de hasta 15 personas pesa en el
 producto, el 3 y el 4 suben: esos centros deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2, y hoy solo cubrimos el 5.5.
-
-## 1. Registro de canalización (5.5, 5.6, 5.8 c)
-
-**Hoy.** La lista de canalización de la Guía I dice quién requiere valoración clínica (C-28) y solo la ven owner y RH.
-No guarda que la persona se canalizó.
-
-**Falta.** Por persona: estado (pendiente, canalizada, atendida), fecha e institución. Con bitácora (`RecordAudit`),
-solo owner y RH, sin nada de esto en logs. Registrar los nombres de quienes recibieron valoración (5.8) ya lo da la
-lista; el registro agrega la evidencia de que se hizo.
 
 ## 2. Programa de intervención (5.4, 8.3, 8.4, 8.5)
 
@@ -95,5 +85,5 @@ seeder.
 
 - **Integración al diagnóstico de la NOM-030 (7.6).** Depende de otra norma y no tiene demanda clara.
 - **Unidades de verificación (numeral 9).** Son opcionales para el patrón; basta con que la evidencia sea exportable.
-- **Exámenes médicos y evaluaciones psicológicas (5.6).** Los hace un tercero; el registro de canalización (1) deja la
-  constancia.
+- **Exámenes médicos y evaluaciones psicológicas (5.6).** Los hace un tercero; el registro de canalización (C-28 de
+  `criterios.md`) ya deja la constancia.
