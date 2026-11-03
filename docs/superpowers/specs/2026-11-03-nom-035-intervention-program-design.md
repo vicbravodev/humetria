@@ -520,3 +520,9 @@ Respóndelas todas juntas; cada una trae mi recomendación por defecto («usa lo
     Y, ¿copiar una acción a otras filas en vez de ligarla a varias? *Recomiendo aprobar ambas.*
 15. **Navegación.** ¿Submenú «Evaluaciones» y «Programas» en NOM-035, o solo la tarjeta en la evaluación y en Resultados?
     *Recomiendo el submenú:* es donde RH busca lo vencido.
+
+## Decisiones del usuario (2026-11-03)
+
+Se aceptaron **todos los valores por defecto** de «Preguntas abiertas», incluida la declaración de
+`bacon/bacon-qr-code` en `composer.json` cuando el diseño la necesita (dependencia ya presente por Fortify).
+Orden de implementación: Programa de intervención y Canal de quejas (en paralelo), Política y portal al final.

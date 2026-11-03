@@ -787,3 +787,9 @@ Contéstalas todas juntas. Cada una trae mi recomendación por defecto.
     publicar, resultados sin publicar y enlace por vencer; solo al owner, como los demás resúmenes.
 17. **¿El submenú de NOM-035 («Evaluaciones», «Política y difusión») se hace en este trabajo?** Recomiendo **sí**, y que los
     trabajos 1, 2 y 4 agreguen sus entradas al mismo submenú.
+
+## Decisiones del usuario (2026-11-03)
+
+Se aceptaron **todos los valores por defecto** de «Preguntas abiertas», incluida la declaración de
+`bacon/bacon-qr-code` en `composer.json` cuando el diseño la necesita (dependencia ya presente por Fortify).
+Orden de implementación: Programa de intervención y Canal de quejas (en paralelo), Política y portal al final.

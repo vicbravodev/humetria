@@ -708,3 +708,9 @@ Responde todas juntas; cada una trae mi recomendación por defecto («usa los de
 18. **Orden de trabajo:** ¿se implementa antes o después del registro de canalización (gap 1) y del programa (gap 2)?
     *Default:* después del gap 1 (comparten el tema de la persona canalizada) y sin depender de él: la persona encargada
     anota a mano hasta que exista el evento público.
+
+## Decisiones del usuario (2026-11-03)
+
+Se aceptaron **todos los valores por defecto** de «Preguntas abiertas», incluida la declaración de
+`bacon/bacon-qr-code` en `composer.json` cuando el diseño la necesita (dependencia ya presente por Fortify).
+Orden de implementación: Programa de intervención y Canal de quejas (en paralelo), Política y portal al final.
