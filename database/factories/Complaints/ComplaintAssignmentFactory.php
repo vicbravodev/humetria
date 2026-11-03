@@ -31,7 +31,7 @@ final class ComplaintAssignmentFactory extends Factory
             'assigned_on' => now()->toDateString(),
             'ended_on' => null,
             'end_reason' => null,
-            'notified_position' => 0,
+            'notified_position' => null,
         ];
     }
 

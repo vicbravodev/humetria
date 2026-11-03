@@ -126,7 +126,7 @@ it('records the assignment of the system with the day and nobody who made it', f
         ->and($assignment->assigned_on->toDateString())->toBe('2026-11-19')
         ->and($assignment->ended_on)->toBeNull()
         ->and($assignment->end_reason)->toBeNull()
-        ->and($assignment->notified_position)->toBe(0);
+        ->and($assignment->notified_position)->toBeNull();
     expect(AuditEntry::query()->count())->toBe(0);
 });
 

@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $assigned_on
  * @property CarbonImmutable|null $ended_on
  * @property string|null $end_reason
- * @property int $notified_position
+ * @property int|null $notified_position
  */
 #[Fillable(['tenant_id', 'complaint_id', 'user_id', 'assigned_by', 'assigned_on', 'ended_on', 'end_reason', 'notified_position'])]
 #[WithoutTimestamps]

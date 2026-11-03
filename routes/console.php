@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
+use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
 use App\Modules\Seating\Actions\SendSeatingDigests;
 use App\Modules\Telework\Actions\ScheduleReviews;
@@ -31,6 +32,10 @@ Artisan::command('seating:schedule-checks', function (ScheduleSeatingChecks $sch
     $this->info('Evaluaciones marcadas por reevaluar: '.$schedule->handle());
 })->purpose('Mark for reassessment the current assessments that turn a year old');
 
+Artisan::command('complaints:send-digests', function (SendComplaintDigests $sendDigests): void {
+    $this->info('Resúmenes enviados: '.$sendDigests->handle());
+})->purpose('Email each handler of the complaints channel how many cases are new, answered or past their deadline (counts only)');
+
 Artisan::command('seating:send-digests', function (SendSeatingDigests $sendDigests): void {
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
 })->purpose('Email the owner and each Comisión member what waits for them in Ley Silla');
@@ -41,6 +46,7 @@ Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone(confi
 Schedule::command('telework:send-digests')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:schedule-checks')->dailyAt('07:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
