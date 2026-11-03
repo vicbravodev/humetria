@@ -16,6 +16,7 @@ import {
     complianceNavItems,
     mainNavItems,
     superadminNavItems,
+    toolNavItems,
 } from '@/lib/app-navigation';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
@@ -24,6 +25,7 @@ export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
     const mainItems = mainNavItems(tenant, auth.isSuperadmin);
     const complianceItems = complianceNavItems(tenant, inCourse?.count);
+    const toolItems = toolNavItems(tenant);
 
     return (
         <Sidebar variant="inset" collapsible="icon">
@@ -61,6 +63,9 @@ export function AppSidebar() {
                 {mainItems.length > 0 && <NavMain items={mainItems} />}
                 {complianceItems.length > 0 && (
                     <NavMain label="Cumplimiento" items={complianceItems} />
+                )}
+                {toolItems.length > 0 && (
+                    <NavMain label="Herramientas" items={toolItems} />
                 )}
                 {auth.isSuperadmin && (
                     <NavMain label="Plataforma" items={superadminNavItems} />

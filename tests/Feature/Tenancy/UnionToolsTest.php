@@ -78,15 +78,15 @@ it('answers 404 to a union on every route matching ComplianceRoutes, also with i
     }
 });
 
-it('lets a union reach employees, areas, members and the dashboard redirect', function (): void {
+it('lets a union reach employees, areas, members and the dashboard redirect to Compensación', function (): void {
     $union = Tenant::factory()->union()->create();
     $owner = memberOf($union, TenantRole::Owner);
 
     $this->actingAs($owner)->get(route('tenant.employees.index', $union))->assertOk();
     $this->actingAs($owner)->get(route('tenant.members.index', $union))->assertOk();
     $this->actingAs($owner)->get(route('tenant.areas.options', $union))->assertOk();
-    // Until Compensación exists the panel of a union is its roster.
-    $this->actingAs($owner)->get(route('tenant.dashboard', $union))->assertRedirect(route('tenant.employees.index', $union));
+    // The panel of a union is Compensación (Task 7 of the calculator plan: it was its roster until then).
+    $this->actingAs($owner)->get(route('tenant.dashboard', $union))->assertRedirect(route('tenant.compensation.index', $union));
 });
 
 it('leaves companies untouched', function (): void {

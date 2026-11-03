@@ -17,6 +17,7 @@ import {
     type NavTenant,
     settingsEntryHref,
     superadminNavItems,
+    toolNavItems,
 } from '@/lib/app-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
@@ -92,6 +93,7 @@ export function paletteCommands({
     const pages = [
         ...mainNavItems(tenant, isSuperadmin),
         ...complianceNavItems(tenant),
+        ...toolNavItems(tenant),
         ...(isSuperadmin ? superadminNavItems : []),
     ];
 

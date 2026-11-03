@@ -146,3 +146,25 @@ foreach (['Actions', 'Models', 'Support'] as $layer) {
         ->expect("App\\Modules\\Seating\\{$layer}")
         ->toOnlyBeUsedIn(['App\Modules\Seating', 'Database\Factories\Seating']);
 }
+
+/*
+ * Compensación handles what each person earns, so, like Seating, its boundaries are spelled out on their own. It reads the
+ * roster through Organization's public contract, never its internals (the loop above already enforces that).
+ */
+$compensationInternals = internalNamespacesOf('Compensation');
+
+it('has the Compensation namespaces the architecture rules target', function () use ($compensationInternals): void {
+    expect($compensationInternals)->toContain('App\Modules\Compensation\Http', 'App\Modules\Compensation\Providers');
+});
+
+foreach (['Actions', 'Models'] as $layer) {
+    arch("Compensation {$layer} do not depend on HTTP")
+        ->expect("App\\Modules\\Compensation\\{$layer}")
+        ->not->toUse(['Illuminate\Http', 'Inertia', 'request', 'session', 'auth']);
+}
+
+foreach (['Actions', 'Models', 'Support'] as $layer) {
+    arch("Compensation {$layer} are not used by the shared kernel")
+        ->expect("App\\Modules\\Compensation\\{$layer}")
+        ->toOnlyBeUsedIn(['App\\Modules\\Compensation', 'Database\\Factories\\Compensation']);
+}

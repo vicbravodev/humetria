@@ -21,8 +21,8 @@ mutates(CompanyRoles::class);
 it('defines the company roles and what each one allows', function (): void {
     $permissions = fn (string $role): array => Role::findByName($role)->permissions->pluck('name')->sort()->values()->all();
 
-    expect($permissions('owner'))->toBe(['assess-seating', 'manage-campaigns', 'manage-members', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-seating', 'view-telework', 'view-trauma-screenings'])
-        ->and($permissions('hr'))->toBe(['assess-seating', 'manage-campaigns', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-seating', 'view-telework', 'view-trauma-screenings'])
+    expect($permissions('owner'))->toBe(['assess-seating', 'manage-campaigns', 'manage-compensation', 'manage-members', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-compensation', 'view-seating', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('hr'))->toBe(['assess-seating', 'manage-campaigns', 'manage-compensation', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-compensation', 'view-seating', 'view-telework', 'view-trauma-screenings'])
         ->and($permissions('viewer'))->toBe(['use-assistant', 'view-seating', 'view-telework'])
         ->and($permissions('committee'))->toBe(['assess-seating', 'review-workplaces', 'view-seating', 'view-telework']);
 });

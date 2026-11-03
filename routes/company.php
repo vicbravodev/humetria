@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     require __DIR__.'/campaigns.php';
     require __DIR__.'/telework.php';
     require __DIR__.'/seating.php';
+    require __DIR__.'/compensation.php';
     require __DIR__.'/results.php';
     require __DIR__.'/assistant.php';
 });

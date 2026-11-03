@@ -91,6 +91,8 @@ export type CurrentTenant = TenantSummary &
             view_seating: boolean;
             manage_seating: boolean;
             assess_seating: boolean;
+            view_compensation: boolean;
+            manage_compensation: boolean;
             use_assistant: boolean;
         };
     };

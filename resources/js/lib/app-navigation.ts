@@ -1,5 +1,6 @@
 import {
     Building2,
+    Calculator,
     ClipboardCheck,
     Factory,
     House,
@@ -17,6 +18,7 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
+import { index as compensation } from '@/routes/tenant/compensation';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as seatingIndex } from '@/routes/tenant/seating';
@@ -143,6 +145,21 @@ export const complianceNavItems = (
         ...(tenant.can.view_seating ? [seating(tenant)] : []),
     ];
 };
+
+/**
+ * The tools that are not compliance, for whoever may view them: Compensación, in a union as well as in a company (the
+ * server keeps it from anyone else).
+ */
+export const toolNavItems = (tenant: NavTenant | null): NavItem[] =>
+    tenant?.can.view_compensation === true
+        ? [
+              {
+                  title: 'Compensación',
+                  href: compensation(tenant.slug),
+                  icon: Calculator,
+              },
+          ]
+        : [];
 
 /**
  * The sidebar's "Siguiente obligación": when the soonest evaluation in course closes ("en 11 días", "mañana",

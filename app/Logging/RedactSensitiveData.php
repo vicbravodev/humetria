@@ -74,6 +74,13 @@ final class RedactSensitiveData implements ProcessorInterface
             'health_note',
             'pain_level',
             'referral_note',
+            // Compensación: what a person earns, and the salary base built from it, is never a log's business.
+            'amount_cents',
+            'daily_salary',
+            'daily_salary_cents',
+            'salary',
+            'salary_cents',
+            'sbc',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',

@@ -16,9 +16,9 @@ final class TenantDashboardController extends Controller
 {
     public function __invoke(Request $request, Tenant $tenant, DashboardPage $page): Response|RedirectResponse
     {
-        // A union has no compliance panel; its start is its roster until Compensación takes over.
+        // A union has no compliance panel; its start is Compensación.
         if ($tenant->isUnion()) {
-            return to_route('tenant.employees.index', $tenant);
+            return to_route('tenant.compensation.index', $tenant);
         }
 
         return Inertia::render('dashboard', $page->props(

@@ -82,6 +82,8 @@ final class ResolveTenant
                 'view_seating' => $user->can('view-seating'),
                 'manage_seating' => $user->can('manage-seating'),
                 'assess_seating' => $user->can('assess-seating'),
+                'view_compensation' => $user->can('view-compensation'),
+                'manage_compensation' => $user->can('manage-compensation'),
                 'use_assistant' => $user->can('use-assistant'),
             ],
         ]);
