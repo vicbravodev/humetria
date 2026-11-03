@@ -482,6 +482,13 @@
     }
 }
 
+@keyframes humi-slide-out {
+    to {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
 @keyframes humi-pop {
     from {
         opacity: 0;
@@ -503,6 +510,10 @@
     animation: humi-slide-in 260ms var(--ease-out) both;
 }
 
+.humi-slide-out {
+    animation: humi-slide-out 200ms var(--ease-out) both;
+}
+
 .humi-pop {
     animation: humi-pop 200ms var(--ease-out) both;
 }
@@ -512,6 +523,10 @@
     .humi-slide-in,
     .humi-pop {
         animation: humi-fade 160ms linear both;
+    }
+
+    .humi-slide-out {
+        animation: humi-fade 160ms linear reverse both;
     }
 
     .humi-bob,

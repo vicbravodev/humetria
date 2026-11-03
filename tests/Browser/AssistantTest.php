@@ -142,6 +142,17 @@ it('draws the markdown of an answer and its norm card, once, and Humi reacts: it
     'dark' => [true],
 ]);
 
+it('slides the docked panel out when it closes instead of removing it at once, then brings the button back', function (): void {
+    visitPage('dashboard', humiPanelCompany())
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'aside[aria-label="Humi"]\')).animationName', 'humi-slide-in')
+        ->click('[aria-label="Cerrar"]')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'aside[aria-label="Humi"]\')).animationName', 'humi-slide-out')
+        ->assertScript('() => new Promise((done) => setTimeout(() => done(document.querySelectorAll(\'aside[aria-label="Humi"]\').length), 600))', 0)
+        ->assertScript('() => document.querySelectorAll(\'[aria-label="Abrir a Humi"]\').length', 1)
+        ->assertNoJavaScriptErrors();
+});
+
 it('says why Humi cannot answer when it is off for the company, and keeps the person from writing', function (): void {
     $panel = humiPanelCompany();
     TenantAiSettings::factory()->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id, 'enabled' => false]);
