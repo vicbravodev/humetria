@@ -47,14 +47,6 @@ final class Program extends Model
     }
 
     /**
-     * @return HasMany<ProgramAction, $this>
-     */
-    public function actions(): HasMany
-    {
-        return $this->hasMany(ProgramAction::class);
-    }
-
-    /**
      * @return array<string, string>
      */
     protected function casts(): array

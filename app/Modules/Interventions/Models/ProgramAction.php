@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -54,22 +53,6 @@ final class ProgramAction extends Model
 {
     /** @use HasFactory<ProgramActionFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
-
-    /**
-     * @return BelongsTo<ProgramItem, $this>
-     */
-    public function item(): BelongsTo
-    {
-        return $this->belongsTo(ProgramItem::class, 'item_id');
-    }
-
-    /**
-     * @return BelongsTo<Program, $this>
-     */
-    public function program(): BelongsTo
-    {
-        return $this->belongsTo(Program::class);
-    }
 
     /**
      * @return HasMany<ActionArea, $this>

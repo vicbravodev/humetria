@@ -16,8 +16,6 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A row of the Programa: the final score, a category or a domain it attends (criterio C-30), with its label frozen, the
@@ -48,22 +46,6 @@ final class ProgramItem extends Model
 {
     /** @use HasFactory<ProgramItemFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
-
-    /**
-     * @return BelongsTo<Program, $this>
-     */
-    public function program(): BelongsTo
-    {
-        return $this->belongsTo(Program::class);
-    }
-
-    /**
-     * @return HasMany<ProgramAction, $this>
-     */
-    public function actions(): HasMany
-    {
-        return $this->hasMany(ProgramAction::class, 'item_id');
-    }
 
     /**
      * @return array<string, string>
