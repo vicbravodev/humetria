@@ -25,6 +25,7 @@ it('reads its settings from config/disclosure.php', function (): void {
     expect(config('disclosure.link_max_months'))->toBe(36)
         ->and(config('disclosure.link_expiry_warning_days'))->toBe(30)
         ->and(config('disclosure.per_page'))->toBe(10)
+        ->and(config('disclosure.history_per_page'))->toBe(5)
         ->and(config('disclosure.workers_page.per_address_per_minute'))->toBe(60)
         ->and(config('disclosure.workers_page.per_link_per_minute'))->toBe(1200)
         ->and(config('disclosure.text_max'))->toBe(20000)

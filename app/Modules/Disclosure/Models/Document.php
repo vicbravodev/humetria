@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A text the company tells its people: a draft, or a version published for some work centers (criterio C-50). A published
@@ -33,6 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $published_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
+ * @property-read int|null $centers_count
  */
 #[Table('disclosure_documents')]
 #[Fillable(['tenant_id', 'kind', 'version', 'status', 'content', 'template_version', 'covers', 'created_by', 'published_at', 'published_by'])]
@@ -41,6 +43,14 @@ final class Document extends Model
 {
     /** @use HasFactory<DocumentFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+
+    /**
+     * @return HasMany<DocumentCenter, $this>
+     */
+    public function centers(): HasMany
+    {
+        return $this->hasMany(DocumentCenter::class, 'document_id');
+    }
 
     /**
      * @return array<string, string>

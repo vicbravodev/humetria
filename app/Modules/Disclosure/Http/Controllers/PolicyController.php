@@ -6,9 +6,11 @@ namespace App\Modules\Disclosure\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Disclosure\Actions\DiscardDraft;
+use App\Modules\Disclosure\Actions\PublishPolicy;
 use App\Modules\Disclosure\Actions\SaveDraft;
 use App\Modules\Disclosure\Actions\StartPolicyDraft;
 use App\Modules\Disclosure\Http\Requests\DraftRequest;
+use App\Modules\Disclosure\Http\Requests\PublishRequest;
 use App\Modules\Disclosure\Support\PolicyPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,5 +54,20 @@ final class PolicyController extends Controller
         Inertia::flash('toast', ['type' => 'info', 'message' => 'Borrador descartado.']);
 
         return redirect()->route('tenant.disclosure.policy', $tenant);
+    }
+
+    public function publish(PublishRequest $request, mixed $tenant, string $document, PublishPolicy $publish): RedirectResponse
+    {
+        $published = $publish->handle($document, $request->workCenterIds(), $request->covers(), $request->boolean('reviewed'), $request->userId());
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Política publicada: versión {$published->version}."]);
+
+        return redirect()->route('tenant.disclosure.policy', $tenant);
+    }
+
+    public function version(mixed $tenant, string $document, PolicyPages $pages): Response
+    {
+        Gate::authorize('view-disclosure');
+
+        return Inertia::render('disclosure/policy-version', $pages->showVersion($document));
     }
 }

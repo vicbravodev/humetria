@@ -13,7 +13,6 @@ use App\Modules\Instruments\Data\PolicySection;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -59,9 +58,8 @@ it('starts one draft only: asking again gives the same one', function (): void {
 
 it('starts a new version from the latest published one', function (): void {
     $older = Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id, 'version' => 1]);
-    $latest = Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id, 'version' => 2]);
-    $latest->content = [...array_slice($latest->content, 0, 1), ['key' => 'responsibles', 'heading' => 'Responsables', 'text' => 'Dirección de RH', 'items' => [], 'list_style' => null]];
-    DB::table('disclosure_documents')->where('id', $latest->id)->update(['content' => json_encode($latest->content)]);
+    $content = [...array_slice($older->content, 0, 1), ['key' => 'responsibles', 'heading' => 'Responsables', 'text' => 'Dirección de RH', 'items' => [], 'list_style' => null]];
+    Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id, 'version' => 2, 'content' => $content]);
 
     $draft = resolve(StartPolicyDraft::class)->handle(null);
 

@@ -189,6 +189,8 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['notices']],
+    'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
+    'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

@@ -147,7 +147,7 @@ describe('complianceNavItems', () => {
         ]);
     });
 
-    it('lists the NOM-035 sub-links: the evaluations and the Programas de intervención, for who may read them', () => {
+    it('lists the NOM-035 sub-links for who may read each: evaluations, Programas, policy and disclosure', () => {
         const subLinks = (tenant: ReturnType<typeof acme>) =>
             (
                 complianceNavItems(tenant).find(
@@ -155,16 +155,28 @@ describe('complianceNavItems', () => {
                 )?.children ?? []
             ).map((item) => [item.title, toUrl(item.href)]);
         const tenant = acme(true, true, 'owner');
+        const without = (can: Partial<typeof tenant.can>) => ({
+            ...tenant,
+            can: { ...tenant.can, ...can },
+        });
 
         expect(subLinks(tenant)).toEqual([
             ['Evaluaciones', '/admin/acme/campaigns'],
             ['Programas', '/admin/acme/programs'],
+            ['Política y difusión', '/admin/acme/disclosure'],
+        ]);
+        expect(subLinks(without({ view_interventions: false }))).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Política y difusión', '/admin/acme/disclosure'],
+        ]);
+        expect(subLinks(without({ view_disclosure: false }))).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Programas', '/admin/acme/programs'],
         ]);
         expect(
-            subLinks({
-                ...tenant,
-                can: { ...tenant.can, view_interventions: false },
-            }),
+            subLinks(
+                without({ view_interventions: false, view_disclosure: false }),
+            ),
         ).toEqual([]);
     });
 

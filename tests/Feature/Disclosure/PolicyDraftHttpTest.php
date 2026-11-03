@@ -137,3 +137,131 @@ it('shows the draft of its own company only', function (): void {
 
     $this->actingAs($this->hr)->get(($this->url)('policy'))->assertInertia(fn (Assert $page) => $page->where('draft', null));
 });
+
+/** The form that publishes: the centers (all by default), the incisos and the review. @return array<string, mixed> */
+function publishForm(array $overrides = []): array
+{
+    return ['all_centers' => true, 'covers' => ['a', 'b', 'c'], 'reviewed' => true, ...$overrides];
+}
+
+/** A complete draft of the company at hand. */
+function completePolicyDraft(?Document $draft = null): Document
+{
+    $draft ??= resolve(StartPolicyDraft::class)->handle(null);
+
+    return resolve(App\Modules\Disclosure\Actions\SaveDraft::class)->handle($draft->id, array_map(fn (array $section): array => [
+        'key' => $section['key'],
+        'text' => in_array($section['key'], ['responsibles', 'resources'], true) ? 'Dirección de RH' : $section['text'],
+        'items' => $section['items'],
+    ], $draft->content));
+}
+
+it('publishes the draft for every center in use from the form', function (): void {
+    $center = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $draft = completePolicyDraft();
+
+    $this->actingAs($this->hr)->post(($this->url)('policy.publish', $draft->id), publishForm())
+        ->assertRedirect(($this->url)('policy'))
+        ->assertSessionHasNoErrors();
+
+    $published = $draft->fresh();
+    expect($published?->version)->toBe(1)
+        ->and($published?->status->value)->toBe('published')
+        ->and(App\Modules\Disclosure\Models\DocumentCenter::query()->pluck('work_center_id')->all())->toBe([$center->id]);
+});
+
+it('publishes for the centers named when not all', function (): void {
+    $north = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $draft = completePolicyDraft();
+
+    $this->actingAs($this->hr)->post(($this->url)('policy.publish', $draft->id), publishForm(['all_centers' => false, 'work_center_ids' => [$north->id], 'covers' => ['a', 'b']]))
+        ->assertSessionHasNoErrors();
+
+    expect(App\Modules\Disclosure\Models\DocumentCenter::query()->pluck('work_center_id')->all())->toBe([$north->id])
+        ->and($draft->fresh()?->covers)->toBe(['a', 'b']);
+});
+
+it('answers what is wrong with a publication on the field it belongs to', function (array $form, string $field): void {
+    App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $draft = completePolicyDraft();
+
+    $this->actingAs($this->hr)->post(($this->url)('policy.publish', $draft->id), publishForm($form))->assertSessionHasErrors($field);
+
+    expect($draft->fresh()?->version)->toBeNull();
+})->with([
+    'without the review' => [['reviewed' => false], 'reviewed'],
+    'no review at all' => [['reviewed' => null], 'reviewed'],
+    'no centers chosen' => [['all_centers' => false, 'work_center_ids' => []], 'work_center_ids'],
+    'a center that is not a uuid' => [['all_centers' => false, 'work_center_ids' => ['x']], 'work_center_ids.0'],
+    'an inciso that does not exist' => [['covers' => ['a', 'z']], 'covers.1'],
+    'covers that is not a list' => [['covers' => 'a'], 'covers'],
+]);
+
+it('answers a policy without responsibles on that field', function (): void {
+    App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $draft = resolve(StartPolicyDraft::class)->handle(null);
+
+    $this->actingAs($this->hr)->post(($this->url)('policy.publish', $draft->id), publishForm())->assertSessionHasErrors(['responsibles', 'resources']);
+});
+
+it('lets the viewer read but not publish, and does not find a draft of another company', function (): void {
+    App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $draft = completePolicyDraft();
+    $foreign = Document::factory()->draft()->policy()->create(['tenant_id' => Tenant::factory()->create()->id]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(($this->url)('policy.publish', $draft->id), publishForm())->assertForbidden();
+    $this->actingAs($this->hr)->post(($this->url)('policy.publish', $foreign->id), publishForm())->assertNotFound();
+
+    expect($draft->fresh()?->version)->toBeNull();
+});
+
+it('shows the version in force with its words, the company name in place, and the history a page at a time', function (): void {
+    $this->tenant->update(['legal_name' => 'Manufacturas del Bajío S.A. de C.V.']);
+    App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $first = completePolicyDraft();
+    resolve(App\Modules\Disclosure\Actions\PublishPolicy::class)->handle($first->id, null, ['a', 'b', 'c'], true, $this->hr->id);
+
+    foreach (range(2, 7) as $ignored) {
+        $next = completePolicyDraft();
+        resolve(App\Modules\Disclosure\Actions\PublishPolicy::class)->handle($next->id, null, ['a'], true, $this->hr->id);
+    }
+
+    $this->actingAs($this->hr)->get(($this->url)('policy'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('latest.version', 7)
+            ->where('latest.covers', ['a'])
+            ->where('latest.centers', 1)
+            ->where('latest.sections.0.text', fn ($text) => str_starts_with($text, 'En este centro de trabajo Manufacturas del Bajío S.A. de C.V. en relación') && ! str_contains($text, '{legal_name}'))
+            ->where('history.total', 7)
+            ->where('history.per_page', 5)
+            ->where('history.data.0', fn ($row) => $row['version'] === 7 && $row['centers'] === 1 && $row['covers'] === ['a'] && isset($row['publishedOn']) && isset($row['id']))
+            ->has('history.data', 5)
+            ->where('centersInUse', 1));
+
+    $this->actingAs($this->hr)->get(route('tenant.disclosure.policy', [$this->tenant, 'versions' => 2]))
+        ->assertInertia(fn (Assert $page) => $page->has('history.data', 2)->where('history.data.0.version', 2));
+});
+
+it('opens a published version to read it, and nothing else', function (): void {
+    App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    $draft = completePolicyDraft();
+    $published = resolve(App\Modules\Disclosure\Actions\PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $this->hr->id);
+    $open = resolve(StartPolicyDraft::class)->handle(null);
+    $foreign = Document::factory()->published()->policy()->create(['tenant_id' => Tenant::factory()->create()->id]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get(($this->url)('policy.version', $published->id))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('disclosure/policy-version')->where('version.version', 1)->where('version.sections.1.text', 'Dirección de RH')->has('version.sections', 12));
+
+    $this->actingAs($this->hr)->get(($this->url)('policy.version', $open->id))->assertNotFound();
+    $this->actingAs($this->hr)->get(($this->url)('policy.version', $foreign->id))->assertNotFound();
+    $this->actingAs(memberOf($this->tenant, TenantRole::Committee))->get(($this->url)('policy.version', $published->id))->assertForbidden();
+});

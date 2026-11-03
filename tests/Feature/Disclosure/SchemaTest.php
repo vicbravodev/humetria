@@ -33,7 +33,7 @@ function insertDisclosure(Factory $factory, array $attributes): void
 }
 
 /** Runs a statement that must fail, in a savepoint, so the transaction of the test goes on. */
-function refused(Closure $statement, string $constraint): void
+function refusedByTheDatabase(Closure $statement, string $constraint): void
 {
     expect(fn () => DB::transaction($statement))->toThrow(QueryException::class, $constraint);
 }
@@ -56,7 +56,7 @@ it('stores a draft and a published version of the same kind', function (): void 
 it('keeps one draft per company and kind', function (): void {
     Document::factory()->draft()->create($this->in);
 
-    refused(fn () => Document::factory()->draft()->create($this->in), 'disclosure_documents_one_draft');
+    refusedByTheDatabase(fn () => Document::factory()->draft()->create($this->in), 'disclosure_documents_one_draft');
 
     Document::factory()->draft()->create(['tenant_id' => Tenant::factory()->create()->id]);
     expect(Document::query()->withoutGlobalScopes()->count())->toBe(2);
@@ -65,7 +65,7 @@ it('keeps one draft per company and kind', function (): void {
 it('numbers the versions of a kind once per company', function (): void {
     Document::factory()->published()->create([...$this->in, 'version' => 1]);
 
-    refused(fn () => Document::factory()->published()->create([...$this->in, 'version' => 1]), 'disclosure_documents_version_unique');
+    refusedByTheDatabase(fn () => Document::factory()->published()->create([...$this->in, 'version' => 1]), 'disclosure_documents_version_unique');
 
     Document::factory()->published()->create([...$this->in, 'version' => 2]);
     Document::factory()->published()->create(['tenant_id' => Tenant::factory()->create()->id, 'version' => 1]);
@@ -73,7 +73,7 @@ it('numbers the versions of a kind once per company', function (): void {
 });
 
 it('refuses what the checks refuse', function (array $attributes, string $constraint): void {
-    refused(fn () => insertDisclosure(Document::factory()->draft(), [...$this->in, ...$attributes]), $constraint);
+    refusedByTheDatabase(fn () => insertDisclosure(Document::factory()->draft(), [...$this->in, ...$attributes]), $constraint);
 })->with([
     'an unknown kind' => [['kind' => 'rules'], 'disclosure_documents_kind_known'],
     // The row breaks two checks and the database names the first it meets.
@@ -90,7 +90,7 @@ it('refuses a published version that is incomplete', function (array $missing): 
     $user = User::factory()->create();
     $complete = ['status' => 'published', 'version' => 1, 'published_at' => now(), 'published_by' => $user->id];
 
-    refused(fn () => insertDisclosure(Document::factory(), [...$this->in, ...array_merge($complete, $missing)]), 'disclosure_documents_published_is_complete');
+    refusedByTheDatabase(fn () => insertDisclosure(Document::factory(), [...$this->in, ...array_merge($complete, $missing)]), 'disclosure_documents_published_is_complete');
 })->with([
     'no number' => [['version' => null]],
     'no day' => [['published_at' => null]],
