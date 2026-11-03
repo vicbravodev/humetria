@@ -43,6 +43,13 @@ return [
 
     'telework_files' => env('TELEWORK_FILES_DISK', 'local'),
 
+    /*
+    | The disk of the Ley Silla evidence (photos of seats, minutes, regulation PDFs). Private: never a public URL; files are
+    | served only through the app, after checking who may see them.
+    */
+
+    'seating_files' => env('SEATING_FILES_DISK', 'local'),
+
     'disks' => [
 
         'local' => [

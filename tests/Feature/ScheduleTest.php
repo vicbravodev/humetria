@@ -16,6 +16,8 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'campaigns:send-digests' => '0 9 * * 1',
         'telework:schedule-reviews' => '0 7 * * *',
         'telework:send-digests' => '0 8 * * *',
+        'seating:schedule-checks' => '30 7 * * *',
+        'seating:send-digests' => '30 8 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
@@ -25,6 +27,18 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
     $telework = collect(app(Schedule::class)->events())->filter(fn (Event $event): bool => str_contains($event->command ?? '', 'telework:'));
     expect($telework)->toHaveCount(2)
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
+});
+
+it('runs the Ley Silla checks at 07:30 and digests them at 08:30 display time, once and without overlapping', function (): void {
+    $seating = collect(app(Schedule::class)->events())->filter(fn (Event $event): bool => str_contains($event->command ?? '', 'seating:'));
+
+    expect($seating)->toHaveCount(2)
+        ->and($seating->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
+});
+
+it('runs the Ley Silla commands and reports what they did', function (): void {
+    $this->artisan('seating:schedule-checks')->expectsOutput('Evaluaciones marcadas por reevaluar: 0')->assertSuccessful();
+    $this->artisan('seating:send-digests')->expectsOutput('Resúmenes enviados: 0')->assertSuccessful();
 });
 
 it('runs the NOM-037 commands and reports what they did', function (): void {

@@ -103,9 +103,10 @@ final class SendSurveyInvitations implements ShouldQueue
                 return;
             }
 
-            // Whoever already got a link is reminded; a Guía I campaign asks the same way each time.
+            // Whoever already got a link is reminded; a Guía I campaign and a Ley Silla survey ask the same way each time.
             $kind = match (true) {
                 $campaign->kind === CampaignKind::Nom035Trauma => SurveyEmail::Trauma,
+                $campaign->kind === CampaignKind::SeatingSurvey => SurveyEmail::Seating,
                 $participant->invited_at !== null => SurveyEmail::Reminder,
                 default => SurveyEmail::Invitation,
             };

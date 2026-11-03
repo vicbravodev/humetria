@@ -128,7 +128,7 @@ export type SurveyOption = { value: string; label: string };
 export type SurveyItem = { number: number; text: string };
 
 export type SurveyGate = {
-    key: 'serves_clients' | 'supervises';
+    key: 'serves_clients' | 'supervises' | 'stands';
     question: string;
     instruction: string;
 };

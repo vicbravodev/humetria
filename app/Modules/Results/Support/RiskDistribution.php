@@ -20,7 +20,7 @@ use App\Modules\Responses\Data\AnonymousRecord;
  */
 final readonly class RiskDistribution
 {
-    public function __construct(private Instruments $instruments) {}
+    public function __construct(private Instruments $instruments, private GroupMinimum $minimum) {}
 
     /**
      * The final score, categories and domains of the questionnaires, or of one area when it is an area shown.
@@ -36,7 +36,7 @@ final readonly class RiskDistribution
 
         $answered = count($records);
 
-        if (! $this->isShown($answered)) {
+        if (! $this->minimum->isShown($answered)) {
             return ['answered' => $answered, 'visible' => false, 'final' => [], 'categories' => [], 'domains' => []];
         }
 
@@ -98,7 +98,7 @@ final readonly class RiskDistribution
                 // Unfavorable: on the side of the item's own scale that scores 3 or 4 points (Tablas 2 and 5).
                 $unfavorable = count(array_filter($given, fn (string $answer): bool => $this->instruments->itemScore($instrument, $item->number, $answer) >= 3));
                 $answered = count($given);
-                $shown = $this->isShown($answered);
+                $shown = $this->minimum->isShown($answered);
                 $items[] = ['number' => $item->number, 'text' => $item->text, 'answered' => $shown ? $answered : null, 'counts' => $shown ? $counts : null, 'unfavorable' => $shown ? $unfavorable : null];
             }
 
@@ -109,34 +109,14 @@ final readonly class RiskDistribution
     }
 
     /**
-     * The areas that may be shown. Those under the minimum are hidden; while the hidden ones add up to more than none
-     * and fewer than the minimum, the smallest area shown (by id on a tie) is hidden too.
+     * The areas that may be shown, largest first, by id on a tie.
      *
      * @param  list<AnonymousRecord>  $records
-     * @return list<string> largest first, by id on a tie
+     * @return list<string>
      */
     private function visibleAreas(array $records): array
     {
-        $sizes = self::sizes($records);
-        $visible = array_filter($sizes, $this->isShown(...));
-        $hidden = count($records) - array_sum($visible);
-        // Smallest first, so the next one to hide is always the first.
-        uksort($visible, fn (string $a, string $b): int => [$visible[$a], $a] <=> [$visible[$b], $b]);
-
-        while ($hidden > 0 && ! $this->isShown($hidden) && $visible !== []) {
-            $smallest = array_key_first($visible);
-            $hidden += $visible[$smallest];
-            unset($visible[$smallest]);
-        }
-
-        uksort($visible, fn (string $a, string $b): int => [$visible[$b], $a] <=> [$visible[$a], $b]);
-
-        return array_keys($visible);
-    }
-
-    private function isShown(int $answered): bool
-    {
-        return $answered >= config()->integer('results.min_group');
+        return $this->minimum->suppress(self::sizes($records))->visible;
     }
 
     /**

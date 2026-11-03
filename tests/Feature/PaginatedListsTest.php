@@ -76,6 +76,47 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.campaigns.report', [$tenant, $closed->id]);
     }, ['shares']],
+    'Ley Silla centers' => ['seating/index', function () {
+        [$tenant] = listsCompany();
+
+        return route('tenant.seating.index', $tenant);
+    }, ['centers']],
+    'Ley Silla positions of a center' => ['seating/center', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.center', [$tenant, $plant->id]);
+    }, ['positions']],
+    'Ley Silla documents of a center' => ['seating/documents', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.documents.index', [$tenant, $plant->id]);
+    }, ['documents']],
+    'Ley Silla plan of a center' => ['seating/plan', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.plan', [$tenant, $plant->id]);
+    }, ['measures', 'agreements']],
+    'Ley Silla seat reports of a center' => ['seating/reports', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.reports.index', [$tenant, $plant->id]);
+    }, ['reports']],
+    'Ley Silla assessments of a center' => ['seating/assessments', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.assessments.index', [$tenant, $plant->id]);
+    }, ['people']],
+    'Ley Silla seats of a center' => ['seating/seats', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.seating.seats.index', [$tenant, $plant->id]);
+    }, ['seats']],
+    'Ley Silla people of a position' => ['seating/position', function () {
+        [$tenant, $plant] = listsCompany();
+        $position = App\Modules\Seating\Models\StandingPosition::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+        return route('tenant.seating.positions.show', [$tenant, $position->id]);
+    }, ['people']],
     'NOM-037 centers' => ['telework/index', function () {
         [$tenant] = listsCompany();
 

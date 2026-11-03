@@ -8,13 +8,17 @@ use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
+use App\Modules\Telework\Contracts\Committee;
+use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Contracts\TeleworkStanding;
 use App\Modules\Telework\Events\DocumentPublished;
 use App\Modules\Telework\Listeners\EndOnDeactivation;
 use App\Modules\Telework\Listeners\EndOnMove;
 use App\Modules\Telework\Listeners\RequestOnPublication;
 use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
+use App\Modules\Telework\Support\CommitteeGate;
 use App\Modules\Telework\Support\CompanyTeleworkStanding;
+use App\Modules\Telework\Support\TokenPortalAccess;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -29,6 +33,8 @@ final class TeleworkServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(Committee::class, CommitteeGate::class);
+        $this->app->bind(PortalAccess::class, TokenPortalAccess::class);
         $this->app->bind(TeleworkStanding::class, CompanyTeleworkStanding::class);
     }
 

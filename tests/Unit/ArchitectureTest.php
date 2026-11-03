@@ -124,3 +124,25 @@ foreach (['Actions', 'Models', 'Support'] as $layer) {
         ->expect("App\\Modules\\Telework\\{$layer}")
         ->toOnlyBeUsedIn(['App\Modules\Telework', 'Database\Factories\Telework']);
 }
+
+/*
+ * Seating (Ley Silla) keeps health data of the people who work standing, so, like Telework, its boundaries are spelled
+ * out on their own. It reads the Comisión through Telework's public contract, never its internals.
+ */
+$seatingInternals = internalNamespacesOf('Seating');
+
+it('has the Seating namespaces the architecture rules target', function () use ($seatingInternals): void {
+    expect($seatingInternals)->toContain('App\Modules\Seating\Actions', 'App\Modules\Seating\Models', 'App\Modules\Seating\Support', 'App\Modules\Seating\Http');
+});
+
+foreach (['Actions', 'Models'] as $layer) {
+    arch("Seating {$layer} do not depend on HTTP")
+        ->expect("App\\Modules\\Seating\\{$layer}")
+        ->not->toUse(['Illuminate\Http', 'Inertia', 'request', 'session', 'auth']);
+}
+
+foreach (['Actions', 'Models', 'Support'] as $layer) {
+    arch("Seating {$layer} are not used by the shared kernel")
+        ->expect("App\\Modules\\Seating\\{$layer}")
+        ->toOnlyBeUsedIn(['App\Modules\Seating', 'Database\Factories\Seating']);
+}

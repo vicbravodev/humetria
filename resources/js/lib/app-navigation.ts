@@ -4,6 +4,7 @@ import {
     Factory,
     House,
     Laptop,
+    Armchair,
     Inbox,
     UserCog,
     Users,
@@ -18,6 +19,7 @@ import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
+import { index as seatingIndex } from '@/routes/tenant/seating';
 import { index as teleworkIndex } from '@/routes/tenant/telework';
 import { index as teleworkDocuments } from '@/routes/tenant/telework/documents';
 import { index as teleworkNotices } from '@/routes/tenant/telework/notices';
@@ -102,9 +104,16 @@ const telework = (tenant: NavTenant): NavItem => ({
     ],
 });
 
+/** Ley Silla's entry: one link, the centers; its tabs live on each center's page. */
+const seating = (tenant: NavTenant): NavItem => ({
+    title: 'Ley Silla',
+    href: seatingIndex(tenant.slug),
+    icon: Armchair,
+});
+
 /**
  * The compliance tools of the current company, for every role: who may change them is the page's to say. The committee
- * sees only NOM-037. Ley Silla enters here when it gets its first page.
+ * sees only NOM-037 and Ley Silla.
  */
 export const complianceNavItems = (
     tenant: NavTenant | null,
@@ -121,9 +130,11 @@ export const complianceNavItems = (
         badge: inCourse,
     };
 
-    return tenant.role === 'committee'
-        ? [telework(tenant)]
-        : [nom035, telework(tenant)];
+    return [
+        ...(tenant.role === 'committee' ? [] : [nom035]),
+        telework(tenant),
+        ...(tenant.can.view_seating ? [seating(tenant)] : []),
+    ];
 };
 
 /**

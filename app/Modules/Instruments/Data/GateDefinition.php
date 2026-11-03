@@ -10,7 +10,7 @@ namespace App\Modules\Instruments\Data;
 final readonly class GateDefinition
 {
     /**
-     * @param  'serves_clients'|'supervises'  $key
+     * @param  'serves_clients'|'supervises'|'stands'  $key
      */
     public function __construct(public string $key, public string $question, public string $instruction) {}
 }
