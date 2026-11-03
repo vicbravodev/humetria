@@ -36,6 +36,7 @@ final class ComplaintsServiceProvider extends ServiceProvider
 
         // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
         RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));
+        RateLimiter::for('complaints-follow-up', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.follow_ups_per_hour'))->by(AddressKey::for($request)));
         RateLimiter::for('complaints-submit', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)));
     }
 }

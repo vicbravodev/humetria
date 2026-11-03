@@ -1,9 +1,16 @@
 import { TriangleAlert } from 'lucide-react';
+import { show } from '@/routes/complaints/follow-up';
 import CodeRow from '@/components/complaints-public/code-row';
 import type { Receipt } from '@/lib/complaints/receipt';
 
 /** What the person takes with them, shown once: the reference and the key to follow the case up, and what losing it means. */
-export default function ReceiptCard({ receipt }: { receipt: Receipt }) {
+export default function ReceiptCard({
+    receipt,
+    code,
+}: {
+    receipt: Receipt;
+    code: string;
+}) {
     return (
         <section className="flex flex-col gap-5 card p-5" aria-live="polite">
             <h2 className="text-xl font-semibold">Recibimos su queja</h2>
@@ -21,6 +28,12 @@ export default function ReceiptCard({ receipt }: { receipt: Receipt }) {
                     en un dispositivo propio, no en uno compartido.
                 </span>
             </p>
+            <a
+                href={show.url({ code })}
+                className="touch-hit w-fit rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+                Dar seguimiento a mi queja
+            </a>
         </section>
     );
 }

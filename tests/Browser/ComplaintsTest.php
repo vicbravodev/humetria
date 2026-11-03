@@ -398,3 +398,71 @@ it('steps aside from a case, which then no longer opens', function (): void {
 
     visit("{$url}/complaints/cases/{$case->id}")->assertSee('404');
 });
+
+/** A channel with a complaint whose reference and key the person knows. */
+function followedComplaint(): array
+{
+    $channel = openChannelWithHandler();
+    $complaint = Complaint::factory()->create(['tenant_id' => $channel->tenant_id, 'channel_id' => $channel->id, 'reference' => 'ABCD2345', 'access_key_hash' => hash('sha256', 'KEYK1234KEYK5678KEYK')]);
+    App\Modules\Complaints\Models\ComplaintEntry::factory()->create(['tenant_id' => $channel->tenant_id, 'complaint_id' => $complaint->id, 'position' => 1, 'kind' => 'handler_message', 'body' => 'Acusamos recibo de su queja.', 'author_id' => ComplaintHandler::query()->withoutGlobalScopes()->where('tenant_id', $channel->tenant_id)->value('user_id')]);
+
+    return [$channel, $complaint];
+}
+
+it('asks for the reference and the key to follow a complaint up', function (bool $dark, bool $mobile): void {
+    [$channel] = followedComplaint();
+
+    visitPage('complaints-public/follow-up', "/c/{$channel->access_code}/follow-up", $dark, $mobile)
+        ->assertSee('Seguimiento de su queja')
+        ->assertSee('Referencia')
+        ->assertSee('Abrir mi caso')
+        ->assertScript('() => document.cookie', '');
+})->with($looks);
+
+it('opens the case with the reference and the key, and writes in it', function (bool $mobile): void {
+    [$channel, $complaint] = followedComplaint();
+    $page = $mobile ? visit("/c/{$channel->access_code}/follow-up")->on()->mobile() : visit("/c/{$channel->access_code}/follow-up");
+
+    $page->fill('#follow-up-reference', 'abcd 2345')
+        ->fill('#follow-up-key', 'keyk-1234-keyk-5678-keyk')
+        ->press('Abrir mi caso')
+        ->assertSee('Su queja')
+        ->assertSee('Recibida')
+        ->assertSee('Persona encargada')
+        ->assertSee('Acusamos recibo de su queja.')
+        ->assertNoAccessibilityIssues(1)
+        ->fill('#follow-up-reply', 'Sigue pasando y ahora lo hace delante de todos.')
+        ->press('Enviar')
+        ->assertSee('Sigue pasando y ahora lo hace delante de todos.')
+        ->assertSee('Usted')
+        ->assertScript('() => document.cookie', '')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Complaints\Models\ComplaintEntry::query()->withoutGlobalScopes()->where('complaint_id', $complaint->id)->where('kind', 'reporter_message')->count())->toBe(1);
+})->with([[false], [true]]);
+
+it('says the same when the key is wrong, and lets the person withdraw their complaint', function (): void {
+    [$channel, $complaint] = followedComplaint();
+
+    visit("/c/{$channel->access_code}/follow-up")
+        ->fill('#follow-up-reference', 'ABCD2345')
+        ->fill('#follow-up-key', 'WRONGWRONGWRONGWRONG')
+        ->press('Abrir mi caso')
+        ->assertSee('La referencia o la clave no coinciden.')
+        ->fill('#follow-up-key', 'KEYK1234KEYK5678KEYK')
+        ->press('Abrir mi caso')
+        ->assertSee('Su queja')
+        ->click('Retirar mi queja')
+        ->click('[role="dialog"] button:has-text("Retirar mi queja")')
+        ->assertSee('Cerrada')
+        ->assertSee('Usted retiró el caso.')
+        ->assertNoJavaScriptErrors();
+
+    expect($complaint->refresh()->resolution?->value)->toBe('withdrawn');
+});
+
+it('links the receipt to the follow-up and the form to it', function (): void {
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")->assertSee('Ya presenté una queja: ver cómo va')->assertNoJavaScriptErrors();
+});

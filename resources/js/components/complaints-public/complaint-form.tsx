@@ -4,6 +4,7 @@ import HowItWorks from '@/components/complaints-public/how-it-works';
 import ReceiptCard from '@/components/complaints-public/receipt-card';
 import StepNav from '@/components/complaints-public/step-nav';
 import { Button } from '@/components/ui/button';
+import { show } from '@/routes/complaints/follow-up';
 import { useComplaintForm } from '@/hooks/use-complaint-form';
 import type { PublicFormProps } from '@/types';
 
@@ -28,7 +29,7 @@ export default function ComplaintForm({
     );
 
     if (state.receipt !== undefined) {
-        return <ReceiptCard receipt={state.receipt} />;
+        return <ReceiptCard receipt={state.receipt} code={form.code} />;
     }
 
     if (state.step === 'intro') {
@@ -36,9 +37,17 @@ export default function ComplaintForm({
             <>
                 <HowItWorks {...words} />
                 <AnonymityLimits />
-                <Button className="self-start" onClick={state.next}>
-                    Quiero presentar una queja
-                </Button>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <Button onClick={state.next}>
+                        Quiero presentar una queja
+                    </Button>
+                    <a
+                        href={show.url({ code: form.code })}
+                        className="touch-hit rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                        Ya presenté una queja: ver cómo va
+                    </a>
+                </div>
             </>
         );
     }

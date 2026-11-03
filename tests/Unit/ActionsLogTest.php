@@ -17,6 +17,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Tenancy/Actions/ListWorkCenters.php' => 'reads a paginated list',
     'app/Modules/Campaigns/Actions/OpenSurvey.php' => 'reads the link; SubmitSurvey logs what changes',
     'app/Modules/Telework/Actions/OpenPortal.php' => 'reads the portal link; each portal action logs what changes',
+    'app/Modules/Complaints/Actions/OpenFollowUp.php' => 'reads the case a reference and a key open; the actions that change it log (without the case, by design)',
     'app/Modules/Complaints/Actions/OpenChannel.php' => 'reads the channel by its code; each action on a complaint logs what changes',
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',

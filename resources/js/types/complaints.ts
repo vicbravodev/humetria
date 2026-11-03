@@ -151,3 +151,28 @@ export type CaseCan = {
 
 /** The ways a handler closes a case. «Retirada por la persona» is the person's. */
 export type CaseResolutionOption = { value: string; label: string };
+
+export type FollowUpEntry = {
+    from: 'reporter' | 'handlers';
+    text: string;
+    /** The day, Y-m-d: never an hour. */
+    day: string | null;
+};
+
+/** What the person reads when they follow their complaint up. */
+export type FollowUp = {
+    status: 'received' | 'in_review' | 'closed';
+    statusLabel: string;
+    /** The resolution in general words, once it is closed. */
+    resolution: string | null;
+    /** How many people attend it: never who. */
+    handlers: number;
+    canReply: boolean;
+    canWithdraw: boolean;
+    entries: {
+        data: FollowUpEntry[];
+        current_page: number;
+        last_page: number;
+        total: number;
+    };
+};

@@ -10,10 +10,13 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Complaints\Http\Controllers\PublicCentersController;
 use App\Modules\Complaints\Http\Controllers\PublicChannelController;
 use App\Modules\Complaints\Http\Controllers\PublicComplaintController;
+use App\Modules\Complaints\Http\Controllers\PublicFollowUpController;
 use App\Modules\Complaints\Http\Middleware\GuardPublicSubmission;
 use App\Modules\Complaints\Http\Middleware\HandlePublicChannelRequests;
+use App\Modules\Complaints\Http\Middleware\OpenChannelForFollowUp;
 use App\Modules\Complaints\Http\Middleware\OpenChannelForSubmission;
 use App\Modules\Complaints\Http\Middleware\PrivateChannelResponse;
+use App\Modules\Complaints\Http\Middleware\RejectCrossSiteRequests;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -42,6 +45,14 @@ Route::withoutMiddleware([
         ->middleware(['throttle:complaints-view', OpenChannelForSubmission::class])
         ->name('complaints.public.centers');
     Route::post('c/{code}', [PublicComplaintController::class, 'store'])
-        ->middleware(['throttle:complaints-submit', OpenChannelForSubmission::class, GuardPublicSubmission::class])
+        ->middleware(['throttle:complaints-submit', RejectCrossSiteRequests::class, OpenChannelForSubmission::class, GuardPublicSubmission::class])
         ->name('complaints.public.store');
+
+    // Following a complaint up: the reference and the key travel in the body, never in the address. A paused channel still serves it.
+    Route::get('c/{code}/follow-up', [PublicFollowUpController::class, 'show'])->middleware('throttle:complaints-view')->name('complaints.follow-up.show');
+    Route::middleware(['throttle:complaints-follow-up', RejectCrossSiteRequests::class, OpenChannelForFollowUp::class])->group(function (): void {
+        Route::post('c/{code}/follow-up', [PublicFollowUpController::class, 'open'])->name('complaints.follow-up.open');
+        Route::post('c/{code}/follow-up/messages', [PublicFollowUpController::class, 'message'])->name('complaints.follow-up.messages.store');
+        Route::post('c/{code}/follow-up/withdraw', [PublicFollowUpController::class, 'withdraw'])->name('complaints.follow-up.withdraw');
+    });
 });

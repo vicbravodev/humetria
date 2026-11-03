@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * What stops a bot or another site before the form is read. A submission that comes from another site is refused. A hidden
+ * What stops a bot before the form is read: a hidden
  * field a person never fills, if filled, gets a receipt that looks real and is not kept, so the bot learns nothing. (The
  * session's forgery token is not here: the signed ticket of the form replaces it.)
  */
@@ -26,8 +26,6 @@ final class GuardPublicSubmission
      */
     public function handle(Request $request, Closure $next): Response
     {
-        abort_if($request->header('Sec-Fetch-Site') === 'cross-site', 403);
-
         if ($request->filled(self::HONEYPOT)) {
             $opened = $request->attributes->get(OpenChannelForSubmission::ATTRIBUTE);
             Log::info('complaints.spam_blocked', ['channel_id' => $opened instanceof OpenedChannel ? $opened->channel->id : null, 'reason' => 'honeypot']);
