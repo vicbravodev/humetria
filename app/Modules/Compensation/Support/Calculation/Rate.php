@@ -70,13 +70,13 @@ final readonly class Rate
         return Money::truncate($this->value->multipliedBy($cents));
     }
 
-    /** The value as whole cents (for a money parameter); a fraction is refused. */
-    public function cents(): int
+    /** The value as a whole number (cents for a money parameter, days for a count); a fraction is refused. */
+    public function integer(): int
     {
         try {
             return $this->value->toInt();
         } catch (RoundingNecessaryException $exception) {
-            throw new InvalidArgumentException('This rate is not a whole number of cents.', previous: $exception);
+            throw new InvalidArgumentException('This rate is not a whole number.', previous: $exception);
         }
     }
 }

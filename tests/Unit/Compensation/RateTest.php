@@ -35,8 +35,8 @@ it('adds and multiplies exactly', function (): void {
         ->and(Rate::fraction(1, 3)->times(Rate::fraction(3, 1))->compareTo(Rate::one()))->toBe(0);
 });
 
-it('gives whole cents only when the value is an integer', function (): void {
-    expect(Rate::scaled(11731, 0)->cents())->toBe(11731);
+it('gives a whole number only when the value is an integer', function (): void {
+    expect(Rate::scaled(11731, 0)->integer())->toBe(11731);
 
-    Rate::scaled(1, 1)->cents();
+    Rate::scaled(1, 1)->integer();
 })->throws(InvalidArgumentException::class);
