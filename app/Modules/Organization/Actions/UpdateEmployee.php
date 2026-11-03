@@ -21,8 +21,9 @@ final readonly class UpdateEmployee
             $from = $employee->work_center_id;
             $employee->update(EmployeeAttributes::from($data, $this->findOrCreateArea->handle($data->area)));
 
-            if ($employee->work_center_id !== $from) {
-                event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $employee->work_center_id));
+            // Someone who had no work center is placed in one, not moved.
+            if ($from !== null && $data->workCenterId !== $from) {
+                event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $data->workCenterId));
             }
 
             // sort() also renumbers the keys, so the list stays a list once updated_at is taken out.

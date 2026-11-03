@@ -37,7 +37,9 @@ final class CompanyRoster implements Roster
         $byCenter = array_fill_keys($workCenterIds, []);
 
         foreach (Employee::query()->whereIn('work_center_id', $workCenterIds)->whereNull('deactivated_at')->get(['id', 'work_center_id']) as $employee) {
-            $byCenter[$employee->work_center_id][] = $employee->id;
+            if ($employee->work_center_id !== null) {
+                $byCenter[$employee->work_center_id][] = $employee->id;
+            }
         }
 
         return $byCenter;
@@ -70,7 +72,7 @@ final class CompanyRoster implements Roster
      */
     private function matching(RosterQuery $query): Builder
     {
-        return Employee::query()
+        return $this->complete(Employee::query())
             ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->among('employees.id', $query->employeeIds ?? []))
             ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
             ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
@@ -84,11 +86,28 @@ final class CompanyRoster implements Roster
      */
     private function query(): Builder
     {
-        return Employee::query()->with('area');
+        return $this->complete(Employee::query())->with('area');
+    }
+
+    /**
+     * Only the people a company tool can place: a union's roster may carry people without a name, gender, work
+     * center, area or job title, and RosterEntry needs them all.
+     *
+     * @param  Builder<Employee>  $employees
+     * @return Builder<Employee>
+     */
+    private function complete(Builder $employees): Builder
+    {
+        return $employees->whereNotNull('name')->whereNotNull('gender')->whereNotNull('work_center_id')->whereNotNull('area_id')->whereNotNull('job_title');
     }
 
     private function entry(Employee $employee): RosterEntry
     {
+        // complete() leaves out whoever lacks any of these; reaching here without them is a query that forgot it.
+        if ($employee->name === null || $employee->gender === null || $employee->area_id === null || $employee->work_center_id === null || $employee->job_title === null) {
+            throw new LogicException("Employee [{$employee->id}] is incomplete.");
+        }
+
         // The foreign key makes the area required; a missing one is broken data, never an empty name.
         $area = $employee->area ?? throw new LogicException("Employee [{$employee->id}] has no area.");
 

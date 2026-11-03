@@ -11,7 +11,8 @@ export type EmployeeRow = {
     email: string | null;
     /** 10 digits. */
     mobile: string | null;
-    gender: 'female' | 'male' | 'other';
+    /** Empty for someone a union loaded without it. */
+    gender: 'female' | 'male' | 'other' | '';
     gender_label: string;
     work_center_id: string;
     work_center: string;

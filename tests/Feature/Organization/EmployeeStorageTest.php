@@ -52,9 +52,24 @@ it('rejects a work center or an area of another company', function (string $colu
     DB::table('employees')->insert([...$row, $column => $foreign]);
 })->throws(QueryException::class, 'foreign key')->with(['work_center_id', 'area_id']);
 
-it('rejects an employee with neither email nor mobile', function (): void {
-    DB::table('employees')->insert(rawEmployee(['email' => null, 'mobile' => null]));
-})->throws(QueryException::class, 'employees_contact_present');
+it('requires a name or an employee number', function (): void {
+    DB::table('employees')->insert(rawEmployee(['name' => null, 'employee_number' => null]));
+})->throws(QueryException::class, 'employees_identified');
+
+it('accepts a person with only an employee number', function (): void {
+    DB::table('employees')->insert(rawEmployee([
+        'name' => null, 'employee_number' => 'E-001', 'email' => null, 'mobile' => null,
+        'gender' => null, 'work_center_id' => null, 'area_id' => null, 'job_title' => null,
+    ]));
+
+    expect(DB::table('employees')->where('employee_number', 'E-001')->sole()->name)->toBeNull();
+});
+
+it('accepts a person with only a name', function (): void {
+    DB::table('employees')->insert(rawEmployee(['name' => 'Ana López', 'employee_number' => null, 'email' => null, 'mobile' => null]));
+
+    expect(DB::table('employees')->where('name', 'Ana López')->count())->toBe(1);
+});
 
 it('accepts an employee with only a mobile, or only an email', function (): void {
     DB::table('employees')->insert(rawEmployee(['email' => null, 'mobile' => '5512345678']));

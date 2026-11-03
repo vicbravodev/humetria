@@ -23,13 +23,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property string $id
  * @property string $tenant_id
- * @property string $work_center_id
- * @property string $area_id
- * @property string $name
+ * @property string|null $work_center_id
+ * @property string|null $area_id
+ * @property string|null $name
  * @property string|null $email
  * @property string|null $mobile
- * @property Gender $gender
- * @property string $job_title
+ * @property Gender|null $gender
+ * @property string|null $job_title
  * @property string|null $employee_number
  * @property CarbonImmutable|null $deactivated_at
  * @property CarbonImmutable $created_at

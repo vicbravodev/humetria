@@ -35,15 +35,15 @@ final readonly class ImportEmployees
 
                 if ($row->existingId === null) {
                     $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
-                    event(new EmployeeCreated($created->tenant_id, $created->id, $created->work_center_id));
+                    event(new EmployeeCreated($created->tenant_id, $created->id, $row->data->workCenterId));
                 } else {
                     $employee = Employee::query()->findOrFail($row->existingId);
                     $from = $employee->work_center_id;
                     $employee->update($attributes);
 
                     // As moving them by hand: an open evaluation of the old work center lets them go (criterio C-24).
-                    if ($employee->work_center_id !== $from) {
-                        event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $employee->work_center_id));
+                    if ($from !== null && $row->data->workCenterId !== $from) {
+                        event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $row->data->workCenterId));
                     }
                 }
             }

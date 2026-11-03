@@ -28,6 +28,7 @@ final class ListEmployees
             ->when($filters->withoutEmail, fn (Builder $query) => $query->whereNull('email'))
             ->matching(['name', 'email', 'employee_number'], $filters->search)
             ->orderBy('name')
+            ->orderBy('employee_number')
             ->orderBy('id')
             ->paginate(self::PER_PAGE)
             ->withQueryString();
