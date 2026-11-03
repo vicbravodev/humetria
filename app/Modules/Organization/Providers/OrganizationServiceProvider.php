@@ -6,9 +6,11 @@ namespace App\Modules\Organization\Providers;
 
 use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Organization\Contracts\Headcount;
+use App\Modules\Organization\Contracts\JobGrades;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Support\CompanyAreas;
 use App\Modules\Organization\Support\CompanyHeadcount;
+use App\Modules\Organization\Support\CompanyJobGrades;
 use App\Modules\Organization\Support\CompanyRoster;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,6 +20,7 @@ final class OrganizationServiceProvider extends ServiceProvider
     {
         $this->app->bind(Areas::class, CompanyAreas::class);
         $this->app->bind(Headcount::class, CompanyHeadcount::class);
+        $this->app->bind(JobGrades::class, CompanyJobGrades::class);
         $this->app->bind(Roster::class, CompanyRoster::class);
     }
 }
