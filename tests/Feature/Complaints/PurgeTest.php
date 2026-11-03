@@ -168,3 +168,12 @@ it('runs from the command, daily and once, and reports how many went', function 
 
     $this->artisan('complaints:purge')->expectsOutput('Casos purgados: 1')->assertSuccessful();
 });
+
+it('purges the notice of a traumatic event too, whose name and date the database demands while the case lives', function (): void {
+    $notice = closedCase($this, '2023-01-01', ['type' => 'traumatic_event_notice', 'category' => null, 'occurred_on' => '2022-12-01', 'involved_text' => 'Luis y el jefe de turno', 'reference' => 'NOTICE12', 'access_key_hash' => hash('sha256', 'NOTICE')]);
+
+    expect(purge())->toBe(1);
+
+    $row = (array) DB::table('complaints')->where('id', $notice->id)->first();
+    expect($row['reporter_name'])->toBeNull()->and($row['occurred_on'])->toBeNull()->and($row['involved_text'])->toBeNull()->and($row['type'])->toBe('traumatic_event_notice')->and($row['purged_on'])->not->toBeNull();
+});

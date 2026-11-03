@@ -76,6 +76,17 @@ final class RedactSensitiveData implements ProcessorInterface
             'referral_note',
             // NOM-035: where a person was referred for a clinical assessment says something about their health.
             'institution',
+            // NOM-035 complaints channel: what a person tells, who it is against, who they are, and the credentials of their case.
+            'access_key',
+            'body',
+            'involved_text',
+            'reference',
+            'reporter_contact',
+            'reporter_email',
+            'reporter_name',
+            'respondent_kind',
+            'respondent_text',
+            'ticket',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',

@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.3 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.4 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -405,6 +405,121 @@ organizacional deberá realizarse, al menos, cada dos años» (num. 7.9).
 
 ---
 
+## G. Canal de quejas y denuncias (numerales 8.1 b, 6.4 y 6.5)
+
+La norma exige «mecanismos seguros y confidenciales»; **no** exige que sean en línea, anónimos ni con seguimiento. Que lo sean,
+las categorías, los plazos, la retención y el enrutamiento son criterios de Humetría y así se rotulan en pantalla. Lo que la
+norma calla no se presenta como obligación. El diseño completo está en
+[`docs/superpowers/specs/2026-11-03-nom-035-complaints-channel-design.md`](../../superpowers/specs/2026-11-03-nom-035-complaints-channel-design.md).
+
+### C-40. Mecanismo seguro y confidencial para quejas y denuncias · Norma + Humetría
+
+**Qué hacemos.** Cada empresa activa un canal con un enlace público (`/c/{código}`) y un cartel con QR. La persona abre el
+enlace sin cuenta, sin sesión y sin cookies, y presenta una queja por una práctica opuesta a un entorno organizacional
+favorable, una denuncia de violencia laboral o el aviso de un acontecimiento traumático severo, de forma anónima o
+confidencial. Al enviar recibe una referencia y una clave para dar seguimiento. El canal tiene un procedimiento por escrito,
+personas encargadas designadas y una página de evidencia imprimible.
+
+**Qué dice la norma.** «Disponer de mecanismos seguros y confidenciales para la recepción de quejas por prácticas opuestas
+al entorno organizacional favorable y para denunciar actos de violencia laboral» (num. 8.1 b). Los trabajadores informan y
+denuncian «a través de los mecanismos que establezca el patrón y/o a través de la comisión de seguridad e higiene»
+(num. 6.4). La STPS verifica por documental o entrevista que el patrón dispone de ellos (num. 10.2).
+
+**Por qué.** La evidencia que mostramos es la configuración y la operación del canal, nunca el contenido de los casos.
+Fuente: DOF, num. 8.1 b, 6.4 y 10.2.
+
+### C-41. La Comisión de seguridad e higiene puede ser receptora · Norma
+
+**Qué hacemos.** Quien está en la Comisión de un centro puede ser designada para atender el canal, por centro. Un rol nuevo,
+«Atención de quejas», sirve para una persona de fuera de la empresa (un abogado, una persona de confianza, un representante
+sindical): ve el canal y nada más de la plataforma.
+
+**Qué dice la norma.** La persona trabajadora informa y denuncia usando los mecanismos del patrón «y/o a través de la
+comisión de seguridad e higiene» (num. 6.4).
+
+### C-42. El escrito del numeral 6.5 exige el nombre · Norma
+
+**Qué hacemos.** El aviso de un acontecimiento traumático severo no se acepta anónimo: pide el nombre de quien lo escribe, la
+fecha en que ocurrió y, si los hay, los involucrados. Solo lo ven las personas a quienes se asignó el caso. La base lo exige
+con un `check` mientras el caso vive.
+
+**Qué dice la norma.** El aviso por escrito lleva «fecha de elaboración, nombre de quien lo elabora, nombres de los
+involucrados (si los hay), fecha de ocurrencia y descripción» (num. 6.5).
+
+### C-43. Quejas y denuncias: tipos y categorías · Interpretación
+
+**Qué hacemos.** Tres tipos: queja por una práctica, denuncia de violencia laboral y aviso 6.5. La violencia se clasifica en
+hostigamiento, acoso y malos tratos (4.12); las prácticas, en cargas o jornadas, responsabilidades poco claras, falta de
+formación, falta de reconocimiento, falta de comunicación o participación, discriminación y otra (4.6, 7.3, 8.1 c y 8.2 a 2).
+La lista se rotula «clasificación de Humetría» y la persona puede no escoger. Otros marcos legales (por ejemplo, protocolos de
+acoso sexual) pueden aplicar a lo que se reporte; el texto de ayuda lo menciona sin citar artículos.
+
+**Qué dice la norma.** Violencia laboral: «actos de hostigamiento, acoso o malos tratos» (num. 4.12). Entorno organizacional
+favorable: pertenencia, formación, responsabilidades claras, participación y comunicación, cargas y jornadas regulares,
+evaluación y reconocimiento del desempeño (num. 4.6 y 7.3).
+
+### C-44. Acceso a un caso solo por asignación · Humetría
+
+**Qué hacemos.** Ver un caso exige una asignación vigente: ser encargada o tener el permiso no abre ninguno. A quien no lo
+tiene asignado, el caso le contesta 404 (nunca 403, que diría que existe). Una encargada designada después no ve los casos
+anteriores. El dueño y RH, por administrar el canal, ven conteos, no casos. Cada lectura queda en la bitácora. Las rutas de un
+caso se cierran a un superadmin que actúa como el dueño. La encargada puede excusarse o compartir el caso con quien el
+conflicto deje.
+
+**Por qué.** Una queja puede ser contra RH o contra el dueño: el modelo de amenaza incluye a quien administra la cuenta.
+
+### C-45. Enrutamiento por conflicto de interés · Humetría
+
+**Qué hacemos.** La persona dice contra quién es la queja por rol, nunca por nombre. Una queja contra recursos humanos no se
+asigna a encargadas con rol RH; contra la dirección o el dueño, no a quien tiene rol de dueño; el resto, a todas las
+encargadas del centro o de la empresa (sin centro, a las de toda la empresa). Si una opción no tiene a nadie independiente
+que la reciba, el formulario **no la acepta** y ofrece la vía externa (la Dirección General de Inspección Federal del
+Trabajo): aceptarla y entregarla a la persona señalada daría una falsa protección. El panel muestra cuántas personas
+recibirían cada opción. El canal abierto no puede quedarse sin nadie que lo atienda.
+
+**Límite honesto.** La plataforma no puede proteger de quien controla toda la empresa: un dueño puede quitar a las
+encargadas. Por eso los cambios en la lista quedan en la bitácora, se avisa a las demás y se ofrece designar a una persona
+externa. La denuncia ante la STPS puede ser anónima si da razón social, ubicación del centro y circunstancias (STPS-1,
+pregunta 10).
+
+### C-46. Anonimato técnico y sus límites; sin hora, dirección, navegador ni cookies · Humetría
+
+**Qué hacemos.** Las rutas públicas no inician sesión ni escriben cookies, y no guardan la dirección de internet, el
+navegador ni el `Referer`. El caso no tiene `created_at` ni `updated_at`: guarda solo el día en que llegó; los mensajes de la
+persona, solo el día; la asignación del sistema, solo el día; el orden del hilo es un consecutivo. Los límites de frecuencia
+usan una huella con llave de la dirección, en la caché y nada más. La protección contra falsificación es un boleto firmado y
+sin estado. El contenido va cifrado en la base. La clave de seguimiento solo existe como hash y no se recupera. Ningún log,
+bitácora, correo ni cola lleva el texto de una queja, su referencia ni su clave, y la línea de log de lo que hace la persona
+no lleva el id del caso. Un aviso opcional por correo es de solo escritura: nadie lo ve, el sistema solo escribe «hay
+novedades», sin referencia ni contenido y sin pasar por la cola, y lo borra a los 30 días de cerrar el caso.
+
+**No se promete «anonimato total».** Se dice en pantalla: el contenido puede identificar, el centro y la persona señalada
+acotan el grupo, y la red de la empresa o el proveedor de internet pueden ver que se visitó la página.
+
+### C-47. Estadísticas con mínimo por grupo · Humetría (como C-23)
+
+**Qué hacemos.** Quien administra el canal sin ser encargada ve totales por tipo y por estatus, con el mínimo de 5 en cada
+celda y supresión complementaria: si lo oculto sumara menos de 5, se oculta también la celda visible más pequeña. Nunca por
+centro, categoría, contra quién ni día. Los casos ya purgados cuentan por su esqueleto.
+
+### C-48. Retención y purga · Humetría (por analogía con 10.4)
+
+**Qué hacemos.** El contenido de un caso cerrado se borra a los N meses del cierre (24 por omisión; de 12 a 60). Una
+encargada puede poner el caso en retención legal y no se purga hasta levantarla. Queda un esqueleto sin datos personales:
+tipo, categoría, resolución, mes de recepción y día de cierre. La referencia y la clave dejan de abrir el caso. Un caso sin
+cerrar nunca se purga; se recuerda como «sin movimiento» a los 90 días.
+
+**Qué dice la norma.** Las evidencias «a que alude esta Norma» se conservan al menos un año (num. 10.4). La norma **no fija**
+la retención de las quejas (no son un registro nombrado en 5.8): el plazo y su piso de 12 meses son de Humetría y los valida
+un abogado antes del lanzamiento.
+
+### C-49. Plazos de acuse y resolución · Humetría
+
+**Qué hacemos.** El acuse de recibo (3 días por omisión) y la respuesta (30) son recordatorios que la empresa se fija. Se
+muestran a la persona, marcan «vencido» a quien atiende y a quien administra solo se le cuentan. No son plazos de la norma.
+
+---
+
 ## Cómo se prueba
 
 Cada criterio que la plataforma aplica tiene pruebas automáticas que fallan si deja de cumplirse. Las de calificación
@@ -433,6 +548,16 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-27 | `tests/Feature/Results/ResultsPageTest.php` (sin resultados con la evaluación abierta) |
 | C-28 | `tests/Feature/Results/ScreeningsPageTest.php` (solo owner y RH, bitácora), `tests/Feature/Results/ResultsPageTest.php` (consulta no la ve), `tests/Feature/Results/ScreeningReferralsTest.php` (registro de la canalización: estados, bitácora, sin datos en el log, aislamiento entre empresas) |
 | C-29 | `tests/Feature/Results/ReportTest.php` (incisos a–h), `tests/Feature/Results/ReportSharesTest.php` (15 min a 48 h, hash, vencido, revocado, empresa bloqueada, sin Guía I) |
+| C-40 | `tests/Feature/Complaints/ChannelTest.php`, `tests/Feature/Complaints/ChannelStatusTest.php` (lista de lo que necesita el canal, evidencia 8.1 b), `tests/Feature/Complaints/PosterTest.php`, `tests/Browser/ComplaintsTest.php` |
+| C-41 | `tests/Feature/Complaints/HandlerRoleTest.php` (rol «Atención de quejas», rutas de la Comisión), `tests/Feature/Complaints/HandlersTest.php` |
+| C-42 | `tests/Feature/Complaints/ConfidentialComplaintTest.php` (nombre, fecha y `check`s del 6.5) |
+| C-43 | `tests/Feature/Complaints/SubmitComplaintTest.php` (categoría coherente con el tipo) |
+| C-44 | `tests/Feature/Complaints/RoutingTest.php` (acceso solo por asignación, sin acceso retroactivo), `tests/Feature/Complaints/InboxTest.php` (404 y no 403, bitácora de lectura, impersonación), `tests/Feature/Complaints/CaseHandlingTest.php` |
+| C-45 | `tests/Feature/Complaints/RoutingTest.php` (contra RH, contra la dirección, alcance por centro), `tests/Feature/Complaints/HandlersTest.php` (cobertura), `tests/Feature/Complaints/SubmitComplaintTest.php` (opción sin cobertura rechazada) |
+| C-46 | `tests/Feature/Complaints/PublicPageTest.php`, `SubmitComplaintTest.php`, `FollowUpTest.php` (sin sesión, sin cookies, sin dirección en la base), `tests/Feature/Complaints/PrivacyTest.php` (la prueba central: logs, bitácora, correos, colas, tablas y esquema), `tests/Feature/Complaints/ReporterEmailTest.php` |
+| C-47 | `tests/Unit/MinimumGroupTest.php`, `tests/Feature/Complaints/ChannelStatusTest.php` (4 y 5, supresión complementaria, sin desgloses) |
+| C-48 | `tests/Feature/Complaints/PurgeTest.php` (23 meses 29 días y 24 meses, retención legal, esqueleto, idempotencia), `tests/Feature/Complaints/ReporterEmailTest.php` (el correo a los 30 días) |
+| C-49 | `tests/Feature/Complaints/InboxTest.php`, `tests/Feature/Complaints/DigestTest.php` (el límite de los días y un recordatorio por día) |
 
 C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
@@ -444,7 +569,6 @@ Obligaciones de la norma que dependen del cliente o que Humetría todavía no ge
 - política de prevención (5.1, Guía IV);
 - difusión de información (5.7);
 - programa de intervención y medidas de control (8.3 a 8.5);
-- mecanismo de quejas (8.1 b);
 - integración al diagnóstico de seguridad y salud de la NOM-030 (7.6).
 
 Los exámenes médicos y las evaluaciones psicológicas (5.6) los hace un tercero: Humetría deja la constancia de la
@@ -473,3 +597,4 @@ acceso propio para los trabajadores.
 | 1.1 | 2026-10-29 | Se agrega «Cómo se prueba» y la errata «pertenencia e, inestabilidad» a C-21. Ningún criterio cambia. |
 | 1.2 | 2026-10-30 | Resultados: C-23 detalla la supresión complementaria y el mínimo por pregunta; nuevos C-27 (resultados solo con la evaluación cerrada), C-28 (lista de canalización) y C-29 (informe 7.7 y enlace temporal). |
 | 1.3 | 2026-11-03 | C-28 suma el registro de la canalización por persona (canalizada, atendida, día e institución), con bitácora; «exámenes médicos y evaluaciones psicológicas (5.6)» sale de lo que no se cubre. |
+| 1.4 | 2026-11-03 | Nueva sección G, canal de quejas y denuncias: C-40 a C-49 (mecanismo, la Comisión como receptora, el escrito 6.5, categorías, acceso por asignación, enrutamiento por conflicto, anonimato técnico, estadísticas con mínimo, retención y purga, plazos); «mecanismo de quejas (8.1 b)» sale de lo que no se cubre. |
