@@ -23,6 +23,8 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     assess_seating: manage_organization,
     view_interventions: true,
     manage_interventions: manage_organization,
+    view_disclosure: true,
+    manage_disclosure: manage_organization,
     use_assistant: true,
     manage_complaint_channel: manage_organization,
     handle_complaints: manage_organization,

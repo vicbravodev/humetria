@@ -21,9 +21,9 @@ mutates(CompanyRoles::class);
 it('defines the company roles and what each one allows', function (): void {
     $permissions = fn (string $role): array => Role::findByName($role)->permissions->pluck('name')->sort()->values()->all();
 
-    expect($permissions('owner'))->toBe(['assess-seating', 'handle-complaints', 'manage-campaigns', 'manage-complaint-channel', 'manage-interventions', 'manage-members', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-interventions', 'view-seating', 'view-telework', 'view-trauma-screenings'])
-        ->and($permissions('hr'))->toBe(['assess-seating', 'handle-complaints', 'manage-campaigns', 'manage-complaint-channel', 'manage-interventions', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-interventions', 'view-seating', 'view-telework', 'view-trauma-screenings'])
-        ->and($permissions('viewer'))->toBe(['use-assistant', 'view-interventions', 'view-seating', 'view-telework'])
+    expect($permissions('owner'))->toBe(['assess-seating', 'handle-complaints', 'manage-campaigns', 'manage-complaint-channel', 'manage-disclosure', 'manage-interventions', 'manage-members', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-disclosure', 'view-interventions', 'view-seating', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('hr'))->toBe(['assess-seating', 'handle-complaints', 'manage-campaigns', 'manage-complaint-channel', 'manage-disclosure', 'manage-interventions', 'manage-organization', 'manage-seating', 'manage-telework', 'review-workplaces', 'use-assistant', 'view-disclosure', 'view-interventions', 'view-seating', 'view-telework', 'view-trauma-screenings'])
+        ->and($permissions('viewer'))->toBe(['use-assistant', 'view-disclosure', 'view-interventions', 'view-seating', 'view-telework'])
         ->and($permissions('committee'))->toBe(['assess-seating', 'handle-complaints', 'review-workplaces', 'view-seating', 'view-telework']);
 });
 
