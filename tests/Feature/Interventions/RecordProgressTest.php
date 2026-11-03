@@ -140,7 +140,7 @@ it('logs the step without the note', function (): void {
 
     resolve(RecordProgress::class)->handle($action->id, ActionStatus::InProgress, '2026-11-20', 'Hablé con Juan Pérez.', $this->user->id);
 
-    Log::shouldHaveReceived('info')->with('intervention.progress_recorded', ['action_id' => $action->id, 'program_id' => $action->program_id, 'from' => 'planned', 'to' => 'in_progress'])->once();
+    Log::shouldHaveReceived('info')->with('intervention.progress_recorded', ['action_id' => $action->id, 'program_id' => $action->program_id, 'from' => 'planned', 'to' => 'in_progress', 'with_evidence' => false])->once();
 });
 
 it('cancels an action with a reason, which stays in the log', function (): void {

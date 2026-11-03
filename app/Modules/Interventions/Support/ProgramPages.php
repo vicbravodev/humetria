@@ -25,8 +25,10 @@ use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Results\Data\RiskGroup;
+use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use Closure;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 
@@ -39,7 +41,7 @@ final readonly class ProgramPages
 {
     private const int ACTIONS_PER_PAGE = 10;
 
-    public function __construct(private RiskResults $results, private WorkCenters $workCenters, private Instruments $instruments, private Members $members) {}
+    public function __construct(private RiskResults $results, private WorkCenters $workCenters, private Instruments $instruments, private Members $members, private Companies $companies) {}
 
     /**
      * @return array<string, mixed>
@@ -61,7 +63,7 @@ final readonly class ProgramPages
             ],
             'requirement' => $program === null ? $this->requirement($campaign) : null,
             'program' => $program === null ? null : $this->program($program, $items, ProgramAction::query()->where('program_id', $program->id)->get(['id', 'item_id', 'status', 'due_on'])->all()),
-            'actions' => $program === null ? null : $this->actions($program, $areas, $filters, $items),
+            'actions' => $program === null ? null : $this->actions($program, $areas, $filters, $items, $canManage ? fn (string $actionId, string $entryId): string => route('tenant.campaigns.program.evidence', [$this->companies->current()->slug, $campaign->id, $actionId, $entryId]) : null),
             'filters' => $filters,
             'catalog' => $canManage ? self::catalog() : null,
             'areaOptions' => $canManage && $program !== null ? $this->areaOptions($areas, $items) : null,
@@ -137,9 +139,10 @@ final readonly class ProgramPages
      * @param  list<AreaRisk>  $areas  the areas Results shows
      * @param  array{item: string|null, status: string|null}  $filters
      * @param  list<ProgramItem>  $items
+     * @param  (Closure(string, string): string)|null  $evidenceUrl
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    private function actions(Program $program, array $areas, array $filters, array $items): LengthAwarePaginator
+    private function actions(Program $program, array $areas, array $filters, array $items, ?Closure $evidenceUrl): LengthAwarePaginator
     {
         $labels = [];
 
@@ -162,15 +165,16 @@ final readonly class ProgramPages
             ->orderBy('id')
             ->paginate(self::ACTIONS_PER_PAGE, pageName: 'actions')
             ->withQueryString()
-            ->through(fn (ProgramAction $action): array => $this->actionRow($action, $shown, $labels));
+            ->through(fn (ProgramAction $action): array => $this->actionRow($action, $shown, $labels, $evidenceUrl));
     }
 
     /**
      * @param  array<string, string>  $shown  names of the areas Results shows, by id
      * @param  array<string, string>  $labels  label of each row of the Programa, by id
+     * @param  (Closure(string, string): string)|null  $evidenceUrl  where a step's file opens (action id, step id); null for who may not open files
      * @return array<string, mixed>
      */
-    private function actionRow(ProgramAction $action, array $shown, array $labels): array
+    private function actionRow(ProgramAction $action, array $shown, array $labels, ?Closure $evidenceUrl): array
     {
         $attached = $action->areas->map(fn (ActionArea $area): string => $area->area_id)->all();
         $visible = array_values(array_filter($attached, fn (string $id): bool => isset($shown[$id])));
@@ -198,6 +202,9 @@ final readonly class ProgramPages
                 'onLabel' => ProgramClock::day($entry->recorded_on),
                 'status' => ['value' => $entry->status->value, 'label' => $entry->status->label()],
                 'note' => $entry->note,
+                'hasEvidence' => $entry->evidence_path !== null,
+                // Only whoever writes the Programa opens a file: an attendance list carries names.
+                'evidenceUrl' => $evidenceUrl !== null && $entry->evidence_path !== null ? $evidenceUrl($action->id, $entry->id) : null,
             ])->values()->all(),
             'completedOnLabel' => $action->completed_on === null ? null : ProgramClock::day($action->completed_on),
         ];

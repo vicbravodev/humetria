@@ -97,8 +97,10 @@ it('answers 404 for the action of another company or another Programa', function
 });
 
 it('has no way to edit or delete a step', function (): void {
-    expect(collect(app('router')->getRoutes()->getRoutes())->filter(fn ($route): bool => str_contains($route->uri(), 'progress'))->map(fn ($route): array => $route->methods())->flatten()->unique()->values()->all())
-        ->toBe(['POST']);
+    $methods = collect(app('router')->getRoutes()->getRoutes())->filter(fn ($route): bool => str_contains($route->uri(), 'progress'))->map(fn ($route): array => $route->methods())->flatten()->unique()->values()->all();
+
+    // Steps are recorded (POST) and their evidence is read (GET); nothing changes or removes one.
+    expect($methods)->not->toContain('PUT')->not->toContain('PATCH')->not->toContain('DELETE');
 });
 
 it('shows where the Programa stands: its state, its meter, each row and each action with its history', function (): void {

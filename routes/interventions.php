@@ -21,3 +21,4 @@ Route::put('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}', 
 // The control of progress (num. 8.4 d): a step is recorded, never edited or deleted; an action is cancelled with a reason.
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/progress', [ProgressController::class, 'store'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.progress.store');
 Route::post('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/cancel', [ProgressController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action'])->name('tenant.campaigns.program.actions.cancel');
+Route::get('admin/{tenant:slug}/campaigns/{campaign}/program/actions/{action}/progress/{entry}/evidence', [ProgressController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid(['campaign', 'action', 'entry'])->name('tenant.campaigns.program.evidence');
