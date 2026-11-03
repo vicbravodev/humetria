@@ -264,7 +264,7 @@ it('keeps the case routes closed to a superadmin acting as the owner', function 
 
 it('guards every route that opens or changes a case against impersonation', function (): void {
     $names = collect(Route::getRoutes()->getRoutes())->map(fn ($route) => $route->getName())->filter(fn (?string $name): bool => $name !== null && str_starts_with($name, 'tenant.complaints.'));
-    $caseRoutes = $names->reject(fn (string $name): bool => str_starts_with($name, 'tenant.complaints.channel.') || str_starts_with($name, 'tenant.complaints.handlers.') || str_starts_with($name, 'tenant.complaints.unassigned.') || str_starts_with($name, 'tenant.complaints.centers.') || $name === 'tenant.complaints.poster' || $name === 'tenant.complaints.evidence' || $name === 'tenant.complaints.summary');
+    $caseRoutes = $names->reject(fn (string $name): bool => str_starts_with($name, 'tenant.complaints.channel.') || str_starts_with($name, 'tenant.complaints.handlers.') || str_starts_with($name, 'tenant.complaints.unassigned.') || str_starts_with($name, 'tenant.complaints.centers.') || str_starts_with($name, 'tenant.complaints.poster') || str_starts_with($name, 'tenant.complaints.evidence'));
 
     expect($caseRoutes->isNotEmpty())->toBeTrue();
     foreach ($caseRoutes as $name) {

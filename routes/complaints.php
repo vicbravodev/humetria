@@ -6,6 +6,7 @@ use App\Modules\Complaints\Http\Controllers\CaseActionController;
 use App\Modules\Complaints\Http\Controllers\CenterOptionsController;
 use App\Modules\Complaints\Http\Controllers\ChannelController;
 use App\Modules\Complaints\Http\Controllers\ComplaintController;
+use App\Modules\Complaints\Http\Controllers\EvidenceController;
 use App\Modules\Complaints\Http\Controllers\HandlerController;
 use App\Modules\Complaints\Http\Controllers\UnassignedController;
 use Illuminate\Support\Facades\Route;
@@ -45,3 +46,7 @@ Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/hold', [CaseAction
 Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/close', [CaseActionController::class, 'close'])->where('tenant', $notReserved)->name('tenant.complaints.cases.close');
 Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/reopen', [CaseActionController::class, 'reopen'])->where('tenant', $notReserved)->name('tenant.complaints.cases.reopen');
 Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/export', [CaseActionController::class, 'export'])->where('tenant', $notReserved)->name('tenant.complaints.cases.export');
+
+// The printable evidence of the mechanism for an inspection: how the channel is set up, never a case. Each reading is audited.
+Route::get('admin/{tenant:slug}/complaints/evidence', [EvidenceController::class, 'show'])->where('tenant', $notReserved)->name('tenant.complaints.evidence');
+Route::post('admin/{tenant:slug}/complaints/evidence/export', [EvidenceController::class, 'export'])->where('tenant', $notReserved)->name('tenant.complaints.evidence.export');

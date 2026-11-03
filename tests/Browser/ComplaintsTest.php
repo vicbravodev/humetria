@@ -466,3 +466,29 @@ it('links the receipt to the follow-up and the form to it', function (): void {
 
     visit("/c/{$channel->access_code}")->assertSee('Ya presenté una queja: ver cómo va')->assertNoJavaScriptErrors();
 });
+
+it('shows the evidence of the mechanism, ready to print, with no case in it', function (bool $dark, bool $mobile): void {
+    [$url, $tenant] = complaintsPanel();
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create(['procedure' => 'Se acusa recibo y la atiende una persona designada.']);
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $tenant->id)->firstOrFail()->user_id]);
+    Complaint::factory()->count(6)->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id, 'description' => 'Una historia reservada']);
+
+    visitPage('complaints/evidence', "{$url}/complaints/evidence", $dark, $mobile)
+        ->assertSee('Mecanismo seguro y confidencial para quejas y denuncias')
+        ->assertSee('Se acusa recibo y la atiende una persona designada.')
+        ->assertSee('Casos recibidos: 6')
+        ->assertSee('Imprimir o guardar PDF')
+        ->assertDontSee('Una historia reservada');
+})->with($looks);
+
+it('shows the checklist and the summary with the minimum on the channel page', function (): void {
+    [$url, $tenant] = complaintsPanel();
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    Complaint::factory()->count(3)->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
+
+    visit("{$url}/complaints/channel")
+        ->assertSee('Al menos una persona que atienda')
+        ->assertSee('Casos recibidos: menos de 5')
+        ->assertSee('menos de 5')
+        ->assertNoJavaScriptErrors();
+});

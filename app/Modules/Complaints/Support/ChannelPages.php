@@ -10,7 +10,7 @@ use App\Modules\Complaints\Models\ComplaintChannel;
 /** What the channel page of the company shows. */
 final readonly class ChannelPages
 {
-    public function __construct(private UnassignedCases $unassigned) {}
+    public function __construct(private UnassignedCases $unassigned, private ChannelStatusPages $status) {}
 
     /**
      * @return array<string, mixed>
@@ -21,6 +21,7 @@ final readonly class ChannelPages
 
         return [
             'unassigned' => $this->unassigned->count(),
+            ...$this->status->status($channel),
             'channel' => [
                 'status' => ($channel?->status() ?? ChannelStatus::Inactive)->value,
                 'url' => $channel?->enabled_at === null ? null : $channel->publicUrl(),

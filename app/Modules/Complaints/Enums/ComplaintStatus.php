@@ -20,6 +20,16 @@ enum ComplaintStatus: string
         };
     }
 
+    /** For a count of them: «6 En revisión». */
+    public function pluralLabel(): string
+    {
+        return match ($this) {
+            self::New => 'Nuevas',
+            self::InReview => 'En revisión',
+            self::Closed => 'Cerradas',
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

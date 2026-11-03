@@ -176,3 +176,30 @@ export type FollowUp = {
         total: number;
     };
 };
+
+export type ChecklistItem = { key: string; label: string; done: boolean };
+
+/** A cell of the summary: its number, or nothing when it is under the minimum of people. */
+export type SummaryCell = {
+    value: string;
+    label: string;
+    count: number | null;
+};
+
+export type ChannelSummary = {
+    minimum: number;
+    total: number | null;
+    byType: SummaryCell[];
+    byStatus: SummaryCell[];
+};
+
+/** What the evidence page of the mechanism says: how the channel is set up and that it operates; never a case. */
+export type EvidenceChannel = {
+    status: ChannelStatus;
+    url: string | null;
+    publishedOn: string | null;
+    procedure: string;
+    acknowledgeWithinDays: number;
+    resolveWithinDays: number;
+    retentionMonths: number;
+};
