@@ -429,7 +429,8 @@ C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
 ## Lo que la plataforma no cubre (por ahora)
 
-Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona:
+Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona (el orden para cerrarlas está en
+[`gaps-pendientes.md`](gaps-pendientes.md)):
 
 - política de prevención (5.1, Guía IV);
 - difusión de información (5.7);
