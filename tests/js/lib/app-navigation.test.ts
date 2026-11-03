@@ -128,6 +128,17 @@ describe('complianceNavItems', () => {
         expect(complianceNavItems(null)).toEqual([]);
     });
 
+    it('adds the complaints channel for whoever manages it', () => {
+        const tenant = acme(true, true);
+
+        expect(
+            complianceNavItems(tenant).map((item) => [
+                item.title,
+                toUrl(item.href),
+            ]),
+        ).toContainEqual(['Quejas', '/admin/acme/complaints/channel']);
+    });
+
     // Behavior defined by NOM-037's entry page (it was empty while NOM-037 had no page).
     it('offers the committee only NOM-037 and Ley Silla', () => {
         expect(

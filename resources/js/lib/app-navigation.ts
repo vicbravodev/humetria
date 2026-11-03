@@ -6,6 +6,7 @@ import {
     Laptop,
     Armchair,
     Inbox,
+    MessageSquareWarning,
     UserCog,
     Users,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
+import { show as channel } from '@/routes/tenant/complaints/channel';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as seatingIndex } from '@/routes/tenant/seating';
@@ -111,6 +113,13 @@ const seating = (tenant: NavTenant): NavItem => ({
     icon: Armchair,
 });
 
+/** The channel for complaints and reports of NOM-035 (8.1 b). */
+const complaints = (tenant: NavTenant): NavItem => ({
+    title: 'Quejas',
+    href: channel(tenant.slug),
+    icon: MessageSquareWarning,
+});
+
 /**
  * The compliance tools of the current company, for every role: who may change them is the page's to say. The committee
  * sees only NOM-037 and Ley Silla.
@@ -135,6 +144,7 @@ export const complianceNavItems = (
         ...(tenant.role === 'committee' ? [] : [nom035]),
         telework(tenant),
         ...(tenant.can.view_seating ? [seating(tenant)] : []),
+        ...(tenant.can.manage_complaint_channel ? [complaints(tenant)] : []),
     ];
 };
 
