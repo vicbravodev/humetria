@@ -18,6 +18,10 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     view_trauma_screenings: manage_organization,
     manage_telework: manage_organization,
     review_workplaces: manage_organization,
+    view_seating: true,
+    manage_seating: manage_organization,
+    assess_seating: manage_organization,
+    use_assistant: true,
 });
 const acme = (
     manageOrganization = true,
@@ -96,7 +100,7 @@ describe('mainNavItems for the committee', () => {
 });
 
 describe('complianceNavItems', () => {
-    it('offers NOM-035 and NOM-037 inside a company, to every role but the committee', () => {
+    it('offers NOM-035, NOM-037 and Ley Silla inside a company, to every role but the committee (which has no NOM-035)', () => {
         expect(
             complianceNavItems(acme(false, false)).map((item) => [
                 item.title,
@@ -105,6 +109,7 @@ describe('complianceNavItems', () => {
         ).toEqual([
             ['NOM-035', '/admin/acme/campaigns'],
             ['NOM-037', '/admin/acme/telework'],
+            ['Ley Silla', '/admin/acme/seating'],
         ]);
     });
 
@@ -113,12 +118,23 @@ describe('complianceNavItems', () => {
     });
 
     // Behavior defined by NOM-037's entry page (it was empty while NOM-037 had no page).
-    it('offers the committee only NOM-037', () => {
+    it('offers the committee only NOM-037 and Ley Silla', () => {
         expect(
             complianceNavItems(acme(false, false, 'committee')).map(
                 (item) => item.title,
             ),
-        ).toEqual(['NOM-037']);
+        ).toEqual(['NOM-037', 'Ley Silla']);
+    });
+
+    it('hides Ley Silla from a role that cannot view it', () => {
+        const tenant = acme(false, false);
+
+        expect(
+            complianceNavItems({
+                ...tenant,
+                can: { ...tenant.can, view_seating: false },
+            }).map((item) => item.title),
+        ).toEqual(['NOM-035', 'NOM-037']);
     });
 
     it('lists the NOM-037 sub-links the role may open', () => {

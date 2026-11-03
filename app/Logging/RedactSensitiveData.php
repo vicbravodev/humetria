@@ -67,6 +67,17 @@ final class RedactSensitiveData implements ProcessorInterface
             'street',
             // NOM-037: that a person reported a severe traumatic event is health data.
             'traumatic_event',
+            // Ley Silla: a person's footwear, discomfort, pain and the notes about their health are health data.
+            'assessment_scores',
+            'discomfort',
+            'footwear',
+            'health_note',
+            'pain_level',
+            'referral_note',
+            // Humi: what a person asks the assistant, and what it answers, is never a log's business.
+            'assistant_message',
+            'prompt',
+            'user_message',
         ];
 
         foreach ($data as $key => $value) {

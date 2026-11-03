@@ -1,5 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import AreaFilter from '@/components/results/area-filter';
+import AreaFilter from '@/components/humetria/area-filter';
 import ResultsBody from '@/components/results/results-body';
 import ResultsHeader from '@/components/results/results-header';
 import ResultsOverview from '@/components/results/results-overview';

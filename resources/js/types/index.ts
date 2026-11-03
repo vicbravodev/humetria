@@ -1,3 +1,4 @@
+export type * from './assistant';
 export type * from './auth';
 export type * from './campaigns';
 export type * from './dashboard';
@@ -7,6 +8,9 @@ export type * from './organization';
 export type * from './tenancy';
 export type * from './ui';
 export type * from './results';
+export type * from './seating';
+export type * from './seating-dossier';
+export type * from './seating-survey';
 export type * from './telework';
 export type * from './telework-center';
 export type * from './telework-documents';

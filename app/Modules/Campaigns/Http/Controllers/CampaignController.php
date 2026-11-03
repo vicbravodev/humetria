@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Campaigns\Actions\CreateEvaluationDraft;
 use App\Modules\Campaigns\Actions\DeleteDraft;
 use App\Modules\Campaigns\Data\PeopleFilter;
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Http\Requests\CreateEvaluationRequest;
@@ -89,7 +90,7 @@ final class CampaignController extends Controller
      */
     public static function find(string $id, ?CampaignStatus $status = null): Campaign
     {
-        $campaign = Campaign::query()->findOrFail($id);
+        $campaign = Campaign::query()->whereIn('kind', CampaignKind::nom035())->findOrFail($id);
         abort_if($status !== null && $campaign->status !== $status, 409);
 
         return $campaign;

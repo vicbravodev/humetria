@@ -401,6 +401,142 @@
 }
 
 /* A report prints alone: no sidebar, no top bar, no panel frame, and anything marked print:hidden stays on screen. */
+/* Humi, the assistant: the colors of its face follow the theme, and it floats and blinks softly. */
+:root {
+    --humi-eye: var(--primary-foreground);
+    --humi-pupil: var(--foreground);
+    --humi-mouth: var(--primary-foreground);
+}
+
+.dark {
+    --humi-eye: var(--foreground);
+    --humi-pupil: var(--primary-foreground);
+}
+
+@keyframes humi-bob {
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes humi-blink {
+    93%,
+    100% {
+        transform: scaleY(1);
+    }
+
+    96% {
+        transform: scaleY(0.1);
+    }
+}
+
+@keyframes humi-look {
+    25% {
+        transform: translateX(-7px);
+    }
+
+    75% {
+        transform: translateX(7px);
+    }
+}
+
+@keyframes humi-change {
+    from {
+        opacity: 0.35;
+        transform: scale(0.94);
+    }
+}
+
+.humi-bob {
+    animation: humi-bob 3.4s ease-in-out infinite;
+}
+
+.humi-look {
+    animation: humi-look 1.6s ease-in-out infinite;
+}
+
+.humi-change {
+    animation: humi-change 0.25s ease-out;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.humi-blink {
+    animation: humi-blink 4s infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+/* Humi's panel arrives and what it says comes in softly: short, with the strong curve, and only fades with reduced motion. */
+@keyframes humi-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
+@keyframes humi-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
+@keyframes humi-slide-out {
+    to {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
+@keyframes humi-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+@keyframes humi-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+.humi-enter {
+    animation: humi-enter 240ms var(--ease-out) both;
+}
+
+.humi-slide-in {
+    animation: humi-slide-in 260ms var(--ease-out) both;
+}
+
+.humi-slide-out {
+    animation: humi-slide-out 200ms var(--ease-out) both;
+}
+
+.humi-pop {
+    animation: humi-pop 200ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .humi-enter,
+    .humi-slide-in,
+    .humi-pop {
+        animation: humi-fade 160ms linear both;
+    }
+
+    .humi-slide-out {
+        animation: humi-fade 160ms linear reverse both;
+    }
+
+    .humi-bob,
+    .humi-blink,
+    .humi-look,
+    .humi-change {
+        animation: none;
+    }
+}
+
 @media print {
     *,
     ::before,

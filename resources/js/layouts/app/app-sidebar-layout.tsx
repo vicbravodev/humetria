@@ -2,6 +2,7 @@ import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import HumiDock from '@/components/assistant/humi-dock';
 import { CommandPalette } from '@/components/command-palette';
 import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
@@ -29,6 +30,7 @@ export default function AppSidebarLayout({
                     {children}
                 </div>
             </AppContent>
+            <HumiDock />
             <CommandPalette />
             <ImpersonatedBlockNotice />
         </AppShell>
