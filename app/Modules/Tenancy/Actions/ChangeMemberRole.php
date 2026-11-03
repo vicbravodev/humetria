@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Actions;
 use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\RoleNotAllowedInAccount;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ final readonly class ChangeMemberRole
     {
         $person = $member->user()->sole();
         $tenant = $member->tenant()->sole();
+        $tenant->type->allows($role) || throw new RoleNotAllowedInAccount;
         $from = $this->roles->of($person, $tenant);
 
         if ($from === $role) {

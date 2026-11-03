@@ -22,6 +22,7 @@ final readonly class CreateTenant
                 'trade_name' => $data->tradeName,
                 'rfc' => $data->rfc,
                 'slug' => $data->slug,
+                'type' => $data->type,
             ]);
 
             // Only the id: the names and the RFC (a person's, when the company is a sole proprietor) stay out of logs and audit.

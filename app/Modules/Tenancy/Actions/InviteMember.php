@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Actions;
 use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Tenancy\Data\MemberInvitationData;
+use App\Modules\Tenancy\Exceptions\RoleNotAllowedInAccount;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,9 @@ final readonly class InviteMember
      */
     public function handle(Tenant $tenant, MemberInvitationData $data, User $invitedBy): TenantInvitation
     {
+        // The source of truth for what an account hands out: a form that skipped its own check still stops here.
+        $tenant->type->allows($data->role) || throw new RoleNotAllowedInAccount;
+
         return DB::transaction(function () use ($tenant, $data, $invitedBy): TenantInvitation {
             $token = Str::random(64);
             $invitation = $tenant->invitations()->create([

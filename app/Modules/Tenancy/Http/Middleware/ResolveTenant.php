@@ -69,6 +69,7 @@ final class ResolveTenant
             'status' => $status->value,
             'blocked' => $status->isBlocked(),
             'trial_days_left' => $tenant->trialDaysLeft(),
+            'type' => $tenant->type->value,
             'role' => $role->value,
             'role_label' => $role->label(),
             'can' => [

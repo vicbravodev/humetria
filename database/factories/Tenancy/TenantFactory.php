@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Tenancy;
 
+use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -29,7 +30,13 @@ final class TenantFactory extends Factory
             'trade_name' => $tradeName,
             'rfc' => Str::upper(fake()->lexify('???').fake()->date('ymd').fake()->bothify('???')),
             'slug' => Str::slug($tradeName).'-'.fake()->unique()->numberBetween(1, 99999),
+            'type' => TenantType::Company,
         ];
+    }
+
+    public function union(): self
+    {
+        return $this->state(['type' => TenantType::Union]);
     }
 
     public function inTrial(CarbonInterface $startedAt): self

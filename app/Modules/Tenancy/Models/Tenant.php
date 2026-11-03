@@ -8,6 +8,7 @@ use App\Concerns\SearchesText;
 use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Enums\TenantView;
 use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\TenantFactory;
@@ -29,6 +30,7 @@ use Illuminate\Database\Query\Builder;
  * @property string $trade_name
  * @property string $rfc
  * @property string $slug
+ * @property TenantType $type
  * @property CarbonImmutable|null $trial_started_at
  * @property CarbonImmutable|null $active_until
  * @property CarbonImmutable|null $deactivated_at
@@ -38,7 +40,7 @@ use Illuminate\Database\Query\Builder;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'trial_started_at', 'active_until', 'deactivated_at', 'logo_path', 'logo_width', 'logo_height'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'deactivated_at', 'logo_path', 'logo_width', 'logo_height'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantFactory::class)]
 final class Tenant extends Model
 {
@@ -46,6 +48,11 @@ final class Tenant extends Model
     use HasFactory, HasVersion4Uuids, SearchesText;
 
     public const int TRIAL_DAYS = 14;
+
+    public function isUnion(): bool
+    {
+        return $this->type === TenantType::Union;
+    }
 
     public function status(): TenantStatus
     {
@@ -149,6 +156,7 @@ final class Tenant extends Model
     protected function casts(): array
     {
         return [
+            'type' => TenantType::class,
             'trial_started_at' => 'immutable_datetime',
             'active_until' => 'immutable_datetime',
             'deactivated_at' => 'immutable_datetime',

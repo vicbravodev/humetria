@@ -75,6 +75,8 @@ export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 /** The company a request is working in, shared on every page under /admin/{slug}. */
 export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
+        /** Whether the account is a company or a union; fixed when it was created. */
+        type: 'company' | 'union';
         trial_days_left: number | null;
         role: TenantRole;
         role_label: string;

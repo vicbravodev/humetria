@@ -336,6 +336,7 @@ return [
         'telework_percentage' => 'porcentaje de teletrabajo',
         'tools' => 'herramientas',
         'trade_name' => 'nombre comercial',
+        'type' => 'tipo de cuenta',
         'user_id' => 'integrante',
         'visit_authorization_id' => 'autorización de la visita',
         'visited_on' => 'fecha de la visita',
