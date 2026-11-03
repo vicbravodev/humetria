@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Disclosure\Http\Controllers\DisclosureController;
 use App\Modules\Disclosure\Http\Controllers\DisseminationController;
+use App\Modules\Disclosure\Http\Controllers\PageLinkController;
 use App\Modules\Disclosure\Http\Controllers\PolicyController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,11 @@ Route::post('admin/{tenant:slug}/disclosure/dissemination/{document}/reminders',
 
 // The physical means (poster, bulletin, leaflet, meeting) RH records as evidence of the disclosure (num. 10.2); never changed or deleted.
 Route::post('admin/{tenant:slug}/disclosure/dissemination/records', [DisseminationController::class, 'storeRecord'])->where('tenant', $notReserved)->name('tenant.disclosure.dissemination.records.store');
+
+// The permanent link to the page of the workers: a credential, so only whoever manages sees it. Nothing here deletes it.
+Route::get('admin/{tenant:slug}/disclosure/page', [PageLinkController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.page');
+Route::post('admin/{tenant:slug}/disclosure/page/link', [PageLinkController::class, 'issue'])->where('tenant', $notReserved)->name('tenant.disclosure.page.issue');
+Route::post('admin/{tenant:slug}/disclosure/page/link/rotation', [PageLinkController::class, 'rotate'])->where('tenant', $notReserved)->name('tenant.disclosure.page.rotate');
+Route::post('admin/{tenant:slug}/disclosure/page/link/disabled', [PageLinkController::class, 'disable'])->where('tenant', $notReserved)->name('tenant.disclosure.page.disable');
+Route::post('admin/{tenant:slug}/disclosure/page/link/enabled', [PageLinkController::class, 'enable'])->where('tenant', $notReserved)->name('tenant.disclosure.page.enable');
+Route::put('admin/{tenant:slug}/disclosure/page/link/expiry', [PageLinkController::class, 'expiry'])->where('tenant', $notReserved)->name('tenant.disclosure.page.expiry');

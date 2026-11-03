@@ -14,12 +14,14 @@ final readonly class CenterFacts
     /**
      * @param  array{active: int, confirmed: int}|null  $acknowledgments  The people active today and how many confirmed the version in force; null without a policy.
      * @param  list<string>  $recordedItems  The incisos of 5.7 (a to f) a physical means covered in this center.
+     * @param  string|null  $linkExpiresOn  The day the link of the page expires, written, when it does within the warning term.
      */
     public function __construct(
         public ?PolicyFact $policy,
         public ?array $acknowledgments = null,
         public array $recordedItems = [],
         public bool $pageActive = false,
+        public ?string $linkExpiresOn = null,
     ) {}
 
     public function delivered(string $item): bool

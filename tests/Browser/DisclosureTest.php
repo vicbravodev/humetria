@@ -221,3 +221,38 @@ it('shows the physical means recorded', function (bool $dark, bool $mobile): voi
         ->assertSee('Cartel')
         ->assertSee('Registrar un medio');
 })->with($looks);
+
+it('offers to create the link of the page of the workers', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('disclosure/page', "{$url}/disclosure/page", $dark, $mobile)
+        ->assertSee('Página de las personas')
+        ->assertSee('Aún no hay enlace')
+        ->assertSee('Crear el enlace');
+})->with($looks);
+
+it('shows the link, its state and what RH can do with it', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
+
+    visitPage('disclosure/page', "{$url}/disclosure/page", $dark, $mobile)
+        ->assertSee('Activo')
+        ->assertSee('Copiar enlace')
+        ->assertSee('Ver como persona')
+        ->assertSee('No vence: es una página permanente.')
+        ->assertSee('Generar un enlace nuevo');
+})->with($looks);
+
+it('creates the link and replaces it from the page', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/disclosure/page")
+        ->press('Crear el enlace')
+        ->assertSee('Enlace creado.')
+        ->press('Generar un enlace nuevo')
+        ->assertSee('El enlace actual deja de abrir al instante')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Enlace nuevo. El anterior ya no abre');
+});

@@ -149,3 +149,19 @@ export type DisseminationRecordRow = {
     doneOn: string;
     note: string | null;
 };
+
+/** The permanent link to the page of the workers, as the management screen shows it. */
+export type PageLinkData = {
+    state: Choice<'active' | 'disabled' | 'expired'>;
+    /** What RH prints; null when the link can no longer be derived (its app key was dropped) and has to be replaced. */
+    url: string | null;
+    needsRotation: boolean;
+    version: number;
+    createdOn: string;
+    rotatedOn: string | null;
+    expiresOn: string | null;
+    /** The last day it opens, as Y-m-d. */
+    expiresDay: string | null;
+};
+
+export type PageLinkProps = { link: PageLinkData | null };

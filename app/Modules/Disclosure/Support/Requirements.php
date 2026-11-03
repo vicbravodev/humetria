@@ -19,7 +19,7 @@ final readonly class Requirements
      */
     public function for(CenterFacts $facts): array
     {
-        return [...$this->policy($facts->policy), ...$this->delivery($facts)];
+        return [...$this->policy($facts->policy), ...$this->delivery($facts), ...$this->link($facts)];
     }
 
     /**
@@ -72,5 +72,16 @@ final readonly class Requirements
         $all = $acks['confirmed'] === $acks['active'];
 
         return [new Requirement('D3', '5.1, 5.7 a', 'La política está a la vista de las personas', $all ? RequirementState::Met : RequirementState::Notice, $all ? "{$said}." : "{$said}; la norma no pide el acuse.")];
+    }
+
+    /**
+     * D10: the link of the page expires soon (num. 10.4: the evidence must stay available). Judged for the company, shown in
+     * every center, and only when it is near; the page is permanent unless RH sets a day.
+     *
+     * @return list<Requirement>
+     */
+    private function link(CenterFacts $facts): array
+    {
+        return $facts->linkExpiresOn === null ? [] : [new Requirement('D10', '10.4', 'Vigencia del enlace de la página', RequirementState::Notice, "El enlace de la página vence el {$facts->linkExpiresOn}: después ya no abrirá. Cambie el vencimiento o genere otro antes.")];
     }
 }

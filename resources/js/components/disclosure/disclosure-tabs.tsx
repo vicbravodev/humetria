@@ -1,9 +1,9 @@
 import { usePage } from '@inertiajs/react';
 import CountTabs from '@/components/humetria/count-tabs';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { dissemination, index, policy } from '@/routes/tenant/disclosure';
+import { dissemination, index, page, policy } from '@/routes/tenant/disclosure';
 
-export type DisclosureTab = 'board' | 'policy' | 'dissemination';
+export type DisclosureTab = 'board' | 'policy' | 'dissemination' | 'page';
 
 /**
  * The sections of «Política y difusión», each its own page and address (pantalla Eval-Activa, tabs): the board and the
@@ -34,6 +34,11 @@ export default function DisclosureTabs({ active }: { active: DisclosureTab }) {
                               label: 'Difusión',
                               href: dissemination(tenantSlug),
                               active: active === 'dissemination',
+                          },
+                          {
+                              label: 'Página',
+                              href: page(tenantSlug),
+                              active: active === 'page',
                           },
                       ]
                     : []),
