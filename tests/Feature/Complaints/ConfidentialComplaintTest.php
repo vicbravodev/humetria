@@ -81,7 +81,7 @@ it('accepts a name and a contact of exactly the limit', function (): void {
 });
 
 /** @param array<string, mixed> $overrides */
-function noticeForm(object $test, array $overrides = []): array
+function traumaticNoticeForm(object $test, array $overrides = []): array
 {
     return confidentialForm($test, [
         'type' => 'traumatic_event_notice',
@@ -94,7 +94,7 @@ function noticeForm(object $test, array $overrides = []): array
 }
 
 it('receives the written notice of a traumatic event, with name, date and the people involved (6.5)', function (): void {
-    sendComplaint($this, noticeForm($this))->assertCreated();
+    sendComplaint($this, traumaticNoticeForm($this))->assertCreated();
 
     $complaint = Complaint::query()->sole();
     expect($complaint->type->value)->toBe('traumatic_event_notice')
@@ -105,7 +105,7 @@ it('receives the written notice of a traumatic event, with name, date and the pe
 });
 
 it('does not take the notice of a traumatic event without the name, the date or as an anonymous one', function (array $override, string $field): void {
-    sendComplaint($this, noticeForm($this, $override))->assertUnprocessable()->assertJsonValidationErrors($field);
+    sendComplaint($this, traumaticNoticeForm($this, $override))->assertUnprocessable()->assertJsonValidationErrors($field);
 
     expect(Complaint::query()->count())->toBe(0);
 })->with([
@@ -117,7 +117,7 @@ it('does not take the notice of a traumatic event without the name, the date or 
 ]);
 
 it('takes the notice of a traumatic event without naming anybody involved', function (): void {
-    sendComplaint($this, noticeForm($this, ['involved_text' => '']))->assertCreated();
+    sendComplaint($this, traumaticNoticeForm($this, ['involved_text' => '']))->assertCreated();
 
     expect(Complaint::query()->sole()->involved_text)->toBeNull();
 });
