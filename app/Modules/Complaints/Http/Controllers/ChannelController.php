@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Complaints\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Complaints\Actions\ActivateChannel;
 use App\Modules\Complaints\Actions\PauseChannel;
 use App\Modules\Complaints\Actions\ResumeChannel;
@@ -12,6 +13,7 @@ use App\Modules\Complaints\Actions\RotateAccessCode;
 use App\Modules\Complaints\Actions\SaveChannelSettings;
 use App\Modules\Complaints\Http\Requests\ChannelSettingsRequest;
 use App\Modules\Complaints\Support\ChannelPages;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -30,9 +32,9 @@ final class ChannelController extends Controller
         return Inertia::render('complaints/channel', $pages->show());
     }
 
-    public function activate(ChannelSettingsRequest $request, mixed $tenant, ActivateChannel $activate): RedirectResponse
+    public function activate(ChannelSettingsRequest $request, mixed $tenant, ActivateChannel $activate, #[CurrentUser] User $user): RedirectResponse
     {
-        $activate->handle($request->settings());
+        $activate->handle($request->settings(), $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'El canal quedó activo.']);
 
         return to_route('tenant.complaints.channel.show', $tenant);

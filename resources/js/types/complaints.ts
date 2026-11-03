@@ -22,3 +22,15 @@ export type ChannelBounds = {
     resolveWithinDays: Bound;
     retentionMonths: Bound;
 };
+
+export type HandlerRow = {
+    id: string;
+    name: string;
+    roleLabel: string;
+    /** "Toda la empresa" or the name of the work center. */
+    scope: string;
+    designatedOn: string;
+};
+
+/** How many people would receive a complaint against this kind of person. */
+export type CoverageRow = { kind: string; label: string; count: number };

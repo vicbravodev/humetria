@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Complaints\Providers;
 
 use App\Modules\Complaints\Contracts\ComplaintChannels;
+use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
+use App\Modules\Tenancy\Events\MemberRemoved;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -18,5 +21,10 @@ final class ComplaintsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ComplaintChannels::class, CompanyComplaintChannels::class);
+    }
+
+    public function boot(): void
+    {
+        Event::listen(MemberRemoved::class, EndHandlerOnMemberRemoval::class);
     }
 }

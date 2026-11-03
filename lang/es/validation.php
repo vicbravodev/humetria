@@ -200,6 +200,10 @@ return [
     ],
 
     'attributes' => [
+        'procedure' => 'procedimiento',
+        'acknowledge_within_days' => 'plazo para acusar recibo',
+        'resolve_within_days' => 'plazo para responder',
+        'retention_months' => 'meses de conservación',
         'title' => 'título',
         'document_on' => 'fecha del documento',
         'incisos' => 'incisos',

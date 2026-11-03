@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
+import ChannelTabs from '@/components/complaints/channel-tabs';
 import ChannelActions from '@/components/complaints/channel-actions';
 import ChannelLinkCard from '@/components/complaints/channel-link-card';
 import ChannelSettingsForm from '@/components/complaints/channel-settings-form';
@@ -34,6 +35,7 @@ export default function Channel({
                         <ChannelActions status={channel.status} />
                     )}
                 </PageHeader>
+                <ChannelTabs active="channel" />
                 {channel.url !== null && (
                     <ChannelLinkCard
                         url={channel.url}
