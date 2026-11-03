@@ -105,3 +105,33 @@ it('scopes the documents to the current company', function (): void {
     expect(Document::query()->pluck('id')->all())->toBe([$own->id])
         ->and(Document::query()->find($foreign->id))->toBeNull();
 });
+
+it('asks each person once per version', function (): void {
+    $ack = App\Modules\Disclosure\Models\Acknowledgment::factory()->create($this->in);
+
+    refusedByTheDatabase(fn () => App\Modules\Disclosure\Models\Acknowledgment::factory()->create([...$this->in, 'document_id' => $ack->document_id, 'employee_id' => $ack->employee_id]), 'disclosure_acknowledgments_document_employee_unique');
+});
+
+it('refuses an acknowledgment whose channel and day disagree, or a note that is not from paper', function (array $attributes, string $constraint): void {
+    refusedByTheDatabase(fn () => insertDisclosure(App\Modules\Disclosure\Models\Acknowledgment::factory(), [...$this->in, ...$attributes]), $constraint);
+})->with([
+    'a channel without a day' => [['channel' => 'portal'], 'disclosure_acknowledgments_channel_when_acknowledged'],
+    'a day without a channel' => [['acknowledged_at' => '2026-11-03'], 'disclosure_acknowledgments_channel_when_acknowledged'],
+    'an unknown channel' => [['channel' => 'sms', 'acknowledged_at' => '2026-11-03'], 'disclosure_acknowledgments_channel_known'],
+    'a note on a portal confirmation' => [['channel' => 'portal', 'acknowledged_at' => '2026-11-03', 'note' => 'hoja 3'], 'disclosure_acknowledgments_manual_only'],
+    'a note on a request' => [['note' => 'hoja 3'], 'disclosure_acknowledgments_manual_only'],
+]);
+
+it('never deletes an acknowledgment', function (): void {
+    $ack = App\Modules\Disclosure\Models\Acknowledgment::factory()->portal()->create($this->in);
+
+    expect(fn () => DB::transaction(fn () => DB::table('disclosure_acknowledgments')->where('id', $ack->id)->delete()))->toThrow(QueryException::class, 'never deleted');
+});
+
+it('scopes the acknowledgments to the current company', function (): void {
+    $other = Tenant::factory()->create();
+    App\Modules\Disclosure\Models\Acknowledgment::factory()->create(['tenant_id' => $other->id]);
+    $own = App\Modules\Disclosure\Models\Acknowledgment::factory()->create($this->in);
+
+    expect(App\Modules\Disclosure\Models\Acknowledgment::query()->pluck('id')->all())->toBe([$own->id]);
+});
