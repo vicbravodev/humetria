@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $tenant_id
  * @property string $campaign_id
  * @property string $work_center_id
+ * @property bool $show_measures
  * @property CarbonImmutable $published_at
  * @property int $published_by
  * @property CarbonImmutable|null $withdrawn_at
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $updated_at
  */
 #[Table('disclosure_result_publications')]
-#[Fillable(['tenant_id', 'campaign_id', 'work_center_id', 'published_at', 'published_by', 'withdrawn_at', 'withdrawn_by'])]
+#[Fillable(['tenant_id', 'campaign_id', 'work_center_id', 'show_measures', 'published_at', 'published_by', 'withdrawn_at', 'withdrawn_by'])]
 #[UseFactory(ResultPublicationFactory::class)]
 final class ResultPublication extends Model
 {
@@ -42,6 +43,6 @@ final class ResultPublication extends Model
      */
     protected function casts(): array
     {
-        return ['published_at' => 'immutable_datetime', 'withdrawn_at' => 'immutable_datetime'];
+        return ['show_measures' => 'boolean', 'published_at' => 'immutable_datetime', 'withdrawn_at' => 'immutable_datetime'];
     }
 }

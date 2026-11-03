@@ -29,6 +29,7 @@ final class ResultPublicationFactory extends Factory
             'tenant_id' => TenantFactory::new(),
             'campaign_id' => fn (array $attributes) => CampaignFactory::new()->closed()->state(['tenant_id' => $attributes['tenant_id']]),
             'work_center_id' => fn (array $attributes) => $this->centerOf($attributes['campaign_id']),
+            'show_measures' => false,
             'published_at' => now(),
             'published_by' => User::factory(),
             'withdrawn_at' => null,

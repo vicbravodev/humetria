@@ -20,7 +20,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class Board
 {
-    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private ResultsStanding $results, private Requirements $requirements) {}
+    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private ResultsStanding $results, private ProgramMeasureFeed $program, private ComplaintChannelFeed $channel, private Requirements $requirements) {}
 
     /**
      * @return array{summary: array{met: int, notice: int, missing: int}, centers: LengthAwarePaginator<int, array<string, mixed>>}
@@ -31,8 +31,8 @@ final readonly class Board
         $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
         $policies = $this->policies->inForce($ids);
         $recorded = $this->delivery->recordedItems($ids);
-        $contents = $this->contents($ids);
         $results = $this->results->forCenters($ids);
+        $contents = $this->contents($ids, $results);
         $acknowledgments = $this->delivery->acknowledgments($policies);
         $link = PageLink::query()->first();
         $active = $link !== null && $link->status() === PageLinkStatus::Active;
@@ -89,12 +89,14 @@ final readonly class Board
     }
 
     /**
-     * The incisos (b, c, d, f) with a text published, by work center.
+     * The incisos (b, c, d, f) with something published, by work center: a text the company wrote, the measures of the Programa
+     * it chose to show and the channel for complaints. What other tools give is joined to the text, never in place of it.
      *
      * @param  list<string>  $workCenterIds
+     * @param  array<string, ResultsFact>  $results
      * @return array<string, list<string>>
      */
-    private function contents(array $workCenterIds): array
+    private function contents(array $workCenterIds, array $results): array
     {
         $found = [];
 
@@ -106,6 +108,24 @@ final readonly class Board
             }
         }
 
-        return $found;
+        $channel = $this->channel->current() !== null;
+
+        foreach ($workCenterIds as $center) {
+            $fact = $results[$center] ?? null;
+
+            if ($fact !== null && $fact->showMeasures && $fact->shown !== null) {
+                foreach ($this->program->forCampaign($fact->shown->id) as $measure) {
+                    $found[$center][] = $measure->inciso;
+                }
+            }
+
+            if ($channel) {
+                $found[$center][] = 'd';
+            }
+
+            $found[$center] = array_values(array_unique($found[$center] ?? []));
+        }
+
+        return array_filter($found, fn (array $items): bool => $items !== []);
     }
 }

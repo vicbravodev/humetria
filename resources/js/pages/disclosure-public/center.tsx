@@ -3,6 +3,7 @@ import { ChevronLeft, Info } from 'lucide-react';
 import PersonShell from '@/components/disclosure/person-shell';
 import PolicySections from '@/components/disclosure/policy-sections';
 import PublicTextBlock from '@/components/disclosure/public-text-block';
+import PublicChannelCard from '@/components/disclosure/public-channel';
 import PublicResultsBlock from '@/components/disclosure/public-results';
 import PublicBlock from '@/components/disclosure/public-block';
 import { show } from '@/routes/workers';
@@ -14,6 +15,8 @@ export default function PublicCenter({
     center,
     others,
     blocks,
+    measures,
+    channel,
     results,
     policy,
 }: PublicCenterProps) {
@@ -71,16 +74,23 @@ export default function PublicCenter({
                     inciso="b"
                     title="Medidas contra la violencia laboral"
                     block={blocks['b']}
+                    measures={measures['b'] ?? []}
                 />
                 <PublicTextBlock
                     inciso="c"
                     title="Medidas y acciones de prevención y control"
                     block={blocks['c']}
+                    measures={measures['c'] ?? []}
                 />
                 <PublicTextBlock
                     inciso="d"
                     title="Cómo presentar una queja"
                     block={blocks['d']}
+                    extra={
+                        channel === null ? undefined : (
+                            <PublicChannelCard channel={channel} />
+                        )
+                    }
                 />
                 {results !== null && <PublicResultsBlock results={results} />}
                 <PublicTextBlock

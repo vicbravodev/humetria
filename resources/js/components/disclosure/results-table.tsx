@@ -1,4 +1,5 @@
-import { Eye, EyeOff } from 'lucide-react';
+import { EyeOff } from 'lucide-react';
+import PublishResultsButton from '@/components/disclosure/publish-results-button';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { publish, withdraw } from '@/routes/tenant/disclosure/results';
+import { withdraw } from '@/routes/tenant/disclosure/results';
 import type { ResultsRow } from '@/types';
 
 /** The closed evaluations and whether the people can read their results; RH publishes and withdraws them one by one. */
@@ -81,29 +82,7 @@ export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
                                 />
                             ) : (
                                 row.canPublish && (
-                                    <ConfirmDialog
-                                        trigger={
-                                            <Button size="sm">
-                                                <Eye aria-hidden />
-                                                Publicar
-                                                <span className="sr-only">
-                                                    {' '}
-                                                    los resultados de{' '}
-                                                    {row.workCenter},{' '}
-                                                    {row.closedOn}
-                                                </span>
-                                            </Button>
-                                        }
-                                        title="¿Publicar los resultados para las personas?"
-                                        description="Estas cifras las verá cualquier persona con el enlace de la página: cuántos cuestionarios quedan en cada nivel de riesgo, de todo el centro, sin áreas. Si el riesgo es alto, conviene tener listas las medidas antes de publicar."
-                                        confirmLabel="Publicar"
-                                        destructive={false}
-                                        form={publish.form({
-                                            tenant: tenantSlug,
-                                            campaign: row.id,
-                                        })}
-                                        preserveScroll
-                                    />
+                                    <PublishResultsButton row={row} />
                                 )
                             )}
                         </TableCell>

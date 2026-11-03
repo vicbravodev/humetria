@@ -185,6 +185,10 @@ export type PublicCenterProps = {
     others: boolean;
     /** What the company published for b, c, d and f in the center, by inciso; null while there is nothing. */
     blocks: Record<string, PublicBlockText | null>;
+    /** The measures of the Programa RH chose to show, by inciso (b and c): the whole center, never people or areas. */
+    measures: Record<string, PublicMeasure[]>;
+    /** The channel for complaints as the channel says it; null while it takes nothing. */
+    channel: PublicChannel | null;
     /** The results block (5.7 e); null where 7.8 does not apply, a center of up to 15 people. */
     results: PublicResults | null;
     /** The policy in force in the center; null while it has none. */
@@ -257,3 +261,19 @@ export type ResultsRow = {
 };
 
 export type ResultsProps = { evaluations: Paginated<ResultsRow> };
+
+/** A measure of the Programa as the public page shows it: what, which level, where it stands and by when. */
+export type PublicMeasure = {
+    title: string;
+    level: number;
+    status: string;
+    statusLabel: string;
+    dueOn: string;
+};
+
+/** The channel for complaints and reports: where to go, whether it takes anonymous ones and what it takes. */
+export type PublicChannel = {
+    url: string;
+    anonymousAllowed: boolean;
+    categories: string[];
+};

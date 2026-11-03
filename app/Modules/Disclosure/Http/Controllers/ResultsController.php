@@ -31,7 +31,7 @@ final class ResultsController extends Controller
     public function publish(Request $request, mixed $tenant, string $campaign, PublishResults $publish): RedirectResponse
     {
         Gate::authorize('manage-disclosure');
-        $publish->handle($campaign, $request->user()->id ?? abort(403));
+        $publish->handle($campaign, $request->user()->id ?? abort(403), $request->boolean('show_measures'));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Resultados publicados para las personas.']);
 
         return redirect()->route('tenant.disclosure.results', $tenant);

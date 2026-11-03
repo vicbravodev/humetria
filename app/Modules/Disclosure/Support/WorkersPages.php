@@ -20,7 +20,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class WorkersPages
 {
-    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private ResultsStanding $results) {}
+    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private ResultsStanding $results, private ProgramMeasureFeed $program, private ComplaintChannelFeed $channel) {}
 
     /**
      * The centers in use, by name, ten at a time, narrowed by a search done on the server.
@@ -44,7 +44,7 @@ final readonly class WorkersPages
     /**
      * What one center publishes: the policy in force there.
      *
-     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, publishedOn: string}|null>, results: array<string, mixed>|null}
+     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, publishedOn: string}|null>, measures: array<string, list<array<string, mixed>>>, channel: array<string, mixed>|null, results: array<string, mixed>|null}
      */
     public function center(WorkCenterSummary $center): array
     {
@@ -61,6 +61,8 @@ final readonly class WorkersPages
                 'sections' => PolicyText::sections($document->content, $this->workCenters->profile($center->id)->legalName ?? ''),
             ],
             'blocks' => $this->blocks($center),
+            'measures' => $this->measures($center),
+            'channel' => $this->channelOf(),
             'results' => $this->resultsOf($center),
         ];
     }
@@ -125,5 +127,38 @@ final readonly class WorkersPages
             'title' => $fact->guide === 'iii' ? 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional' : 'Resultados de la identificación y análisis de los factores de riesgo psicosocial',
             'published' => $published,
         ];
+    }
+
+    /**
+     * The measures of the Programa of the evaluation shown here, by inciso (b and c), when RH chose to show them with the results.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private function measures(WorkCenterSummary $center): array
+    {
+        $fact = $this->results->forCenters([$center->id])[$center->id] ?? null;
+        $measures = ['b' => [], 'c' => []];
+
+        if ($fact === null || ! $fact->showMeasures || $fact->shown === null) {
+            return $measures;
+        }
+
+        foreach ($this->program->forCampaign($fact->shown->id) as $measure) {
+            $measures[$measure->inciso][] = ['title' => $measure->title, 'level' => $measure->level, 'status' => $measure->status, 'statusLabel' => $measure->statusLabel, 'dueOn' => $measure->dueOn];
+        }
+
+        return $measures;
+    }
+
+    /**
+     * The channel for complaints as the channel says it, or null while it takes nothing.
+     *
+     * @return array{url: string, anonymousAllowed: bool, categories: list<string>}|null
+     */
+    private function channelOf(): ?array
+    {
+        $channel = $this->channel->current();
+
+        return $channel === null ? null : ['url' => $channel->url, 'anonymousAllowed' => $channel->anonymousAllowed, 'categories' => $channel->categories];
     }
 }

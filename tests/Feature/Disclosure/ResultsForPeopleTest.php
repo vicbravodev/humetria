@@ -62,8 +62,8 @@ it('publishes a closed evaluation to the people, once', function (): void {
         ->and($publication->published_by)->toBe($this->hr->id)
         ->and($publication->withdrawn_at)->toBeNull();
     expect(AuditEntry::query()->where('event', 'disclosure.results_published')->count())->toBe(1)
-        ->and(AuditEntry::query()->where('event', 'disclosure.results_published')->sole()->metadata)->toEqual(['campaign_id' => $campaign->id, 'work_center_id' => $this->plant->id]);
-    Log::shouldHaveReceived('info')->with('disclosure.results_published', ['campaign_id' => $campaign->id, 'work_center_id' => $this->plant->id])->once();
+        ->and(AuditEntry::query()->where('event', 'disclosure.results_published')->sole()->metadata)->toEqual(['campaign_id' => $campaign->id, 'work_center_id' => $this->plant->id, 'show_measures' => false]);
+    Log::shouldHaveReceived('info')->with('disclosure.results_published', ['campaign_id' => $campaign->id, 'work_center_id' => $this->plant->id, 'show_measures' => false])->once();
 });
 
 it('publishes also when there are too few questionnaires to show figures: the page says so without a count', function (): void {
@@ -114,7 +114,7 @@ it('keeps one active publication per evaluation and no column that points at a p
     expect(fn () => DB::transaction(fn () => ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $campaign->id, 'work_center_id' => $this->plant->id])))->toThrow(QueryException::class, 'disclosure_result_publications_one_active');
 
     $columns = Schema::getColumnListing('disclosure_result_publications');
-    expect($columns)->toEqualCanonicalizing(['id', 'tenant_id', 'campaign_id', 'work_center_id', 'published_at', 'published_by', 'withdrawn_at', 'withdrawn_by', 'created_at', 'updated_at']);
+    expect($columns)->toEqualCanonicalizing(['id', 'tenant_id', 'campaign_id', 'work_center_id', 'show_measures', 'published_at', 'published_by', 'withdrawn_at', 'withdrawn_by', 'created_at', 'updated_at']);
     $foreign = collect(Schema::getForeignKeys('disclosure_result_publications'))->pluck('foreign_table')->unique()->sort()->values()->all();
     expect($foreign)->toBe(['campaigns', 'tenants', 'users', 'work_centers']);
 });

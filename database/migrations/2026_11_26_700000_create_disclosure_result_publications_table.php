@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Schema;
  * «This closed evaluation was published to the people» (num. 7.8; criterio C-54). It points at the evaluation and its center
  * and at who published and withdrew it, and at nothing else: no person, invitation or token, so it cannot tie anybody to an
  * answer. There is one active publication per evaluation; withdrawing and publishing again makes a new row and the earlier ones
- * stay (num. 10.4).
+ * stay (num. 10.4). `show_measures` is RH's choice to show, with the results, the measures of the Programa that are for the whole
+ * center (criterio C-52): nothing of the Programa reaches the people without it.
  */
 return new class extends Migration
 {
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->foreignUuid('tenant_id')->constrained()->restrictOnDelete();
             $table->uuid('campaign_id');
             $table->uuid('work_center_id');
+            $table->boolean('show_measures')->default(false);
             $table->timestampTz('published_at');
             $table->foreignId('published_by')->constrained('users')->restrictOnDelete();
             $table->timestampTz('withdrawn_at')->nullable();

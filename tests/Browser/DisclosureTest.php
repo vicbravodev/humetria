@@ -375,3 +375,25 @@ it('publishes results and the people read them on their page, of the whole cente
         ->assertSee('Calificación final (12 cuestionarios)')
         ->assertSee('no son un promedio');
 });
+
+it('shows the people the channel for complaints and the measures the company chose to show', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $hr = memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    workIn($tenant);
+    App\Modules\Complaints\Models\ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    [$campaign] = closedEvaluationInAreas($tenant, ['Producción' => 12]);
+    $campaign->update(['work_center_id' => $plant->id]);
+    $program = App\Modules\Interventions\Models\Program::factory()->create(['tenant_id' => $tenant->id, 'campaign_id' => $campaign->id]);
+    $item = App\Modules\Interventions\Models\ProgramItem::factory()->create(['tenant_id' => $tenant->id, 'program_id' => $program->id]);
+    App\Modules\Interventions\Models\ProgramAction::factory()->create(['tenant_id' => $tenant->id, 'program_id' => $program->id, 'item_id' => $item->id, 'title' => 'Revisar las cargas de trabajo']);
+    resolve(App\Modules\Disclosure\Actions\PublishResults::class)->handle($campaign->id, $hr->id, showMeasures: true);
+    $url = route('workers.center', [(string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle($hr->id)->token(), $plant->id], absolute: false);
+
+    visitPage('disclosure-public/center', $url, $dark, $mobile)
+        ->assertSee('Presentar una queja o denuncia')
+        ->assertSee('El canal permite presentar la queja o la denuncia de forma anónima.')
+        ->assertSee('Del Programa de intervención')
+        ->assertSee('Revisar las cargas de trabajo');
+})->with($looks);

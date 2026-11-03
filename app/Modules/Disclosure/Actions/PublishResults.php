@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  * RH publishes the results of a closed evaluation to the people of its center (num. 7.8; criterio C-54). Only an evaluation that
  * is closed (C-27) and that is scored (not the Guía I alone) can be published; whether figures are shown is Results' to decide,
  * with the minimum applied (C-23), and below it the page says so without a count. Publishing what is already published changes
- * nothing. The audit trail and the log keep the evaluation and the center, never a figure.
+ * nothing (the choice to show the measures of the Programa is the one it was made with). The audit trail and the log keep the evaluation and the center, never a figure.
  */
 final readonly class PublishResults
 {
@@ -31,7 +31,7 @@ final readonly class PublishResults
      * @throws ValidationException when the evaluation still runs or has no scored guide.
      * @throws ModelNotFoundException when it does not exist or is another company's.
      */
-    public function handle(string $campaignId, int $userId): ResultPublication
+    public function handle(string $campaignId, int $userId, bool $showMeasures = false): ResultPublication
     {
         $record = Str::isUuid($campaignId) ? $this->campaigns->find($campaignId) : null;
 
@@ -43,15 +43,15 @@ final readonly class PublishResults
             throw ValidationException::withMessages(['campaign' => 'Esta evaluación no tiene resultados que las personas puedan consultar: sigue abierta o solo aplicó la Guía I.']);
         }
 
-        return $this->active($record->id) ?? DB::transaction(function () use ($record, $userId): ResultPublication {
+        return $this->active($record->id) ?? DB::transaction(function () use ($record, $userId, $showMeasures): ResultPublication {
             try {
-                $publication = ResultPublication::query()->create(['tenant_id' => $this->tenant->id(), 'campaign_id' => $record->id, 'work_center_id' => $record->workCenterId, 'published_at' => now(), 'published_by' => $userId]);
+                $publication = ResultPublication::query()->create(['tenant_id' => $this->tenant->id(), 'campaign_id' => $record->id, 'work_center_id' => $record->workCenterId, 'show_measures' => $showMeasures, 'published_at' => now(), 'published_by' => $userId]);
             } catch (UniqueConstraintViolationException) {
                 // Two requests raced: the one that lost reads the one that won.
                 return $this->active($record->id) ?? throw new ModelNotFoundException;
             }
 
-            $facts = ['campaign_id' => $record->id, 'work_center_id' => $record->workCenterId];
+            $facts = ['campaign_id' => $record->id, 'work_center_id' => $record->workCenterId, 'show_measures' => $showMeasures];
             Log::info('disclosure.results_published', $facts);
             $this->audit->handle('disclosure.results_published', $publication, $facts);
 

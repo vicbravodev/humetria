@@ -34,8 +34,8 @@ final readonly class ResultsStanding
         $latest = $this->campaigns->latestClosedEvaluations($workCenterIds);
         $published = [];
 
-        foreach (ResultPublication::query()->whereIn('work_center_id', $workCenterIds)->whereNull('withdrawn_at')->get(['campaign_id', 'work_center_id']) as $publication) {
-            $published[$publication->work_center_id][$publication->campaign_id] = true;
+        foreach (ResultPublication::query()->whereIn('work_center_id', $workCenterIds)->whereNull('withdrawn_at')->get(['campaign_id', 'work_center_id', 'show_measures']) as $publication) {
+            $published[$publication->work_center_id][$publication->campaign_id] = $publication->show_measures;
         }
 
         $facts = [];
@@ -48,13 +48,13 @@ final readonly class ResultsStanding
     }
 
     /**
-     * @param  array<string, true>  $published  the evaluations of the center that are published
+     * @param  array<string, bool>  $published  the evaluations of the center that are published, with whether RH chose to show their measures
      */
     private function fact(string $center, int $people, ?CampaignRecord $latest, array $published): ResultsFact
     {
         $latestBreakdown = $latest === null ? null : $this->results->forCampaign($latest);
         $applies = $latestBreakdown === null ? $people >= self::MINIMUM_PEOPLE : $latestBreakdown->state !== RiskBreakdown::NOT_SCORED;
-        $latestPublished = $latest !== null && isset($published[$latest->id]);
+        $latestPublished = $latest !== null && array_key_exists($latest->id, $published);
         $shown = $latestPublished ? $latest : ($published === [] ? null : $this->firstPublished($center, $published));
 
         return new ResultsFact(
@@ -65,18 +65,19 @@ final readonly class ResultsStanding
             $latestPublished,
             $shown,
             $shown === null ? null : ($shown->id === $latest?->id ? $latestBreakdown : $this->results->forCampaign($shown)),
+            $shown !== null && ($published[$shown->id] ?? false),
         );
     }
 
     /**
      * The most recent published evaluation of a center, when it is not its latest closed one.
      *
-     * @param  array<string, true>  $published
+     * @param  array<string, bool>  $published
      */
     private function firstPublished(string $center, array $published): ?CampaignRecord
     {
         foreach ($this->campaigns->closedAt($center) as $record) {
-            if (isset($published[$record->id])) {
+            if (array_key_exists($record->id, $published)) {
                 return $record;
             }
         }
