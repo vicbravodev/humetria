@@ -103,9 +103,10 @@ final readonly class SendComplaintDigests
     {
         $assignments = ComplaintAssignment::query()->where('user_id', $member->userId)->whereNull('ended_on')->get();
         $cases = Complaint::query()->whereIn('id', $assignments->map(fn (ComplaintAssignment $assignment): string => $assignment->complaint_id)->all())->get()->keyBy('id');
-        $entries = ComplaintEntry::query()->whereIn('complaint_id', $cases->keys()->all())->get(['complaint_id', 'kind', 'position']);
+        $entries = ComplaintEntry::query()->whereIn('complaint_id', $cases->keys()->all())->get(['complaint_id', 'kind', 'position', 'occurred_on', 'occurred_at']);
         $new = 0;
         $replies = 0;
+        $moved = [];
 
         foreach ($assignments as $assignment) {
             $case = $cases->get($assignment->complaint_id);
@@ -116,6 +117,7 @@ final readonly class SendComplaintDigests
 
             $mine = $entries->filter(fn (ComplaintEntry $entry): bool => $entry->complaint_id === $case->id);
             $last = $mine->isEmpty() ? 0 : $mine->max(fn (ComplaintEntry $entry): int => $entry->position);
+            $moved[$case->id] = $this->lastMovement($case, array_values($mine->all()));
 
             if ($case->status !== ComplaintStatus::Closed) {
                 $new += $assignment->notified_position === null ? 1 : 0;
@@ -127,20 +129,23 @@ final readonly class SendComplaintDigests
             }
         }
 
-        return $this->lines($new, $replies, $this->reminders(array_values($cases->all()), $channel, $member));
+        return $this->lines($new, $replies, $this->reminders(array_values($cases->all()), $moved, $channel, $member));
     }
 
     /**
      * What is past its deadline, counted, if the handler was not already reminded today.
      *
      * @param  list<Complaint>  $cases
-     * @return array{acknowledge: int, resolve: int}
+     * @param  array<string, string>  $moved  The last day each case moved, by case id.
+     * @return array{acknowledge: int, resolve: int, stagnant: int}
      */
-    private function reminders(array $cases, ComplaintChannel $channel, MemberSummary $member): array
+    private function reminders(array $cases, array $moved, ComplaintChannel $channel, MemberSummary $member): array
     {
         $today = Dates::today()->toDateString();
+        $stagnant = Dates::today()->subDays(config()->integer('complaints.retention.stagnant_days'))->toDateString();
         $acknowledge = 0;
         $resolve = 0;
+        $idle = 0;
 
         foreach ($cases as $case) {
             if ($case->status === ComplaintStatus::Closed) {
@@ -149,17 +154,35 @@ final readonly class SendComplaintDigests
 
             $acknowledge += $case->status === ComplaintStatus::New && $case->acknowledged_at === null && $case->received_on->addDays($channel->acknowledge_within_days)->toDateString() < $today ? 1 : 0;
             $resolve += $case->received_on->addDays($channel->resolve_within_days)->toDateString() < $today ? 1 : 0;
+            $idle += ($moved[$case->id] ?? $today) < $stagnant ? 1 : 0;
         }
 
-        if (($acknowledge > 0 || $resolve > 0) && ! Cache::add("complaints:reminded:{$channel->id}:{$member->userId}:{$today}", true, now()->addDay())) {
-            return ['acknowledge' => 0, 'resolve' => 0];
+        if (($acknowledge > 0 || $resolve > 0 || $idle > 0) && ! Cache::add("complaints:reminded:{$channel->id}:{$member->userId}:{$today}", true, now()->addDay())) {
+            return ['acknowledge' => 0, 'resolve' => 0, 'stagnant' => 0];
         }
 
-        return ['acknowledge' => $acknowledge, 'resolve' => $resolve];
+        return ['acknowledge' => $acknowledge, 'resolve' => $resolve, 'stagnant' => $idle];
     }
 
     /**
-     * @param  array{acknowledge: int, resolve: int}  $reminders
+     * The last day something happened in a case: it arrived, or an entry was written.
+     *
+     * @param  list<ComplaintEntry>  $entries
+     */
+    private function lastMovement(Complaint $case, array $entries): string
+    {
+        $zone = config()->string('app.display_timezone');
+        $days = [$case->received_on->toDateString()];
+
+        foreach ($entries as $entry) {
+            $days[] = $entry->occurred_on?->toDateString() ?? $entry->occurred_at?->setTimezone($zone)->toDateString() ?? $case->received_on->toDateString();
+        }
+
+        return max($days);
+    }
+
+    /**
+     * @param  array{acknowledge: int, resolve: int, stagnant: int}  $reminders
      * @return list<string>
      */
     private function lines(int $new, int $replies, array $reminders): array
@@ -169,6 +192,7 @@ final readonly class SendComplaintDigests
             [$replies, '{1} Tienes :count caso con una respuesta de la persona.|[2,*] Tienes :count casos con una respuesta de la persona.'],
             [$reminders['acknowledge'], '{1} Tienes :count caso sin acusar recibo pasado su plazo.|[2,*] Tienes :count casos sin acusar recibo pasado su plazo.'],
             [$reminders['resolve'], '{1} Tienes :count caso sin responder pasado su plazo.|[2,*] Tienes :count casos sin responder pasado su plazo.'],
+            [$reminders['stagnant'], '{1} Tienes :count caso sin movimiento desde hace más de 90 días.|[2,*] Tienes :count casos sin movimiento desde hace más de 90 días.'],
         ];
         $lines = [];
 

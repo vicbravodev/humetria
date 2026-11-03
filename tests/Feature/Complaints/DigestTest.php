@@ -194,3 +194,27 @@ it('runs from the command and reports how many went', function (): void {
 
     $this->artisan('complaints:send-digests')->expectsOutput('Resúmenes enviados: 1')->assertSuccessful();
 });
+
+it('reminds, once a day, of the open cases with no movement for ninety days', function (string $received, bool $remind): void {
+    $complaint = given($this, [$this->owner], ['received_on' => $received, 'status' => 'in_review', 'acknowledged_at' => now()]);
+    ComplaintAssignment::query()->where('complaint_id', $complaint->id)->update(['notified_position' => 0]);
+    $this->channel->forceFill(['resolve_within_days' => 180])->save();
+
+    expect(digest())->toBe($remind ? 1 : 0);
+    if ($remind) {
+        Notification::assertSentOnDemand(ComplaintsDigest::class, fn (ComplaintsDigest $notification): bool => in_array('Tienes 1 caso sin movimiento desde hace más de 90 días.', digestLinesOf($notification), true));
+    }
+})->with([
+    'received 90 days ago (the limit)' => ['2026-08-22', false],
+    'received 91 days ago' => ['2026-08-21', true],
+    'received yesterday' => ['2026-11-19', false],
+]);
+
+it('counts the last entry of a case as its movement', function (): void {
+    $complaint = given($this, [$this->owner], ['received_on' => '2026-06-01', 'status' => 'in_review', 'acknowledged_at' => now()]);
+    $this->channel->forceFill(['resolve_within_days' => 180])->save();
+    ComplaintEntry::factory()->fromReporter('2026-11-01')->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $complaint->id, 'position' => 1, 'body' => 'Sigue']);
+    ComplaintAssignment::query()->where('complaint_id', $complaint->id)->update(['notified_position' => 1]);
+
+    expect(digest())->toBe(0);
+});

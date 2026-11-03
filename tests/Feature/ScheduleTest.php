@@ -19,6 +19,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'seating:schedule-checks' => '30 7 * * *',
         'seating:send-digests' => '30 8 * * *',
         'complaints:send-digests' => '0 * * * *',
+        'complaints:purge' => '15 3 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
