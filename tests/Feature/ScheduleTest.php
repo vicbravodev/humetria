@@ -15,6 +15,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'campaigns:close-expired' => '0 * * * *',
         'campaigns:send-digests' => '0 9 * * 1',
         'interventions:send-digests' => '30 9 * * 1',
+        'disclosure:send-digests' => '45 9 * * 1',
         'telework:schedule-reviews' => '0 7 * * *',
         'telework:send-digests' => '0 8 * * *',
         'seating:schedule-checks' => '30 7 * * *',
