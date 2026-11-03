@@ -77,11 +77,14 @@ it('writes the Programa as the report reads it: rows, levels, analysis and actio
         ->and($first->dueOn)->toBe('20 dic 2026')
         ->and($first->responsible)->toBe('Hugo RH')
         ->and($first->status)->toBe('Planeada')
-        ->and($first->professional)->toBeNull();
+        ->and($first->professional)->toBeNull()
+        // The keys a reader that is not RH's (the page of the people) filters by, so it never matches a label.
+        ->and([$first->kindKey, $first->levelValue, $first->statusKey, $first->wholeCenter])->toBe(['policy_review', 1, 'planned', false]);
 
     $clinical = array_find($row->actions, fn ($action): bool => $action->title === 'Atención psicológica a solicitud');
     expect($clinical?->subjects)->toBe('Todo el centro de trabajo')
-        ->and($clinical->professional)->toBe('Psicólogo');
+        ->and($clinical->professional)->toBe('Psicólogo')
+        ->and([$clinical->kindKey, $clinical->levelValue, $clinical->statusKey, $clinical->wholeCenter])->toBe(['clinical_care', 3, 'planned', true]);
 });
 
 it('names only the areas Results shows, never one that stays hidden', function (): void {
