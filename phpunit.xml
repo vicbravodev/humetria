@@ -21,6 +21,8 @@
         </include>
     </source>
     <php>
+        <!-- Coverage piles up in the process that runs the tests (a child of `artisan test`, which `php -d` never reaches): 512M, the usual limit, runs out. -->
+        <ini name="memory_limit" value="2G"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
@@ -38,6 +40,9 @@
         <!-- No mail provider limit in tests: the one test of the limit sets its own. -->
         <env name="CAMPAIGN_INVITATIONS_PER_MINUTE" value="100000"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <!-- Humi's defaults, whatever the local .env sets: the tests never reach a provider. -->
+        <env name="HUMI_PROVIDER" value="anthropic" force="true"/>
+        <env name="HUMI_MODEL" value="claude-sonnet-5-5" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
