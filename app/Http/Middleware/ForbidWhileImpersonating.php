@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Http\Impersonation;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -19,7 +20,8 @@ final class ForbidWhileImpersonating
     public function __construct(private readonly Impersonation $impersonation) {}
 
     /**
-     * Names of the owner's account routes. Every route under admin/user/ must be here: a test enumerates them.
+     * Names of the owner's account routes, and of the routes that open a complaint: not even a superadmin acting as the owner
+     * reads a case (criterio C-44). Every route under admin/user/ must be here: a test enumerates them. A name may end in *.
      *
      * @return list<string>
      */
@@ -32,7 +34,14 @@ final class ForbidWhileImpersonating
             'two-factor.confirm', 'two-factor.enable', 'two-factor.disable', 'two-factor.qr-code',
             'two-factor.recovery-codes', 'two-factor.regenerate-recovery-codes', 'two-factor.secret-key',
             'passkey.store', 'passkey.registration-options', 'passkey.destroy',
+            'tenant.complaints.index', 'tenant.complaints.cases.*',
         ];
+    }
+
+    /** Whether a route is one of those guarded by name. */
+    public static function guards(string $routeName): bool
+    {
+        return Str::is(self::protectedRoutes(), $routeName);
     }
 
     /**

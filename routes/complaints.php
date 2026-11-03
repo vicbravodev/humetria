@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\Complaints\Http\Controllers\CenterOptionsController;
 use App\Modules\Complaints\Http\Controllers\ChannelController;
+use App\Modules\Complaints\Http\Controllers\ComplaintController;
 use App\Modules\Complaints\Http\Controllers\HandlerController;
 use App\Modules\Complaints\Http\Controllers\UnassignedController;
 use Illuminate\Support\Facades\Route;
@@ -25,3 +27,8 @@ Route::delete('admin/{tenant:slug}/complaints/handlers/{handler}', [HandlerContr
 
 // The complaints nobody holds are assigned again by the same rules; whoever asks learns only how many were.
 Route::post('admin/{tenant:slug}/complaints/unassigned/route', [UnassignedController::class, 'route'])->where('tenant', $notReserved)->name('tenant.complaints.unassigned.route');
+
+// The cases a handler works on: found only among those assigned to the person (a 404 otherwise, never a 403).
+Route::get('admin/{tenant:slug}/complaints', [ComplaintController::class, 'index'])->where('tenant', $notReserved)->name('tenant.complaints.index');
+Route::get('admin/{tenant:slug}/complaints/cases/{complaint}', [ComplaintController::class, 'show'])->where('tenant', $notReserved)->name('tenant.complaints.cases.show');
+Route::get('admin/{tenant:slug}/complaints/centers/options', CenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.complaints.centers.options');

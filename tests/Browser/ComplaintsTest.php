@@ -266,3 +266,82 @@ it('assigns again the complaints nobody holds from the page', function (): void 
 
     expect(App\Modules\Complaints\Models\ComplaintAssignment::query()->withoutGlobalScopes()->where('complaint_id', $complaint->id)->count())->toBe(1);
 });
+
+/** The signed-in owner of the panel's company, handling a confidential complaint and an anonymous one. */
+function handlerWithCases(): array
+{
+    [$url, $tenant] = complaintsPanel();
+    $owner = App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $tenant->id)->firstOrFail()->user_id;
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Planta Querétaro']);
+    $confidential = Complaint::factory()->create([
+        'tenant_id' => $tenant->id, 'channel_id' => $channel->id, 'reference' => 'ABCD2345', 'work_center_id' => $plant->id,
+        'description' => 'El jefe de turno me humilla frente a todos cada semana.', 'identity_mode' => 'confidential', 'reporter_name' => 'Rosa Aguilar', 'reporter_contact' => 'Cel. 442 000 0000',
+        'received_on' => '2026-10-01',
+    ]);
+    $anonymous = Complaint::factory()->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id, 'reference' => 'WXYZ6789', 'description' => 'Las cargas del turno de noche son excesivas.', 'received_on' => '2026-11-02']);
+
+    foreach ([$confidential, $anonymous] as $complaint) {
+        App\Modules\Complaints\Models\ComplaintAssignment::factory()->create(['tenant_id' => $tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $owner]);
+    }
+
+    return [$url, $confidential, $anonymous];
+}
+
+it('lists the cases assigned to the handler, without what they say', function (bool $dark, bool $mobile): void {
+    [$url] = handlerWithCases();
+
+    visitPage('complaints/index', "{$url}/complaints", $dark, $mobile)
+        ->assertSee('Información confidencial.')
+        ->assertSee('ABCD2345')
+        ->assertSee('WXYZ6789')
+        ->assertSee('Acuse vencido')
+        ->assertSee('Planta Querétaro')
+        ->assertDontSee('humilla')
+        ->assertDontSee('Rosa Aguilar');
+})->with($looks);
+
+it('shows the empty inbox with what makes it fill', function (): void {
+    [$url] = complaintsPanel();
+
+    visitPage('complaints/index', "{$url}/complaints")
+        ->assertSee('Sin casos abiertos');
+});
+
+it('narrows the inbox by a reference from the page', function (): void {
+    [$url] = handlerWithCases();
+
+    visit("{$url}/complaints")
+        ->fill('input[type="search"]', 'WXYZ')
+        ->assertSee('WXYZ6789')
+        ->assertDontSee('ABCD2345')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens a confidential case with the words of the person and their name', function (bool $dark, bool $mobile): void {
+    [$url, $case] = handlerWithCases();
+
+    visitPage('complaints/show', "{$url}/complaints/cases/{$case->id}", $dark, $mobile)
+        ->assertSee('Caso ABCD2345')
+        ->assertSee('humilla frente a todos')
+        ->assertSee('Rosa Aguilar')
+        ->assertSee('Cel. 442 000 0000')
+        ->assertSee('Tu consulta queda registrada');
+})->with($looks);
+
+it('opens an anonymous case saying that there is nobody to ask for', function (): void {
+    [$url, , $case] = handlerWithCases();
+
+    visitPage('complaints/show', "{$url}/complaints/cases/{$case->id}")
+        ->assertSee('Anónima: no hay nombre')
+        ->assertSee('Las cargas del turno de noche');
+});
+
+it('opens a case from the inbox', function (): void {
+    [$url] = handlerWithCases();
+
+    visit("{$url}/complaints")
+        ->click('ABCD2345')
+        ->assertSee('Lo que cuenta la persona')
+        ->assertNoJavaScriptErrors();
+});

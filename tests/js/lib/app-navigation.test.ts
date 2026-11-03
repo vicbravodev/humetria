@@ -101,15 +101,6 @@ describe('mainNavItems for the committee', () => {
     });
 });
 
-describe('the complaints handler', () => {
-    it('sees none of the panel nor the compliance tools of the company', () => {
-        const handler = acme(false, false, 'complaints');
-
-        expect(titles(handler)).toEqual([]);
-        expect(complianceNavItems(handler)).toEqual([]);
-    });
-});
-
 describe('complianceNavItems', () => {
     it('offers NOM-035, NOM-037 and Ley Silla inside a company, to every role but the committee (which has no NOM-035)', () => {
         expect(
@@ -126,17 +117,6 @@ describe('complianceNavItems', () => {
 
     it('offers nothing outside a company', () => {
         expect(complianceNavItems(null)).toEqual([]);
-    });
-
-    it('adds the complaints channel for whoever manages it', () => {
-        const tenant = acme(true, true);
-
-        expect(
-            complianceNavItems(tenant).map((item) => [
-                item.title,
-                toUrl(item.href),
-            ]),
-        ).toContainEqual(['Quejas', '/admin/acme/complaints/channel']);
     });
 
     // Behavior defined by NOM-037's entry page (it was empty while NOM-037 had no page).

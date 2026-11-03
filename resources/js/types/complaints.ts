@@ -72,3 +72,52 @@ export type PublicFormProps = {
     /** Today in the company's time zone, Y-m-d: the last day something can have happened. */
     today: string;
 };
+
+export type CaseRow = {
+    id: string;
+    reference: string;
+    type: string;
+    typeLabel: string;
+    status: 'new' | 'in_review' | 'closed';
+    statusLabel: string;
+    resolution: string | null;
+    receivedOn: string;
+    center: string | null;
+    kindLabel: string;
+    identity: 'anonymous' | 'confidential';
+    /** The acknowledgement the company set itself is late. */
+    overdue: boolean;
+};
+
+export type CaseFilters = {
+    q: string;
+    type: string | null;
+    center: { value: string; label: string } | null;
+    status: 'open' | 'closed';
+};
+
+export type CaseCounts = { open: number; closed: number };
+
+/** One case as its handler reads it: the only place where a complaint's words reach a screen. */
+export type CaseDetail = {
+    id: string;
+    reference: string;
+    type: string;
+    typeLabel: string;
+    categoryLabel: string | null;
+    center: string | null;
+    kindLabel: string;
+    identity: 'anonymous' | 'confidential';
+    /** Only in a confidential case: an anonymous one has no field of identity at all. */
+    reporterName?: string | null;
+    reporterContact?: string | null;
+    description: string;
+    respondentText: string | null;
+    involvedText: string | null;
+    receivedOn: string;
+    occurredOn: string | null;
+    status: 'new' | 'in_review' | 'closed';
+    statusLabel: string;
+    onHold: boolean;
+    resolution: string | null;
+};
