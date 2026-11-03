@@ -397,3 +397,27 @@ it('shows the people the channel for complaints and the measures the company cho
         ->assertSee('Del Programa de intervención')
         ->assertSee('Revisar las cargas de trabajo');
 })->with($looks);
+
+it('shows the poster with the address and its QR', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
+    resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
+
+    visitPage('disclosure/poster', "{$url}/disclosure/page/poster", $dark, $mobile)
+        ->assertSee('Información para las personas trabajadoras')
+        ->assertSee('Consulte aquí la política de prevención')
+        ->assertSee('Imprimir o guardar PDF')
+        ->assertScript('() => document.querySelector("img[alt^=\'Código QR\']").naturalWidth > 0', true);
+})->with($looks);
+
+it('prints the dossier of the disclosure of a center', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $center = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+
+    visitPage('disclosure/dossier', "{$url}/disclosure/dossier/{$center->id}", $dark, $mobile)
+        ->assertSee('Expediente de difusión · Planta Querétaro')
+        ->assertSee('Política de prevención (5.1)')
+        ->assertSee('Contenidos del numeral 5.7')
+        ->assertSee('no certifica el cumplimiento de la norma');
+})->with($looks);

@@ -28,21 +28,12 @@ final readonly class Board
     public function page(): array
     {
         $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived));
-        $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
-        $policies = $this->policies->inForce($ids);
-        $recorded = $this->delivery->recordedItems($ids);
-        $results = $this->results->forCenters($ids);
-        $contents = $this->contents($ids, $results);
-        $acknowledgments = $this->delivery->acknowledgments($policies);
-        $link = PageLink::query()->first();
-        $active = $link !== null && $link->status() === PageLinkStatus::Active;
-        $expires = $link !== null && $active && $link->expires_at !== null && $link->expires_at->lessThanOrEqualTo(now()->addDays(config()->integer('disclosure.link_expiry_warning_days'))) ? Days::moment($link->expires_at) : null;
-
+        $facts = $this->facts($centers);
         $rows = [];
         $states = [];
 
         foreach ($centers as $center) {
-            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null, $acknowledgments[$center->id] ?? null, $recorded[$center->id] ?? [], $active, $expires, $contents[$center->id] ?? [], $results[$center->id] ?? null));
+            $requirements = $this->requirements->for($facts[$center->id]);
             $state = $this->overall($requirements);
             $states[] = $state->value;
             $rows[] = $this->row($center, $requirements, $state);
@@ -58,6 +49,33 @@ final readonly class Board
             'summary' => $summary,
             'centers' => (new LengthAwarePaginator(array_slice($rows, ($current - 1) * $perPage, $perPage), count($rows), $perPage, $current, ['path' => LengthAwarePaginator::resolveCurrentPath()]))->withQueryString(),
         ];
+    }
+
+    /**
+     * What is recorded about each of these centers that the board judges, read in bulk (a fixed number of queries per kind of
+     * fact, whatever the number of centers): the single source of the board and of a center's dossier.
+     *
+     * @param  list<WorkCenterSummary>  $centers
+     * @return array<string, CenterFacts> by work center id
+     */
+    public function facts(array $centers): array
+    {
+        $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
+        $policies = $this->policies->inForce($ids);
+        $recorded = $this->delivery->recordedItems($ids);
+        $results = $this->results->forCenters($ids);
+        $contents = $this->contents($ids, $results);
+        $acknowledgments = $this->delivery->acknowledgments($policies);
+        $link = PageLink::query()->first();
+        $active = $link !== null && $link->status() === PageLinkStatus::Active;
+        $expires = $link !== null && $active && $link->expires_at !== null && $link->expires_at->lessThanOrEqualTo(now()->addDays(config()->integer('disclosure.link_expiry_warning_days'))) ? Days::moment($link->expires_at) : null;
+        $facts = [];
+
+        foreach ($ids as $id) {
+            $facts[$id] = new CenterFacts($policies[$id] ?? null, $acknowledgments[$id] ?? null, $recorded[$id] ?? [], $active, $expires, $contents[$id] ?? [], $results[$id] ?? null);
+        }
+
+        return $facts;
     }
 
     /**

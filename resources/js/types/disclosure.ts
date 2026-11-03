@@ -1,6 +1,5 @@
 import type { Paginated } from './demos';
 import type { Choice } from './interventions';
-import type { RiskLevelValue } from './results';
 
 /** A section of a policy as the page edits and shows it: plain text, a list of items and how they are marked. */
 export type PolicySectionData = {
@@ -167,38 +166,6 @@ export type PageLinkData = {
 
 export type PageLinkProps = { link: PageLinkData | null };
 
-/** A work center as the public page lists it: its name, nothing else. */
-export type PublicCenter = { id: string; name: string };
-
-export type PublicCentersProps = {
-    token: string;
-    company: string;
-    centers: Paginated<PublicCenter>;
-    filters: { q: string };
-};
-
-export type PublicCenterProps = {
-    token: string;
-    company: string;
-    center: PublicCenter;
-    /** Whether the company has another center to choose from. */
-    others: boolean;
-    /** What the company published for b, c, d and f in the center, by inciso; null while there is nothing. */
-    blocks: Record<string, PublicBlockText | null>;
-    /** The measures of the Programa RH chose to show, by inciso (b and c): the whole center, never people or areas. */
-    measures: Record<string, PublicMeasure[]>;
-    /** The channel for complaints as the channel says it; null while it takes nothing. */
-    channel: PublicChannel | null;
-    /** The results block (5.7 e); null where 7.8 does not apply, a center of up to 15 people. */
-    results: PublicResults | null;
-    /** The policy in force in the center; null while it has none. */
-    policy: {
-        version: number;
-        publishedOn: string;
-        sections: PolicyTextSection[];
-    } | null;
-};
-
 /** A block of 5.7 the company writes by hand (b, c, d or f): the text in force and the draft being written. */
 export type ContentBlock = {
     kind: string;
@@ -221,34 +188,6 @@ export type ContentsProps = {
     centersInUse: number;
 };
 
-/** What the company published for a block of 5.7 in a center: the words and the day. */
-export type PublicBlockText = { text: string; publishedOn: string };
-
-/** A category or a domain in the results of a center: how many questionnaires fall in each level. */
-export type PublicRiskGroup = {
-    key: string;
-    label: string;
-    levels: number[];
-};
-
-/** The results the company published for a center, of the whole center and with the minimum applied. */
-export type PublicResults = {
-    title: string;
-    published:
-        | { state: 'below_minimum'; closedOn: string }
-        | {
-              state: 'available';
-              closedOn: string;
-              guide: 'ii' | 'iii';
-              answered: number;
-              levels: { value: RiskLevelValue; label: string }[];
-              final: number[];
-              categories: PublicRiskGroup[];
-              domains: PublicRiskGroup[];
-          }
-        | null;
-};
-
 /** A closed evaluation on the screen that publishes results to the people. */
 export type ResultsRow = {
     id: string;
@@ -261,19 +200,3 @@ export type ResultsRow = {
 };
 
 export type ResultsProps = { evaluations: Paginated<ResultsRow> };
-
-/** A measure of the Programa as the public page shows it: what, which level, where it stands and by when. */
-export type PublicMeasure = {
-    title: string;
-    level: number;
-    status: string;
-    statusLabel: string;
-    dueOn: string;
-};
-
-/** The channel for complaints and reports: where to go, whether it takes anonymous ones and what it takes. */
-export type PublicChannel = {
-    url: string;
-    anonymousAllowed: boolean;
-    categories: string[];
-};

@@ -15,6 +15,7 @@ import type { DisclosureIndexProps } from '@/types';
 export default function DisclosureIndex({
     summary,
     centers,
+    can,
 }: DisclosureIndexProps) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
@@ -53,7 +54,11 @@ export default function DisclosureIndex({
                         className="flex flex-col gap-4"
                     >
                         {centers.data.map((center) => (
-                            <CenterCard key={center.id} center={center} />
+                            <CenterCard
+                                key={center.id}
+                                center={center}
+                                canManage={can.manage}
+                            />
                         ))}
                         <Pagination page={centers} label="Páginas de centros" />
                     </section>

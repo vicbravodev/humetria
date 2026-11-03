@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Modules\Disclosure\Http\Controllers\ContentController;
 use App\Modules\Disclosure\Http\Controllers\DisclosureController;
 use App\Modules\Disclosure\Http\Controllers\DisseminationController;
+use App\Modules\Disclosure\Http\Controllers\DossierController;
 use App\Modules\Disclosure\Http\Controllers\PageLinkController;
 use App\Modules\Disclosure\Http\Controllers\PolicyController;
+use App\Modules\Disclosure\Http\Controllers\PosterController;
 use App\Modules\Disclosure\Http\Controllers\ResultsController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,3 +50,7 @@ Route::post('admin/{tenant:slug}/disclosure/contents/{kind}/draft/{document}/pub
 Route::get('admin/{tenant:slug}/disclosure/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.results');
 Route::post('admin/{tenant:slug}/disclosure/results/{campaign}', [ResultsController::class, 'publish'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.disclosure.results.publish');
 Route::post('admin/{tenant:slug}/disclosure/results/{campaign}/withdrawal', [ResultsController::class, 'withdraw'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.disclosure.results.withdraw');
+
+// What is printed: the poster with the link and its QR, and the dossier of the disclosure of a center for an inspection. Both are audited.
+Route::get('admin/{tenant:slug}/disclosure/page/poster', [PosterController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.page.poster');
+Route::get('admin/{tenant:slug}/disclosure/dossier/{workCenter}', [DossierController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.disclosure.dossier');

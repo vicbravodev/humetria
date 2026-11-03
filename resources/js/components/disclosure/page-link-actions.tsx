@@ -1,12 +1,17 @@
-import { useForm } from '@inertiajs/react';
-import { CalendarClock, Power, RefreshCw } from 'lucide-react';
+import { Link, useForm } from '@inertiajs/react';
+import { CalendarClock, Power, Printer, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import ExpiryDialog from '@/components/disclosure/expiry-dialog';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { disable, enable, rotate } from '@/routes/tenant/disclosure/page';
+import {
+    disable,
+    enable,
+    poster,
+    rotate,
+} from '@/routes/tenant/disclosure/page';
 import type { PageLinkData } from '@/types';
 
 /**
@@ -33,6 +38,14 @@ export default function PageLinkActions({ link }: { link: PageLinkData }) {
                 {toggle.processing ? <Spinner /> : <Power aria-hidden />}
                 {off ? 'Activar la página' : 'Desactivar la página'}
             </Button>
+            {link.url !== null && (
+                <Button asChild variant="outline">
+                    <Link href={poster.url(tenantSlug)}>
+                        <Printer aria-hidden />
+                        Cartel imprimible
+                    </Link>
+                </Button>
+            )}
             <Button variant="outline" onClick={() => setExpiring(true)}>
                 <CalendarClock aria-hidden />
                 Vencimiento
