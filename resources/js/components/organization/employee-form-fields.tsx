@@ -4,9 +4,14 @@ import EmployeeFormSection from '@/components/organization/employee-form-section
 import EmployeeGenderField from '@/components/organization/employee-gender-field';
 import EmployeePayScaleFields from '@/components/organization/employee-pay-scale-fields';
 import EmployeePlaceFields from '@/components/organization/employee-place-fields';
+import UnionEmployeeFormFields from '@/components/organization/union-employee-form-fields';
+import { useIsUnion } from '@/hooks/use-is-union';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
-/** The fields of an employee, in three groups: the person, where they work and how the surveys reach them. */
+/**
+ * The fields of an employee, in groups: the person, where they work, the pay scale and how the surveys reach them. A
+ * union's people have their own, shorter form.
+ */
 export default function EmployeeFormFields({
     errors,
     choices,
@@ -16,6 +21,7 @@ export default function EmployeeFormFields({
     choices: EmployeeChoices;
     employee?: EmployeeRow;
 }) {
+    const union = useIsUnion();
     const text = (
         name: 'name' | 'email' | 'mobile' | 'job_title' | 'employee_number',
     ) => ({
@@ -24,6 +30,16 @@ export default function EmployeeFormFields({
         defaultValue: employee?.[name] ?? undefined,
         error: errors[name],
     });
+
+    if (union) {
+        return (
+            <UnionEmployeeFormFields
+                errors={errors}
+                choices={choices}
+                {...(employee === undefined ? {} : { employee })}
+            />
+        );
+    }
 
     return (
         <div className="grid gap-7">

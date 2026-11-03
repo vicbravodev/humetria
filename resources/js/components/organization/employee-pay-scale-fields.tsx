@@ -2,6 +2,7 @@ import FormField from '@/components/form-field';
 import EmployeeGradeFields from '@/components/organization/employee-grade-fields';
 import EmployeeChoiceField from '@/components/organization/employee-choice-field';
 import EmployeeFormSection from '@/components/organization/employee-form-section';
+import { useIsUnion } from '@/hooks/use-is-union';
 import { catalogOption, clearableOptions } from '@/lib/employee-form';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
@@ -18,6 +19,8 @@ export default function EmployeePayScaleFields({
     choices: EmployeeChoices;
     employee: EmployeeRow | undefined;
 }) {
+    const union = useIsUnion();
+
     return (
         <EmployeeFormSection title="Tabulador y contrato">
             <EmployeeGradeFields
@@ -64,10 +67,12 @@ export default function EmployeePayScaleFields({
                 )}
                 error={errors['state']}
             />
-            <p className="-mt-2 text-caption text-muted-foreground">
-                El estado solo hace falta si la persona no tiene centro de
-                trabajo: con uno, se usa el de su centro.
-            </p>
+            {!union && (
+                <p className="-mt-2 text-caption text-muted-foreground">
+                    El estado solo hace falta si la persona no tiene centro de
+                    trabajo: con uno, se usa el de su centro.
+                </p>
+            )}
         </EmployeeFormSection>
     );
 }

@@ -3,8 +3,10 @@ import { Download } from 'lucide-react';
 import ImportForm from '@/components/organization/import-form';
 import ImportInstructions from '@/components/organization/import-instructions';
 import ImportSteps from '@/components/organization/import-steps';
+import UnionImportInstructions from '@/components/organization/union-import-instructions';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
+import { useIsUnion } from '@/hooks/use-is-union';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { importStep } from '@/lib/employees';
 import { index as employees } from '@/routes/tenant/employees';
@@ -20,6 +22,7 @@ export default function EmployeeImport({
     const page = usePage();
     // Always set here: this page only exists inside a company.
     const tenantSlug = useTenantSlug();
+    const union = useIsUnion();
 
     setLayoutProps({
         breadcrumbs: [
@@ -30,10 +33,12 @@ export default function EmployeeImport({
 
     return (
         <>
-            <Head title="Cargar empleados" />
+            <Head title={union ? 'Cargar padrón' : 'Cargar empleados'} />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <div className="flex flex-col gap-[18px]">
-                    <PageHeader title="Cargar empleados">
+                    <PageHeader
+                        title={union ? 'Cargar padrón' : 'Cargar empleados'}
+                    >
                         <Button variant="ghost" asChild>
                             <a href={template.url(tenantSlug)} download>
                                 <Download />
@@ -45,10 +50,14 @@ export default function EmployeeImport({
                 </div>
                 <ImportForm
                     aside={
-                        <ImportInstructions
-                            maxRows={maxRows}
-                            hasWorkCenters={hasWorkCenters}
-                        />
+                        union ? (
+                            <UnionImportInstructions maxRows={maxRows} />
+                        ) : (
+                            <ImportInstructions
+                                maxRows={maxRows}
+                                hasWorkCenters={hasWorkCenters}
+                            />
+                        )
                     }
                 />
             </div>
