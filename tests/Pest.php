@@ -406,6 +406,46 @@ function nom035Answers(string $key, string $value = 'sometimes', bool $clients =
 }
 
 /**
+ * A complete Guía II or III whose every item gets the answer that scores 0 points (Tablas 2 and 5): a questionnaire that
+ * lands in Nulo in every category and domain.
+ *
+ * @return array<string, string>
+ */
+function nom035HealthyAnswers(string $key): array
+{
+    $instruments = resolve(Instruments::class);
+    $definition = $instruments->definition($key);
+    $options = array_column($definition->options, 'value');
+    $answers = [];
+
+    foreach ($definition->sections as $section) {
+        foreach ($section->items as $item) {
+            $answers[(string) $item->number] = array_find($options, fn (string $option): bool => $instruments->itemScore($key, $item->number, $option) === 0) ?? $options[0];
+        }
+    }
+
+    $answers['serves_clients'] = 'yes';
+    $answers['supervises'] = 'yes';
+
+    return $answers;
+}
+
+/**
+ * A closed evaluation of `$tenant` whose Guía II (or III) `$guide` was answered by `$count` anonymous questionnaires, all
+ * with `$answers`, in `$area` (a new one by default).
+ *
+ * @param  array<string, string>  $answers
+ */
+function closedEvaluationWith(Tenant $tenant, array $answers, int $count = 5, string $guide = 'nom035.guide-ii', ?App\Modules\Organization\Models\Area $area = null): App\Modules\Campaigns\Models\Campaign
+{
+    $campaign = App\Modules\Campaigns\Models\Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'instruments' => ['nom035.guide-i', $guide], 'workers' => $guide === 'nom035.guide-iii' ? 60 : 30]);
+    $area ??= App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count($count)->create(['campaign_id' => $campaign->id, 'area_id' => $area->id, 'instrument' => $guide, 'answers' => $answers]);
+
+    return $campaign;
+}
+
+/**
  * A complete Guía I with "yes" on the items given and "no" on the rest. With no "yes" in section I (items 1 to 6) it
  * ends there, as GR.I a) says.
  *
