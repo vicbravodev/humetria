@@ -42,7 +42,7 @@ export const mainNavItems = (
     isSuperadmin: boolean,
 ): NavItem[] => {
     // The committee's only pages are NOM-037's (under Cumplimiento), so its main sidebar has nothing else.
-    if (tenant?.role === 'committee') {
+    if (tenant?.role === 'committee' || tenant?.role === 'complaints') {
         return [];
     }
 
@@ -119,7 +119,8 @@ export const complianceNavItems = (
     tenant: NavTenant | null,
     inCourse = 0,
 ): NavItem[] => {
-    if (tenant === null) {
+    // The handler of complaints has no tool of the company but the channel.
+    if (tenant === null || tenant.role === 'complaints') {
         return [];
     }
 

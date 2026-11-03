@@ -82,6 +82,8 @@ final class ResolveTenant
                 'manage_seating' => $user->can('manage-seating'),
                 'assess_seating' => $user->can('assess-seating'),
                 'use_assistant' => $user->can('use-assistant'),
+                'manage_complaint_channel' => $user->can('manage-complaint-channel'),
+                'handle_complaints' => $user->can('handle-complaints'),
             ],
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.

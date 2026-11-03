@@ -22,11 +22,13 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_seating: manage_organization,
     assess_seating: manage_organization,
     use_assistant: true,
+    manage_complaint_channel: manage_organization,
+    handle_complaints: manage_organization,
 });
 const acme = (
     manageOrganization = true,
     manageMembers = true,
-    role: 'owner' | 'hr' | 'viewer' | 'committee' = 'owner',
+    role: 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints' = 'owner',
 ) => ({
     slug: 'acme',
     role,
@@ -96,6 +98,15 @@ describe('mainNavItems', () => {
 describe('mainNavItems for the committee', () => {
     it('shows nothing: its only page is NOM-037', () => {
         expect(titles(acme(false, false, 'committee'))).toEqual([]);
+    });
+});
+
+describe('the complaints handler', () => {
+    it('sees none of the panel nor the compliance tools of the company', () => {
+        const handler = acme(false, false, 'complaints');
+
+        expect(titles(handler)).toEqual([]);
+        expect(complianceNavItems(handler)).toEqual([]);
     });
 });
 
