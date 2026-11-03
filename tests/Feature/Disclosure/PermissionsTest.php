@@ -28,5 +28,5 @@ it('reads its settings from config/disclosure.php', function (): void {
         ->and(config('disclosure.workers_page.per_address_per_minute'))->toBe(60)
         ->and(config('disclosure.workers_page.per_link_per_minute'))->toBe(1200)
         ->and(config('disclosure.text_max'))->toBe(20000)
-        ->and(config('disclosure.sections_max'))->toBe(40);
+        ->and(config('disclosure.items_max'))->toBe(60);
 });

@@ -1,0 +1,19 @@
+/** What a role may do in a company, as the server shares it with every page (`tenant.can`). */
+export const can = (manage_organization: boolean, manage_members: boolean) => ({
+    manage_organization,
+    manage_members,
+    manage_campaigns: manage_organization,
+    view_trauma_screenings: manage_organization,
+    manage_telework: manage_organization,
+    review_workplaces: manage_organization,
+    view_seating: true,
+    manage_seating: manage_organization,
+    assess_seating: manage_organization,
+    view_interventions: true,
+    manage_interventions: manage_organization,
+    view_disclosure: true,
+    manage_disclosure: manage_organization,
+    use_assistant: true,
+    manage_complaint_channel: manage_organization,
+    handle_complaints: manage_organization,
+});

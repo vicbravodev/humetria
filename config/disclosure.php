@@ -9,13 +9,13 @@ return [
     | Policy text
     |--------------------------------------------------------------------------
     |
-    | The most a content (the policy, the text of a 5.7 block) may hold, in characters, and the most sections a policy may
-    | have. The content is plain text: there is no Markdown or HTML to parse or to inject into a public page.
+    | The most a content (the policy, the text of a 5.7 block) may hold, in characters, and the most items a section may list.
+    | The content is plain text: there is no Markdown or HTML to parse or to inject into a public page.
     |
     */
 
     'text_max' => 20000,
-    'sections_max' => 40,
+    'items_max' => 60,
 
     /*
     |--------------------------------------------------------------------------

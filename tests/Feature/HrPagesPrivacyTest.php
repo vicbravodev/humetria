@@ -86,6 +86,7 @@ it('gives HR no individual response on any page about campaigns, results or peop
     'screenings' => fn (): string => route('tenant.campaigns.screenings', [$this->tenant, $this->evaluation->id]),
     'Programas de intervención' => fn (): string => route('tenant.interventions.index', $this->tenant),
     'Programa de intervención' => fn (): string => route('tenant.campaigns.program', [$this->tenant, $this->evaluation->id]),
+    'Política de prevención' => fn (): string => route('tenant.disclosure.policy', $this->tenant),
     'employees' => fn (): string => route('tenant.employees.index', $this->tenant),
     'Ley Silla' => fn (): string => route('tenant.seating.index', $this->tenant),
     'Ley Silla work center' => fn (): string => route('tenant.seating.center', [$this->tenant, $this->plant->id]),

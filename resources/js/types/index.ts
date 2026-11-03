@@ -4,6 +4,7 @@ export type * from './campaigns';
 export type * from './dashboard';
 export type * from './interventions';
 export type * from './demos';
+export type * from './disclosure';
 export type * from './navigation';
 export type * from './organization';
 export type * from './tenancy';
