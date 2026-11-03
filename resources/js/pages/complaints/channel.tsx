@@ -1,9 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import { FileText } from 'lucide-react';
+import { FileText, QrCode } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { evidence } from '@/routes/tenant/complaints';
+import { evidence, poster } from '@/routes/tenant/complaints';
 import ChannelChecklist from '@/components/complaints/channel-checklist';
 import ChannelSummary from '@/components/complaints/channel-summary';
 import OverdueNotice from '@/components/complaints/overdue-notice';
@@ -56,6 +56,14 @@ export default function Channel({
                     }
                     description={channelSummary(channel.status)}
                 >
+                    {channel.status !== 'inactive' && (
+                        <Button variant="outline" asChild>
+                            <Link href={poster.url(tenantSlug)}>
+                                <QrCode aria-hidden />
+                                Cartel
+                            </Link>
+                        </Button>
+                    )}
                     <Button variant="outline" asChild>
                         <Link href={evidence.url(tenantSlug)}>
                             <FileText aria-hidden />

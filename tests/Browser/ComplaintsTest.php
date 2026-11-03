@@ -492,3 +492,21 @@ it('shows the checklist and the summary with the minimum on the channel page', f
         ->assertSee('menos de 5')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows the poster with a QR that draws, ready to print', function (bool $dark, bool $mobile): void {
+    [$url, $tenant] = complaintsPanel();
+    ComplaintChannel::factory()->forTenant($tenant->id)->active()->create(['procedure' => 'Se acusa recibo y la atiende una persona designada.']);
+
+    visitPage('complaints/poster', "{$url}/complaints/poster", $dark, $mobile)
+        ->assertSee('¿Algo no está bien en tu trabajo?')
+        ->assertSee('Imprimir o guardar PDF')
+        ->assertSee('Se acusa recibo y la atiende una persona designada.')
+        ->assertScript('() => { const image = document.querySelector("img[alt^=\"Código QR\"]"); return image !== null && image.complete && image.naturalWidth > 0; }', true);
+})->with($looks);
+
+it('opens the poster from the channel page', function (): void {
+    [$url, $tenant] = complaintsPanel();
+    ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+
+    visit("{$url}/complaints/channel")->click('Cartel')->assertSee('¿Algo no está bien en tu trabajo?')->assertNoJavaScriptErrors();
+});

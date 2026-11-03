@@ -8,6 +8,7 @@ use App\Modules\Complaints\Http\Controllers\ChannelController;
 use App\Modules\Complaints\Http\Controllers\ComplaintController;
 use App\Modules\Complaints\Http\Controllers\EvidenceController;
 use App\Modules\Complaints\Http\Controllers\HandlerController;
+use App\Modules\Complaints\Http\Controllers\PosterController;
 use App\Modules\Complaints\Http\Controllers\UnassignedController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,3 +51,6 @@ Route::post('admin/{tenant:slug}/complaints/cases/{complaint}/export', [CaseActi
 // The printable evidence of the mechanism for an inspection: how the channel is set up, never a case. Each reading is audited.
 Route::get('admin/{tenant:slug}/complaints/evidence', [EvidenceController::class, 'show'])->where('tenant', $notReserved)->name('tenant.complaints.evidence');
 Route::post('admin/{tenant:slug}/complaints/evidence/export', [EvidenceController::class, 'export'])->where('tenant', $notReserved)->name('tenant.complaints.evidence.export');
+
+// The poster to print and hang, with the QR of the channel.
+Route::get('admin/{tenant:slug}/complaints/poster', [PosterController::class, 'show'])->where('tenant', $notReserved)->name('tenant.complaints.poster');
