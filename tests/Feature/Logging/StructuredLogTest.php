@@ -88,6 +88,8 @@ it('redacts each sensitive key', function (string $key): void {
     'health_note', 'pain_level', 'referral_note', 'assessment_scores', 'discomfort', 'footwear',
     // Humi: what a person asks the assistant, and what it answers, is never a log's business.
     'prompt', 'user_message', 'assistant_message',
+    // NOM-035: where a person was referred for a clinical assessment says something about their health.
+    'institution',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {
