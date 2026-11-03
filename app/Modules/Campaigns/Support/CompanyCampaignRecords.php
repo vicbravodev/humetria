@@ -164,6 +164,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
             answered: $answered,
             closesOn: $campaign->closes_on === null ? null : CampaignClock::day($campaign->closes_on, isDate: true),
             daysLeft: $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null ? CampaignClock::daysLeft($campaign->closes_on) : null,
+            closedDate: $campaign->closed_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
         );
     }
 }

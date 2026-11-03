@@ -71,6 +71,7 @@ it('describes a campaign of the company with who answered each guide, counted', 
         answered: ['nom035.guide-i' => 1, 'nom035.guide-iii' => 2],
         closesOn: '19 nov 2026',
         daysLeft: null,
+        closedDate: '2026-11-19',
     ));
 });
 
@@ -85,6 +86,7 @@ it('describes a campaign still open, or a draft, as not closed', function (): vo
         ->closed->toBeFalse()
         ->sample->toBeFalse()
         ->closedOn->toBeNull()
+        ->closedDate->toBeNull()
         ->launchedOn->toBe('20 nov 2026')
         ->closesOn->toBe('4 dic 2026')
         // Its last day, 4 dic, counted from today in Mexico City (20 nov).
