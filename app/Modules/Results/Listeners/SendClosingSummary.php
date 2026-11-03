@@ -7,6 +7,7 @@ namespace App\Modules\Results\Listeners;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Events\CampaignClosed;
 use App\Modules\Responses\Contracts\ResponseReader;
+use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Notifications\ClosingSummary;
 use App\Modules\Results\Support\ResultsPages;
 use App\Modules\Results\Support\RiskDistribution;
@@ -28,6 +29,7 @@ final readonly class SendClosingSummary implements ShouldQueue
         private WorkCenters $workCenters,
         private ResponseReader $responses,
         private RiskDistribution $distribution,
+        private RiskResults $results,
     ) {}
 
     public function handle(CampaignClosed $event): void
@@ -54,6 +56,8 @@ final readonly class SendClosingSummary implements ShouldQueue
             hasRisk: $guide !== null,
             requiringAssessment: $this->responses->screeningCounts($campaign->id)['requiring'],
             url: route('tenant.campaigns.results', [$company->slug, $campaign->id]),
+            // The Programa de intervención is the next step only when the results ask for one (num. 8.3).
+            programUrl: $this->results->forCampaign($campaign)->needingProgram() === [] ? null : route('tenant.campaigns.program', [$company->slug, $campaign->id]),
         ));
         Log::info('campaign.closing_summary_sent', ['campaign_id' => $campaign->id]);
     }

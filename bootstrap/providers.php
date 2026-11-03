@@ -6,6 +6,7 @@ use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Campaigns\Providers\CampaignsServiceProvider;
 use App\Modules\Demos\Providers\DemosServiceProvider;
 use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
+use App\Modules\Interventions\Providers\InterventionsServiceProvider;
 use App\Modules\Organization\Providers\OrganizationServiceProvider;
 use App\Modules\Responses\Providers\ResponsesServiceProvider;
 use App\Modules\Results\Providers\ResultsServiceProvider;
@@ -27,6 +28,7 @@ return [
     CampaignsServiceProvider::class,
     ResponsesServiceProvider::class,
     ResultsServiceProvider::class,
+    InterventionsServiceProvider::class,
     TeleworkServiceProvider::class,
     SeatingServiceProvider::class,
     AssistantServiceProvider::class,
