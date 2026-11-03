@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Disclosure\Http\Controllers\DisclosureController;
+use App\Modules\Disclosure\Http\Controllers\DisseminationController;
 use App\Modules\Disclosure\Http\Controllers\PolicyController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,3 +17,8 @@ Route::put('admin/{tenant:slug}/disclosure/policy/draft/{document}', [PolicyCont
 Route::delete('admin/{tenant:slug}/disclosure/policy/draft/{document}', [PolicyController::class, 'discard'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.policy.draft.destroy');
 Route::post('admin/{tenant:slug}/disclosure/policy/draft/{document}/publish', [PolicyController::class, 'publish'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.policy.publish');
 Route::get('admin/{tenant:slug}/disclosure/policy/versions/{document}', [PolicyController::class, 'version'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.policy.version');
+
+// The follow-up of the acknowledgments: who confirmed the policy, the paper ones RH records and the reminder to the pending.
+Route::get('admin/{tenant:slug}/disclosure/dissemination', [DisseminationController::class, 'index'])->where('tenant', $notReserved)->name('tenant.disclosure.dissemination');
+Route::post('admin/{tenant:slug}/disclosure/dissemination/{document}/acknowledgments', [DisseminationController::class, 'record'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.dissemination.acknowledgments.store');
+Route::post('admin/{tenant:slug}/disclosure/dissemination/{document}/reminders', [DisseminationController::class, 'remind'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.dissemination.reminders.store');

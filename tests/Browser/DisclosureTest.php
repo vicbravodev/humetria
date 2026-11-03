@@ -156,3 +156,44 @@ it('lets the person confirm from the phone, once', function (): void {
         ->assertSee('Usted confirmó el')
         ->assertDontSee('Confirmo que la leí');
 });
+
+/** The company the user signed in to has a published policy and `$people` people asked to confirm it; one has confirmed. */
+function askedForBrowser(int $people = 3): void
+{
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $center = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    workIn($tenant);
+    $draft = resolve(StartPolicyDraft::class)->handle(null);
+    resolve(SaveDraft::class)->handle($draft->id, array_map(fn (array $section): array => [
+        'key' => $section['key'],
+        'text' => in_array($section['key'], ['responsibles', 'resources'], true) ? 'La dirección de Recursos Humanos.' : $section['text'],
+        'items' => $section['items'],
+    ], $draft->content));
+    $user = App\Models\User::query()->firstOrFail();
+    $staff = staffOf($tenant, $center, $people);
+    $policy = resolve(PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $user->id);
+    App\Modules\Disclosure\Models\Acknowledgment::query()->where('document_id', $policy->id)->where('employee_id', $staff[0]->id)->update(['channel' => 'portal', 'acknowledged_at' => now()]);
+}
+
+it('follows who confirmed the policy', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    askedForBrowser();
+
+    visitPage('disclosure/dissemination', "{$url}/disclosure/dissemination", $dark, $mobile)
+        ->assertSee('Difusión de la política')
+        ->assertSee('1 de 3 personas confirmaron')
+        ->assertSee('Pendientes')
+        ->assertSee('Recordar a los pendientes');
+})->with($looks);
+
+it('records paper acknowledgments of the people ticked', function (): void {
+    $url = signInToPanel();
+    askedForBrowser(2);
+
+    visit("{$url}/disclosure/dissemination?status=pending")
+        ->click('[role="checkbox"]')
+        ->press('Registrar acuses en papel')
+        ->fill('#paper-note', 'Hoja 1')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Se registró 1 acuse en papel.');
+});

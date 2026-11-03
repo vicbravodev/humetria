@@ -96,3 +96,44 @@ export type PortalPolicyProps = {
     } | null;
     acknowledgment: PolicyAcknowledgment | null;
 };
+
+/** How far the confirmations of a version are, over the people active today in its centers. */
+export type PolicyAckProgress = {
+    active: number;
+    confirmed: number;
+    pending: number;
+    percent: number;
+};
+
+export type PolicyAckStatus = 'all' | 'pending' | 'confirmed';
+
+export type PolicyAckFilters = { status: PolicyAckStatus; q: string };
+
+/** A person of the follow-up list: what is recorded of their confirmation. No email, no link. */
+export type PolicyAckPerson = {
+    id: string;
+    name: string;
+    jobTitle: string;
+    state: 'pending' | 'confirmed';
+    channelLabel: string | null;
+    on: string | null;
+    hasEmail: boolean;
+};
+
+export type VersionSummary = {
+    id: string;
+    version: number;
+    publishedOn: string | null;
+};
+
+export type DisseminationProps = {
+    version: (VersionSummary & { centers: number }) | null;
+    versions: VersionSummary[];
+    progress: PolicyAckProgress | null;
+    counts: Record<PolicyAckStatus, number> | null;
+    filters: PolicyAckFilters;
+    people: Paginated<PolicyAckPerson>;
+    /** Today and the day of publication, as Y-m-d, to bound the day of a paper confirmation. */
+    today: string;
+    publishedDay: string | null;
+};

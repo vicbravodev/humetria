@@ -1,6 +1,7 @@
 import type { Option } from '@/lib/option-search';
-import { countOf } from '@/lib/plural';
+import { countOf, plural } from '@/lib/plural';
 import type {
+    PolicyAckProgress,
     BadgeVariant,
     BoardSummary,
     PolicySectionData,
@@ -104,3 +105,29 @@ export const INCISOS: { value: string; label: string }[] = [
         label: 'La promoción de un entorno organizacional favorable',
     },
 ];
+
+/** The query of the follow-up list: only what differs from the defaults (everyone, no search, the latest version). */
+export const ackQuery = (filters: {
+    status: string;
+    q: string;
+    version: string | null;
+}): Partial<Record<'status' | 'q' | 'version', string>> => ({
+    ...(filters.status === 'all' ? {} : { status: filters.status }),
+    ...(filters.q === '' ? {} : { q: filters.q }),
+    ...(filters.version === null ? {} : { version: filters.version }),
+});
+
+/** How far the confirmations are, in words. */
+export const progressText = (progress: PolicyAckProgress): string => {
+    if (progress.active === 0) {
+        return 'Aún no hay personas a quienes pedirles confirmar';
+    }
+
+    return `${progress.confirmed} de ${progress.active} ${plural(progress.active, 'persona confirmó', 'personas confirmaron')}`;
+};
+
+/** What RH has ticked in the list. */
+export const selectionText = (count: number): string =>
+    count === 0
+        ? 'Ninguna persona elegida'
+        : `${countOf(count, 'persona', 'personas')} ${plural(count, 'elegida', 'elegidas')}`;

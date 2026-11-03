@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+    ackQuery,
     addCenter,
     boardHeadline,
     INCISOS,
     joinLines,
+    progressText,
     removeCenter,
     requirementVariant,
     sectionPayload,
+    selectionText,
     splitLines,
     withChange,
     withoutSection,
@@ -129,5 +132,36 @@ describe('the centers chosen to publish to', () => {
 describe('INCISOS', () => {
     it('are the three incisos of numeral 5.1', () => {
         expect(INCISOS.map(({ value }) => value)).toEqual(['a', 'b', 'c']);
+    });
+});
+
+describe('ackQuery', () => {
+    it('asks only for what differs from the defaults', () => {
+        expect(ackQuery({ status: 'all', q: '', version: null })).toEqual({});
+        expect(
+            ackQuery({ status: 'pending', q: 'ana', version: 'v1' }),
+        ).toEqual({ status: 'pending', q: 'ana', version: 'v1' });
+    });
+});
+
+describe('progressText', () => {
+    it('says how many of the people confirmed', () => {
+        expect(
+            progressText({ active: 5, confirmed: 2, pending: 3, percent: 40 }),
+        ).toBe('2 de 5 personas confirmaron');
+        expect(
+            progressText({ active: 1, confirmed: 1, pending: 0, percent: 100 }),
+        ).toBe('1 de 1 persona confirmó');
+        expect(
+            progressText({ active: 0, confirmed: 0, pending: 0, percent: 0 }),
+        ).toBe('Aún no hay personas a quienes pedirles confirmar');
+    });
+});
+
+describe('selectionText', () => {
+    it('says what is ticked', () => {
+        expect(selectionText(0)).toBe('Ninguna persona elegida');
+        expect(selectionText(1)).toBe('1 persona elegida');
+        expect(selectionText(12)).toBe('12 personas elegidas');
     });
 });

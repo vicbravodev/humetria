@@ -1,16 +1,17 @@
+import { usePage } from '@inertiajs/react';
 import CountTabs from '@/components/humetria/count-tabs';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/disclosure';
-import { policy } from '@/routes/tenant/disclosure';
+import { dissemination, index, policy } from '@/routes/tenant/disclosure';
 
-export type DisclosureTab = 'board' | 'policy';
+export type DisclosureTab = 'board' | 'policy' | 'dissemination';
 
 /**
  * The sections of «Política y difusión», each its own page and address (pantalla Eval-Activa, tabs): the board and the
- * policy. Each is a link, so the section lives in the URL.
+ * policy and, for whoever manages it, the disclosure. Each is a link, so the section lives in the URL.
  */
 export default function DisclosureTabs({ active }: { active: DisclosureTab }) {
     const tenantSlug = useTenantSlug();
+    const manage = usePage().props.tenant?.can.manage_disclosure === true;
 
     return (
         <CountTabs
@@ -26,6 +27,16 @@ export default function DisclosureTabs({ active }: { active: DisclosureTab }) {
                     href: policy(tenantSlug),
                     active: active === 'policy',
                 },
+                // The follow-up names people: only whoever manages sees it.
+                ...(manage
+                    ? [
+                          {
+                              label: 'Difusión',
+                              href: dissemination(tenantSlug),
+                              active: active === 'dissemination',
+                          },
+                      ]
+                    : []),
             ]}
         />
     );
