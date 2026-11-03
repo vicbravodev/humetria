@@ -13,11 +13,14 @@ use App\Modules\Interventions\Enums\ActionStatus;
 use App\Modules\Interventions\Enums\ItemOrigin;
 use App\Modules\Interventions\Enums\ItemScope;
 use App\Modules\Interventions\Enums\Professional;
+use App\Modules\Interventions\Enums\ProgramState;
+use App\Modules\Interventions\Enums\RowState;
 use App\Modules\Interventions\Exceptions\ProgramUnavailable;
 use App\Modules\Interventions\Models\ActionArea;
 use App\Modules\Interventions\Models\Program;
 use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgramItem;
+use App\Modules\Interventions\Models\ProgressEntry;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
@@ -57,7 +60,7 @@ final readonly class ProgramPages
                 'guide' => $guide === null ? null : $this->instruments->definition($guide)->shortTitle,
             ],
             'requirement' => $program === null ? $this->requirement($campaign) : null,
-            'program' => $program === null ? null : $this->program($program, $items),
+            'program' => $program === null ? null : $this->program($program, $items, ProgramAction::query()->where('program_id', $program->id)->get(['id', 'item_id', 'status', 'due_on'])->all()),
             'actions' => $program === null ? null : $this->actions($program, $areas, $filters, $items),
             'filters' => $filters,
             'catalog' => $canManage ? self::catalog() : null,
@@ -86,25 +89,46 @@ final readonly class ProgramPages
 
     /**
      * @param  list<ProgramItem>  $items
+     * @param  array<int, ProgramAction>  $actions  every action of the Programa: its row, state and due day
      * @return array<string, mixed>
      */
-    private function program(Program $program, array $items): array
+    private function program(Program $program, array $items, array $actions): array
     {
         usort($items, fn (ProgramItem $a, ProgramItem $b): int => self::order($a) <=> self::order($b));
+        $today = ProgramClock::today();
+        $rows = [];
+
+        foreach ($items as $item) {
+            $statuses = array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, array_filter($actions, fn (ProgramAction $action): bool => $action->item_id === $item->id)));
+            $rows[] = ['item' => $item, 'state' => ProgramProgress::rowState($statuses), 'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null];
+        }
+
+        $overdue = array_any($actions, fn (ProgramAction $action): bool => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), $today));
 
         return [
             'id' => $program->id,
             'highestLevel' => self::level($program->highest_level),
             'responsible' => $program->responsible_name === null ? null : ['name' => $program->responsible_name, 'userId' => $program->responsible_user_id],
-            'items' => array_map(fn (ProgramItem $item): array => [
-                'id' => $item->id,
-                'scope' => $item->scope->value,
-                'label' => $item->label,
-                'category' => $item->category_key,
-                'level' => self::level($item->highest_level),
-                'manual' => $item->origin === ItemOrigin::Manual,
-            ], $items),
+            'state' => self::labeled(ProgramProgress::programState($rows, $overdue)),
+            'meter' => ProgramProgress::meter(array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, $actions))),
+            'items' => array_map(fn (array $row): array => [
+                'id' => $row['item']->id,
+                'scope' => $row['item']->scope->value,
+                'label' => $row['item']->label,
+                'category' => $row['item']->category_key,
+                'level' => self::level($row['item']->highest_level),
+                'manual' => $row['item']->origin === ItemOrigin::Manual,
+                'state' => self::labeled($row['state']),
+            ], $rows),
         ];
+    }
+
+    /**
+     * @return array{value: string, label: string}
+     */
+    private static function labeled(RowState|ProgramState $state): array
+    {
+        return ['value' => $state->value, 'label' => $state->label()];
     }
 
     /**
@@ -133,7 +157,7 @@ final readonly class ProgramPages
             ->where('program_id', $program->id)
             ->when($filters['item'] !== null, fn ($query) => $query->where('item_id', $filters['item']))
             ->when($filters['status'] !== null, fn ($query) => $query->where('status', $filters['status']))
-            ->with('areas')
+            ->with(['areas', 'progress'])
             ->orderBy('due_on')
             ->orderBy('id')
             ->paginate(self::ACTIONS_PER_PAGE, pageName: 'actions')
@@ -169,6 +193,12 @@ final readonly class ProgramPages
             'responsible' => ['name' => $action->responsible_name, 'userId' => $action->responsible_user_id],
             'professional' => $action->professional === null ? null : ['value' => $action->professional->value, 'label' => $action->professional->label()],
             'status' => ['value' => $action->status->value, 'label' => $action->status->label()],
+            'overdue' => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), ProgramClock::today()),
+            'history' => $action->progress->sortBy(fn (ProgressEntry $entry): string => $entry->recorded_on->toDateString().'|'.$entry->created_at->format('c').'|'.$entry->id)->map(fn (ProgressEntry $entry): array => [
+                'onLabel' => ProgramClock::day($entry->recorded_on),
+                'status' => ['value' => $entry->status->value, 'label' => $entry->status->label()],
+                'note' => $entry->note,
+            ])->values()->all(),
             'completedOnLabel' => $action->completed_on === null ? null : ProgramClock::day($action->completed_on),
         ];
     }

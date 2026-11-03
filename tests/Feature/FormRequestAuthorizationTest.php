@@ -33,6 +33,8 @@ it('refuses a viewer before validating what they sent', function (string $method
     'share the report' => ['post', 'tenant.campaigns.shares.store', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'add an action to the Programa' => ['post', 'tenant.campaigns.program.actions.store', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c', 'item' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'edit an action of the Programa' => ['put', 'tenant.campaigns.program.actions.update', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c', 'action' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
+    'record a step of an action' => ['post', 'tenant.campaigns.program.progress.store', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c', 'action' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
+    'cancel an action' => ['post', 'tenant.campaigns.program.actions.cancel', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c', 'action' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'set who answers for the Programa' => ['put', 'tenant.campaigns.program.responsible', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'change the NOM-037 settings' => ['put', 'tenant.telework.settings.update', []],
     'publish a NOM-037 document' => ['post', 'tenant.telework.documents.store', []],
