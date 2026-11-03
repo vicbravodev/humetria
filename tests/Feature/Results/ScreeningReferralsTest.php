@@ -118,6 +118,12 @@ it('refuses what the record cannot hold', function (array $overrides, string $fi
     'a very long institution' => [['institution' => str_repeat('a', 151)], 'institution'],
 ]);
 
+it('names the missing institution in Spanish', function (): void {
+    $this->actingAs($this->hr)
+        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['institution' => '']))
+        ->assertSessionHasErrors(['institution' => 'El campo institución es obligatorio.']);
+});
+
 it('accepts an institution of exactly 150 characters', function (): void {
     $this->actingAs($this->hr)
         ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['institution' => str_repeat('a', 150)]))

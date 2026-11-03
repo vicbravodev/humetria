@@ -4,12 +4,14 @@ import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import ConfidentialBanner from '@/components/results/confidential-banner';
+import ReferralSummary from '@/components/results/referral-summary';
 import ScreenedPerson from '@/components/results/screened-person';
 import ScreeningRule from '@/components/results/screening-rule';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { resultsTrail } from '@/lib/results';
 import type {
     Paginated,
+    ReferralCounts,
     ScreenedPerson as Person,
     ScreeningCounts,
 } from '@/types';
@@ -17,10 +19,12 @@ import type {
 export default function Screenings({
     campaign,
     counts,
+    referralCounts,
     people,
 }: {
     campaign: { id: string; workCenter: string; kindLabel: string };
     counts: ScreeningCounts;
+    referralCounts: ReferralCounts;
     people: Paginated<Person>;
 }) {
     const tenantSlug = useTenantSlug();
@@ -46,6 +50,9 @@ export default function Screenings({
                         </>
                     }
                 />
+                {people.total > 0 && (
+                    <ReferralSummary counts={referralCounts} />
+                )}
                 {people.total === 0 ? (
                     <EmptyState
                         icon={HeartHandshake}
@@ -57,7 +64,11 @@ export default function Screenings({
                 ) : (
                     <ol aria-label="Personas" className="flex flex-col gap-3">
                         {people.data.map((person) => (
-                            <ScreenedPerson key={person.id} person={person} />
+                            <ScreenedPerson
+                                key={person.id}
+                                campaignId={campaign.id}
+                                person={person}
+                            />
                         ))}
                     </ol>
                 )}

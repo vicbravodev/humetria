@@ -517,6 +517,39 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
         ->assertSee('Ana López');
 })->with($looks);
 
+it('shows the channeling of each person and the dialog that records it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    $person->update(['name' => 'Ana López']);
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/screenings", $dark, $mobile, fn ($page) => $page->click('Registrar canalización'))
+        ->assertSee('Canalización de Ana López')
+        ->assertSee('Institución');
+})->with($looks);
+
+it('records that a person was referred, choosing the day and writing the institution', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/screenings")
+        ->click('Registrar canalización')
+        ->click('#referred-on')
+        ->click('[data-day="'.now('America/Mexico_City')->format('Y-m-d').'"] button')
+        ->fill('#report-institution', 'IMSS, Unidad de Medicina Familiar 7')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Canalización registrada.')
+        ->assertSee('IMSS, Unidad de Medicina Familiar 7')
+        ->assertSee('Registrar atención')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('shows the 7.7 report of a closed evaluation, ready to print', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);

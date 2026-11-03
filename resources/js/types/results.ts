@@ -82,6 +82,25 @@ export type ScreeningCounts = {
     requiring: number;
 };
 
+/** Where a person's channeling stands once recorded; no record means still pending. */
+export type ReferralStatus = 'referred' | 'attended';
+
+/** The record of a person's channeling (num. 5.5, 5.8 c): the day is Y-m-d for the picker, and written for reading. */
+export type ScreeningReferral = {
+    status: ReferralStatus;
+    statusLabel: string;
+    referredOn: string;
+    referredOnLabel: string;
+    institution: string;
+};
+
+/** How many of who requires a clinical assessment are pending, referred and attended. */
+export type ReferralCounts = {
+    pending: number;
+    referred: number;
+    attended: number;
+};
+
 /** A row of a distribution table: a group and its questionnaires by level. */
 export type DistributionRow = {
     key: string;
@@ -97,6 +116,7 @@ export type ScreenedPerson = {
     area: string;
     jobTitle: string;
     answeredOn: string;
+    referral: ScreeningReferral | null;
 };
 
 /** The work center as the report names it (num. 7.7 a). */
