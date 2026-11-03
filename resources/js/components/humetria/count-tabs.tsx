@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils';
 
 export type CountTab = {
     label: string;
-    count: number;
+    /** How many the view holds; a view without a count (a form, a document) shows none. */
+    count?: number | undefined;
     href: NonNullable<InertiaLinkProps['href']>;
     active: boolean;
 };
@@ -38,16 +39,18 @@ export default function CountTabs({
                     )}
                 >
                     {tab.label}
-                    <span
-                        className={cn(
-                            'rounded-full px-[7px] text-xs leading-5 tabular-nums',
-                            tab.active
-                                ? 'bg-accent text-primary'
-                                : 'bg-track text-muted-foreground',
-                        )}
-                    >
-                        {tab.count}
-                    </span>
+                    {tab.count !== undefined && (
+                        <span
+                            className={cn(
+                                'rounded-full px-[7px] text-xs leading-5 tabular-nums',
+                                tab.active
+                                    ? 'bg-accent text-primary'
+                                    : 'bg-track text-muted-foreground',
+                            )}
+                        >
+                            {tab.count}
+                        </span>
+                    )}
                 </Link>
             ))}
         </nav>

@@ -19,7 +19,7 @@ composer test:fast                                                       # Tia: 
 composer mutate -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # una clase (o un namespace), 4 procesos
 composer mutate:retry -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # lo que escapó, primero
 composer mutate:critical                                                 # las clases de lógica de negocio, ~6 min; CI le pone --min=95
-composer mutate:full                                                     # las 230 de mutates(), --min=95
+composer mutate:full                                                     # las 293 de mutates(), --min=95
 ```
 
 No corras la mutación al mismo tiempo que `composer test`: comparten la base `testing`.

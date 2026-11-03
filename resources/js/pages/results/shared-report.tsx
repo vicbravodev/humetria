@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import { Link2 } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
 import LinkUnavailable from '@/components/results/link-unavailable';
-import PrintButton from '@/components/results/print-button';
+import PrintButton from '@/components/humetria/print-button';
 import ReportBar from '@/components/results/report-bar';
 import ReportDocument from '@/components/results/report-document';
 import { reportSections } from '@/lib/report';

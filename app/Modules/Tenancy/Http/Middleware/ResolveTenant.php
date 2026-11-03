@@ -78,6 +78,9 @@ final class ResolveTenant
                 'view_trauma_screenings' => $user->can('view-trauma-screenings'),
                 'manage_telework' => $user->can('manage-telework'),
                 'review_workplaces' => $user->can('review-workplaces'),
+                'view_seating' => $user->can('view-seating'),
+                'manage_seating' => $user->can('manage-seating'),
+                'assess_seating' => $user->can('assess-seating'),
                 'use_assistant' => $user->can('use-assistant'),
             ],
         ]);

@@ -67,7 +67,7 @@ final readonly class CampaignPages
         $events = Campaign::query()->where('kind', CampaignKind::Nom035Trauma)->whereIn('status', [CampaignStatus::Draft, CampaignStatus::Active])
             ->orderByDesc('created_at')->orderByDesc('id')
             ->paginate(self::OPEN_PER_PAGE, pageName: 'events')->withQueryString();
-        $closed = Campaign::query()->where('status', CampaignStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')
+        $closed = Campaign::query()->whereIn('kind', CampaignKind::nom035())->where('status', CampaignStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')
             ->paginate(self::CLOSED_PER_PAGE, pageName: 'closed')->withQueryString();
         $centers = $this->workCenters->activePage(CampaignPeople::PER_PAGE, 'centers');
         $evaluations = $this->evaluationsOf($centers->items());

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Actions;
 
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
@@ -47,7 +48,7 @@ final readonly class SendProgressDigests
     {
         $sent = 0;
 
-        foreach (Campaign::query()->withoutGlobalScopes()->where('status', CampaignStatus::Active)->orderBy('tenant_id')->get(['id', 'tenant_id']) as $campaign) {
+        foreach (Campaign::query()->withoutGlobalScopes()->whereIn('kind', CampaignKind::nom035())->where('status', CampaignStatus::Active)->orderBy('tenant_id')->get(['id', 'tenant_id']) as $campaign) {
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($campaign, &$sent): void {
