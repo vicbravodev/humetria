@@ -18,9 +18,11 @@ describe('stepAfter and stepBefore', () => {
     it('move one step and stop at both ends', () => {
         expect(stepAfter('intro')).toBe('type');
         expect(stepAfter('whom')).toBe('identity');
-        expect(stepAfter('identity')).toBe('review');
+        expect(stepAfter('identity')).toBe('email');
+        expect(stepAfter('email')).toBe('review');
         expect(stepAfter('review')).toBe('review');
-        expect(stepBefore('review')).toBe('identity');
+        expect(stepBefore('review')).toBe('email');
+        expect(stepBefore('email')).toBe('identity');
         expect(stepBefore('identity')).toBe('whom');
         expect(stepBefore('intro')).toBe('intro');
     });
@@ -82,7 +84,9 @@ describe('problemWith', () => {
             ),
         ).toBeUndefined();
     });
+});
 
+describe('problemWith, the later steps', () => {
     it('asks for the day a traumatic event happened, and only for that notice', () => {
         const notice = { ...written(30), type: 'traumatic_event_notice' };
 
@@ -138,6 +142,31 @@ describe('problemWith', () => {
         ).toContain('necesita su nombre');
     });
 
+    it('lets the notice address stay empty, and asks for a real one when it is given', () => {
+        const withEmail = (notifyEmail: string) => ({
+            ...emptyDraft,
+            notifyEmail,
+        });
+
+        expect(problemWith('email', withEmail(''), limits)).toBeUndefined();
+        expect(problemWith('email', withEmail('   '), limits)).toBeUndefined();
+        expect(
+            problemWith('email', withEmail('rosa@ejemplo.mx'), limits),
+        ).toBeUndefined();
+        expect(
+            problemWith('email', withEmail(' rosa@ejemplo.mx '), limits),
+        ).toBeUndefined();
+        expect(problemWith('email', withEmail('rosa'), limits)).toBe(
+            'Escriba un correo válido o déjelo vacío.',
+        );
+        expect(problemWith('email', withEmail('rosa@ejemplo'), limits)).toBe(
+            'Escriba un correo válido o déjelo vacío.',
+        );
+        expect(
+            problemWith('email', withEmail('ro sa@ejemplo.mx'), limits),
+        ).toBe('Escriba un correo válido o déjelo vacío.');
+    });
+
     it('asks nothing on the steps that only read or review', () => {
         expect(problemWith('intro', emptyDraft, limits)).toBeUndefined();
         expect(problemWith('review', emptyDraft, limits)).toBeUndefined();
@@ -171,8 +200,16 @@ describe('payload', () => {
             reporter_name: '',
             reporter_contact: '',
             involved_text: '',
+            notify_email: '',
             website: '',
         });
+    });
+
+    it('sends the address for the notice trimmed, whatever the identity', () => {
+        expect(
+            payload({ ...emptyDraft, notifyEmail: ' rosa@ejemplo.mx ' }, 't')
+                .notify_email,
+        ).toBe('rosa@ejemplo.mx');
     });
 
     it('sends the name and the contact only when the person chose to give them', () => {

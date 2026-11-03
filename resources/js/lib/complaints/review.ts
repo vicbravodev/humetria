@@ -49,6 +49,12 @@ export function reviewRows(
         ['Centro de trabajo', draft.workCenter?.label ?? UNSAID],
         whoRow(draft, kinds),
         identityRow(draft),
+        [
+            'Aviso por correo',
+            draft.notifyEmail.trim() === ''
+                ? 'No'
+                : 'Sí: le avisaremos a su correo. Nadie lo verá.',
+        ],
     );
 
     return rows;

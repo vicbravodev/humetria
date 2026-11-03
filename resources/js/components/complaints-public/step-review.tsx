@@ -3,7 +3,7 @@ import type { Draft } from '@/lib/complaints/form';
 import { reviewRows } from '@/lib/complaints/review';
 import type { ComplaintKindOption, ComplaintTypeOption } from '@/types';
 
-/** Step 5: what will be sent, to read once more. Sending is the person's decision, here and nowhere else. */
+/** Step 6: what will be sent, to read once more. Sending is the person's decision, here and nowhere else. */
 export default function ReviewStep({
     draft,
     types,

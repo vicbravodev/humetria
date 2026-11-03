@@ -9,6 +9,7 @@ use App\Modules\Complaints\Enums\ComplaintStatus;
 use App\Modules\Complaints\Enums\EntryKind;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Support\CaseThread;
+use App\Modules\Complaints\Support\ReporterNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,7 @@ final readonly class AcknowledgeComplaint
 {
     public const string TEXT = 'Acusamos recibo de su queja. La persona que atiende el caso la está revisando.';
 
-    public function __construct(private CaseThread $thread, private RecordAudit $audit) {}
+    public function __construct(private CaseThread $thread, private RecordAudit $audit, private ReporterNotifier $news) {}
 
     public function handle(Complaint $complaint, int $by): void
     {
@@ -33,5 +34,6 @@ final readonly class AcknowledgeComplaint
         });
 
         Log::info('complaints.acknowledged', ['complaint_id' => $complaint->id]);
+        $this->news->news($complaint);
     }
 }

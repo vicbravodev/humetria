@@ -60,6 +60,7 @@ final readonly class PurgeComplaints
         $channel = ComplaintChannel::query()->firstOrFail();
         $limit = Dates::today()->subMonthsNoOverflow($channel->retention_months)->toDateString();
         $purged = 0;
+        $this->clearEmails($channel);
 
         $due = Complaint::query()
             ->where('status', ComplaintStatus::Closed->value)
@@ -81,6 +82,21 @@ final readonly class PurgeComplaints
         return $purged;
     }
 
+    /** The write-only address goes thirty days after the case closes, held or not: a hold keeps the case, not the address. */
+    private function clearEmails(ComplaintChannel $channel): void
+    {
+        $limit = Dates::today()->subDays(config()->integer('complaints.retention.notice_email_days'))->toDateString();
+        $cleared = Complaint::query()->where('status', ComplaintStatus::Closed->value)->whereNotNull('reporter_email')->whereDate('closed_on', '<=', $limit)->get();
+
+        foreach ($cleared as $complaint) {
+            $complaint->update(['reporter_email' => null]);
+        }
+
+        if ($cleared->isNotEmpty()) {
+            Log::info('complaints.reporter_emails_cleared', ['count' => $cleared->count(), 'channel_id' => $channel->id]);
+        }
+    }
+
     /**
      * What a purged case keeps: nothing that says who, where or what.
      *
@@ -94,6 +110,7 @@ final readonly class PurgeComplaints
             'involved_text' => null,
             'reporter_name' => null,
             'reporter_contact' => null,
+            'reporter_email' => null,
             'identity_mode' => 'anonymous',
             'respondent_kind' => 'unknown',
             'work_center_id' => null,

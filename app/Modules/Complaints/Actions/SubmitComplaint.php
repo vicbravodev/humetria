@@ -78,6 +78,7 @@ final readonly class SubmitComplaint
                         'respondent_text' => $input->respondentText,
                         'reporter_name' => $input->reporterName,
                         'reporter_contact' => $input->reporterContact,
+                        'reporter_email' => $input->notifyEmail,
                         'involved_text' => $input->involvedText,
                         'occurred_on' => $input->occurredOn,
                         'received_on' => $day,

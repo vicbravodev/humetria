@@ -48,6 +48,7 @@ final class SubmitComplaintRequest extends FormRequest
             'identity_mode' => ['required', Rule::in($type === ComplaintType::TraumaticEventNotice ? [IdentityMode::Confidential->value] : array_map(fn (IdentityMode $mode): string => $mode->value, IdentityMode::cases()))],
             'reporter_name' => [Rule::requiredIf($this->string('identity_mode')->toString() === IdentityMode::Confidential->value), 'prohibited_if:identity_mode,anonymous', 'nullable', 'string', 'max:150', 'regex:/\S/u'],
             'reporter_contact' => ['prohibited_if:identity_mode,anonymous', 'nullable', 'string', 'max:200'],
+            'notify_email' => ['nullable', 'email:rfc', 'max:190'],
             'involved_text' => ['prohibited_unless:type,traumatic_event_notice', 'nullable', 'string', 'max:'.config()->integer('complaints.free_text_max')],
         ];
     }
@@ -75,6 +76,7 @@ final class SubmitComplaintRequest extends FormRequest
             $this->trimmedOrNull('reporter_name'),
             $this->trimmedOrNull('reporter_contact'),
             $this->trimmedOrNull('involved_text'),
+            $this->trimmedOrNull('notify_email'),
         );
     }
 

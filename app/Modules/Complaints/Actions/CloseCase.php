@@ -11,6 +11,7 @@ use App\Modules\Complaints\Enums\EntryKind;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Support\CaseThread;
 use App\Modules\Complaints\Support\Dates;
+use App\Modules\Complaints\Support\ReporterNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class CloseCase
 {
-    public function __construct(private CaseThread $thread, private RecordAudit $audit) {}
+    public function __construct(private CaseThread $thread, private RecordAudit $audit, private ReporterNotifier $news) {}
 
     public function handle(Complaint $complaint, ComplaintResolution $resolution, int $by): void
     {
@@ -39,5 +40,6 @@ final readonly class CloseCase
         });
 
         Log::info('complaints.closed', ['complaint_id' => $complaint->id, 'resolution' => $resolution->value]);
+        $this->news->news($complaint);
     }
 }

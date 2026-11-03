@@ -1,3 +1,4 @@
+import EmailStep from '@/components/complaints-public/step-email';
 import IdentityStep from '@/components/complaints-public/step-identity';
 import ReviewStep from '@/components/complaints-public/step-review';
 import StoryStep from '@/components/complaints-public/step-story';
@@ -49,6 +50,8 @@ export default function ComplaintStep({
             );
         case 'identity':
             return <IdentityStep draft={draft} onChange={change} />;
+        case 'email':
+            return <EmailStep draft={draft} onChange={change} />;
         case 'review':
             return (
                 <ReviewStep

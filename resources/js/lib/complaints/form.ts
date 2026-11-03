@@ -7,6 +7,7 @@ export type StepId =
     | 'story'
     | 'whom'
     | 'identity'
+    | 'email'
     | 'review';
 
 export const STEPS: readonly StepId[] = [
@@ -15,6 +16,7 @@ export const STEPS: readonly StepId[] = [
     'story',
     'whom',
     'identity',
+    'email',
     'review',
 ];
 
@@ -30,6 +32,8 @@ export type Draft = {
     reporterName: string;
     reporterContact: string;
     involvedText: string;
+    /** The address for the notice «hay novedades»: nobody ever reads it. */
+    notifyEmail: string;
 };
 
 /** The written notice of a severe traumatic event (num. 6.5): the norm asks for the name of who writes it and the day it happened. */
@@ -47,6 +51,7 @@ export const emptyDraft: Draft = {
     reporterName: '',
     reporterContact: '',
     involvedText: '',
+    notifyEmail: '',
 };
 
 /** What the server takes: snake_case, as it validates it. */
@@ -63,6 +68,7 @@ export type Payload = {
     reporter_name: string;
     reporter_contact: string;
     involved_text: string;
+    notify_email: string;
     website: string;
 };
 
@@ -92,11 +98,23 @@ export function problemWith(
         return identityProblem(draft);
     }
 
+    if (step === 'email') {
+        return emailProblem(draft.notifyEmail.trim());
+    }
+
     if (step === 'whom' && draft.respondentKind === '') {
         return 'Elija de quién se trata, o «No sé o prefiero no decirlo».';
     }
 
     return undefined;
+}
+
+const ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function emailProblem(address: string): string | undefined {
+    return address === '' || ADDRESS.test(address)
+        ? undefined
+        : 'Escriba un correo válido o déjelo vacío.';
 }
 
 function identityProblem(draft: Draft): string | undefined {
@@ -145,6 +163,7 @@ export function payload(draft: Draft, ticket: string): Payload {
         reporter_name: named ? draft.reporterName.trim() : '',
         reporter_contact: named ? draft.reporterContact.trim() : '',
         involved_text: draft.type === NOTICE ? draft.involvedText.trim() : '',
+        notify_email: draft.notifyEmail.trim(),
         website: '',
     };
 }

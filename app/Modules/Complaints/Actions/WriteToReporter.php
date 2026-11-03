@@ -8,13 +8,14 @@ use App\Actions\RecordAudit;
 use App\Modules\Complaints\Enums\EntryKind;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Support\CaseThread;
+use App\Modules\Complaints\Support\ReporterNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /** Writes to the person who presented the complaint: they read it when they come back with their reference and key. */
 final readonly class WriteToReporter
 {
-    public function __construct(private CaseThread $thread, private RecordAudit $audit) {}
+    public function __construct(private CaseThread $thread, private RecordAudit $audit, private ReporterNotifier $news) {}
 
     public function handle(Complaint $complaint, string $body, int $by): void
     {
@@ -24,5 +25,6 @@ final readonly class WriteToReporter
         });
 
         Log::info('complaints.message_sent', ['complaint_id' => $complaint->id]);
+        $this->news->news($complaint);
     }
 }

@@ -27,6 +27,7 @@ describe('reviewRows', () => {
             ['Centro de trabajo', 'Sin indicar'],
             ['De quién se trata', 'Un compañero'],
             ['Cómo va', 'Anónima: sin nombre ni contacto'],
+            ['Aviso por correo', 'No'],
         ]);
     });
 
@@ -71,12 +72,37 @@ describe('reviewRows', () => {
             'Centro de trabajo',
             'Personas involucradas',
             'Cómo va',
+            'Aviso por correo',
         ]);
         expect(rows).toContainEqual(['Personas involucradas', 'Luis']);
         expect(rows).toContainEqual([
             'Fecha en que ocurrió',
             '10 de noviembre de 2026',
         ]);
+    });
+
+    it('says whether the person will be told of news by email, without showing the address', () => {
+        const without = reviewRows(
+            { ...emptyDraft, type: 'workplace_violence' },
+            types,
+            kinds,
+        );
+        const withEmail = reviewRows(
+            {
+                ...emptyDraft,
+                type: 'workplace_violence',
+                notifyEmail: 'rosa@ejemplo.mx',
+            },
+            types,
+            kinds,
+        );
+
+        expect(without).toContainEqual(['Aviso por correo', 'No']);
+        expect(withEmail).toContainEqual([
+            'Aviso por correo',
+            'Sí: le avisaremos a su correo. Nadie lo verá.',
+        ]);
+        expect(JSON.stringify(withEmail)).not.toContain('rosa@ejemplo.mx');
     });
 
     it('says nobody was named when the notice names nobody', () => {

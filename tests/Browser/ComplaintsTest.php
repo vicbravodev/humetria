@@ -161,6 +161,9 @@ it('walks the form step by step and hands back a reference and a key once', func
         ->assertSee('¿Cómo quiere ir?')
         ->assertNoAccessibilityIssues(1)
         ->press('Continuar')
+        ->assertSee('¿Quiere que le avisemos cuando haya novedades?')
+        ->assertNoAccessibilityIssues(1)
+        ->press('Continuar')
         ->assertSee('Revise antes de enviar')
         ->assertSee('Anónima: sin nombre ni contacto')
         ->assertNoAccessibilityIssues(1)
@@ -205,12 +208,17 @@ it('sends a confidential complaint with the name that only its handlers read', f
         ->assertSee('Escriba su nombre.')
         ->fill('#reporter-name', 'Rosa Aguilar')
         ->press('Continuar')
+        ->fill('#notify-email', 'rosa.privada@ejemplo.mx')
+        ->press('Continuar')
         ->assertSee('Confidencial, con su nombre (Rosa Aguilar)')
+        ->assertSee('Sí: le avisaremos a su correo. Nadie lo verá.')
+        ->assertDontSee('rosa.privada@ejemplo.mx')
         ->press('Enviar mi queja')
         ->assertSee('Recibimos su queja')
         ->assertNoJavaScriptErrors();
 
-    expect(Complaint::query()->withoutGlobalScopes()->sole()->reporter_name)->toBe('Rosa Aguilar');
+    $complaint = Complaint::query()->withoutGlobalScopes()->sole();
+    expect($complaint->reporter_name)->toBe('Rosa Aguilar')->and($complaint->reporter_email)->toBe('rosa.privada@ejemplo.mx');
 });
 
 it('asks for the day and the name of the notice of a traumatic event, and sends it', function (): void {
@@ -232,6 +240,7 @@ it('asks for the day and the name of the notice of a traumatic event, and sends 
         ->press('Continuar')
         ->assertSee('Este aviso necesita su nombre')
         ->fill('#reporter-name', 'Rosa Aguilar')
+        ->press('Continuar')
         ->press('Continuar')
         ->assertSee('Fecha en que ocurrió')
         ->press('Enviar mi queja')
@@ -509,4 +518,28 @@ it('opens the poster from the channel page', function (): void {
     ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
 
     visit("{$url}/complaints/channel")->click('Cartel')->assertSee('¿Algo no está bien en tu trabajo?')->assertNoJavaScriptErrors();
+});
+
+it('asks for a real address on the optional step and lets it stay empty', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")->on()->mobile()
+        ->click('Quiero presentar una queja')
+        ->click('Queja por una práctica opuesta a un entorno favorable')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Las cargas de trabajo del turno de noche son excesivas desde hace meses.')
+        ->press('Continuar')
+        ->click('Una compañera o compañero')
+        ->press('Continuar')
+        ->press('Continuar')
+        ->fill('#notify-email', 'no es un correo')
+        ->press('Continuar')
+        ->assertSee('Escriba un correo válido o déjelo vacío.')
+        ->assertScript(smallTouchTargets(), '')
+        ->fill('#notify-email', '')
+        ->press('Continuar')
+        ->assertSee('Aviso por correo')
+        ->assertSee('No')
+        ->assertNoJavaScriptErrors();
 });

@@ -25,5 +25,6 @@ final readonly class ComplaintInput
         public ?string $reporterName = null,
         public ?string $reporterContact = null,
         public ?string $involvedText = null,
+        public ?string $notifyEmail = null,
     ) {}
 }
