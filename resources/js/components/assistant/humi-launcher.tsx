@@ -36,7 +36,7 @@ export default function HumiLauncher({
                     aria-keyshortcuts="Control+J Meta+J"
                     className="humi-pop fixed right-4 bottom-4 z-40 flex size-12 items-center justify-center rounded-full border bg-card shadow-float transition-transform duration-150 ease-out hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none print:hidden"
                 >
-                    <HumiAvatar size={40} animated />
+                    <HumiAvatar size={40} />
                 </button>
             </TooltipTrigger>
             <TooltipContent side="left">
