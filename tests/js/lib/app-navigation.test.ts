@@ -273,3 +273,18 @@ describe('activeChild', () => {
         ).toBeUndefined();
     });
 });
+
+describe('a union account', () => {
+    const union = { ...acme(), type: 'union' as const };
+
+    it('has no compliance tools in the sidebar', () => {
+        expect(complianceNavItems(union)).toEqual([]);
+        expect(complianceNavItems({ ...acme(), type: 'company' })).not.toEqual(
+            [],
+        );
+    });
+
+    it('keeps the panel, employees and users, and drops the work centers', () => {
+        expect(titles(union)).toEqual(['Panel', 'Empleados', 'Usuarios']);
+    });
+});

@@ -74,7 +74,9 @@ function companyActions(
     };
 
     return [
-        ...(tenant.can.manage_campaigns ? [newEvaluation] : []),
+        ...(tenant.can.manage_campaigns && tenant.type !== 'union'
+            ? [newEvaluation]
+            : []),
         ...(tenant.can.manage_organization ? [importEmployees] : []),
     ];
 }

@@ -166,3 +166,38 @@ describe('paletteCommands while impersonating', () => {
         expect(settingsUrl(true)).toBe('/admin/settings/appearance');
     });
 });
+
+describe('paletteCommands inside a union', () => {
+    it('offers loading employees but no evaluation, and no compliance page', () => {
+        const commands = paletteCommands({
+            isSuperadmin: false,
+            tenant: {
+                slug: 'sindicato',
+                type: 'union',
+                role: 'owner',
+                can: {
+                    manage_organization: true,
+                    manage_members: true,
+                    manage_campaigns: true,
+                    view_trauma_screenings: true,
+                    manage_telework: true,
+                    review_workplaces: true,
+                    view_seating: true,
+                    manage_seating: true,
+                    assess_seating: true,
+                    use_assistant: true,
+                },
+            },
+            sidebarExpanded: true,
+            impersonating: false,
+            actions: actions(),
+        });
+        const ids = commands.map(({ id }) => id);
+
+        expect(ids).toContain('/admin/sindicato/employees/import');
+        expect(ids).not.toContain('new-evaluation');
+        expect(ids).not.toContain('/admin/sindicato/campaigns');
+        expect(ids).not.toContain('/admin/sindicato/telework');
+        expect(ids).not.toContain('/admin/sindicato/work-centers');
+    });
+});
