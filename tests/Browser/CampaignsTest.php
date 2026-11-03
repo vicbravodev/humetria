@@ -119,7 +119,9 @@ it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobil
         ->assertSee('Borrador')
         ->assertSee('Muestra de 53: Mujeres 27 · Hombres 26')
         ->assertSee('Muestra sorteada (53)')
-        ->assertSee('Página 1 de 3');
+        ->assertSee('Página 1 de 3')
+        // The number of the last step says what it is to a screen reader, and the steps that are ready say so.
+        ->assertScript('document.body.textContent.includes("Paso 3") && document.body.textContent.includes("Listo: ")', true);
 })->with($looks);
 
 it('prepares an evaluation from the panel, reached from the sidebar', function (): void {
