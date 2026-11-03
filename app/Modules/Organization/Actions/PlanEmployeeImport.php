@@ -12,6 +12,7 @@ use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\EmployeeCsv;
+use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
@@ -40,7 +41,10 @@ final class PlanEmployeeImport
     /** @var array<string, int> the spreadsheet row where each email, then each number, first appears */
     private array $seen = [];
 
-    public function __construct(private readonly WorkCenters $workCenters) {}
+    /** A union's people are identified by the company ID alone: no contact, gender or work center. */
+    private bool $union = false;
+
+    public function __construct(private readonly WorkCenters $workCenters, private readonly Companies $companies) {}
 
     /**
      * @param  list<array<string, string>>  $rows  as EmployeeCsv reads them.
@@ -53,7 +57,7 @@ final class PlanEmployeeImport
 
         foreach ($rows as $index => $row) {
             $line = $index + 2;
-            [$result, $messages] = $this->check($row, $line);
+            [$result, $messages] = $this->union ? $this->checkUnion($row, $line) : $this->check($row, $line);
 
             if ($result !== null) {
                 $valid[] = $result;
@@ -67,6 +71,8 @@ final class PlanEmployeeImport
 
     private function load(): void
     {
+        $this->union = $this->companies->current()->isUnion();
+
         foreach ($this->workCenters->all() as $center) {
             if (! $center->archived) {
                 $this->centers[self::fold($center->name)] = $center->id;
@@ -147,6 +153,50 @@ final class PlanEmployeeImport
     }
 
     /**
+     * A row of a union's file: only the company ID is required. Contact, gender and work center columns, if the file
+     * has them, are left out, as the form does not ask them.
+     *
+     * @param  array<string, string>  $row
+     * @return array{0: EmployeeImportRow|null, 1: list<string>}
+     */
+    private function checkUnion(array $row, int $line): array
+    {
+        $input = ['name' => $row['nombre'] ?? '', 'area' => $row['area'] ?? '', 'job_title' => $row['puesto'] ?? '', 'employee_number' => $row['numero_de_empleado'] ?? ''];
+        $payScale = $this->payScale($row);
+        $errors = Validator::make([...$input, ...$payScale['input']], EmployeeRequest::unionFieldRules(), [], ['employee_number' => 'ID de la empresa'])->errors();
+        $messages = [...array_values($errors->all()), ...$payScale['messages'], ...$this->repeated(null, $input['employee_number'] === '' ? null : $input['employee_number'], $line)];
+
+        if ($messages !== []) {
+            return [null, $messages];
+        }
+
+        $number = $input['employee_number'];
+
+        return [new EmployeeImportRow(new EmployeeData(
+            name: $input['name'] ?: null,
+            email: null,
+            mobile: null,
+            gender: null,
+            workCenterId: null,
+            area: $input['area'] ?: null,
+            jobTitle: $input['job_title'] ?: null,
+            employeeNumber: $number,
+            jobCategory: self::text($payScale['input'], 'job_category') ?: null,
+            jobLevel: self::text($payScale['input'], 'job_level') ?: null,
+            hiredOn: $payScale['hiredOn'],
+            staffGroup: $payScale['group'],
+            state: self::text($payScale['input'], 'state') ?: null,
+        ), $this->byNumber[mb_strtolower($number)] ?? null, [
+            ...$payScale['absent'],
+            ...array_keys(array_filter([
+                'name' => ! array_key_exists('nombre', $row),
+                'area_id' => ! array_key_exists('area', $row),
+                'job_title' => ! array_key_exists('puesto', $row),
+            ])),
+        ]), []];
+    }
+
+    /**
      * What the pay scale columns say, for the validator as the form would send it (empty is none), with what the file
      * gets wrong, and the columns it does not have.
      *
@@ -208,7 +258,11 @@ final class PlanEmployeeImport
             $first = $this->seen["{$kind}:{$value}"] ??= $line;
 
             if ($first !== $line) {
-                $messages[] = $kind === 'email' ? "El correo se repite en la fila {$first}." : "El número de empleado se repite en la fila {$first}.";
+                $messages[] = match (true) {
+                    $kind === 'email' => "El correo se repite en la fila {$first}.",
+                    $this->union => "El ID de la empresa se repite en la fila {$first}.",
+                    default => "El número de empleado se repite en la fila {$first}.",
+                };
             }
         }
 

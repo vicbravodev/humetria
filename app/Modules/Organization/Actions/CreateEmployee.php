@@ -28,7 +28,10 @@ final readonly class CreateEmployee
             // Only the id: a person's name and contact data stay out of logs.
             Log::info('employee.created', ['employee_id' => $employee->id]);
 
-            event(new EmployeeCreated($employee->tenant_id, $employee->id, $data->workCenterId));
+            // A union's people have no work center, which the evaluations need to count them.
+            if ($data->workCenterId !== null) {
+                event(new EmployeeCreated($employee->tenant_id, $employee->id, $data->workCenterId));
+            }
 
             return $employee;
         });

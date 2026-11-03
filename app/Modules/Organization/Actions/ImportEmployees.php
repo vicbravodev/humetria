@@ -33,22 +33,25 @@ final readonly class ImportEmployees
             $grades = [];
 
             foreach ($plan->rows as $row) {
-                $area = $areas[mb_strtolower($row->data->area)] ??= $this->findOrCreateArea->handle($row->data->area);
+                $area = $row->data->area === null ? null : ($areas[mb_strtolower($row->data->area)] ??= $this->findOrCreateArea->handle($row->data->area));
                 $attributes = [
-                    ...EmployeeAttributes::from($row->data, $area),
+                    ...EmployeeAttributes::from($row->data, $area, $row->absent),
                     ...EmployeeAttributes::payScale($row->data, $this->grade($row->data, $grades), $row->absent),
                 ];
 
                 if ($row->existingId === null) {
                     $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
-                    event(new EmployeeCreated($created->tenant_id, $created->id, $row->data->workCenterId));
+
+                    if ($row->data->workCenterId !== null) {
+                        event(new EmployeeCreated($created->tenant_id, $created->id, $row->data->workCenterId));
+                    }
                 } else {
                     $employee = Employee::query()->findOrFail($row->existingId);
                     $from = $employee->work_center_id;
                     $employee->update($attributes);
 
                     // As moving them by hand: an open evaluation of the old work center lets them go (criterio C-24).
-                    if ($from !== null && $row->data->workCenterId !== $from) {
+                    if ($from !== null && $row->data->workCenterId !== null && $row->data->workCenterId !== $from) {
                         event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $row->data->workCenterId));
                     }
                 }

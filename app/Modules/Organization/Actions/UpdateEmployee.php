@@ -25,7 +25,7 @@ final readonly class UpdateEmployee
             ]);
 
             // Someone who had no work center is placed in one, not moved.
-            if ($from !== null && $data->workCenterId !== $from) {
+            if ($from !== null && $data->workCenterId !== null && $data->workCenterId !== $from) {
                 event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $data->workCenterId));
             }
 

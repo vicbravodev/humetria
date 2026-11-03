@@ -16,4 +16,9 @@ final readonly class CompanySummary
      * @param  string  $slug  Its address under /admin/, for links into it.
      */
     public function __construct(public string $id, public string $tradeName, public string $slug, public bool $blocked, public ?CompanyLogo $logo = null, public TenantType $type = TenantType::Company) {}
+
+    public function isUnion(): bool
+    {
+        return $this->type === TenantType::Union;
+    }
 }

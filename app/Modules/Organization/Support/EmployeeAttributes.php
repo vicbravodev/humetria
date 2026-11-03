@@ -19,18 +19,19 @@ final class EmployeeAttributes
     /**
      * The person and where they work.
      *
-     * @return array{work_center_id: string, area_id: string, name: string, email: string|null, mobile: string|null, gender: Gender, job_title: string, employee_number: string|null}
+     * @param  list<string>  $absent  the columns an import file of a union does not have (name, area_id, job_title), which an update leaves as they are.
+     * @return array{work_center_id?: string|null, area_id?: string|null, name?: string|null, email: string|null, mobile: string|null, gender: Gender|null, job_title?: string|null, employee_number: string|null}
      */
-    public static function from(EmployeeData $data, Area $area): array
+    public static function from(EmployeeData $data, ?Area $area, array $absent = []): array
     {
         return [
             'work_center_id' => $data->workCenterId,
-            'area_id' => $area->id,
-            'name' => $data->name,
+            ...(in_array('area_id', $absent, true) ? [] : ['area_id' => $area?->id]),
+            ...(in_array('name', $absent, true) ? [] : ['name' => $data->name]),
             'email' => $data->email,
             'mobile' => $data->mobile,
             'gender' => $data->gender,
-            'job_title' => $data->jobTitle,
+            ...(in_array('job_title', $absent, true) ? [] : ['job_title' => $data->jobTitle]),
             'employee_number' => $data->employeeNumber,
         ];
     }
