@@ -8,6 +8,8 @@ use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Responses\Contracts\ResponseReader;
+use App\Modules\Results\Contracts\ProgramOutlines;
+use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 
 /**
@@ -23,6 +25,8 @@ final readonly class ResultsPages
         private Instruments $instruments,
         private WorkCenters $workCenters,
         private Areas $areas,
+        private ProgramOutlines $programs,
+        private RiskResults $risk,
     ) {}
 
     /**
@@ -53,7 +57,25 @@ final readonly class ResultsPages
             'filters' => ['area' => $results['area'] ?? null],
             'levels' => RiskLevels::catalog(),
             'trauma' => $withScreenings ? $this->responses->screeningCounts($campaign->id) : null,
+            'program' => $results === null ? null : $this->programCard($campaign),
         ];
+    }
+
+    /**
+     * Where the Programa de intervención stands, for the card of the results: its state and meter, or that it is asked for and
+     * not made yet. Nothing when the results ask for none (num. 8.3) or there are no figures to ask by (under the minimum).
+     *
+     * @return array{exists: bool, state: array{value: string, label: string}|null, meter: array{done: int, total: int}|null}|null
+     */
+    private function programCard(CampaignRecord $campaign): ?array
+    {
+        $outline = $this->programs->forCampaign($campaign->id);
+
+        if ($outline !== null) {
+            return ['exists' => true, 'state' => ['value' => $outline->stateKey, 'label' => $outline->state], 'meter' => $outline->meter];
+        }
+
+        return $this->risk->forCampaign($campaign)->needingProgram() === [] ? null : ['exists' => false, 'state' => null, 'meter' => null];
     }
 
     /**

@@ -72,6 +72,13 @@ export type ResultsCampaign = {
     instruments: string[];
 };
 
+/** Where the Programa de intervención stands, for the card of the results; not made yet when `exists` is false. */
+export type ResultsProgramCard = {
+    exists: boolean;
+    state: { value: string; label: string } | null;
+    meter: { done: number; total: number } | null;
+};
+
 export type Participation = {
     invited: number;
     answered: number;
@@ -128,6 +135,53 @@ export type ReportCenter = {
     mainActivity: string;
 };
 
+/** An action of the Programa as the report prints it: no file, no note of a step. */
+export type ReportProgramAction = {
+    title: string;
+    kind: string;
+    level: string;
+    subjects: string;
+    startsOn: string | null;
+    dueOn: string;
+    responsible: string;
+    status: string;
+    professional: string | null;
+    overdue: boolean;
+};
+
+/** A row of the Programa as the report prints it. */
+export type ReportProgramItem = {
+    label: string;
+    scope: string;
+    level: string | null;
+    analysis: string | null;
+    followUp: string | null;
+    actions: ReportProgramAction[];
+};
+
+/** The Programa de intervención as of the day the report is read (num. 7.7 g). */
+export type ReportProgram = {
+    state: string;
+    stateKey: string;
+    meter: { done: number; total: number };
+    highestLevel: string | null;
+    responsible: string | null;
+    asOf: string;
+    items: ReportProgramItem[];
+};
+
+/** What incise g says of the Programa: it is there, the norm asks for none, it is missing, or nothing can be derived. */
+export type ReportInterventionState =
+    | 'program'
+    | 'not_required'
+    | 'missing'
+    | 'below_minimum';
+
+export type ReportIntervention = {
+    state: ReportInterventionState;
+    program: ReportProgram | null;
+};
+
 /** The report of a closed evaluation (num. 7.7). What HR has not filled in yet is null. */
 export type NomReport = {
     center: ReportCenter;
@@ -145,6 +199,7 @@ export type NomReport = {
     complete: boolean;
     results: RiskResults;
     areas: AreaResults;
+    intervention: ReportIntervention;
 };
 
 /** What HR fills in for the report. */

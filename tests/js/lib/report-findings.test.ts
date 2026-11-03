@@ -34,6 +34,26 @@ describe('pendingText', () => {
     });
 });
 
+describe('pendingText with the Programa de intervención', () => {
+    const waiting = {
+        conclusions: 'Listas.',
+        recommendations: null,
+        responsible: { name: 'Ana', license: null },
+    };
+
+    it('waits for the recommendations only while the Programa is missing too', () => {
+        expect(pendingText(waiting, 'missing')).toBe(
+            'Falta 1 dato para entregar el informe: recomendaciones.',
+        );
+    });
+
+    it('does not wait for them when the Programa is there, the norm asks for none or nothing can be derived', () => {
+        expect(pendingText(waiting, 'program')).toBeNull();
+        expect(pendingText(waiting, 'not_required')).toBeNull();
+        expect(pendingText(waiting, 'below_minimum')).toBeNull();
+    });
+});
+
 describe('keyFindings', () => {
     const results: RiskResults = {
         answered: 20,

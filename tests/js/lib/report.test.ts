@@ -6,6 +6,7 @@ import {
     focusDomains,
     hiddenQuestionnaires,
     highTone,
+    interventionText,
     mostFrequentLevel,
     nestDomains,
     reportSections,
@@ -163,5 +164,21 @@ describe('reportSections', () => {
             { id: 'informe', label: 'Informe 7.7' },
             { id: 'anexo', label: 'Anexo' },
         ]);
+    });
+});
+
+describe('interventionText', () => {
+    it('says why the Programa is not in the report, in the words of the norm', () => {
+        expect(interventionText('not_required')).toContain('numeral 8.3');
+        expect(interventionText('below_minimum')).toContain(
+            'pocos cuestionarios',
+        );
+        expect(interventionText('missing')).toContain(
+            'todavía no se ha creado',
+        );
+    });
+
+    it('says nothing when the Programa is there', () => {
+        expect(interventionText('program')).toBe('');
     });
 });

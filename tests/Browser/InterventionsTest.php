@@ -140,3 +140,33 @@ it('says there are no closed evaluations yet', function (): void {
     visitPage('interventions/index', "{$url}/programs")
         ->assertSee('Aún no hay evaluaciones cerradas');
 });
+
+it('prints the Programa in the 7.7 report, next to what HR wrote', function (bool $dark, bool $mobile): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+
+    visitPage('results/report', "{$url}/campaigns/{$campaign}/report", $dark, $mobile)
+        ->assertSee('Recomendaciones y acciones de intervención')
+        ->assertSee('Programa de intervención · Estado al')
+        ->assertSee('Revisar la política')
+        ->assertSee('1 de 2 acciones hechas');
+})->with($looks);
+
+it('says on the report that the Programa is missing, and offers it on the results', function (): void {
+    [$url, $campaign] = programEvaluation();
+
+    visitPage('results/report', "{$url}/campaigns/{$campaign}/report")
+        ->assertSee('todavía no se ha creado');
+    visitPage('results/show', "{$url}/campaigns/{$campaign}/results")
+        ->assertSee('Crear el Programa');
+});
+
+it('shows on the results where the Programa stands, with the way to it', function (bool $dark, bool $mobile): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+
+    visitPage('results/show', "{$url}/campaigns/{$campaign}/results", $dark, $mobile)
+        ->assertSee('Programa de intervención')
+        ->assertSee('Con acciones vencidas')
+        ->assertSee('Ver el Programa');
+})->with($looks);

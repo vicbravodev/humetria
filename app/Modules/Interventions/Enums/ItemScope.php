@@ -21,4 +21,14 @@ enum ItemScope: string
             self::Domain => 'Dominio',
         };
     }
+
+    /** Where a row of this scope goes in the Programa: the final score first, then the categories, then the domains. */
+    public function position(): int
+    {
+        return match ($this) {
+            self::Final => 0,
+            self::Category => 1,
+            self::Domain => 2,
+        };
+    }
 }

@@ -5,7 +5,13 @@ import {
     riskVerdict,
     total,
 } from '@/lib/results';
-import type { AreaResults, NomReport, RiskGroup, RiskResults } from '@/types';
+import type {
+    AreaResults,
+    NomReport,
+    ReportInterventionState,
+    RiskGroup,
+    RiskResults,
+} from '@/types';
 
 /** A finding of the summary: where the risk is, or what holds up. */
 export type Finding = {
@@ -14,13 +20,19 @@ export type Finding = {
     detail: string;
 };
 
-/** What HR still has to fill in before handing the report over, or nothing when it is complete. */
+/**
+ * What HR still has to fill in before handing the report over, or nothing when it is complete. The recommendations are
+ * missing only while the Programa de intervención is too: when it is there, or the norm asks for none, incise g does not wait.
+ */
 export function pendingText(
     report: Pick<NomReport, 'conclusions' | 'recommendations' | 'responsible'>,
+    intervention: ReportInterventionState = 'missing',
 ): string | null {
     const missing = [
         report.conclusions === null ? 'conclusiones' : null,
-        report.recommendations === null ? 'recomendaciones' : null,
+        report.recommendations === null && intervention === 'missing'
+            ? 'recomendaciones'
+            : null,
         report.responsible === null ? 'responsable de la evaluación' : null,
     ].filter((part) => part !== null);
 

@@ -1,5 +1,6 @@
-import { Head, setLayoutProps } from '@inertiajs/react';
+import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import AreaFilter from '@/components/humetria/area-filter';
+import ProgramCard from '@/components/results/program-card';
 import ResultsBody from '@/components/results/results-body';
 import ResultsHeader from '@/components/results/results-header';
 import ResultsOverview from '@/components/results/results-overview';
@@ -13,6 +14,7 @@ import type {
     Participation,
     ResultsCampaign,
     RiskLevelInfo,
+    ResultsProgramCard,
     RiskResults,
     ScreeningCounts,
 } from '@/types';
@@ -27,6 +29,7 @@ export default function Results({
     filters,
     levels,
     trauma,
+    program,
 }: {
     campaign: ResultsCampaign;
     guide: { key: string; title: string } | null;
@@ -37,8 +40,12 @@ export default function Results({
     filters: { area: { value: string; label: string } | null };
     levels: RiskLevelInfo[];
     trauma: ScreeningCounts | null;
+    program: ResultsProgramCard | null;
 }) {
     const tenantSlug = useTenantSlug();
+    const canSeeProgram =
+        usePage().props.tenant?.can.view_interventions === true &&
+        program !== null;
     const area = filters.area;
     setLayoutProps({
         breadcrumbs: resultsTrail(tenantSlug, campaign, 'Resultados'),
@@ -68,12 +75,20 @@ export default function Results({
                     area={area}
                     levels={levels}
                 />
-                {trauma !== null && (
-                    <div className="grid gap-5 lg:grid-cols-2">
-                        <TraumaSummary
-                            url={[tenantSlug, campaign.id]}
-                            counts={trauma}
-                        />
+                {(trauma !== null || canSeeProgram) && (
+                    <div className="grid items-start gap-5 lg:grid-cols-2">
+                        {trauma !== null && (
+                            <TraumaSummary
+                                url={[tenantSlug, campaign.id]}
+                                counts={trauma}
+                            />
+                        )}
+                        {canSeeProgram && (
+                            <ProgramCard
+                                route={[tenantSlug, campaign.id]}
+                                program={program}
+                            />
+                        )}
                     </div>
                 )}
                 <ResultsBody

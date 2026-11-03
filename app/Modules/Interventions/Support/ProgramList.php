@@ -6,7 +6,6 @@ namespace App\Modules\Interventions\Support;
 
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
-use App\Modules\Interventions\Enums\ActionStatus;
 use App\Modules\Interventions\Enums\ProgramState;
 use App\Modules\Interventions\Models\Program;
 use App\Modules\Interventions\Models\ProgramAction;
@@ -85,18 +84,10 @@ final readonly class ProgramList
         $standing = [];
 
         foreach ($programs as $program) {
-            $own = $actions->where('program_id', $program->id);
-            $rows = array_values($items->where('program_id', $program->id)->map(fn (ProgramItem $item): array => [
-                'state' => ProgramProgress::rowState(array_values($own->where('item_id', $item->id)->map(fn (ProgramAction $action): ActionStatus => $action->status)->all())),
-                'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null,
-            ])->all());
-            $overdue = $own->contains(fn (ProgramAction $action): bool => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), $today));
+            $own = array_values($actions->where('program_id', $program->id)->all());
+            $standingOf = ProgramProgress::standing(array_values($items->where('program_id', $program->id)->all()), $own, $today);
 
-            $standing[$program->campaign_id] = [
-                'state' => ProgramProgress::programState($rows, $overdue),
-                'meter' => ProgramProgress::meter(array_values($own->map(fn (ProgramAction $action): ActionStatus => $action->status)->all())),
-                'level' => $program->highest_level?->value,
-            ];
+            $standing[$program->campaign_id] = ['state' => $standingOf['state'], 'meter' => $standingOf['meter'], 'level' => $program->highest_level?->value];
         }
 
         return $standing;

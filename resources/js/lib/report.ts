@@ -1,5 +1,10 @@
 import { highRisk, rankBySeverity, total } from '@/lib/results';
-import type { AreaResults, LevelCounts, RiskGroup } from '@/types';
+import type {
+    AreaResults,
+    LevelCounts,
+    ReportInterventionState,
+    RiskGroup,
+} from '@/types';
 
 /** What each domain of Guías II and III looks at, in a line, for whoever reads the report. */
 const DOMAIN_DESCRIPTIONS: Record<string, string> = {
@@ -141,4 +146,18 @@ export function reportSections(
     return SECTIONS.filter((section) => visible || !section.results).map(
         ({ id, label }) => ({ id, label }),
     );
+}
+
+/** What incise g says when the Programa de intervención is not there: why, in the words of num. 8.3. */
+export function interventionText(state: ReportInterventionState): string {
+    switch (state) {
+        case 'program':
+            return '';
+        case 'not_required':
+            return 'La norma no pide un Programa de intervención: ningún cuestionario quedó en riesgo medio o más (numeral 8.3).';
+        case 'below_minimum':
+            return 'Con tan pocos cuestionarios no se muestran niveles de riesgo, así que no se deriva un Programa de intervención.';
+        case 'missing':
+            return 'Los resultados piden un Programa de intervención y todavía no se ha creado.';
+    }
 }

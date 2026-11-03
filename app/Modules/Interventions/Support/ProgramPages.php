@@ -105,14 +105,8 @@ final readonly class ProgramPages
      */
     private function program(Program $program, array $items, array $later, array $actions): array
     {
-        usort($items, fn (ProgramItem $a, ProgramItem $b): int => self::order($a) <=> self::order($b));
-        $today = ProgramClock::today();
-        $rows = [];
-
-        foreach ($items as $item) {
-            $statuses = array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, array_filter($actions, fn (ProgramAction $action): bool => $action->item_id === $item->id)));
-            $rows[] = ['item' => $item, 'state' => ProgramProgress::rowState($statuses), 'meter' => ProgramProgress::meter($statuses), 'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null];
-        }
+        usort($items, fn (ProgramItem $a, ProgramItem $b): int => [$a->scope->position(), $a->label] <=> [$b->scope->position(), $b->label]);
+        $standing = ProgramProgress::standing($items, $actions, ProgramClock::today());
 
         $kinds = array_values(array_map(fn (ProgramAction $action): ActionKind => $action->kind, array_filter($actions, fn (ProgramAction $action): bool => $action->status !== ActionStatus::Cancelled)));
         $analysisRows = [];
@@ -123,29 +117,27 @@ final readonly class ProgramPages
             }
         }
 
-        $overdueCount = count(array_filter($actions, fn (ProgramAction $action): bool => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), $today)));
-
         return [
             'id' => $program->id,
             'highestLevel' => self::level($program->highest_level),
             'responsible' => $program->responsible_name === null ? null : ['name' => $program->responsible_name, 'userId' => $program->responsible_user_id],
-            'state' => self::labeled(ProgramProgress::programState($rows, $overdueCount > 0)),
-            'overdue' => $overdueCount,
+            'state' => self::labeled($standing['state']),
+            'overdue' => $standing['overdue'],
             'requirements' => TableChecklist::for($program->highest_level, $kinds, $analysisRows),
-            'meter' => ProgramProgress::meter(array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, $actions))),
-            'items' => array_map(fn (array $row): array => [
-                'id' => $row['item']->id,
-                'scope' => $row['item']->scope->value,
-                'label' => $row['item']->label,
-                'category' => $row['item']->category_key,
-                'level' => self::level($row['item']->highest_level),
-                'manual' => $row['item']->origin === ItemOrigin::Manual,
-                'state' => self::labeled($row['state']),
-                'meter' => $row['meter'],
-                'analysis' => $row['item']->analysis,
-                'missingAnalysis' => in_array($row['item']->highest_level, [RiskLevel::High, RiskLevel::VeryHigh], true) && trim($row['item']->analysis ?? '') === '',
-                'followUp' => self::followUp($row['item'], $later),
-            ], $rows),
+            'meter' => $standing['meter'],
+            'items' => array_map(fn (ProgramItem $item): array => [
+                'id' => $item->id,
+                'scope' => $item->scope->value,
+                'label' => $item->label,
+                'category' => $item->category_key,
+                'level' => self::level($item->highest_level),
+                'manual' => $item->origin === ItemOrigin::Manual,
+                'state' => self::labeled($standing['rows'][$item->id]['state']),
+                'meter' => $standing['rows'][$item->id]['meter'],
+                'analysis' => $item->analysis,
+                'missingAnalysis' => in_array($item->highest_level, [RiskLevel::High, RiskLevel::VeryHigh], true) && trim($item->analysis ?? '') === '',
+                'followUp' => self::followUp($item, $later),
+            ], $items),
         ];
     }
 
@@ -365,18 +357,6 @@ final readonly class ProgramPages
             'levels' => array_map(fn (ActionLevel $level): array => ['value' => $level->value, 'label' => $level->label()], ActionLevel::cases()),
             'professionals' => array_map(fn (Professional $professional): array => ['value' => $professional->value, 'label' => $professional->label()], Professional::cases()),
         ];
-    }
-
-    /** Final score first, then categories, then domains; by label inside each. */
-    private static function order(ProgramItem $item): string
-    {
-        $place = match ($item->scope) {
-            ItemScope::Final => 0,
-            ItemScope::Category => 1,
-            ItemScope::Domain => 2,
-        };
-
-        return "{$place}|{$item->label}";
     }
 
     /**
