@@ -23,7 +23,7 @@ final readonly class DocumentTemplates
     {
         return match ($kind) {
             DocumentKind::Policy => $this->policy->template()->sections,
-            default => [],
+            default => [new PolicySection('body', $kind->label(), $this->base($kind), removable: false, required: true)],
         };
     }
 
@@ -41,5 +41,16 @@ final readonly class DocumentTemplates
             'items' => $section->items,
             'list_style' => $section->listStyle,
         ], $this->sections($kind));
+    }
+
+    /**
+     * The text a block starts from. Only the health effects have one: the definition of the numeral 4.7 (literal) and what the
+     * people can do, written as a draft for the company to review.
+     */
+    private function base(DocumentKind $kind): string
+    {
+        return $kind === DocumentKind::HealthEffects
+            ? "Los factores de riesgo psicosocial son aquellos que pueden provocar trastornos de ansiedad, no orgánicos del ciclo sueño-vigilia y de estrés grave y de adaptación, derivado de la naturaleza de las funciones del puesto de trabajo, el tipo de jornada de trabajo y la exposición a acontecimientos traumáticos severos o a actos de violencia laboral al trabajador, por el trabajo desarrollado.\n\nSi usted nota alguno de estos síntomas, puede acudir a su institución de seguridad social o al médico del centro de trabajo, o hablar con Recursos Humanos."
+            : '';
     }
 }

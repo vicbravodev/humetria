@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Support;
 
+use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\PageLinkStatus;
 use App\Modules\Disclosure\Enums\RequirementState;
 use App\Modules\Disclosure\Models\PageLink;
@@ -30,6 +31,7 @@ final readonly class Board
         $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
         $policies = $this->policies->inForce($ids);
         $recorded = $this->delivery->recordedItems($ids);
+        $contents = $this->contents($ids);
         $acknowledgments = $this->delivery->acknowledgments($policies);
         $link = PageLink::query()->first();
         $active = $link !== null && $link->status() === PageLinkStatus::Active;
@@ -39,7 +41,7 @@ final readonly class Board
         $states = [];
 
         foreach ($centers as $center) {
-            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null, $acknowledgments[$center->id] ?? null, $recorded[$center->id] ?? [], $active, $expires));
+            $requirements = $this->requirements->for(new CenterFacts($policies[$center->id] ?? null, $acknowledgments[$center->id] ?? null, $recorded[$center->id] ?? [], $active, $expires, $contents[$center->id] ?? []));
             $state = $this->overall($requirements);
             $states[] = $state->value;
             $rows[] = $this->row($center, $requirements, $state);
@@ -83,5 +85,26 @@ final readonly class Board
             in_array(RequirementState::Notice, $states, true) => RequirementState::Notice,
             default => RequirementState::Met,
         };
+    }
+
+    /**
+     * The incisos (b, c, d, f) with a text published, by work center.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return array<string, list<string>>
+     */
+    private function contents(array $workCenterIds): array
+    {
+        $found = [];
+
+        foreach (DocumentKind::cases() as $kind) {
+            if ($kind->isBlock()) {
+                foreach (array_keys($this->policies->ofKind($kind, $workCenterIds)) as $center) {
+                    $found[$center][] = $kind->inciso();
+                }
+            }
+        }
+
+        return $found;
     }
 }

@@ -21,7 +21,18 @@ final readonly class PolicyStanding
      */
     public function inForce(array $workCenterIds): array
     {
-        $versions = Document::query()->where('kind', DocumentKind::Policy)->where('status', DocumentStatus::Published)->orderBy('version')->get(['id', 'version', 'covers', 'published_at']);
+        return $this->ofKind(DocumentKind::Policy, $workCenterIds);
+    }
+
+    /**
+     * The same for any kind of text: the version of it in force in each work center.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return array<string, PolicyFact> by work center id; a center without one is left out.
+     */
+    public function ofKind(DocumentKind $kind, array $workCenterIds): array
+    {
+        $versions = Document::query()->where('kind', $kind)->where('status', DocumentStatus::Published)->orderBy('version')->get(['id', 'version', 'covers', 'published_at']);
         $reached = [];
 
         foreach (DocumentCenter::query()->whereIn('document_id', $versions->pluck('id'))->whereIn('work_center_id', $workCenterIds)->get(['document_id', 'work_center_id']) as $reach) {

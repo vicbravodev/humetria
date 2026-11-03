@@ -35,6 +35,18 @@ function publishedPolicy(object $test, ?array $centers, array $covers = ['a', 'b
     resolve(PublishPolicy::class)->handle($draft->id, $centers, $covers, true, $test->hr->id);
 }
 
+/** Everything the board asks of a center in front of the people: a means covering a to f and the four blocks of 5.7 published. */
+function everythingAt(object $test, WorkCenter $center): void
+{
+    App\Modules\Disclosure\Models\DisseminationRecord::factory()->covering(['a', 'b', 'c', 'd', 'e', 'f'])->create(['tenant_id' => $test->tenant->id, 'work_center_id' => $center->id]);
+
+    foreach ([App\Modules\Disclosure\Enums\DocumentKind::ViolenceMeasures, App\Modules\Disclosure\Enums\DocumentKind::PreventionMeasures, App\Modules\Disclosure\Enums\DocumentKind::ComplaintMechanism, App\Modules\Disclosure\Enums\DocumentKind::HealthEffects] as $kind) {
+        $draft = resolve(App\Modules\Disclosure\Actions\StartContentDraft::class)->handle($kind, null);
+        resolve(SaveDraft::class)->handle($draft->id, [['key' => 'body', 'text' => 'Texto.', 'items' => []]]);
+        resolve(App\Modules\Disclosure\Actions\PublishContent::class)->handle($draft->id, [$center->id], $test->hr->id);
+    }
+}
+
 /** The board's rows of a center, by code. @return array<string, array<string, mixed>> */
 function boardRows(object $test, string $name): array
 {
@@ -48,10 +60,10 @@ function boardRows(object $test, string $name): array
     return $found;
 }
 
-it('says «Falta» for a center with no policy, and judges nothing else of it', function (): void {
+it('says «Falta» for a center with no policy, and judges only what does not need a policy', function (): void {
     $rows = boardRows($this, 'Planta Norte');
 
-    expect(array_keys($rows))->toBe(['D1'])
+    expect(array_keys($rows))->toBe(['D1', 'D4', 'D5', 'D6', 'D8'])
         ->and($rows['D1'])->toMatchArray(['numeral' => '5.1', 'state' => ['value' => 'missing', 'label' => 'Falta'], 'detail' => 'Aún no hay una política publicada para este centro.']);
 });
 
@@ -97,7 +109,7 @@ it('takes, for each center, the highest version that reached it', function (): v
 it('leaves a center created after the publication without policy, and an archived one out', function (): void {
     publishedPolicy($this, null);
     foreach ([$this->north, $this->south] as $center) {
-        App\Modules\Disclosure\Models\DisseminationRecord::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+        everythingAt($this, $center);
     }
     WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Nueva']);
     WorkCenter::factory()->for($this->tenant)->archived()->create(['name' => 'Planta Cerrada']);
@@ -114,7 +126,7 @@ it('counts every center in the summary and lists them ten at a time, by name', f
         WorkCenter::factory()->for($this->tenant)->create(['name' => sprintf('Centro %02d', $number)]);
     }
     publishedPolicy($this, [$this->north->id]);
-    App\Modules\Disclosure\Models\DisseminationRecord::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id]);
+    everythingAt($this, $this->north);
 
     $this->actingAs($this->hr)->get(route('tenant.disclosure.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
@@ -130,7 +142,7 @@ it('counts every center in the summary and lists them ten at a time, by name', f
 
 it('gives each center the overall state of its worst row', function (): void {
     publishedPolicy($this, [$this->north->id], ['a']);
-    App\Modules\Disclosure\Models\DisseminationRecord::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id]);
+    everythingAt($this, $this->north);
 
     $this->actingAs($this->hr)->get(route('tenant.disclosure.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page

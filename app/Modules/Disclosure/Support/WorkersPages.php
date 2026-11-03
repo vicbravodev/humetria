@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Support;
 
+use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
@@ -40,7 +41,7 @@ final readonly class WorkersPages
     /**
      * What one center publishes: the policy in force there.
      *
-     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null}
+     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, publishedOn: string}|null>}
      */
     public function center(WorkCenterSummary $center): array
     {
@@ -56,6 +57,30 @@ final readonly class WorkersPages
                 'publishedOn' => Days::moment($fact->publishedAt),
                 'sections' => PolicyText::sections($document->content, $this->workCenters->profile($center->id)->legalName ?? ''),
             ],
+            'blocks' => $this->blocks($center),
         ];
+    }
+
+    /**
+     * The blocks of 5.7 the company wrote (b, c, d and f), each with the text in force in the center and the day it was
+     * published, or null while there is none. What other tools provide is joined here, never in place of it.
+     *
+     * @return array<string, array{text: string, publishedOn: string}|null>
+     */
+    private function blocks(WorkCenterSummary $center): array
+    {
+        $blocks = [];
+
+        foreach (DocumentKind::cases() as $kind) {
+            if (! $kind->isBlock()) {
+                continue;
+            }
+
+            $fact = $this->policies->ofKind($kind, [$center->id])[$center->id] ?? null;
+            $document = $fact === null ? null : Document::query()->find($fact->documentId);
+            $blocks[$kind->inciso()] = $fact === null || $document === null ? null : ['text' => ContentPages::text($document), 'publishedOn' => Days::moment($fact->publishedAt)];
+        }
+
+        return $blocks;
     }
 }

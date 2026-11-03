@@ -10,9 +10,8 @@ use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Events\PolicyPublished;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Support\PublicationCenters;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
-use App\Modules\Tenancy\Contracts\WorkCenters;
-use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -30,7 +29,7 @@ final readonly class PublishPolicy
 {
     private const array INCISOS = ['a', 'b', 'c'];
 
-    public function __construct(private CurrentTenant $tenant, private WorkCenters $workCenters, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $tenant, private PublicationCenters $publication, private RecordAudit $audit) {}
 
     /**
      * @param  list<string>|null  $workCenterIds  Work centers in use; null means every one in use.
@@ -41,7 +40,7 @@ final readonly class PublishPolicy
      */
     public function handle(string $documentId, ?array $workCenterIds, array $covers, bool $reviewed, int $userId): Document
     {
-        $centers = $this->centers($workCenterIds);
+        $centers = $this->publication->resolve($workCenterIds);
         $covers = array_values(array_unique($covers));
         sort($covers);
         $tenantId = $this->tenant->id();
@@ -74,28 +73,6 @@ final readonly class PublishPolicy
         });
 
         return $published;
-    }
-
-    /**
-     * The centers to publish to, in order: the ones named, which must be in use, or all of those in use.
-     *
-     * @param  list<string>|null  $named
-     * @return list<string>
-     *
-     * @throws ValidationException
-     */
-    private function centers(?array $named): array
-    {
-        $inUse = array_map(fn (WorkCenterSummary $center): string => $center->id, array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
-        $centers = $named === null ? $inUse : array_values(array_unique($named));
-
-        if ($centers === [] || array_diff($centers, $inUse) !== []) {
-            throw ValidationException::withMessages(['work_center_ids' => 'Elige al menos un centro de trabajo de la empresa.']);
-        }
-
-        sort($centers);
-
-        return $centers;
     }
 
     /**

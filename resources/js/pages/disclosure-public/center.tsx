@@ -1,16 +1,25 @@
 import { Head, Link } from '@inertiajs/react';
 import { ChevronLeft, Info } from 'lucide-react';
 import PersonShell from '@/components/disclosure/person-shell';
+import PlainText from '@/components/disclosure/plain-text';
 import PolicySections from '@/components/disclosure/policy-sections';
 import PublicBlock from '@/components/disclosure/public-block';
 import { show } from '@/routes/workers';
 import type { PublicCenterProps } from '@/types';
+
+const OTHER_BLOCKS = [
+    { inciso: 'b', title: 'Medidas contra la violencia laboral' },
+    { inciso: 'c', title: 'Medidas y acciones de prevención y control' },
+    { inciso: 'd', title: 'Cómo presentar una queja' },
+    { inciso: 'f', title: 'Posibles alteraciones a la salud' },
+] as const;
 
 export default function PublicCenter({
     token,
     company,
     center,
     others,
+    blocks,
     policy,
 }: PublicCenterProps) {
     return (
@@ -63,6 +72,28 @@ export default function PublicCenter({
                         </>
                     )}
                 </PublicBlock>
+                {OTHER_BLOCKS.map(({ inciso, title }) => (
+                    <PublicBlock
+                        key={inciso}
+                        id={`block-${inciso}`}
+                        inciso={inciso}
+                        title={title}
+                    >
+                        {blocks[inciso] === undefined ||
+                        blocks[inciso] === null ? (
+                            <p className="text-muted-foreground">
+                                Aún no hay información publicada.
+                            </p>
+                        ) : (
+                            <>
+                                <PlainText text={blocks[inciso].text} />
+                                <p className="text-sm text-muted-foreground">
+                                    Publicado el {blocks[inciso].publishedOn}.
+                                </p>
+                            </>
+                        )}
+                    </PublicBlock>
+                ))}
             </div>
         </PersonShell>
     );

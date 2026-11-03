@@ -114,5 +114,5 @@ it('does not judge delivery of a center without policy', function (): void {
     posterAt($this, $bare);
 
     $this->actingAs($this->hr)->get(route('tenant.disclosure.index', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('centers.data.0.requirements', fn ($rows) => collect($rows)->pluck('code')->all() === ['D1']));
+        ->assertInertia(fn (Assert $page) => $page->where('centers.data.0.requirements', fn ($rows) => collect($rows)->pluck('code')->all() === ['D1', 'D4', 'D5', 'D6', 'D8']));
 });

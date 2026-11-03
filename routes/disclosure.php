@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Disclosure\Http\Controllers\ContentController;
 use App\Modules\Disclosure\Http\Controllers\DisclosureController;
 use App\Modules\Disclosure\Http\Controllers\DisseminationController;
 use App\Modules\Disclosure\Http\Controllers\PageLinkController;
@@ -34,3 +35,10 @@ Route::post('admin/{tenant:slug}/disclosure/page/link/rotation', [PageLinkContro
 Route::post('admin/{tenant:slug}/disclosure/page/link/disabled', [PageLinkController::class, 'disable'])->where('tenant', $notReserved)->name('tenant.disclosure.page.disable');
 Route::post('admin/{tenant:slug}/disclosure/page/link/enabled', [PageLinkController::class, 'enable'])->where('tenant', $notReserved)->name('tenant.disclosure.page.enable');
 Route::put('admin/{tenant:slug}/disclosure/page/link/expiry', [PageLinkController::class, 'expiry'])->where('tenant', $notReserved)->name('tenant.disclosure.page.expiry');
+
+// The blocks of 5.7 the company writes by hand (b, c, d and f): a draft, its publication to centers and nothing deleted once published.
+Route::get('admin/{tenant:slug}/disclosure/contents', [ContentController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.contents');
+Route::post('admin/{tenant:slug}/disclosure/contents/{kind}/draft', [ContentController::class, 'start'])->where('tenant', $notReserved)->whereIn('kind', ['violence_measures', 'prevention_measures', 'complaint_mechanism', 'health_effects'])->name('tenant.disclosure.contents.draft.store');
+Route::put('admin/{tenant:slug}/disclosure/contents/{kind}/draft/{document}', [ContentController::class, 'save'])->where('tenant', $notReserved)->whereIn('kind', ['violence_measures', 'prevention_measures', 'complaint_mechanism', 'health_effects'])->whereUuid('document')->name('tenant.disclosure.contents.draft.update');
+Route::delete('admin/{tenant:slug}/disclosure/contents/{kind}/draft/{document}', [ContentController::class, 'discard'])->where('tenant', $notReserved)->whereIn('kind', ['violence_measures', 'prevention_measures', 'complaint_mechanism', 'health_effects'])->whereUuid('document')->name('tenant.disclosure.contents.draft.destroy');
+Route::post('admin/{tenant:slug}/disclosure/contents/{kind}/draft/{document}/publish', [ContentController::class, 'publish'])->where('tenant', $notReserved)->whereIn('kind', ['violence_measures', 'prevention_measures', 'complaint_mechanism', 'health_effects'])->whereUuid('document')->name('tenant.disclosure.contents.publish');

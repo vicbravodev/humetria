@@ -316,3 +316,30 @@ it('keeps the public page free of cookies and of policy violations', function ()
         ->assertScript('() => document.cookie', '')
         ->assertScript(cspViolations(), '[]');
 });
+
+it('shows the blocks of 5.7 the company writes by hand', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('disclosure/contents', "{$url}/disclosure/contents", $dark, $mobile)
+        ->assertSee('Contenidos para las personas')
+        ->assertSee('Medidas contra la violencia laboral')
+        ->assertSee('Posibles alteraciones a la salud')
+        ->assertSee('Sin publicar');
+})->with($looks);
+
+it('writes a block, saves it and publishes it', function (): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+
+    visit("{$url}/disclosure/contents")
+        ->click('section[aria-labelledby="block-violence_measures"] button:has-text("Escribir")')
+        ->assertSee('Guardar borrador')
+        ->fill('#content-violence_measures', 'Las quejas las atiende la Comisión.')
+        ->press('Guardar borrador')
+        ->assertSee('Borrador guardado.')
+        ->press('Publicar')
+        ->assertSee('Publicar: Medidas contra la violencia laboral')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Publicado: versión 1.')
+        ->assertSee('Las quejas las atiende la Comisión.');
+});

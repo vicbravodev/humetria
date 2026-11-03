@@ -182,6 +182,8 @@ export type PublicCenterProps = {
     center: PublicCenter;
     /** Whether the company has another center to choose from. */
     others: boolean;
+    /** What the company published for b, c, d and f in the center, by inciso; null while there is nothing. */
+    blocks: Record<string, PublicBlockText | null>;
     /** The policy in force in the center; null while it has none. */
     policy: {
         version: number;
@@ -189,3 +191,28 @@ export type PublicCenterProps = {
         sections: PolicyTextSection[];
     } | null;
 };
+
+/** A block of 5.7 the company writes by hand (b, c, d or f): the text in force and the draft being written. */
+export type ContentBlock = {
+    kind: string;
+    inciso: string;
+    label: string;
+    /** How to write it: what the norm asks and what to avoid. */
+    note: string;
+    latest: {
+        id: string;
+        version: number;
+        publishedOn: string | null;
+        text: string;
+        centers: number;
+    } | null;
+    draft: { id: string; text: string } | null;
+};
+
+export type ContentsProps = {
+    blocks: ContentBlock[];
+    centersInUse: number;
+};
+
+/** What the company published for a block of 5.7 in a center: the words and the day. */
+export type PublicBlockText = { text: string; publishedOn: string };

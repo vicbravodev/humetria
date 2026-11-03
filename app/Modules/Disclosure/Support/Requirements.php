@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Support;
 
+use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\RequirementState;
 
 /**
@@ -19,7 +20,15 @@ final readonly class Requirements
      */
     public function for(CenterFacts $facts): array
     {
-        return [...$this->policy($facts->policy), ...$this->delivery($facts), ...$this->link($facts)];
+        return [
+            ...$this->policy($facts->policy),
+            ...$this->delivery($facts),
+            ...$this->block($facts, 'D4', DocumentKind::ViolenceMeasures),
+            ...$this->block($facts, 'D5', DocumentKind::PreventionMeasures),
+            ...$this->block($facts, 'D6', DocumentKind::ComplaintMechanism),
+            ...$this->block($facts, 'D8', DocumentKind::HealthEffects),
+            ...$this->link($facts),
+        ];
     }
 
     /**
@@ -83,5 +92,25 @@ final readonly class Requirements
     private function link(CenterFacts $facts): array
     {
         return $facts->linkExpiresOn === null ? [] : [new Requirement('D10', '10.4', 'Vigencia del enlace de la página', RequirementState::Notice, "El enlace de la página vence el {$facts->linkExpiresOn}: después ya no abrirá. Cambie el vencimiento o genere otro antes.")];
+    }
+
+    /**
+     * D4, D5, D6 and D8: a block of 5.7 has something published for the center (a text the company wrote or what another tool
+     * provides) and it is in front of the people (criterio C-52). The center is judged whether or not it has a policy.
+     *
+     * @return list<Requirement>
+     */
+    private function block(CenterFacts $facts, string $code, DocumentKind $kind): array
+    {
+        $numeral = "5.7 {$kind->inciso()}";
+
+        if (! $facts->hasContent($kind->inciso())) {
+            return [new Requirement($code, $numeral, $kind->label(), RequirementState::Missing, "Aún no hay información publicada sobre {$kind->topic()}.")];
+        }
+
+        return [$facts->delivered($kind->inciso())
+            ? new Requirement($code, $numeral, $kind->label(), RequirementState::Met, null)
+            : new Requirement($code, $numeral, $kind->label(), RequirementState::Missing, 'Está publicada, pero no está a la vista de las personas: publique la página o registre un medio físico que la cubra.'),
+        ];
     }
 }
