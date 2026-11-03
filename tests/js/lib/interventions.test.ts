@@ -1,10 +1,42 @@
 import { describe, expect, it } from 'vitest';
 import {
+    activeTab,
+    meterText,
     programStartText,
     programTrail,
+    requirementText,
     SCOPE_LABELS,
+    stateVariant,
+    statusVariant,
+    subjectsText,
+    tabHref,
 } from '@/lib/interventions';
 import { index, show } from '@/routes/tenant/campaigns';
+import type { ProgramAction } from '@/types';
+
+const action = (overrides: Partial<ProgramAction> = {}): ProgramAction => ({
+    id: 'a1',
+    itemId: 'i1',
+    itemLabel: 'Calificación final',
+    level: { value: 1, label: 'Primer nivel: organizacional' },
+    kind: { value: 'policy_review', label: 'Revisión de la política' },
+    title: 'Revisar',
+    description: 'Revisar la política',
+    subjects: { value: 'center', label: 'Todo el centro de trabajo' },
+    areas: [],
+    hiddenAreas: 0,
+    startsOn: null,
+    startsOnLabel: null,
+    dueOn: '2026-12-15',
+    dueOnLabel: '15 dic 2026',
+    responsible: { name: 'Laura', userId: null },
+    professional: null,
+    status: { value: 'planned', label: 'Planeada' },
+    overdue: false,
+    history: [],
+    completedOnLabel: null,
+    ...overrides,
+});
 
 describe('programStartText', () => {
     it('says the results ask for a Programa', () => {
@@ -49,5 +81,102 @@ describe('programTrail', () => {
             { title: 'Planta Norte', href: show(['acme', 'c1']) },
             { title: 'Programa de intervención' },
         ]);
+    });
+});
+
+describe('tabs', () => {
+    it('takes the tab from the address and opens the rows without one', () => {
+        expect(activeTab('?tab=actions')).toBe('actions');
+        expect(activeTab('?tab=follow-up&page=2')).toBe('follow-up');
+        expect(activeTab('')).toBe('rows');
+        expect(activeTab('?tab=nonsense')).toBe('rows');
+    });
+
+    it('writes the address of each tab, the rows being the page itself', () => {
+        expect(tabHref('/admin/acme/p', 'rows')).toBe('/admin/acme/p');
+        expect(tabHref('/admin/acme/p', 'actions')).toBe(
+            '/admin/acme/p?tab=actions',
+        );
+    });
+});
+
+describe('variants', () => {
+    it('gives each state of an action its look', () => {
+        expect(statusVariant('planned')).toBe('outline');
+        expect(statusVariant('in_progress')).toBe('default');
+        expect(statusVariant('done')).toBe('success');
+        expect(statusVariant('cancelled')).toBe('secondary');
+    });
+
+    it('gives each state of a Programa its look', () => {
+        expect(stateVariant('none')).toBe('secondary');
+        expect(stateVariant('in_progress')).toBe('default');
+        expect(stateVariant('overdue')).toBe('destructive');
+        expect(stateVariant('done')).toBe('success');
+    });
+});
+
+describe('meterText', () => {
+    it('counts the actions done, in the singular and the plural', () => {
+        expect(meterText({ done: 3, total: 8 })).toBe('3 de 8 acciones hechas');
+        expect(meterText({ done: 0, total: 1 })).toBe('0 de 1 acción hecha');
+    });
+
+    it('says there are no actions yet', () => {
+        expect(meterText({ done: 0, total: 0 })).toBe('Aún no hay acciones');
+    });
+});
+
+describe('subjectsText', () => {
+    it('says the whole center', () => {
+        expect(subjectsText(action())).toBe('Todo el centro de trabajo');
+    });
+
+    it('lists the areas shown, and how many more are hidden', () => {
+        const areas = [
+            { id: 'a', name: 'Producción' },
+            { id: 'b', name: 'Ventas' },
+        ];
+        const areaAction = action({
+            subjects: { value: 'areas', label: 'Áreas' },
+            areas,
+        });
+
+        expect(subjectsText(areaAction)).toBe('Producción, Ventas');
+        expect(subjectsText({ ...areaAction, hiddenAreas: 2 })).toBe(
+            'Producción, Ventas y 2 más',
+        );
+    });
+});
+
+describe('requirementText', () => {
+    it('says what each line of the Tabla stands at', () => {
+        const line = {
+            key: 'analysis',
+            text: 'Análisis',
+            detail: null,
+        };
+
+        expect(requirementText({ ...line, status: 'covered' })).toBe(
+            'Cubierto',
+        );
+        expect(requirementText({ ...line, status: 'optional' })).toBe(
+            'Opcional',
+        );
+        expect(requirementText({ ...line, status: 'missing' })).toBe('Falta');
+        expect(
+            requirementText({
+                ...line,
+                status: 'missing',
+                detail: '2 de 3 filas',
+            }),
+        ).toBe('Falta · 2 de 3 filas');
+        expect(
+            requirementText({
+                ...line,
+                status: 'covered',
+                detail: '3 de 3 filas',
+            }),
+        ).toBe('Cubierto · 3 de 3 filas');
     });
 });

@@ -76,6 +76,15 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.campaigns.report', [$tenant, $closed->id]);
     }, ['shares']],
+    'the Programas de intervención' => ['interventions/index', fn () => route('tenant.interventions.index', listsCompany()[0]), ['evaluations']],
+    'a Programa de intervención' => ['interventions/show', function () {
+        [$tenant] = listsCompany();
+        $closed = closedEvaluationWith($tenant, nom035Answers('nom035.guide-ii', 'always'));
+        workIn($tenant);
+        resolve(App\Modules\Interventions\Actions\CreateProgram::class)->handle($closed->id, null);
+
+        return route('tenant.campaigns.program', [$tenant, $closed->id]);
+    }, ['actions']],
     'Ley Silla centers' => ['seating/index', function () {
         [$tenant] = listsCompany();
 

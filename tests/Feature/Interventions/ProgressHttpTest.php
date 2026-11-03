@@ -113,7 +113,10 @@ it('shows where the Programa stands: its state, its meter, each row and each act
         ->assertInertia(fn (Assert $page) => $page
             ->where('program.state', ['value' => 'overdue', 'label' => 'Con acciones vencidas'])
             ->where('program.meter', ['done' => 1, 'total' => 3])
+            ->where('program.overdue', 1)
             ->where('program.items.0.state', ['value' => 'in_progress', 'label' => 'En curso'])
+            ->where('program.items.0.meter', ['done' => 1, 'total' => 3])
+            ->where('program.items.1.meter', ['done' => 0, 'total' => 0])
             ->where('program.items.1.state', ['value' => 'none', 'label' => 'Sin acciones'])
             ->where('actions.data', fn ($rows) => collect($rows)->firstWhere('id', $overdue->id)['overdue'] === true
                 && collect($rows)->firstWhere('id', $this->action->id)['overdue'] === false

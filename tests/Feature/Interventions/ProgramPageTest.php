@@ -7,7 +7,9 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Interventions\Actions\CreateProgram;
 use App\Modules\Interventions\Http\Controllers\ProgramController;
 use App\Modules\Interventions\Models\Program;
+use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgramItem;
+use App\Modules\Interventions\Models\ProgressEntry;
 use App\Modules\Interventions\Support\ProgramPages;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -51,6 +53,7 @@ it('shows the Programa of a closed evaluation with its rows, from the most gener
             ->where('program.items.0.level', ['value' => 'very_high', 'label' => 'Muy alto'])
             ->where('program.items.0.manual', false)
             ->where('program.items.1.scope', 'category')
+            ->where('today', '2026-11-20')
             ->where('can', ['manage' => true]));
 });
 
@@ -147,4 +150,23 @@ it('sends a guest to sign in', function (): void {
     $campaign = plantEvaluation($this, 'always');
 
     $this->get(route('tenant.campaigns.program', [$this->tenant, $campaign->id]))->assertRedirect(route('login'));
+});
+
+it('reads the Programa with a fixed number of queries, however many actions it has', function (): void {
+    $campaign = plantEvaluation($this, 'always');
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.program.store', [$this->tenant, $campaign->id]));
+    $program = Program::query()->sole();
+    $item = ProgramItem::query()->where('program_id', $program->id)->firstOrFail();
+    $url = route('tenant.campaigns.program', [$this->tenant, $campaign->id, 'tab' => 'actions']);
+
+    foreach (range(1, 8) as $ignored) {
+        $action = ProgramAction::factory()->create(['tenant_id' => $this->tenant->id, 'program_id' => $program->id, 'item_id' => $item->id]);
+        ProgressEntry::factory()->create(['tenant_id' => $this->tenant->id, 'action_id' => $action->id]);
+    }
+
+    // The first request warms what every page loads (permissions).
+    $this->actingAs($this->hr)->get($url)->assertOk();
+
+    $this->expectsDatabaseQueryCount(28);
+    $this->actingAs($this->hr)->get($url)->assertOk();
 });

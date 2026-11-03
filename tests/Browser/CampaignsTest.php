@@ -128,8 +128,10 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
     $tenant = campaignsCompany();
     staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
 
+    // NOM-035 opens its submenu (Evaluaciones, Programas); its first page is the evaluations.
     visit('/admin/acme')
         ->click('NOM-035')
+        ->click('Evaluaciones')
         ->assertPathIs('/admin/acme/campaigns')
         ->click('button:has-text("Evaluar")')
         ->assertSee('Planta Norte · 60 personas')

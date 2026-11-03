@@ -75,6 +75,7 @@ final readonly class ProgramPages
             'followUpSuggestion' => $canManage && $program !== null && $later === [] ? $this->followUpSuggestion($campaign->workCenterId) : null,
             'areaOptions' => $canManage && $program !== null ? $this->areaOptions($areas, $items) : null,
             'members' => $canManage ? array_map(fn ($member): array => ['id' => $member->userId, 'name' => $member->name], $this->members->all()) : null,
+            'today' => ProgramClock::today(),
             'can' => ['manage' => $canManage],
         ];
     }
@@ -110,7 +111,7 @@ final readonly class ProgramPages
 
         foreach ($items as $item) {
             $statuses = array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, array_filter($actions, fn (ProgramAction $action): bool => $action->item_id === $item->id)));
-            $rows[] = ['item' => $item, 'state' => ProgramProgress::rowState($statuses), 'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null];
+            $rows[] = ['item' => $item, 'state' => ProgramProgress::rowState($statuses), 'meter' => ProgramProgress::meter($statuses), 'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null];
         }
 
         $kinds = array_values(array_map(fn (ProgramAction $action): ActionKind => $action->kind, array_filter($actions, fn (ProgramAction $action): bool => $action->status !== ActionStatus::Cancelled)));
@@ -122,13 +123,14 @@ final readonly class ProgramPages
             }
         }
 
-        $overdue = array_any($actions, fn (ProgramAction $action): bool => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), $today));
+        $overdueCount = count(array_filter($actions, fn (ProgramAction $action): bool => ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), $today)));
 
         return [
             'id' => $program->id,
             'highestLevel' => self::level($program->highest_level),
             'responsible' => $program->responsible_name === null ? null : ['name' => $program->responsible_name, 'userId' => $program->responsible_user_id],
-            'state' => self::labeled(ProgramProgress::programState($rows, $overdue)),
+            'state' => self::labeled(ProgramProgress::programState($rows, $overdueCount > 0)),
+            'overdue' => $overdueCount,
             'requirements' => TableChecklist::for($program->highest_level, $kinds, $analysisRows),
             'meter' => ProgramProgress::meter(array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, $actions))),
             'items' => array_map(fn (array $row): array => [
@@ -139,6 +141,7 @@ final readonly class ProgramPages
                 'level' => self::level($row['item']->highest_level),
                 'manual' => $row['item']->origin === ItemOrigin::Manual,
                 'state' => self::labeled($row['state']),
+                'meter' => $row['meter'],
                 'analysis' => $row['item']->analysis,
                 'missingAnalysis' => in_array($row['item']->highest_level, [RiskLevel::High, RiskLevel::VeryHigh], true) && trim($row['item']->analysis ?? '') === '',
                 'followUp' => self::followUp($row['item'], $later),

@@ -160,6 +160,27 @@ describe('complianceNavItems', () => {
         ]);
     });
 
+    it('lists the NOM-035 sub-links: the evaluations and the Programas de intervención, for who may read them', () => {
+        const subLinks = (tenant: ReturnType<typeof acme>) =>
+            (
+                complianceNavItems(tenant).find(
+                    (item) => item.title === 'NOM-035',
+                )?.children ?? []
+            ).map((item) => [item.title, toUrl(item.href)]);
+        const tenant = acme(true, true, 'owner');
+
+        expect(subLinks(tenant)).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Programas', '/admin/acme/programs'],
+        ]);
+        expect(
+            subLinks({
+                ...tenant,
+                can: { ...tenant.can, view_interventions: false },
+            }),
+        ).toEqual([]);
+    });
+
     it('counts the evaluations in course on NOM-035', () => {
         expect(complianceNavItems(acme(), 2)[0]?.badge).toBe(2);
         expect(complianceNavItems(acme(), 2)[1]?.badge).toBeUndefined();
