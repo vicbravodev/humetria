@@ -6,4 +6,4 @@
 - [`texto-de-referencia.md`](texto-de-referencia.md): el texto literal de las Guías I, II y III, sus tablas de
   calificación y rangos, la muestra y los criterios de la STPS. Las pruebas del instrumento se escriben contra él.
 - [`fuentes/`](fuentes/README.md): copias de las fuentes oficiales con fecha de descarga y huella.
-- [`gaps-pendientes.md`](gaps-pendientes.md): lo que la norma pide y Humetría todavía no gestiona, en el orden propuesto para cerrarlo, más los hallazgos de usabilidad.
+- [`gaps-pendientes.md`](gaps-pendientes.md): lo que sigue pendiente y lo que está fuera de alcance. Hoy ya no queda ningún gap de la norma por cerrar.

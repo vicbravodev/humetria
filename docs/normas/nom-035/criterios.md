@@ -370,7 +370,8 @@ abre nada ni nombra a la empresa.
 
 **Qué dice la norma.** «El resultado (…) deberá constar en un informe que contenga lo siguiente: a) Datos del centro de
 trabajo verificado (…) h) Datos del responsable de la evaluación» (num. 7.7). El informe es también lo que se pone a
-disposición de los trabajadores (num. 7.8).
+disposición de los trabajadores (num. 7.8). Para la plantilla hay además un camino propio, la página de las personas (C-54 y
+C-55): muestra **resultados** (no el informe), publicados por RH; el informe sigue siendo para RH, la dirección y el auditor.
 
 ---
 
@@ -667,7 +668,9 @@ sin Markdown ni HTML, que en una página pública serían un vector de inyecció
 al entorno favorable, las medidas de prevención y control, los mecanismos de queja, los resultados y las posibles
 alteraciones a la salud. Un inciso está **entregado** en un centro cuando la **página de las personas está activa** o RH
 **registró un medio físico** de ese centro que lo cubre (cartel, boletín, folleto, reunión). Lo que viene del Programa y del
-canal de quejas se muestra tal como está; el texto que RH escribe se **suma**, nunca los reemplaza.
+canal de quejas se muestra tal como está (del Programa, solo las medidas de todo el centro, de primer y segundo nivel, y solo
+si RH lo elige al publicar los resultados; del canal, su enlace, si acepta avisos anónimos y qué recibe); el texto que RH
+escribe se **suma**, nunca los reemplaza.
 
 **Qué dice la norma.** «Difundir y proporcionar información a los trabajadores sobre: a) la política (…); f) las posibles
 alteraciones a la salud por la exposición a los factores de riesgo psicosocial» (num. 5.7). «La evidencia para dar
@@ -711,7 +714,7 @@ cifras con riesgo alto lleguen sin contexto.
 enlace se deriva de la llave de la aplicación y una versión, para poder volver a verlo sin cambiarlo; solo se guarda su
 huella. RH puede **rotarlo** (el anterior deja de servir), **desactivarlo** y ponerle un vencimiento opcional de hasta 36
 meses. Cualquier causa de fallo (desconocido, rotado, desactivado, vencido, empresa bloqueada, centro ajeno) da la misma
-respuesta neutra, sin nombrar a la empresa. La página **nunca contiene** nombres, correos, ids de personas, áreas,
+respuesta neutra, sin nombrar a la empresa. La página no abre sesión ni pone cookies y **no registra quién la abre**; **nunca contiene** nombres, correos, ids de personas, áreas,
 respuestas, medidas dirigidas a personas ni nada de la Guía I; no registra quién la abre.
 
 **Qué dice la norma.** Nada: 5.7 no pide una página web.
@@ -776,23 +779,28 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-47 | `tests/Unit/MinimumGroupTest.php`, `tests/Feature/Complaints/ChannelStatusTest.php` (4 y 5, supresión complementaria, sin desgloses) |
 | C-48 | `tests/Feature/Complaints/PurgeTest.php` (23 meses 29 días y 24 meses, retención legal, esqueleto, idempotencia), `tests/Feature/Complaints/ReporterEmailTest.php` (el correo a los 30 días) |
 | C-49 | `tests/Feature/Complaints/InboxTest.php`, `tests/Feature/Complaints/DigestTest.php` (el límite de los días y un recordatorio por día) |
+| C-50 | `tests/Feature/Disclosure/PolicyDraftTest.php`, `PublishPolicyTest.php` (versiones 1 y 2, el candado, un UPDATE o DELETE crudo de lo publicado falla, un subconjunto de centros solo sustituye en esos), `SchemaTest.php`, `BoardTest.php` (D1 y D2) |
+| C-51 | `tests/Feature/Instruments/Nom035PolicyTest.php` (cada texto de la Guía IV contra el anexo), `PublishPolicyTest.php` (responsables, recursos y la revisión obligatorios), `PolicyDraftHttpTest.php` |
+| C-52 | `tests/Feature/Disclosure/DisseminationRecordsTest.php`, `ContentsTest.php`, `AdaptersTest.php` (lista blanca del Programa y del canal), `BoardDeliveryTest.php` (D3), `PosterAndDossierTest.php` (expediente sin nombres) |
+| C-53 | `tests/Feature/Disclosure/RequestAcknowledgmentsTest.php` (499, 500 y 501 personas, ingresos), `PortalPolicyTest.php`, `ManualAcknowledgmentsTest.php`, `DisseminationPageTest.php`, `SendPolicyReminderTest.php` |
+| C-54 | `tests/Feature/Disclosure/ResultsForPeopleTest.php` (4 contra 5, solo `areaId = null`, publicar y retirar), `BoardResultsTest.php` (D7), `PrivacyTest.php` |
+| C-55 | `tests/Feature/Disclosure/PageLinkTest.php`, `PageLinkPageTest.php`, `WorkersPageTest.php` (el mismo 404 por toda causa, sin sesión ni cookies, encabezados, límites), `PrivacyTest.php`, `tests/Browser/DisclosureTest.php` |
+| C-56 | `tests/Feature/Disclosure/BoardResultsTest.php` (D9) |
 
 C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
 ## Lo que la plataforma no cubre (por ahora)
 
-Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona (el orden para cerrarlas está en
+Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona (lo que sigue pendiente está en
 [`gaps-pendientes.md`](gaps-pendientes.md)):
 
-- política de prevención (5.1, Guía IV);
-- difusión de información (5.7);
 - integración al diagnóstico de seguridad y salud de la NOM-030 (7.6).
 
 Los exámenes médicos y las evaluaciones psicológicas (5.6) los hace un tercero: Humetría deja la constancia de la
 canalización y de la atención (C-28), no los practica ni guarda su resultado.
 
-La consulta de los trabajadores (7.8) se cumple con el informe impreso o publicado por la empresa: no hay todavía un
-acceso propio para los trabajadores.
+La exención del numeral 2 (último párrafo) para quien tiene el certificado vigente de la NMX-R-025-SCFI-2015 no se calcula:
+un centro certificado puede publicar el texto de 5.7 d y listo.
 
 ## Si la norma cambia
 
