@@ -6,9 +6,11 @@ namespace App\Modules\Organization\Http\Requests;
 
 use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Enums\Gender;
+use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -83,6 +85,12 @@ final class EmployeeRequest extends FormRequest
             'area' => ['required', 'string', 'max:120', self::SINGLE_LINE],
             'job_title' => ['required', 'string', 'max:150', self::SINGLE_LINE],
             'employee_number' => ['nullable', 'string', 'max:50', self::SINGLE_LINE],
+            'job_category' => ['nullable', 'required_with:job_level', 'string', 'max:120', self::SINGLE_LINE],
+            'job_level' => ['nullable', 'required_with:job_category', 'string', 'max:60', self::SINGLE_LINE],
+            // Today as the company counts it: in Mexico City, not in UTC.
+            'hired_on' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()],
+            'staff_group' => ['nullable', 'string', Rule::in(array_column(StaffGroup::cases(), 'value'))],
+            'state' => ['nullable', 'string', Rule::in(array_keys(resolve(WorkCenters::class)->states()))],
         ];
     }
 
@@ -128,6 +136,11 @@ final class EmployeeRequest extends FormRequest
             area: $this->string('area')->trim()->toString(),
             jobTitle: $this->string('job_title')->toString(),
             employeeNumber: $this->filled('employee_number') ? $this->string('employee_number')->toString() : null,
+            jobCategory: $this->filled('job_category') ? $this->string('job_category')->trim()->toString() : null,
+            jobLevel: $this->filled('job_level') ? $this->string('job_level')->trim()->toString() : null,
+            hiredOn: $this->date('hired_on', 'Y-m-d')?->toImmutable(),
+            staffGroup: $this->filled('staff_group') ? StaffGroup::from($this->string('staff_group')->toString()) : null,
+            state: $this->filled('state') ? $this->string('state')->toString() : null,
         );
     }
 

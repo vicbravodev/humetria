@@ -12,6 +12,7 @@ export default function EmployeeChoiceField({
     defaultValue,
     error,
     allowNew = false,
+    placeholder,
 }: {
     name: string;
     label: string;
@@ -19,6 +20,8 @@ export default function EmployeeChoiceField({
     defaultValue: ChoiceOption | undefined;
     error: string | undefined;
     allowNew?: boolean;
+    /** What shows while nothing is chosen; by default it asks to choose, or to type when `allowNew`. */
+    placeholder?: string;
 }) {
     const id = `employee-${name}`;
 
@@ -30,7 +33,10 @@ export default function EmployeeChoiceField({
                 name={name}
                 source={source}
                 defaultValue={defaultValue}
-                placeholder={allowNew ? 'Elige o escribe una' : 'Elige uno'}
+                placeholder={
+                    placeholder ??
+                    (allowNew ? 'Elige o escribe una' : 'Elige uno')
+                }
                 invalid={error !== undefined}
                 describedBy={error === undefined ? undefined : `${id}-error`}
             />

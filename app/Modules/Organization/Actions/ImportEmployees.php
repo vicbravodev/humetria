@@ -34,11 +34,12 @@ final readonly class ImportEmployees
                 $attributes = EmployeeAttributes::from($row->data, $area);
 
                 if ($row->existingId === null) {
-                    $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes]);
+                    $created = Employee::query()->create(['tenant_id' => $this->currentTenant->id(), ...$attributes, ...EmployeeAttributes::payScale($row->data, null)]);
                     event(new EmployeeCreated($created->tenant_id, $created->id, $row->data->workCenterId));
                 } else {
                     $employee = Employee::query()->findOrFail($row->existingId);
                     $from = $employee->work_center_id;
+                    // The import does not read the pay scale columns yet: it leaves them as they are.
                     $employee->update($attributes);
 
                     // As moving them by hand: an open evaluation of the old work center lets them go (criterio C-24).

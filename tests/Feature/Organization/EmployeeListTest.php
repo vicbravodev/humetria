@@ -50,6 +50,7 @@ it('lists the active employees by name, with their center and area', function ()
                 'id' => $ana->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678',
                 'gender' => 'female', 'gender_label' => 'Mujer', 'work_center_id' => $this->office->id, 'work_center' => 'Oficinas',
                 'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null,
+                'job_category' => '', 'job_level' => '', 'hired_on' => null, 'staff_group' => '', 'state' => '',
             ])
             ->where('filters', ['q' => '', 'work_center' => null, 'area' => null, 'status' => 'active', 'without_email' => false])
             // Work centers and areas are searched on the server as they are chosen, never sent whole.

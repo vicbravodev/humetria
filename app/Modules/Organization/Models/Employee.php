@@ -8,6 +8,7 @@ use App\Concerns\BelongsToCurrentTenant;
 use App\Concerns\MatchesManyIds;
 use App\Concerns\SearchesText;
 use App\Modules\Organization\Enums\Gender;
+use App\Modules\Organization\Enums\StaffGroup;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -31,11 +32,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Gender|null $gender
  * @property string|null $job_title
  * @property string|null $employee_number
+ * @property string|null $job_grade_id
+ * @property CarbonImmutable|null $hired_on
+ * @property StaffGroup|null $staff_group
+ * @property string|null $state
  * @property CarbonImmutable|null $deactivated_at
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'area_id', 'name', 'email', 'mobile', 'gender', 'job_title', 'employee_number', 'deactivated_at'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'work_center_id', 'area_id', 'name', 'email', 'mobile', 'gender', 'job_title', 'employee_number', 'job_grade_id', 'hired_on', 'staff_group', 'state', 'deactivated_at'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(EmployeeFactory::class)]
 final class Employee extends Model
 {
@@ -57,6 +62,8 @@ final class Employee extends Model
     {
         return [
             'gender' => Gender::class,
+            'staff_group' => StaffGroup::class,
+            'hired_on' => 'immutable_date',
             'deactivated_at' => 'immutable_datetime',
         ];
     }

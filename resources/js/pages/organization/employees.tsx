@@ -12,6 +12,7 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { employeeQuery, headcountText } from '@/lib/employees';
 import { options as areaOptions } from '@/routes/tenant/areas';
 import { create as importPage } from '@/routes/tenant/employees/import';
+import { options as jobGradeOptions } from '@/routes/tenant/job-grades';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type {
     ChoiceOption,
@@ -26,18 +27,32 @@ export default function Employees({
     counts,
     filters,
     genders,
+    staff_groups,
+    states,
 }: {
     employees: Paginated<EmployeeRow>;
     counts: EmployeeCounts;
     filters: EmployeeFilters;
     genders: ChoiceOption[];
+    staff_groups: ChoiceOption[];
+    states: ChoiceOption[];
 }) {
     // Always set here: this page only exists inside a company.
     const tenantSlug = useTenantSlug();
     const choices = {
         workCentersUrl: workCenterOptions.url(tenantSlug),
         areasUrl: areaOptions.url(tenantSlug),
+        jobCategoriesUrl: jobGradeOptions.url({
+            tenant: tenantSlug,
+            field: 'category',
+        }),
+        jobLevelsUrl: jobGradeOptions.url({
+            tenant: tenantSlug,
+            field: 'level',
+        }),
         genders,
+        staffGroups: staff_groups,
+        states,
     };
     // The Bajas tab alone is not a search: it gets its own empty state.
     const filtered =

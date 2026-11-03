@@ -125,6 +125,11 @@ final class PlanEmployeeImport
             area: self::text($input, 'area'),
             jobTitle: self::text($input, 'job_title'),
             employeeNumber: $number,
+            jobCategory: null,
+            jobLevel: null,
+            hiredOn: null,
+            staffGroup: null,
+            state: null,
         ), $existingId), []];
     }
 

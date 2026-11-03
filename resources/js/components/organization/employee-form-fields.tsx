@@ -2,6 +2,7 @@ import { Lock } from 'lucide-react';
 import FormField from '@/components/form-field';
 import EmployeeFormSection from '@/components/organization/employee-form-section';
 import EmployeeGenderField from '@/components/organization/employee-gender-field';
+import EmployeePayScaleFields from '@/components/organization/employee-pay-scale-fields';
 import EmployeePlaceFields from '@/components/organization/employee-place-fields';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
@@ -54,6 +55,11 @@ export default function EmployeeFormFields({
                 />
             </EmployeeFormSection>
             <EmployeePlaceFields
+                errors={errors}
+                choices={choices}
+                employee={employee}
+            />
+            <EmployeePayScaleFields
                 errors={errors}
                 choices={choices}
                 employee={employee}

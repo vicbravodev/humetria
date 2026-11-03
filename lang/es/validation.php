@@ -163,6 +163,13 @@ return [
         'email' => [
             'required_without' => 'Escribe un correo o un celular.',
         ],
+        'hired_on' => [
+            'before_or_equal' => 'La fecha de ingreso no puede ser futura.',
+            'date_format' => 'Escribe una fecha de ingreso válida.',
+        ],
+        'staff_group' => [
+            'in' => 'Elige un grupo de la lista.',
+        ],
         'gender' => [
             'in' => 'Elige una opción de la lista.',
             'required' => 'Elige una opción de la lista.',
@@ -301,6 +308,10 @@ return [
         'gender' => 'género',
         'interior_number' => 'número interior',
         'job_title' => 'puesto',
+        'job_category' => 'categoría',
+        'job_level' => 'nivel',
+        'hired_on' => 'fecha de ingreso',
+        'staff_group' => 'grupo',
         'kind' => 'tipo de solicitud',
         'legal_name' => 'razón social',
         'logo' => 'logo',

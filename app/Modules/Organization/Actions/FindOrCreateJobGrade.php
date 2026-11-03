@@ -12,9 +12,13 @@ final readonly class FindOrCreateJobGrade
 {
     public function __construct(private CurrentTenant $currentTenant) {}
 
-    /** The company's grade with that category and level, whatever the case, or a new one. */
-    public function handle(string $category, string $level): JobGrade
+    /** The company's grade with that category and level, whatever the case, or a new one; none when either is missing. */
+    public function handle(?string $category, ?string $level): ?JobGrade
     {
+        if ($category === null || $level === null) {
+            return null;
+        }
+
         $category = trim($category);
         $level = trim($level);
         $existing = JobGrade::query()->whereRaw('lower(category) = lower(?) and lower(level) = lower(?)', [$category, $level])->first();
