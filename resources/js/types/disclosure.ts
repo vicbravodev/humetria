@@ -76,3 +76,23 @@ export type DisclosureIndexProps = {
     centers: Paginated<BoardCenter>;
     can: { manage: boolean };
 };
+
+/** Where a person's own confirmation of the policy stands. */
+export type PolicyAcknowledgment = {
+    documentId: string;
+    state: 'pending' | 'confirmed';
+    on: string | null;
+};
+
+export type PortalPolicyProps = {
+    token: string;
+    company: string;
+    name: string;
+    /** The version in force in the person's center; null while the center has none. */
+    policy: {
+        version: number;
+        publishedOn: string;
+        sections: PolicyTextSection[];
+    } | null;
+    acknowledgment: PolicyAcknowledgment | null;
+};

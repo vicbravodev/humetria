@@ -6,11 +6,13 @@ namespace App\Modules\Disclosure\Actions;
 
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
+use App\Modules\Disclosure\Jobs\SendPolicyReminder;
 use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Support\PolicyStanding;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -83,8 +85,22 @@ final readonly class RequestAcknowledgments
 
         if ($made !== []) {
             Log::info('disclosure.acknowledgment_requested', ['document_id' => $documentId, 'employees' => count($made)]);
+            $this->tell($made);
         }
 
         return count($made);
+    }
+
+    /**
+     * Those who can be reached get an email; the rest are left to RH's record of paper acknowledgments.
+     *
+     * @param  list<string>  $employees
+     */
+    private function tell(array $employees): void
+    {
+        foreach (array_chunk($employees, self::CHUNK) as $chunk) {
+            $reachable = array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null));
+            array_map(fn (string $id) => SendPolicyReminder::remind($this->tenant->id(), $id), $reachable);
+        }
     }
 }

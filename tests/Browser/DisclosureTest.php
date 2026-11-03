@@ -122,3 +122,37 @@ it('publishes the draft from the dialog', function (): void {
         ->assertSee('Política publicada: versión 1.')
         ->assertSee('Historial de versiones');
 });
+
+/** The personal link to the policy of an employee the published policy asked; returns its address. */
+function personalPolicyUrl(): string
+{
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $center = WorkCenter::factory()->for($tenant)->create();
+    $ana = App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'email' => 'ana@acme.test']);
+    $hr = memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
+    workIn($tenant);
+    $draft = resolve(StartPolicyDraft::class)->handle(null);
+    resolve(SaveDraft::class)->handle($draft->id, array_map(fn (array $section): array => [
+        'key' => $section['key'],
+        'text' => in_array($section['key'], ['responsibles', 'resources'], true) ? 'La dirección de Recursos Humanos.' : $section['text'],
+        'items' => $section['items'],
+    ], $draft->content));
+    resolve(PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $hr->id);
+
+    return route('portal.policy.show', resolve(App\Modules\Telework\Contracts\PortalAccess::class)->token($ana->id), absolute: false);
+}
+
+it('shows a person the policy of their center to read and confirm', function (bool $dark, bool $mobile): void {
+    visitPage('disclosure/portal-policy', personalPolicyUrl(), $dark, $mobile)
+        ->assertSee('La política de prevención, Ana Ruiz')
+        ->assertSee('Compromisos')
+        ->assertSee('Confirmo que la leí');
+})->with($looks);
+
+it('lets the person confirm from the phone, once', function (): void {
+    visit(personalPolicyUrl())->on()->mobile()
+        ->press('Confirmo que la leí')
+        ->assertSee('Gracias. Quedó registrado que leyó la política.')
+        ->assertSee('Usted confirmó el')
+        ->assertDontSee('Confirmo que la leí');
+});

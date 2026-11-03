@@ -12,6 +12,8 @@ describe('isStandalone', () => {
         'error',
         'complaints-public/form',
         'complaints-public/follow-up',
+        'disclosure/portal-policy',
+        'disclosure-public/center',
     ])('leaves %s outside the panel', (name) => {
         expect(isStandalone(name)).toBe(true);
     });
@@ -22,6 +24,8 @@ describe('isStandalone', () => {
         'campaigns/show',
         'seating/index',
         'complaints-publicity',
+        'disclosure/index',
+        'disclosure/policy',
     ])('keeps %s inside the panel', (name) => {
         expect(isStandalone(name)).toBe(false);
     });

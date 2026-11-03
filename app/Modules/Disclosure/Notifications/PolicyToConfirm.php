@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Disclosure\Notifications;
+
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+/**
+ * Tells a person, as "usted", that their company published its policy of prevention and that they can read it and confirm
+ * they did (criterio C-53). The link is theirs (made as the job runs, so the notification is sent at once and never queued:
+ * the plain token must not reach the queue).
+ */
+final class PolicyToConfirm extends Notification
+{
+    public function __construct(
+        private readonly string $url,
+        private readonly string $name,
+        private readonly string $company,
+    ) {}
+
+    /**
+     * @return list<string>
+     */
+    public function via(object $notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)->subject('Lea la política de prevención de su empresa')->greeting("Hola, {$this->name}")
+            ->line("{$this->company} publicó su política de prevención de riesgos psicosociales: lo que se compromete a hacer para prevenir la violencia laboral y cuidar el entorno de trabajo.")
+            ->line('Puede leerla desde su página personal y confirmar que la leyó.')
+            ->action('Leer y confirmar', $this->url)
+            ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+    }
+}
