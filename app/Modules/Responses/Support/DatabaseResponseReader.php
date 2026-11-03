@@ -61,6 +61,15 @@ final class DatabaseResponseReader implements ResponseReader
         return $counts;
     }
 
+    public function requiresAssessment(string $campaignId, string $employeeId): bool
+    {
+        return TraumaScreening::query()
+            ->where('campaign_id', $campaignId)
+            ->where('employee_id', $employeeId)
+            ->where('requires_clinical_assessment', true)
+            ->exists();
+    }
+
     public function requiringAssessment(string $campaignId, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
     {
         return TraumaScreening::query()

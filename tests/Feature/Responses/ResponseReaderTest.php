@@ -78,3 +78,16 @@ it('pages who requires a clinical assessment, by when they answered', function (
         ->and($page->getPageName())->toBe('people')
         ->and($page->items())->toEqual([new ScreeningRecord($earlier->employee_id, CarbonImmutable::parse('2026-11-03 15:00:00'))]);
 });
+
+it('says whether one person of a campaign requires a clinical assessment', function (): void {
+    $requiring = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true]);
+    $not = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id]);
+    $inOther = TraumaScreening::factory()->create(['requires_clinical_assessment' => true]);
+    workIn($this->tenant);
+    $reader = resolve(ResponseReader::class);
+
+    expect($reader->requiresAssessment($this->campaign->id, $requiring->employee_id))->toBeTrue()
+        ->and($reader->requiresAssessment($this->campaign->id, $not->employee_id))->toBeFalse()
+        ->and($reader->requiresAssessment($this->campaign->id, $inOther->employee_id))->toBeFalse()
+        ->and($reader->requiresAssessment($inOther->campaign_id, $inOther->employee_id))->toBeFalse();
+});
