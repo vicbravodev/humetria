@@ -8,10 +8,12 @@ use App\Modules\Tenancy\Actions\AcceptInvitation;
 use App\Modules\Tenancy\Actions\ChangeMemberRole;
 use App\Modules\Tenancy\Actions\RemoveMember;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Events\MemberRemoved;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Support\SessionKey;
@@ -97,6 +99,15 @@ it('removes the access of a person, keeping their account', function (): void {
         'event' => 'tenant_member.removed',
         'metadata' => ['member_user_id' => $member->user_id, 'role' => 'viewer'],
     ]);
+});
+
+it('announces that a person left the company, so other modules clear what they kept of them', function (): void {
+    Event::fake([MemberRemoved::class]);
+    $member = membershipOf($this->tenant, TenantRole::Hr);
+
+    resolve(RemoveMember::class)->handle($member, $this->owner);
+
+    Event::assertDispatched(MemberRemoved::class, fn (MemberRemoved $event): bool => $event->tenantId === $this->tenant->id && $event->userId === $member->user_id);
 });
 
 it('never changes nor removes the owner here, so nobody removes themself', function (): void {

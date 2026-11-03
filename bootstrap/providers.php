@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Campaigns\Providers\CampaignsServiceProvider;
 use App\Modules\Demos\Providers\DemosServiceProvider;
 use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
@@ -28,4 +29,5 @@ return [
     ResultsServiceProvider::class,
     TeleworkServiceProvider::class,
     SeatingServiceProvider::class,
+    AssistantServiceProvider::class,
 ];

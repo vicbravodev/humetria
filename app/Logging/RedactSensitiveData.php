@@ -74,6 +74,10 @@ final class RedactSensitiveData implements ProcessorInterface
             'health_note',
             'pain_level',
             'referral_note',
+            // Humi: what a person asks the assistant, and what it answers, is never a log's business.
+            'assistant_message',
+            'prompt',
+            'user_message',
         ];
 
         foreach ($data as $key => $value) {

@@ -89,7 +89,7 @@ app/Modules/{Module}/
 
 Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (áreas, empleados),
 `Instruments` (Guías I/II/III y calificación), `Campaigns` (campañas, invitaciones),
-`Responses` (respuestas anónimas), `Results` (agregados y reportes), `Notifications` (correo/SMS/WhatsApp).
+`Responses` (respuestas anónimas), `Results` (agregados y reportes), `Notifications` (correo/SMS/WhatsApp); ya existe `Assistant` (Humi, el asistente de IA; ver su README).
 
 ## Arquitectura del frontend
 

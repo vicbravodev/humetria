@@ -1,6 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import {
     Ban,
+    Bot,
     CalendarCheck,
     Ellipsis,
     ImageIcon,
@@ -12,6 +13,7 @@ import { useState } from 'react';
 import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
 import DeactivateTenantDialog from '@/components/tenancy/deactivate-tenant-dialog';
 import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
+import HumiSettingsDialog from '@/components/tenancy/humi-settings-dialog';
 import InviteOwnerDialog from '@/components/tenancy/invite-owner-dialog';
 import TenantLogoDialog from '@/components/tenancy/tenant-logo-dialog';
 import { Button } from '@/components/ui/button';
@@ -26,7 +28,7 @@ import { activationCopy, ownerAction } from '@/lib/tenant-status';
 import { impersonate } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
-type Action = 'activate' | 'invite' | 'edit' | 'logo' | 'deactivate';
+type Action = 'activate' | 'invite' | 'edit' | 'logo' | 'humi' | 'deactivate';
 
 /**
  * Everything the superadmin can do with a company, behind one "…" button so the row stays narrow.
@@ -92,6 +94,10 @@ export default function TenantRowActions({
                         <ImageIcon />
                         Logo de los correos
                     </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setOpen('humi')}>
+                        <Bot />
+                        Asistente Humi
+                    </DropdownMenuItem>
                     {!tenant.blocked && (
                         <>
                             <DropdownMenuSeparator />
@@ -113,6 +119,12 @@ export default function TenantRowActions({
             <InviteOwnerDialog {...dialog('invite')} />
             <EditTenantDialog {...dialog('edit')} />
             <TenantLogoDialog {...dialog('logo')} />
+            <HumiSettingsDialog
+                tenantId={tenant.id}
+                tradeName={tenant.trade_name}
+                open={open === 'humi'}
+                onOpenChange={(isOpen) => setOpen(isOpen ? 'humi' : null)}
+            />
             <DeactivateTenantDialog {...dialog('deactivate')} />
         </>
     );

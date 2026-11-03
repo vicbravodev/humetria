@@ -21,6 +21,7 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     view_seating: true,
     manage_seating: manage_organization,
     assess_seating: manage_organization,
+    use_assistant: true,
 });
 const acme = (
     manageOrganization = true,
