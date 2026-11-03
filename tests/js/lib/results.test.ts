@@ -197,6 +197,10 @@ describe('periodText', () => {
         );
     });
 
+    it('writes one day once when it opened and closed the same day', () => {
+        expect(periodText('2 nov 2026', '2 nov 2026')).toBe('2 nov 2026');
+    });
+
     it('says since when while it has not closed', () => {
         expect(periodText('27 oct 2026', null)).toBe('Desde el 27 oct 2026');
     });

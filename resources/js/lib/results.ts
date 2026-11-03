@@ -148,6 +148,10 @@ export function periodText(
         return `Desde el ${from}`;
     }
 
+    if (from === to) {
+        return from;
+    }
+
     const [fromDay, fromMonth, fromYear] = from.split(' ');
     const [, toMonth, toYear] = to.split(' ');
 
