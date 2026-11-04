@@ -14,8 +14,16 @@ final class IntegrationFactor
 
     public static function for(int $aguinaldoDays, int $vacationDays, Rate $vacationPremium): Rate
     {
+        return self::ofDays(Rate::scaled($aguinaldoDays, 0), Rate::scaled($vacationDays, 0), $vacationPremium);
+    }
+
+    /** The same, for days that are not whole (a contract may grant 22.5 days of aguinaldo). */
+    public static function ofDays(Rate $aguinaldoDays, Rate $vacationDays, Rate $vacationPremium): Rate
+    {
+        $perDay = Rate::fraction(1, self::DAYS_IN_YEAR);
+
         return Rate::one()
-            ->plus(Rate::fraction($aguinaldoDays, self::DAYS_IN_YEAR))
-            ->plus(Rate::fraction($vacationDays, self::DAYS_IN_YEAR)->times($vacationPremium));
+            ->plus($aguinaldoDays->times($perDay))
+            ->plus($vacationDays->times($perDay)->times($vacationPremium));
     }
 }

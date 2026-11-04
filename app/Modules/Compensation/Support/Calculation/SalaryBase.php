@@ -10,8 +10,14 @@ namespace App\Modules\Compensation\Support\Calculation;
  */
 final class SalaryBase
 {
-    public static function sbc(int $dailySalaryCents, Rate $factor, int $sbcCapCents): int
+    /**
+     * @param  ?Rate  $extraDaily  other daily cents that integrate (a bonus, the excess of the vouchers), added before the
+     *                             cent is truncated so the fraction is dropped once
+     */
+    public static function sbc(int $dailySalaryCents, Rate $factor, int $sbcCapCents, ?Rate $extraDaily = null): int
     {
-        return min($factor->truncated($dailySalaryCents), $sbcCapCents);
+        $integrated = $factor->times(Rate::scaled($dailySalaryCents, 0))->plus($extraDaily ?? Rate::zero());
+
+        return min($integrated->truncated(1), $sbcCapCents);
     }
 }

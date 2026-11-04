@@ -45,3 +45,18 @@ it('caps the integrated salary, not the daily salary', function (): void {
 it('is zero for a salary of zero', function (): void {
     expect(SalaryBase::sbc(0, Rate::fraction(383, 365), CAP_2026))->toBe(0);
 });
+
+it('adds the daily extras before truncating, once', function (): void {
+    $factor = Rate::fraction(383, 365);
+
+    // 50,000 × 383/365 = 52,465.75…; plus 1.5 cents is 52,467.25…: 52,467, not 52,465 + 1.
+    expect(SalaryBase::sbc(50_000, $factor, CAP_2026, Rate::fraction(3, 2)))->toBe(52_467)
+        ->and(SalaryBase::sbc(50_000, $factor, CAP_2026, Rate::zero()))->toBe(52_465)
+        ->and(SalaryBase::sbc(50_000, $factor, CAP_2026))->toBe(52_465);
+});
+
+it('caps the salary with its extras', function (): void {
+    expect(SalaryBase::sbc(290_000, Rate::one(), CAP_2026, Rate::scaled(5_000, 0)))->toBe(CAP_2026)
+        ->and(SalaryBase::sbc(290_000, Rate::one(), CAP_2026, Rate::scaled(3_275, 0)))->toBe(CAP_2026)
+        ->and(SalaryBase::sbc(290_000, Rate::one(), CAP_2026, Rate::scaled(3_274, 0)))->toBe(CAP_2026 - 1);
+});

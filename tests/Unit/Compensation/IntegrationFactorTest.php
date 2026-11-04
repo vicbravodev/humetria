@@ -38,3 +38,11 @@ it('keeps the fraction exact, with no rounding before the salary is multiplied',
     expect($factor->truncated(50_000))->toBe(52_465)
         ->and($factor->of(50_000))->toBe(52_466);
 });
+
+it('takes days that are not whole, as a contract may grant 22.5 days of aguinaldo', function (): void {
+    // 365 + 22.5 + 12 × 0.25 = 390.5 over 365.
+    $factor = IntegrationFactor::ofDays(Rate::scaled(225, 1), Rate::scaled(12, 0), Rate::scaled(25, 2));
+
+    expect($factor->compareTo(Rate::fraction(781, 730)))->toBe(0)
+        ->and(IntegrationFactor::ofDays(Rate::scaled(15, 0), Rate::scaled(12, 0), Rate::scaled(25, 2))->compareTo(IntegrationFactor::for(15, 12, Rate::scaled(25, 2))))->toBe(0);
+});
