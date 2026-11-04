@@ -392,6 +392,8 @@ return [
         'workplaces.*.street' => 'calle',
         'workforce' => 'número de trabajadores',
         'cap' => 'tope',
+        'category' => 'categoría',
+        'daily_salary' => 'salario diario',
         'effective_from' => 'vigencia',
         'frequency' => 'frecuencia',
         'group' => 'grupo',

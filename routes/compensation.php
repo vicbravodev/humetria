@@ -7,6 +7,7 @@ use App\Modules\Compensation\Http\Controllers\BenefitTermController;
 use App\Modules\Compensation\Http\Controllers\CompensationController;
 use App\Modules\Compensation\Http\Controllers\GradeOptionsController;
 use App\Modules\Compensation\Http\Controllers\RiskPremiumController;
+use App\Modules\Compensation\Http\Controllers\TabulatorController;
 use App\Modules\Compensation\Http\Middleware\BlockWhileImpersonating;
 use Illuminate\Support\Facades\Route;
 
@@ -23,5 +24,7 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::post('admin/{tenant:slug}/compensation/benefits/{benefit}/archive', [BenefitController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('benefit')->name('tenant.compensation.benefits.archive');
     Route::post('admin/{tenant:slug}/compensation/benefits/{benefit}/restore', [BenefitController::class, 'restore'])->where('tenant', $notReserved)->whereUuid('benefit')->name('tenant.compensation.benefits.restore');
     Route::post('admin/{tenant:slug}/compensation/benefits/{benefit}/terms', [BenefitTermController::class, 'store'])->where('tenant', $notReserved)->whereUuid('benefit')->name('tenant.compensation.benefits.terms.store');
+    Route::get('admin/{tenant:slug}/compensation/tabulator', [TabulatorController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.index');
+    Route::post('admin/{tenant:slug}/compensation/tabulator', [TabulatorController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.store');
     Route::put('admin/{tenant:slug}/compensation/risk-premium', [RiskPremiumController::class, 'update'])->where('tenant', $notReserved)->name('tenant.compensation.risk-premium.update');
 });

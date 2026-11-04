@@ -5,6 +5,10 @@ export type {
     BenefitFilters,
     TenureFormRow,
 } from '@/lib/compensation/benefits';
+export type {
+    SalaryFilters,
+    SalaryStanding,
+} from '@/lib/compensation/salaries';
 
 /** A row of a seniority table as the server sends it: the value to edit and the value written with its unit. */
 export type TenureRow = {
@@ -67,3 +71,20 @@ export type BenefitChoices = {
 
 /** The IMSS work risk premium in force today, as a percent. */
 export type RiskPremium = { rate: string; effective_from: string };
+
+/** A daily salary as the server sends it: the number to edit, the amount written and the date it starts. */
+export type SalaryEntry = {
+    daily_salary: string;
+    daily_salary_text: string;
+    /** `AAAA-MM-DD`. */
+    effective_from: string;
+};
+
+/** A category and level of the tabulator with its salaries, latest vigencia first, and the one in force today. */
+export type TabulatorRow = {
+    id: string;
+    category: string;
+    level: string;
+    current: SalaryEntry | null;
+    salaries: (SalaryEntry & { id: string })[];
+};
