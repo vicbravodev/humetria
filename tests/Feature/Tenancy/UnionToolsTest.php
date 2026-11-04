@@ -39,6 +39,8 @@ function unionProbeUrl(LaravelRoute $route, Tenant $tenant, Campaign $foreign): 
 
         return match (true) {
             str_contains($constraint, '[0-9]') => '1',
+            // A whereIn() constraint (a fixed list of words): the first of them, or the URL would not reach the route.
+            preg_match('/^[a-z_|-]+$/', $constraint) === 1 => explode('|', $constraint)[0],
             $match[1] === 'workCenter' => $foreign->work_center_id,
             default => $foreign->id,
         };

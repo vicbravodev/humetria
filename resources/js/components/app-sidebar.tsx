@@ -16,8 +16,8 @@ import {
     complianceNavItems,
     mainNavItems,
     superadminNavItems,
-    toolNavItems,
 } from '@/lib/app-navigation';
+import { toolNavItems } from '@/lib/tool-navigation';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 

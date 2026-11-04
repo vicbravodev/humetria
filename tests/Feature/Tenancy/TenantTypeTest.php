@@ -96,7 +96,7 @@ it('exposes tenant.type in the shared props', function (TenantType $type): void 
 
 it('hands a union only the hr role', function (): void {
     expect(TenantType::Union->assignableRoles())->toBe([TenantRole::Hr])
-        ->and(TenantType::Company->assignableRoles())->toBe([TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee]);
+        ->and(TenantType::Company->assignableRoles())->toBe([TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints]);
 });
 
 it('refuses to invite a viewer or a committee member to a union', function (TenantRole $role): void {
@@ -113,7 +113,7 @@ it('refuses to invite a viewer or a committee member to a union', function (Tena
     $this->actingAs($owner)
         ->post(route('tenant.members.invitations.store', $union), ['name' => 'Rita', 'email' => 'rita@sindicato.mx', 'role' => 'hr'])
         ->assertSessionHasNoErrors();
-})->with([TenantRole::Viewer, TenantRole::Committee]);
+})->with([TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints]);
 
 it('refuses to change a union member to a viewer or a committee member', function (TenantRole $role): void {
     $union = Tenant::factory()->create(['type' => TenantType::Union->value]);
@@ -125,7 +125,7 @@ it('refuses to change a union member to a viewer or a committee member', functio
         ->assertSessionHasErrors('role');
 
     expect(resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->of($member->user()->sole(), $union))->toBe(TenantRole::Hr);
-})->with([TenantRole::Viewer, TenantRole::Committee]);
+})->with([TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints]);
 
 it('still lets a company invite and change to every role', function (TenantRole $role): void {
     Notification::fake();
@@ -135,7 +135,7 @@ it('still lets a company invite and change to every role', function (TenantRole 
     $this->actingAs($owner)
         ->post(route('tenant.members.invitations.store', $company), ['name' => 'Vera', 'email' => 'vera@acme.mx', 'role' => $role->value])
         ->assertSessionHasNoErrors();
-})->with([TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee]);
+})->with([TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints]);
 
 it('guards the membership actions themselves, whatever calls them', function (): void {
     Notification::fake();

@@ -1,26 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { complianceNavItems, toolNavItems } from '@/lib/app-navigation';
+import { complianceNavItems } from '@/lib/app-navigation';
+import { toolNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
+import { can } from '../support/tenant-can';
 
-const can = (allowed: boolean) => ({
-    manage_organization: allowed,
-    manage_members: allowed,
-    manage_campaigns: allowed,
-    view_trauma_screenings: allowed,
-    manage_telework: allowed,
-    review_workplaces: allowed,
-    view_seating: true,
-    manage_seating: allowed,
-    assess_seating: allowed,
-    view_compensation: allowed,
-    manage_compensation: allowed,
-    use_assistant: true,
-});
 const acme = (
     allowed = true,
-    role: 'owner' | 'hr' | 'viewer' | 'committee' = 'owner',
-) => ({ slug: 'acme', role, can: can(allowed) });
+    role: 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints' = 'owner',
+) => ({ slug: 'acme', role, can: can(allowed, allowed) });
 
 describe('toolNavItems', () => {
     it('offers Compensación to whoever may view it, in a company and in a union', () => {

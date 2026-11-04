@@ -17,8 +17,8 @@ import {
     type NavTenant,
     settingsEntryHref,
     superadminNavItems,
-    toolNavItems,
 } from '@/lib/app-navigation';
+import { toolNavItems } from '@/lib/tool-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
 import { index as campaigns } from '@/routes/tenant/campaigns';
