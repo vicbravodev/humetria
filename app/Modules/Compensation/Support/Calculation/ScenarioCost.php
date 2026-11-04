@@ -115,11 +115,17 @@ final class ScenarioCost
         return $units;
     }
 
-    /** The daily salary after the raise of the group, settled to the cent; the trusted take the unionized raise if they have none. */
+    /** The raise of a group: its own, or for the trusted the unionized one when they have none; null when there is none. */
+    public static function raiseFor(PayGroup $group, ScenarioInput $in): ?Rate
+    {
+        return $in->raises[$group->value]
+            ?? ($group === PayGroup::Trusted ? ($in->raises[PayGroup::Unionized->value] ?? null) : null);
+    }
+
+    /** The daily salary after the raise of the group, settled to the cent. */
     public static function raised(int $salary, PayGroup $group, ScenarioInput $in): int
     {
-        $raise = $in->raises[$group->value]
-            ?? ($group === PayGroup::Trusted ? ($in->raises[PayGroup::Unionized->value] ?? null) : null);
+        $raise = self::raiseFor($group, $in);
 
         return $raise === null ? $salary : Rate::one()->plus($raise)->of($salary);
     }

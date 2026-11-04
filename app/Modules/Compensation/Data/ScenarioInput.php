@@ -41,4 +41,18 @@ final readonly class ScenarioInput
         public ?string $defaultState,
         public RosterGaps $gaps,
     ) {}
+
+    /**
+     * The same scenario with other changes proposed; the roster, the contract and the fiscal values are the same.
+     *
+     * @param  array<string, Rate>  $raises
+     * @param  list<BenefitSpec>  $proposed
+     */
+    public function withChanges(array $raises, array $proposed): self
+    {
+        return new self(
+            $this->effectiveOn, $this->retroMonths, $this->fiscal, $this->cells, $this->individuals, $this->gradeSalaries,
+            $this->benefits, $raises, $proposed, $this->workRiskPremium, $this->defaultState, $this->gaps,
+        );
+    }
 }
