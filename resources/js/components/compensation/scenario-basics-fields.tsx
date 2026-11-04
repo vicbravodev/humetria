@@ -34,7 +34,7 @@ export default function ScenarioBasicsFields({
     const stateOptions = [
         {
             value: '',
-            label: 'Sin estado: no se calcula el impuesto sobre nómina',
+            label: 'Sin estado',
         },
         ...states,
     ];
@@ -42,7 +42,7 @@ export default function ScenarioBasicsFields({
     return (
         <ScenarioSection
             title="La propuesta"
-            description="Ponle un nombre, di desde cuándo rige y hasta cuántos años quieres ver su costo."
+            description="Ponle un nombre, di desde cuándo rige y hasta cuántos años quieres ver su costo. Quien no tiene estado en el padrón usa el que elijas; sin estado no se calcula su impuesto sobre nómina."
         >
             <FormField
                 name="name"

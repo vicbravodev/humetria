@@ -72,7 +72,7 @@ final readonly class ReportBuilder
                 'retroactive_text' => Money::format($cost->retroactiveCents),
                 'before_text' => Money::format($cost->beforeCents), 'after_text' => Money::format($cost->afterCents),
             ],
-            'concepts' => array_map(fn (ConceptCost $concept): array => $this->concept($concept, $names), $cost->concepts),
+            'concepts' => array_map(fn (ConceptCost $concept): array => $this->concept($concept, $names), array_values(array_filter($cost->concepts, fn (ConceptCost $concept): bool => $concept->beforeCents !== 0 || $concept->afterCents !== 0 || $concept->retroactiveCents !== 0))),
             'months' => array_map(fn (MonthlyCost $month): array => [
                 'month' => $month->month->toDateString(), 'before_text' => Money::format($month->beforeCents),
                 'after_text' => Money::format($month->afterCents), 'delta_text' => Money::format($month->deltaCents()),
@@ -229,6 +229,7 @@ final readonly class ReportBuilder
         $individuals = count($input->individuals);
         $gradeNames = $this->jobGrades->findMany(array_keys($cost->uncostedGrades));
         $stale = array_values(array_unique([...$cost->staleKeys, ...array_merge([], ...array_map(fn (ProjectionYear $year): array => $year->staleKeys, $years))]));
+        $stale = array_values(array_unique(array_map($this->labels->fiscalLabel(...), $stale)));
         sort($stale);
 
         return [

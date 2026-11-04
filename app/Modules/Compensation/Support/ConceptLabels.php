@@ -50,4 +50,17 @@ final class ConceptLabels
             CostConcept::Contribution => self::CONTRIBUTIONS[$key] ?? $key,
         };
     }
+
+    /** What a fiscal value is called when the report says it is out of date: the state rates of the payroll tax are one. */
+    public function fiscalLabel(string $key): string
+    {
+        return match (true) {
+            $key === 'uma' => 'UMA',
+            $key === 'minimum_wage' => 'Salario mínimo',
+            $key === 'minimum_wage_border' => 'Salario mínimo de la frontera norte',
+            str_starts_with($key, 'payroll_tax') => 'Impuesto sobre nómina de los estados',
+            str_starts_with($key, 'severance_old_age') => 'Cesantía en edad avanzada y vejez',
+            default => $key,
+        };
+    }
 }

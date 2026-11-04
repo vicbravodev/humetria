@@ -51,7 +51,7 @@ export default function ReportTimeline({ report }: { report: ScenarioReport }) {
                         {
                             label: 'Año',
                             cell: (year) =>
-                                `${year.year} · desde el ${describeDate(year.effective_on) ?? year.effective_on}`,
+                                `Año ${year.year} · ${year.effective_on.slice(0, 4)}`,
                         },
                         {
                             label: 'Antes',

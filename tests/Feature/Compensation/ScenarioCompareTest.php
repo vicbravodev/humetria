@@ -52,7 +52,17 @@ it('compares scenarios by concept, the cascade in its order', function (): void 
             ->where('rows.3.label', 'Bono de transporte')
             ->where('rows.3.cells', ['$0.00', '$0.00', '$6,000.00'])
             ->where('rows.4.type', 'contribution')
-            ->where('rows.4.label', 'IMSS: cuota fija de enfermedad y maternidad'));
+            ->where('rows.4.label', 'IMSS: excedente de enfermedad y maternidad'));
+});
+
+it('leaves out the concepts that no scenario changes', function (): void {
+    $this->get(compareUrl($this->tenant, $this->a->id, $this->b->id))
+        ->assertInertia(fn (Assert $page) => $page->where('rows', function ($rows): bool {
+            $labels = collect($rows)->pluck('label')->all();
+
+            // The fixed IMSS quota does not depend on the salary, and no benefit of the contract changes: neither is a choice.
+            return ! in_array('IMSS: cuota fija de enfermedad y maternidad', $labels, true) && ! in_array('Fondo de ahorro', $labels, true) && in_array('Salario', $labels, true);
+        }));
 });
 
 it('knows the label of every employer line the calculation can give', function (): void {

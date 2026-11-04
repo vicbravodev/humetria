@@ -114,6 +114,15 @@ it('warns about individual salaries and about what it could not calculate', func
         ->assertInertia(fn (Assert $page) => $page->where('warnings.uncalculated', fn ($lines): bool => in_array('Impuesto sobre nómina', collect($lines)->all(), true)));
 });
 
+it('names the fiscal values carried past their vigencia by what they are, once each', function (): void {
+    $far = Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'effective_on' => '2028-01-01']);
+
+    $this->get(reportUrl($this->tenant, $far))
+        ->assertInertia(fn (Assert $page) => $page->where('warnings.stale', fn ($stale): bool => in_array('UMA', collect($stale)->all(), true)
+            && in_array('Impuesto sobre nómina de los estados', collect($stale)->all(), true)
+            && count(collect($stale)->filter(fn ($label): bool => str_contains((string) $label, '_') || str_contains((string) $label, ':'))) === 0));
+});
+
 it('does not warn about individual salaries up to a tenth of the staff', function (): void {
     reportStaff($this->tenant, $this->grade, $this->area, 'E-010');
     SalaryOverride::factory()->create(['tenant_id' => $this->tenant->id, 'employee_number' => 'E-001', 'effective_from' => '2026-01-01']);

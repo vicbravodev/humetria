@@ -207,7 +207,7 @@ it('compares two ticked scenarios by concept', function (bool $dark, bool $mobil
         ->assertSee('Comparar escenarios')
         ->assertSee('$9,125.00')
         ->assertSee('$10,950.00')
-        ->assertSee('IMSS: cuota fija de enfermedad y maternidad')
+        ->assertSee('IMSS: invalidez y vida')
         ->assertNoJavaScriptErrors();
 
     $ids = Scenario::query()->withoutGlobalScopes()->pluck('id')->all();

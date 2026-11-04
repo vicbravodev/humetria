@@ -11,7 +11,8 @@ use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 
 /**
  * Two to four scenarios side by side: their totals and, for each concept of the cost, what each one changes in the first
- * year (the 12 months and the retroactive months). A concept a scenario does not have costs it nothing.
+ * year (the 12 months and the retroactive months). A concept a scenario does not have costs it nothing, and one that no
+ * scenario changes is left out.
  */
 final readonly class ScenarioComparison
 {
@@ -39,6 +40,11 @@ final readonly class ScenarioComparison
         $rows = [];
 
         foreach ($concepts as $concept) {
+            // A concept no scenario touches costs nothing in any of them: it says nothing about the choice.
+            if (array_filter($costs, fn (CostBreakdown $cost): bool => (array_find($cost->concepts, fn ($other): bool => $other->type === $concept->type && $other->key === $concept->key)?->firstYearCents() ?? 0) !== 0) === []) {
+                continue;
+            }
+
             $rows[] = [
                 'type' => $concept->type->value,
                 'key' => $concept->key,
