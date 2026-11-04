@@ -28,4 +28,17 @@ final class TenureYears
 
         return max($years, 0);
     }
+
+    /** Whole months of service on an exact day; the same clamping of the day of the month as the anniversary. */
+    public static function monthsAt(CarbonImmutable $hiredOn, CarbonImmutable $on): int
+    {
+        $hired = $hiredOn->startOfDay();
+        $months = ($on->year - $hired->year) * 12 + $on->month - $hired->month;
+
+        if ($hired->addMonthsNoOverflow($months)->isAfter($on->startOfDay())) {
+            $months--;
+        }
+
+        return max($months, 0);
+    }
 }

@@ -90,3 +90,17 @@ it('steps vacation days on the exact anniversary, for a person hired on Feb 29 a
         ->and($days('2026-06-30', '2027-06-29'))->toBe(0)
         ->and($days('2026-06-30', '2027-06-30'))->toBe(12);
 });
+
+it('counts whole months on the exact day, with the day of the month clamped like the anniversary', function (): void {
+    $months = fn (string $hiredOn, string $on): int => TenureYears::monthsAt(CarbonImmutable::parse($hiredOn), CarbonImmutable::parse($on));
+
+    expect($months('2026-01-15', '2026-02-14'))->toBe(0)
+        ->and($months('2026-01-15', '2026-02-15'))->toBe(1)
+        ->and($months('2025-03-01', '2026-03-01'))->toBe(12)
+        ->and($months('2025-03-01', '2026-02-28'))->toBe(11)
+        ->and($months('2026-01-31', '2026-02-27'))->toBe(0)
+        ->and($months('2026-01-31', '2026-02-28'))->toBe(1)
+        ->and($months('2020-02-29', '2021-02-28'))->toBe(12)
+        ->and($months('2026-06-30', '2026-06-30'))->toBe(0)
+        ->and($months('2026-07-01', '2026-06-30'))->toBe(0);
+});
