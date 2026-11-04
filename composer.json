@@ -85,8 +85,13 @@
             "@php artisan config:clear --ansi",
             "@lint:check",
             "@types:check",
-            "@php artisan test --coverage --min=90 --exclude-testsuite=Browser",
+            "@test:coverage",
             "@test:browser"
+        ],
+        "test:coverage": [
+            "Composer\\Config::disableProcessTimeout",
+            "pest --parallel --exclude-testsuite=Browser --coverage-clover=coverage.xml",
+            "@php scripts/coverage-min.php coverage.xml 90"
         ],
         "check:fast": [
             "Composer\\Config::disableProcessTimeout",
