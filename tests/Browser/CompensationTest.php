@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Modules\Compensation\Models\GradeSalary;
+use App\Modules\Compensation\Models\SalaryOverride;
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\File;
@@ -97,3 +99,41 @@ it('lists the rows of a tabulator file to fix and imports nothing', function (bo
 
     expect(GradeSalary::query()->withoutGlobalScopes()->count())->toBe(0);
 })->with($looks);
+
+it('shows the people with an individual salary and what they have earned', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'employee_number' => 'E-001']);
+    SalaryOverride::factory()->create(['tenant_id' => $tenant->id, 'employee_number' => 'E-001', 'daily_salary_cents' => 65025, 'effective_from' => '2020-01-01', 'note' => 'Convenio de planta']);
+    SalaryOverride::factory()->create(['tenant_id' => $tenant->id, 'employee_number' => 'E-404', 'effective_from' => '2020-01-01']);
+
+    visitPage('compensation/overrides', "{$url}/compensation/overrides", $dark, $mobile)
+        ->assertSee('Sueldos individuales')
+        ->assertSee('E-001')
+        ->assertSee('Operador · A')
+        ->assertSee('$650.25')
+        ->assertSee('Convenio de planta')
+        ->assertSee('Sin persona que costear');
+})->with($looks);
+
+it('saves the individual salary of a person from its sheet', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'employee_number' => 'E-001']);
+
+    visit("{$url}/compensation/overrides")
+        ->press('Nuevo sueldo')
+        ->fill('employee_number', 'E-404')
+        ->fill('daily_salary', '650.25')
+        ->press('Guardar sueldo')
+        ->assertSee('No hay una persona activa con este ID de la empresa.')
+        ->fill('employee_number', 'e-001')
+        ->press('Guardar sueldo')
+        ->assertSee('Sueldo individual guardado.')
+        ->assertSee('$650.25')
+        ->assertNoJavaScriptErrors();
+
+    expect(SalaryOverride::query()->withoutGlobalScopes()->sole()->employee_number)->toBe('E-001');
+});

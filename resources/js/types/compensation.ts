@@ -95,3 +95,16 @@ export type SalaryImportSummary = {
     rows: number;
     errors: { row: number; messages: string[] }[];
 };
+
+/** A person's individual salary: the note says why it is not their category's. */
+export type OverrideSalary = SalaryEntry & { id: string; note: string | null };
+
+/** A person with an individual salary, told apart by the company's own ID. `active` is false when the roster no longer has them to cost. */
+export type OverrideRow = {
+    employee_number: string;
+    /** "Operador · A", when the person is in the roster and can be costed. */
+    grade: string | null;
+    active: boolean;
+    current: OverrideSalary | null;
+    salaries: OverrideSalary[];
+};

@@ -7,6 +7,7 @@ use App\Modules\Compensation\Http\Controllers\BenefitTermController;
 use App\Modules\Compensation\Http\Controllers\CompensationController;
 use App\Modules\Compensation\Http\Controllers\GradeOptionsController;
 use App\Modules\Compensation\Http\Controllers\RiskPremiumController;
+use App\Modules\Compensation\Http\Controllers\SalaryOverrideController;
 use App\Modules\Compensation\Http\Controllers\TabulatorController;
 use App\Modules\Compensation\Http\Controllers\TabulatorImportController;
 use App\Modules\Compensation\Http\Middleware\BlockWhileImpersonating;
@@ -29,5 +30,7 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::post('admin/{tenant:slug}/compensation/tabulator', [TabulatorController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.store');
     Route::get('admin/{tenant:slug}/compensation/tabulator/import/template', [TabulatorImportController::class, 'template'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.template');
     Route::post('admin/{tenant:slug}/compensation/tabulator/import', [TabulatorImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.import');
+    Route::get('admin/{tenant:slug}/compensation/overrides', [SalaryOverrideController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.index');
+    Route::post('admin/{tenant:slug}/compensation/overrides', [SalaryOverrideController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.store');
     Route::put('admin/{tenant:slug}/compensation/risk-premium', [RiskPremiumController::class, 'update'])->where('tenant', $notReserved)->name('tenant.compensation.risk-premium.update');
 });

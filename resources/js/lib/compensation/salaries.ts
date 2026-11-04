@@ -24,6 +24,15 @@ export function tabulatorHeadline(total: number): string {
     return `${countOf(total, 'categoría', 'categorías')} y ${plural(total, 'nivel', 'niveles')}.`;
 }
 
+/** "3 personas con sueldo individual." */
+export function overridesHeadline(total: number): string {
+    if (total === 0) {
+        return 'Todavía no hay sueldos individuales.';
+    }
+
+    return `${countOf(total, 'persona', 'personas')} con sueldo individual.`;
+}
+
 /** "Operador · A". */
 export function gradeName(grade: { category: string; level: string }): string {
     return `${grade.category} · ${grade.level}`;

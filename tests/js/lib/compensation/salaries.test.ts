@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     gradeName,
+    overridesHeadline,
     salaryQuery,
     salaryStanding,
     tabulatorHeadline,
@@ -44,5 +45,17 @@ describe('salaryStanding', () => {
 
     it('is later when nothing is in force yet', () => {
         expect(salaryStanding('2027-01-01', null)).toBe('upcoming');
+    });
+});
+
+describe('overridesHeadline', () => {
+    it('says there are none, one person or many', () => {
+        expect(overridesHeadline(0)).toBe(
+            'Todavía no hay sueldos individuales.',
+        );
+        expect(overridesHeadline(1)).toBe('1 persona con sueldo individual.');
+        expect(overridesHeadline(12)).toBe(
+            '12 personas con sueldo individual.',
+        );
     });
 });
