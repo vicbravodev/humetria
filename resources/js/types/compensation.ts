@@ -88,3 +88,10 @@ export type TabulatorRow = {
     current: SalaryEntry | null;
     salaries: (SalaryEntry & { id: string })[];
 };
+
+/** The problems that kept a salaries CSV from being imported, each row numbered as the spreadsheet numbers it. */
+export type SalaryImportSummary = {
+    status: 'invalid' | 'imported';
+    rows: number;
+    errors: { row: number; messages: string[] }[];
+};

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Compensation\Actions\ListTabulator;
 use App\Modules\Compensation\Actions\SaveGradeSalary;
 use App\Modules\Compensation\Http\Requests\GradeSalaryRequest;
+use App\Modules\Compensation\Support\CsvFile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ final class TabulatorController extends Controller
         return Inertia::render('compensation/tabulator', [
             'grades' => $list->handle($search, $today),
             'filters' => ['q' => $search],
+            'max_rows' => CsvFile::MAX_ROWS,
         ]);
     }
 

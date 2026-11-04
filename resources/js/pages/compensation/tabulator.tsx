@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import NewSalaryButton from '@/components/compensation/new-salary-button';
 import TabulatorEmpty from '@/components/compensation/tabulator-empty';
+import TabulatorImport from '@/components/compensation/tabulator-import';
 import TabulatorTable from '@/components/compensation/tabulator-table';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
@@ -13,9 +14,11 @@ import type { Paginated, SalaryFilters, TabulatorRow } from '@/types';
 export default function Tabulator({
     grades,
     filters,
+    max_rows,
 }: {
     grades: Paginated<TabulatorRow>;
     filters: SalaryFilters;
+    max_rows: number;
 }) {
     const tenantSlug = useTenantSlug();
     const { text, type } = useTabulatorFilters(tenantSlug, filters);
@@ -30,6 +33,7 @@ export default function Tabulator({
                 >
                     <NewSalaryButton />
                 </PageHeader>
+                <TabulatorImport maxRows={max_rows} />
                 <SearchField
                     label="Buscar una categoría o un nivel"
                     value={text}

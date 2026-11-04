@@ -49,8 +49,8 @@ final class SalaryRules
     public static function gradeProblems(string $category, string $level): array
     {
         return [
-            ...self::textProblem('category', 'La categoría', trim($category), self::CATEGORY_LENGTH),
-            ...self::textProblem('level', 'El nivel', trim($level), self::LEVEL_LENGTH),
+            ...self::textProblem('category', 'La categoría', 'vacía', trim($category), self::CATEGORY_LENGTH),
+            ...self::textProblem('level', 'El nivel', 'vacío', trim($level), self::LEVEL_LENGTH),
         ];
     }
 
@@ -73,10 +73,10 @@ final class SalaryRules
     /**
      * @return array<string, string>
      */
-    private static function textProblem(string $field, string $label, string $text, int $length): array
+    private static function textProblem(string $field, string $label, string $empty, string $text, int $length): array
     {
         return match (true) {
-            $text === '' => [$field => "{$label} no puede quedar vacío."],
+            $text === '' => [$field => "{$label} no puede quedar {$empty}."],
             mb_strlen($text) > $length => [$field => "{$label} puede tener {$length} caracteres a lo más."],
             default => [],
         };

@@ -45,6 +45,7 @@ it('lists the tabulator paginated by category and level with server-side search'
             ->where('grades.total', 3)
             ->where('grades.per_page', 15)
             ->where('filters', ['q' => ''])
+            ->where('max_rows', 2000)
             ->where('grades.data.0.category', 'Operador')
             ->where('grades.data.0.level', 'A')
             // The one in force today is the 2026 salary, not the one of next year.
