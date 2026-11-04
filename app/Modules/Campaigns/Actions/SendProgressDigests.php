@@ -101,7 +101,7 @@ final readonly class SendProgressDigests
         $rows = ParticipantInstrument::query()
             ->join('campaign_participants', 'campaign_participants.id', '=', 'participant_instruments.participant_id')
             ->where('campaign_participants.campaign_id', $campaign->id)
-            ->where('participant_instruments.instrument', array_last($campaign->instruments))
+            ->where('participant_instruments.instrument', $campaign->measuringGuide())
             ->whereIn('participant_instruments.status', [InstrumentStatus::Pending, InstrumentStatus::Completed])
             ->toBase()
             ->get(['campaign_participants.employee_id', 'participant_instruments.status']);

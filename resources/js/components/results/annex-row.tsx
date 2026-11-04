@@ -58,7 +58,7 @@ export default function AnnexRow({
                     tone !== null && riskText(tone),
                 )}
             >
-                {high} %
+                {high}&nbsp;%
             </TableCell>
         </TableRow>
     );

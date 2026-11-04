@@ -26,6 +26,7 @@ final class ClosingSummary extends Notification implements ShouldQueue
      * @param  list<int>|null  $levels  questionnaires at each level, Nulo to Muy alto; null below the minimum group.
      * @param  array{label: string, high: int}|null  $domain  the domain with the most questionnaires at Alto or Muy alto.
      * @param  bool  $hasRisk  whether the campaign applied a guide scored by risk level (Guía II or III).
+     * @param  string|null  $programUrl  where the Programa de intervención is, when the results ask for one.
      */
     public function __construct(
         private readonly string $tradeName,
@@ -37,6 +38,7 @@ final class ClosingSummary extends Notification implements ShouldQueue
         private readonly bool $hasRisk,
         private readonly int $requiringAssessment,
         private readonly string $url,
+        private readonly ?string $programUrl = null,
     ) {}
 
     /**
@@ -76,6 +78,7 @@ final class ClosingSummary extends Notification implements ShouldQueue
                 'minGroup' => config()->integer('results.min_group'),
                 'assessment' => $this->requiringAssessment,
                 'report' => $this->levels !== null,
+                'programUrl' => $this->programUrl,
             ]);
     }
 }

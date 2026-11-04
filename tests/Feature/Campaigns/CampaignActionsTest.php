@@ -115,6 +115,18 @@ it('sends the link again only to the pending people the filters narrow the list 
         ->and(participantOf($campaign, $people[0])->token_hash)->not->toBe($untouched);
 });
 
+it('reminds only who has the chosen guide pending, and whoever has any when none is chosen', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => staffOf($this->tenant, $this->plant, 20));
+    $answeredTwo = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->first();
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $answeredTwo->id)->where('instrument', 'nom035.guide-ii')->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['guide' => 'nom035.guide-ii']);
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 19);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 19 + 20);
+});
+
 it('sends the link again to whoever it failed to reach, and no one else, when the list shows them', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
     $failed = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->limit(3)->pluck('id');

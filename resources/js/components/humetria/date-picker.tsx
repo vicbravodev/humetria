@@ -10,6 +10,7 @@ import { useHeldValue } from '@/hooks/use-held-value';
 import {
     describeDate,
     fromCalendarDate,
+    calendarLimits,
     toCalendarDate,
 } from '@/lib/calendar-date';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,8 @@ type Props = {
     defaultValue?: string | undefined;
     /** The first day that can be picked, Y-m-d. */
     min?: string | undefined;
+    /** The last day that can be picked, Y-m-d. */
+    max?: string | undefined;
     invalid?: boolean;
     describedBy?: string | undefined;
     /** The day picked, when the page holds it (Y-m-d); without it the field keeps its own. */
@@ -37,6 +40,7 @@ export default function DatePicker({
     name,
     defaultValue = '',
     min,
+    max,
     invalid = false,
     describedBy,
     value: held,
@@ -45,9 +49,9 @@ export default function DatePicker({
     const [value, setValue] = useHeldValue(defaultValue, held, onChange);
     const [open, setOpen] = useState(false);
     const selected = fromCalendarDate(value);
-    const first = min === undefined ? undefined : fromCalendarDate(min);
+    const limits = calendarLimits(min, max);
     const written = describeDate(value);
-    const month = selected ?? first;
+    const month = selected ?? limits.startMonth;
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -92,9 +96,7 @@ export default function DatePicker({
                     required
                     selected={selected}
                     {...(month === undefined ? {} : { defaultMonth: month })}
-                    {...(first === undefined
-                        ? {}
-                        : { startMonth: first, disabled: { before: first } })}
+                    {...limits}
                     onSelect={(day) => {
                         setValue(toCalendarDate(day));
                         setOpen(false);

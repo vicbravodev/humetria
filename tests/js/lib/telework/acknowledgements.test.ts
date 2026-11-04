@@ -22,7 +22,7 @@ describe('percent', () => {
 describe('progressText', () => {
     it('writes the count and the percent', () => {
         expect(progressText({ acknowledged: 12, expected: 40 })).toBe(
-            '12 de 40 (30 %)',
+            '12 de 40 (30\u00a0%)',
         );
     });
 });

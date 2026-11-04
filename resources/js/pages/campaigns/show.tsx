@@ -5,7 +5,7 @@ import CampaignPageHeader from '@/components/campaigns/campaign-page-header';
 import ClosedEvaluation from '@/components/campaigns/closed-evaluation';
 import DraftReview from '@/components/campaigns/draft-review';
 import { useCampaignAccess } from '@/hooks/use-campaign-access';
-import { peoplePage } from '@/lib/campaigns';
+import { measuringGuide, peoplePage } from '@/lib/campaigns';
 import { pendingTotal } from '@/lib/evaluation';
 import { index } from '@/routes/tenant/campaigns';
 import type {
@@ -65,6 +65,7 @@ export default function Campaign(props: {
                         replacementPool={props.replacementPool}
                         missing={props.missing ?? { people: 0, links: 0 }}
                         pending={pendingTotal(props.areas)}
+                        guide={measuringGuide(instruments)}
                     />
                 </CampaignPageHeader>
                 {campaign.status === 'draft' && (

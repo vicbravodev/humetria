@@ -38,6 +38,11 @@ interface ResponseReader
     public function requiringCounts(array $campaignIds): array;
 
     /**
+     * Whether one person's Guía I in a campaign says they require a clinical assessment (num. 5.5).
+     */
+    public function requiresAssessment(string $campaignId, string $employeeId): bool;
+
+    /**
      * Who requires a clinical assessment in a campaign (num. 5.5), by when they answered, a page at a time.
      *
      * @return LengthAwarePaginator<int, ScreeningRecord>

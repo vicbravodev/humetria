@@ -139,7 +139,8 @@ it('folds a submenu away from its parent and lights the closest child on a deepe
 
     visit('/admin/acme/telework')
         ->click('[data-sidebar="menu-button"][aria-expanded="true"]')
-        ->assertScript('() => document.querySelector(\'[data-sidebar="menu-button"][aria-expanded="false"]\')?.textContent.includes("NOM-037") === true && document.querySelector(\'[data-sidebar="menu-sub"]\') === null')
+        // NOM-035 is a submenu too, folded: the one that just folded is NOM-037, and no submenu is open.
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"][aria-expanded="false"]\')].some((button) => button.textContent.includes("NOM-037")) && document.querySelector(\'[data-sidebar="menu-sub"]\') === null')
         ->navigate('/admin/acme/telework/documents')
         ->assertScript('() => document.querySelector(\'[data-sidebar="menu-sub-button"][aria-current="page"]\')?.textContent', 'Documentos');
 });

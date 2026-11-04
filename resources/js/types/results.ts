@@ -72,6 +72,13 @@ export type ResultsCampaign = {
     instruments: string[];
 };
 
+/** Where the Programa de intervención stands, for the card of the results; not made yet when `exists` is false. */
+export type ResultsProgramCard = {
+    exists: boolean;
+    state: { value: string; label: string } | null;
+    meter: { done: number; total: number } | null;
+};
+
 export type Participation = {
     invited: number;
     answered: number;
@@ -80,6 +87,25 @@ export type Participation = {
 export type ScreeningCounts = {
     answered: number;
     requiring: number;
+};
+
+/** Where a person's channeling stands once recorded; no record means still pending. */
+export type ReferralStatus = 'referred' | 'attended';
+
+/** The record of a person's channeling (num. 5.5, 5.8 c): the day is Y-m-d for the picker, and written for reading. */
+export type ScreeningReferral = {
+    status: ReferralStatus;
+    statusLabel: string;
+    referredOn: string;
+    referredOnLabel: string;
+    institution: string;
+};
+
+/** How many of who requires a clinical assessment are pending, referred and attended. */
+export type ReferralCounts = {
+    pending: number;
+    referred: number;
+    attended: number;
 };
 
 /** A row of a distribution table: a group and its questionnaires by level. */
@@ -97,6 +123,7 @@ export type ScreenedPerson = {
     area: string;
     jobTitle: string;
     answeredOn: string;
+    referral: ScreeningReferral | null;
 };
 
 /** The work center as the report names it (num. 7.7 a). */
@@ -106,6 +133,53 @@ export type ReportCenter = {
     name: string;
     address: string;
     mainActivity: string;
+};
+
+/** An action of the Programa as the report prints it: no file, no note of a step. */
+export type ReportProgramAction = {
+    title: string;
+    kind: string;
+    level: string;
+    subjects: string;
+    startsOn: string | null;
+    dueOn: string;
+    responsible: string;
+    status: string;
+    professional: string | null;
+    overdue: boolean;
+};
+
+/** A row of the Programa as the report prints it. */
+export type ReportProgramItem = {
+    label: string;
+    scope: string;
+    level: string | null;
+    analysis: string | null;
+    followUp: string | null;
+    actions: ReportProgramAction[];
+};
+
+/** The Programa de intervención as of the day the report is read (num. 7.7 g). */
+export type ReportProgram = {
+    state: string;
+    stateKey: string;
+    meter: { done: number; total: number };
+    highestLevel: string | null;
+    responsible: string | null;
+    asOf: string;
+    items: ReportProgramItem[];
+};
+
+/** What incise g says of the Programa: it is there, the norm asks for none, it is missing, or nothing can be derived. */
+export type ReportInterventionState =
+    | 'program'
+    | 'not_required'
+    | 'missing'
+    | 'below_minimum';
+
+export type ReportIntervention = {
+    state: ReportInterventionState;
+    program: ReportProgram | null;
 };
 
 /** The report of a closed evaluation (num. 7.7). What HR has not filled in yet is null. */
@@ -125,6 +199,7 @@ export type NomReport = {
     complete: boolean;
     results: RiskResults;
     areas: AreaResults;
+    intervention: ReportIntervention;
 };
 
 /** What HR fills in for the report. */

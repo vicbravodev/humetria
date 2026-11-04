@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta property="csp-nonce" nonce="{{ Vite::cspNonce() }}">
+        @if (str_starts_with($page['component'] ?? '', 'disclosure-public/'))
+            <meta name="robots" content="noindex, nofollow">
+        @endif
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script nonce="{{ Vite::cspNonce() }}">

@@ -31,3 +31,32 @@ export function describeDate(text: string): string | undefined {
 
     return date === undefined ? undefined : longDate.format(date);
 }
+
+/** What a calendar closes: the days before `min` and after `max` (Y-m-d); nothing when neither is a date. */
+export function pickableDays(
+    min: string | undefined,
+    max: string | undefined,
+): Array<{ before: Date } | { after: Date }> | undefined {
+    const first = min === undefined ? undefined : fromCalendarDate(min);
+    const last = max === undefined ? undefined : fromCalendarDate(max);
+    const closed = [
+        ...(first === undefined ? [] : [{ before: first }]),
+        ...(last === undefined ? [] : [{ after: last }]),
+    ];
+
+    return closed.length === 0 ? undefined : closed;
+}
+
+/** What a calendar needs to respect a first and a last day: where it starts, and the days it closes. */
+export function calendarLimits(
+    min: string | undefined,
+    max: string | undefined,
+): { startMonth?: Date; disabled?: Array<{ before: Date } | { after: Date }> } {
+    const first = min === undefined ? undefined : fromCalendarDate(min);
+    const disabled = pickableDays(min, max);
+
+    return {
+        ...(first === undefined ? {} : { startMonth: first }),
+        ...(disabled === undefined ? {} : { disabled }),
+    };
+}

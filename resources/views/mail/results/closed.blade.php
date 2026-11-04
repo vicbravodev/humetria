@@ -35,7 +35,7 @@
 </tr>
 </table>
 @endif
-@if ($assessment > 0 || $report)
+@if ($assessment > 0 || $report || $programUrl)
 <table class="rule" cellpadding="0" cellspacing="0" role="presentation">
 <tr><td colspan="2" class="meta" style="color: #14211f; font-weight: 600;">Lo que sigue</td></tr>
 @if ($assessment > 0)
@@ -48,6 +48,12 @@
 <tr>
 <td width="26" style="vertical-align: top; padding-top: 2px;"><img src="{{ asset('mail/file-text.png') }}" width="16" height="16" alt=""></td>
 <td class="meta" style="color: #14211f;">Completa el informe 7.7 con las conclusiones y las acciones de intervención.</td>
+</tr>
+@endif
+@if ($programUrl)
+<tr>
+<td width="26" style="vertical-align: top; padding-top: 2px;"><img src="{{ asset('mail/file-text.png') }}" width="16" height="16" alt=""></td>
+<td class="meta" style="color: #14211f;">Siguiente paso: <a href="{{ $programUrl }}" style="color: #14211f;">completa el Programa de intervención</a>.</td>
 </tr>
 @endif
 </table>

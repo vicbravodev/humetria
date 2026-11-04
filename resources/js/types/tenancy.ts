@@ -89,11 +89,17 @@ export type CurrentTenant = TenantSummary &
             view_seating: boolean;
             manage_seating: boolean;
             assess_seating: boolean;
+            view_interventions: boolean;
+            manage_interventions: boolean;
+            view_disclosure: boolean;
+            manage_disclosure: boolean;
             use_assistant: boolean;
+            manage_complaint_channel: boolean;
+            handle_complaints: boolean;
         };
     };
 
-export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee';
+export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &

@@ -30,6 +30,19 @@ final class CompanyWorkCenters implements WorkCenters
             ->through($this->summary(...));
     }
 
+    public function search(string $query, int $limit = 20): array
+    {
+        return array_values(WorkCenter::query()
+            ->whereNull('archived_at')
+            ->matching(['name'], $query)
+            ->orderBy('name')
+            ->orderBy('id')
+            ->limit($limit)
+            ->get(['id', 'name', 'archived_at', 'main_activity'])
+            ->map($this->summary(...))
+            ->all());
+    }
+
     public function findActive(string $id): ?WorkCenterSummary
     {
         $workCenter = WorkCenter::query()->whereNull('archived_at')->find($id, ['id', 'name', 'archived_at', 'main_activity']);

@@ -199,7 +199,7 @@ it('builds the report with a fixed number of queries, however many areas, answer
     $this->get($url);
 
     // The same whatever the size: nothing is read per row.
-    $this->expectsDatabaseQueryCount(18);
+    $this->expectsDatabaseQueryCount(21);
 
     $this->get($url)->assertOk();
 })->with([1, 4]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Campaigns\Support;
 
 use App\Modules\Campaigns\Data\PeopleFilter;
+use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\Standing;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
@@ -122,14 +123,14 @@ final readonly class CampaignPeople
     }
 
     /**
-     * How many people of each area answered every guide, and how many wait with a link sent, of everyone still in the
+     * How many people of each area answered the guide that measures the campaign, and how many wait with a link sent, of everyone still in the
      * campaign (cancelled people left out): the counts the list of people gives, area by area. By area name.
      *
      * @return list<array{id: string, name: string, answered: int, pending: int, total: int}>
      */
     public function byArea(Campaign $campaign): array
     {
-        $standings = DB::query()->fromSub($this->standingQuery($campaign, null), 'people')->pluck('standing', 'employee_id')->all();
+        $standings = DB::query()->fromSub($this->standingQuery($campaign, $campaign->measuringGuide()), 'people')->pluck('standing', 'employee_id')->all();
         $people = $this->roster->findMany(array_values(array_filter(array_keys($standings), is_string(...))));
         $areas = [];
 
@@ -153,8 +154,8 @@ final readonly class CampaignPeople
     }
 
     /**
-     * How many people finished on each day from the launch to the last day, counted on the day of their last guide
-     * (null for the days still to come). Below the minimum group there is no count at all: with fewer people, a day
+     * How many people finished the guide that measures the campaign on each day from the launch to the last day (null
+     * for the days still to come). Below the minimum group there is no count at all: with fewer people, a day
      * could tell when one of them answered.
      *
      * @return array{minimum: int, days: list<array{date: string, answers: int|null}>|null}
@@ -164,11 +165,10 @@ final readonly class CampaignPeople
         $minimum = config()->integer('results.min_group');
         $finished = $campaign->participants()->getQuery()
             ->join('participant_instruments', 'participant_instruments.participant_id', '=', 'campaign_participants.id')
-            ->groupBy('campaign_participants.id')
-            ->havingRaw("bool_and(participant_instruments.status = 'completed')")
+            ->where('participant_instruments.instrument', $campaign->measuringGuide())
+            ->where('participant_instruments.status', InstrumentStatus::Completed)
             ->toBase()
-            ->selectRaw('max(participant_instruments.completed_at) as finished_at')
-            ->pluck('finished_at');
+            ->pluck('participant_instruments.completed_at');
 
         if ($finished->count() < $minimum || $campaign->launched_at === null || $campaign->closes_on === null) {
             return ['minimum' => $minimum, 'days' => null];

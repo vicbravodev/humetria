@@ -43,7 +43,7 @@ final class ErrorPage
             Inertia::share($this->inertia->share($request));
         }
 
-        $page = Inertia::render('error', ['status' => $status, 'survey' => $request->routeIs('survey.*')])
+        $page = Inertia::render('error', ['status' => $status, 'survey' => $request->routeIs('survey.*', 'complaints.public.*', 'complaints.follow-up.*')])
             ->toResponse($request)
             ->setStatusCode($status);
 

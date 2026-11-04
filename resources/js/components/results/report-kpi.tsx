@@ -37,7 +37,7 @@ export default function ReportKpi({
                     tone === 'alarm' && 'text-risk-muy-alto-fg',
                 )}
             >
-                {shown} %
+                {shown}&nbsp;%
             </p>
             <div className="h-1.5 overflow-hidden rounded-full bg-border">
                 <div

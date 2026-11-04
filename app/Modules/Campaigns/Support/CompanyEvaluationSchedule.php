@@ -41,11 +41,11 @@ final class CompanyEvaluationSchedule implements EvaluationSchedule
         }
 
         if ($campaign->closed_at === null) {
-            return new EvaluationStanding('running', $campaign->closes_on === null ? null : CampaignClock::day($campaign->closes_on, isDate: true));
+            return new EvaluationStanding('running', $campaign->closes_on === null ? null : CampaignClock::day($campaign->closes_on, isDate: true), $campaign->closes_on?->format('Y-m-d'));
         }
 
         $due = $campaign->closed_at->addYears(2);
 
-        return new EvaluationStanding($due->isPast() ? 'overdue' : 'due', CampaignClock::day($due));
+        return new EvaluationStanding($due->isPast() ? 'overdue' : 'due', CampaignClock::day($due), CampaignClock::date($due));
     }
 }

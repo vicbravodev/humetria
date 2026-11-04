@@ -6,6 +6,10 @@ namespace App\Modules\Results\Support;
 
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Instruments\Contracts\Instruments;
+use App\Modules\Results\Contracts\ProgramOutlines;
+use App\Modules\Results\Contracts\RiskResults;
+use App\Modules\Results\Data\ProgramOutline;
+use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Results\Models\ReportDetails;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 
@@ -18,7 +22,7 @@ final readonly class ReportBuilder
 {
     private const array NUMERALS = ['nom035.guide-ii' => 'II', 'nom035.guide-iii' => 'III'];
 
-    public function __construct(private ResultsPages $pages, private WorkCenters $workCenters, private Instruments $instruments) {}
+    public function __construct(private ResultsPages $pages, private WorkCenters $workCenters, private Instruments $instruments, private ProgramOutlines $programs, private RiskResults $risk) {}
 
     /** The evaluation's guide scored by risk level, when it is closed and has one; else it has no report. */
     public static function guideOf(CampaignRecord $campaign): ?string
@@ -56,7 +60,31 @@ final readonly class ReportBuilder
             'complete' => $details !== null,
             'results' => $risk['results'],
             'areas' => $risk['areas'],
+            'intervention' => $this->intervention($campaign),
         ];
+    }
+
+    /**
+     * What incise g says of the Programa de intervención (num. 8.3): the Programa as of today, or why there is none. The
+     * report keeps no copy of it, so a change reaches the report at once.
+     *
+     * @return array{state: string, program: ProgramOutline|null}
+     */
+    private function intervention(CampaignRecord $campaign): array
+    {
+        $outline = $this->programs->forCampaign($campaign->id);
+
+        if ($outline !== null) {
+            return ['state' => 'program', 'program' => $outline];
+        }
+
+        $risk = $this->risk->forCampaign($campaign);
+
+        return ['state' => match (true) {
+            $risk->state === RiskBreakdown::BELOW_MINIMUM => 'below_minimum',
+            $risk->needingProgram() === [] => 'not_required',
+            default => 'missing',
+        }, 'program' => null];
     }
 
     /**
