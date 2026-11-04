@@ -17,10 +17,7 @@ export default function TermHistory({ terms }: { terms: BenefitTerm[] }) {
     return (
         <ol aria-label="Términos por vigencia" className="grid gap-2">
             {terms.map((term) => (
-                <li
-                    key={term.id}
-                    className="grid gap-1.5 rounded-xl border bg-card px-4 py-3"
-                >
+                <li key={term.id} className="grid gap-1.5 card px-4 py-3">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4">
                         <span className="text-sm text-muted-foreground">
                             Desde el {describeDate(term.effective_from)}

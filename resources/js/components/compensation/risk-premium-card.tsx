@@ -2,6 +2,7 @@ import { Form } from '@inertiajs/react';
 import { ShieldAlert } from 'lucide-react';
 import FormField from '@/components/form-field';
 import DatePicker from '@/components/humetria/date-picker';
+import IconTile from '@/components/humetria/icon-tile';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -25,11 +26,9 @@ export default function RiskPremiumCard({
     const start = useYearStart();
 
     return (
-        <section className="grid gap-4 rounded-xl border bg-card p-5">
+        <section className="grid gap-4 card p-5">
             <div className="flex items-start gap-3">
-                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                    <ShieldAlert aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={ShieldAlert} />
                 <div>
                     <h2 className="text-lg leading-[26px] font-semibold">
                         Prima de riesgo de trabajo
