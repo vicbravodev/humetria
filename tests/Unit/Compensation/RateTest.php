@@ -40,3 +40,11 @@ it('gives a whole number only when the value is an integer', function (): void {
 
     Rate::scaled(1, 1)->integer();
 })->throws(InvalidArgumentException::class);
+
+it('has a zero and subtracts exactly', function (): void {
+    expect(Rate::zero()->compareTo(Rate::scaled(0, 4)))->toBe(0)
+        ->and(Rate::zero()->of(12_345))->toBe(0)
+        ->and(Rate::fraction(1, 2)->minus(Rate::fraction(1, 3))->compareTo(Rate::fraction(1, 6)))->toBe(0)
+        ->and(Rate::fraction(1, 3)->minus(Rate::fraction(1, 2))->compareTo(Rate::fraction(-1, 6)))->toBe(0)
+        ->and(Rate::one()->minus(Rate::one())->compareTo(Rate::zero()))->toBe(0);
+});

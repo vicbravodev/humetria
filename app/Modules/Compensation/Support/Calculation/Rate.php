@@ -37,6 +37,11 @@ final readonly class Rate
         return new self(BigRational::one());
     }
 
+    public static function zero(): self
+    {
+        return new self(BigRational::zero());
+    }
+
     public function value(): BigRational
     {
         return $this->value;
@@ -45,6 +50,11 @@ final readonly class Rate
     public function plus(self $other): self
     {
         return new self($this->value->plus($other->value));
+    }
+
+    public function minus(self $other): self
+    {
+        return new self($this->value->minus($other->value));
     }
 
     public function times(self $other): self
