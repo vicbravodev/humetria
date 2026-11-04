@@ -35,5 +35,14 @@ interface CompensationRoster
      */
     public function individuals(array $employeeNumbers): array;
 
+    /**
+     * Everyone hired on or before `$asOf` who can be costed and has an employee number, by employee number, read one by one
+     * from the database so a large roster never sits in memory. It is for a per-person file; the calculation itself uses
+     * `cells()`.
+     *
+     * @return iterable<int, CompensationPerson>
+     */
+    public function numbered(CarbonImmutable $asOf): iterable;
+
     public function gaps(): RosterGaps;
 }

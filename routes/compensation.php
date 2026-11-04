@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Compensation\Http\Controllers\AnnexController;
 use App\Modules\Compensation\Http\Controllers\BenefitController;
 use App\Modules\Compensation\Http\Controllers\BenefitOptionsController;
 use App\Modules\Compensation\Http\Controllers\BenefitTermController;
@@ -47,6 +48,7 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.edit');
     Route::put('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'update'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.update');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/report', [ReportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.report');
+    Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/annex', AnnexController::class)->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.annex');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/duplicate', [ScenarioController::class, 'duplicate'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.duplicate');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/archive', [ScenarioController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.archive');
 

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Pencil } from 'lucide-react';
+import { Download, Pencil } from 'lucide-react';
 import ReportAssumptions from '@/components/compensation/report-assumptions';
 import ReportConcepts from '@/components/compensation/report-concepts';
 import ReportCoverage from '@/components/compensation/report-coverage';
@@ -16,7 +16,7 @@ import { useIsUnion } from '@/hooks/use-is-union';
 import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { raiseSummary } from '@/lib/compensation/scenarios';
-import { edit } from '@/routes/tenant/compensation/scenarios';
+import { annex, edit } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioReport } from '@/types';
 
 export default function Report(report: ScenarioReport) {
@@ -45,6 +45,24 @@ export default function Report(report: ScenarioReport) {
                             Editar escenario
                         </Link>
                     </Button>
+                    {report.can_annex && (
+                        <Button
+                            variant="outline"
+                            asChild
+                            className="print:hidden"
+                        >
+                            <a
+                                href={annex.url({
+                                    tenant: tenantSlug,
+                                    scenario: scenario.id,
+                                })}
+                                download
+                            >
+                                <Download />
+                                Anexo por persona
+                            </a>
+                        </Button>
+                    )}
                     <span className="print:hidden">
                         <PrintButton />
                     </span>

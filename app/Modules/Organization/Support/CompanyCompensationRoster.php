@@ -89,6 +89,32 @@ final class CompanyCompensationRoster implements CompensationRoster
         return $people;
     }
 
+    public function numbered(CarbonImmutable $asOf): iterable
+    {
+        $rows = $this->costable()
+            ->whereNotNull('employee_number')
+            ->where('hired_on', '<=', $asOf->toDateString())
+            ->orderBy('employee_number')
+            ->select(['employee_number', 'job_grade_id', 'area_id', 'staff_group', 'state', 'hired_on'])
+            ->toBase()
+            ->cursor();
+
+        foreach ($rows as $row) {
+            $group = is_string($row->staff_group) ? StaffGroup::tryFrom($row->staff_group) : null;
+
+            if (is_string($row->employee_number) && is_string($row->job_grade_id) && $group !== null && is_string($row->hired_on)) {
+                yield new CompensationPerson(
+                    $row->employee_number,
+                    $row->job_grade_id,
+                    is_string($row->area_id) ? $row->area_id : null,
+                    $group,
+                    is_string($row->state) ? $row->state : null,
+                    CarbonImmutable::parse($row->hired_on, 'UTC'),
+                );
+            }
+        }
+    }
+
     public function gaps(): RosterGaps
     {
         $active = Employee::query()->whereNull('deactivated_at');

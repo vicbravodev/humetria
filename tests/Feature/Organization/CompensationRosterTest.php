@@ -244,3 +244,30 @@ it('serves a union account the same as a company account', function (): void {
         ->and(roster()->individuals(['S-001'])['S-001']->areaId)->toBeNull()
         ->and(roster()->gaps()->costed)->toBe(1);
 });
+
+it('lists the people who can be costed and have a company ID, by company ID, in one query', function (): void {
+    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-2']);
+    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-1', 'area_id' => null]);
+    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-3', 'hired_on' => '2030-01-01']);
+    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-4', 'deactivated_at' => now()]);
+    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-5', 'job_grade_id' => null]);
+    costedPerson($this->tenant, $this->grade, ['employee_number' => null]);
+    workIn($this->tenant);
+
+    $this->expectsDatabaseQueryCount(1);
+    $people = iterator_to_array(roster()->numbered(asOf()), false);
+
+    expect($people)->toHaveCount(2)->each->toBeInstanceOf(CompensationPerson::class)
+        ->and(array_map(fn (CompensationPerson $person): string => $person->employeeNumber, $people))->toBe(['E-1', 'E-2'])
+        ->and($people[0]->jobGradeId)->toBe($this->grade->id)
+        ->and($people[0]->group)->toBe(StaffGroup::Unionized)
+        ->and($people[0]->hiredOn->toDateString())->toBe('2020-03-15');
+});
+
+it('lists nobody of another company', function (): void {
+    $other = Tenant::factory()->create();
+    costedPerson($other, JobGrade::factory()->create(['tenant_id' => $other->id]), ['employee_number' => 'E-OTHER']);
+    workIn($this->tenant);
+
+    expect(iterator_to_array(roster()->numbered(asOf()), false))->toBe([]);
+});
