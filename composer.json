@@ -88,6 +88,13 @@
             "@php artisan test --coverage --min=90 --exclude-testsuite=Browser",
             "@test:browser"
         ],
+        "check:fast": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan config:clear --ansi",
+            "@lint:check",
+            "@types:check",
+            "@test:fast"
+        ],
         "test:browser": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan test --testsuite=Browser --parallel --processes=4"
