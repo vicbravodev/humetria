@@ -91,6 +91,8 @@ export type CurrentTenant = TenantSummary &
             assess_seating: boolean;
             view_interventions: boolean;
             manage_interventions: boolean;
+            view_disclosure: boolean;
+            manage_disclosure: boolean;
             use_assistant: boolean;
             manage_complaint_channel: boolean;
             handle_complaints: boolean;

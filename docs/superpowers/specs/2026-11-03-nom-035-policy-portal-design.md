@@ -1,8 +1,7 @@
 # NOM-035: política de prevención, difusión y página de las personas trabajadoras
 
-Fecha: 2026-11-03. Estado: propuesta (pendiente de aprobación). Es el trabajo 3 de
-[`gaps-pendientes.md`](../../normas/nom-035/gaps-pendientes.md) (numerales 5.1, 5.7 y 7.8). El plan de implementación se
-escribe al aprobarse este documento. Se diseña en paralelo con el programa de intervención (trabajo 2) y el canal de
+Fecha: 2026-11-03. Estado: **implementado** (rama `nom035-policy`; ver al final «Decisiones al implementar»). Fue el trabajo 3 de
+[`gaps-pendientes.md`](../../normas/nom-035/gaps-pendientes.md) (numerales 5.1, 5.7 y 7.8). Se diseñó en paralelo con el programa de intervención (trabajo 2) y el canal de
 quejas (trabajo 4): lo que se asume de ellos está en «Integración con el Programa y las Quejas».
 
 Anexos obligatorios:
@@ -793,3 +792,68 @@ Contéstalas todas juntas. Cada una trae mi recomendación por defecto.
 Se aceptaron **todos los valores por defecto** de «Preguntas abiertas», incluida la declaración de
 `bacon/bacon-qr-code` en `composer.json` cuando el diseño la necesita (dependencia ya presente por Fortify).
 Orden de implementación: Programa de intervención y Canal de quejas (en paralelo), Política y portal al final.
+
+## Decisiones al implementar (2026-11-03)
+
+Se implementó con los valores por defecto aceptados y la descomposición del documento; donde el diseño chocó con el código o
+con `CLAUDE.md` se eligió lo más conservador. Los criterios son **C-50 a C-56** (sección I de `criterios.md`, versión 1.6), no
+C-30 a C-36: esos números son del Programa.
+
+**Las suposiciones del Programa y de las Quejas**
+
+- **P1 no se cumple: el Programa no tiene una bandera «visible para las personas»** (y no se le agregó: es de otro módulo y de
+  otro trabajo). Lo más conservador que da una lectura real es que **RH elige mostrar las medidas del Programa al publicar los
+  resultados** de una evaluación (casilla `show_measures` en `disclosure_result_publications`, desactivada por omisión); nada del
+  Programa llega a la página sin esa elección. Se lee por el puerto público `Results\Contracts\ProgramOutlines`, al que se le
+  agregaron cuatro claves a `ProgramOutlineAction` (`kindKey`, `levelValue`, `statusKey`, `wholeCenter`) para filtrar sin leer
+  etiquetas (commit propio, con su prueba en las pruebas del Programa).
+- **P2 y P3 se cumplen con una lista blanca más estricta** (`ProgramMeasureFeed`): solo acciones **de todo el centro**, de
+  **primer o segundo nivel** (el tercero es atención individual) y no canceladas; de cada una, solo título, inciso (b si es de
+  prevención de la violencia, c el resto), nivel, estado y fecha. Nunca responsable, descripción, análisis, áreas, archivos ni
+  evaluación posterior. El título es texto libre de RH: el diálogo avisa que no escriba nombres. No existen las categorías
+  `risk_factors`/`violence`/`environment` ni `scope = areas` del diseño: el inciso se deriva del tipo de acción.
+- **Q1 a Q6**: el contrato real es `ComplaintChannels::current(): ChannelData` y no trae `statement`. El adaptador
+  (`ComplaintChannelFeed`) copia solo el enlace (y solo si es del mismo origen), si acepta avisos anónimos y qué tipos recibe,
+  con etiquetas propias de los tres tipos que conoce (los demás se descartan). **No se copia** el procedimiento, los plazos ni
+  nada de un caso. La página repite el hecho de la bandera («el canal permite presentarla de forma anónima») y no agrega
+  promesas. El enlace del canal es un botón (visita completa) y el cartel de esta página lleva **un solo QR**, el de la página:
+  el cartel del canal sigue siendo el suyo (Q5).
+
+**Cambios al plan de commits**
+
+- El esqueleto (3) no trae rutas ni submenú: llegan con el tablero (5), cuando hay una página a la que apuntar, y la prueba de
+  que la Comisión no entra a `tenant.disclosure.*` está en esa misma tanda.
+- La petición de acuses (6) y su correo y confirmación (7) se partieron distinto: el 6 es la audiencia, los listeners y las filas;
+  el 7 la página del enlace personal, la confirmación y el correo, porque el correo apunta a una ruta que nace ahí.
+- El submenú de NOM-035 es «Evaluaciones», «Programas» y «Política y difusión»; el de las Quejas sigue siendo una entrada
+  propia de Cumplimiento (decisión de ese trabajo).
+- Se agregaron: `CampaignRecords::latestClosedEvaluations` (13) y `CampaignRecord::closedDate` (el día de cierre como fecha, para
+  comparar la política contra el cierre en D9).
+- Una pestaña **«Resultados»** y otra **«Contenidos»** del panel (el diseño las listaba como pestañas; son páginas propias con su
+  dirección), más el cartel y el expediente.
+
+**Reglas que el documento no fijaba**
+
+- **El token de la página es `HMAC(APP_KEY, "page|{tenant}|{version}")`** y la página **no abre sesión ni pone cookies**
+  (como el canal de quejas): una página que se abre con un enlace impreso en un cartel no debe dejar una fila en `sessions` con
+  la dirección y el navegador de quien la abrió. Un 429 y todo fallo (enlace inventado, rotado, desactivado, vencido, empresa
+  bloqueada o un centro ajeno) dan la misma página `disclosure-public/inactive`, con el mismo código y las mismas props. El tema
+  claro/oscuro tampoco escribe cookie en `/workers/*` (`isPrivatePath`).
+- **El vencimiento es el último día que abre**, hasta el fin de ese día en hora de México; de mañana a 36 meses.
+- **El acuse manual** exige que la persona siga pendiente, activa y con esa versión vigente en su centro; las demás se omiten
+  y, si ninguna queda, el servidor responde en `employee_ids`. La nota es opcional.
+- **El resumen semanal** (lunes 9:45) solo llega a empresas que ya empezaron con la difusión (tienen un texto o un enlace): no se
+  insiste a quien nunca abrió la herramienta. Cuenta centros sin política, centros con la última evaluación cerrada sin publicar
+  (D7) y el enlace por vencer.
+- **El tablero juzga a todos los centros en uso en masa** (consultas fijas) y los pagina en memoria; D7 y D9 piden los resultados
+  de cada centro con evaluación cerrada, así que esa parte crece con ellos.
+- **D2 y D3 solo se juzgan con política publicada**; D1 ya dice que falta. D10 se muestra en cada centro, aunque es de la empresa.
+- Las llaves nuevas de `RedactSensitiveData`: `acknowledgment_note`, `page_url`, `personal_link`, `policy_text`, `sections`,
+  `worker_page_link`.
+
+**Deuda registrada** (en `gaps-pendientes.md`): el módulo `Acknowledgements` genérico, mover `PortalAccess`, una raíz única del
+portal personal, un solo `FormDialog` y la bandera de visibilidad del Programa.
+
+**No verificado**: la mutación de las clases que declaran `mutates()` (no se corre en local por iniciativa propia: la corrida
+semanal lo dirá) y el texto base de 5.7 f, el aviso de los compromisos de la Guía IV y la lectura de «entregado» siguen
+pendientes de una persona con criterio legal o médico.

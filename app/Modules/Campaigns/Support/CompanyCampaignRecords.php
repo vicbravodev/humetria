@@ -73,6 +73,21 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
             ->get());
     }
 
+    public function latestClosedEvaluations(array $workCenterIds): array
+    {
+        $closed = Campaign::query()
+            ->where('kind', CampaignKind::Nom035Evaluation)
+            ->where('status', CampaignStatus::Closed)
+            ->whereIn('work_center_id', $workCenterIds)
+            ->orderByDesc('closed_at')
+            ->orderByDesc('id')
+            ->get();
+        // The first of each center is its latest: the list is already newest first.
+        $latest = $closed->unique('work_center_id')->values();
+
+        return array_column(array_map(fn (CampaignRecord $record): array => [$record->workCenterId, $record], $this->records($latest)), 1, 0);
+    }
+
     public function cycles(array $workCenterIds): array
     {
         $evaluations = Campaign::query()
@@ -149,6 +164,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
             answered: $answered,
             closesOn: $campaign->closes_on === null ? null : CampaignClock::day($campaign->closes_on, isDate: true),
             daysLeft: $campaign->status === CampaignStatus::Active && $campaign->closes_on !== null ? CampaignClock::daysLeft($campaign->closes_on) : null,
+            closedDate: $campaign->closed_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
         );
     }
 }

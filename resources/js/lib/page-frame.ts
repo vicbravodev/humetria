@@ -4,6 +4,8 @@ const STANDALONE_NAMES = new Set([
     'landing',
     'campaigns/survey',
     'seating/portal',
+    // The policy page of the person's portal: their own link, no account.
+    'disclosure/portal-policy',
     // A report opened from a temporary link: nobody signed in.
     'results/shared-report',
     // An error page stands alone: the address may not even be a page of the panel.
@@ -15,6 +17,8 @@ const STANDALONE_PREFIXES = [
     'telework/portal',
     // The channel for complaints is public and keeps no trace of who came: no panel, no account.
     'complaints-public/',
+    // The permanent page of the workers, opened with a link: no account, no panel.
+    'disclosure-public/',
 ];
 
 /** Whether a page renders without the panel around it. */

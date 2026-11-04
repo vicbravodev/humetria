@@ -82,6 +82,10 @@ final readonly class CompanyProgramOutlines implements ProgramOutlines
             status: $action->status->label(),
             professional: $action->professional?->label(),
             overdue: ProgramProgress::isOverdue($action->status, $action->due_on->toDateString(), ProgramClock::today()),
+            kindKey: $action->kind->value,
+            levelValue: $action->level->value,
+            statusKey: $action->status->value,
+            wholeCenter: $action->subjects === ActionSubjects::Center,
         );
     }
 

@@ -16,6 +16,8 @@ const ability = (handle: boolean, manage: boolean): CurrentTenant['can'] => ({
     assess_seating: manage,
     view_interventions: manage,
     manage_interventions: manage,
+    view_disclosure: manage,
+    manage_disclosure: manage,
     use_assistant: true,
     manage_complaint_channel: manage,
     handle_complaints: handle,

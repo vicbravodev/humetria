@@ -189,6 +189,27 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['notices']],
+    'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
+    'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
+    'the results for the people' => ['disclosure/results', function () {
+        [$tenant, $plant] = listsCompany();
+        Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+        return route('tenant.disclosure.results', $tenant);
+    }, ['evaluations']],
+    'the policy acknowledgments' => ['disclosure/dissemination', function () {
+        [$tenant] = listsCompany();
+        $policy = App\Modules\Disclosure\Models\Document::factory()->published()->policy()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.disclosure.dissemination', $tenant);
+    }, ['people']],
+    'the public page of the workers' => ['disclosure-public/centers', function () {
+        [$tenant] = listsCompany();
+        WorkCenter::factory()->for($tenant)->create();
+        workIn($tenant);
+
+        return route('workers.show', (string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(auth()->id() ?? 0)->token());
+    }, ['centers']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

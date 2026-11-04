@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.5 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.6 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -370,7 +370,8 @@ abre nada ni nombra a la empresa.
 
 **Qué dice la norma.** «El resultado (…) deberá constar en un informe que contenga lo siguiente: a) Datos del centro de
 trabajo verificado (…) h) Datos del responsable de la evaluación» (num. 7.7). El informe es también lo que se pone a
-disposición de los trabajadores (num. 7.8).
+disposición de los trabajadores (num. 7.8). Para la plantilla hay además un camino propio, la página de las personas (C-54 y
+C-55): muestra **resultados** (no el informe), publicados por RH; el informe sigue siendo para RH, la dirección y el auditor.
 
 ---
 
@@ -622,6 +623,115 @@ un abogado antes del lanzamiento.
 **Qué hacemos.** El acuse de recibo (3 días por omisión) y la respuesta (30) son recordatorios que la empresa se fija. Se
 muestran a la persona, marcan «vencido» a quien atiende y a quien administra solo se le cuentan. No son plazos de la norma.
 
+## I. Política de prevención, difusión y página de las personas trabajadoras (numerales 5.1, 5.7 y 7.8)
+
+La norma pide que el patrón tenga **por escrito** una política de prevención, la **difunda** y deje a las personas
+trabajadoras **consultar** qué se hace y qué resultó. No pide acuse de lectura, plazo de revisión ni una página web: lo que
+Humetría hace encima de la norma se rotula así. El diseño completo está en
+[`docs/superpowers/specs/2026-11-03-nom-035-policy-portal-design.md`](../../superpowers/specs/2026-11-03-nom-035-policy-portal-design.md).
+
+### C-50. Política por escrito, por centro y con versiones · Norma + Interpretación
+
+**Qué hacemos.** La política es texto. Cada **versión publicada es inmutable** (ni la plataforma ni la base de datos la
+cambian: es evidencia) y se publica a los centros que elija RH. La **vigente** de un centro es la versión más alta que lo
+incluye; una versión posterior para otros centros no la sustituye en los demás. Un centro creado después de publicar no
+tiene política hasta que RH la publique. Un centro de hasta 15 personas también la tiene: 5.1 y 5.7 aplican a todo centro.
+
+**Qué dice la norma.** «Establecer por escrito, implantar, mantener y difundir en el centro de trabajo una política de
+prevención de riesgos psicosociales que contemple: a) la prevención de los factores de riesgo psicosocial; b) la
+prevención de la violencia laboral, y c) la promoción de un entorno organizacional favorable» (num. 5.1). La política es
+«la declaración de principios y compromisos que establece el patrón (…)» (num. 4.9). Las evidencias «podrán exhibirse de
+manera impresa o en medios electrónicos, y se deberán conservar al menos durante un año» (num. 10.4).
+
+**Por qué.** «Mantener» no tiene periodicidad en la norma: no inventamos un plazo de revisión. Publicar con alguno de los
+incisos a, b o c sin marcar se permite, con un aviso en el tablero: la norma dice qué debe contemplar, no bloquea una
+versión que no lo declara.
+
+### C-51. La plantilla es la Guía IV y no obliga · Norma + Humetría
+
+**Qué hacemos.** Se ofrece el ejemplo de la Guía de referencia IV, **literal y editable**: nueve compromisos y ocho principios
+(texto en [`texto-de-referencia.md`](texto-de-referencia.md)). El nombre de la razón social se pone al publicar y al mostrar.
+**Responsables y recursos son obligatorios** al publicar, y publicar exige marcar que RH **revisó que cada compromiso y
+principio es cierto en sus centros** (la plantilla incluye cosas que no todo centro hace, como exámenes psicológicos al
+ingreso o evaluar el desempeño cada año).
+
+**Qué dice la norma.** «El contenido de esta guía es un complemento para la mejor comprensión de la presente Norma, y no
+es de cumplimiento obligatorio.» Y: «La política deberá indicar a los responsables (con capacidad para su aplicación) y los
+recursos que se disponen para cumplir con las políticas (…)» (Guía IV).
+
+**Por qué.** Publicar compromisos falsos sería declarar algo que no es cierto ante las personas y la STPS. Solo texto plano:
+sin Markdown ni HTML, que en una página pública serían un vector de inyección.
+
+### C-52. Qué es difundir y con qué medios se evidencia · Norma + Interpretación
+
+**Qué hacemos.** Se difunden seis cosas (5.7 a a f): la política, las medidas contra la violencia y las prácticas opuestas
+al entorno favorable, las medidas de prevención y control, los mecanismos de queja, los resultados y las posibles
+alteraciones a la salud. Un inciso está **entregado** en un centro cuando la **página de las personas está activa** o RH
+**registró un medio físico** de ese centro que lo cubre (cartel, boletín, folleto, reunión). Lo que viene del Programa y del
+canal de quejas se muestra tal como está (del Programa, solo las medidas de todo el centro, de primer y segundo nivel, y solo
+si RH lo elige al publicar los resultados; del canal, su enlace, si acepta avisos anónimos y qué recibe); el texto que RH
+escribe se **suma**, nunca los reemplaza.
+
+**Qué dice la norma.** «Difundir y proporcionar información a los trabajadores sobre: a) la política (…); f) las posibles
+alteraciones a la salud por la exposición a los factores de riesgo psicosocial» (num. 5.7). «La evidencia para dar
+cumplimiento con la difusión (…) puede ser a través de folletos, boletines, y/o carteles» (num. 10.2). Los centros de hasta
+15 trabajadores solo deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2; los resultados (5.7 e) solo aplican de 16 en adelante (num. 2).
+
+**Por qué.** La norma no define «entregar»; la lectura más apegada es que la información esté a la vista de quien la quiera
+consultar o se haya puesto por un medio físico. El texto base del inciso f se apoya en la definición de los factores de riesgo
+(num. 4.7) y lo valida una persona con criterio médico o legal antes de lanzar.
+
+### C-53. Acuse de lectura de la política · Humetría
+
+**Qué hacemos.** Cada persona activa del centro recibe por correo su enlace personal y puede confirmar «Confirmo que la leí»,
+con fecha y hora, **una sola vez y solo de la versión vigente**. Quien llega después (alta, reactivación, cambio de centro)
+recibe la vigente de su centro. RH ve el avance, registra acuses en papel y recuerda a los pendientes. No se guarda la
+dirección IP. El acuse es de la política (5.7 a), no de los demás bloques.
+
+**Qué dice la norma.** Nada: 5.7 pide «difundir y proporcionar información», no confirmar la lectura.
+
+**Por qué.** Es una evidencia adicional que muchos clientes quieren. Por eso **no cuenta como requisito**: entregar la
+política no exige el 100 % de acuses (el tablero lo avisa).
+
+### C-54. Resultados para las personas · Norma + Humetría
+
+**Qué hacemos.** RH **publica** (y puede retirar) los resultados de una evaluación **cerrada** hacia la página. Solo
+centros de **16 o más** personas; el **centro completo, sin filtros ni áreas**; las mismas cifras que ve RH (nivel final,
+categorías y dominios) por la misma ruta de datos, con el mínimo de respondentes de C-23 y sin la Guía I. Con la
+evaluación abierta, sin publicar, retirada, de solo Guía I o por debajo del mínimo, no se muestran cifras (bajo el mínimo
+se dice solo que contestaron muy pocas personas, sin el conteo).
+
+**Qué dice la norma.** «El resultado de la identificación y análisis de los factores de riesgo psicosocial y la evaluación
+del entorno organizacional deberá estar disponible para consulta de los trabajadores» (num. 7.8).
+
+**Por qué.** La página la lee toda la plantilla: un grupo bajo el mínimo o un filtro permitiría atribuir un resultado a una
+persona (C-23, C-27). Publicar es una decisión de RH y no automática al cerrar, para preparar las medidas antes de que las
+cifras con riesgo alto lleguen sin contexto.
+
+### C-55. La página permanente y su enlace · Humetría
+
+**Qué hacemos.** Un **enlace por empresa** (con selector de centro), de solo lectura, que se imprime como cartel con QR. El
+enlace se deriva de la llave de la aplicación y una versión, para poder volver a verlo sin cambiarlo; solo se guarda su
+huella. RH puede **rotarlo** (el anterior deja de servir), **desactivarlo** y ponerle un vencimiento opcional de hasta 36
+meses. Cualquier causa de fallo (desconocido, rotado, desactivado, vencido, empresa bloqueada, centro ajeno) da la misma
+respuesta neutra, sin nombrar a la empresa. La página no abre sesión ni pone cookies y **no registra quién la abre**; **nunca contiene** nombres, correos, ids de personas, áreas,
+respuestas, medidas dirigidas a personas ni nada de la Guía I; no registra quién la abre.
+
+**Qué dice la norma.** Nada: 5.7 no pide una página web.
+
+**Por qué.** El cartel se imprime y se filtra: la página solo puede tener lo que la empresa decidió que lean todos. No se
+cuenta quién entra porque sería vigilar a la plantilla.
+
+### C-56. Revisar la política con riesgo Medio o más · Norma
+
+**Qué hacemos.** Si la última evaluación publicable tiene algún cuestionario en Medio o más y la política vigente del centro
+es anterior a su cierre, el tablero avisa «revise la política»; con riesgo Bajo, «mayor difusión». Solo cuando las cifras
+se pueden mostrar (con menos del mínimo no se sabe y no se dice). Es consistente con C-15.
+
+**Qué dice la norma.** Medio: «Se requiere revisar la política de prevención de riesgos psicosociales y programas (…) así
+como reforzar su aplicación y difusión, mediante un Programa de intervención»; Bajo: «Es necesario una mayor difusión de la
+política (…)» (Tablas 4 y 7).
+
 ---
 
 ## Cómo se prueba
@@ -669,23 +779,28 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-47 | `tests/Unit/MinimumGroupTest.php`, `tests/Feature/Complaints/ChannelStatusTest.php` (4 y 5, supresión complementaria, sin desgloses) |
 | C-48 | `tests/Feature/Complaints/PurgeTest.php` (23 meses 29 días y 24 meses, retención legal, esqueleto, idempotencia), `tests/Feature/Complaints/ReporterEmailTest.php` (el correo a los 30 días) |
 | C-49 | `tests/Feature/Complaints/InboxTest.php`, `tests/Feature/Complaints/DigestTest.php` (el límite de los días y un recordatorio por día) |
+| C-50 | `tests/Feature/Disclosure/PolicyDraftTest.php`, `PublishPolicyTest.php` (versiones 1 y 2, el candado, un UPDATE o DELETE crudo de lo publicado falla, un subconjunto de centros solo sustituye en esos), `SchemaTest.php`, `BoardTest.php` (D1 y D2) |
+| C-51 | `tests/Feature/Instruments/Nom035PolicyTest.php` (cada texto de la Guía IV contra el anexo), `PublishPolicyTest.php` (responsables, recursos y la revisión obligatorios), `PolicyDraftHttpTest.php` |
+| C-52 | `tests/Feature/Disclosure/DisseminationRecordsTest.php`, `ContentsTest.php`, `AdaptersTest.php` (lista blanca del Programa y del canal), `BoardDeliveryTest.php` (D3), `PosterAndDossierTest.php` (expediente sin nombres) |
+| C-53 | `tests/Feature/Disclosure/RequestAcknowledgmentsTest.php` (499, 500 y 501 personas, ingresos), `PortalPolicyTest.php`, `ManualAcknowledgmentsTest.php`, `DisseminationPageTest.php`, `SendPolicyReminderTest.php` |
+| C-54 | `tests/Feature/Disclosure/ResultsForPeopleTest.php` (4 contra 5, solo `areaId = null`, publicar y retirar), `BoardResultsTest.php` (D7), `PrivacyTest.php` |
+| C-55 | `tests/Feature/Disclosure/PageLinkTest.php`, `PageLinkPageTest.php`, `WorkersPageTest.php` (el mismo 404 por toda causa, sin sesión ni cookies, encabezados, límites), `PrivacyTest.php`, `tests/Browser/DisclosureTest.php` |
+| C-56 | `tests/Feature/Disclosure/BoardResultsTest.php` (D9) |
 
 C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
 ## Lo que la plataforma no cubre (por ahora)
 
-Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona (el orden para cerrarlas está en
+Obligaciones de la norma que dependen del cliente o que Humetría todavía no gestiona (lo que sigue pendiente está en
 [`gaps-pendientes.md`](gaps-pendientes.md)):
 
-- política de prevención (5.1, Guía IV);
-- difusión de información (5.7);
 - integración al diagnóstico de seguridad y salud de la NOM-030 (7.6).
 
 Los exámenes médicos y las evaluaciones psicológicas (5.6) los hace un tercero: Humetría deja la constancia de la
 canalización y de la atención (C-28), no los practica ni guarda su resultado.
 
-La consulta de los trabajadores (7.8) se cumple con el informe impreso o publicado por la empresa: no hay todavía un
-acceso propio para los trabajadores.
+La exención del numeral 2 (último párrafo) para quien tiene el certificado vigente de la NMX-R-025-SCFI-2015 no se calcula:
+un centro certificado puede publicar el texto de 5.7 d y listo.
 
 ## Si la norma cambia
 
@@ -709,3 +824,4 @@ acceso propio para los trabajadores.
 | 1.3 | 2026-11-03 | C-28 suma el registro de la canalización por persona (canalizada, atendida, día e institución), con bitácora; «exámenes médicos y evaluaciones psicológicas (5.6)» sale de lo que no se cubre. |
 | 1.4 | 2026-11-03 | Sección G, Programa de intervención: nuevos C-30 a C-36 (una fila por categoría, dominio y calificación final en Medio o más; contenido de la acción; niveles; sujetos; qué pide la Tabla; evidencia y conservación; recordatorios). C-29 suma que el inciso g imprime el Programa. El programa de intervención sale de lo que no se cubre. |
 | 1.5 | 2026-11-03 | Nueva sección H, canal de quejas y denuncias: C-40 a C-49 (mecanismo, la Comisión como receptora, el escrito 6.5, categorías, acceso por asignación, enrutamiento por conflicto, anonimato técnico, estadísticas con mínimo, retención y purga, plazos); «mecanismo de quejas (8.1 b)» sale de lo que no se cubre. |
+| 1.6 | 2026-11-03 | Nueva sección I, política de prevención y difusión: C-50 a C-56 (política por escrito con versiones inmutables; la Guía IV como plantilla; qué es difundir y con qué medios; acuse de lectura; resultados para las personas; la página permanente y su enlace; revisar la política con riesgo Medio o más). 5.1, 5.7 y la consulta de resultados (7.8) salen de lo que no se cubre. |

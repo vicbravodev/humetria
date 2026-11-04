@@ -5,8 +5,10 @@ Sale de correr `Nom035EvaluationSeeder` (ver abajo) y revisar las pantallas cont
 Las Guías I, II y III, su calificación, la muestra, la privacidad y el informe 7.7 **sí** cumplen: lo verifican
 `tests/Feature/Seeders/Nom035EvaluationSeederTest.php` y las pruebas citadas en [`criterios.md`](criterios.md).
 
-Cada gap es **un trabajo propio** (un PR, según `CLAUDE.md`) y empieza con diseño: es funcionalidad nueva. Al cerrar
-uno, se actualiza «Lo que la plataforma no cubre» de `criterios.md` y se borra de aquí.
+**Ya no queda ningún gap de la norma por cerrar.** La política de prevención, su difusión y la página permanente de las
+personas trabajadoras (5.1, 5.7 y 7.8) se cerraron con los criterios C-50 a C-56 de [`criterios.md`](criterios.md); el Programa
+de intervención con C-30 a C-36 y el canal de quejas con C-40 a C-49. Si aparece uno nuevo, es **un trabajo propio** (un PR,
+según `CLAUDE.md`), empieza con diseño y, al cerrarlo, se actualiza «Lo que la plataforma no cubre» de `criterios.md` y se borra de aquí.
 
 ## Cómo ver el estado actual
 
@@ -17,27 +19,6 @@ sail artisan migrate:fresh --seed --seeder=Nom035EvaluationSeeder
 Crea `demo-nom035` (`owner@`, `hr@` y `viewer@demo-nom035.test`) con cinco centros: 15, 16, 30, 51 y 100 personas, con
 campañas en borrador, activas y cerradas. No manda correos; imprime los enlaces abiertos de las campañas activas.
 
-## Orden propuesto
-
-| # | Trabajo | Numerales | Tamaño |
-|---|---|---|---|
-| 3 | Política de prevención, difusión y portal de la persona trabajadora | 5.1, 5.7, 7.8 | M–L |
-
-El Programa de intervención ya existe (C-30 a C-36 de `criterios.md`). Si el segmento de centros de hasta 15 personas pesa
-en el producto, el 3 sube: esos centros deben cumplir 5.1, 5.4, 5.5, 5.7, 8.1 y 8.2, y hoy cubrimos el 5.5 y el mecanismo de quejas (8.1 b).
-
-## 3. Política, difusión y portal de la persona trabajadora (5.1, 5.7, 7.8)
-
-**Hoy.** La consulta de resultados (7.8) se cumple con el informe impreso o publicado por la empresa; el enlace del
-informe (C-29) dura de 15 min a 48 h. No hay política de prevención ni difusión.
-
-**Falta.** Plantilla de política basada en el ejemplo de la Guía IV, con versiones y publicación; difusión con acuse; y
-una página permanente para las personas trabajadoras con política, medidas, mecanismos y resultados agregados (siempre
-con el mínimo por grupo, C-23).
-
-**Revisar antes de diseñar.** El módulo Telework ya tiene avisos con acuse y un portal por enlace. Los módulos no
-pueden importarse entre sí: o se sube a un contrato público, o se duplica con cuidado.
-
 ## Fuera de alcance, por ahora
 
 - **Integración al diagnóstico de la NOM-030 (7.6).** Depende de otra norma y no tiene demanda clara.
@@ -46,3 +27,17 @@ pueden importarse entre sí: o se sube a un contrato público, o se duplica con 
   nunca avanza sola» (design system, `CLAUDE.md`): quien contesta debe poder corregir antes de seguir.
 - **Exámenes médicos y evaluaciones psicológicas (5.6).** Los hace un tercero; el registro de canalización (C-28 de
   `criterios.md`) ya deja la constancia.
+- **La exención por el certificado de la NMX-R-025-SCFI-2015** (numeral 2, último párrafo): no se calcula. Es un dato que solo el
+  cliente puede afirmar y está sujeta a que el certificado esté vigente; basta con que publique el texto de 5.7 d.
+- **PDF de la política ya firmada**: la política se publica como texto. Adjuntarlo pediría un disco privado y un servicio de archivos.
+- **Una raíz única del portal personal** que junte los pendientes de todas las herramientas: hoy la persona llega a su política
+  por el enlace del correo (`portal/{token}/policy`), como llega a Ley Silla. Un `PortalSection` público que cada módulo
+  implemente es la solución de fondo.
+- **Mover `PortalAccess` y `PortalIdentity` a `Organization`** (son de la persona, no de NOM-037): cambia imports en Telework,
+  Ley Silla y Disclosure, sin riesgo de datos.
+- **Un módulo `Acknowledgements` genérico**: Telework y Disclosure duplican con cuidado el patrón «versión × audiencia por centro»
+  (cada uno comenta al otro). Cuando aparezca un tercer módulo de la misma forma, se diseña una vez y se migran los dos.
+- **Un solo `FormDialog`**: `components/humetria/form-dialog.tsx` y `components/interventions/form-dialog.tsx` hacen lo mismo.
+- **Una marca de «visible para las personas» en el Programa**: hoy RH elige mostrar las medidas de todo el centro al publicar
+  los resultados (ver «Decisiones al implementar» del diseño de la política). Si se quiere decidir acción por acción, la bandera
+  vive en `Interventions` y el adaptador de `Disclosure` la lee.

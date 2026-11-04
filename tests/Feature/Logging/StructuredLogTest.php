@@ -94,6 +94,8 @@ it('redacts each sensitive key', function (string $key): void {
     'analysis', 'follow_up_result', 'cancelled_reason',
     // NOM-035 complaints channel: what a person tells, who it is against, who they are, and the credentials of their case.
     'access_key', 'body', 'involved_text', 'reference', 'reporter_contact', 'reporter_email', 'reporter_name', 'respondent_kind', 'respondent_text', 'ticket',
+    // NOM-035 policy and disclosure: the link of the page and of a person, the words of the policy and the note of a paper acknowledgment.
+    'page_url', 'worker_page_link', 'personal_link', 'acknowledgment_note', 'sections', 'policy_text',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {

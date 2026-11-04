@@ -10,23 +10,8 @@ import {
     settingsNavItems,
 } from '@/lib/app-navigation';
 import { toUrl } from '@/lib/utils';
+import { can } from '../support/tenant-can';
 
-const can = (manage_organization: boolean, manage_members: boolean) => ({
-    manage_organization,
-    manage_members,
-    manage_campaigns: manage_organization,
-    view_trauma_screenings: manage_organization,
-    manage_telework: manage_organization,
-    review_workplaces: manage_organization,
-    view_seating: true,
-    manage_seating: manage_organization,
-    assess_seating: manage_organization,
-    view_interventions: true,
-    manage_interventions: manage_organization,
-    use_assistant: true,
-    manage_complaint_channel: manage_organization,
-    handle_complaints: manage_organization,
-});
 const acme = (
     manageOrganization = true,
     manageMembers = true,
@@ -162,7 +147,7 @@ describe('complianceNavItems', () => {
         ]);
     });
 
-    it('lists the NOM-035 sub-links: the evaluations and the Programas de intervención, for who may read them', () => {
+    it('lists the NOM-035 sub-links for who may read each: evaluations, Programas, policy and disclosure', () => {
         const subLinks = (tenant: ReturnType<typeof acme>) =>
             (
                 complianceNavItems(tenant).find(
@@ -170,16 +155,28 @@ describe('complianceNavItems', () => {
                 )?.children ?? []
             ).map((item) => [item.title, toUrl(item.href)]);
         const tenant = acme(true, true, 'owner');
+        const without = (can: Partial<typeof tenant.can>) => ({
+            ...tenant,
+            can: { ...tenant.can, ...can },
+        });
 
         expect(subLinks(tenant)).toEqual([
             ['Evaluaciones', '/admin/acme/campaigns'],
             ['Programas', '/admin/acme/programs'],
+            ['Política y difusión', '/admin/acme/disclosure'],
+        ]);
+        expect(subLinks(without({ view_interventions: false }))).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Política y difusión', '/admin/acme/disclosure'],
+        ]);
+        expect(subLinks(without({ view_disclosure: false }))).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Programas', '/admin/acme/programs'],
         ]);
         expect(
-            subLinks({
-                ...tenant,
-                can: { ...tenant.can, view_interventions: false },
-            }),
+            subLinks(
+                without({ view_interventions: false, view_disclosure: false }),
+            ),
         ).toEqual([]);
     });
 

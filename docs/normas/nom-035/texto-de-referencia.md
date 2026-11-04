@@ -414,6 +414,57 @@ respondidos y que corresponda con el tamaño mínimo de la muestra.
 - **Bajo:** mayor difusión de la política y programas.
 - **Nulo:** el riesgo es despreciable; no se requieren medidas adicionales.
 
+## Guía de referencia IV (ejemplo de política de prevención de riesgos psicosociales)
+
+Transcripción literal del DOF (tomada del `fuentes/dof-2018-10-23-nom-035.txt`). Solo se quitaron los saltos de línea del
+texto corrido y se numeraron los compromisos. La Guía **no es de cumplimiento obligatorio**; la prueba del instrumento
+(`tests/Feature/Instruments/Nom035PolicyTest.php`) compara la plantilla con este texto.
+
+El contenido de esta guía es un complemento para la mejor comprensión de la presente Norma, y no es de cumplimiento obligatorio.
+
+**POLÍTICA DE PREVENCIÓN DE RIESGOS PSICOSOCIALES**
+
+En este centro de trabajo (Razón Social) en relación con la prevención de los factores de riesgo psicosocial; la prevención de la violencia laboral, y la promoción de un entorno organizacional favorable, se asumen los compromisos siguientes:
+
+1. Es obligación de supervisores, gerentes y directores aplicar esta política y predicar con el ejemplo;
+2. Los actos de violencia laboral no son tolerados, así como ningún incidente que propicie factores de riesgo psicosocial o acciones en contra del entorno organizacional favorable;
+3. Se aplican medidas encaminadas a la prevención de los factores de riesgo psicosocial; la prevención de la violencia laboral, y la promoción de un entorno organizacional favorable, para prevenir sus consecuencias adversas;
+4. Se cuenta con un procedimiento de atención justo, que no permite represalias y evita reclamaciones abusivas o carentes de fundamento, y que garantiza la confidencialidad de los casos;
+5. Se realizan acciones de sensibilización, programas de información y capacitación;
+6. Se divulgan de forma eficaz las políticas de prevención y las medidas de prevención;
+7. Todos los trabajadores participan para establecer y poner en práctica esta política en el lugar de trabajo;
+8. Se respeta al ejercicio de los derechos del personal para observar sus creencias o prácticas o para satisfacer sus necesidades relacionadas con la raza, sexo, religión, etnia o edad o cualquier otra condición que pueda dar origen a la discriminación, y
+9. Se crean espacios de participación y consulta, teniendo en cuenta las ideas de los trabajadores y empleados.
+
+Nota: La política deberá indicar a los responsables (con capacidad para su aplicación) y los recursos que se disponen para cumplir con las políticas en todos los planos de la organización; la asignación de responsabilidades tanto a las personas como a los equipos de trabajo, los cuales reciben la capacitación para la aplicación de las políticas.
+
+La política se basa en los principios siguientes:
+
+**Principio 1.** Para favorecer un entorno organizacional favorable, en el centro de trabajo se:
+
+- a) Realizan reuniones con los trabajadores para que todos tengan la oportunidad de exponer sus dudas, inquietudes, quejas relacionadas con su trabajo;
+- b) Mantienen limpias las áreas de trabajo; así como las áreas comunes: comedor, baños, sanitarios, accesos;
+- c) Trata con amabilidad y cortesía a los compañeros de trabajo, jefes, subalternos, visitantes, proveedores, clientes;
+- d) Atienden todos los casos relacionados con burlas, malos tratos, discriminación, etc., y en su caso, se sancionan éstos;
+- e) Realizan exámenes médicos al personal de nuevo ingreso para procurar y mantener su salud;
+- f) Llevan a cabo exámenes psicológicos y/o psicométricos para situar a cada trabajador en el puesto para el cual cuente con capacidades y preparación acordes;
+- g) Realizan planes de promoción interna, y
+- h) Capacita a todo el personal para el desempeño de sus funciones, su seguridad y desarrollo.
+
+**Principio 2.** En este centro de trabajo, para promover el sentido de pertenencia de los trabajadores a la organización, se hace hincapié en que todas y todos los trabajadores y empleados son importantes para el centro de trabajo, ya que el mismo no puede funcionar si no se cuenta con personal desde el de la limpieza, pasando por el operativo, administrativo y hasta el directivo.
+
+**Principio 3.** Este centro de trabajo, para lograr la adecuada realización de las tareas encomendadas, imparte a sus trabajadores y empleados la capacitación establecida en la Ley Federal del Trabajo, acorde a las actividades que desempeñan.
+
+**Principio 4.** En este centro de trabajo, para lograr la definición precisa de responsabilidades para los trabajadores, se difunde y promueve el seguimiento a los manuales de organización y las descripciones de puesto que indican las responsabilidades específicas de cada puesto de trabajo.
+
+**Principio 5.** Para lograr la participación proactiva y comunicación entre sus integrantes, este centro de trabajo publica en tableros anuncios, noticias y avisos de interés para sus trabajadores y empleados relativos a las labores y operaciones de la misma, y éstos, a su vez, pueden publicar en dichos tableros el mismo tipo de anuncios, noticias y avisos. En estos tableros no se incluyen avisos que no están estrictamente relacionados con las labores del centro de trabajo.
+
+**Principio 6.** Para promover un trabajo digno y lograr un entorno organizacional favorable, este centro de trabajo realiza una distribución adecuada de cargas de trabajo, con jornadas de trabajo conforme a la Ley Federal de Trabajo, para tal efecto, define en los manuales de organización y en las descripciones de puesto que se emiten, así como en el Reglamento Interior de Trabajo, en función de la naturaleza especifica de la labor de que se trate.
+
+**Principio 7.** Para reconocer el desempeño de los trabajadores en el centro de trabajo, se evalúa por lo menos una vez al año el desempeño de cada uno de sus trabajadores y empleados, lo cual se lleva a cabo personalmente por conducto del supervisor o jefe inmediato del trabajador o empleado de que se trate y los resultados de la misma sirven de base para la determinar el reconocimiento o beneficios a los trabajadores sobresalientes.
+
+**Principio 8.** Este centro de trabajo se compromete a vigilar el cumplimiento de las normas dirigidas a prevenir cualquier conducta o comportamiento que implique violencia laboral, a salvaguardar la información que sea recolectada, dar trámite e intervenir, de forma oportuna, en las quejas que se reciban por los medios establecidos.
+
 ## Criterios oficiales de la STPS (preguntas frecuentes)
 
 Fuentes: <https://trabajoseguro.stps.gob.mx/bol097/vinculos/preguntas_bol097.pdf> (parte uno) y

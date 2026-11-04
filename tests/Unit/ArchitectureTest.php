@@ -168,3 +168,26 @@ foreach (['Actions', 'Models', 'Support'] as $layer) {
         ->expect("App\\Modules\\Complaints\\{$layer}")
         ->toOnlyBeUsedIn(['App\Modules\Complaints', 'Database\Factories\Complaints']);
 }
+
+/*
+ * Disclosure (the policy of prevention, its disclosure and the permanent page of the workers) writes the one page of the
+ * platform that anybody with a link reads, so, like the modules above, its boundaries are spelled out on their own: it reads
+ * the other modules only through their public contracts and data.
+ */
+$disclosureInternals = internalNamespacesOf('Disclosure');
+
+it('has the Disclosure namespaces the architecture rules target', function () use ($disclosureInternals): void {
+    expect($disclosureInternals)->toContain('App\Modules\Disclosure\Actions', 'App\Modules\Disclosure\Models', 'App\Modules\Disclosure\Support', 'App\Modules\Disclosure\Http');
+});
+
+foreach (['Actions', 'Models'] as $layer) {
+    arch("Disclosure {$layer} do not depend on HTTP")
+        ->expect("App\\Modules\\Disclosure\\{$layer}")
+        ->not->toUse(['Illuminate\\Http', 'Inertia', 'request', 'session', 'auth']);
+}
+
+foreach (['Actions', 'Models', 'Support'] as $layer) {
+    arch("Disclosure {$layer} are not used by the shared kernel")
+        ->expect("App\\Modules\\Disclosure\\{$layer}")
+        ->toOnlyBeUsedIn(['App\\Modules\\Disclosure', 'Database\\Factories\\Disclosure']);
+}
