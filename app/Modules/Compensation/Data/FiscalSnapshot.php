@@ -17,6 +17,9 @@ final readonly class FiscalSnapshot
     /** LSS art. 28: the SBC is capped at 25 times the UMA. */
     private const int SBC_CAP_UMAS = 25;
 
+    /** The money parameters that follow prices. */
+    private const array INDEXED_KEYS = ['uma', 'minimum_wage', 'minimum_wage_border'];
+
     /**
      * @param  array<string, Rate>  $values
      * @param  list<string>  $staleKeys  sorted
@@ -72,6 +75,23 @@ final readonly class FiscalSnapshot
     public function severanceOldAgeRate(int $sbcCents): Rate
     {
         return $this->rate('severance_old_age.'.$this->severanceBracket($sbcCents));
+    }
+
+    /**
+     * The same values with the UMA and the minimum wages that were carried past their vigencia grown by a factor, because a
+     * carried value is a year old or more. A value the platform knows for the date, and every rate, stays as it is.
+     */
+    public function indexed(Rate $factor): self
+    {
+        $values = $this->values;
+
+        foreach (self::INDEXED_KEYS as $key) {
+            if (in_array($key, $this->staleKeys, true) && isset($values[$key])) {
+                $values[$key] = Rate::scaled($factor->of($values[$key]->integer()), 0);
+            }
+        }
+
+        return new self($values, $this->staleKeys);
     }
 
     public function isStale(): bool
