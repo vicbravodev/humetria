@@ -253,6 +253,25 @@ Nada de esto se siembra como definitivo hasta confirmarlo. Para cada punto, lo q
 12. **Parámetros 2027**: UMA (aviso DOF de enero de 2027), salario mínimo (resolución de diciembre de 2026) y leyes de ingresos estatales aún no
     existen a la fecha de consulta. Es un trabajo de actualización anual: UMA en enero, salario mínimo en diciembre, ISN en diciembre.
 
+## 7.1 Decisiones tomadas con datos (2026-11-04)
+
+Las toma Humetría con las fuentes de `fuentes/supuestos-largo-plazo.txt`; cada una se revisa si cambia el dato.
+
+| Punto | Decisión | Dato en que se apoya |
+|---|---|---|
+| Cesantía y vejez, rango «1.0 SM» | Se mantiene el texto literal del art. 168 fr. II; el reporte lo declara como supuesto | La ley rotula ese rango en salarios mínimos y los demás en UMA; ningún criterio del IMSS ni publicación profesional resuelve el caso SM > 1.5 UMA |
+| Sinaloa | El impuesto sobre nómina de Sinaloa queda «no calculado» y el reporte lo marca | Es una tarifa mensual progresiva (2.40 a 3.00 %) sobre el total de remuneraciones del patrón en el estado; la calculadora no suma por estado, y una tasa plana falsearía el costo |
+| Ingreso el 29 de febrero | Aniversario el 28 de febrero en un año sin 29 | LFT art. 18: la duda se resuelve a favor del trabajador |
+| Aguinaldo de quien ingresa | Sin prorrateo | LFT art. 87 lo prorratea al que no cumplió el año, pero la calculadora costea a quien ya estaba al inicio de la vigencia |
+| Despensa (40 % de la UMA diaria, solo el excedente integra) | Tal como está | LSS art. 27 fr. VI |
+| Inflación | 3 % | Meta del Banco de México |
+| Revisiones futuras | 7.3 % | STPS: promedio nominal de 2,896 revisiones, enero a octubre de 2025 |
+| Crecimiento de la plantilla | 1.3 % | IMSS: empleo formal 2025 |
+| Rotación | 0 % | No hay dato oficial utilizable; la cuenta captura la suya |
+
+Límite conocido, a diferencia de lo anterior: un premio de asistencia o puntualidad «hasta el tope de la ley» sin tope capturado integra
+completo al SBC, y la ley (art. 27 fr. VIII) excluye el que no pase de 10 % del SBC. Sobrestima el SBC de quien tiene ese premio dentro del límite.
+
 ## 8. Historial
 
 - 1.0 · 2026-11-03: primera versión. UMA, salario mínimo, cuotas IMSS e Infonavit, cesantía y vejez 2023-2030, mínimos de ley, prima de

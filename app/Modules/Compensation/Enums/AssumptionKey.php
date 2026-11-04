@@ -30,18 +30,20 @@ enum AssumptionKey: string
     public function defaultBasisPoints(): int
     {
         return match ($this) {
-            self::Inflation, self::FutureRevisions => 300,
-            self::Turnover, self::HeadcountGrowth, self::FollowingYearsRate => 0,
+            self::Inflation => 300,
+            self::FutureRevisions => 730,
+            self::HeadcountGrowth => 130,
+            self::Turnover, self::FollowingYearsRate => 0,
         };
     }
 
     public function defaultSource(): string
     {
         return match ($this) {
-            self::Inflation => 'Meta de inflación del Banco de México: 3 % con un intervalo de ±1 punto. Hace crecer la UMA y el salario mínimo de los años que la plataforma aún no conoce.',
-            self::Turnover => 'Supuesto de la plataforma, sin dato general: captura el de tu empresa. Quien se va se reemplaza con una persona de nuevo ingreso.',
-            self::HeadcountGrowth => 'Supuesto de la plataforma, sin dato general: captura el de tu empresa.',
-            self::FutureRevisions => 'Supuesto de la plataforma, igual a la meta de inflación: el aumento que darán las revisiones de los años siguientes, con o sin esta propuesta.',
+            self::Inflation => 'Meta de inflación del Banco de México: 3 % con un intervalo de ±1 punto (CEFP, nota 012/2024). Hace crecer la UMA y el salario mínimo de los años que la plataforma aún no conoce.',
+            self::Turnover => 'Sin dato oficial para este uso: el IMSS no publica una tasa anual de rotación de plantilla fija y las cifras que hay mezclan empleo eventual. Captura la de tu empresa. Quien se va se reemplaza con una persona de nuevo ingreso.',
+            self::HeadcountGrowth => 'Crecimiento del empleo formal registrado en el IMSS en 2025: 1.3 % (informe del IMSS, cierre de diciembre de 2025). Es un dato nacional: captura el de tu empresa.',
+            self::FutureRevisions => 'Incremento salarial nominal promedio de las revisiones contractuales de jurisdicción federal de enero a octubre de 2025: 7.3 %, en 2,896 revisiones (STPS; DOF del 9-dic-2025). Incluye un año de salarios mínimos al alza.',
             self::FollowingYearsRate => 'Supuesto de la plataforma: la propuesta no se repite. Si lo capturas, es un aumento más cada año solo con la propuesta.',
         };
     }

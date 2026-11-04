@@ -1,0 +1,37 @@
+Supuestos por defecto del largo plazo y las decisiones de la sección 7 de criterios.md. Consultado: 2026-11-04.
+
+INFLACIÓN (300 pb). Meta del Banco de México: 3 % anual con intervalo de variabilidad de ±1 punto porcentual (2 % a 4 %).
+  - CEFP, nota 012/2024: https://www.cefp.gob.mx/publicaciones/nota/2024/notacefp0122024.pdf
+  - CEFP 2012 (documento 027) y 2018 (documento 044) describen el mismo esquema.
+  No se pudo leer la página de Banxico (redirige a un sitio anterior que devuelve 404).
+
+REVISIONES FUTURAS (730 pb). Incremento salarial contractual de la jurisdicción federal, enero a octubre de 2025:
+  "2,896 revisiones salariales en la jurisdicción federal que han involucrado a 1 millón 975 mil 968 personas trabajadoras"
+  "crecimiento salarial promedio de 7.3% en términos nominales y un incremento en términos reales de 3.3 por ciento"
+  - DOF 9-dic-2025, resolución de la Comisión Nacional de los Salarios Mínimos: https://dof.gob.mx/nota_detalle.php?codigo=5775534&fecha=09%2F12%2F2025
+  Referencia: 2024 tuvo 3,198 revisiones, 1,315,194 personas y 4.2 % real (STPS, https://www.gob.mx/stps/prensa/incrementos-salariales-contractuales-los-mas-altos-de-los-ultimos-4-sexenios).
+  Es el dato oficial más reciente; el promedio ponderado por número de personas lo calcula la STPS (Metodologia_Incrementos_Salarales.pdf).
+
+CRECIMIENTO DE LA PLANTILLA (130 pb). Empleo formal registrado en el IMSS, cierre de 2025: 22,517,076 puestos, +279 mil, 1.3 % anual.
+  - Resumen del informe del IMSS (CROSS, IMCP): https://imcp.org.mx/boletin-de-noticias-de-la-cross-2025-11-puestos-de-trabajo-afiliados-al-imss-boletin-imss-no-014-2026-cierre-de-diciembre-de-2025/
+  Es un dato nacional; la cuenta debe capturar el suyo.
+
+ROTACIÓN (0 pb). No hay dato oficial utilizable. El IMSS publica altas y bajas mensuales de todo el empleo registrado, eventual incluido
+  (p. ej. julio de 2016: bajas 7.6 % y altas 7.7 % del empleo, El Financiero 1-sep-2016), que no describe una plantilla fija bajo contrato
+  colectivo; el INEGI no publica una tasa de rotación. Se deja en cero y la cuenta captura la suya.
+
+SINALOA. Ley de Hacienda, art. 18: tarifa mensual progresiva, no tasa plana: hasta $500,000 → 2.40 %; $500,000.01 a $700,000 → $12,000 +
+  2.60 % del excedente; $700,000.01 a $900,000 → $17,200 + 2.80 %; más de $900,000 → $22,800 + 3.00 %. Coincide con la tarifa que publica una
+  consultoría (Praxium) y con lo ya leído en el texto oficial; los tramos son consecutivos (12,000 + 2.6 % × 200,000 = 17,200; + 2.8 % × 200,000 = 22,800).
+  El impuesto es sobre el total mensual de remuneraciones del patrón en el estado, que la calculadora no suma por estado.
+
+CESANTÍA Y VEJEZ, rango «1.0 SM». Los profesionales (IDC, ContadorMX, El Contribuyente, Praxium) reproducen la tabla del art. 168 fr. II con
+  sus mismas etiquetas (1.00 SM; 1.01 SM a 1.50 UMA; …) sin resolver el caso SM > 1.5 UMA, y Praxium avisa que es una tabla de transición y que se
+  confirme el renglón en el SUA. No se halló un criterio del IMSS. Se mantiene el texto literal.
+
+29 DE FEBRERO. La LFT no dice qué día se cumple el año de quien ingresó el 29 de febrero. LFT art. 18: en caso de duda de una norma laboral
+  prevalece la interpretación más favorable al trabajador (https://mley.mx/LFT/articulo/18/, compendio; texto oficial en
+  https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf). El 28 de febrero es el día anterior: favorece al trabajador.
+
+AGUINALDO. LFT art. 87: quien no cumplió el año recibe la parte proporcional. La calculadora costea a toda la plantilla que ya trabajó el año
+  completo desde la vigencia; quien ingresa dentro del periodo no se modela, así que no hay un año parcial que prorratear.
