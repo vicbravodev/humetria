@@ -215,6 +215,51 @@ it('compares two ticked scenarios by concept', function (bool $dark, bool $mobil
         ->assertSee('Salario');
 })->with($looks);
 
+it('shows the report of a scenario with its numbers and assumptions', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    foreach (['E-001', 'E-002'] as $number) {
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2006-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => $number]);
+    }
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => null, 'hired_on' => null, 'employee_number' => 'E-900']);
+    $scenario = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027', 'effective_on' => '2027-01-01', 'retroactive_months' => 2, 'group_changes' => ['unionized' => 500, 'trusted' => null]]);
+
+    visitPage('compensation/report', "{$url}/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
+        ->assertSee('Revisión 2027')
+        ->assertSee('2 de 3 personas costeadas')
+        ->assertSee('E-900')
+        ->assertSee('Cascada por concepto')
+        ->assertSee('Prima de antigüedad')
+        ->assertSee('Supuestos y alcance')
+        ->assertSee('Meta de inflación del Banco de México')
+        ->assertSee('Operador · A')
+        ->assertDontSee('Valor para la persona y costo para la empresa');
+})->with($looks);
+
+it('opens the report of a scenario from its list', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027']);
+
+    visit("{$url}/compensation/scenarios")
+        ->click('[data-test="scenario-actions"]')
+        ->click('Ver reporte')
+        ->assertSee('Reporte de impacto')
+        ->assertSee('Revisión 2027')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows a union the worker gross against the company cost', function (bool $dark, bool $mobile): void {
+    $union = Tenant::factory()->union()->create(['slug' => 'sindicato']);
+    $this->actingAs(ownerOf($union));
+    $scenario = Scenario::factory()->create(['tenant_id' => $union->id, 'name' => 'Propuesta del sindicato']);
+
+    visitPage('compensation/report', "/admin/sindicato/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
+        ->assertSee('Valor para la persona y costo para la empresa');
+})->with($looks);
+
 it('shows the first scenario as the next step', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 

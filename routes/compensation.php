@@ -7,6 +7,7 @@ use App\Modules\Compensation\Http\Controllers\BenefitOptionsController;
 use App\Modules\Compensation\Http\Controllers\BenefitTermController;
 use App\Modules\Compensation\Http\Controllers\CompensationController;
 use App\Modules\Compensation\Http\Controllers\GradeOptionsController;
+use App\Modules\Compensation\Http\Controllers\ReportController;
 use App\Modules\Compensation\Http\Controllers\RiskPremiumController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideImportController;
@@ -45,6 +46,7 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::post('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.store');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.edit');
     Route::put('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'update'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.update');
+    Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/report', [ReportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.report');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/duplicate', [ScenarioController::class, 'duplicate'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.duplicate');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/archive', [ScenarioController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.archive');
 

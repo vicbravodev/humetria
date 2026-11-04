@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Archive, Copy, Ellipsis, Pencil } from 'lucide-react';
+import { Archive, ChartColumn, Copy, Ellipsis, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +14,7 @@ import {
     archive,
     duplicate,
     edit,
+    report,
 } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioRow } from '@/types';
 
@@ -60,6 +61,12 @@ export default function ScenarioRowActions({
                     }
                 }}
             >
+                <DropdownMenuItem
+                    onSelect={() => router.visit(report.url(ids))}
+                >
+                    <ChartColumn />
+                    Ver reporte
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => router.visit(edit.url(ids))}>
                     <Pencil />
                     Editar
