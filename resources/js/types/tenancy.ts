@@ -89,6 +89,8 @@ export type CurrentTenant = TenantSummary &
             view_seating: boolean;
             manage_seating: boolean;
             assess_seating: boolean;
+            view_interventions: boolean;
+            manage_interventions: boolean;
             use_assistant: boolean;
         };
     };

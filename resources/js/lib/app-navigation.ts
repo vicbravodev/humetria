@@ -18,6 +18,7 @@ import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
+import { index as programs } from '@/routes/tenant/interventions';
 import { index as members } from '@/routes/tenant/members';
 import { index as seatingIndex } from '@/routes/tenant/seating';
 import { index as teleworkIndex } from '@/routes/tenant/telework';
@@ -128,6 +129,15 @@ export const complianceNavItems = (
         href: campaigns(tenant.slug),
         icon: ClipboardCheck,
         badge: inCourse,
+        // The evaluations and, for whoever may read them, the Programas de intervención (num. 8.3 to 8.5).
+        ...(tenant.can.view_interventions
+            ? {
+                  children: [
+                      { title: 'Evaluaciones', href: campaigns(tenant.slug) },
+                      { title: 'Programas', href: programs(tenant.slug) },
+                  ],
+              }
+            : {}),
     };
 
     return [

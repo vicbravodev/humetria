@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
+use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
 use App\Modules\Seating\Actions\SendSeatingDigests;
 use App\Modules\Telework\Actions\ScheduleReviews;
@@ -18,6 +19,10 @@ Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $clo
 Artisan::command('campaigns:send-digests', function (SendProgressDigests $sendDigests): void {
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
 })->purpose('Email each owner how far its open evaluations got');
+
+Artisan::command('interventions:send-digests', function (SendProgramDigests $sendDigests): void {
+    $this->info('Resúmenes enviados: '.$sendDigests->handle());
+})->purpose('Email each owner and each responsible what waits for them in the Programas de intervención of NOM-035');
 
 Artisan::command('telework:schedule-reviews', function (ScheduleReviews $schedule): void {
     $this->info('Listas de la Sección II pedidas: '.$schedule->handle());
@@ -37,6 +42,7 @@ Artisan::command('seating:send-digests', function (SendSeatingDigests $sendDiges
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
+Schedule::command('interventions:send-digests')->weeklyOn(1, '9:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('telework:send-digests')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:schedule-checks')->dailyAt('07:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();

@@ -90,8 +90,26 @@ it('tells the owner how the evaluation closed: participation, risk levels, the d
         ->toContain('Lo que sigue')
         ->toContain('2 personas requieren valoración clínica (Guía I)')
         ->toContain('Completa el informe 7.7 con las conclusiones y las acciones de intervención.')
+        ->toMatch('#Siguiente paso: <a [^>]*>completa el Programa de intervención</a>\.#')
+        ->toContain(route('tenant.campaigns.program', ['autopartes', $this->campaign->id]))
         ->toContain('Recibes este aviso porque eres el dueño de Autopartes Demo.')
         ->toContain('alt="Humetría"');
+});
+
+it('points to the Programa de intervención only when someone falls in Medio or more', function (): void {
+    foreach (range(1, 5) as $ignored) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $this->campaign->id])->id,
+            'instrument' => 'nom035.guide-ii',
+            'status' => InstrumentStatus::Completed,
+            'completed_at' => now(),
+        ]);
+        AnonymousResponse::factory()->create(['campaign_id' => $this->campaign->id, 'area_id' => $this->area->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035HealthyAnswers('nom035.guide-ii')]);
+    }
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]));
+
+    expect((string) closingSummaryTo('olga@autopartes.mx')->render())->not->toContain('Programa de intervención');
 });
 
 it('shows no risk level below the minimum group, only the participation', function (): void {
@@ -107,6 +125,7 @@ it('shows no risk level below the minimum group, only the participation', functi
         ->toContain('Con menos de 5 cuestionarios no se muestran niveles de riesgo, para cuidar el anonimato.')
         ->not->toContain('riesgo alto o muy alto')
         ->not->toContain('Muy alto')
+        ->not->toContain('Programa de intervención')
         ->not->toContain('valoración clínica');
 });
 
@@ -134,6 +153,7 @@ it('closes a Guía I campaign with its participation and who needs a clinical as
         ->and((string) $mail->render())
         ->toContain('1 persona requiere valoración clínica (Guía I)')
         ->not->toContain('informe 7.7')
+        ->not->toContain('Programa de intervención')
         ->not->toContain('niveles de riesgo');
 });
 

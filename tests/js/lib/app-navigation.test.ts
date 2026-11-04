@@ -21,6 +21,8 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     view_seating: true,
     manage_seating: manage_organization,
     assess_seating: manage_organization,
+    view_interventions: true,
+    manage_interventions: manage_organization,
     use_assistant: true,
 });
 const acme = (
@@ -156,6 +158,27 @@ describe('complianceNavItems', () => {
             ['Centros', '/admin/acme/telework'],
             ['Documentos', '/admin/acme/telework/documents'],
         ]);
+    });
+
+    it('lists the NOM-035 sub-links: the evaluations and the Programas de intervención, for who may read them', () => {
+        const subLinks = (tenant: ReturnType<typeof acme>) =>
+            (
+                complianceNavItems(tenant).find(
+                    (item) => item.title === 'NOM-035',
+                )?.children ?? []
+            ).map((item) => [item.title, toUrl(item.href)]);
+        const tenant = acme(true, true, 'owner');
+
+        expect(subLinks(tenant)).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Programas', '/admin/acme/programs'],
+        ]);
+        expect(
+            subLinks({
+                ...tenant,
+                can: { ...tenant.can, view_interventions: false },
+            }),
+        ).toEqual([]);
     });
 
     it('counts the evaluations in course on NOM-035', () => {

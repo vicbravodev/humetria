@@ -12,7 +12,7 @@ export default function ReportPending({
     /** The way to fill it in, or who can. */
     children: ReactNode;
 }) {
-    const text = pendingText(report);
+    const text = pendingText(report, report.intervention.state);
 
     if (text === null) {
         return null;

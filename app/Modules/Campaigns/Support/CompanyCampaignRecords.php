@@ -62,6 +62,17 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
         return $page->through(fn (Campaign $campaign, int $index): CampaignRecord => $records[$index]);
     }
 
+    public function closedAt(string $workCenterId): array
+    {
+        return $this->records(Campaign::query()
+            ->where('kind', CampaignKind::Nom035Evaluation)
+            ->where('status', CampaignStatus::Closed)
+            ->where('work_center_id', $workCenterId)
+            ->orderByDesc('closed_at')
+            ->orderByDesc('id')
+            ->get());
+    }
+
     public function cycles(array $workCenterIds): array
     {
         $evaluations = Campaign::query()

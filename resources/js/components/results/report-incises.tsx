@@ -1,4 +1,5 @@
 import ReportIncise from '@/components/results/report-incise';
+import ReportProgram from '@/components/results/report-program';
 import ReportSection from '@/components/results/report-section';
 import ReportWritten from '@/components/results/report-written';
 import type { NomReport } from '@/types';
@@ -64,12 +65,18 @@ export default function ReportIncises({ report }: { report: NomReport }) {
                 <ReportIncise
                     code="g"
                     title="Recomendaciones y acciones de intervención"
-                    pending={report.recommendations === null}
+                    pending={
+                        report.recommendations === null &&
+                        report.intervention.state === 'missing'
+                    }
                 >
-                    <ReportWritten
-                        text={report.recommendations}
-                        hint="Define acciones de intervención para los dominios de la sección 1."
-                    />
+                    <div className="flex flex-col gap-4">
+                        <ReportWritten
+                            text={report.recommendations}
+                            hint="Escribe tus recomendaciones; las acciones de intervención salen del Programa."
+                        />
+                        <ReportProgram intervention={report.intervention} />
+                    </div>
                 </ReportIncise>
                 <ReportIncise
                     code="h"
