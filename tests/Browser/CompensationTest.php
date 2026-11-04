@@ -313,6 +313,62 @@ it('says a link that opens nothing is not available, without saying why', functi
         ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
+it('takes a union from its roster to a report shared with someone who has no account', function (): void {
+    $union = Tenant::factory()->union()->create(['slug' => 'sindicato', 'trade_name' => 'Sindicato Demo']);
+    $this->actingAs(ownerOf($union));
+    $roster = "numero_de_empleado,categoria,nivel,fecha_de_ingreso,grupo\n".collect(range(1, 8))->map(fn (int $number): string => "E-00{$number},Operador,A,2018-03-15,Sindicalizado")->implode("\n")."\n";
+
+    // 1. The roster, from the union's own template, checked and then imported.
+    visit('/admin/sindicato/employees/import')
+        ->attach('file', salaryCsvOnDisk($roster))
+        ->press('Revisar archivo')
+        ->assertSee('Listo para importar 8 empleados')
+        ->press('Importar 8 empleados')
+        ->assertSee('Se importaron 8 empleados')
+        ->assertNoJavaScriptErrors();
+
+    // 2. The tabulator, from its CSV.
+    visit('/admin/sindicato/compensation/tabulator')
+        ->attach('file', salaryCsvOnDisk("categoria,nivel,salario_diario,vigencia\nOperador,A,500,2018-01-01\n"))
+        ->press('Importar')
+        ->assertSee('Se importó el tabulador: 1 salario.')
+        ->assertNoJavaScriptErrors();
+
+    // 3. A scenario from its editor, and its report.
+    visit('/admin/sindicato/compensation/scenarios/create')
+        ->fill('name', 'Propuesta del sindicato')
+        ->fill('unionized_raise', '6')
+        ->press('Guardar escenario')
+        ->assertSee('Escenario guardado.')
+        ->assertSee('Propuesta del sindicato')
+        ->assertSee('8 personas costeadas')
+        ->assertNoJavaScriptErrors();
+
+    $scenario = Scenario::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/sindicato/compensation/scenarios/{$scenario->id}/report")
+        ->assertSee('8 de 8 personas costeadas')
+        ->assertSee('Valor para la persona y costo para la empresa')
+        ->click('Compartir')
+        ->press('Crear enlace')
+        ->assertSee('Cópialo ahora: no se vuelve a mostrar.')
+        ->assertNoJavaScriptErrors();
+
+    // 4. The link, with the same token hash the page kept: it opens the report with nobody signed in, and without the worker's gross.
+    $token = str_repeat('f', 64);
+    $share = ReportShare::query()->withoutGlobalScopes()->sole();
+    $share->update(['token_hash' => ReportShare::hashToken($token)]);
+
+    auth()->logout();
+    visit("/compensation-report/{$token}")
+        ->assertSee('Sindicato Demo compartió este reporte contigo')
+        ->assertSee('Propuesta del sindicato')
+        ->assertSee('Cascada por concepto')
+        ->assertDontSee('Valor para la persona y costo para la empresa')
+        ->assertDontSee('E-001')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows the first scenario as the next step', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 
