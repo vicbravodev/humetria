@@ -13,10 +13,13 @@ export default function TenureTableField({
     initial,
     unit,
     error,
+    namePrefix = 'tenure_table',
 }: {
     initial: TenureFormRow[];
     unit: string;
     error: string | undefined;
+    /** The field name the rows go under, for a form with more than one table. */
+    namePrefix?: string;
 }) {
     const { rows, add, remove, change } = useTenureRows(initial);
 
@@ -36,7 +39,7 @@ export default function TenureTableField({
                     className="grid grid-cols-[1fr_1fr_auto] items-center gap-2"
                 >
                     <Input
-                        name={`tenure_table[${index}][from_years]`}
+                        name={`${namePrefix}[${index}][from_years]`}
                         aria-label={`Años de servicio del renglón ${index + 1}`}
                         placeholder="Desde (años)"
                         inputMode="numeric"
@@ -46,7 +49,7 @@ export default function TenureTableField({
                         }
                     />
                     <Input
-                        name={`tenure_table[${index}][value]`}
+                        name={`${namePrefix}[${index}][value]`}
                         aria-label={`Valor (${unit}) del renglón ${index + 1}`}
                         placeholder={`Valor (${unit})`}
                         inputMode="decimal"

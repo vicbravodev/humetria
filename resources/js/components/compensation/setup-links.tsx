@@ -1,12 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { Gift, Layers, UserRoundPen } from 'lucide-react';
+import { GitCompareArrows, Gift, Layers, UserRoundPen } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index as benefits } from '@/routes/tenant/compensation/benefits';
 import { index as overrides } from '@/routes/tenant/compensation/overrides';
+import { index as scenarios } from '@/routes/tenant/compensation/scenarios';
 import { index as tabulator } from '@/routes/tenant/compensation/tabulator';
 
-/** The three things a contract is costed from, each a step: what it grants, what each category earns, and the exceptions. */
+/** What a contract is costed from, each a step (what it grants, what each category earns, the exceptions), and the scenarios that cost a proposal. */
 export default function SetupLinks() {
     const tenantSlug = useTenantSlug();
     const links = [
@@ -28,12 +29,18 @@ export default function SetupLinks() {
             text: 'Quien gana distinto a su categoría.',
             href: overrides(tenantSlug),
         },
+        {
+            icon: GitCompareArrows,
+            title: 'Escenarios',
+            text: 'Propuestas de revisión y lo que cuesta cada una.',
+            href: scenarios(tenantSlug),
+        },
     ];
 
     return (
         <nav
             aria-label="Datos del contrato"
-            className="grid gap-3 sm:grid-cols-3"
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         >
             {links.map(({ icon, title, text, href }) => (
                 <Link

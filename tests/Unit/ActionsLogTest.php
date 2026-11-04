@@ -12,6 +12,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Compensation/Actions/CountBenefits.php' => 'counts',
     'app/Modules/Compensation/Actions/ListBenefits.php' => 'reads a paginated list',
     'app/Modules/Compensation/Actions/ListSalaryOverrides.php' => 'reads a paginated list',
+    'app/Modules/Compensation/Actions/ListScenarios.php' => 'reads a paginated list and counts',
     'app/Modules/Compensation/Actions/ListTabulator.php' => 'reads a paginated list',
     'app/Modules/Organization/Actions/CountEmployees.php' => 'counts',
     'app/Modules/Organization/Actions/ListEmployees.php' => 'reads a paginated list',

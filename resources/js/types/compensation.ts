@@ -1,3 +1,4 @@
+import type { TermChangeForm } from '@/lib/compensation/scenarios';
 import type { ChoiceOption } from '@/types/organization';
 
 export type {
@@ -9,6 +10,11 @@ export type {
     SalaryFilters,
     SalaryStanding,
 } from '@/lib/compensation/salaries';
+export type {
+    ScenarioCounts,
+    ScenarioFilters,
+    TermChangeForm,
+} from '@/lib/compensation/scenarios';
 
 /** A row of a seniority table as the server sends it: the value to edit and the value written with its unit. */
 export type TenureRow = {
@@ -107,4 +113,52 @@ export type OverrideRow = {
     active: boolean;
     current: OverrideSalary | null;
     salaries: OverrideSalary[];
+};
+
+/** A scenario as the «Escenarios» list shows it: what it proposes and what it costs in its first year. */
+export type ScenarioRow = {
+    id: string;
+    name: string;
+    /** `AAAA-MM-DD`. */
+    effective_on: string;
+    horizon_years: number;
+    retroactive_months: number;
+    /** A percent as typed: "5.75". */
+    unionized_raise: string;
+    /** Null when the trusted staff copy the unionized raise. */
+    trusted_raise: string | null;
+    changed_benefits: number;
+    people: number;
+    /** The change over the 12 months plus the retroactive months, written as money. */
+    first_year_text: string;
+    /** What the change costs per year from the effective date, written as money. */
+    recurring_text: string;
+    archived: boolean;
+};
+
+/** A scenario as its editor types it. */
+export type ScenarioDetail = {
+    id: string;
+    name: string;
+    effective_on: string;
+    retroactive_months: number;
+    horizon_years: number;
+    unionized_raise: string;
+    /** Empty when the trusted staff copy the unionized raise. */
+    trusted_raise: string;
+    /** A state code, or empty for none. */
+    default_state: string;
+    archived: boolean;
+    term_changes: TermChangeForm[];
+};
+
+/** One assumption of the long-term projection with where its value comes from. */
+export type AssumptionField = {
+    key: string;
+    label: string;
+    /** A percent as typed. */
+    value: string;
+    source: string;
+    /** `AAAA-MM-DD`. */
+    set_on: string;
 };

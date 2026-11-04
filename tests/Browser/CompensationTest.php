@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\SalaryOverride;
+use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Models\Tenant;
@@ -170,6 +172,90 @@ it('lists the rows of an individual salaries file to fix and imports nothing', f
     expect(SalaryOverride::query()->withoutGlobalScopes()->count())->toBe(0);
 })->with($looks);
 
+it('shows the scenarios with what each proposes and costs', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => 'E-001']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027', 'effective_on' => '2027-01-01', 'retroactive_months' => 2, 'group_changes' => ['unionized' => 575, 'trusted' => 300]]);
+
+    visitPage('compensation/scenarios', "{$url}/compensation/scenarios", $dark, $mobile)
+        ->assertSee('Escenarios')
+        ->assertSee('Revisión 2027')
+        ->assertSee('5.75 % sindicalizados · 3 % confianza')
+        ->assertSee('con 2 meses de retroactivo')
+        ->assertSee('1 persona costeada');
+})->with($looks);
+
+it('shows the first scenario as the next step', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/scenarios', "{$url}/compensation/scenarios", $dark, $mobile)
+        ->assertSee('Todavía no hay escenarios')
+        ->assertSee('Nuevo escenario');
+})->with($looks);
+
+it('shows the editor of a new scenario with its assumptions', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/scenario', "{$url}/compensation/scenarios/create", $dark, $mobile)
+        ->assertSee('Nuevo escenario')
+        ->assertSee('Aumento al salario')
+        ->assertSee('Supuestos de largo plazo')
+        ->assertSee('Meta de inflación del Banco de México');
+})->with($looks);
+
+it('makes a scenario from its editor and finds it in the list', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/scenarios/create")
+        ->fill('name', 'Revisión 2027')
+        ->fill('unionized_raise', '5.75')
+        ->press('Guardar escenario')
+        ->assertPathIs("{$url}/compensation/scenarios")
+        ->assertSee('Escenario guardado.')
+        ->assertSee('Revisión 2027')
+        ->assertSee('5.75 % sindicalizados y confianza')
+        ->assertNoJavaScriptErrors();
+
+    expect(Scenario::query()->withoutGlobalScopes()->sole()->group_changes)->toEqual(['unionized' => 575, 'trusted' => null]);
+});
+
+it('adds a benefit to change in the editor, in its own unit, and saves its new value', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $benefit = Benefit::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Bono de transporte', 'kind' => 'fixed_amount', 'frequency' => 'monthly']);
+
+    visit("{$url}/compensation/scenarios/create")
+        ->fill('name', 'Con bono')
+        ->click('#scenario-benefit-search')
+        ->type('[role="combobox"][aria-controls="scenario-benefit-search-options"]', 'transp')
+        ->click('[role="option"]:has-text("Bono de transporte")')
+        ->assertSee('No está en el contrato de hoy')
+        ->assertSee('Valor nuevo (pesos)')
+        ->fill('[name="term_changes[0][value]"]', '1500')
+        ->fill('unionized_raise', '0')
+        ->press('Guardar escenario')
+        ->assertSee('Escenario guardado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Scenario::query()->withoutGlobalScopes()->sole()->term_changes)->toEqual([['benefit_id' => $benefit->id, 'value' => 150000, 'tenure_table' => null]]);
+});
+
+it('shows what is wrong in the editor without saving', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/scenarios/create")
+        ->fill('name', 'Revisión 2027')
+        ->fill('unionized_raise', 'cinco')
+        ->press('Guardar escenario')
+        ->assertSee('Escribe un porcentaje como 5 o 5.75.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Scenario::query()->withoutGlobalScopes()->count())->toBe(0);
+});
+
 it('leads from Compensación to the benefits, the tabulator and the individual salaries', function (string $link, string $path): void {
     $url = signInToPanel();
 
@@ -181,4 +267,5 @@ it('leads from Compensación to the benefits, the tabulator and the individual s
     'benefits' => ['Prestaciones', 'benefits'],
     'tabulator' => ['Tabulador', 'tabulator'],
     'individual salaries' => ['Sueldos individuales', 'overrides'],
+    'scenarios' => ['Escenarios', 'scenarios'],
 ]);
