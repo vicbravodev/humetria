@@ -27,13 +27,15 @@ Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo mand
 Nada está terminado hasta que esto pasa en verde:
 
 ```bash
-composer test          # pint --test + phpstan (max) + Pest Unit/Feature con cobertura ≥ 90% + Browser en paralelo
+composer test          # pint --test + phpstan (max) + Pest Unit/Feature en paralelo con cobertura ≥ 90% + Browser en paralelo
 npm run types:check
 npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
-y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden.
-El check obligatorio de `main` es el job `ci` (chequeos y navegador, en `.github/workflows/tests.yml`).
+y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden: se corre al cerrar un trabajo, antes
+del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo) y `composer check:fast`.
+El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (auditoría, Pint, PHPStan, frontend),
+`tests` (Unit/Feature con cobertura) y `browser` (3 shards), todos en paralelo (`.github/workflows/tests.yml`).
 
 **Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
 `.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
@@ -49,12 +51,13 @@ FormRequests y notificaciones. Si el score baja de 95, el workflow falla y GitHu
   la pide, y acotada a las clases que tocaste: `composer mutate -- --class=…` (4 procesos, solo los tests con
   `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (~6 min) y
   `composer mutate:full` (las 293 clases, `--min=95`) son para medir, a petición del usuario. Ver `docs/testing.md`.
-- No corras la mutación al mismo tiempo que `composer test`: comparten la base `testing` y los dos dan resultados falsos.
-- La cobertura (Unit/Feature) corre sin `--parallel`: en paralelo `--min` no se aplica. Si la cobertura baja, faltan
-  tests: no se baja el umbral.
+- No corras la mutación al mismo tiempo que `composer test` en el mismo checkout: comparten su base de pruebas y los dos dan resultados falsos (otro worktree no estorba).
+- La cobertura (Unit/Feature) corre en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo,
+  `scripts/coverage-min.php` lee el clover y falla bajo 90%. Si la cobertura baja, faltan tests: no se baja el umbral.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
 `composer test:fast` (Tia: solo los tests que tu cambio afecta; la primera corrida graba el grafo).
+`composer check:fast` = Pint + PHPStan + Tia: es lo que corre el hook de Stop.
 
 ## Arquitectura: monolito modular
 
@@ -263,13 +266,21 @@ contra él.
   `queue:work` a mano.
 - Los tests son la excepción: corren en local (`composer test`, Vitest, navegador) contra el Postgres de Docker en el
   puerto 5433 (`FORWARD_DB_PORT`); `phpunit.xml` fija ese host y puerto, así que el `.env` puede apuntar a `pgsql`.
+- **Worktrees en paralelo:** cada checkout prueba contra su propia base: `testing` en el principal y
+  `testing_<directorio>_<hash>` en un worktree, que `tests/bootstrap.php` crea sola (un `DB_DATABASE` explícito en el
+  shell gana). No hace falta pasar nada a mano ni deadlockean entre sí. Un worktree nuevo se prepara con
+  `composer worktree:setup` (`.env`, dependencias y build); `composer worktree:prune` lista las bases de worktrees
+  borrados y `-- --drop` las elimina (revisa la lista antes: otra sesión podría usarlas).
+  La app de Sail en `http://localhost` sirve el checkout principal, no el worktree.
 - Primera vez: `composer install`, `cp .env.example .env`, `sail up -d`, `sail artisan key:generate`, `sail artisan migrate`.
   El primer superadmin: `sail artisan humetria:create-superadmin`.
   La base de ciudades para los correos de cuenta: `sail artisan geoip:update` (luego la baja cada mes el scheduler).
 - El correo local va a mailtrap-local (bandeja en `http://localhost:3550`): ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
-- Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado;
-  al terminar, `composer test` si hay cambios y además `npm run check` + `npm run types:check` si cambió frontend.
+- Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado
+  (en el checkout dueño del archivo, sea worktree o principal); al terminar, `composer check:fast` si hay cambios
+  (Pint, PHPStan y solo los tests afectados) y además `npm run check` + `npm run types:check` + `npm run test:js` si
+  cambió frontend. La suite completa es `composer ci:check`, al cerrar el trabajo, y el CI la repite.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
 
 ## Flujo de trabajo: un PR por trabajo, commits atómicos

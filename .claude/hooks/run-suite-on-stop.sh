@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Stop: when the working tree has changes, run the full quality suite before Claude finishes.
-# composer test always runs; when frontend files changed, npm run check, npm run types:check and npm run test:js run too.
+# Stop: when the working tree has changes, run the FAST checks before Claude finishes: Pint, PHPStan and only the tests
+# the change affects (composer check:fast, Tia). When frontend files changed, npm run check, types:check and test:js
+# run too. The full suite (coverage, browser) is composer ci:check, run before the pull request, and CI repeats it.
+# It runs in the checkout the session works in (a worktree, not $CLAUDE_PROJECT_DIR), whose tests use their own database.
 # A failure blocks the stop once so Claude keeps fixing; a second consecutive failure
 # lets it stop and warns the user, to avoid an endless loop.
 
 input=$(cat)
-cd "$CLAUDE_PROJECT_DIR" || exit 0
+cd "$(echo "$input" | jq -r '.cwd // empty')" 2>/dev/null || cd "$CLAUDE_PROJECT_DIR" || exit 0
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" || exit 0
 
 changes=$(git status --porcelain 2>/dev/null)
 [ -n "$changes" ] || exit 0
@@ -13,8 +16,8 @@ changes=$(git status --porcelain 2>/dev/null)
 failed=""
 report=""
 
-if ! output=$(composer test 2>&1); then
-    failed="composer test"
+if ! output=$(composer check:fast 2>&1); then
+    failed="composer check:fast"
     report=$(echo "$output" | tail -40)
 fi
 

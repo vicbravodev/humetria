@@ -3,7 +3,9 @@
 # Exit 2 sends PHPStan errors back to Claude so it fixes them right away.
 
 file=$(jq -r '.tool_response.filePath // .tool_input.file_path // empty')
-cd "$CLAUDE_PROJECT_DIR" || exit 0
+# The checkout that owns the file: a worktree is not $CLAUDE_PROJECT_DIR, and its code must be checked with its own config.
+root=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null || echo "$CLAUDE_PROJECT_DIR")
+cd "$root" || exit 0
 
 case "$file" in
     *.php) ;;
@@ -14,7 +16,7 @@ esac
 
 vendor/bin/pint --quiet "$file" 2>/dev/null
 
-relative=${file#"$CLAUDE_PROJECT_DIR"/}
+relative=${file#"$root"/}
 case "$relative" in
     app/*|config/*|database/*|routes/*|bootstrap/app.php) ;;
     *) exit 0 ;;

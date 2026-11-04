@@ -22,7 +22,7 @@ composer mutate:critical                                                 # las c
 composer mutate:full                                                     # las 293 de mutates(), --min=95
 ```
 
-No corras la mutación al mismo tiempo que `composer test`: comparten la base `testing`.
+Cada checkout usa su propia base de pruebas (ver CLAUDE.md, "Worktrees en paralelo"): dos worktrees ya no se pisan. Dentro de un mismo checkout, no corras la mutación al mismo tiempo que `composer test`: comparten su base.
 
 ## Dónde corre
 

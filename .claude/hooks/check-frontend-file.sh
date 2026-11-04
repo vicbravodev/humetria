@@ -3,7 +3,9 @@
 # (frontend architecture, size limits, oxlint). Exit 2 sends the errors back to Claude so it fixes them right away.
 
 file=$(jq -r '.tool_response.filePath // .tool_input.file_path // empty')
-cd "$CLAUDE_PROJECT_DIR" || exit 0
+# The checkout that owns the file: a worktree is not $CLAUDE_PROJECT_DIR, and its code must be checked with its own config.
+root=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null || echo "$CLAUDE_PROJECT_DIR")
+cd "$root" || exit 0
 
 case "$file" in
     *.ts|*.tsx) ;;
@@ -14,7 +16,7 @@ esac
 
 node_modules/.bin/vp fmt "$file" >/dev/null 2>&1
 
-relative=${file#"$CLAUDE_PROJECT_DIR"/}
+relative=${file#"$root"/}
 if ! output=$(node_modules/.bin/vp lint "$file" 2>&1); then
     echo "vp lint found problems in $relative. Fix the cause (split the component, move logic to hooks/lib); do not loosen the rules:" >&2
     echo "$output" >&2
