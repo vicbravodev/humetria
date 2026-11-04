@@ -4,7 +4,7 @@ import FormSection from '@/components/compensation/form-section';
 import OverrideFields from '@/components/compensation/override-fields';
 import SalaryHistory from '@/components/compensation/salary-history';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { store } from '@/routes/tenant/compensation/overrides';
+import { destroy, store } from '@/routes/tenant/compensation/overrides';
 import type { OverrideRow } from '@/types';
 
 /**
@@ -47,6 +47,9 @@ export default function OverrideSheet({
                             current={person.current}
                             label="Sueldos por vigencia"
                             empty="Todavía no tiene sueldo individual."
+                            removeForm={(override) =>
+                                destroy.form({ tenant: tenantSlug, override })
+                            }
                         />
                     </FormSection>
                 )

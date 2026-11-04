@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Compensation\Actions\DeleteGradeSalary;
 use App\Modules\Compensation\Actions\ListTabulator;
 use App\Modules\Compensation\Actions\SaveGradeSalary;
 use App\Modules\Compensation\Http\Requests\GradeSalaryRequest;
+use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Support\CsvFile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +44,15 @@ final class TabulatorController extends Controller
     {
         $save->handle($request->toData());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Salario guardado.']);
+
+        return back();
+    }
+
+    public function destroy(mixed $tenant, string $salary, DeleteGradeSalary $delete): RedirectResponse
+    {
+        Gate::authorize('manage-compensation');
+        $delete->handle(GradeSalary::query()->findOrFail($salary));
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Salario eliminado.']);
 
         return back();
     }

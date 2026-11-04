@@ -1,7 +1,9 @@
+import SalaryRemoveButton from '@/components/compensation/salary-remove-button';
 import { Badge } from '@/components/ui/badge';
 import { describeDate } from '@/lib/calendar-date';
 import { salaryStanding } from '@/lib/compensation/salaries';
 import type { SalaryEntry } from '@/types';
+import type { RouteFormDefinition } from '@/wayfinder';
 
 const STANDING = {
     current: 'Vigente hoy',
@@ -18,11 +20,14 @@ export default function SalaryHistory({
     current,
     label,
     empty,
+    removeForm,
 }: {
-    salaries: SalaryEntry[];
+    salaries: (SalaryEntry & { id: string })[];
     current: SalaryEntry | null;
     label: string;
     empty: string;
+    /** The form that deletes the salary with that id. */
+    removeForm: (id: string) => RouteFormDefinition<'post'>;
 }) {
     if (salaries.length === 0) {
         return (
@@ -61,6 +66,10 @@ export default function SalaryHistory({
                             <span className="font-medium tabular-nums">
                                 {salary.daily_salary_text}
                             </span>
+                            <SalaryRemoveButton
+                                salary={salary}
+                                form={removeForm(salary.id)}
+                            />
                         </span>
                     </li>
                 );

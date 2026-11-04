@@ -5,7 +5,7 @@ import GradeSalaryFields from '@/components/compensation/grade-salary-fields';
 import SalaryHistory from '@/components/compensation/salary-history';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { gradeName } from '@/lib/compensation/salaries';
-import { store } from '@/routes/tenant/compensation/tabulator';
+import { destroy, store } from '@/routes/tenant/compensation/tabulator';
 import type { TabulatorRow } from '@/types';
 
 /**
@@ -49,6 +49,9 @@ export default function GradeSalarySheet({
                             current={grade.current}
                             label="Salarios por vigencia"
                             empty="Todavía no tiene salario. Captura abajo el de hoy."
+                            removeForm={(salary) =>
+                                destroy.form({ tenant: tenantSlug, salary })
+                            }
                         />
                     </FormSection>
                 )

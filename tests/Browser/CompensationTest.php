@@ -89,6 +89,24 @@ it('imports a tabulator file from its page and lists the new categories', functi
     expect(GradeSalary::query()->withoutGlobalScopes()->count())->toBe(2);
 });
 
+it('deletes a salary of the tabulator that was typed by mistake, after confirming', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 99000, 'effective_from' => '2031-06-01']);
+
+    visit("{$url}/compensation/tabulator")
+        ->click('Salarios')
+        ->click('[aria-label^="Eliminar el salario desde el 1 de junio de 2031"]')
+        ->assertSee('¿Eliminar este salario?')
+        ->press('Eliminar salario')
+        ->assertSee('Salario eliminado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(GradeSalary::query()->withoutGlobalScopes()->sole()->daily_salary_cents)->toBe(50000);
+});
+
 it('lists the rows of a tabulator file to fix and imports nothing', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     $path = salaryCsvOnDisk("categoria,nivel,salario_diario,vigencia\nOperador,A,0,2020-01-01\n");

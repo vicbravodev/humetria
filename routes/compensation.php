@@ -35,10 +35,12 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::post('admin/{tenant:slug}/compensation/benefits/{benefit}/terms', [BenefitTermController::class, 'store'])->where('tenant', $notReserved)->whereUuid('benefit')->name('tenant.compensation.benefits.terms.store');
     Route::get('admin/{tenant:slug}/compensation/tabulator', [TabulatorController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.index');
     Route::post('admin/{tenant:slug}/compensation/tabulator', [TabulatorController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.store');
+    Route::delete('admin/{tenant:slug}/compensation/tabulator/{salary}', [TabulatorController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('salary')->name('tenant.compensation.tabulator.destroy');
     Route::get('admin/{tenant:slug}/compensation/tabulator/import/template', [TabulatorImportController::class, 'template'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.template');
     Route::post('admin/{tenant:slug}/compensation/tabulator/import', [TabulatorImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.tabulator.import');
     Route::get('admin/{tenant:slug}/compensation/overrides', [SalaryOverrideController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.index');
     Route::post('admin/{tenant:slug}/compensation/overrides', [SalaryOverrideController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.store');
+    Route::delete('admin/{tenant:slug}/compensation/overrides/{override}', [SalaryOverrideController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('override')->name('tenant.compensation.overrides.destroy');
     Route::get('admin/{tenant:slug}/compensation/overrides/import/template', [SalaryOverrideImportController::class, 'template'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.template');
     Route::post('admin/{tenant:slug}/compensation/overrides/import', [SalaryOverrideImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.import');
     Route::get('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.index');

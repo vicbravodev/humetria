@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Compensation\Actions\DeleteSalaryOverride;
 use App\Modules\Compensation\Actions\ListSalaryOverrides;
 use App\Modules\Compensation\Actions\SaveSalaryOverride;
 use App\Modules\Compensation\Http\Requests\OverrideRequest;
+use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Support\CsvFile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +44,15 @@ final class SalaryOverrideController extends Controller
     {
         $save->handle($request->toData());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Sueldo individual guardado.']);
+
+        return back();
+    }
+
+    public function destroy(mixed $tenant, string $override, DeleteSalaryOverride $delete): RedirectResponse
+    {
+        Gate::authorize('manage-compensation');
+        $delete->handle(SalaryOverride::query()->findOrFail($override));
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Sueldo individual eliminado.']);
 
         return back();
     }
