@@ -51,4 +51,20 @@ enum AssumptionKey: string
     {
         return '2026-11-04';
     }
+
+    /**
+     * Every assumption at the platform's proposal, as a scenario keeps them: its value, where it comes from and when it was set.
+     *
+     * @return array<string, array{value_bp: int, source: string, set_on: string}>
+     */
+    public static function defaultSnapshot(): array
+    {
+        $snapshot = [];
+
+        foreach (self::cases() as $key) {
+            $snapshot[$key->value] = ['value_bp' => $key->defaultBasisPoints(), 'source' => $key->defaultSource(), 'set_on' => $key->defaultSetOn()];
+        }
+
+        return $snapshot;
+    }
 }
