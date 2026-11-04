@@ -92,6 +92,8 @@ it('redacts each sensitive key', function (string $key): void {
     'institution',
     // NOM-035 Programa de intervención: what HR writes may name a person, so it never reaches a log.
     'analysis', 'follow_up_result', 'cancelled_reason',
+    // NOM-035 complaints channel: what a person tells, who it is against, who they are, and the credentials of their case.
+    'access_key', 'body', 'involved_text', 'reference', 'reporter_contact', 'reporter_email', 'reporter_name', 'respondent_kind', 'respondent_text', 'ticket',
 ]);
 
 it('keeps lists with numeric keys intact', function (): void {

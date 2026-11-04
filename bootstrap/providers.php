@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Campaigns\Providers\CampaignsServiceProvider;
+use App\Modules\Complaints\Providers\ComplaintsServiceProvider;
 use App\Modules\Demos\Providers\DemosServiceProvider;
 use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
 use App\Modules\Interventions\Providers\InterventionsServiceProvider;
@@ -31,5 +32,6 @@ return [
     InterventionsServiceProvider::class,
     TeleworkServiceProvider::class,
     SeatingServiceProvider::class,
+    ComplaintsServiceProvider::class,
     AssistantServiceProvider::class,
 ];

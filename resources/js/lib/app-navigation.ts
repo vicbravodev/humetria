@@ -6,6 +6,7 @@ import {
     Laptop,
     Armchair,
     Inbox,
+    MessageSquareWarning,
     UserCog,
     Users,
 } from 'lucide-react';
@@ -17,6 +18,9 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
+import { index as complaintCases } from '@/routes/tenant/complaints';
+import { show as channel } from '@/routes/tenant/complaints/channel';
+import { index as complaintHandlers } from '@/routes/tenant/complaints/handlers';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as programs } from '@/routes/tenant/interventions';
 import { index as members } from '@/routes/tenant/members';
@@ -43,7 +47,7 @@ export const mainNavItems = (
     isSuperadmin: boolean,
 ): NavItem[] => {
     // The committee's only pages are NOM-037's (under Cumplimiento), so its main sidebar has nothing else.
-    if (tenant?.role === 'committee') {
+    if (tenant?.role === 'committee' || tenant?.role === 'complaints') {
         return [];
     }
 
@@ -113,6 +117,35 @@ const seating = (tenant: NavTenant): NavItem => ({
 });
 
 /**
+ * The channel for complaints and reports of NOM-035 (8.1 b): the cases of whoever handles them, and the channel and who
+ * handles it for whoever manages it. A handler's start is its cases; a manager who handles none starts at the channel.
+ */
+const complaints = (tenant: NavTenant): NavItem => ({
+    title: 'Quejas',
+    href: tenant.can.handle_complaints
+        ? complaintCases(tenant.slug)
+        : channel(tenant.slug),
+    icon: MessageSquareWarning,
+    children: [
+        ...(tenant.can.handle_complaints
+            ? [{ title: 'Casos', href: complaintCases(tenant.slug) }]
+            : []),
+        ...(tenant.can.manage_complaint_channel
+            ? [
+                  { title: 'Canal', href: channel(tenant.slug) },
+                  {
+                      title: 'Quién atiende',
+                      href: complaintHandlers(tenant.slug),
+                  },
+              ]
+            : []),
+    ],
+});
+
+const handlesOrManagesComplaints = (tenant: NavTenant): boolean =>
+    tenant.can.handle_complaints || tenant.can.manage_complaint_channel;
+
+/**
  * The compliance tools of the current company, for every role: who may change them is the page's to say. The committee
  * sees only NOM-037 and Ley Silla.
  */
@@ -122,6 +155,11 @@ export const complianceNavItems = (
 ): NavItem[] => {
     if (tenant === null) {
         return [];
+    }
+
+    // The handler of complaints has no tool of the company but the channel.
+    if (tenant.role === 'complaints') {
+        return tenant.can.handle_complaints ? [complaints(tenant)] : [];
     }
 
     const nom035: NavItem = {
@@ -144,6 +182,7 @@ export const complianceNavItems = (
         ...(tenant.role === 'committee' ? [] : [nom035]),
         telework(tenant),
         ...(tenant.can.view_seating ? [seating(tenant)] : []),
+        ...(handlesOrManagesComplaints(tenant) ? [complaints(tenant)] : []),
     ];
 };
 

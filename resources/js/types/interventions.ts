@@ -23,7 +23,7 @@ export type ProgramStateValue = 'none' | 'in_progress' | 'overdue' | 'done';
 /** The evaluation that came after, to follow up the measures of a row (num. 8.4 e). */
 export type FollowUpEvaluation = { id: string; label: string };
 
-export type FollowUp = {
+export type ProgramFollowUpState = {
     dueOn: string | null;
     dueOnLabel: string | null;
     doneOn: string | null;
@@ -46,7 +46,7 @@ export type ProgramRow = {
     meter: { done: number; total: number };
     analysis: string | null;
     missingAnalysis: boolean;
-    followUp: FollowUp;
+    followUp: ProgramFollowUpState;
 };
 
 /** A line of «Lo que pide la Tabla»: covered or missing, never a verdict. */

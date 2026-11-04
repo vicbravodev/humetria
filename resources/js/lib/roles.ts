@@ -5,6 +5,7 @@ const SUMMARIES: Record<TenantRole, string> = {
     hr: 'opera evaluaciones, centros y empleados',
     viewer: 've resultados e informes',
     committee: 'revisa y valida los lugares de teletrabajo',
+    complaints: 'atiende, de forma confidencial, las quejas que se le asignan',
 };
 
 /** What a role in a company does, to follow its name: "RH · opera evaluaciones, centros y empleados". */

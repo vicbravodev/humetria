@@ -24,11 +24,13 @@ const can = (manage_organization: boolean, manage_members: boolean) => ({
     view_interventions: true,
     manage_interventions: manage_organization,
     use_assistant: true,
+    manage_complaint_channel: manage_organization,
+    handle_complaints: manage_organization,
 });
 const acme = (
     manageOrganization = true,
     manageMembers = true,
-    role: 'owner' | 'hr' | 'viewer' | 'committee' = 'owner',
+    role: 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints' = 'owner',
 ) => ({
     slug: 'acme',
     role,

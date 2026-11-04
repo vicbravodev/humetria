@@ -29,8 +29,8 @@ final class HomeController extends Controller
         if ($companies->total() === 1) {
             $company = $companies->getCollection()->sole();
 
-            // The Comisión sees only NOM-037: its start is there, not a page that would answer 403.
-            return redirect()->route($roles->of($user, $company) === TenantRole::Committee ? 'tenant.telework.index' : 'tenant.dashboard', $company);
+            // A restricted role starts in its own tool, not on a page that would answer 403.
+            return redirect()->route(($roles->of($user, $company) ?? TenantRole::Viewer)->startRoute(), $company);
         }
 
         return Inertia::render('tenancy/companies', [

@@ -6,6 +6,8 @@ const HINTS: Record<string, string> = {
     viewer: 'Solo consulta, sin cambiar nada.',
     committee:
         'Solo ve la NOM-037: revisa y valida los lugares de teletrabajo.',
+    complaints:
+        'Solo ve el canal de quejas: atiende las que le asignen (abogado, persona de confianza).',
 };
 
 /** The role an invited person gets, as option cards (pantallas: Usuarios-Invitar); RH is chosen to begin with. */

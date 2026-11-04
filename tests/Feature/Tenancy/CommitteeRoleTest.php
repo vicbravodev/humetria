@@ -8,7 +8,7 @@ use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
-use App\Modules\Tenancy\Http\Middleware\LimitCommitteeToTelework;
+use App\Modules\Tenancy\Http\Middleware\LimitRestrictedRoles;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 
-mutates(LimitCommitteeToTelework::class, CompanyMembers::class);
+mutates(LimitRestrictedRoles::class, CompanyMembers::class);
 
 it('invites a member as committee', function (): void {
     Notification::fake();
@@ -53,7 +53,7 @@ it('limits a committee member to the telework routes', function (): void {
     $committee = memberOf($tenant, TenantRole::Committee);
     $owner = memberOf($tenant, TenantRole::Owner);
 
-    Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitCommitteeToTelework::class])
+    Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class])
         ->get('admin/{tenant:slug}/telework-probe', fn () => 'ok')->name('tenant.telework.probe');
     Route::getRoutes()->refreshNameLookups();
 

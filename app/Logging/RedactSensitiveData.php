@@ -80,6 +80,17 @@ final class RedactSensitiveData implements ProcessorInterface
             'analysis',
             'cancelled_reason',
             'follow_up_result',
+            // NOM-035 complaints channel: what a person tells, who it is against, who they are, and the credentials of their case.
+            'access_key',
+            'body',
+            'involved_text',
+            'reference',
+            'reporter_contact',
+            'reporter_email',
+            'reporter_name',
+            'respondent_kind',
+            'respondent_text',
+            'ticket',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',
