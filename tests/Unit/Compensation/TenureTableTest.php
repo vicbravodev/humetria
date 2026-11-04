@@ -12,16 +12,20 @@ it('accepts a table that ascends by years', function (): void {
         ->and(TenureTable::problem([]))->toBeNull();
 });
 
-it('refuses a table out of order, with a repeated year, with a negative number or too long', function (array $rows): void {
-    expect(TenureTable::problem($rows))->toBeString();
-})->with([
-    'out of order' => [[['from_years' => 5, 'value' => 100], ['from_years' => 1, 'value' => 100]]],
-    'a repeated year' => [[['from_years' => 1, 'value' => 100], ['from_years' => 1, 'value' => 200]]],
-    'a negative year' => [[['from_years' => -1, 'value' => 100]]],
-    'a negative value' => [[['from_years' => 1, 'value' => -1]]],
-    'a year too far' => [[['from_years' => 81, 'value' => 100]]],
-    'too many rows' => [array_map(fn (int $year): array => ['from_years' => $year, 'value' => 1], range(0, 40))],
-]);
+it('refuses a table out of order, with a repeated year, with a negative number or too long', function (): void {
+    $tables = [
+        'out of order' => [['from_years' => 5, 'value' => 100], ['from_years' => 1, 'value' => 100]],
+        'a repeated year' => [['from_years' => 1, 'value' => 100], ['from_years' => 1, 'value' => 200]],
+        'a negative year' => [['from_years' => -1, 'value' => 100]],
+        'a negative value' => [['from_years' => 1, 'value' => -1]],
+        'a year too far' => [['from_years' => 81, 'value' => 100]],
+        'too many rows' => array_map(fn (int $year): array => ['from_years' => $year, 'value' => 1], range(0, 40)),
+    ];
+
+    foreach ($tables as $name => $rows) {
+        expect(TenureTable::problem($rows))->toBeString($name);
+    }
+});
 
 it('reads the value in force at a year of service', function (): void {
     $rows = [['from_years' => 1, 'value' => 1200], ['from_years' => 5, 'value' => 2000]];
