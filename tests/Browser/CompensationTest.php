@@ -169,3 +169,16 @@ it('lists the rows of an individual salaries file to fix and imports nothing', f
 
     expect(SalaryOverride::query()->withoutGlobalScopes()->count())->toBe(0);
 })->with($looks);
+
+it('leads from Compensación to the benefits, the tabulator and the individual salaries', function (string $link, string $path): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation")
+        ->click($link)
+        ->assertPathIs("{$url}/compensation/{$path}")
+        ->assertNoJavaScriptErrors();
+})->with([
+    'benefits' => ['Prestaciones', 'benefits'],
+    'tabulator' => ['Tabulador', 'tabulator'],
+    'individual salaries' => ['Sueldos individuales', 'overrides'],
+]);

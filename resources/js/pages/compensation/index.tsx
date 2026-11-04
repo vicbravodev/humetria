@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { Calculator } from 'lucide-react';
+import SetupLinks from '@/components/compensation/setup-links';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export default function CompensationIndex() {
                     title="Compensación"
                     description="Costea una propuesta de revisión de contrato colectivo: salario y prestaciones, a corto y largo plazo, con todos sus supuestos."
                 />
+                <SetupLinks />
                 <EmptyState
                     icon={Calculator}
                     title="Todavía no hay nada que costear"
