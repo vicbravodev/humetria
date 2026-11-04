@@ -51,7 +51,7 @@ FormRequests y notificaciones. Si el score baja de 95, el workflow falla y GitHu
   la pide, y acotada a las clases que tocaste: `composer mutate -- --class=…` (4 procesos, solo los tests con
   `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (~6 min) y
   `composer mutate:full` (las 293 clases, `--min=95`) son para medir, a petición del usuario. Ver `docs/testing.md`.
-- No corras la mutación al mismo tiempo que `composer test`: comparten la base `testing` y los dos dan resultados falsos.
+- No corras la mutación al mismo tiempo que `composer test` en el mismo checkout: comparten su base de pruebas y los dos dan resultados falsos (otro worktree no estorba).
 - La cobertura (Unit/Feature) corre en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo,
   `scripts/coverage-min.php` lee el clover y falla bajo 90%. Si la cobertura baja, faltan tests: no se baja el umbral.
 
