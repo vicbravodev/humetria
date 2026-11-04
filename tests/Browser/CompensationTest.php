@@ -188,6 +188,33 @@ it('shows the scenarios with what each proposes and costs', function (bool $dark
         ->assertSee('1 persona costeada');
 })->with($looks);
 
+it('compares two ticked scenarios by concept', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => 'E-001']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Cinco', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 500, 'trusted' => null]]);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Seis', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 600, 'trusted' => null]]);
+
+    visit("{$url}/compensation/scenarios")
+        ->click('[aria-label="Comparar Cinco"]')
+        ->click('[aria-label="Comparar Seis"]')
+        ->click('Comparar 2')
+        ->assertPathBeginsWith("{$url}/compensation/scenarios/compare")
+        ->assertSee('Comparar escenarios')
+        ->assertSee('$9,125.00')
+        ->assertSee('$10,950.00')
+        ->assertSee('IMSS: cuota fija de enfermedad y maternidad')
+        ->assertNoJavaScriptErrors();
+
+    $ids = Scenario::query()->withoutGlobalScopes()->pluck('id')->all();
+
+    visitPage('compensation/scenario-compare', "{$url}/compensation/scenarios/compare?ids[]={$ids[0]}&ids[]={$ids[1]}", $dark, $mobile)
+        ->assertSee('Costo del primer año')
+        ->assertSee('Salario');
+})->with($looks);
+
 it('shows the first scenario as the next step', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 

@@ -10,6 +10,7 @@ use App\Modules\Compensation\Http\Controllers\GradeOptionsController;
 use App\Modules\Compensation\Http\Controllers\RiskPremiumController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideImportController;
+use App\Modules\Compensation\Http\Controllers\ScenarioComparisonController;
 use App\Modules\Compensation\Http\Controllers\ScenarioController;
 use App\Modules\Compensation\Http\Controllers\TabulatorController;
 use App\Modules\Compensation\Http\Controllers\TabulatorImportController;
@@ -39,6 +40,7 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::post('admin/{tenant:slug}/compensation/overrides/import', [SalaryOverrideImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.import');
     Route::get('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.index');
     Route::get('admin/{tenant:slug}/compensation/scenarios/create', [ScenarioController::class, 'create'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.create');
+    Route::get('admin/{tenant:slug}/compensation/scenarios/compare', ScenarioComparisonController::class)->where('tenant', $notReserved)->name('tenant.compensation.scenarios.compare');
     Route::get('admin/{tenant:slug}/compensation/scenarios/benefits', BenefitOptionsController::class)->where('tenant', $notReserved)->name('tenant.compensation.scenarios.benefits');
     Route::post('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.store');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.edit');

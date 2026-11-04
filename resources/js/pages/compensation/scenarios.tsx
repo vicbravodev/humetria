@@ -1,10 +1,12 @@
 import { Head } from '@inertiajs/react';
+import CompareScenariosButton from '@/components/compensation/compare-scenarios-button';
 import NewScenarioButton from '@/components/compensation/new-scenario-button';
 import ScenariosEmpty from '@/components/compensation/scenarios-empty';
 import ScenariosTable from '@/components/compensation/scenarios-table';
 import ScenariosToolbar from '@/components/compensation/scenarios-toolbar';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
+import { useScenarioSelection } from '@/hooks/use-scenario-selection';
 import { scenariosHeadline } from '@/lib/compensation/scenarios';
 import type {
     Paginated,
@@ -22,6 +24,8 @@ export default function Scenarios({
     counts: ScenarioCounts;
     filters: ScenarioFilters;
 }) {
+    const { chosen, full, ready, toggle } = useScenarioSelection();
+
     return (
         <>
             <Head title="Escenarios" />
@@ -30,13 +34,19 @@ export default function Scenarios({
                     title="Escenarios"
                     description={`${scenariosHeadline(counts)} Cada uno es una propuesta de revisión del contrato: lo que sube el salario, lo que cambia en prestaciones y lo que cuesta.`}
                 >
+                    <CompareScenariosButton chosen={chosen} ready={ready} />
                     <NewScenarioButton />
                 </PageHeader>
                 <ScenariosToolbar filters={filters} counts={counts} />
                 {scenarios.data.length === 0 ? (
                     <ScenariosEmpty archived={filters.status === 'archived'} />
                 ) : (
-                    <ScenariosTable scenarios={scenarios.data} />
+                    <ScenariosTable
+                        scenarios={scenarios.data}
+                        chosen={chosen}
+                        full={full}
+                        onChoose={toggle}
+                    />
                 )}
                 <Pagination page={scenarios} label="Páginas de escenarios" />
             </div>
