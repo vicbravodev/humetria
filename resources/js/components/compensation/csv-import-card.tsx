@@ -1,6 +1,7 @@
 import { Form, usePage } from '@inertiajs/react';
 import { Download, FileUp } from 'lucide-react';
 import ImportProblems from '@/components/compensation/import-problems';
+import IconTile from '@/components/humetria/icon-tile';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,14 +35,12 @@ export default function CsvImportCard({
                 {...form}
                 options={{ preserveScroll: true }}
                 resetOnSuccess
-                className="grid gap-4 rounded-xl border bg-card p-5"
+                className="grid gap-4 card p-5"
             >
                 {({ processing, errors }) => (
                     <>
                         <div className="flex items-start gap-3">
-                            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                                <FileUp aria-hidden className="size-5" />
-                            </span>
+                            <IconTile icon={FileUp} />
                             <div className="min-w-0 flex-1">
                                 <h2 className="text-lg leading-[26px] font-semibold">
                                     {title}

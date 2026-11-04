@@ -9,6 +9,8 @@ declare(strict_types=1);
 const ACTIONS_WITHOUT_OWN_LOG = [
     // Read-only: they change nothing.
     'app/Modules/Demos/Actions/ListDemoRequests.php' => 'reads a paginated list',
+    'app/Modules/Compensation/Actions/ListSalaryOverrides.php' => 'reads a paginated list',
+    'app/Modules/Compensation/Actions/ListTabulator.php' => 'reads a paginated list',
     'app/Modules/Organization/Actions/CountEmployees.php' => 'counts',
     'app/Modules/Organization/Actions/ListEmployees.php' => 'reads a paginated list',
     'app/Modules/Organization/Actions/PlanEmployeeImport.php' => 'checks the rows without writing; ImportEmployees logs the import',

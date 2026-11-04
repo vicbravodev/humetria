@@ -43,7 +43,7 @@ export default function SalaryHistory({
                 return (
                     <li
                         key={salary.effective_from}
-                        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-xl border bg-card px-4 py-3"
+                        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 card px-4 py-3"
                     >
                         <span className="text-sm text-muted-foreground">
                             Desde el {describeDate(salary.effective_from)}
