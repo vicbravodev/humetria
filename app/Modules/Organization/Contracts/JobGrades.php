@@ -29,4 +29,10 @@ interface JobGrades
      * @return array<string, JobGradeData> by id
      */
     public function findMany(array $ids): array;
+
+    /**
+     * The grade with that category and level, whatever the case or the spaces around them, or a new one when the company
+     * has none yet. Neither may be empty and they fit the columns (120 and 60 characters): the caller has checked.
+     */
+    public function findOrCreate(string $category, string $level): JobGradeData;
 }

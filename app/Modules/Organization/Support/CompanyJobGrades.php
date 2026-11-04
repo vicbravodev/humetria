@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Organization\Support;
 
+use App\Modules\Organization\Actions\FindOrCreateJobGrade;
 use App\Modules\Organization\Contracts\JobGrades;
 use App\Modules\Organization\Data\JobGradeData;
 use App\Modules\Organization\Models\JobGrade;
 use Illuminate\Pagination\LengthAwarePaginator;
+use InvalidArgumentException;
 
-final class CompanyJobGrades implements JobGrades
+final readonly class CompanyJobGrades implements JobGrades
 {
+    public function __construct(private FindOrCreateJobGrade $findOrCreate) {}
+
     public function page(string $search, int $perPage): LengthAwarePaginator
     {
         return JobGrade::query()
@@ -38,6 +42,14 @@ final class CompanyJobGrades implements JobGrades
         }
 
         return $grades;
+    }
+
+    public function findOrCreate(string $category, string $level): JobGradeData
+    {
+        $grade = $this->findOrCreate->handle($category, $level);
+
+        // FindOrCreateJobGrade answers null only when either is missing, and the type says neither is.
+        return $grade === null ? throw new InvalidArgumentException('A job grade needs a category and a level.') : self::data($grade);
     }
 
     private static function data(JobGrade $grade): JobGradeData

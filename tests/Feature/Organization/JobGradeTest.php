@@ -134,3 +134,18 @@ it('answers the options only to members of the company and for a known field', f
         ->getJson('/admin/acme/job-grades/salary/options')
         ->assertNotFound();
 });
+
+it('finds or creates a job grade through the contract, ignoring case and spaces, inside the company only', function (): void {
+    $existing = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    $foreign = JobGrade::factory()->create(['category' => 'Soldador', 'level' => 'B']);
+    workIn($this->tenant);
+    $grades = resolve(JobGrades::class);
+
+    $same = $grades->findOrCreate(' OPERADOR ', 'a');
+    $created = $grades->findOrCreate('Soldador', 'B');
+
+    expect($same)->toEqual(new JobGradeData($existing->id, 'Operador', 'A'))
+        ->and($created->id)->not->toBe($foreign->id)
+        ->and($created->category)->toBe('Soldador')
+        ->and(JobGrade::query()->count())->toBe(2);
+});
