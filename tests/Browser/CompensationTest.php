@@ -27,3 +27,12 @@ it('shows Compensación as the start of a union', function (bool $dark, bool $mo
         ->assertSee('Compensación')
         ->assertSee('Cargar el padrón');
 })->with($looks);
+
+it('shows the catalog of benefits with the base ones and the risk premium', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/benefits', "{$url}/compensation/benefits", $dark, $mobile)
+        ->assertSee('Prestaciones')
+        ->assertSee('Aguinaldo')
+        ->assertSee('Prima de riesgo de trabajo');
+})->with($looks);
