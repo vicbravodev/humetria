@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { isPrivatePath } from '@/lib/private-paths';
 
 export type ResolvedAppearance = 'light' | 'dark';
 export type Appearance = ResolvedAppearance | 'system';
@@ -82,7 +83,10 @@ export function initializeTheme(): void {
 
     if (!localStorage.getItem('appearance')) {
         localStorage.setItem('appearance', 'system');
-        setCookie('appearance', 'system');
+
+        if (!isPrivatePath(window.location.pathname)) {
+            setCookie('appearance', 'system');
+        }
     }
 
     currentAppearance = getStoredAppearance();

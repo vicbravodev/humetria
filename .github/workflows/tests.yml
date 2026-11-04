@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run that is still going on the old commit. On main nothing is cancelled:
+# every merge keeps its own run.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   DB_CONNECTION: pgsql
   DB_HOST: 127.0.0.1
@@ -18,9 +24,10 @@ env:
   DB_PASSWORD: password
 
 # The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
-# requires only the ci job, which waits for every other job: a job can be added or renamed without touching the
+# requires only the ci job, which waits for every other job: a job can be added, split or renamed without touching the
 # settings. Mutation testing is not here: mutation.yml runs it every week, and it never blocks a pull request.
 jobs:
+  # Static checks and the frontend: the fast feedback (a style or type error shows up here in a couple of minutes).
   checks:
     runs-on: ubuntu-latest
     services: &postgres
@@ -49,22 +56,42 @@ jobs:
           composer audit
           npm audit --omit=dev
 
+      - name: Pint and PHPStan
+        run: |
+          php artisan config:clear --ansi
+          composer lint:check
+          composer types:check
+
       - name: Frontend checks
         run: |
           npm run check
           npm run types:check
           npm run test:js
 
-      - name: Pint, PHPStan and Unit/Feature with coverage
-        run: |
-          php artisan config:clear --ansi
-          composer lint:check
-          composer types:check
-          php artisan test --coverage --min=90 --exclude-testsuite=Browser
+  # Unit and Feature, in parallel and with coverage. Pest does not apply --min in parallel, so the script reads the report.
+  tests:
+    runs-on: ubuntu-latest
+    services: *postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
+      - uses: ./.github/actions/setup
+        with:
+          coverage: pcov
+
+      - name: Unit and Feature with coverage
+        run: composer test:coverage
+
+  # The browser tests, split in three runs of about a third each.
   browser:
     runs-on: ubuntu-latest
     services: *postgres
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -75,12 +102,12 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Browser tests
-        run: composer test:browser
+      - name: Browser tests (shard ${{ matrix.shard }}/3)
+        run: composer test:browser -- --shard=${{ matrix.shard }}/3
 
   # The required check: every job passed.
   ci:
-    needs: [checks, browser]
+    needs: [checks, tests, browser]
     # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
     if: always()
     runs-on: ubuntu-latest

@@ -23,6 +23,12 @@ final class CompanyMembers implements Members
     /** @var array<string, list<MemberSummary>> */
     private array $reviewing = [];
 
+    /** @var array<string, list<MemberSummary>> */
+    private array $handling = [];
+
+    /** @var array<string, list<MemberSummary>> */
+    private array $managing = [];
+
     public function __construct(private readonly CurrentTenant $current, private readonly CompanyRoles $roles) {}
 
     public function all(): array
@@ -37,6 +43,8 @@ final class CompanyMembers implements Members
     {
         $this->memo = [];
         $this->reviewing = [];
+        $this->handling = [];
+        $this->managing = [];
     }
 
     /** @return list<MemberSummary> */
@@ -59,13 +67,29 @@ final class CompanyMembers implements Members
         return $this->reviewing[$this->current->id()] ??= $this->loadReviewers();
     }
 
+    public function complaintHandlers(): array
+    {
+        return $this->handling[$this->current->id()] ??= $this->withPermission('handle-complaints');
+    }
+
+    public function complaintManagers(): array
+    {
+        return $this->managing[$this->current->id()] ??= $this->withPermission('manage-complaint-channel');
+    }
+
     /** @return list<MemberSummary> */
     private function loadReviewers(): array
+    {
+        return $this->withPermission('review-workplaces');
+    }
+
+    /** @return list<MemberSummary> The members whose role has the permission. */
+    private function withPermission(string $permission): array
     {
         $names = DB::table('role_has_permissions')
             ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
             ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
-            ->where('permissions.name', 'review-workplaces')
+            ->where('permissions.name', $permission)
             ->pluck('roles.name')
             ->all();
 

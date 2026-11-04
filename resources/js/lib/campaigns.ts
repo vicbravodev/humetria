@@ -77,6 +77,13 @@ export function quotasText(quotas: GenderQuota[]): string {
     return quotas.map((quota) => `${quota.label} ${quota.count}`).join(' · ');
 }
 
+/** The guide that measures the evaluation (the last): the one «contestó» is counted by; null without guides. */
+export function measuringGuide(
+    instruments: InstrumentProgress[],
+): string | null {
+    return instruments.at(-1)?.key ?? null;
+}
+
 /** The query string for the filters: only what narrows the default list of pending people. */
 export function peopleQuery(
     filters: PeopleFilters,

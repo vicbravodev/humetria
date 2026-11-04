@@ -171,6 +171,7 @@ describe('periodText', () => {
         expect(periodText('20 dic 2025', '5 ene 2026')).toBe(
             '20 dic 2025 al 5 ene 2026',
         );
+        expect(periodText('2 nov 2026', '2 nov 2026')).toBe('2 nov 2026');
         expect(periodText(null, '5 ene 2026')).toBe('Hasta el 5 ene 2026');
         expect(periodText('5 ene 2026', null)).toBe('Desde el 5 ene 2026');
     });

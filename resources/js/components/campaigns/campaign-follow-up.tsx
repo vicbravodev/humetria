@@ -4,7 +4,7 @@ import CampaignPeopleSection from '@/components/campaigns/campaign-people-sectio
 import ProgressCard from '@/components/campaigns/progress-card';
 import SendingProgress from '@/components/campaigns/sending-progress';
 import Notice from '@/components/humetria/notice';
-import { progressNote } from '@/lib/campaigns';
+import { measuringGuide, progressNote } from '@/lib/campaigns';
 import type {
     AnswersByDay,
     AreaParticipation,
@@ -65,7 +65,11 @@ export default function CampaignFollowUp({
                 )}
             </section>
             {areas !== null && areas.length > 0 && (
-                <AreaParticipationCard route={route} areas={areas} />
+                <AreaParticipationCard
+                    route={route}
+                    guide={measuringGuide(instruments)}
+                    areas={areas}
+                />
             )}
             {people !== null && (
                 <CampaignPeopleSection

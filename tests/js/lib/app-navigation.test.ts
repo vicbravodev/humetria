@@ -10,25 +10,12 @@ import {
     settingsNavItems,
 } from '@/lib/app-navigation';
 import { toUrl } from '@/lib/utils';
+import { can } from '../support/tenant-can';
 
-const can = (manage_organization: boolean, manage_members: boolean) => ({
-    manage_organization,
-    manage_members,
-    manage_campaigns: manage_organization,
-    view_trauma_screenings: manage_organization,
-    manage_telework: manage_organization,
-    review_workplaces: manage_organization,
-    view_seating: true,
-    manage_seating: manage_organization,
-    assess_seating: manage_organization,
-    view_compensation: manage_organization,
-    manage_compensation: manage_organization,
-    use_assistant: true,
-});
 const acme = (
     manageOrganization = true,
     manageMembers = true,
-    role: 'owner' | 'hr' | 'viewer' | 'committee' = 'owner',
+    role: 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints' = 'owner',
 ) => ({
     slug: 'acme',
     role,
@@ -158,6 +145,39 @@ describe('complianceNavItems', () => {
             ['Centros', '/admin/acme/telework'],
             ['Documentos', '/admin/acme/telework/documents'],
         ]);
+    });
+
+    it('lists the NOM-035 sub-links for who may read each: evaluations, Programas, policy and disclosure', () => {
+        const subLinks = (tenant: ReturnType<typeof acme>) =>
+            (
+                complianceNavItems(tenant).find(
+                    (item) => item.title === 'NOM-035',
+                )?.children ?? []
+            ).map((item) => [item.title, toUrl(item.href)]);
+        const tenant = acme(true, true, 'owner');
+        const without = (can: Partial<typeof tenant.can>) => ({
+            ...tenant,
+            can: { ...tenant.can, ...can },
+        });
+
+        expect(subLinks(tenant)).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Programas', '/admin/acme/programs'],
+            ['Política y difusión', '/admin/acme/disclosure'],
+        ]);
+        expect(subLinks(without({ view_interventions: false }))).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Política y difusión', '/admin/acme/disclosure'],
+        ]);
+        expect(subLinks(without({ view_disclosure: false }))).toEqual([
+            ['Evaluaciones', '/admin/acme/campaigns'],
+            ['Programas', '/admin/acme/programs'],
+        ]);
+        expect(
+            subLinks(
+                without({ view_interventions: false, view_disclosure: false }),
+            ),
+        ).toEqual([]);
     });
 
     it('counts the evaluations in course on NOM-035', () => {

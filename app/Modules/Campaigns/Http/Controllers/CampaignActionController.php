@@ -56,7 +56,7 @@ final class CampaignActionController extends Controller
 
     /**
      * To the people the list's filters narrow it to whose link failed, when it shows them; else to the pending ones,
-     * whatever standing it showed.
+     * whatever standing it showed. Without a guide, to whoever has any of them pending.
      */
     public function resend(Request $request, mixed $tenant, string $campaign, ResendInvitations $resendInvitations, CampaignPeople $people): RedirectResponse
     {
@@ -64,7 +64,7 @@ final class CampaignActionController extends Controller
         $active = CampaignController::find($campaign, CampaignStatus::Active);
         $filter = CampaignController::peopleFilter($request, $active);
         $standing = $filter->standing === Standing::Failed ? Standing::Failed : Standing::Pending;
-        $pending = new PeopleFilter($standing, $filter->guide, $filter->areaId, $filter->search);
+        $pending = new PeopleFilter($standing, $request->has('guide') ? $filter->guide : null, $filter->areaId, $filter->search);
         $sent = $resendInvitations->handle($active, $people->employeeIds($active, $pending));
 
         return $this->done($sent, 'No hay a quién reenviar: nadie con correo tiene guías pendientes.', 'Enlace reenviado a 1 persona.', "Enlace reenviado a {$sent} personas.");

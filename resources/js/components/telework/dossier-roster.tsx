@@ -31,7 +31,7 @@ export default function DossierRoster({ people }: { people: DossierPerson[] }) {
                 <TableRow key={`${person.name}-${index}`}>
                     <TableCell className="font-medium">{person.name}</TableCell>
                     <TableCell>{person.jobTitle}</TableCell>
-                    <TableCell>{person.percentage} %</TableCell>
+                    <TableCell>{person.percentage}&nbsp;%</TableCell>
                     <TableCell>
                         {describeDate(person.startedOn ?? '') ?? '—'}
                     </TableCell>

@@ -51,7 +51,7 @@ it('lists who requires a clinical assessment, by when they answered, deactivated
             ->where('counts', ['answered' => 3, 'requiring' => 2])
             ->where('people.total', 2)
             // 06:00 UTC is still the 3rd in Mexico City... at midnight.
-            ->where('people.data.0', ['id' => $ana->id, 'name' => 'Ana López', 'area' => 'Área de Ana López', 'jobTitle' => 'Operador', 'answeredOn' => '3 nov 2026'])
+            ->where('people.data.0', ['id' => $ana->id, 'name' => 'Ana López', 'area' => 'Área de Ana López', 'jobTitle' => 'Operador', 'answeredOn' => '3 nov 2026', 'referral' => null])
             ->where('people.data.1.name', 'Luis Pérez'));
 })->with([TenantRole::Owner, TenantRole::Hr]);
 
@@ -60,7 +60,7 @@ it('gives no answer of the Guía I in the list, only who needs care', function (
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr))
         ->get(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]))
-        ->assertInertia(fn (Assert $page) => expect(array_keys($page->toArray()['props']['people']['data'][0]))->toBe(['id', 'name', 'area', 'jobTitle', 'answeredOn']));
+        ->assertInertia(fn (Assert $page) => expect(array_keys($page->toArray()['props']['people']['data'][0]))->toBe(['id', 'name', 'area', 'jobTitle', 'answeredOn', 'referral']));
 });
 
 it('records in the audit trail who consulted the list', function (): void {
@@ -96,7 +96,7 @@ it('lists with a fixed number of queries, however many need care', function (int
     $this->get($url);
 
     // The same whatever the size: nothing is read per row.
-    $this->expectsDatabaseQueryCount(18);
+    $this->expectsDatabaseQueryCount(20);
 
     $this->get($url)->assertOk();
 })->with([1, 6]);

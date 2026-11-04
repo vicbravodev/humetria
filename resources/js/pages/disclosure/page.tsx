@@ -1,0 +1,36 @@
+import { Head, setLayoutProps } from '@inertiajs/react';
+import { Globe } from 'lucide-react';
+import DisclosureTabs from '@/components/disclosure/disclosure-tabs';
+import PageLinkActions from '@/components/disclosure/page-link-actions';
+import PageLinkCard from '@/components/disclosure/page-link-card';
+import PageLinkStart from '@/components/disclosure/page-link-start';
+import PageHeader from '@/components/humetria/page-header';
+import type { PageLinkProps } from '@/types';
+
+export default function Page({ link }: PageLinkProps) {
+    setLayoutProps({
+        breadcrumbs: [{ title: 'NOM-035' }, { title: 'Política y difusión' }],
+    });
+
+    return (
+        <>
+            <Head title="Página de las personas" />
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+                <PageHeader
+                    caption="Política y difusión"
+                    title="Página de las personas"
+                    description="Un enlace permanente, para el cartel y el correo, donde las personas ven la política, las medidas, cómo presentar una queja y los resultados (numerales 5.7 y 7.8). Solo lee: no pide cuenta ni guarda quién entra."
+                />
+                <DisclosureTabs active="page" />
+                {link === null ? (
+                    <PageLinkStart icon={Globe} />
+                ) : (
+                    <>
+                        <PageLinkCard link={link} />
+                        <PageLinkActions link={link} />
+                    </>
+                )}
+            </div>
+        </>
+    );
+}

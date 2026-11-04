@@ -50,6 +50,13 @@ return [
 
     'seating_files' => env('SEATING_FILES_DISK', 'local'),
 
+    /*
+    | The disk of the NOM-035 Programa de intervención evidence (attendance lists, call-ups, photos of an activity). Private:
+    | never a public URL; files are served only through the app, after checking who may see them.
+    */
+
+    'intervention_files' => env('INTERVENTION_FILES_DISK', 'local'),
+
     'disks' => [
 
         'local' => [

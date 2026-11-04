@@ -33,6 +33,21 @@ interface CampaignRecords
     public function closedEvaluations(int $perPage, string $pageName = 'page'): LengthAwarePaginator;
 
     /**
+     * The closed NOM-035 evaluations of one work center (Guía I by event left out), the latest first.
+     *
+     * @return list<CampaignRecord>
+     */
+    public function closedAt(string $workCenterId): array;
+
+    /**
+     * The latest closed NOM-035 evaluation (Guía I by event left out) of each of those work centers, in a fixed number of queries.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return array<string, CampaignRecord> by work center id; a center without a closed evaluation is left out.
+     */
+    public function latestClosedEvaluations(array $workCenterIds): array;
+
+    /**
      * Where each work center stands in its two-year cycle of NOM-035 evaluations (num. 7.9).
      *
      * @param  list<string>  $workCenterIds

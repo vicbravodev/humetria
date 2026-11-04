@@ -52,9 +52,7 @@ export default function PeopleToolbar({
             />
             <Select
                 value={filters.guide ?? ALL_GUIDES}
-                onValueChange={(guide) =>
-                    filter({ guide: guide === ALL_GUIDES ? null : guide })
-                }
+                onValueChange={(guide) => filter({ guide })}
             >
                 <SelectTrigger aria-label="Guía" className="w-full">
                     <SelectValue />

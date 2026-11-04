@@ -20,14 +20,14 @@ enum TenantType: string
     }
 
     /**
-     * The roles its owner can hand out. A union has no viewer or committee: only the owner and HR.
+     * The roles its owner can hand out. A union has no viewer, committee or complaints handler: only the owner and HR.
      *
      * @return list<TenantRole>
      */
     public function assignableRoles(): array
     {
         return match ($this) {
-            self::Company => [TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee],
+            self::Company => [TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints],
             self::Union => [TenantRole::Hr],
         };
     }

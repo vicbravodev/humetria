@@ -215,3 +215,46 @@ it('lets owner and HR see the Guía I channeling list, and hides it from the vie
     $visit(Nom035EvaluationSeeder::MEMBER_EMAILS[1])->assertOk();
     $visit(Nom035EvaluationSeeder::MEMBER_EMAILS[2])->assertNotFound();
 });
+
+it('gives each work center its own main activity, as a company would write it', function (): void {
+    $activities = WorkCenter::query()->withoutGlobalScopes()->pluck('main_activity');
+
+    expect($activities)->toHaveCount(5)->and($activities->unique())->toHaveCount(5);
+});
+
+it('drafts the Programa de intervención of the 30-person center and brings the 100-person one well on its way (C-30 to C-36)', function (): void {
+    $slug = Nom035EvaluationSeeder::SLUG;
+    $owner = User::query()->where('email', Nom035EvaluationSeeder::OWNER_EMAIL)->sole();
+    $draft = demoCampaign(Nom035EvaluationSeeder::CENTER_30);
+    $under = demoCampaign(Nom035EvaluationSeeder::CENTER_100);
+
+    $this->actingAs($owner)->get(route('tenant.campaigns.program', [$slug, $draft->id]))->assertOk()
+        ->assertInertia(fn ($page) => $page->where('program.state.value', 'none')->where('program.responsible', null)->where('actions.total', 0));
+    $this->actingAs($owner)->get(route('tenant.campaigns.program', [$slug, $under->id]))->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('program.responsible.name', fn ($name) => is_string($name) && $name !== '')
+            ->where('program.state.value', 'overdue')
+            // Done, running, overdue, planned and cancelled actions; none of the third level aimed at a person.
+            ->where('actions.total', 8)
+            ->where('actions.data', fn ($actions) => collect($actions)->pluck('status.value')->unique()->sort()->values()->all() === ['cancelled', 'done', 'in_progress', 'planned']
+                && collect($actions)->contains(fn ($action) => $action['overdue'] === true)
+                && collect($actions)->contains(fn ($action) => $action['level']['value'] === 3 && $action['professional'] !== null && $action['subjects']['value'] === 'center'))
+            ->where('program.items', fn ($rows) => collect($rows)->contains(fn ($row) => $row['analysis'] !== null)));
+});
+
+it('lets the viewer read the Programa of the demo and hides the tools to write it', function (): void {
+    $viewer = User::query()->where('email', Nom035EvaluationSeeder::MEMBER_EMAILS[2])->sole();
+
+    $this->actingAs($viewer)->get(route('tenant.campaigns.program', [Nom035EvaluationSeeder::SLUG, demoCampaign(Nom035EvaluationSeeder::CENTER_100)->id]))->assertOk()
+        ->assertInertia(fn ($page) => $page->where('can.manage', false)->where('catalog', null)->where('members', null));
+});
+
+it('keeps the demo Programa free of anything that points at a person', function (): void {
+    $tables = collect(Illuminate\Support\Facades\Schema::getTables())->pluck('name')->filter(fn (string $name): bool => str_starts_with($name, 'intervention_'));
+
+    foreach ($tables as $table) {
+        expect(Illuminate\Support\Facades\Schema::getColumnListing($table))->not->toContain('employee_id')->not->toContain('participant_id');
+    }
+
+    expect($tables)->toHaveCount(5);
+});

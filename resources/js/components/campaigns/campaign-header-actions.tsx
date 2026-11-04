@@ -1,10 +1,10 @@
-import { Link } from '@inertiajs/react';
-import { FileText } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { ClipboardList, FileText } from 'lucide-react';
 import ActiveCampaignActions from '@/components/campaigns/active-campaign-actions';
 import DeleteDraftDialog from '@/components/campaigns/delete-draft-dialog';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { report, results } from '@/routes/tenant/campaigns';
+import { program, report, results } from '@/routes/tenant/campaigns';
 import type {
     CampaignDetail,
     InviteMissingCount,
@@ -21,6 +21,7 @@ export default function CampaignHeaderActions({
     minDeadline,
     replacementPool,
     pending,
+    guide,
     missing,
 }: {
     campaign: CampaignDetail;
@@ -28,10 +29,15 @@ export default function CampaignHeaderActions({
     minDeadline: string | null;
     replacementPool: ReplacementPool[] | null;
     pending: number;
+    guide: string | null;
     missing: InviteMissingCount;
 }) {
     const tenantSlug = useTenantSlug();
     const route: [string, string] = [tenantSlug, campaign.id];
+    // The Programa de intervención exists for an evaluation scored by risk level (Guía II or III), for who may read it.
+    const canSeeProgram =
+        usePage().props.tenant?.can.view_interventions === true &&
+        campaign.instruments.some((guide) => guide !== 'Guía I');
 
     if (campaign.status === 'draft') {
         return canManage ? (
@@ -46,6 +52,7 @@ export default function CampaignHeaderActions({
                 minDeadline={minDeadline}
                 replacementPool={replacementPool}
                 pending={pending}
+                guide={guide}
                 missing={missing}
             />
         );
@@ -55,12 +62,22 @@ export default function CampaignHeaderActions({
         <>
             {campaign.status === 'closed' &&
                 campaign.kind === 'nom035_evaluation' && (
-                    <Button asChild variant="outline">
-                        <Link href={report(route)}>
-                            <FileText aria-hidden="true" />
-                            Informe 7.7
-                        </Link>
-                    </Button>
+                    <>
+                        {canSeeProgram && (
+                            <Button asChild variant="outline">
+                                <Link href={program(route)}>
+                                    <ClipboardList aria-hidden="true" />
+                                    Programa
+                                </Link>
+                            </Button>
+                        )}
+                        <Button asChild variant="outline">
+                            <Link href={report(route)}>
+                                <FileText aria-hidden="true" />
+                                Informe 7.7
+                            </Link>
+                        </Button>
+                    </>
                 )}
             <Button asChild>
                 <Link href={results(route)}>Ver resultados</Link>

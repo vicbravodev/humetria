@@ -9,6 +9,7 @@ use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Responses\Contracts\ResponseReader;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\AreaResult;
+use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Results\Data\RiskGroup;
 
@@ -49,6 +50,30 @@ final readonly class CompanyRiskResults implements RiskResults
             $areas['hidden'],
             $filtered === null ? null : $names[$filtered],
         );
+    }
+
+    public function areaGroups(CampaignRecord $campaign): array
+    {
+        $guide = ResultsPages::riskGuide($campaign);
+
+        if ($guide === null || ! $campaign->closed) {
+            return [];
+        }
+
+        $records = $this->responses->anonymous($campaign->id, $guide);
+
+        if (! $this->distribution->of($guide, $records)['visible']) {
+            return [];
+        }
+
+        $visible = $this->distribution->areas($guide, $records)['visible'];
+        $names = $this->areas->names(array_column($visible, 'areaId'));
+
+        return array_map(function (array $area) use ($guide, $records, $names): AreaRisk {
+            $result = $this->distribution->of($guide, $records, $area['areaId']);
+
+            return new AreaRisk($area['areaId'], $names[$area['areaId']] ?? '', $area['answered'], $result['final'], array_map(self::group(...), $result['categories']), array_map(self::group(...), $result['domains']));
+        }, $visible);
     }
 
     /**

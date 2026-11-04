@@ -119,15 +119,19 @@ it('shows a sampled draft with who was drawn', function (bool $dark, bool $mobil
         ->assertSee('Borrador')
         ->assertSee('Muestra de 53: Mujeres 27 · Hombres 26')
         ->assertSee('Muestra sorteada (53)')
-        ->assertSee('Página 1 de 3');
+        ->assertSee('Página 1 de 3')
+        // The number of the last step says what it is to a screen reader, and the steps that are ready say so.
+        ->assertScript('document.body.textContent.includes("Paso 3") && document.body.textContent.includes("Listo: ")', true);
 })->with($looks);
 
 it('prepares an evaluation from the panel, reached from the sidebar', function (): void {
     $tenant = campaignsCompany();
     staffOf($tenant, WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']), 60);
 
+    // NOM-035 opens its submenu (Evaluaciones, Programas); its first page is the evaluations.
     visit('/admin/acme')
         ->click('NOM-035')
+        ->click('Evaluaciones')
         ->assertPathIs('/admin/acme/campaigns')
         ->click('button:has-text("Evaluar")')
         ->assertSee('Planta Norte · 60 personas')
@@ -198,8 +202,8 @@ it('follows a launched evaluation: answers per guide, the sample and who answere
         ->assertSee('43 pendientes')
         ->assertSee('Participación por área')
         ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', 'Pendientes')
-        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '60')
-        ->assertSee('Página 1 de 3');
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '43')
+        ->assertSee('Página 1 de 2');
 })->with($looks);
 
 it('narrows who answered a guide and searches them by name', function (): void {
@@ -241,7 +245,7 @@ it('shows how the sending of the links goes until it ends, and offers to resend 
 
     foreach (['sent', 'sent', 'failed', 'queued'] as $status) {
         $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_batch' => $campaign->invitation_batch, 'invitation_status' => $status]);
-        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
     }
 
     $page = visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", $dark, $mobile)
@@ -262,7 +266,7 @@ it('sends the link again only to whom it failed', function (): void {
 
     foreach (['sent', 'failed', 'failed'] as $status) {
         $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invitation_status' => $status]);
-        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
     }
 
     visit("/admin/acme/campaigns/{$campaign->id}")
@@ -288,10 +292,10 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
     staffOf($tenant, $plant, female: 1);
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->click('Recordar a 60')
+        ->click('Recordar a 53')
         ->assertSee('Es el mismo de antes: el que ya tienen sigue sirviendo.')
         ->click('Reenviar enlaces')
-        ->assertSee('Enlace reenviado a 60 personas.')
+        ->assertSee('Enlace reenviado a 53 personas.')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Invitar a quien falte")')
         // Nothing goes out before confirming: it says who gets a link.
@@ -306,7 +310,7 @@ it('sends links again, invites a newcomer and draws replacements from the evalua
         ->assertSeeIn('[role=dialog]', 'No falta nadie por invitar.')
         ->assertScript('document.querySelector("[role=dialog] button[type=submit]").disabled', true)
         ->click('[role=dialog] button:has-text("Cancelar")')
-        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '61')
+        ->assertSeeIn('[aria-label="Situación de las personas"] [aria-current="page"]', '53')
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Sortear reemplazos")')
         ->assertSee('del mismo género de quienes no contestarán')
@@ -517,6 +521,39 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
         ->assertSee('Ana López');
 })->with($looks);
 
+it('shows the channeling of each person and the dialog that records it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    $person->update(['name' => 'Ana López']);
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/screenings", $dark, $mobile, fn ($page) => $page->click('Registrar canalización'))
+        ->assertSee('Canalización de Ana López')
+        ->assertSee('Institución');
+})->with($looks);
+
+it('records that a person was referred, choosing the day and writing the institution', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/screenings")
+        ->click('Registrar canalización')
+        ->click('#referred-on')
+        ->click('[data-day="'.now('America/Mexico_City')->format('Y-m-d').'"] button')
+        ->fill('#report-institution', 'IMSS, Unidad de Medicina Familiar 7')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Canalización registrada.')
+        ->assertSee('IMSS, Unidad de Medicina Familiar 7')
+        ->assertSee('Registrar atención')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('shows the 7.7 report of a closed evaluation, ready to print', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
@@ -625,4 +662,18 @@ it('gives each part of the 7.7 report the width of the phone to read', function 
     $page = visitPage('results/shared-report', '/report/'.str_repeat('a', 64), mobile: true);
 
     resizeTo($page, 375)->assertScript($narrowest.' >= 300')->assertScript(spilledOut(), '');
+});
+
+it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out when they do not fit', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii')]);
+    // The rows the shown links sit on: none when the list is left out, one when it fits; never two or three.
+    $rows = '() => new Set([...document.querySelectorAll("nav[aria-label=\'Secciones del informe\'] a")].filter((link) => link.offsetParent !== null).map((link) => Math.round(link.getBoundingClientRect().top))).size <= 1';
+
+    $page = visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/report");
+
+    foreach ([800, 1024, 1100, 1280, 1440, 1600] as $width) {
+        resizeTo($page, $width)->assertScript($rows, true);
+    }
 });

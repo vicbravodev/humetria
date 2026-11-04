@@ -1,6 +1,11 @@
 name: Setup
 description: PHP, Node, dependencies, the migrated database and the built assets, as every CI job needs them.
 
+inputs:
+  coverage:
+    description: "PHP coverage driver: pcov for the job that measures coverage, none for the rest (pcov slows every test)."
+    default: none
+
 runs:
   using: composite
   steps:
@@ -9,7 +14,7 @@ runs:
       with:
         php-version: '8.5'
         tools: composer:v2
-        coverage: pcov
+        coverage: ${{ inputs.coverage }}
 
     - name: Setup Node
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

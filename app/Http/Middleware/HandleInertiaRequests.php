@@ -55,7 +55,7 @@ final class HandleInertiaRequests extends Middleware
             'tenants' => [],
             // The NOM-035 count and the next deadline in the sidebar. Read when the page renders, after ResolveTenant
             // has shared the company: outside one, nothing is asked.
-            // The Comisión sees nothing of NOM-035 (criterio C-25), not even its counts.
+            // The Comisión and the handlers of complaints see nothing of NOM-035's evaluations (criterio C-25), not even its counts.
             'inCourse' => fn (): ?array => $this->seesNom035() ? $this->inCourse() : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -65,7 +65,7 @@ final class HandleInertiaRequests extends Middleware
     {
         $tenant = Inertia::getShared('tenant');
 
-        return is_array($tenant) && ($tenant['role'] ?? null) !== 'committee';
+        return is_array($tenant) && ! in_array($tenant['role'] ?? null, ['committee', 'complaints'], true);
     }
 
     /**

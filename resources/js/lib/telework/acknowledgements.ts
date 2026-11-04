@@ -9,7 +9,7 @@ export function percent(progress: AckProgress): number {
 
 /** "12 de 40 (30 %)": the written count that goes next to the bar. */
 export function progressText(progress: AckProgress): string {
-    return `${progress.acknowledged} de ${progress.expected} (${percent(progress)} %)`;
+    return `${progress.acknowledged} de ${progress.expected} (${percent(progress)}\u00a0%)`;
 }
 
 /** The query of the list: only what differs from the default view, so a clean URL is the whole list. */

@@ -12,6 +12,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import type { NavItem } from '@/types';
 
 /**
@@ -36,7 +37,21 @@ export function NavSubmenu({
                     <SidebarMenuButton className="data-[state=open]:font-semibold data-[state=open]:[&>svg:first-child]:text-sidebar-primary data-[state=open]:[&>svg:last-child]:rotate-90">
                         {item.icon && <item.icon />}
                         <span className="truncate">{item.title}</span>
-                        <ChevronRight className="ml-auto size-4! transition-transform duration-200 ease-out" />
+                        {item.badge !== undefined && item.badge > 0 && (
+                            <span
+                                data-sidebar="menu-badge"
+                                className="ml-auto rounded-full bg-sidebar-accent px-[7px] text-xs leading-5 font-medium tabular-nums"
+                            >
+                                {item.badge}
+                            </span>
+                        )}
+                        <ChevronRight
+                            className={cn(
+                                'size-4! transition-transform duration-200 ease-out',
+                                !(item.badge !== undefined && item.badge > 0) &&
+                                    'ml-auto',
+                            )}
+                        />
                     </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>

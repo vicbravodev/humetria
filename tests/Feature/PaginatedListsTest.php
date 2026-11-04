@@ -76,6 +76,15 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.campaigns.report', [$tenant, $closed->id]);
     }, ['shares']],
+    'the Programas de intervención' => ['interventions/index', fn () => route('tenant.interventions.index', listsCompany()[0]), ['evaluations']],
+    'a Programa de intervención' => ['interventions/show', function () {
+        [$tenant] = listsCompany();
+        $closed = closedEvaluationWith($tenant, nom035Answers('nom035.guide-ii', 'always'));
+        workIn($tenant);
+        resolve(App\Modules\Interventions\Actions\CreateProgram::class)->handle($closed->id, null);
+
+        return route('tenant.campaigns.program', [$tenant, $closed->id]);
+    }, ['actions']],
     'Ley Silla centers' => ['seating/index', function () {
         [$tenant] = listsCompany();
 
@@ -155,6 +164,22 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.telework.notices.index', $tenant);
     }, ['notices']],
+    'complaints assigned to a handler' => ['complaints/index', function () {
+        [$tenant] = listsCompany();
+        $channel = App\Modules\Complaints\Models\ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+        $complaint = App\Modules\Complaints\Models\Complaint::factory()->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
+        App\Modules\Complaints\Models\ComplaintAssignment::factory()->create(['tenant_id' => $tenant->id, 'complaint_id' => $complaint->id, 'user_id' => auth()->id()]);
+
+        return route('tenant.complaints.index', $tenant);
+    }, ['cases']],
+    'a complaint\'s thread' => ['complaints/show', function () {
+        [$tenant] = listsCompany();
+        $channel = App\Modules\Complaints\Models\ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+        $complaint = App\Modules\Complaints\Models\Complaint::factory()->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
+        App\Modules\Complaints\Models\ComplaintAssignment::factory()->create(['tenant_id' => $tenant->id, 'complaint_id' => $complaint->id, 'user_id' => auth()->id()]);
+
+        return route('tenant.complaints.cases.show', [$tenant, $complaint->id]);
+    }, ['entries']],
     'notices a person sent' => ['telework/portal-notices', function () {
         [$tenant] = listsCompany();
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
@@ -164,6 +189,27 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['notices']],
+    'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
+    'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
+    'the results for the people' => ['disclosure/results', function () {
+        [$tenant, $plant] = listsCompany();
+        Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+        return route('tenant.disclosure.results', $tenant);
+    }, ['evaluations']],
+    'the policy acknowledgments' => ['disclosure/dissemination', function () {
+        [$tenant] = listsCompany();
+        $policy = App\Modules\Disclosure\Models\Document::factory()->published()->policy()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.disclosure.dissemination', $tenant);
+    }, ['people']],
+    'the public page of the workers' => ['disclosure-public/centers', function () {
+        [$tenant] = listsCompany();
+        WorkCenter::factory()->for($tenant)->create();
+        workIn($tenant);
+
+        return route('workers.show', (string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(auth()->id() ?? 0)->token());
+    }, ['centers']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

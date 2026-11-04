@@ -42,8 +42,10 @@ jobs:
         with:
           persist-credentials: false
 
-      # PCOV is the coverage driver the setup installs.
+      # Mutation needs coverage to know which tests cover each line: PCOV.
       - uses: ./.github/actions/setup
+        with:
+          coverage: pcov
 
       - name: Mutation testing
         run: composer mutate:critical -- --min=95 --ignore-min-score-on-zero-mutations

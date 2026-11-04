@@ -13,5 +13,8 @@ describe('roleSummary', () => {
         expect(roleSummary('committee')).toBe(
             'revisa y valida los lugares de teletrabajo',
         );
+        expect(roleSummary('complaints')).toBe(
+            'atiende, de forma confidencial, las quejas que se le asignan',
+        );
     });
 });
