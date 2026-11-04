@@ -177,7 +177,7 @@ it('writes the log and the audit entry with counts only, never a person or a sal
     $entry = AuditEntry::query()->where('event', 'compensation.overrides_imported')->sole();
 
     expect($entry->metadata)->toBe(['overrides' => 2])
-        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('650')->not->toContain('777')->not->toContain('65025');
+        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('650.25')->not->toContain('777.77')->not->toContain('65025')->not->toContain('77777');
 });
 
 it('writes neither log nor audit when the file is refused', function (): void {

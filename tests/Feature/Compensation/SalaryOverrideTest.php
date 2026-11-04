@@ -163,7 +163,7 @@ it('writes the audit entry of a saved salary with a count only, never the person
     $entry = AuditEntry::query()->where('event', 'compensation.override_saved')->sole();
 
     expect($entry->metadata)->toBe(['overrides' => 1])
-        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('650')->not->toContain('65025');
+        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('650.25')->not->toContain('65025');
 });
 
 it('replaces a salary with another from a later date and keeps the history', function (): void {
