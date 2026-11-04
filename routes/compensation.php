@@ -9,6 +9,7 @@ use App\Modules\Compensation\Http\Controllers\BenefitTermController;
 use App\Modules\Compensation\Http\Controllers\CompensationController;
 use App\Modules\Compensation\Http\Controllers\GradeOptionsController;
 use App\Modules\Compensation\Http\Controllers\ReportController;
+use App\Modules\Compensation\Http\Controllers\ReportShareController;
 use App\Modules\Compensation\Http\Controllers\RiskPremiumController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideImportController;
@@ -49,6 +50,8 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::put('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'update'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.update');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/report', [ReportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.report');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/annex', AnnexController::class)->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.annex');
+    Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/shares', [ReportShareController::class, 'store'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.shares.store');
+    Route::delete('admin/{tenant:slug}/compensation/scenarios/{scenario}/shares/{share}', [ReportShareController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('scenario')->whereUuid('share')->name('tenant.compensation.scenarios.shares.destroy');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/duplicate', [ScenarioController::class, 'duplicate'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.duplicate');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/archive', [ScenarioController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.archive');
 

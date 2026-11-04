@@ -22,6 +22,7 @@ use App\Modules\Compensation\Support\Calculation\SeniorityPremium;
 use App\Modules\Compensation\Support\Calculation\Sensitivity;
 use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Organization\Contracts\JobGrades;
+use App\Modules\Results\Contracts\SmallGroups;
 use Carbon\CarbonImmutable;
 
 /**
@@ -39,15 +40,20 @@ final readonly class ReportBuilder
         private ConceptLabels $labels,
         private Areas $areas,
         private JobGrades $jobGrades,
+        private SmallGroups $smallGroups,
     ) {}
 
     /**
+     * The report for a page. For a link anyone can open (`$shared`) the groups under the platform's minimum are folded into
+     * «Otros», and nobody is named: no employee number, no list of who was left out, no table of the worker's gross.
+     *
      * @return array<string, mixed>
      */
-    public function build(Scenario $scenario): array
+    public function build(Scenario $scenario, bool $shared = false): array
     {
         $input = $this->inputs->build($scenario);
         $cost = ScenarioCost::firstYear($input);
+        $cuts = $shared ? SharedGroups::apply($cost, $this->smallGroups) : $cost;
         $names = $this->labels->benefitNames();
         $assumptions = $this->assumptions($scenario);
         $years = Projection::years($input, $assumptions['values'], $scenario->horizon_years, fn (CarbonImmutable $on) => $this->fiscal->at($on));
@@ -59,7 +65,7 @@ final readonly class ReportBuilder
                 'unionized_raise' => PercentBasisPoints::format($scenario->group_changes['unionized'] ?? 0),
                 'trusted_raise' => ($scenario->group_changes['trusted'] ?? null) === null ? null : PercentBasisPoints::format($scenario->group_changes['trusted']),
             ],
-            'coverage' => $this->coverage($cost),
+            'coverage' => $this->coverage($cost, $shared),
             'headline' => [
                 'people' => $cost->people, 'retroactive_months' => $scenario->retroactive_months,
                 'first_year_text' => Money::format($cost->firstYearCents()), 'recurring_text' => Money::format($cost->recurringCents),
@@ -71,28 +77,28 @@ final readonly class ReportBuilder
                 'month' => $month->month->toDateString(), 'before_text' => Money::format($month->beforeCents),
                 'after_text' => Money::format($month->afterCents), 'delta_text' => Money::format($month->deltaCents()),
             ], $cost->months),
-            'cuts' => $this->cuts($cost),
+            'cuts' => $this->cuts($cuts),
             'projection' => array_map(fn (ProjectionYear $year): array => $this->year($year), $years),
             'seniority' => $this->seniority($input),
             'sensitivity' => $this->sensitivity($input),
             'assumptions' => $assumptions['rows'],
-            'warnings' => $this->warnings($cost, $input, $years),
-            'person_value' => $this->personValue($cost, $input, $names),
+            'warnings' => $this->warnings($cost, $input, $years, $shared),
+            'person_value' => $shared ? ['rows' => [], 'person_total_text' => Money::format(0), 'company_total_text' => Money::format(0)] : $this->personValue($cost, $input, $names),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function coverage(CostBreakdown $cost): array
+    private function coverage(CostBreakdown $cost, bool $shared): array
     {
         $gaps = $cost->gaps;
 
         return [
             'total' => $gaps->total, 'costed' => $gaps->costed,
-            'missing' => array_slice($gaps->missing, 0, self::MISSING_SHOWN),
-            'missing_more' => max(0, count($gaps->missing) - self::MISSING_SHOWN),
-            'missing_without_number' => $gaps->missingWithoutNumber,
+            'missing' => $shared ? [] : array_slice($gaps->missing, 0, self::MISSING_SHOWN),
+            'missing_more' => $shared ? 0 : max(0, count($gaps->missing) - self::MISSING_SHOWN),
+            'missing_without_number' => $shared ? 0 : $gaps->missingWithoutNumber,
         ];
     }
 
@@ -114,14 +120,25 @@ final readonly class ReportBuilder
      */
     private function cuts(CostBreakdown $cost): array
     {
-        $areaNames = $this->areas->names(array_values(array_filter(array_map(fn (CostCut $cut): ?string => $cut->key, $cost->byArea))));
-        $gradeNames = $this->jobGrades->findMany(array_values(array_filter(array_map(fn (CostCut $cut): ?string => $cut->key, $cost->byGrade))));
+        $areaNames = $this->areas->names($this->ids($cost->byArea));
+        $gradeNames = $this->jobGrades->findMany($this->ids($cost->byGrade));
 
         return [
-            'areas' => $this->cutRows($cost->byArea, fn (?string $key): string => $key === null ? 'Sin área' : ($areaNames[$key] ?? 'Área')),
-            'grades' => $this->cutRows($cost->byGrade, fn (?string $key): string => $key === null || ! isset($gradeNames[$key]) ? 'Categoría' : "{$gradeNames[$key]->category} · {$gradeNames[$key]->level}"),
-            'groups' => $this->cutRows($cost->byGroup, fn (?string $key): string => PayGroup::tryFrom((string) $key)?->label() ?? 'Grupo'),
+            'areas' => $this->cutRows($cost->byArea, fn (?string $key): string => $key === null ? 'Sin área' : ($key === SharedGroups::OTHERS ? 'Otros' : ($areaNames[$key] ?? 'Área'))),
+            'grades' => $this->cutRows($cost->byGrade, fn (?string $key): string => $key === SharedGroups::OTHERS ? 'Otros' : ($key === null || ! isset($gradeNames[$key]) ? 'Categoría' : "{$gradeNames[$key]->category} · {$gradeNames[$key]->level}")),
+            'groups' => $this->cutRows($cost->byGroup, fn (?string $key): string => $key === SharedGroups::OTHERS ? 'Otros' : (PayGroup::tryFrom((string) $key)?->label() ?? 'Grupo')),
         ];
+    }
+
+    /**
+     * The ids a cut names, without the folded group, which is no one's id.
+     *
+     * @param  list<CostCut>  $cuts
+     * @return list<string>
+     */
+    private function ids(array $cuts): array
+    {
+        return array_values(array_filter(array_map(fn (CostCut $cut): ?string => $cut->key, $cuts), fn (?string $key): bool => $key !== null && $key !== SharedGroups::OTHERS));
     }
 
     /**
@@ -207,7 +224,7 @@ final readonly class ReportBuilder
      * @param  list<ProjectionYear>  $years
      * @return array<string, mixed>
      */
-    private function warnings(CostBreakdown $cost, ScenarioInput $input, array $years): array
+    private function warnings(CostBreakdown $cost, ScenarioInput $input, array $years, bool $shared): array
     {
         $individuals = count($input->individuals);
         $gradeNames = $this->jobGrades->findMany(array_keys($cost->uncostedGrades));
@@ -216,11 +233,11 @@ final readonly class ReportBuilder
 
         return [
             'individual' => [
-                'count' => $individuals,
+                'count' => $shared ? 0 : $individuals,
                 'percent' => $cost->people === 0 ? '0' : $this->tenths($individuals, $cost->people),
                 'over_tenth' => $individuals * 10 > $cost->people,
             ],
-            'uncosted' => array_map(
+            'uncosted' => $shared ? [] : array_map(
                 fn (string $id, int $people): array => ['label' => isset($gradeNames[$id]) ? "{$gradeNames[$id]->category} · {$gradeNames[$id]->level}" : 'Categoría', 'people' => $people],
                 array_keys($cost->uncostedGrades),
                 array_values($cost->uncostedGrades),

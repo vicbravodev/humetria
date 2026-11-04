@@ -59,6 +59,7 @@ function publicRouteNames(): array
         'complaints.follow-up.messages.store', // guest: la persona escribe en su caso con la referencia y la clave; solo el día, nunca la hora; throttled
         'complaints.follow-up.withdraw', // guest: la persona retira su caso con la referencia y la clave; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
+        'compensation.report.shared', // guest: the report of a contract scenario from a temporary link (7 days at most, revocable); groups under the minimum folded into Otros, no annex, nobody named; the token is the credential; throttled
     ];
 }
 

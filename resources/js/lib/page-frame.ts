@@ -8,6 +8,8 @@ const STANDALONE_NAMES = new Set([
     'disclosure/portal-policy',
     // A report opened from a temporary link: nobody signed in.
     'results/shared-report',
+    // The report of a contract scenario opened from a temporary link: nobody signed in.
+    'compensation/shared-report',
     // An error page stands alone: the address may not even be a page of the panel.
     'error',
 ]);

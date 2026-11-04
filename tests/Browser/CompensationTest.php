@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\GradeSalary;
+use App\Modules\Compensation\Models\ReportShare;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Models\Tenant;
@@ -258,6 +260,57 @@ it('shows a union the worker gross against the company cost', function (bool $da
 
     visitPage('compensation/report', "/admin/sindicato/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
         ->assertSee('Valor para la persona y costo para la empresa');
+})->with($looks);
+
+it('shares the report from its page, shows the link once and revokes it', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027']);
+
+    visit("{$url}/compensation/scenarios/{$scenario->id}/report")
+        ->click('Compartir')
+        ->press('Crear enlace')
+        ->assertSee('Enlace al reporte')
+        ->assertSee('Cópialo ahora: no se vuelve a mostrar.')
+        ->assertNoJavaScriptErrors();
+
+    expect(ReportShare::query()->withoutGlobalScopes()->sole()->scenario_id)->toBe($scenario->id);
+
+    visit("{$url}/compensation/scenarios/{$scenario->id}/report")
+        ->assertSee('Enlaces abiertos')
+        ->click('[aria-label^="Revocar el enlace"]')
+        ->press('Revocar enlace')
+        ->assertSee('Enlace revocado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(ReportShare::query()->withoutGlobalScopes()->sole()->revoked_at)->not->toBeNull();
+});
+
+it('opens the shared report with no account, the small groups folded into Others', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Acme']);
+    $grade = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    foreach (['Producción' => 12, 'Dirección' => 2] as $name => $count) {
+        $area = Area::factory()->create(['tenant_id' => $tenant->id, 'name' => $name]);
+
+        foreach (range(1, $count) as $number) {
+            Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $grade->id, 'area_id' => $area->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => "{$name}-{$number}"]);
+        }
+    }
+    $scenario = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027', 'effective_on' => '2027-01-01']);
+    ReportShare::factory()->create(['tenant_id' => $tenant->id, 'scenario_id' => $scenario->id, 'token_hash' => ReportShare::hashToken(str_repeat('a', 64)), 'created_at' => now(), 'expires_at' => now()->addDay()]);
+
+    visitPage('compensation/shared-report', '/compensation-report/'.str_repeat('a', 64), $dark, $mobile)
+        ->assertSee('Acme compartió este reporte contigo')
+        ->assertSee('Revisión 2027')
+        ->assertSee('Cascada por concepto')
+        ->assertDontSee('Producción-1')
+        ->assertDontSee('Anexo por persona');
+})->with($looks);
+
+it('says a link that opens nothing is not available, without saying why', function (bool $dark, bool $mobile): void {
+    visitPage('compensation/shared-report', '/compensation-report/'.str_repeat('z', 64), $dark, $mobile)
+        ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
 it('shows the first scenario as the next step', function (bool $dark, bool $mobile): void {

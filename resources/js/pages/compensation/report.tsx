@@ -6,6 +6,8 @@ import ReportCoverage from '@/components/compensation/report-coverage';
 import ReportCuts from '@/components/compensation/report-cuts';
 import ReportHeadline from '@/components/compensation/report-headline';
 import ReportLiability from '@/components/compensation/report-liability';
+import ReportShares from '@/components/compensation/report-shares';
+import ShareDialog from '@/components/compensation/share-dialog';
 import ReportPersonValue from '@/components/compensation/report-person-value';
 import ReportTimeline from '@/components/compensation/report-timeline';
 import ReportWarnings from '@/components/compensation/report-warnings';
@@ -63,6 +65,11 @@ export default function Report(report: ScenarioReport) {
                             </a>
                         </Button>
                     )}
+                    {report.shares !== null && (
+                        <span className="print:hidden">
+                            <ShareDialog scenarioId={scenario.id} />
+                        </span>
+                    )}
                     <span className="print:hidden">
                         <PrintButton />
                     </span>
@@ -76,6 +83,12 @@ export default function Report(report: ScenarioReport) {
                 <ReportTimeline report={report} />
                 <ReportLiability report={report} />
                 <ReportAssumptions assumptions={report.assumptions} />
+                {report.shares !== null && (
+                    <ReportShares
+                        scenarioId={scenario.id}
+                        shares={report.shares}
+                    />
+                )}
             </div>
         </>
     );

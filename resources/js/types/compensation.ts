@@ -1,4 +1,5 @@
 import type { TermChangeForm } from '@/lib/compensation/scenarios';
+import type { Paginated, ReportShareRow } from '@/types';
 import type { ChoiceOption } from '@/types/organization';
 
 export type {
@@ -288,4 +289,6 @@ export type ScenarioReport = {
     warnings: ReportWarnings;
     person_value: ReportPersonValue;
     can_annex: boolean;
+    /** The links to the report that still open; null for whoever cannot share it. */
+    shares: Paginated<ReportShareRow> | null;
 };
