@@ -34,7 +34,7 @@ final class SalaryRules
     public static function salaryProblem(?int $cents): ?string
     {
         return match (true) {
-            $cents === null => 'El salario diario debe ser un monto en pesos como 524.65, sin comas de miles.',
+            $cents === null => 'El salario diario debe ser un monto en pesos como 524.65, sin signos ni comas de miles.',
             $cents <= 0 => 'El salario diario debe ser mayor que cero.',
             $cents > self::MAX_DAILY_CENTS => 'El salario diario no puede pasar de '.Money::format(self::MAX_DAILY_CENTS).'.',
             default => null,

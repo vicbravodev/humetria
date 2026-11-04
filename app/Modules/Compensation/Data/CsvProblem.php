@@ -8,7 +8,7 @@ namespace App\Modules\Compensation\Data;
 final readonly class CsvProblem
 {
     /**
-     * @param  non-empty-list<string>  $messages
+     * @param  list<string>  $messages
      */
     public function __construct(public int $row, public array $messages) {}
 }

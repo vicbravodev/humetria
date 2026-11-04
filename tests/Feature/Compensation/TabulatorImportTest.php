@@ -108,7 +108,7 @@ it('writes nothing, not even a new category, when any row has a problem, and say
         ->and(array_column($flash['errors'], 'row'))->toBe([4, 5, 6, 7, 8, 9, 10])
         ->and($flash['errors'][0]['messages'])->toBe(['El salario diario debe ser mayor que cero.'])
         ->and($flash['errors'][2]['messages'])->toBe(['La categoría no puede quedar vacía.'])
-        ->and($flash['errors'][4]['messages'])->toBe(['El salario diario debe ser un monto en pesos como 524.65, sin comas de miles.'])
+        ->and($flash['errors'][4]['messages'])->toBe(['El salario diario debe ser un monto en pesos como 524.65, sin signos ni comas de miles.'])
         ->and($flash['errors'][5]['messages'])->toBe(['La vigencia debe ser una fecha AAAA-MM-DD o DD/MM/AAAA que exista.']);
 });
 

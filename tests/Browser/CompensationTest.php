@@ -137,3 +137,35 @@ it('saves the individual salary of a person from its sheet', function (): void {
 
     expect(SalaryOverride::query()->withoutGlobalScopes()->sole()->employee_number)->toBe('E-001');
 });
+
+it('imports a file of individual salaries from its page', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'employee_number' => 'E-001']);
+    $path = salaryCsvOnDisk("id_de_la_empresa,salario_diario,vigencia\nE-001,650.25,2020-01-01\n");
+
+    visit("{$url}/compensation/overrides")
+        ->attach('file', $path)
+        ->press('Importar')
+        ->assertSee('Se importó 1 sueldo individual.')
+        ->assertSee('$650.25')
+        ->assertNoJavaScriptErrors();
+
+    expect(SalaryOverride::query()->withoutGlobalScopes()->sole()->daily_salary_cents)->toBe(65025);
+});
+
+it('lists the rows of an individual salaries file to fix and imports nothing', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $path = salaryCsvOnDisk("id_de_la_empresa,salario_diario,vigencia\nE-404,650.25,2020-01-01\n");
+
+    visitPage('compensation/overrides', "{$url}/compensation/overrides", $dark, $mobile, fn ($page) => $page
+        ->attach('file', $path)
+        ->press('Importar')
+        ->assertSee('No se importó nada'))
+        ->assertSee('Corrige 1 fila')
+        ->assertSeeIn('[aria-labelledby="import-problems"] tbody tr', 'Fila 2')
+        ->assertSee('No hay una persona activa con este ID de la empresa.');
+
+    expect(SalaryOverride::query()->withoutGlobalScopes()->count())->toBe(0);
+})->with($looks);

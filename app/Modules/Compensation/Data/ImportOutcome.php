@@ -20,7 +20,7 @@ final readonly class ImportOutcome
     /**
      * What the page shows of a file that was not imported.
      *
-     * @return array{status: string, rows: int, errors: list<array{row: int, messages: non-empty-list<string>}>}
+     * @return array{status: string, rows: int, errors: list<array{row: int, messages: list<string>}>}
      */
     public function summary(): array
     {

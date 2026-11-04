@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import NewOverrideButton from '@/components/compensation/new-override-button';
 import OverridesEmpty from '@/components/compensation/overrides-empty';
+import OverridesImport from '@/components/compensation/overrides-import';
 import OverridesTable from '@/components/compensation/overrides-table';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
@@ -13,6 +14,7 @@ import type { OverrideRow, Paginated, SalaryFilters } from '@/types';
 export default function Overrides({
     people,
     filters,
+    max_rows,
 }: {
     people: Paginated<OverrideRow>;
     filters: SalaryFilters;
@@ -31,6 +33,7 @@ export default function Overrides({
                 >
                     <NewOverrideButton />
                 </PageHeader>
+                <OverridesImport maxRows={max_rows} />
                 <SearchField
                     label="Buscar por ID de la empresa o nota"
                     value={text}
