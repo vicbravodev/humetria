@@ -184,15 +184,15 @@ describe('cycleTexts', () => {
 describe('participationShare', () => {
     it('writes who answered of how many, with the share', () => {
         expect(participationShare({ completed: 29, target: 30 })).toBe(
-            '29 de 30 · 97 %',
+            '29 de 30 · 97\u00a0%',
         );
     });
 });
 
 describe('highRiskShare', () => {
     it('gives the share in Alto or Muy alto', () => {
-        expect(highRiskShare([2, 6, 3, 3, 15])).toBe('62 %');
-        expect(highRiskShare([0, 0, 0, 0, 0])).toBe('0 %');
+        expect(highRiskShare([2, 6, 3, 3, 15])).toBe('62\u00a0%');
+        expect(highRiskShare([0, 0, 0, 0, 0])).toBe('0\u00a0%');
     });
 });
 

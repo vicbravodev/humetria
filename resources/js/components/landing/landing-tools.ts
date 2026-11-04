@@ -28,7 +28,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'nom_037',
         name: 'NOM-037',
         hint: 'Teletrabajo',
-        appliesTo: 'Quien teletrabaja más del 40 % de su jornada',
+        appliesTo: 'Quien teletrabaja más del 40\u00a0% de su jornada',
         points: [
             'Lleva el listado de personas en teletrabajo',
             'Cada persona contesta la lista de verificación de su lugar de trabajo desde el celular',

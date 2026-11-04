@@ -58,7 +58,8 @@ final class CampaignController extends Controller
     }
 
     /**
-     * The people filter from the query string: pending people by default, and anything unknown left out.
+     * The people filter from the query string: pending people of the guide that measures the campaign by default
+     * (`guide=all`: every guide), and anything unknown left out.
      */
     public static function peopleFilter(Request $request, Campaign $campaign): PeopleFilter
     {
@@ -68,7 +69,7 @@ final class CampaignController extends Controller
 
         return new PeopleFilter(
             standing: $status === 'all' ? null : Standing::tryFrom($status) ?? Standing::Pending,
-            guide: in_array($guide, $campaign->instruments, true) ? $guide : null,
+            guide: $guide === 'all' ? null : (in_array($guide, $campaign->instruments, true) ? $guide : $campaign->measuringGuide()),
             areaId: Str::isUuid($area) ? $area : null,
             search: $request->string('q')->trim()->limit(100, '')->toString(),
         );

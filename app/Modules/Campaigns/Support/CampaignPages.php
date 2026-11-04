@@ -148,7 +148,7 @@ final readonly class CampaignPages
             'sending' => $campaign->status === CampaignStatus::Active ? $this->sending($campaign) : null,
             'filters' => [
                 'status' => $filter->standing->value ?? 'all',
-                'guide' => $filter->guide,
+                'guide' => $filter->guide ?? 'all',
                 'area' => $filter->areaId === null ? null : ['value' => $filter->areaId, 'label' => $this->areas->name($filter->areaId) ?? ''],
                 'q' => $filter->search,
             ],
@@ -206,7 +206,7 @@ final readonly class CampaignPages
             return null;
         }
 
-        $main = array_last($campaign->instruments);
+        $main = $campaign->measuringGuide();
         $counts = $main === null ? [] : ($tally[$main] ?? []);
         $completed = $counts[InstrumentStatus::Completed->value] ?? 0;
         $sampleSize = $main === 'nom035.guide-iii' ? $campaign->sample_size : null;

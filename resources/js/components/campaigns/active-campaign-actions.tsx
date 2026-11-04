@@ -15,8 +15,6 @@ import type {
     ReplacementPool,
 } from '@/types';
 
-const PENDING = { status: 'pending', guide: null, area: null, q: '' };
-
 /**
  * What RH does while an evaluation runs (pantalla Eval-Activa): remind everyone pending and give more days; the menu
  * has the results so far, inviting whoever is missing, drawing replacements and closing it.
@@ -26,6 +24,7 @@ export default function ActiveCampaignActions({
     minDeadline,
     replacementPool,
     pending,
+    guide,
     missing,
 }: {
     campaign: CampaignDetail;
@@ -34,6 +33,8 @@ export default function ActiveCampaignActions({
     replacementPool: ReplacementPool[] | null;
     /** People waiting with a link sent: who "Recordar" reaches. */
     pending: number;
+    /** The guide that measures the evaluation: «pending» is counted by it. */
+    guide: string | null;
     /** Who «Invitar a quien falte» sends a link to. */
     missing: InviteMissingCount;
 }) {
@@ -66,7 +67,7 @@ export default function ActiveCampaignActions({
             )}
             <ResendFilteredDialog
                 campaignId={campaign.id}
-                filters={PENDING}
+                filters={{ status: 'pending', guide, area: null, q: '' }}
                 count={pending}
                 trigger={
                     <Button>

@@ -44,7 +44,7 @@ export default function AreaCard({
                             tone !== null && riskText(tone),
                         )}
                     >
-                        {share} %
+                        {share}&nbsp;%
                     </span>
                     <span className="text-caption text-muted-foreground">
                         alto o muy alto

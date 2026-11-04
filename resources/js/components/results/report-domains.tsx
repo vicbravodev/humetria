@@ -64,8 +64,8 @@ export default function ReportDomains({
                         className="gap-x-[18px] text-caption text-muted-foreground"
                     />
                     <span className="text-caption text-muted-foreground">
-                        Escala de 0 a {scale} % por lado. Pasa el cursor sobre
-                        una barra para ver el detalle.
+                        Escala de 0 a {scale}&nbsp;% por lado. Pasa el cursor
+                        sobre una barra para ver el detalle.
                     </span>
                 </div>
             </div>

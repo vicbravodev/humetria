@@ -19,6 +19,7 @@ export default function ReviewStep({
         <li className="grid grid-cols-[28px_minmax(0,1fr)] gap-4 border-t py-5 first:border-t-0">
             {number === undefined ? (
                 <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <span className="sr-only">Listo: </span>
                     <Check
                         aria-hidden="true"
                         className="size-4"
@@ -27,6 +28,7 @@ export default function ReviewStep({
                 </span>
             ) : (
                 <span className="inline-flex size-7 items-center justify-center rounded-full border-[1.5px] border-primary text-caption font-semibold text-primary">
+                    <span className="sr-only">Paso </span>
                     {number}
                 </span>
             )}
