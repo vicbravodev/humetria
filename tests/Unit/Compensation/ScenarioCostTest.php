@@ -334,3 +334,18 @@ it('dates the months from the effective date', function (): void {
         ->and($months[2]->month->toDateString())->toBe('2026-03-31')
         ->and($months[11]->month->toDateString())->toBe('2026-12-31');
 });
+
+it('keeps an attendance bonus inside 10 percent of the SBC out of the contributions and integrates only the excess over it', function (): void {
+    $bonus = fn (int $hundredths): array => ['benefits' => [scenarioBenefit([
+        'key' => 'attendance_bonus', 'kind' => BenefitKind::SalaryPercent, 'amount' => Rate::scaled($hundredths, 2),
+        'frequency' => Frequency::Monthly, 'sbcIntegration' => SbcIntegration::UpToCap,
+    ])]];
+    $cash = fn (array $with): int => conceptOf(ScenarioCost::firstYear(scenarioInput($with)), CostConcept::Contribution, 'imss_cash')?->beforeCents ?? -1;
+
+    // The SBC is 52,465 without the bonus; the cash line is 0.70 % of it for 365 days: 134,048.
+    // A bonus of 8 % of the salary is 4,000 a day, under the 5,246.5 that 10 % allows: the SBC does not move.
+    // One of 15 % is 7,500 a day: the 2,253.5 over the 10 % integrate on the 52,465.75 of the salary: 54,719.25 → 54,719, and 139,807 in the line.
+    expect($cash([]))->toBe(134_048)
+        ->and($cash($bonus(8)))->toBe(134_048)
+        ->and($cash($bonus(15)))->toBe(139_807);
+});

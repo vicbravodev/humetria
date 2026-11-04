@@ -269,8 +269,9 @@ Las toma Humetría con las fuentes de `fuentes/supuestos-largo-plazo.txt`; cada 
 | Crecimiento de la plantilla | 1.3 % | IMSS: empleo formal 2025 |
 | Rotación | 0 % | No hay dato oficial utilizable; la cuenta captura la suya |
 
-Límite conocido, a diferencia de lo anterior: un premio de asistencia o puntualidad «hasta el tope de la ley» sin tope capturado integra
-completo al SBC, y la ley (art. 27 fr. VIII) excluye el que no pase de 10 % del SBC. Sobrestima el SBC de quien tiene ese premio dentro del límite.
+Premio de asistencia o puntualidad «hasta el tope de la ley» (sin tope capturado): integra al SBC solo lo que pasa de 10 % del SBC sin
+el premio (LSS art. 27 fr. VII y el párrafo final, que integra el excedente). El 10 % se toma del SBC de la persona sin el premio, con el que
+el premio no se cuenta a sí mismo; si el contrato captura un tope, rige ese tope. Sin dato del SBC integra completo.
 
 ## 8. Historial
 

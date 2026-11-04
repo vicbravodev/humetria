@@ -245,3 +245,35 @@ it('costs the aguinaldo and the premium from the resolved terms', function (): v
         ->and($terms->premiumCost(50_000))->toBe(150_000)
         ->and($terms->factor()->compareTo(Rate::fraction(383, 365)))->toBe(0);
 });
+
+it('integrates an attendance bonus only for what is over 10 percent of the SBC without it', function (): void {
+    // Without the bonus the SBC is $524.65 (52,465 cents): 10 % is 5,246.5 cents a day (LSS art. 27, premios de asistencia y puntualidad).
+    $bonus = fn (int $dailyCents, ?int $withoutIt = 52_465): Rate => BenefitCost::dailyIntegrating(benefitSpec([
+        'key' => 'attendance_bonus', 'kind' => BenefitKind::FixedAmount, 'amount' => Rate::scaled($dailyCents, 0),
+        'frequency' => Frequency::Daily, 'sbcIntegration' => SbcIntegration::UpToCap,
+    ]), benefitSubject(), benefitFiscal(), $withoutIt);
+
+    expect($bonus(1_000)->compareTo(Rate::zero()))->toBe(0)
+        ->and($bonus(5_246)->compareTo(Rate::zero()))->toBe(0)
+        ->and($bonus(5_247)->compareTo(Rate::fraction(1, 2)))->toBe(0)
+        ->and($bonus(7_500)->compareTo(Rate::fraction(4_507, 2)))->toBe(0)
+        // Nobody knows the SBC without it: the whole bonus integrates, the conservative reading.
+        ->and($bonus(1_000, null)->compareTo(Rate::scaled(1_000, 0)))->toBe(0);
+});
+
+it('lets the cap the contract names for an attendance bonus rule over the law', function (): void {
+    $capped = benefitSpec([
+        'key' => 'attendance_bonus', 'kind' => BenefitKind::FixedAmount, 'amount' => Rate::scaled(7_500, 0),
+        'frequency' => Frequency::Daily, 'sbcIntegration' => SbcIntegration::UpToCap, 'sbcCapCents' => 3_000,
+    ]);
+
+    expect(BenefitCost::dailyIntegrating($capped, benefitSubject(), benefitFiscal(), 52_465)->compareTo(Rate::scaled(3_000, 0)))->toBe(0);
+});
+
+it('says which benefits need the SBC without them to know what integrates', function (): void {
+    expect(BenefitCost::needsSbcWithoutIt(benefitSpec(['key' => 'attendance_bonus', 'sbcIntegration' => SbcIntegration::UpToCap])))->toBeTrue()
+        ->and(BenefitCost::needsSbcWithoutIt(benefitSpec(['key' => 'attendance_bonus', 'sbcIntegration' => SbcIntegration::UpToCap, 'sbcCapCents' => 100])))->toBeFalse()
+        ->and(BenefitCost::needsSbcWithoutIt(benefitSpec(['key' => 'attendance_bonus', 'sbcIntegration' => SbcIntegration::Always])))->toBeFalse()
+        ->and(BenefitCost::needsSbcWithoutIt(benefitSpec(['key' => 'food_vouchers', 'sbcIntegration' => SbcIntegration::UpToCap])))->toBeFalse()
+        ->and(BenefitCost::needsSbcWithoutIt(benefitSpec(['key' => 'custom', 'sbcIntegration' => SbcIntegration::UpToCap])))->toBeFalse();
+});

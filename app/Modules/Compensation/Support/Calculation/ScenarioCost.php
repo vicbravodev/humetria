@@ -178,6 +178,7 @@ final class ScenarioCost
         $lines = ['salary:salary' => $salary * self::DAYS_IN_YEAR, 'benefit:christmas_bonus' => $aguinaldo, 'benefit:vacation_premium' => $premium];
         $taxable = $lines['salary:salary'] + ($terms->aguinaldoTaxable ? $aguinaldo : 0) + ($terms->premiumTaxable ? $premium : 0);
         $integrating = Rate::zero();
+        $deferred = [];
 
         foreach ($benefits as $benefit) {
             // The aguinaldo and the premium are costed from the terms above, and the vacation days are paid in the salary.
@@ -188,7 +189,19 @@ final class ScenarioCost
             $annual = BenefitCost::annual($benefit, $subject, $in->fiscal);
             $lines["benefit:{$benefit->key}"] = $annual;
             $taxable += $benefit->inPayrollTax ? $annual : 0;
-            $integrating = $integrating->plus(BenefitCost::dailyIntegrating($benefit, $subject, $in->fiscal));
+
+            if (BenefitCost::needsSbcWithoutIt($benefit)) {
+                $deferred[] = $benefit;
+            } else {
+                $integrating = $integrating->plus(BenefitCost::dailyIntegrating($benefit, $subject, $in->fiscal));
+            }
+        }
+
+        // What integrates of an attendance bonus is what passes 10 % of the SBC without it: the SBC of everything else first.
+        $withoutIt = SalaryBase::sbc($salary, $terms->factor(), $in->fiscal->sbcCap(), $integrating);
+
+        foreach ($deferred as $benefit) {
+            $integrating = $integrating->plus(BenefitCost::dailyIntegrating($benefit, $subject, $in->fiscal, $withoutIt));
         }
 
         $sbc = SalaryBase::sbc($salary, $terms->factor(), $in->fiscal->sbcCap(), $integrating);

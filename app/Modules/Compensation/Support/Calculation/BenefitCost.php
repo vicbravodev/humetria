@@ -71,18 +71,30 @@ final class BenefitCost
 
     /**
      * Cents per calendar day that the benefit adds to the SBC, as an exact fraction. The vouchers integrate only what is
-     * over 40 % of the daily UMA (truncated to the cent); another benefit "up to a cap" integrates at most its cap. One
-     * "up to a cap" with no cap that is not the vouchers integrates entirely: the conservative reading.
+     * over 40 % of the daily UMA (truncated to the cent); the attendance bonus, what is over 10 % of the SBC without it (when that
+     * SBC is given); another benefit "up to a cap" integrates at most its cap. One "up to a cap" with no cap and no rule of the
+     * law integrates entirely: the conservative reading.
      */
-    public static function dailyIntegrating(BenefitSpec $benefit, CostSubject $subject, FiscalSnapshot $fiscal): Rate
+    public static function dailyIntegrating(BenefitSpec $benefit, CostSubject $subject, FiscalSnapshot $fiscal, ?int $sbcWithoutIt = null): Rate
     {
         $daily = Rate::fraction(self::annual($benefit, $subject, $fiscal), self::DAYS_IN_YEAR);
 
         return match ($benefit->sbcIntegration) {
             SbcIntegration::Never => Rate::zero(),
             SbcIntegration::Always => $daily,
-            SbcIntegration::UpToCap => self::upToCap($benefit, $daily, $fiscal),
+            SbcIntegration::UpToCap => self::upToCap($benefit, $daily, $fiscal, $sbcWithoutIt),
         };
+    }
+
+    /**
+     * Whether what integrates of the benefit depends on the SBC without it: an attendance bonus the contract leaves to the law's
+     * limit of 10 % of the SBC (LSS art. 27, premios de asistencia y puntualidad). The caller works out that SBC first.
+     */
+    public static function needsSbcWithoutIt(BenefitSpec $benefit): bool
+    {
+        return $benefit->key === BaseBenefit::AttendanceBonus->value
+            && $benefit->sbcIntegration === SbcIntegration::UpToCap
+            && $benefit->sbcCapCents === null;
     }
 
     /**
@@ -119,12 +131,19 @@ final class BenefitCost
         };
     }
 
-    private static function upToCap(BenefitSpec $benefit, Rate $daily, FiscalSnapshot $fiscal): Rate
+    private static function upToCap(BenefitSpec $benefit, Rate $daily, FiscalSnapshot $fiscal, ?int $sbcWithoutIt): Rate
     {
         if ($benefit->sbcCapCents !== null) {
             $cap = Rate::scaled($benefit->sbcCapCents, 0);
 
             return $daily->compareTo($cap) <= 0 ? $daily : $cap;
+        }
+
+        if (self::needsSbcWithoutIt($benefit) && $sbcWithoutIt !== null) {
+            // Only what is over 10 % of the SBC without the bonus integrates; the SBC is that of the person, so the 10 % follows it.
+            $excess = $daily->minus(Rate::scaled($sbcWithoutIt, 0)->times(Rate::scaled(10, 2)));
+
+            return $excess->compareTo(Rate::zero()) > 0 ? $excess : Rate::zero();
         }
 
         if ($benefit->key !== BaseBenefit::FoodVouchers->value) {
