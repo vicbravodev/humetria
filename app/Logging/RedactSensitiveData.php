@@ -74,6 +74,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'health_note',
             'pain_level',
             'referral_note',
+            // NOM-035: where a person was referred for a clinical assessment says something about their health.
+            'institution',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',

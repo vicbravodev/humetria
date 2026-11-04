@@ -227,6 +227,7 @@ return [
         'status' => 'estado',
         'referred' => 'respuesta',
         'referred_on' => 'fecha',
+        'institution' => 'institución',
         'resolution' => 'resolución',
         'description' => 'descripción',
         'scores' => 'condicionantes',

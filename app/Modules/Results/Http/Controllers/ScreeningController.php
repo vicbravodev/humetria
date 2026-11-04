@@ -11,6 +11,7 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Responses\Contracts\ResponseReader;
 use App\Modules\Responses\Data\ScreeningRecord;
 use App\Modules\Results\Support\ResultsClock;
+use App\Modules\Results\Support\ScreeningReferrals;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,24 +25,29 @@ final class ScreeningController extends Controller
 {
     private const int PER_PAGE = 25;
 
-    public function index(Request $request, mixed $tenant, string $campaign, CampaignRecords $campaigns, ResponseReader $responses, Roster $roster, WorkCenters $workCenters, RecordAudit $audit): Response
+    public function index(Request $request, mixed $tenant, string $campaign, CampaignRecords $campaigns, ResponseReader $responses, Roster $roster, WorkCenters $workCenters, RecordAudit $audit, ScreeningReferrals $referrals): Response
     {
         abort_unless($request->user()?->can('view-trauma-screenings') ?? false, 404);
         $found = $campaigns->find($campaign) ?? abort(404);
         $audit->handle('results.screenings_viewed', metadata: ['campaign_id' => $found->id]);
 
         $page = $responses->requiringAssessment($found->id, self::PER_PAGE);
-        $people = $roster->findMany(array_values(array_map(fn (ScreeningRecord $record): string => $record->employeeId, $page->items())));
+        $ids = array_values(array_map(fn (ScreeningRecord $record): string => $record->employeeId, $page->items()));
+        $people = $roster->findMany($ids);
+        $records = $referrals->of($found->id, $ids);
+        $counts = $responses->screeningCounts($found->id);
 
         return Inertia::render('results/screenings', [
             'campaign' => ['id' => $found->id, 'workCenter' => $workCenters->profile($found->workCenterId)->name ?? '', 'kindLabel' => $found->kindLabel],
-            'counts' => $responses->screeningCounts($found->id),
+            'counts' => $counts,
+            'referralCounts' => $referrals->counts($found->id, $counts['requiring']),
             'people' => $page->through(fn (ScreeningRecord $record): array => [
                 'id' => $record->employeeId,
                 'name' => $people[$record->employeeId]->name ?? '',
                 'area' => $people[$record->employeeId]->areaName ?? '',
                 'jobTitle' => $people[$record->employeeId]->jobTitle ?? '',
                 'answeredOn' => ResultsClock::day($record->answeredAt),
+                'referral' => $records[$record->employeeId] ?? null,
             ]),
         ]);
     }
