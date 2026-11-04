@@ -48,6 +48,8 @@ function scenarioFiscal(array $stale = []): FiscalSnapshot
         'christmas_bonus_days' => Rate::scaled(15, 0),
         'vacation_premium' => Rate::scaled(25, 2),
         'voucher_exempt_uma' => Rate::scaled(40, 2),
+        'seniority_premium_days' => Rate::scaled(12, 0),
+        'seniority_premium_cap_minimum_wages' => Rate::scaled(2, 0),
     ];
 
     foreach ([2 => 150, 3 => 200, 4 => 250, 5 => 300, 6 => 350, 7 => 400] as $bracket => $limit) {
@@ -66,7 +68,7 @@ function scenarioFiscal(array $stale = []): FiscalSnapshot
 }
 
 /**
- * @param  array{key?: string, kind?: BenefitKind, amount?: Rate, frequency?: Frequency, group?: ?PayGroup, sbcIntegration?: SbcIntegration, inPayrollTax?: bool}  $with
+ * @param  array{key?: string, kind?: BenefitKind, amount?: Rate, frequency?: Frequency, group?: ?PayGroup, sbcIntegration?: SbcIntegration, inPayrollTax?: bool, inSeniorityBase?: bool}  $with
  */
 function scenarioBenefit(array $with = []): BenefitSpec
 {
@@ -83,7 +85,7 @@ function scenarioBenefit(array $with = []): BenefitSpec
         sbcCapCents: null,
         inPayrollTax: $with['inPayrollTax'] ?? false,
         incomeTaxExempt: false,
-        inSeniorityBase: false,
+        inSeniorityBase: $with['inSeniorityBase'] ?? false,
         capCents: null,
     );
 }

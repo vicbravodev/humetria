@@ -84,7 +84,7 @@ final class ScenarioCost
     }
 
     /** @return list<BenefitSpec> the current benefits, each replaced by the proposed one with its key, plus the new ones */
-    private static function benefitsAfter(ScenarioInput $in): array
+    public static function benefitsAfter(ScenarioInput $in): array
     {
         $proposed = array_map(fn (BenefitSpec $benefit): string => $benefit->key, $in->proposed);
         $kept = array_filter($in->benefits, fn (BenefitSpec $benefit): bool => ! in_array($benefit->key, $proposed, true));
@@ -93,7 +93,7 @@ final class ScenarioCost
     }
 
     /** @return list<CostUnit> */
-    private static function units(ScenarioInput $in): array
+    public static function units(ScenarioInput $in): array
     {
         $units = [];
 
@@ -116,7 +116,7 @@ final class ScenarioCost
     }
 
     /** The daily salary after the raise of the group, settled to the cent; the trusted take the unionized raise if they have none. */
-    private static function raised(int $salary, PayGroup $group, ScenarioInput $in): int
+    public static function raised(int $salary, PayGroup $group, ScenarioInput $in): int
     {
         $raise = $in->raises[$group->value]
             ?? ($group === PayGroup::Trusted ? ($in->raises[PayGroup::Unionized->value] ?? null) : null);
