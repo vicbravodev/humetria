@@ -581,3 +581,8 @@ function surveyAnswers(string $answer = 'yes'): array
 
     return $answers;
 }
+
+/*
+| The inputs of the contract calculator's unit tests (scenarioInput, scenarioCell, scenarioFiscal…), shared by several files.
+*/
+require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
