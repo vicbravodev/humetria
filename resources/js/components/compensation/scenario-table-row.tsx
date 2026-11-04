@@ -26,14 +26,17 @@ export default function ScenarioTableRow({
     return (
         <TableRow>
             <TableCell className="w-px">
-                <Checkbox
-                    aria-label={`Comparar ${scenario.name}`}
-                    checked={checked}
-                    disabled={disabled}
-                    onCheckedChange={(value) =>
-                        onChoose(scenario.id, value === true)
-                    }
-                />
+                {/* The label gives a finger the whole 44 px square, as it toggles the box. */}
+                <label className="-m-3 flex size-11 items-center justify-center">
+                    <Checkbox
+                        aria-label={`Comparar ${scenario.name}`}
+                        checked={checked}
+                        disabled={disabled}
+                        onCheckedChange={(value) =>
+                            onChoose(scenario.id, value === true)
+                        }
+                    />
+                </label>
             </TableCell>
             <TableCell className="whitespace-normal">
                 <Link
