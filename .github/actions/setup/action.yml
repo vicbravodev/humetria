@@ -3,7 +3,7 @@ description: PHP, Node, dependencies, the migrated database and the built assets
 
 inputs:
   coverage:
-    description: PHP coverage driver (pcov for the job that measures coverage, none for the rest: pcov slows every test).
+    description: "PHP coverage driver: pcov for the job that measures coverage, none for the rest (pcov slows every test)."
     default: none
 
 runs:
