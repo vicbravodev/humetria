@@ -8,10 +8,12 @@ use App\Modules\Campaigns\Events\CampaignClosed;
 use App\Modules\Results\Contracts\AnswerDistributions;
 use App\Modules\Results\Contracts\EvaluationResults;
 use App\Modules\Results\Contracts\RiskResults;
+use App\Modules\Results\Contracts\SmallGroups;
 use App\Modules\Results\Listeners\SendClosingSummary;
 use App\Modules\Results\Support\AnswerDistribution;
 use App\Modules\Results\Support\CompanyEvaluationResults;
 use App\Modules\Results\Support\CompanyRiskResults;
+use App\Modules\Results\Support\GroupMinimum;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -25,6 +27,7 @@ final class ResultsServiceProvider extends ServiceProvider
         $this->app->bind(EvaluationResults::class, CompanyEvaluationResults::class);
         $this->app->bind(AnswerDistributions::class, AnswerDistribution::class);
         $this->app->bind(RiskResults::class, CompanyRiskResults::class);
+        $this->app->bind(SmallGroups::class, GroupMinimum::class);
     }
 
     public function boot(): void
