@@ -38,3 +38,20 @@ function ensureTestDatabase(string $name, array $server): void
         $pdo->exec('create database "'.$name.'"');
     }
 }
+
+/**
+ * The test databases (and their `_test_N` parallel copies) whose worktree is gone. `testing` and its own parallel
+ * copies belong to the main checkout and are never stale.
+ *
+ * @param  list<string>  $databases
+ * @param  list<string>  $live  the base names of the checkouts that still exist
+ * @return list<string>
+ */
+function staleTestDatabases(array $databases, array $live): array
+{
+    return array_values(array_filter($databases, function (string $database) use ($live): bool {
+        $base = (string) preg_replace('/_test_\d+$/', '', $database);
+
+        return str_starts_with($base, 'testing_') && $base !== 'testing' && ! in_array($base, $live, true);
+    }));
+}

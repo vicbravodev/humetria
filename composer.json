@@ -55,6 +55,11 @@
             "npm ci",
             "npm run build"
         ],
+        "worktree:setup": [
+            "Composer\\Config::disableProcessTimeout",
+            "scripts/worktree-setup.sh"
+        ],
+        "worktree:prune": "@php scripts/prune-test-databases.php",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"

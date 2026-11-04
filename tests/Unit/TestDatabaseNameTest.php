@@ -34,3 +34,17 @@ it('keeps the name valid and short enough for the parallel suffix, whatever the 
     expect(strlen($name))->toBeLessThanOrEqual(63 - strlen('_test_12'))
         ->and($name)->toMatch('/^[a-z0-9_]+$/');
 });
+
+it('marks as stale the databases of worktrees that no longer exist, with their parallel copies', function (): void {
+    $live = testDatabaseName('/wt/alive', true);
+    $gone = testDatabaseName('/wt/gone', true);
+
+    expect(staleTestDatabases(
+        ['testing', 'testing_test_1', $live, $live.'_test_1', $gone, $gone.'_test_1', $gone.'_test_12', 'laravel'],
+        [$live],
+    ))->toBe([$gone, $gone.'_test_1', $gone.'_test_12']);
+});
+
+it('never marks the main checkout databases as stale', function (): void {
+    expect(staleTestDatabases(['testing', 'testing_test_1', 'testing_test_12'], []))->toBe([]);
+});
