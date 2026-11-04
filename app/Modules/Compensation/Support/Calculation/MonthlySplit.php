@@ -47,6 +47,6 @@ final class MonthlySplit
             $months[$index]++;
         }
 
-        return $months;
+        return array_values($months);
     }
 }
