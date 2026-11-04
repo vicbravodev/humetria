@@ -37,7 +37,7 @@ function rawBenefit(Tenant $tenant, array $override = []): array
 }
 
 /** Runs the write inside a savepoint, so the failed statement does not poison the test's transaction. */
-function refused(Closure $write, string $constraint): void
+function refusedBenefit(Closure $write, string $constraint): void
 {
     expect(fn () => DB::transaction($write))->toThrow(QueryException::class, $constraint);
 }
@@ -73,7 +73,7 @@ it('accepts every kind, frequency, integration and group the enums name', functi
 });
 
 it('refuses a kind, frequency, integration, group or base key it does not know', function (string $column, string $constraint): void {
-    refused(fn () => DB::table('benefits')->insert(rawBenefit($this->tenant, [$column => 'unknown'])), $constraint);
+    refusedBenefit(fn () => DB::table('benefits')->insert(rawBenefit($this->tenant, [$column => 'unknown'])), $constraint);
 })->with([
     'kind' => ['kind', 'benefits_kind_known'],
     'frequency' => ['frequency', 'benefits_frequency_known'],
@@ -83,7 +83,7 @@ it('refuses a kind, frequency, integration, group or base key it does not know',
 ]);
 
 it('refuses a blank name and a negative number', function (array $override, string $constraint): void {
-    refused(fn () => Benefit::factory()->create(['tenant_id' => $this->tenant->id, ...$override]), $constraint);
+    refusedBenefit(fn () => Benefit::factory()->create(['tenant_id' => $this->tenant->id, ...$override]), $constraint);
 })->with([
     'blank name' => [['name' => '   '], 'benefits_name_filled'],
     'negative minimum tenure' => [['min_tenure_months' => -1], 'benefits_amounts_not_negative'],
@@ -92,7 +92,7 @@ it('refuses a blank name and a negative number', function (array $override, stri
 ]);
 
 it('wants a cap exactly when the benefit integrates up to a cap', function (array $override): void {
-    refused(fn () => Benefit::factory()->create(['tenant_id' => $this->tenant->id, ...$override]), 'benefits_sbc_cap_matches');
+    refusedBenefit(fn () => Benefit::factory()->create(['tenant_id' => $this->tenant->id, ...$override]), 'benefits_sbc_cap_matches');
 })->with([
     'up to a cap without it' => [['sbc_integration' => SbcIntegration::UpToCap, 'sbc_cap_cents' => null]],
     'a cap on a benefit that always integrates' => [['sbc_integration' => SbcIntegration::Always, 'sbc_cap_cents' => 100]],
@@ -106,13 +106,13 @@ it('lets a base benefit integrate up to the legal cap, which the law sets', func
 });
 
 it('keeps job grades as a list', function (): void {
-    refused(fn () => DB::table('benefits')->insert(rawBenefit($this->tenant, ['job_grade_ids' => '{"a": 1}'])), 'benefits_job_grades_list');
+    refusedBenefit(fn () => DB::table('benefits')->insert(rawBenefit($this->tenant, ['job_grade_ids' => '{"a": 1}'])), 'benefits_job_grades_list');
 });
 
 it('allows one benefit per name in a company, whatever the case and the spaces, and the same name in another', function (): void {
     Benefit::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bono de transporte']);
 
-    refused(fn () => Benefit::factory()->create(['tenant_id' => $this->tenant->id, 'name' => '  BONO DE TRANSPORTE ']), 'benefits_tenant_name_unique');
+    refusedBenefit(fn () => Benefit::factory()->create(['tenant_id' => $this->tenant->id, 'name' => '  BONO DE TRANSPORTE ']), 'benefits_tenant_name_unique');
     Benefit::factory()->create(['tenant_id' => Tenant::factory()->create()->id, 'name' => 'Bono de transporte']);
 
     expect(Benefit::query()->withoutGlobalScopes()->count())->toBe(2);
@@ -121,14 +121,14 @@ it('allows one benefit per name in a company, whatever the case and the spaces, 
 it('allows one base benefit per key in a company', function (): void {
     Benefit::factory()->base('vacation')->create(['tenant_id' => $this->tenant->id]);
 
-    refused(fn () => Benefit::factory()->base('vacation')->create(['tenant_id' => $this->tenant->id, 'name' => 'Otro nombre']), 'benefits_tenant_base_key_unique');
+    refusedBenefit(fn () => Benefit::factory()->base('vacation')->create(['tenant_id' => $this->tenant->id, 'name' => 'Otro nombre']), 'benefits_tenant_base_key_unique');
     Benefit::factory()->base('vacation')->create(['tenant_id' => Tenant::factory()->create()->id]);
 
     expect(Benefit::query()->withoutGlobalScopes()->count())->toBe(2);
 });
 
 it('never archives a base benefit', function (): void {
-    refused(fn () => Benefit::factory()->base('vacation')->archived()->create(['tenant_id' => $this->tenant->id]), 'benefits_base_never_archived');
+    refusedBenefit(fn () => Benefit::factory()->base('vacation')->archived()->create(['tenant_id' => $this->tenant->id]), 'benefits_base_never_archived');
     Benefit::factory()->archived()->create(['tenant_id' => $this->tenant->id]);
 });
 
@@ -137,25 +137,25 @@ it('refuses a negative term, a repeated vigencia and a table that is not a list'
     $term = fn (array $override = []) => ContractTerm::factory()->forBenefit($benefit)->create(['effective_from' => '2026-01-01', ...$override]);
     $term();
 
-    refused(fn () => $term(['effective_from' => '2027-01-01', 'value' => -1]), 'contract_terms_value_not_negative');
-    refused(fn () => $term(), 'contract_terms_benefit_date_unique');
-    refused(fn () => DB::table('contract_terms')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'benefit_id' => $benefit->id, 'effective_from' => '2028-01-01', 'value' => 1, 'tenure_table' => '{"a": 1}', 'created_at' => now(), 'updated_at' => now()]), 'contract_terms_table_list');
+    refusedBenefit(fn () => $term(['effective_from' => '2027-01-01', 'value' => -1]), 'contract_terms_value_not_negative');
+    refusedBenefit(fn () => $term(), 'contract_terms_benefit_date_unique');
+    refusedBenefit(fn () => DB::table('contract_terms')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'benefit_id' => $benefit->id, 'effective_from' => '2028-01-01', 'value' => 1, 'tenure_table' => '{"a": 1}', 'created_at' => now(), 'updated_at' => now()]), 'contract_terms_table_list');
     $term(['effective_from' => '2027-01-01', 'tenure_table' => [['from_years' => 1, 'value' => 100]]]);
 });
 
 it('points a term only to a benefit of its own company', function (): void {
     $foreign = Benefit::factory()->create();
 
-    refused(fn () => ContractTerm::factory()->forBenefit($foreign)->create(['tenant_id' => $this->tenant->id]), 'contract_terms_benefit_id_tenant_id_foreign');
+    refusedBenefit(fn () => ContractTerm::factory()->forBenefit($foreign)->create(['tenant_id' => $this->tenant->id]), 'contract_terms_benefit_id_tenant_id_foreign');
 });
 
 it('keeps the rate of the work risk premium between the minimum and the maximum of the law, one per vigencia', function (): void {
     WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2026-01-01', 'rate_scaled' => 50_000]);
     WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2027-01-01', 'rate_scaled' => 1_500_000]);
 
-    refused(fn () => WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2028-01-01', 'rate_scaled' => 49_999]), 'work_risk_premiums_rate_in_law');
-    refused(fn () => WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2028-01-01', 'rate_scaled' => 1_500_001]), 'work_risk_premiums_rate_in_law');
-    refused(fn () => WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2026-01-01']), 'work_risk_premiums_tenant_date_unique');
+    refusedBenefit(fn () => WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2028-01-01', 'rate_scaled' => 49_999]), 'work_risk_premiums_rate_in_law');
+    refusedBenefit(fn () => WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2028-01-01', 'rate_scaled' => 1_500_001]), 'work_risk_premiums_rate_in_law');
+    refusedBenefit(fn () => WorkRiskPremium::factory()->create(['tenant_id' => $this->tenant->id, 'effective_from' => '2026-01-01']), 'work_risk_premiums_tenant_date_unique');
     WorkRiskPremium::factory()->create(['tenant_id' => Tenant::factory()->create()->id, 'effective_from' => '2026-01-01']);
 });
 
