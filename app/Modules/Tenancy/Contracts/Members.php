@@ -42,6 +42,14 @@ interface Members
      */
     public function complaintManagers(): array;
 
+    /**
+     * The members whose role has the `view-trauma-screenings` permission (owner and hr), by name: who may see the Guía I and
+     * channel the people it says need care (criterio C-28).
+     *
+     * @return list<MemberSummary>
+     */
+    public function screeningViewers(): array;
+
     /** A person of the current company by user id; null when they belong to another company or none. */
     public function find(int $userId): ?MemberSummary;
 }

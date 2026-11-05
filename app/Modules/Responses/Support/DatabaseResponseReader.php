@@ -70,11 +70,13 @@ final class DatabaseResponseReader implements ResponseReader
             ->exists();
     }
 
-    public function requiringAssessment(string $campaignId, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
+    public function requiringAssessment(string $campaignId, int $perPage = 25, string $pageName = 'page', ?array $among = null, array $except = []): LengthAwarePaginator
     {
         return TraumaScreening::query()
             ->where('campaign_id', $campaignId)
             ->where('requires_clinical_assessment', true)
+            ->when($among !== null, fn ($query) => $query->whereIn('employee_id', $among ?? []))
+            ->when($except !== [], fn ($query) => $query->whereNotIn('employee_id', $except))
             ->orderBy('answered_at')
             ->orderBy('id')
             ->paginate($perPage, ['id', 'employee_id', 'answered_at'], $pageName)

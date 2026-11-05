@@ -54,7 +54,7 @@ it('records where the person was channeled, how they were told, the day and a no
 
     $this->actingAs($user)
         ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm())
-        ->assertRedirect(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]))
+        ->assertRedirect(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id, 'person' => $this->screening->employee_id]))
         ->assertSessionHasNoErrors();
 
     expect(ScreeningReferral::query()->sole())
@@ -196,20 +196,23 @@ it('finds nobody to record for when they do not require a clinical assessment or
     'a campaign that does not exist' => fn ($test) => ['9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c', $test->screening->employee_id],
 ]);
 
-it('shows each person with their record, or none while pending, and counts them by status', function (): void {
+it('shows each record as the page reads it, and counts the people by status', function (): void {
     $attended = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true, 'answered_at' => '2026-11-10 15:00:00']);
     TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true, 'answered_at' => '2026-11-21 15:00:00']);
     $this->actingAs($this->hr);
-    $this->put(screeningReferralUrl($this->campaign->id, $attended->employee_id), screeningReferralForm(['status' => 'attended', 'referred_on' => '2026-11-03']));
-    $this->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm());
+    $this->put(screeningReferralUrl($this->campaign->id, $attended->employee_id), screeningReferralForm(['attended' => '1', 'referred_on' => '2026-11-03']));
+    $this->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['remind' => '0', 'told' => 'portal', 'destination' => 'declined']));
 
-    $this->get(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]))
+    $this->get(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id, 'view' => 'channeled']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('referralCounts', ['pending' => 1, 'referred' => 1, 'attended' => 1])
-            ->where('people.data.0.referral', ['status' => 'attended', 'statusLabel' => 'Atendida', 'referredOn' => '2026-11-03', 'referredOnLabel' => '3 nov 2026', 'institution' => 'IMSS, Unidad de Medicina Familiar 7'])
-            ->where('people.data.1.referral.status', 'referred')
-            ->where('people.data.1.referral.referredOnLabel', '18 nov 2026')
-            ->where('people.data.2.referral', null));
+            ->where('people.data.0.referral', [
+                'status' => 'attended', 'statusLabel' => 'Atendida', 'destination' => 'imss', 'destinationLabel' => 'IMSS', 'told' => 'in_person', 'toldLabel' => 'En persona, en privado',
+                'referredOn' => '2026-11-03', 'referredOnLabel' => '3 nov 2026', 'note' => 'Cita en la UMF 12 el lunes', 'remindOn' => '3 dic 2026', 'institution' => null,
+            ])
+            ->where('people.data.1.referral.destinationLabel', 'No quiso atenderse')
+            ->where('people.data.1.referral.toldLabel', 'Aviso en su portal')
+            ->where('people.data.1.referral.remindOn', null));
 });
 
 it('keeps company A from reading or changing the records of company B', function (): void {

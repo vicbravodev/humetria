@@ -14,6 +14,7 @@ describe('isStandalone', () => {
         'complaints-public/form',
         'complaints-public/follow-up',
         'disclosure/portal-policy',
+        'results/portal-support',
         'disclosure-public/center',
         'telework/applies',
         'tenancy/applies',

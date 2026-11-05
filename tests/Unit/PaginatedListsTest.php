@@ -17,6 +17,7 @@ const ARRAY_PROPS = [
     'tenancy/members:roles' => 'catálogo fijo: los roles que se pueden dar',
     'dashboard:urgencies' => 'resumen corto: lo que no puede esperar, cinco a lo más',
     'dashboard:week' => 'resumen corto: lo que vence en los próximos 7 días, cinco a lo más',
+    'results/screenings:destinations' => 'catálogo fijo: los cinco destinos de una canalización, con su guion y su aviso',
     'tenancy/nom035-route:urgencies' => 'resumen corto: quienes esperan canalización en ese centro, un renglón por evaluación',
     'tenancy/nom035-route:rows' => 'catálogo fijo: los seis requisitos de la NOM-035 del centro, uno por etapa, solo conteos',
     'tenancy/nom035-inspection:missing' => 'catálogo fijo: los requisitos que faltan (6 a lo más)',

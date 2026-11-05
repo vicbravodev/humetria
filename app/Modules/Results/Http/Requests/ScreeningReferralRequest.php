@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Http\Requests;
 
+use App\Modules\Results\Data\ReferralRecord;
+use App\Modules\Results\Enums\Destination;
+use App\Modules\Results\Enums\HowTold;
 use App\Modules\Results\Enums\ReferralStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,36 +14,45 @@ use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * The channeling of a person who requires a clinical assessment: referred or attended, the day (not in the future) and
- * the institution. Whoever may not see the list of those people does not find this either (404, like the list).
+ * The channeling of a person who requires a clinical assessment (board V4-N035-Canalizacion, decisión A7): where to from a
+ * closed list, how they were told, the day (not in the future), an optional note without clinical detail, whether to be
+ * reminded in 30 days and, once it happened, that they were attended. Whoever may not see the list of those people does
+ * not find this either (404, like the list).
  */
 final class ScreeningReferralRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return $this->user()?->can('view-trauma-screenings') ?? false;
-    }
-
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'status' => ['required', Rule::enum(ReferralStatus::class)],
+            'destination' => ['required', Rule::enum(Destination::class)],
+            'told' => ['required', Rule::enum(HowTold::class)],
             'referred_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()],
-            'institution' => ['required', 'string', 'max:150'],
+            'note' => ['nullable', 'string', 'max:200'],
+            'remind' => ['sometimes', 'boolean'],
+            'attended' => ['sometimes', 'boolean'],
         ];
     }
 
-    public function status(): ReferralStatus
+    public function authorize(): bool
     {
-        return ReferralStatus::from($this->string('status')->toString());
+        return $this->user()?->can('view-trauma-screenings') ?? false;
     }
 
-    public function institution(): string
+    public function record(): ReferralRecord
     {
-        return $this->string('institution')->toString();
+        $note = $this->string('note')->trim()->toString();
+
+        return new ReferralRecord(
+            $this->boolean('attended') ? ReferralStatus::Attended : ReferralStatus::Referred,
+            Destination::from($this->string('destination')->toString()),
+            HowTold::from($this->string('told')->toString()),
+            $this->string('referred_on')->toString(),
+            $note === '' ? null : $note,
+            $this->boolean('remind'),
+        );
     }
 
     protected function failedAuthorization(): never

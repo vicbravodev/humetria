@@ -6,6 +6,8 @@ const STANDALONE_NAMES = new Set([
     'seating/portal',
     // The policy page of the person's portal: their own link, no account.
     'disclosure/portal-policy',
+    // The support message of the person's portal, when RH channeled them through it: their own link, no account.
+    'results/portal-support',
     // A report opened from a temporary link: nobody signed in.
     'results/shared-report',
     // The report of a contract scenario opened from a temporary link: nobody signed in.

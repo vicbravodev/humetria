@@ -79,6 +79,19 @@ it('pages who requires a clinical assessment, by when they answered', function (
         ->and($page->items())->toEqual([new ScreeningRecord($earlier->employee_id, CarbonImmutable::parse('2026-11-03 15:00:00'))]);
 });
 
+it('pages only who it is asked about, and leaves out who it is told to', function (): void {
+    $first = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true, 'answered_at' => '2026-11-03 15:00:00']);
+    $second = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true, 'answered_at' => '2026-11-05 15:00:00']);
+    workIn($this->tenant);
+    $reader = resolve(ResponseReader::class);
+    $ids = fn ($page): array => array_map(fn (ScreeningRecord $record): string => $record->employeeId, $page->items());
+
+    expect($ids($reader->requiringAssessment($this->campaign->id, except: [$first->employee_id])))->toBe([$second->employee_id])
+        ->and($ids($reader->requiringAssessment($this->campaign->id, among: [$second->employee_id])))->toBe([$second->employee_id])
+        ->and($ids($reader->requiringAssessment($this->campaign->id, among: [])))->toBe([])
+        ->and($ids($reader->requiringAssessment($this->campaign->id)))->toBe([$first->employee_id, $second->employee_id]);
+});
+
 it('says whether one person of a campaign requires a clinical assessment', function (): void {
     $requiring = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true]);
     $not = TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id]);

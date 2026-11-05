@@ -9,12 +9,15 @@ export default function ScreeningRule() {
                 className="size-5 shrink-0 text-muted-foreground"
             />
             <div className="flex flex-[1_1_320px] flex-col gap-1">
-                <h2 className="text-sm font-semibold">Cómo se decide</h2>
+                <h2 className="text-sm font-semibold">
+                    Cómo se decide quién aparece aquí
+                </h2>
                 <p className="text-sm text-muted-foreground">
-                    Requiere valoración quien contestó «sí» en la sección I y en
-                    alguna de las secciones II, III o IV de la Guía I, como
-                    indica la norma. Humetría no muestra las respuestas, solo el
-                    resultado.
+                    Requiere valoración quien contestó «sí» en la sección I de
+                    la Guía I y además en alguna de las secciones II, III o IV,
+                    como indica la norma. Humetría solo muestra el resultado,
+                    nunca las respuestas. Si no se lo dices en persona, la
+                    persona lo ve en su portal con un mensaje en usted.
                 </p>
             </div>
         </section>

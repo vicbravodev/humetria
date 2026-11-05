@@ -23,9 +23,9 @@ final class ScreeningReferralController extends Controller
         $found = $campaigns->find($campaign) ?? abort(404);
         abort_unless($responses->requiresAssessment($found->id, $employee), 404);
 
-        $record->handle($found->id, $employee, $request->status(), $request->string('referred_on')->toString(), $request->institution(), ($request->user() ?? abort(403))->id);
+        $record->handle($found->id, $employee, $request->record(), ($request->user() ?? abort(403))->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Canalización registrada.']);
 
-        return redirect()->route('tenant.campaigns.screenings', [$tenant, $found->id]);
+        return redirect()->route('tenant.campaigns.screenings', [$tenant, $found->id, 'person' => $employee]);
     }
 }
