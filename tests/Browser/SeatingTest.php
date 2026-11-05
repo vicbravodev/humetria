@@ -211,6 +211,32 @@ it('asks the two questions one at a time, never moving on alone, and sends them'
         ->assertNoJavaScriptErrors();
 })->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
+// Board V3-Estados, «Portal sin conexión»: what the person answered stays on the phone and goes out when the connection is back.
+it('keeps the answers when the connection drops and sends them when it is back', function (bool $dark, bool $mobile): void {
+    [$url, $ana] = seatingPortal();
+
+    $page = visitPage('seating/portal', $url, $dark, $mobile)
+        ->click('@portal-accept')
+        ->click('input[name="footwear"][value="1"]')
+        ->press('Siguiente')
+        ->click('input[name="discomfort"][value="2"]');
+    // Every request fails as without a network until `__offline` is turned off.
+    $page->script('() => { const send = XMLHttpRequest.prototype.send; window.__offline = true; XMLHttpRequest.prototype.send = function (...args) { if (window.__offline) { setTimeout(() => this.onerror?.(), 0); return; } send.apply(this, args); }; }');
+    $page->press('Enviar mis respuestas')
+        ->assertSee('Sin conexión.')
+        ->assertSee('Sus respuestas siguen en este teléfono y se envían al volver la conexión.')
+        ->assertSee('Pregunta 2 de 2')
+        ->assertNoAccessibilityIssues(1);
+
+    expect(PersonInput::query()->withoutGlobalScopes()->count())->toBe(0);
+
+    $page->script('() => { window.__offline = false; window.dispatchEvent(new Event("online")); }');
+    $page->assertSee('Gracias, quedó enviado')->assertDontSee('Sin conexión.')->assertNoJavaScriptErrors();
+
+    expect(PersonInput::query()->withoutGlobalScopes()->sole()->discomfort)->toBe(2)
+        ->and(PersonInput::query()->withoutGlobalScopes()->sole()->employee_id)->toBe($ana->id);
+})->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
+
 it('tells the person when they already answered', function (): void {
     [$url, $ana] = seatingPortal();
     PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
