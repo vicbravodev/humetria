@@ -14,7 +14,6 @@ function row(
     numeral: string,
     stage: number,
     state: RouteRow['state'],
-    href: string | null = null,
 ): RouteRow {
     return {
         numeral,
@@ -22,14 +21,14 @@ function row(
         detail: null,
         state,
         stage,
-        href,
+        href: null,
         action: null,
     };
 }
 
 const rows: RouteRow[] = [
-    row('5.1', 2, 'done', '/personas'),
-    row('5.2', 1, 'missing', '/documentos'),
+    { ...row('5.1', 2, 'done'), href: '/personas' },
+    { ...row('5.2', 1, 'missing'), href: '/documentos' },
     row('5.3', 1, 'done'),
     row('5.6', 1, 'missing'),
     row('5.11', 5, 'not_applicable'),
