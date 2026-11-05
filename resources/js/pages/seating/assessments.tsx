@@ -62,6 +62,7 @@ export default function SeatingAssessments({
                     workCenterId={workCenter.id}
                     people={people}
                     canAssess={canAssess}
+                    search={search}
                 />
             </div>
         </>

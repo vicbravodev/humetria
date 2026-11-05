@@ -465,3 +465,19 @@ it('closes the survey from its page after asking', function (): void {
 
     expect($survey->refresh()->status->value)->toBe('closed');
 });
+
+// Rediseño v2 (C7): the list of assessments with nobody to assess says why, and a search that found nobody says so instead.
+it('tells a center with nobody to assess apart from a search that found nobody', function (): void {
+    [$url, , , $center] = assessableCenter();
+    $empty = WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+
+    visit("{$url}/seating/centers/{$empty->id}/assessments")
+        ->assertSee('Sin personas que evaluar')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+
+    visit("{$url}/seating/centers/{$center->id}/assessments?q=Zeta")
+        ->assertSee('Nadie coincide')
+        ->assertDontSee('Sin personas que evaluar')
+        ->assertNoJavaScriptErrors();
+});
