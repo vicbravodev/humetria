@@ -22,3 +22,21 @@ export type RouteAccidents = {
     waiting: string;
     href: string;
 };
+
+/** Something that waits for the Comisión in one of its centers (board V2-Comision). */
+export type CommitteeTask = {
+    kind: 'lists' | 'notices';
+    workCenter: string;
+    count: number;
+    /** Whose lists wait, in the order they were sent; empty for notices. */
+    people: string[];
+    href: string;
+};
+
+/** A center the member sits on, with who sits with them. */
+export type CommitteeSeat = {
+    id: string;
+    name: string;
+    members: string[];
+    href: string;
+};

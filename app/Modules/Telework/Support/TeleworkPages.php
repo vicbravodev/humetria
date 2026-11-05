@@ -126,6 +126,80 @@ final readonly class TeleworkPages
     }
 
     /**
+     * The queue of a member of the Comisión (board V2-Comision; decisión A5, with its account): in each center it sits on,
+     * the lists of places that wait for its decision, with whose they are, and the notices nobody reviewed; and who sits
+     * with it. Only its centers, nothing of NOM-035 nor health data.
+     *
+     * @return array<string, mixed>
+     */
+    public function queue(mixed $tenant, int $userId, string $name): array
+    {
+        $ids = $this->gate->workCenterIds($userId);
+        $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && in_array($center->id, $ids, true)));
+        $waiting = $this->waitingLists(array_map(fn (WorkCenterSummary $center): string => $center->id, $centers));
+        $notices = [];
+
+        foreach (WorkerNotice::query()->whereNull('reviewed_at')->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->get(['teleworker_id']) as $notice) {
+            $notices[$notice->teleworker_id] = ($notices[$notice->teleworker_id] ?? 0) + 1;
+        }
+
+        $centerOf = [];
+
+        foreach (Teleworker::query()->whereIn('id', array_keys($notices))->get(['id', 'work_center_id']) as $person) {
+            $centerOf[$person->id] = $person->work_center_id;
+        }
+        $reviewers = $this->members->reviewers();
+        $tasks = [];
+        $seats = [];
+
+        foreach ($centers as $center) {
+            $people = $waiting[$center->id] ?? [];
+            $count = array_sum(array_map(fn (string $id): int => ($centerOf[$id] ?? null) === $center->id ? $notices[$id] : 0, array_keys($notices)));
+            array_push($tasks, ...array_filter([
+                $people === [] ? null : ['kind' => 'lists', 'workCenter' => $center->name, 'count' => count($people), 'people' => $people, 'href' => route('tenant.telework.reviews.index', [$tenant, $center->id])],
+                $count === 0 ? null : ['kind' => 'notices', 'workCenter' => $center->name, 'count' => $count, 'people' => [], 'href' => route('tenant.telework.notices.index', [$tenant, 'center' => $center->id])],
+            ]));
+            $seated = $this->gate->userIdsOf($center->id);
+            $members = array_values(array_map(fn (MemberSummary $member): string => $member->name, array_filter($reviewers, fn (MemberSummary $member): bool => in_array($member->userId, $seated, true))));
+            $seats[] = ['id' => $center->id, 'name' => $center->name, 'members' => $members, 'href' => route('tenant.telework.route', [$tenant, $center->id])];
+        }
+
+        return ['name' => $name, 'tasks' => $tasks, 'centers' => $seats];
+    }
+
+    /**
+     * By center, the names of the people whose sent list waits for the Comisión, in the order they were sent.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, list<string>>
+     */
+    private function waitingLists(array $ids): array
+    {
+        $applications = ChecklistApplication::query()->awaitingReview()
+            ->whereIn('workplace_id', Workplace::query()->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->select('id'))
+            ->orderBy('submitted_at')->orderBy('id')->get(['workplace_id']);
+        $places = [];
+
+        foreach (Workplace::query()->whereIn('id', $applications->map(fn (ChecklistApplication $application): string => $application->workplace_id)->unique()->values()->all())->get(['id', 'teleworker_id']) as $place) {
+            $places[$place->id] = $place->teleworker_id;
+        }
+
+        $people = Teleworker::query()->whereIn('id', array_values(array_unique($places)))->get(['id', 'employee_id', 'work_center_id'])->keyBy('id');
+        $names = $this->roster->findMany(array_values($people->map(fn (Teleworker $person): string => $person->employee_id)->all()));
+        $waiting = [];
+
+        foreach ($applications as $application) {
+            $person = $people->get($places[$application->workplace_id] ?? '');
+
+            if ($person !== null && isset($names[$person->employee_id])) {
+                $waiting[$person->work_center_id][] = $names[$person->employee_id]->name;
+            }
+        }
+
+        return $waiting;
+    }
+
+    /**
      * «Para toda la empresa» (board V2-Centros-N037): how many people telework in how many of the centers the user sees,
      * how many of those centers have their policy in force, and how many of the six supporting documents are in force in
      * all of them.

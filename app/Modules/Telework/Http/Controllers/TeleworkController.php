@@ -23,11 +23,17 @@ use Inertia\Response;
  */
 final class TeleworkController extends Controller
 {
-    public function index(Request $request, mixed $tenant, TeleworkPages $pages): Response
+    public function index(Request $request, mixed $tenant, VisibleCenters $visible, TeleworkPages $pages): Response
     {
         Gate::authorize('view-telework');
+        $userId = $this->userId($request);
 
-        return Inertia::render('telework/index', $pages->index($this->userId($request)));
+        // The Comisión sees only its queue (board V2-Comision).
+        if ($visible->limitedTo($userId) !== null) {
+            return Inertia::render('telework/queue', $pages->queue($tenant, $userId, $request->user()->name ?? ''));
+        }
+
+        return Inertia::render('telework/index', $pages->index($userId));
     }
 
     public function center(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, VisibleCenters $visible, TeleworkPages $pages): Response

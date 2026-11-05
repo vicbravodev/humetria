@@ -242,11 +242,11 @@ it('lists the centers the user may see, with their progress, counts and pending 
         ->where('centers.data.1', fn ($center) => $center['name'] === 'Planta Sur' && $center['teleworkers'] === 0 && $center['applicable'] === 10));
 });
 
-it('lists to the committee only its centers, and to the viewer every one without names', function (): void {
+it('gives the committee its queue of only its centers (board V2-Comision), and the viewer every center without names', function (): void {
     centerPerson();
 
     $this->actingAs($this->cora)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
-        ->has('centers.data', 1)->where('centers.data.0.name', 'Planta Norte'));
+        ->component('telework/queue')->has('centers', 1)->where('centers.0.name', 'Planta Norte'));
 
     $response = $this->actingAs($this->viewer)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
         ->has('centers.data', 2));
