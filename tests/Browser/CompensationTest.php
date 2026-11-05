@@ -369,6 +369,17 @@ it('draws the report still with reduced motion, and prints it in the light theme
         ->assertNoJavaScriptErrors();
 });
 
+// With reduced motion a dialog only fades in: no scale and no slide (design-system.md, «Movimiento»).
+it('opens a dialog with a fade only when the person asks for reduced motion', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    visit("{$url}/compensation/scenarios/{$scenario->id}/report", ['reducedMotion' => 'reduce'])
+        ->click('Compartir')
+        ->assertScript('() => { const style = getComputedStyle(document.querySelector("[data-slot=dialog-content]")); return [style.getPropertyValue("--tw-enter-scale").trim() || "1", style.getPropertyValue("--tw-enter-translate-y").trim() || "0"].join(); }', '1,0')
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens the report of a scenario from its list', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
