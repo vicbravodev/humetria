@@ -10,6 +10,7 @@ use App\Modules\Compensation\Data\CostBreakdown;
 use App\Modules\Compensation\Data\CostCut;
 use App\Modules\Compensation\Data\CostSubject;
 use App\Modules\Compensation\Data\CostUnit;
+use App\Modules\Compensation\Data\GradeRaise;
 use App\Modules\Compensation\Data\MonthlyCost;
 use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Data\SideCost;
@@ -38,6 +39,9 @@ final class ScenarioCost
     private const int MONTHS = 12;
 
     private const int DAYS_IN_YEAR = 365;
+
+    /** The month of the salary, 30.4 days, in tenths of a day. */
+    private const int MONTH_DAYS_TENTHS = 304;
 
     public static function firstYear(ScenarioInput $in): CostBreakdown
     {
@@ -115,19 +119,63 @@ final class ScenarioCost
         return $units;
     }
 
-    /** The raise of a group: its own, or for the trusted the unionized one when they have none; null when there is none. */
-    public static function raiseFor(PayGroup $group, ScenarioInput $in): ?Rate
+    /** The group whose change applies to a group: its own, or for the trusted with none of their own the unionized one. */
+    private static function changeOf(PayGroup $group, ScenarioInput $in): PayGroup
     {
-        return $in->raises[$group->value]
-            ?? ($group === PayGroup::Trusted ? ($in->raises[PayGroup::Unionized->value] ?? null) : null);
+        $own = isset($in->raises[$group->value]) || isset($in->monthlyAmounts[$group->value]);
+
+        return $own || $group !== PayGroup::Trusted ? $group : PayGroup::Unionized;
     }
 
-    /** The daily salary after the raise of the group, settled to the cent. */
+    /** The raise of a group as a fraction of the salary (see changeOf); null when there is none. */
+    public static function raiseFor(PayGroup $group, ScenarioInput $in): ?Rate
+    {
+        return $in->raises[self::changeOf($group, $in)->value] ?? null;
+    }
+
+    /** The fixed amount a month, in cents, a group receives (see changeOf); 0 when there is none. */
+    public static function amountFor(PayGroup $group, ScenarioInput $in): int
+    {
+        return $in->monthlyAmounts[self::changeOf($group, $in)->value] ?? 0;
+    }
+
+    /**
+     * The daily salary after the change of the group, settled to the cent once: the salary plus the daily share of the fixed
+     * amount (a month of 30.4 days), raised by the percent.
+     */
     public static function raised(int $salary, PayGroup $group, ScenarioInput $in): int
     {
-        $raise = self::raiseFor($group, $in);
+        $withAmount = Rate::fraction($salary * self::MONTH_DAYS_TENTHS + self::amountFor($group, $in) * 10, self::MONTH_DAYS_TENTHS);
 
-        return $raise === null ? $salary : Rate::one()->plus($raise)->of($salary);
+        return Rate::one()->plus(self::raiseFor($group, $in) ?? Rate::zero())->times($withAmount)->of(1);
+    }
+
+    /**
+     * What each person of a category and level receives more a month, by group, from the tabulator salary (a month is 30.4
+     * days): the people with an individual salary and the categories with no salary are not in it.
+     *
+     * @return list<GradeRaise> by category and level id, then group
+     */
+    public static function monthlyRaises(ScenarioInput $in): array
+    {
+        $raises = [];
+
+        foreach ($in->cells as $cell) {
+            $salary = $in->gradeSalaries[$cell->jobGradeId] ?? null;
+
+            if ($salary === null) {
+                continue;
+            }
+
+            $group = PayGroup::from($cell->group->value);
+            $key = "{$cell->jobGradeId}|{$group->value}";
+            $monthly = Rate::fraction(self::MONTH_DAYS_TENTHS, 10)->of(self::raised($salary, $group, $in) - $salary);
+            $raises[$key] = new GradeRaise($cell->jobGradeId, $group, ($raises[$key]->people ?? 0) + $cell->count, $salary, $monthly);
+        }
+
+        ksort($raises);
+
+        return array_values($raises);
     }
 
     /**

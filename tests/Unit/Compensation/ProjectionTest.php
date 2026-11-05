@@ -9,6 +9,7 @@ use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Support\Calculation\Projection;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
+use App\Modules\Organization\Enums\StaffGroup;
 use Carbon\CarbonImmutable;
 
 mutates(Projection::class);
@@ -229,4 +230,19 @@ it('keeps a scenario without changes at zero extra cost every year', function ()
     foreach (project(horizon: 5) as $year) {
         expect($year->deltaCents())->toBe(0);
     }
+});
+
+it('keeps the fixed amount in the following years, for the trusted who copy it too, and grows it by the following years rate', function (): void {
+    $cells = [scenarioCell(), scenarioCell(group: StaffGroup::Trusted)];
+    $flat = project(['cells' => $cells, 'amounts' => ['unionized' => 60_800]]);
+    // $608 a month on $500 a day is 4 %: the same scenario as a percent costs the same every year.
+    $percent = project(['cells' => $cells, 'raises' => ['unionized' => Rate::scaled(4, 2)]]);
+    $assumptions = new Assumptions(inflationBp: 0, turnoverBp: 0, headcountGrowthBp: 0, futureRevisionsBp: 0, followingYearsRateBp: 300);
+    // (500 + 20) × 1.03 = 535.60 in 2027.
+    $grown = project(['cells' => $cells, 'amounts' => ['unionized' => 60_800]], $assumptions);
+    $second = alone(['effectiveOn' => '2027-01-01', 'cells' => $cells, 'raises' => ['unionized' => Rate::scaled(712, 4), 'trusted' => Rate::scaled(712, 4)]]);
+
+    expect(array_map(fn (ProjectionYear $year): int => $year->deltaCents(), $flat))->toBe(array_map(fn (ProjectionYear $year): int => $year->deltaCents(), $percent))
+        ->and($flat[1]->deltaCents())->toBeGreaterThan(0)
+        ->and($grown[1]->afterCents)->toBe($second->afterCents);
 });

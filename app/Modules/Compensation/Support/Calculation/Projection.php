@@ -22,7 +22,7 @@ use InvalidArgumentException;
  * on, so the tenure, the vacation days, the premium and the SBC grow by themselves, and the fiscal values of that year rule
  * (the employer rates change by year; the UMA and the minimum wage the platform does not know yet grow with the inflation).
  * What the assumptions add, from the second year: every salary grows by the future revisions, on both sides; the proposal's raise
- * stays and grows by the following years rate, on its side only; each year a share of the people leave and are replaced by
+ * (and its fixed amount) stays and grows by the following years rate, on its side only; each year a share of the people leave and are replaced by
  * people of no seniority (the share who stay is the compound of the turnover); and the headcount grows.
  *
  * ponytail: the replacements are costed at no seniority in every year, and the individual salaries leave and are replaced like
@@ -88,9 +88,12 @@ final class Projection
         $revisions = self::compound($assumptions->futureRevisionsBp, $passed);
         $following = self::compound($assumptions->followingYearsRateBp, $passed);
         $raises = [];
+        $amounts = [];
 
+        // Each group's change resolved, so the trusted who copy the unionized keep doing it once both have a raise.
         foreach (PayGroup::cases() as $group) {
             $raises[$group->value] = Rate::one()->plus(ScenarioCost::raiseFor($group, $in) ?? Rate::zero())->times($following)->minus(Rate::one());
+            $amounts[$group->value] = ScenarioCost::amountFor($group, $in);
         }
 
         return new ScenarioInput(
@@ -111,6 +114,7 @@ final class Projection
             $in->workRiskPremium,
             $in->defaultState,
             $in->gaps,
+            $amounts,
         );
     }
 
