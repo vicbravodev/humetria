@@ -13,6 +13,19 @@ use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\File;
 
+/** The scenario of the report tests: two people costed, one left out, a 5 % raise with two months of retroactivity. */
+function reportScenario(Tenant $tenant): Scenario
+{
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    foreach (['E-001', 'E-002'] as $number) {
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2006-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => $number]);
+    }
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => null, 'hired_on' => null, 'employee_number' => 'E-900']);
+
+    return Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027', 'effective_on' => '2027-01-01', 'retroactive_months' => 2, 'group_changes' => ['unionized' => 500, 'trusted' => null]]);
+}
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -288,28 +301,71 @@ it('tries the point in between of two scenarios in a new one', function (): void
         ->assertNoJavaScriptErrors();
 });
 
-it('shows the report of a scenario with its numbers and assumptions', function (bool $dark, bool $mobile): void {
+it('shows the report of a scenario with its analysis, one notice of accuracy and the detail folded (board V4-Comp-Reporte)', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
-    $tenant = Tenant::query()->where('slug', 'acme')->sole();
-    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
-    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
-    foreach (['E-001', 'E-002'] as $number) {
-        Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2006-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => $number]);
-    }
-    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => null, 'hired_on' => null, 'employee_number' => 'E-900']);
-    $scenario = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027', 'effective_on' => '2027-01-01', 'retroactive_months' => 2, 'group_changes' => ['unionized' => 500, 'trusted' => null]]);
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
 
     visitPage('compensation/report', "{$url}/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
         ->assertSee('Revisión 2027')
+        ->assertSee('para que el número sea exacto')
+        ->assertSee('Costo del primer año')
+        ->assertSee('Hallazgos clave')
+        ->assertSee('1. De dónde sale el costo')
+        ->assertSee('2. Quién recibe el aumento')
+        ->assertSee('Operador · A')
+        ->assertSee('3. Los próximos años')
+        ->assertSee('4. Anexo: detalle por concepto')
         ->assertSee('2 de 3 personas costeadas')
+        ->assertDontSee('Frente a las otras propuestas')
+        ->click('[data-test="report-detail"]')
         ->assertSee('E-900')
-        ->assertSee('Cascada por concepto')
         ->assertSee('Prima de antigüedad')
         ->assertSee('Supuestos y alcance')
         ->assertSee('Meta de inflación del Banco de México')
-        ->assertSee('Operador · A')
         ->assertDontSee('Valor para la persona y costo para la empresa');
 })->with($looks);
+
+/** A script that waits a moment for the tooltip and says whether it opened telling `$start`. */
+function tooltipTells(string $start): string
+{
+    return '() => new Promise((resolve) => setTimeout(() => resolve(document.querySelector(\'[data-slot="tooltip-content"]\')?.textContent.startsWith('.json_encode($start).') ?? false), 300))';
+}
+
+it('weighs the report against the other proposals of the account and tells each bar on focus and on hover', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = reportScenario($tenant);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027 · 4 %', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
+
+    visit("{$url}/compensation/scenarios/{$scenario->id}/report")
+        ->assertSee('4. Frente a las otras propuestas')
+        ->assertSee('Revisión 2027 (esta)')
+        ->assertSee('Ver la comparación completa')
+        // The keyboard reaches each bar and its tooltip opens; so does the cursor. The chart is on screen first: a tooltip
+        // closes when the page scrolls under it.
+        ->assertScript('() => new Promise((resolve) => { document.getElementById("costo").scrollIntoView({ block: "start" }); requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))); })', true)
+        ->keys('[role="img"][aria-label^="Salario:"]', 'Shift')
+        ->assertScript(tooltipTells('Salario:'), true)
+        ->hover('[role="img"][aria-label^="Infonavit:"]')
+        ->assertScript(tooltipTells('Infonavit:'), true)
+        ->assertNoJavaScriptErrors()
+        ->click('Ver la comparación completa')
+        ->assertSee('Comparar escenarios')
+        ->assertNoJavaScriptErrors();
+});
+
+it('draws the report still with reduced motion, and prints it in the light theme', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    visit("{$url}/compensation/scenarios/{$scenario->id}/report", ['reducedMotion' => 'reduce'])->inDarkMode()
+        ->assertSee('Costo del primer año')
+        // Nothing grows or counts up: no animation runs, and the first figure is already whole.
+        ->assertScript('() => document.getAnimations().filter((animation) => animation.playState === "running").length', 0)
+        ->assertScript('() => /^\$[1-9]/.test(document.querySelector("#resumen dd").textContent)', true)
+        ->assertScript('() => { window.dispatchEvent(new Event("beforeprint")); return document.documentElement.classList.contains("dark"); }', false)
+        ->assertNoJavaScriptErrors();
+});
 
 it('opens the report of a scenario from its list', function (): void {
     $url = signInToPanel();
@@ -330,6 +386,8 @@ it('shows a union the worker gross against the company cost', function (bool $da
     $scenario = Scenario::factory()->create(['tenant_id' => $union->id, 'name' => 'Propuesta del sindicato']);
 
     visitPage('compensation/report', "/admin/sindicato/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
+        ->assertSee('Reporte de impacto · Propuesta del sindicato')
+        ->click('[data-test="report-detail"]')
         ->assertSee('Valor para la persona y costo para la empresa');
 })->with($looks);
 
@@ -374,7 +432,10 @@ it('opens the shared report with no account, the small groups folded into Others
     visitPage('compensation/shared-report', '/compensation-report/'.str_repeat('a', 64), $dark, $mobile)
         ->assertSee('Acme compartió este reporte contigo')
         ->assertSee('Revisión 2027')
-        ->assertSee('Cascada por concepto')
+        ->assertSee('1. De dónde sale el costo')
+        ->assertSee('Operador · A')
+        ->assertDontSee('Frente a las otras propuestas')
+        ->assertDontSee('Completar datos')
         ->assertDontSee('Producción-1')
         ->assertDontSee('Anexo por persona');
 })->with($looks);
@@ -414,6 +475,7 @@ it('takes a union from its roster to a report shared with someone who has no acc
         ->assertSee('Escenario guardado.')
         ->assertSee('Propuesta del sindicato')
         ->assertSee('8 de 8 personas costeadas')
+        ->click('[data-test="report-detail"]')
         ->assertSee('Valor para la persona y costo para la empresa')
         ->click('Compartir')
         ->press('Crear enlace')
@@ -429,7 +491,7 @@ it('takes a union from its roster to a report shared with someone who has no acc
     visit("/compensation-report/{$token}")
         ->assertSee('Sindicato Demo compartió este reporte contigo')
         ->assertSee('Propuesta del sindicato')
-        ->assertSee('Cascada por concepto')
+        ->assertSee('1. De dónde sale el costo')
         ->assertDontSee('Valor para la persona y costo para la empresa')
         ->assertDontSee('E-001')
         ->assertNoJavaScriptErrors();

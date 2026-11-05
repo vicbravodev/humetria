@@ -376,12 +376,21 @@
  */
 @theme {
     --animate-report-grow: report-grow 850ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    --animate-report-grow-up: report-grow-up 850ms
+        cubic-bezier(0.2, 0.7, 0.2, 1) both;
     --animate-report-rise: report-rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
     --animate-report-pop: report-pop 380ms var(--ease-out) both;
 
     @keyframes report-grow {
         from {
             transform: scaleX(0);
+        }
+    }
+
+    /* The columns of a chart grow from their axis, like the bars do from theirs. */
+    @keyframes report-grow-up {
+        from {
+            transform: scaleY(0);
         }
     }
 

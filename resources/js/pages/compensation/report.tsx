@@ -1,39 +1,44 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { Download, Pencil } from 'lucide-react';
-import ReportAssumptions from '@/components/compensation/report-assumptions';
-import ReportConcepts from '@/components/compensation/report-concepts';
-import ReportCoverage from '@/components/compensation/report-coverage';
-import ReportCuts from '@/components/compensation/report-cuts';
-import ReportHeadline from '@/components/compensation/report-headline';
-import ReportLiability from '@/components/compensation/report-liability';
+import CompensationHeader from '@/components/compensation/compensation-header';
+import ReportBody from '@/components/compensation/report-body';
 import ReportShares from '@/components/compensation/report-shares';
 import ShareDialog from '@/components/compensation/share-dialog';
-import ReportPersonValue from '@/components/compensation/report-person-value';
-import ReportTimeline from '@/components/compensation/report-timeline';
-import ReportWarnings from '@/components/compensation/report-warnings';
-import PageHeader from '@/components/humetria/page-header';
-import PrintButton from '@/components/humetria/print-button';
 import { Button } from '@/components/ui/button';
 import { useIsUnion } from '@/hooks/use-is-union';
 import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { reportSubtitle } from '@/lib/compensation/report-notes';
+import { index } from '@/routes/tenant/compensation';
 import { annex, edit } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioReport } from '@/types';
 
+/** The report of impact of a scenario with its analysis (board V4-Comp-Reporte), of a company or of a union with its own data. */
 export default function Report(report: ScenarioReport) {
     const tenantSlug = useTenantSlug();
-    const isUnion = useIsUnion();
+    const union = useIsUnion();
+    const company = usePage().props.tenant?.trade_name ?? null;
     const { scenario } = report;
     useLightPrint();
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Compensación', href: index(tenantSlug) },
+            { title: scenario.name },
+        ],
+    });
 
     return (
         <>
             <Head title={`Reporte · ${scenario.name}`} />
-            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16 print:p-0">
-                <PageHeader
-                    caption="Reporte de impacto"
+            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16 print:p-0">
+                <CompensationHeader
+                    eyebrow={
+                        union
+                            ? 'Reporte de impacto · Propuesta del sindicato'
+                            : 'Reporte de impacto · Compensación'
+                    }
                     title={scenario.name}
-                    description={`Desde el ${scenario.effective_on} · ${scenario.raise_text}.`}
+                    lead={reportSubtitle(report, company)}
                 >
                     <Button variant="outline" asChild className="print:hidden">
                         <Link
@@ -42,8 +47,8 @@ export default function Report(report: ScenarioReport) {
                                 scenario: scenario.id,
                             })}
                         >
-                            <Pencil />
-                            Editar escenario
+                            <Pencil aria-hidden />
+                            Editar
                         </Link>
                     </Button>
                     {report.can_annex && (
@@ -59,7 +64,7 @@ export default function Report(report: ScenarioReport) {
                                 })}
                                 download
                             >
-                                <Download />
+                                <Download aria-hidden />
                                 Anexo por persona
                             </a>
                         </Button>
@@ -69,35 +74,22 @@ export default function Report(report: ScenarioReport) {
                             <ShareDialog scenarioId={scenario.id} />
                         </span>
                     )}
-                    <span className="print:hidden">
-                        <PrintButton />
-                    </span>
-                </PageHeader>
-                <ReportCoverage report={report} />
-                <ReportWarnings report={report} />
-                <ReportHeadline report={report} />
-                <ReportConcepts concepts={report.concepts} />
-                {isUnion && <ReportPersonValue value={report.person_value} />}
-                <ReportCuts cuts={report.cuts} />
-                <ReportTimeline report={report} />
-                <ReportLiability report={report} />
-                <ReportAssumptions assumptions={report.assumptions} />
+                </CompensationHeader>
+                <ReportBody
+                    report={report}
+                    union={union}
+                    shared={false}
+                    stickyClassName="top-16"
+                />
                 {report.shares !== null && (
-                    <ReportShares
-                        scenarioId={scenario.id}
-                        shares={report.shares}
-                    />
+                    <div className="print:hidden">
+                        <ReportShares
+                            scenarioId={scenario.id}
+                            shares={report.shares}
+                        />
+                    </div>
                 )}
             </div>
         </>
     );
 }
-
-Report.layout = {
-    breadcrumbs: [
-        { title: 'Herramientas' },
-        { title: 'Compensación' },
-        { title: 'Escenarios' },
-        { title: 'Reporte' },
-    ],
-};
