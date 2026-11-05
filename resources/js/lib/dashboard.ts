@@ -1,16 +1,12 @@
-import { instrumentsText } from '@/lib/campaigns';
-import { countOf, plural } from '@/lib/plural';
-import { highRisk, percentText } from '@/lib/results';
+import { NORMS, STAGES } from '@/lib/compliance-routes';
+import type { Norm, NormKey } from '@/lib/compliance-routes';
+import { countOf } from '@/lib/plural';
 import type {
-    BadgeVariant,
-    CycleRow,
-    DashboardCounts,
-    DashboardProgress,
-    LevelCounts,
-    NextStep,
+    CenterRoutes,
+    DashboardSummary,
+    RouteProgress,
+    StageState,
 } from '@/types';
-
-export type Kpi = { value: string; caption: string };
 
 // Titles people put before their name; "Ma." is María, not a title, so it stays.
 const TITLES = new Set([
@@ -44,185 +40,90 @@ export function greeting(name: string): string {
     return first === '' ? 'Hola' : `Hola, ${first}`;
 }
 
-/** The sentence under the greeting: what is in course and what is ready to launch. */
-export function panelSummary({ active, drafts }: DashboardCounts): string {
-    const parts = [
-        active > 0 &&
-            plural(
-                active,
-                'una evaluación en curso',
-                `${active} evaluaciones en curso`,
-            ),
-        drafts > 0 &&
-            plural(
-                drafts,
-                'un borrador listo para lanzar',
-                `${drafts} borradores listos para lanzar`,
-            ),
-    ].filter((part) => part !== false);
-
-    return parts.length === 0
-        ? 'No tienes evaluaciones en curso.'
-        : `Tienes ${parts.join(' y ')}.`;
-}
-
-/** The days left to the evaluation's last one. */
-export function closingKpi(daysLeft: number): Kpi {
-    if (daysLeft <= 0) {
-        return { value: 'Hoy', caption: 'es el último día' };
+/** The sentence under the greeting (board V2-Panel). */
+export function panelSummary({ norms, centers }: DashboardSummary): string {
+    if (centers === 0) {
+        return 'Aún no registras centros de trabajo.';
     }
 
-    return {
-        value: countOf(daysLeft, 'día', 'días'),
-        caption: 'para el cierre',
-    };
+    return `Llevas ${countOf(norms, 'norma', 'normas')} en ${countOf(centers, 'centro', 'centros')}. Primero lo urgente, luego dónde vas en cada una.`;
 }
 
-/** How many answers are still missing to reach the target. */
-export function missingKpi({ completed, target }: DashboardProgress): Kpi {
-    const missing = Math.max(0, target - completed);
+/** Each of the six stages: done, the earliest one left (where the center is) or still ahead. */
+export function stageStates(route: RouteProgress): StageState[] {
+    const current = route.done.indexOf(false);
 
-    return {
-        value: String(missing),
-        caption: plural(missing, 'falta por contestar', 'faltan por contestar'),
-    };
-}
-
-/** A step of "Lo que sigue", written: what to do, where and its button. */
-export function nextStepTexts(step: NextStep): {
-    title: string;
-    detail: string;
-    action: string;
-} {
-    if (step.kind === 'launch') {
-        const people =
-            step.workers === null
-                ? []
-                : [
-                      plural(
-                          step.workers,
-                          '1 persona',
-                          `${step.workers} personas`,
-                      ),
-                  ];
-
-        return {
-            title: `Lanza la evaluación de ${step.workCenter}`,
-            detail: [
-                'Borrador listo',
-                ...people,
-                instrumentsText(step.instruments),
-            ].join(' · '),
-            action: 'Continuar',
-        };
-    }
-
-    if (step.kind === 'report') {
-        return {
-            title: `Completa el informe 7.7 de ${step.workCenter}`,
-            detail: 'Faltan conclusiones, recomendaciones y responsable',
-            action: 'Completar',
-        };
-    }
-
-    const people = step.people ?? 0;
-
-    return {
-        title: plural(
-            people,
-            '1 persona requiere valoración clínica',
-            `${people} personas requieren valoración clínica`,
-        ),
-        detail: `Guía I · ${step.workCenter} · ${plural(people, 'canalízala', 'canalízalas')} a atención`,
-        action: 'Revisar',
-    };
-}
-
-export function pendingText(count: number): string {
-    return countOf(count, 'pendiente', 'pendientes');
-}
-
-const STANDINGS: Record<
-    CycleRow['standing'],
-    {
-        from: string;
-        until: string;
-        badge: { label: string; variant: BadgeVariant };
-    }
-> = {
-    in_course: {
-        from: 'Lanzada el',
-        until: 'Cierra el',
-        badge: { label: 'En curso', variant: 'default' },
-    },
-    up_to_date: {
-        from: 'Evaluada el',
-        until: 'Siguiente antes del',
-        badge: { label: 'Al día', variant: 'success' },
-    },
-    overdue: {
-        from: 'Evaluada el',
-        until: 'Debía evaluarse antes del',
-        badge: { label: 'Vencida', variant: 'destructive' },
-    },
-    never: {
-        from: 'Aún sin evaluar',
-        until: '',
-        badge: { label: 'Sin evaluar', variant: 'warning' },
-    },
-};
-
-/** A work center's place in its cycle, written: where its span starts and ends, and its badge. */
-export function cycleTexts(row: CycleRow): {
-    from: string;
-    until: string;
-    badge: { label: string; variant: BadgeVariant };
-} {
-    const standing = STANDINGS[row.standing];
-    const dated = (prefix: string, day: string | null) =>
-        day === null ? prefix : `${prefix} ${day}`;
-
-    return {
-        from: dated(standing.from, row.from),
-        until: dated(standing.until, row.until),
-        badge: standing.badge,
-    };
-}
-
-/** "29 de 30 · 97 %". */
-export function participationShare({
-    completed,
-    target,
-}: DashboardProgress): string {
-    return `${completed} de ${target} · ${percentText(completed, target)}`;
-}
-
-/** The share of questionnaires in Alto or Muy alto: "62 %". */
-export function highRiskShare(levels: LevelCounts): string {
-    return percentText(
-        highRisk(levels),
-        levels.reduce((sum, count) => sum + count, 0),
+    return route.done.map((done, index) =>
+        done ? 'done' : index === current ? 'current' : 'pending',
     );
 }
 
-/**
- * What the panel shows below its header: the way to the work centers until there is one, the wait for the first
- * campaign until anything is on the go or closed, and the panel itself after that.
- */
-export function dashboardView({
-    hasWorkCenters,
-    hasActive,
-    steps,
-    closed,
-}: {
-    hasWorkCenters: boolean;
-    hasActive: boolean;
-    steps: number;
-    closed: number;
-}): 'no-work-centers' | 'no-campaigns' | 'panel' {
-    if (!hasWorkCenters) {
-        return 'no-work-centers';
+/** "Etapa 2 de 6 · 18 de 60 contestaron"; the line alone, capitalized, when it is all done or does not apply. */
+export function stageLine(route: RouteProgress): string {
+    const current = route.done.indexOf(false);
+
+    if (!route.applies || current === -1) {
+        return route.status.charAt(0).toUpperCase() + route.status.slice(1);
     }
 
-    return hasActive || steps > 0 || closed > 0 ? 'panel' : 'no-campaigns';
+    return `Etapa ${current + 1} de ${route.done.length} · ${route.status}`;
+}
+
+/** The standards that apply to some center of the page, each with every center of it (those it does not apply to say so). */
+export function normsInUse(centers: CenterRoutes[]): {
+    norm: Norm;
+    rows: { id: string; name: string; route: RouteProgress }[];
+}[] {
+    return NORMS.filter((norm) =>
+        centers.some((center) => center[norm.key].applies),
+    ).map((norm) => ({
+        norm,
+        rows: centers.map((center) => ({
+            id: center.id,
+            name: center.name,
+            route: center[norm.key],
+        })),
+    }));
+}
+
+export type NextStep = {
+    norm: NormKey;
+    /** 1 to 6. */
+    stage: number;
+    /** How many centers are at that stage of that route. */
+    centers: number;
+    title: string;
+    text: string;
+};
+
+/**
+ * "Siguiente paso recomendado": the earliest stage any center has left, of any route; on a tie, the first standard in
+ * the menu's order. Null when every route that applies is done.
+ */
+export function nextStep(centers: CenterRoutes[]): NextStep | null {
+    let best: NextStep | null = null;
+
+    for (const norm of NORMS) {
+        const stages = centers
+            .map((center) => center[norm.key])
+            .filter((route) => route.applies)
+            .map((route) => route.done.indexOf(false))
+            .filter((index) => index !== -1);
+        const earliest = Math.min(...stages);
+        const stage = STAGES[norm.key][earliest];
+
+        if (
+            stage !== undefined &&
+            (best === null || earliest < best.stage - 1)
+        ) {
+            best = {
+                norm: norm.key,
+                stage: earliest + 1,
+                centers: stages.filter((index) => index === earliest).length,
+                ...stage,
+            };
+        }
+    }
+
+    return best;
 }

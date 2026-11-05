@@ -1,53 +1,38 @@
-import type { LevelCounts } from '@/types/results';
-
-/** Answers of the guide that measures an evaluation, against its sample or everyone invited. */
-export type DashboardProgress = { completed: number; target: number };
-
-/** The evaluation in course that closes soonest. Dates already written for display ("10 nov 2026"). */
-export type ActiveEvaluation = DashboardProgress & {
-    id: string;
-    workCenter: string;
-    kindLabel: string;
-    /** Short titles, in order: "Guía I", "Guía III". */
-    instruments: string[];
-    closesOn: string;
-    daysLeft: number;
+/**
+ * Where a work center stands in the six-stage route of a standard (rediseño v2, boards V2-Ruta-*): the stages done, in
+ * order, and a short line about the earliest one left. When the standard does not apply, `done` is empty and the line
+ * says why ("Nadie teletrabaja en este centro").
+ */
+export type RouteProgress = {
+    applies: boolean;
+    done: boolean[];
+    status: string;
 };
 
-/** Something on the panel's "Lo que sigue": a draft to launch, a 7.7 report to complete or people to channel. */
-export type NextStep = {
-    kind: 'launch' | 'report' | 'screenings';
-    campaignId: string;
-    workCenter: string;
-    /** For a draft: how many people it covers and its guides. */
-    workers: number | null;
-    instruments: string[];
-    /** For screenings: how many require a clinical assessment. */
-    people: number | null;
-};
-
-/** Where a work center stands in its two-year NOM-035 cycle (num. 7.9). */
-export type CycleRow = {
+/** A work center of the panel with its place in each route. */
+export type CenterRoutes = {
     id: string;
     name: string;
-    workers: number;
-    instruments: string[];
-    standing: 'in_course' | 'up_to_date' | 'overdue' | 'never';
-    /** Launched on, while in course; last evaluated on otherwise. */
-    from: string | null;
-    /** Closes on, while in course; next due on otherwise. */
-    until: string | null;
-    /** Percent of the span gone by. */
-    elapsed: number;
+    nom035: RouteProgress;
+    nom037: RouteProgress;
+    seating: RouteProgress;
 };
 
-export type ClosedEvaluation = DashboardProgress & {
-    id: string;
-    workCenter: string;
-    instruments: string[];
-    closedOn: string;
-    /** Questionnaires by risk level; null under the minimum group. */
-    final: LevelCounts | null;
+/** Something to attend before anything else ("Atiende primero"), with its one action. Never what a complaint says. */
+export type Urgency = {
+    /** "NOM-037", "NOM-035", "Quejas". */
+    norm: string;
+    title: string;
+    detail: string;
+    action: string;
+    href: string;
 };
 
-export type DashboardCounts = { active: number; drafts: number };
+/** Something that falls due in the next seven days: "Mar 10 nov" and what. */
+export type WeekItem = { day: string; text: string };
+
+/** How many standards apply in how many centers, for the sentence under the greeting. */
+export type DashboardSummary = { norms: number; centers: number };
+
+/** A stage of the bar: done, the one the center is in, or still ahead. */
+export type StageState = 'done' | 'current' | 'pending';

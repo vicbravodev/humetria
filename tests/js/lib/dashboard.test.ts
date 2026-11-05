@@ -1,38 +1,39 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
-    closingKpi,
-    cycleTexts,
-    dashboardView,
     greeting,
-    highRiskShare,
-    missingKpi,
-    nextStepTexts,
+    nextStep,
+    normsInUse,
     panelSummary,
-    participationShare,
-    pendingText,
+    stageLine,
+    stageStates,
 } from '@/lib/dashboard';
-import type { CycleRow, NextStep } from '@/types';
+import type { CenterRoutes, RouteProgress } from '@/types';
 
-const step = (changes: Partial<NextStep>): NextStep => ({
-    kind: 'launch',
-    campaignId: 'c1',
-    workCenter: 'Planta Querétaro',
-    workers: 30,
-    instruments: ['Guía I', 'Guía II'],
-    people: null,
-    ...changes,
+const at = (stage: number, status = 'define las reglas'): RouteProgress => ({
+    applies: true,
+    done: [1, 2, 3, 4, 5, 6].map((number) => number !== stage),
+    status,
 });
-
-const row = (changes: Partial<CycleRow>): CycleRow => ({
-    id: 'w1',
-    name: 'Planta Querétaro',
-    workers: 30,
-    instruments: ['Guía I', 'Guía II'],
-    standing: 'up_to_date',
-    from: '29 oct 2026',
-    until: '29 oct 2028',
-    elapsed: 0,
-    ...changes,
+const notApplicable: RouteProgress = {
+    applies: false,
+    done: [],
+    status: 'Nadie teletrabaja en este centro',
+};
+const allDone: RouteProgress = {
+    applies: true,
+    done: [true, true, true, true, true, true],
+    status: 'al día hasta el 29 oct 2028',
+};
+const center = (
+    name: string,
+    routes: Partial<Omit<CenterRoutes, 'id' | 'name'>>,
+): CenterRoutes => ({
+    id: name,
+    name,
+    nom035: allDone,
+    nom037: notApplicable,
+    seating: notApplicable,
+    ...routes,
 });
 
 describe('greeting', () => {
@@ -52,167 +53,83 @@ describe('greeting', () => {
 });
 
 describe('panelSummary', () => {
-    it('says what is in course and what is ready to launch', () => {
-        expect(panelSummary({ active: 1, drafts: 1 })).toBe(
-            'Tienes una evaluación en curso y un borrador listo para lanzar.',
+    it('says how many standards apply in how many centers, and what comes first', () => {
+        expect(panelSummary({ norms: 3, centers: 2 })).toBe(
+            'Llevas 3 normas en 2 centros. Primero lo urgente, luego dónde vas en cada una.',
         );
-        expect(panelSummary({ active: 2, drafts: 0 })).toBe(
-            'Tienes 2 evaluaciones en curso.',
+        expect(panelSummary({ norms: 1, centers: 1 })).toBe(
+            'Llevas 1 norma en 1 centro. Primero lo urgente, luego dónde vas en cada una.',
         );
-        expect(panelSummary({ active: 0, drafts: 3 })).toBe(
-            'Tienes 3 borradores listos para lanzar.',
-        );
-        expect(panelSummary({ active: 0, drafts: 0 })).toBe(
-            'No tienes evaluaciones en curso.',
+        expect(panelSummary({ norms: 0, centers: 0 })).toBe(
+            'Aún no registras centros de trabajo.',
         );
     });
 });
 
-describe('closingKpi', () => {
-    it('counts the days to the last one', () => {
-        expect(closingKpi(11)).toEqual({
-            value: '11 días',
-            caption: 'para el cierre',
-        });
-        expect(closingKpi(1)).toEqual({
-            value: '1 día',
-            caption: 'para el cierre',
-        });
-        expect(closingKpi(0)).toEqual({
-            value: 'Hoy',
-            caption: 'es el último día',
-        });
-    });
-});
-
-describe('missingKpi', () => {
-    it('says how many answers are missing, never fewer than none', () => {
-        expect(missingKpi({ completed: 18, target: 60 })).toEqual({
-            value: '42',
-            caption: 'faltan por contestar',
-        });
-        expect(missingKpi({ completed: 59, target: 60 })).toEqual({
-            value: '1',
-            caption: 'falta por contestar',
-        });
-        expect(missingKpi({ completed: 61, target: 60 })).toEqual({
-            value: '0',
-            caption: 'faltan por contestar',
-        });
-    });
-});
-
-describe('nextStepTexts', () => {
-    it('writes a draft to launch', () => {
-        expect(nextStepTexts(step({}))).toEqual({
-            title: 'Lanza la evaluación de Planta Querétaro',
-            detail: 'Borrador listo · 30 personas · Guías I y II',
-            action: 'Continuar',
-        });
-        expect(nextStepTexts(step({ workers: null })).detail).toBe(
-            'Borrador listo · Guías I y II',
-        );
-        expect(nextStepTexts(step({ workers: 1 })).detail).toBe(
-            'Borrador listo · 1 persona · Guías I y II',
-        );
-    });
-
-    it('writes a report to complete', () => {
-        expect(nextStepTexts(step({ kind: 'report' }))).toEqual({
-            title: 'Completa el informe 7.7 de Planta Querétaro',
-            detail: 'Faltan conclusiones, recomendaciones y responsable',
-            action: 'Completar',
-        });
-    });
-
-    it('writes how many people to channel', () => {
-        expect(nextStepTexts(step({ kind: 'screenings', people: 2 }))).toEqual({
-            title: '2 personas requieren valoración clínica',
-            detail: 'Guía I · Planta Querétaro · canalízalas a atención',
-            action: 'Revisar',
-        });
-        expect(nextStepTexts(step({ kind: 'screenings', people: 1 }))).toEqual({
-            title: '1 persona requiere valoración clínica',
-            detail: 'Guía I · Planta Querétaro · canalízala a atención',
-            action: 'Revisar',
-        });
-    });
-});
-
-describe('pendingText', () => {
-    it('counts the pending steps', () => {
-        expect(pendingText(1)).toBe('1 pendiente');
-        expect(pendingText(3)).toBe('3 pendientes');
-    });
-});
-
-describe('cycleTexts', () => {
-    it('writes each standing with its badge', () => {
-        expect(cycleTexts(row({}))).toEqual({
-            from: 'Evaluada el 29 oct 2026',
-            until: 'Siguiente antes del 29 oct 2028',
-            badge: { label: 'Al día', variant: 'success' },
-        });
+describe('stageStates', () => {
+    it('marks the stages done, the earliest one left as the current one, and the rest pending', () => {
         expect(
-            cycleTexts(
-                row({
-                    standing: 'in_course',
-                    from: '27 oct 2026',
-                    until: '10 nov 2026',
-                }),
-            ),
-        ).toEqual({
-            from: 'Lanzada el 27 oct 2026',
-            until: 'Cierra el 10 nov 2026',
-            badge: { label: 'En curso', variant: 'default' },
-        });
-        expect(cycleTexts(row({ standing: 'overdue' }))).toEqual({
-            from: 'Evaluada el 29 oct 2026',
-            until: 'Debía evaluarse antes del 29 oct 2028',
-            badge: { label: 'Vencida', variant: 'destructive' },
-        });
+            stageStates({
+                applies: true,
+                done: [false, true, false, true, false, false],
+                status: '',
+            }),
+        ).toEqual(['current', 'done', 'pending', 'done', 'pending', 'pending']);
+        expect(stageStates(allDone)).toEqual(Array(6).fill('done'));
+    });
+});
+
+describe('stageLine', () => {
+    it('numbers the stage before its line, or says it plainly when every stage is done or the standard does not apply', () => {
+        expect(stageLine(at(2, '18 de 60 contestaron'))).toBe(
+            'Etapa 2 de 6 · 18 de 60 contestaron',
+        );
+        expect(stageLine(allDone)).toBe('Al día hasta el 29 oct 2028');
+        expect(stageLine(notApplicable)).toBe(
+            'Nadie teletrabaja en este centro',
+        );
+    });
+});
+
+describe('normsInUse', () => {
+    it('lists each standard with the centers it applies to, and leaves out the ones that apply to none', () => {
+        const plant = center('Planta', { nom037: at(1) });
+        const offices = center('Oficinas', {});
+
         expect(
-            cycleTexts(row({ standing: 'never', from: null, until: null })),
-        ).toEqual({
-            from: 'Aún sin evaluar',
-            until: '',
-            badge: { label: 'Sin evaluar', variant: 'warning' },
-        });
+            normsInUse([plant, offices]).map(({ norm, rows }) => [
+                norm.key,
+                rows.map((row) => row.name),
+            ]),
+        ).toEqual([
+            ['nom035', ['Planta', 'Oficinas']],
+            ['nom037', ['Planta', 'Oficinas']],
+        ]);
+        expect(normsInUse([])).toEqual([]);
     });
 });
 
-describe('participationShare', () => {
-    it('writes who answered of how many, with the share', () => {
-        expect(participationShare({ completed: 29, target: 30 })).toBe(
-            '29 de 30 · 97\u00a0%',
+describe('nextStep', () => {
+    it('recommends the earliest stage left of all, the first standard winning a tie, with how many centers it covers', () => {
+        const step = nextStep([
+            center('Planta', { nom035: at(5), nom037: at(1), seating: at(3) }),
+            center('Oficinas', { nom035: at(2), nom037: at(1) }),
+        ]);
+
+        expect(step).toEqual({
+            norm: 'nom037',
+            stage: 1,
+            centers: 2,
+            title: 'Define las reglas del teletrabajo',
+            text: 'Tu Política de Teletrabajo es la base: dice horarios, desconexión y cómo se regresa a la oficina. Sin ella, lo demás no se sostiene.',
+        });
+        expect(nextStep([center('Planta', { nom035: at(2) })])?.norm).toBe(
+            'nom035',
         );
     });
-});
 
-describe('highRiskShare', () => {
-    it('gives the share in Alto or Muy alto', () => {
-        expect(highRiskShare([2, 6, 3, 3, 15])).toBe('62\u00a0%');
-        expect(highRiskShare([0, 0, 0, 0, 0])).toBe('0\u00a0%');
-    });
-});
-
-describe('dashboardView', () => {
-    const view = (changes: Partial<Parameters<typeof dashboardView>[0]>) =>
-        dashboardView({
-            hasWorkCenters: true,
-            hasActive: false,
-            steps: 0,
-            closed: 0,
-            ...changes,
-        });
-
-    it('points to the work centers first, then waits for the first campaign', () => {
-        expect(view({ hasWorkCenters: false, hasActive: true })).toBe(
-            'no-work-centers',
-        );
-        expect(view({})).toBe('no-campaigns');
-        expect(view({ hasActive: true })).toBe('panel');
-        expect(view({ steps: 1 })).toBe('panel');
-        expect(view({ closed: 1 })).toBe('panel');
+    it('has nothing to recommend when every route that applies is done', () => {
+        expect(nextStep([center('Planta', {})])).toBeNull();
+        expect(nextStep([])).toBeNull();
     });
 });

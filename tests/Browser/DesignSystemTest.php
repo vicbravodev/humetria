@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\Tenancy\Models\WorkCenter;
 use Pest\Browser\Api\AwaitableWebpage;
 
 $looks = [
@@ -224,13 +223,10 @@ it('greets an empty list with an icon and what comes next', function (string $ur
     ['/admin/demo-requests', 'demos/index', 'Aún no hay solicitudes'],
 ]);
 
-it('greets a company without campaigns with an icon and what comes next', function (): void {
-    $panel = signInToPanel(superadmin());
-    // With a work center already: without one, the panel points there first (see WorkCentersTest).
-    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->sole())->create();
-
-    visitPage('dashboard', $panel)
-        ->assertSeeIn('[data-slot="empty-state"] h2', 'Aún no hay campañas')
+// Rediseño v2: the panel always shows the routes; its one empty state is the company without work centers (V3-Estados).
+it('greets a company without work centers with an icon and what comes next', function (): void {
+    visitPage('dashboard', signInToPanel(superadmin()))
+        ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tu primer centro de trabajo')
         ->assertPresent('[data-slot="empty-state"] svg');
 });
 

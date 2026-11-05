@@ -181,8 +181,8 @@ it('points a company without work centers from its panel to them', function (boo
     $url = signInToPanel();
 
     visitPage('dashboard', $url, $dark, $mobile)
-        ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tus centros de trabajo')
-        ->click('Ir a centros de trabajo')
+        ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tu primer centro de trabajo')
+        ->click('Agregar centro')
         ->assertPathIs('/admin/acme/work-centers');
 })->with($looks);
 
