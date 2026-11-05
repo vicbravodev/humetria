@@ -172,5 +172,7 @@ it('shows on the results where the Programa stands, with the way to it', functio
     visitPage('results/show', "{$url}/campaigns/{$campaign}/results", $dark, $mobile)
         ->assertSee('Programa de intervención')
         ->assertSee('Con acciones vencidas')
-        ->assertSee('Ver el Programa');
+        ->assertSee('Ver el Programa')
+        // On a phone the state goes under the title instead of pushing the card past the edge.
+        ->assertScript('() => [...document.querySelectorAll("main section")].every((section) => section.getBoundingClientRect().right <= window.innerWidth)', true);
 })->with($looks);
