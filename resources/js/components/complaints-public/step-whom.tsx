@@ -5,7 +5,7 @@ import type { Draft } from '@/lib/complaints/form';
 import { NOTICE } from '@/lib/complaints/form';
 import type { ComplaintKindOption } from '@/types';
 
-/** Step 3: where it happened and against whom (or, in the notice of an event, who was involved). */
+/** Step 2 of 4: who is involved, by role and never by name (or, in the notice of an event, its names), and where. */
 export default function WhomStep({
     code,
     kinds,
@@ -19,11 +19,19 @@ export default function WhomStep({
 }) {
     return (
         <div className="flex flex-col gap-6">
-            <h2 className="text-xl font-semibold">
-                {draft.type === NOTICE
-                    ? '¿Dónde ocurrió?'
-                    : '¿Dónde y de quién se trata?'}
-            </h2>
+            <div className="flex flex-col gap-1.5">
+                <h2 className="text-[22px] leading-7 font-semibold">
+                    {draft.type === NOTICE
+                        ? '¿Dónde ocurrió y quiénes estuvieron?'
+                        : '¿Quién está involucrado?'}
+                </h2>
+                {draft.type !== NOTICE && (
+                    <p className="text-base text-muted-foreground">
+                        Así llega a alguien que no tiene que ver con lo que
+                        pasó. No le pedimos nombres.
+                    </p>
+                )}
+            </div>
             <CenterField
                 code={code}
                 value={draft.workCenter}

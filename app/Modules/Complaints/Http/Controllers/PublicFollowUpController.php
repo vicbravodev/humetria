@@ -33,7 +33,7 @@ final class PublicFollowUpController extends Controller
             return Inertia::render('complaints-public/unavailable', $pages->unavailable())->toResponse($request)->setStatusCode(404);
         }
 
-        return Inertia::render('complaints-public/follow-up', ['code' => $opened->channel->access_code, 'company' => $opened->company])->toResponse($request);
+        return Inertia::render('complaints-public/follow-up', $pages->followUp($opened))->toResponse($request);
     }
 
     public function open(FollowUpRequest $request, OpenFollowUp $open, FollowUpPages $pages): JsonResponse

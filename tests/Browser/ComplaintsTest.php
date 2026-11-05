@@ -163,9 +163,12 @@ it('opens the public form of the channel with what to read first, and leaves no 
 
     visitPage('complaints-public/form', "/c/{$channel->access_code}", $dark, $mobile)
         ->assertSee('Acme Industrial')
-        ->assertSee('Quejas y denuncias')
-        ->assertSee('Cómo se atiende')
-        ->assertSee('Qué protegemos y qué no')
+        ->assertSee('¿Algo no está bien en su trabajo?')
+        ->assertSee('Le confirmamos que la recibimos en 3 días')
+        ->assertSee('Qué puede identificarle aunque no dé su nombre')
+        ->assertSee('Cómo se atiende su queja')
+        ->assertSee('Ya presenté una: ver cómo va')
+        ->assertSee('Inspección Federal del Trabajo')
         ->assertScript('() => document.cookie', '');
 })->with($looks);
 
@@ -189,40 +192,42 @@ function openChannelWithHandler(): ComplaintChannel
     return ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
 }
 
-it('walks the form step by step and hands back a reference and a key once', function (bool $mobile): void {
+// Rediseño v2 (board V4-Quejas-Form): four steps — what, who is involved, what happened, how to follow it up — the last
+// one sends, with no step to review; the key is still the one the system generates (decisión A9).
+it('walks the four steps of the form and hands back a reference and a key once', function (bool $mobile): void {
     // A robot is quicker than any person: the three seconds of the ticket have their own tests.
     config(['complaints.ticket.min_seconds' => 0]);
     $channel = openChannelWithHandler();
     $page = $mobile ? visit("/c/{$channel->access_code}")->on()->mobile() : visit("/c/{$channel->access_code}");
 
-    $page->click('Quiero presentar una queja')
-        ->assertSee('¿Qué quiere informar?')
+    $page->click('Presentar una queja')
+        ->assertSee('Paso 1 de 4')
+        ->assertSee('¿Qué quiere reportar?')
+        ->press('Continuar')
+        ->assertSee('Elija qué quiere informar.')
         ->click('Denuncia de violencia laboral')
         ->press('Continuar')
-        ->assertSee('¿Qué pasó?')
-        ->press('Continuar')
-        ->assertSee('Cuéntenos un poco más')
-        ->fill('#complaint-description', 'Mi jefe me grita todos los días frente a mis compañeros y me amenaza.')
-        ->press('Continuar')
-        ->assertSee('¿Dónde y de quién se trata?')
+        ->assertSee('Paso 2 de 4')
+        ->assertSee('¿Quién está involucrado?')
         ->assertSee('Por ahora la empresa no tiene a nadie independiente')
         ->press('Continuar')
         ->assertSee('Elija de quién se trata')
         ->click('Mi jefa o jefe inmediato')
         ->press('Continuar')
-        ->assertSee('¿Cómo quiere ir?')
-        ->assertNoAccessibilityIssues(1)
+        ->assertSee('Cuéntenos qué pasó')
         ->press('Continuar')
-        ->assertSee('¿Quiere que le avisemos cuando haya novedades?')
-        ->assertNoAccessibilityIssues(1)
+        ->assertSee('Cuéntenos un poco más')
+        ->fill('#complaint-description', 'Mi jefe me grita todos los días frente a mis compañeros y me amenaza.')
         ->press('Continuar')
-        ->assertSee('Revise antes de enviar')
-        ->assertSee('Anónima: sin nombre ni contacto')
+        ->assertSee('Paso 4 de 4')
+        ->assertSee('¿Cómo quiere darle seguimiento?')
         ->assertNoAccessibilityIssues(1)
-        ->press('Enviar mi queja')
+        ->press('Enviar queja')
         ->assertSee('Recibimos su queja')
-        ->assertSee('Referencia')
-        ->assertSee('Clave')
+        ->assertSee('Le confirmaremos que alguien la leyó a más tardar el')
+        ->assertSee('Su referencia')
+        ->assertSee('Su clave')
+        ->assertSee('la clave no se puede recuperar')
         ->assertScript('() => document.cookie', '')
         ->assertNoJavaScriptErrors();
 
@@ -230,11 +235,26 @@ it('walks the form step by step and hands back a reference and a key once', func
         ->and(Complaint::query()->withoutGlobalScopes()->first()?->description)->toContain('me grita');
 })->with([[false], [true]]);
 
+it('goes back a step without losing what was written', function (): void {
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")->on()->mobile()
+        ->click('Presentar una queja')
+        ->click('Denuncia de violencia laboral')
+        ->press('Continuar')
+        ->click('Atrás')
+        ->assertSee('¿Qué quiere reportar?')
+        ->assertChecked('[name="type"][value="workplace_violence"]')
+        ->click('Atrás')
+        ->assertSee('Presentar una queja')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows the form steps without accessibility issues and with room for a finger', function (): void {
     $channel = openChannelWithHandler();
 
     visit("/c/{$channel->access_code}")->on()->mobile()
-        ->click('Quiero presentar una queja')
+        ->click('Presentar una queja')
         ->assertNoAccessibilityIssues(1)
         ->assertScript(smallTouchTargets(), '')
         ->click('Queja por una práctica opuesta a un entorno favorable')
@@ -248,25 +268,21 @@ it('sends a confidential complaint with the name that only its handlers read', f
     $channel = openChannelWithHandler();
 
     visit("/c/{$channel->access_code}")
-        ->click('Quiero presentar una queja')
+        ->click('Presentar una queja')
         ->click('Queja por una práctica opuesta a un entorno favorable')
-        ->press('Continuar')
-        ->fill('#complaint-description', 'Las cargas de trabajo del turno de noche son excesivas desde hace meses.')
         ->press('Continuar')
         ->click('Una compañera o compañero')
         ->press('Continuar')
-        ->click('[name="identity_mode"][value="confidential"]')
+        ->fill('#complaint-description', 'Las cargas de trabajo del turno de noche son excesivas desde hace meses.')
         ->press('Continuar')
+        ->click('[name="identity_mode"][value="confidential"]')
+        ->press('Enviar queja')
         ->assertSee('Escriba su nombre.')
         ->fill('#reporter-name', 'Rosa Aguilar')
-        ->press('Continuar')
         ->fill('#notify-email', 'rosa.privada@ejemplo.mx')
-        ->press('Continuar')
-        ->assertSee('Confidencial, con su nombre (Rosa Aguilar)')
-        ->assertSee('Sí: le avisaremos a su correo. Nadie lo verá.')
-        ->assertDontSee('rosa.privada@ejemplo.mx')
-        ->press('Enviar mi queja')
+        ->press('Enviar queja')
         ->assertSee('Recibimos su queja')
+        ->assertDontSee('rosa.privada@ejemplo.mx')
         ->assertNoJavaScriptErrors();
 
     $complaint = Complaint::query()->withoutGlobalScopes()->sole();
@@ -278,8 +294,11 @@ it('asks for the day and the name of the notice of a traumatic event, and sends 
     $channel = openChannelWithHandler();
 
     visit("/c/{$channel->access_code}")
-        ->click('Quiero presentar una queja')
+        ->click('Presentar una queja')
         ->click('Aviso de un acontecimiento traumático severo')
+        ->press('Continuar')
+        ->assertSee('¿Dónde ocurrió y quiénes estuvieron?')
+        ->assertDontSee('¿Quién está involucrado?')
         ->press('Continuar')
         ->fill('#complaint-description', 'Presencié un accidente en el que un compañero perdió la mano en la prensa.')
         ->press('Continuar')
@@ -287,15 +306,11 @@ it('asks for the day and the name of the notice of a traumatic event, and sends 
         ->click('#complaint-date')
         ->click('[data-day] button[tabindex="0"]')
         ->press('Continuar')
-        ->assertSee('¿Dónde ocurrió?')
-        ->assertDontSee('¿De quién se trata?')
-        ->press('Continuar')
         ->assertSee('Este aviso necesita su nombre')
+        ->press('Enviar queja')
+        ->assertSee('Escriba su nombre.')
         ->fill('#reporter-name', 'Rosa Aguilar')
-        ->press('Continuar')
-        ->press('Continuar')
-        ->assertSee('Fecha en que ocurrió')
-        ->press('Enviar mi queja')
+        ->press('Enviar queja')
         ->assertSee('Recibimos su queja')
         ->assertNoJavaScriptErrors();
 
@@ -513,11 +528,23 @@ it('asks for the reference and the key to follow a complaint up', function (bool
     [$channel] = followedComplaint();
 
     visitPage('complaints-public/follow-up', "/c/{$channel->access_code}/follow-up", $dark, $mobile)
-        ->assertSee('Seguimiento de su queja')
+        ->assertSee('Ver cómo va su queja')
         ->assertSee('Referencia')
-        ->assertSee('Abrir mi caso')
+        ->assertSee('Ver mi queja')
+        ->assertSee('Si perdió la clave no podemos recuperarla')
+        ->assertDontSee('El canal está en pausa')
         ->assertScript('() => document.cookie', '');
 })->with($looks);
+
+it('says the channel is paused while the people with a complaint follow it, with the other way', function (): void {
+    [$channel] = followedComplaint();
+    $channel->forceFill(['paused_at' => now()])->save();
+
+    visitPage('complaints-public/follow-up', "/c/{$channel->access_code}/follow-up", false, true)
+        ->assertSee('El canal está en pausa')
+        ->assertSee('Inspección Federal del Trabajo')
+        ->assertSee('Ver mi queja');
+});
 
 it('opens the case with the reference and the key, and writes in it', function (bool $mobile): void {
     [$channel, $complaint] = followedComplaint();
@@ -525,9 +552,11 @@ it('opens the case with the reference and the key, and writes in it', function (
 
     $page->fill('#follow-up-reference', 'abcd 2345')
         ->fill('#follow-up-key', 'keyk-1234-keyk-5678-keyk')
-        ->press('Abrir mi caso')
-        ->assertSee('Su queja')
-        ->assertSee('Recibida')
+        ->press('Ver mi queja')
+        ->assertSee('ABCD2345')
+        ->assertSee('Recibimos su queja')
+        ->assertSee('Le responderemos a más tardar el')
+        ->assertSee('Alguien la leyó')
         ->assertSee('Persona encargada')
         ->assertSee('Acusamos recibo de su queja.')
         ->assertNoAccessibilityIssues(1)
@@ -536,6 +565,9 @@ it('opens the case with the reference and the key, and writes in it', function (
         ->assertSee('Sigue pasando y ahora lo hace delante de todos.')
         ->assertSee('Usted')
         ->assertScript('() => document.cookie', '')
+        ->click('Salir')
+        ->assertSee('Ver cómo va su queja')
+        ->assertDontSee('Sigue pasando')
         ->assertNoJavaScriptErrors();
 
     expect(App\Modules\Complaints\Models\ComplaintEntry::query()->withoutGlobalScopes()->where('complaint_id', $complaint->id)->where('kind', 'reporter_message')->count())->toBe(1);
@@ -547,14 +579,14 @@ it('says the same when the key is wrong, and lets the person withdraw their comp
     visit("/c/{$channel->access_code}/follow-up")
         ->fill('#follow-up-reference', 'ABCD2345')
         ->fill('#follow-up-key', 'WRONGWRONGWRONGWRONG')
-        ->press('Abrir mi caso')
+        ->press('Ver mi queja')
         ->assertSee('La referencia o la clave no coinciden.')
         ->fill('#follow-up-key', 'KEYK1234KEYK5678KEYK')
-        ->press('Abrir mi caso')
-        ->assertSee('Su queja')
+        ->press('Ver mi queja')
+        ->assertSee('Recibimos su queja')
         ->click('Retirar mi queja')
         ->click('[role="dialog"] button:has-text("Retirar mi queja")')
-        ->assertSee('Cerrada')
+        ->assertSee('Su queja se cerró')
         ->assertSee('Usted retiró el caso.')
         ->assertNoJavaScriptErrors();
 
@@ -564,7 +596,7 @@ it('says the same when the key is wrong, and lets the person withdraw their comp
 it('links the receipt to the follow-up and the form to it', function (): void {
     $channel = openChannelWithHandler();
 
-    visit("/c/{$channel->access_code}")->assertSee('Ya presenté una queja: ver cómo va')->assertNoJavaScriptErrors();
+    visit("/c/{$channel->access_code}")->assertSee('Ya presenté una: ver cómo va')->click('a[href$="/follow-up"]')->assertSee('Ver cómo va su queja')->assertNoJavaScriptErrors();
 });
 
 it('shows the evidence of the mechanism, ready to print, with no case in it', function (bool $dark, bool $mobile): void {
@@ -612,26 +644,24 @@ it('opens the poster from the channel page', function (): void {
     visit("{$url}/complaints/channel")->click('Cartel para imprimir')->assertSee('¿Algo no está bien en su trabajo?')->assertNoJavaScriptErrors();
 });
 
-it('asks for a real address on the optional step and lets it stay empty', function (): void {
+it('asks for a real address on the last step and lets it stay empty', function (): void {
     config(['complaints.ticket.min_seconds' => 0]);
     $channel = openChannelWithHandler();
 
     visit("/c/{$channel->access_code}")->on()->mobile()
-        ->click('Quiero presentar una queja')
+        ->click('Presentar una queja')
         ->click('Queja por una práctica opuesta a un entorno favorable')
-        ->press('Continuar')
-        ->fill('#complaint-description', 'Las cargas de trabajo del turno de noche son excesivas desde hace meses.')
         ->press('Continuar')
         ->click('Una compañera o compañero')
         ->press('Continuar')
+        ->fill('#complaint-description', 'Las cargas de trabajo del turno de noche son excesivas desde hace meses.')
         ->press('Continuar')
         ->fill('#notify-email', 'no es un correo')
-        ->press('Continuar')
+        ->press('Enviar queja')
         ->assertSee('Escriba un correo válido o déjelo vacío.')
         ->assertScript(smallTouchTargets(), '')
         ->fill('#notify-email', '')
-        ->press('Continuar')
-        ->assertSee('Aviso por correo')
-        ->assertSee('No')
+        ->press('Enviar queja')
+        ->assertSee('Recibimos su queja')
         ->assertNoJavaScriptErrors();
 });

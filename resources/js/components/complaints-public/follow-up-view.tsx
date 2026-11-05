@@ -1,9 +1,11 @@
-import { Undo2 } from 'lucide-react';
+import { LogOut, Undo2 } from 'lucide-react';
 import FollowUpReply from '@/components/complaints-public/follow-up-reply';
+import FollowUpSteps from '@/components/complaints-public/follow-up-steps';
 import FollowUpThread from '@/components/complaints-public/follow-up-thread';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { describeDate } from '@/lib/calendar-date';
+import { followUpTitle } from '@/lib/complaints/follow-up';
 import { countOf } from '@/lib/plural';
 import type { FollowUp } from '@/types';
 
@@ -13,36 +15,40 @@ type Actions = {
     onPage: (page: number) => void;
     onReply: (body: string, onDone: () => void) => void;
     onWithdraw: () => void;
+    /** Forgets the reference and the key and goes back to asking for them. */
+    onLeave: () => void;
 };
 
 /** Where the complaint stands, in general words; what has been written; and what the person may still do. */
 export default function FollowUpView({
+    reference,
     view,
     actions,
 }: {
+    reference: string;
     view: FollowUp;
     actions: Actions;
 }) {
     return (
         <>
-            <section className="flex flex-col gap-3 card p-5">
-                <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="text-xl font-semibold">Su queja</h2>
-                    <Badge
-                        variant={
-                            view.status === 'closed' ? 'secondary' : 'default'
-                        }
-                    >
-                        {view.statusLabel}
-                    </Badge>
-                </div>
-                {view.resolution !== null && <p>{view.resolution}</p>}
-                <p className="text-base text-muted-foreground">
-                    {view.handlers === 0
-                        ? 'Por ahora no la tiene asignada nadie: la empresa lo sabe.'
-                        : `La atiende${view.handlers === 1 ? '' : 'n'} ${countOf(view.handlers, 'persona', 'personas')}. No le diremos quiénes son.`}
+            <div className="flex flex-col gap-1.5">
+                <p className="font-mono text-sm font-semibold text-muted-foreground">
+                    {reference}
                 </p>
-            </section>
+                <h1 className="text-[26px] leading-8 font-semibold tracking-[-0.01em]">
+                    {followUpTitle(view.status)}
+                </h1>
+                <p className="text-muted-foreground">
+                    {view.resolution ??
+                        `Le responderemos a más tardar el ${describeDate(view.respondBy) ?? view.respondBy}.`}
+                </p>
+            </div>
+            <FollowUpSteps view={view} />
+            <p className="text-sm text-muted-foreground">
+                {view.handlers === 0
+                    ? 'Por ahora no la tiene asignada nadie: la empresa lo sabe.'
+                    : `La atiende${view.handlers === 1 ? '' : 'n'} ${countOf(view.handlers, 'persona', 'personas')}. No le diremos quiénes son.`}
+            </p>
             <FollowUpThread
                 entries={view.entries}
                 processing={actions.processing}
@@ -62,13 +68,21 @@ export default function FollowUpView({
                     confirmLabel="Retirar mi queja"
                     onConfirm={actions.onWithdraw}
                     trigger={
-                        <Button variant="outline" className="self-start">
+                        <Button variant="ghost" className="self-start">
                             <Undo2 aria-hidden />
                             Retirar mi queja
                         </Button>
                     }
                 />
             )}
+            <Button
+                variant="outline"
+                className="w-full"
+                onClick={actions.onLeave}
+            >
+                <LogOut aria-hidden />
+                Salir
+            </Button>
         </>
     );
 }

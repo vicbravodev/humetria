@@ -8,6 +8,7 @@ use App\Modules\Complaints\Enums\ComplaintStatus;
 use App\Modules\Complaints\Enums\EntryKind;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
+use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintEntry;
 
 /**
@@ -25,6 +26,7 @@ final readonly class FollowUpPages
     public function view(Complaint $complaint): array
     {
         $closed = $complaint->status === ComplaintStatus::Closed;
+        $resolveDays = ComplaintChannel::query()->find($complaint->channel_id)->resolve_within_days ?? config()->integer('complaints.deadlines.resolve_days');
 
         return [
             'status' => $complaint->status === ComplaintStatus::New ? 'received' : $complaint->status->value,
@@ -33,6 +35,10 @@ final readonly class FollowUpPages
             'handlers' => ComplaintAssignment::query()->where('complaint_id', $complaint->id)->whereNull('ended_on')->count(),
             'canReply' => ! $closed,
             'canWithdraw' => ! $closed,
+            // Days, never hours (decisión D2): when it came, when someone read it and by when it is answered.
+            'receivedOn' => $complaint->received_on->toDateString(),
+            'acknowledgedOn' => $complaint->acknowledged_at?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'respondBy' => $complaint->received_on->addDays($resolveDays)->toDateString(),
             'entries' => $this->entries($complaint),
         ];
     }

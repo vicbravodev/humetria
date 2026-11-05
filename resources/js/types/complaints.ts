@@ -198,6 +198,10 @@ export type FollowUp = {
     handlers: number;
     canReply: boolean;
     canWithdraw: boolean;
+    /** Days, never hours: when it came, when someone read it and by when it is answered. */
+    receivedOn: string;
+    acknowledgedOn: string | null;
+    respondBy: string;
     entries: {
         data: FollowUpEntry[];
         current_page: number;

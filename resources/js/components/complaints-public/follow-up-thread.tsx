@@ -20,7 +20,10 @@ export default function FollowUpThread({
     }
 
     return (
-        <section aria-label="Mensajes" className="flex flex-col gap-3">
+        <section aria-labelledby="messages" className="flex flex-col gap-3">
+            <h2 id="messages" className="text-lg font-semibold">
+                Mensajes
+            </h2>
             <ol className="flex flex-col gap-3">
                 {entries.data.map((entry, index) => (
                     <li

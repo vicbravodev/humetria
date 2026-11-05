@@ -1,24 +1,26 @@
 import type { Option } from '@/lib/option-search';
 
-/** The steps of the form, in order; the person moves between them and none advances alone. */
-export type StepId =
-    | 'intro'
-    | 'type'
-    | 'story'
-    | 'whom'
-    | 'identity'
-    | 'email'
-    | 'review';
+/**
+ * The steps of the form, in order (board V4-Quejas-Form): what, who is involved, what happened and how to follow it up; the
+ * last one sends. The person moves between them and none advances alone.
+ */
+export type StepId = 'intro' | 'type' | 'whom' | 'story' | 'identity';
 
 export const STEPS: readonly StepId[] = [
     'intro',
     'type',
-    'story',
     'whom',
+    'story',
     'identity',
-    'email',
-    'review',
 ];
+
+/** How many steps the person counts: the introduction is not one. */
+export const STEP_COUNT = STEPS.length - 1;
+
+/** «Paso 2 de 4»: where a step falls among the ones the person counts. */
+export function stepNumber(step: StepId): number {
+    return STEPS.indexOf(step);
+}
 
 export type Draft = {
     type: string;
@@ -95,11 +97,7 @@ export function problemWith(
     }
 
     if (step === 'identity') {
-        return identityProblem(draft);
-    }
-
-    if (step === 'email') {
-        return emailProblem(draft.notifyEmail.trim());
+        return identityProblem(draft) ?? emailProblem(draft.notifyEmail.trim());
     }
 
     if (step === 'whom' && draft.respondentKind === '') {

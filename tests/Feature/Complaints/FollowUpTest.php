@@ -50,10 +50,15 @@ it('shows the form that asks for the reference and the key, without a session or
     expect($response->headers->getCookies())->toBe([])->and(DB::table('sessions')->count())->toBe(0);
 });
 
-it('shows that form even while the channel is paused, so the people with a case can still follow it', function (): void {
+it('shows that form even while the channel is paused, so the people with a case can still follow it, and says so with the other way (board V4-Quejas-Seguimiento)', function (): void {
+    $this->get('/c/'.$this->channel->access_code.'/follow-up')->assertInertia(fn (Assert $page) => $page->where('paused', false));
+
     $this->channel->forceFill(['paused_at' => now()])->save();
 
-    $this->get('/c/'.$this->channel->access_code.'/follow-up')->assertOk()->assertInertia(fn (Assert $page) => $page->component('complaints-public/follow-up'));
+    $this->get('/c/'.$this->channel->access_code.'/follow-up')->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->component('complaints-public/follow-up')
+        ->where('paused', true)
+        ->where('alternative.email', config('complaints.external_alternative.email')));
 });
 
 it('answers a code that serves nobody with the same bare 404 page', function (): void {
@@ -76,6 +81,17 @@ it('opens a case for who has its reference and its key, telling them only what t
         ])
         ->and($response->headers->getCookies())->toBe([]);
     expect($response->getContent())->not->toContain('secreta')->not->toContain($this->owner->name)->not->toContain('access_key_hash')->not->toContain('Mi jefe');
+});
+
+it('tells the person the days of their case: when it came, when someone read it and by when it is answered — days, never hours', function (): void {
+    $this->channel->forceFill(['resolve_within_days' => 30])->save();
+    $this->complaint->forceFill(['received_on' => '2026-11-02'])->save();
+
+    expect(followUp($this, '')->json())->toMatchArray(['receivedOn' => '2026-11-02', 'acknowledgedOn' => null, 'respondBy' => '2026-12-02']);
+
+    $this->complaint->forceFill(['acknowledged_at' => '2026-11-04 03:00:00'])->save();
+
+    expect(followUp($this, '')->json('acknowledgedOn'))->toBe('2026-11-03');
 });
 
 it('tells the state in general words: received, in review or closed with its resolution', function (string $status, string $label, ?string $resolution, ?string $words): void {

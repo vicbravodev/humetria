@@ -1,31 +1,30 @@
 import { Head } from '@inertiajs/react';
 import FollowUpForm from '@/components/complaints-public/follow-up-form';
+import FollowUpPaused from '@/components/complaints-public/follow-up-paused';
 import FollowUpView from '@/components/complaints-public/follow-up-view';
 import PublicShell from '@/components/complaints-public/public-shell';
 import { useFollowUp } from '@/hooks/use-follow-up';
+import type { ExternalAlternative } from '@/types';
 
+/** «La persona ve cómo va su queja» (board V4-Quejas-Seguimiento): with its reference and key, its state, messages and a reply. */
 export default function FollowUpPage({
     code,
     company,
+    paused,
+    alternative,
 }: {
     code: string;
     company: string;
+    paused: boolean;
+    alternative: ExternalAlternative;
 }) {
     const state = useFollowUp(code);
 
     return (
         <PublicShell company={company}>
-            <Head title="Seguimiento de su queja" />
-            <div className="flex w-full max-w-2xl flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                        Seguimiento de su queja
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Vea cómo va su caso, lea lo que le responden y escriba
-                        si tiene algo más que decir.
-                    </p>
-                </div>
+            <Head title="Ver cómo va su queja" />
+            <div className="flex w-full max-w-xl flex-col gap-6">
+                {paused && <FollowUpPaused alternative={alternative} />}
                 {state.view === undefined ? (
                     <FollowUpForm
                         error={state.errors['reference']}
@@ -34,6 +33,7 @@ export default function FollowUpPage({
                     />
                 ) : (
                     <FollowUpView
+                        reference={state.reference}
                         view={state.view}
                         actions={{
                             errors: state.errors,
@@ -41,6 +41,7 @@ export default function FollowUpPage({
                             onPage: state.page,
                             onReply: state.reply,
                             onWithdraw: state.withdraw,
+                            onLeave: state.leave,
                         }}
                     />
                 )}
