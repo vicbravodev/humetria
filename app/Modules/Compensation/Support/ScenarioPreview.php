@@ -9,6 +9,7 @@ use App\Modules\Compensation\Data\ConceptCost;
 use App\Modules\Compensation\Data\CostBreakdown;
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Enums\CostConcept;
+use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\Calculation\Money;
@@ -43,6 +44,7 @@ final readonly class ScenarioPreview
 
         return [
             'people' => $cost->people,
+            'groups' => $this->groups($cost),
             'left_out' => $gaps->total - $gaps->costed + array_sum($cost->uncostedGrades),
             'first_year_cents' => $cost->firstYearCents(),
             'first_year_text' => Money::pesos($cost->firstYearCents()),
@@ -53,6 +55,18 @@ final readonly class ScenarioPreview
             'over_today_text' => self::share($cost->firstYearCents(), $cost->beforeCents),
             'benefits' => $this->benefits($cost, $data),
         ];
+    }
+
+    /** @return array<string, int> the people costed in each group, both always there */
+    private function groups(CostBreakdown $cost): array
+    {
+        $people = [];
+
+        foreach (PayGroup::cases() as $group) {
+            $people[$group->value] = array_find($cost->byGroup, fn ($cut): bool => $cut->key === $group->value)->people ?? 0;
+        }
+
+        return $people;
     }
 
     /** A part of a whole as a percent with one decimal and no trailing zero: 1 of 16 is "6.3", 1 of 10 is "10"; of nothing, "0". */

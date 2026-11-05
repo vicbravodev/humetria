@@ -1,3 +1,4 @@
+import type { RaiseUnit } from '@/lib/compensation/scenario-draft';
 import type { TermChangeForm } from '@/lib/compensation/scenarios';
 import type { Paginated, ReportShareRow } from '@/types';
 import type { ChoiceOption } from '@/types/organization';
@@ -144,6 +145,8 @@ export type ScenarioDetail = {
     effective_on: string;
     retroactive_months: number;
     horizon_years: number;
+    raise_unit: RaiseUnit;
+    /** A percent ("5.75") or, for an amount, pesos a month ("608.5"). */
     unionized_raise: string;
     /** Empty when the trusted staff copy the unionized raise. */
     trusted_raise: string;

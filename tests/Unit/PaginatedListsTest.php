@@ -77,6 +77,7 @@ const ARRAY_PROPS = [
     'compensation/scenario-compare:scenarios' => 'resumen corto: de dos a cuatro escenarios comparados',
     'compensation/scenario-compare:rows' => 'resumen corto: un renglón por concepto del costo, menos de cuarenta',
     'compensation/scenario:horizons' => 'catálogo fijo: 3, 4 o 5 años',
+    'compensation/scenario:others' => 'resumen corto: a lo más 4 escenarios activos para comparar el costo (ScenarioEditor::OTHERS)',
     'complaints/handlers:handlers' => 'resumen corto: las personas que atienden quejas, pocas por empresa',
     'complaints/channel:coverage' => 'catálogo fijo: las seis opciones de «contra quién», cada una con quienes la reciben (pocas por empresa)',
     'complaints/channel:candidates' => 'quienes pueden ser designadas: las personas de la empresa con un rol que permite atender quejas, pocas',

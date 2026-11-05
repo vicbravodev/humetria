@@ -57,16 +57,12 @@ final class ScenarioController extends Controller
     // parameters in order.
     public function store(ScenarioRequest $request, SaveScenario $save): RedirectResponse
     {
-        $save->handle($request->toData());
-
-        return $this->done('Escenario guardado.');
+        return $this->done($save->handle($request->toData()));
     }
 
     public function update(ScenarioRequest $request, mixed $tenant, string $scenario, SaveScenario $save): RedirectResponse
     {
-        $save->handle($request->toData(Scenario::query()->findOrFail($scenario)->id));
-
-        return $this->done('Escenario guardado.');
+        return $this->done($save->handle($request->toData(Scenario::query()->findOrFail($scenario)->id)));
     }
 
     public function duplicate(mixed $tenant, string $scenario, DuplicateScenario $duplicate): RedirectResponse
@@ -87,11 +83,12 @@ final class ScenarioController extends Controller
         return back();
     }
 
-    private function done(string $message): RedirectResponse
+    /** «Guardar y ver reporte» (board V4-Comp-Escenario): a saved scenario opens its report. */
+    private function done(Scenario $saved): RedirectResponse
     {
-        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Escenario guardado.']);
 
-        return to_route('tenant.compensation.scenarios.index', request()->route('tenant'));
+        return to_route('tenant.compensation.scenarios.report', [request()->route('tenant'), $saved->id]);
     }
 
     private function today(): CarbonImmutable

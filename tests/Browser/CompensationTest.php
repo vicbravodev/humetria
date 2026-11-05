@@ -356,15 +356,10 @@ it('takes a union from its roster to a report shared with someone who has no acc
     visit('/admin/sindicato/compensation/scenarios/create')
         ->fill('name', 'Propuesta del sindicato')
         ->fill('unionized_raise', '6')
-        ->press('Guardar escenario')
+        ->assertSee('sobre lo que hoy paga la empresa')
+        ->press('Guardar y ver reporte')
         ->assertSee('Escenario guardado.')
         ->assertSee('Propuesta del sindicato')
-        ->assertSee('8 personas costeadas')
-        ->assertNoJavaScriptErrors();
-
-    $scenario = Scenario::query()->withoutGlobalScopes()->sole();
-
-    visit("/admin/sindicato/compensation/scenarios/{$scenario->id}/report")
         ->assertSee('8 de 8 personas costeadas')
         ->assertSee('Valor para la persona y costo para la empresa')
         ->click('Compartir')
@@ -400,25 +395,66 @@ it('shows the editor of a new scenario with its assumptions', function (bool $da
 
     visitPage('compensation/scenario', "{$url}/compensation/scenarios/create", $dark, $mobile)
         ->assertSee('Nuevo escenario')
-        ->assertSee('Aumento al salario')
-        ->assertSee('Supuestos de largo plazo')
+        ->assertSee('Nada se guarda hasta que tú lo decidas.')
+        ->assertSee('El aumento al salario')
+        ->assertSee('Costo del primer año')
+        ->assertSee('Supuestos de los años siguientes')
+        ->click('Revisar')
         ->assertSee('Meta de inflación del Banco de México');
 })->with($looks);
 
-it('makes a scenario from its editor and finds it in the list', function (): void {
+it('costs the scenario as it is moved, against the others of the account, before saving anything (board V4-Comp-Escenario)', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    Employee::factory()->count(3)->sequence(fn ($sequence) => ['employee_number' => 'E-00'.$sequence->index])->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => null, 'employee_number' => 'E-900']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027 · 4 %', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
+
+    visitPage('compensation/scenario', "{$url}/compensation/scenarios/create", $dark, $mobile, fn ($page) => $page
+        ->assertSee('3 personas')
+        ->click('[aria-label="Subir sindicalizados"]')
+        ->click('[aria-label="Subir retroactivo"]')
+        ->assertSee('Incluye')
+        ->assertSee('1 persona queda fuera porque no tiene categoría o salario.'))
+        ->assertSee('Frente a tus otros escenarios')
+        ->assertSee('Revisión 2027 · 4 %')
+        ->assertSee('Este escenario');
+
+    expect(Scenario::query()->withoutGlobalScopes()->count())->toBe(1);
+})->with($looks);
+
+it('makes a scenario from its editor and opens its report', function (): void {
     $url = signInToPanel();
 
     visit("{$url}/compensation/scenarios/create")
         ->fill('name', 'Revisión 2027')
         ->fill('unionized_raise', '5.75')
-        ->press('Guardar escenario')
-        ->assertPathIs("{$url}/compensation/scenarios")
+        ->press('Guardar y ver reporte')
+        ->assertPathBeginsWith("{$url}/compensation/scenarios/")
         ->assertSee('Escenario guardado.')
+        ->assertSee('Reporte de impacto')
         ->assertSee('Revisión 2027')
-        ->assertSee('5.75 % sindicalizados y confianza')
         ->assertNoJavaScriptErrors();
 
     expect(Scenario::query()->withoutGlobalScopes()->sole()->group_changes)->toEqual(['unionized' => 575, 'trusted' => null]);
+});
+
+it('saves a raise of a fixed amount a month from the editor', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/scenarios/create")
+        ->fill('name', 'Monto fijo')
+        ->click('Monto fijo al mes')
+        ->fill('unionized_raise', '608')
+        ->press('Guardar y ver reporte')
+        ->assertSee('Escenario guardado.')
+        ->assertNoJavaScriptErrors();
+
+    $scenario = Scenario::query()->withoutGlobalScopes()->sole();
+
+    expect($scenario->raise_unit->value)->toBe('amount')->and($scenario->group_changes)->toEqual(['unionized' => 60_800, 'trusted' => null]);
 });
 
 it('adds a benefit to change in the editor, in its own unit, and saves its new value', function (): void {
@@ -431,11 +467,11 @@ it('adds a benefit to change in the editor, in its own unit, and saves its new v
         ->click('#scenario-benefit-search')
         ->type('[role="combobox"][aria-controls="scenario-benefit-search-options"]', 'transp')
         ->click('[role="option"]:has-text("Bono de transporte")')
-        ->assertSee('No está en el contrato de hoy')
+        ->assertSee('Nueva en el contrato')
         ->assertSee('Valor nuevo (pesos)')
         ->fill('[name="term_changes[0][value]"]', '1500')
         ->fill('unionized_raise', '0')
-        ->press('Guardar escenario')
+        ->press('Guardar y ver reporte')
         ->assertSee('Escenario guardado.')
         ->assertNoJavaScriptErrors();
 
@@ -448,7 +484,8 @@ it('shows what is wrong in the editor without saving', function (): void {
     visit("{$url}/compensation/scenarios/create")
         ->fill('name', 'Revisión 2027')
         ->fill('unionized_raise', 'cinco')
-        ->press('Guardar escenario')
+        ->assertSee('Escribe un porcentaje como 5 o 5.75.')
+        ->press('Guardar y ver reporte')
         ->assertSee('Escribe un porcentaje como 5 o 5.75.')
         ->assertNoJavaScriptErrors();
 

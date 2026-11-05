@@ -57,6 +57,7 @@ it('costs what is typed with the engine of the report, and saves nothing', funct
     expect(Scenario::query()->count())->toBe(1)
         ->and($response->json())->toMatchArray([
             'people' => 10,
+            'groups' => ['unionized' => 10, 'trusted' => 0],
             'left_out' => 2,
             'first_year_cents' => $cost->firstYearCents(),
             'first_year_text' => Money::pesos($cost->firstYearCents()),
