@@ -183,6 +183,7 @@ layouts/  hooks/  lib/  types/
   de arco, pestañas con conteo, estados vacíos con siguiente paso). Una pantalla que se vea como un formulario o una
   tabla sin diseñar no está terminada. Antes de cerrar un trabajo con UI, se revisa en el navegador en claro, oscuro
   y a 375 px contra la pantalla de referencia.
+- Para las pantallas que cubre, el estándar es además el rediseño v2 de `docs/rediseno/` (mapa en su `MAPA.md`).
 - Un solo acento (`primary`); `brand-soft` y `brand-deep` solo dentro del logo.
 - Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
   entra ahí con su par.
