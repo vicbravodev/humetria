@@ -6,8 +6,8 @@ import {
 } from '@/routes/tenant/disclosure';
 import { index as interventions } from '@/routes/tenant/interventions';
 import {
-    center as seatingCenter,
     dossier as seatingDossier,
+    route as seatingRoute,
 } from '@/routes/tenant/seating';
 import {
     dossier as teleworkDossier,
@@ -41,8 +41,8 @@ export function dossierHref(
 
 /**
  * Where each of the six stages of a route is done today (board V3-Movil), until the pages of each route arrive with its
- * own PR: the policies and documents of the company, the center's page, and the dossier last. NOM-037 already has its
- * route page (board V2-Ruta-N037), where every stage is done.
+ * own PR: the policies and documents of the company, the center's page, and the dossier last. NOM-037 and Ley Silla
+ * already have their route pages (boards V2-Ruta-N037 and V2-Ruta-Silla), where every stage is done.
  */
 export function stageHrefs(
     norm: NormKey,
@@ -68,7 +68,7 @@ export function stageHrefs(
             ];
         default:
             return [
-                ...Array.from({ length: 5 }, () => seatingCenter(center)),
+                ...Array.from({ length: 5 }, () => seatingRoute(center)),
                 dossierHref(norm, tenantSlug, workCenterId),
             ];
     }

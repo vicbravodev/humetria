@@ -18,8 +18,7 @@ final readonly class CompanySeatingRoute implements SeatingRoute
         $progress = [];
 
         foreach (ComplianceFacts::ofMany($own, $this->committee) as $id => $facts) {
-            $declaredOn = $facts->profile === null ? null : str_replace('.', '', $facts->profile->declared_on->isoFormat('D MMM YYYY'));
-            $progress[$id] = RouteStages::from($this->rows->fromFacts($facts), $facts->profile->no_standing_positions ?? false, $facts->positions->isNotEmpty(), $declaredOn);
+            $progress[$id] = RouteStages::ofFacts($facts, $this->rows->fromFacts($facts));
         }
 
         return $progress;

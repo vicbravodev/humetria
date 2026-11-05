@@ -18,7 +18,7 @@ use Inertia\Response;
 /**
  * The printable dossier of one work center for an inspection. Owner, hr and the Comisión of the center read it; the viewer
  * gets a 403 and a center the person cannot see is a 404. Every view goes to the audit trail and the log, with the id of the
- * center only.
+ * center only. `?ready=1` keeps only what the center can show (board V3-Inspeccion).
  */
 final class DossierController extends Controller
 {
@@ -35,6 +35,6 @@ final class DossierController extends Controller
         $audit->handle('seating.dossier_viewed', null, $record);
         Log::info('seating.dossier_viewed', $record);
 
-        return Inertia::render('seating/dossier', $dossier->build($profile, $user->name));
+        return Inertia::render('seating/dossier', $dossier->build($profile, $user->name, $request->boolean('ready')));
     }
 }

@@ -1,21 +1,11 @@
 import { STAGES } from '@/lib/compliance-routes';
-import type {
-    RouteAccidents,
-    RouteProgress,
-    RouteRow,
-    RouteStageState,
-} from '@/types';
+import { stagesOf } from '@/lib/route-stages';
+import type { RouteStage } from '@/lib/route-stages';
+import type { RouteAccidents, RouteProgress, RouteRow } from '@/types';
 import { shortDay } from '@/lib/telework/accident';
 
-export type RouteStage = {
-    number: number;
-    title: string;
-    text: string;
-    state: RouteStageState;
-    rows: RouteRow[];
-    /** What a done stage says in one line. */
-    summary: string;
-};
+export type { RouteStage } from '@/lib/route-stages';
+export { inspectionReach, stageDone, stageHref } from '@/lib/route-stages';
 
 /** The documents of the first stage besides the policy (5.3, 5.6, 5.8, 5.10, 5.13 and 5.14). */
 const POLICY = '5.2';
@@ -34,39 +24,14 @@ export function routeStages(
     route: RouteProgress,
     rows: RouteRow[],
 ): RouteStage[] {
-    const current = route.done.indexOf(false);
-
-    return STAGES.nom037.map((stage, index) => ({
-        number: index + 1,
-        title: stage.title,
-        text: stage.text,
-        state:
-            route.done[index] === true
-                ? 'done'
-                : index === current
-                  ? 'current'
-                  : 'pending',
-        rows: rows.filter((row) => row.stage === index + 1),
-        summary: SUMMARIES[index] ?? '',
-    }));
-}
-
-/** «Si hoy llegara una inspección»: what the center could show of what applies, and where it gets by ending its stage. */
-export function inspectionReach(
-    rows: RouteRow[],
-    stage: RouteStage | undefined,
-): { ready: number; applicable: number; afterStage: number } {
-    const applicable = rows.filter((row) => row.state !== 'not_applicable');
-    const ready = applicable.filter((row) => row.state === 'done').length;
-    const left =
-        stage === undefined
-            ? 0
-            : stage.rows.filter(
-                  (row) =>
-                      row.state !== 'done' && row.state !== 'not_applicable',
-              ).length;
-
-    return { ready, applicable: applicable.length, afterStage: ready + left };
+    return stagesOf(
+        STAGES.nom037.map((stage, index) => ({
+            ...stage,
+            summary: SUMMARIES[index] ?? '',
+        })),
+        route,
+        rows,
+    );
 }
 
 /** The first stage as tasks: the policy alone, then its supporting documents together (k of 6 ready). */
@@ -92,24 +57,6 @@ export function accidentsLine(accidents: RouteAccidents): string {
             : `${accidents.person} avisó un accidente el ${shortDay(accidents.since)}`;
 
     return `${who}. ${accidents.count === 1 ? 'Espera' : 'El más antiguo espera'} respuesta desde ${accidents.waiting}.`;
-}
-
-/** Where a stage is done, opened from its line: the first of its rows the person may open. */
-export function stageHref(stage: RouteStage): string | null {
-    return stage.rows.find((row) => row.href !== null)?.href ?? null;
-}
-
-/** A done stage folded into one line: what was done, and where to see it. */
-export function stageDone(stage: RouteStage): {
-    summary: string;
-    href: string | null;
-    action: string;
-} {
-    return {
-        summary: stage.summary,
-        href: stageHref(stage),
-        action: stage.rows.find((row) => row.href !== null)?.action ?? 'Ver',
-    };
 }
 
 /** The line under the title: who teleworks in the center, the six stages, and how many are done. */

@@ -46,10 +46,10 @@ it('puts first the people of the center who wait for a clinical assessment, for 
     'a viewer' => [TenantRole::Viewer, 0],
 ]);
 
-it('says that the center has to answer, instead of a route', function (): void {
+it('sends Ley Silla to its own route page (board V2-Ruta-Silla)', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
-    routeOf('seating')->assertInertia(fn (Assert $page) => $page->where('route.answered', false));
+    routeOf('seating')->assertRedirect(route('tenant.seating.route', [$this->tenant, $this->plant->id]));
 });
 
 it('answers 404 for a standard it does not know, and for an archived center, a made-up one or another company\'s', function (string $case): void {

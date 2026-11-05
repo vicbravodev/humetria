@@ -8,6 +8,7 @@ use App\Modules\Campaigns\Contracts\CenterSurveys;
 use App\Modules\Instruments\Data\RiskLevel;
 use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Enums\MeasureStatus;
+use App\Modules\Seating\Enums\RowState;
 use App\Modules\Seating\Models\InternalRegulation;
 use App\Modules\Seating\Models\MedicalReferral;
 use App\Modules\Seating\Models\PauseAgreement;
@@ -35,7 +36,7 @@ final readonly class Dossier
     /**
      * @return array<string, mixed>
      */
-    public function build(WorkCenterProfile $center, string $generatedBy): array
+    public function build(WorkCenterProfile $center, string $generatedBy, bool $readyOnly = false): array
     {
         $id = $center->id;
         $signed = RiskAssessment::query()->where('work_center_id', $id)->where('status', AssessmentStatus::Signed)->orderBy('signed_at')->orderBy('id')->get(['employee_id', 'level', 'signed_at', 'recorded_in_document_id']);
@@ -64,7 +65,7 @@ final readonly class Dossier
                 'state' => $requirement['state'],
                 'stateLabel' => $requirement['stateLabel'],
                 'lines' => DossierLines::of($requirement['key'], $requirement['state'], $requirement['count'], $facts),
-            ], $board),
+            ], array_values(array_filter($board, fn (array $requirement): bool => ! $readyOnly || $requirement['state'] === RowState::Met->value))),
             'levels' => $this->levels($signed->all()),
             'documents' => array_values($documents->map(fn (SeatingDocument $document): array => [
                 'kindLabel' => $document->kind->label(),
