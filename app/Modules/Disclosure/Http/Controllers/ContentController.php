@@ -55,7 +55,8 @@ final class ContentController extends Controller
         $published = $publish->handle($this->draft($kind, $document)->id, $request->workCenterIds(), $request->userId());
         Inertia::flash('toast', ['type' => 'success', 'message' => "Publicado: versión {$published->version}."]);
 
-        return redirect()->route('tenant.disclosure.contents', $tenant);
+        // Written with questions, it goes back to what the people must know (board V4-Difusion-Contenidos).
+        return redirect()->route($request->string('back')->toString() === 'board' ? 'tenant.disclosure.index' : 'tenant.disclosure.contents', $tenant);
     }
 
     public function discard(mixed $tenant, string $kind, string $document, DiscardDraft $discard): RedirectResponse

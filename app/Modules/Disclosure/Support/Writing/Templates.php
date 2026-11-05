@@ -13,11 +13,14 @@ final readonly class Templates
 {
     public function __construct(private Nom035Policy $guide) {}
 
-    public function template(DocumentKind $kind): ?WrittenTemplate
+    public function template(DocumentKind $kind): WrittenTemplate
     {
         return match ($kind) {
             DocumentKind::Policy => new PolicyTemplate($this->guide),
-            default => null,
+            DocumentKind::ViolenceMeasures => new ViolenceTemplate,
+            DocumentKind::PreventionMeasures => new PreventionTemplate,
+            DocumentKind::ComplaintMechanism => new ComplaintTemplate,
+            DocumentKind::HealthEffects => new HealthTemplate,
         };
     }
 }

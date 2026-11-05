@@ -336,21 +336,14 @@ it('shows the blocks of 5.7 the company writes by hand', function (bool $dark, b
         ->assertSee('Sin publicar');
 })->with($looks);
 
-it('writes a block, saves it and publishes it', function (): void {
+it('writes a block with questions from its card', function (): void {
     $url = signInToPanel();
-    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
 
     visit("{$url}/disclosure/contents")
-        ->click('section[aria-labelledby="block-violence_measures"] button:has-text("Escribir")')
-        ->assertSee('Guardar borrador')
-        ->fill('#content-violence_measures', 'Las quejas las atiende la Comisión.')
-        ->press('Guardar borrador')
-        ->assertSee('Borrador guardado.')
-        ->press('Publicar')
-        ->assertSee('Publicar: Medidas contra la violencia laboral')
-        ->click('[role="dialog"] button[type="submit"]')
-        ->assertSee('Publicado: versión 1.')
-        ->assertSee('Las quejas las atiende la Comisión.');
+        ->click('section[aria-labelledby="block-violence_measures"] a:has-text("Escribir con preguntas")')
+        ->assertSee('Pregunta 1 de 4')
+        ->assertSee('¿Qué consideran violencia laboral?')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows the evaluations RH can publish to the people', function (bool $dark, bool $mobile): void {
@@ -430,3 +423,31 @@ it('prints the dossier of the disclosure of a center', function (bool $dark, boo
         ->assertSee('Contenidos del numeral 5.7')
         ->assertSee('no certifica el cumplimiento de la norma');
 })->with($looks);
+
+// Rediseño v2 (board V4-Difusion-Contenidos, decisión A3): the blocks of 5.7 are written with questions, with the phone beside.
+it('writes a block of 5.7 with questions, with how the people will read it on their phone', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('disclosure/content-write', "{$url}/disclosure/write/violence_measures", $dark, $mobile)
+        ->assertSee('NOM-035 · numeral 5.7 b')
+        ->assertSee('Medidas contra la violencia laboral')
+        ->assertSee('Pregunta 1 de 4')
+        ->assertSee('¿Qué consideran violencia laboral?')
+        ->assertSee('Así lo verán en su celular')
+        ->assertSee('Gritos, insultos o amenazas, humillaciones o burlas y acoso u hostigamiento.')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with($looks);
+
+it('reviews the draft of the health effects and publishes it to the centers', function (): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+
+    visit("{$url}/disclosure/write/health_effects")
+        ->assertSee('Revisa el borrador antes de publicarlo')
+        ->assertSee('Los factores de riesgo psicosocial son aquellos')
+        ->press('Usar este borrador')
+        ->press('Publicar en tus centros')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Publicado: versión 1.')
+        ->assertNoJavaScriptErrors();
+});

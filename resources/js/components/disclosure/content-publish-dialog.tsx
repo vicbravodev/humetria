@@ -15,6 +15,7 @@ export default function ContentPublishDialog({
     documentId,
     label,
     centersInUse,
+    back = null,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -22,6 +23,8 @@ export default function ContentPublishDialog({
     documentId: string;
     label: string;
     centersInUse: number;
+    /** «board» goes back to what the people must know once published (board V4-Difusion-Contenidos). */
+    back?: 'board' | null;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -31,11 +34,10 @@ export default function ContentPublishDialog({
             onOpenChange={onOpenChange}
             title={`Publicar: ${label}`}
             description="Se guarda como la siguiente versión y ya no se puede cambiar: es evidencia de lo que el centro informó."
-            form={publish.form({
-                tenant: tenantSlug,
-                kind,
-                document: documentId,
-            })}
+            form={publish.form(
+                { tenant: tenantSlug, kind, document: documentId },
+                back === null ? {} : { query: { back } },
+            )}
             submit="Publicar"
         >
             {(errors) => (
