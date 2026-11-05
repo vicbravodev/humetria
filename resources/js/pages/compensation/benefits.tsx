@@ -3,7 +3,7 @@ import BenefitsEmpty from '@/components/compensation/benefits-empty';
 import BenefitsTable from '@/components/compensation/benefits-table';
 import BenefitsToolbar from '@/components/compensation/benefits-toolbar';
 import ContractDataFrame from '@/components/compensation/contract-data-frame';
-import CreateBenefitSheet from '@/components/compensation/create-benefit-sheet';
+import NewBenefitButton from '@/components/compensation/new-benefit-button';
 import RiskPremiumCard from '@/components/compensation/risk-premium-card';
 import Pagination from '@/components/humetria/pagination';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -67,7 +67,7 @@ export default function Benefits({
                     current="benefits"
                     title="Prestaciones"
                     lead={`${benefitsHeadline(counts)} Aquí defines lo que da el contrato y sus términos de hoy: el punto de partida de cada escenario.`}
-                    action={<CreateBenefitSheet choices={choices} />}
+                    action={<NewBenefitButton />}
                 >
                     <RiskPremiumCard premium={risk_premium} />
                     <BenefitsToolbar filters={filters} counts={counts} />

@@ -51,11 +51,14 @@ async function post(
 /**
  * The live cost of a form that is being typed (decision A12): `anchorRef` goes on any element inside the form and `schedule` is
  * called on any change in it; once the changes stop it sends the whole form, as it would be saved, to `url`. The same form twice is asked once, a newer request
- * makes the older one stale, and a field the server refuses shows its message while the last good result stays.
+ * makes the older one stale, and a field the server refuses shows its message while the last good result stays; a field
+ * still empty is not told it is missing until the form is saved.
  */
 export function useLivePreview<T>(
     url: string,
     parse: (value: unknown) => T | null,
+    /** Whether to ask as soon as the page opens; a form that starts empty waits for the first change. */
+    immediate = true,
 ) {
     const anchorRef = useRef<HTMLDivElement>(null);
     const [result, setResult] = useState<T | null>(null);
@@ -88,7 +91,7 @@ export function useLivePreview<T>(
         setLoading(false);
 
         if (answer !== null) {
-            setErrors(answer.ok ? {} : parsePreviewErrors(answer.json));
+            setErrors(answer.ok ? {} : parsePreviewErrors(answer.json, body));
             setResult((last) =>
                 answer.ok ? (parse(answer.json) ?? last) : last,
             );
@@ -105,13 +108,15 @@ export function useLivePreview<T>(
     useEffect(() => {
         const current = state.current;
         // The first numbers come as soon as the page opens.
-        current.timer = setTimeout(first, 0);
+        if (immediate) {
+            current.timer = setTimeout(first, 0);
+        }
 
         return () => {
             clearTimeout(current.timer);
             current.controller?.abort();
         };
-    }, []);
+    }, [immediate]);
 
     return { anchorRef, result, errors, loading, schedule };
 }

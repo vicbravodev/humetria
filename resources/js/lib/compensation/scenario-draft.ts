@@ -141,8 +141,11 @@ export function parsePreview(value: unknown): ScenarioPreview | null {
     };
 }
 
-/** The first message of each field of a validation answer. */
-export function parsePreviewErrors(value: unknown): Record<string, string> {
+/** The first message of each field of a validation answer, but for the fields still empty in what was sent. */
+export function parsePreviewErrors(
+    value: unknown,
+    sent: URLSearchParams = new URLSearchParams(),
+): Record<string, string> {
     const errors: Record<string, string> = {};
 
     if (!isRecord(value) || !isRecord(value['errors'])) {
@@ -150,7 +153,11 @@ export function parsePreviewErrors(value: unknown): Record<string, string> {
     }
 
     for (const [field, messages] of Object.entries(value['errors'])) {
-        if (Array.isArray(messages) && typeof messages[0] === 'string') {
+        if (
+            Array.isArray(messages) &&
+            typeof messages[0] === 'string' &&
+            sent.get(field) !== ''
+        ) {
             errors[field] = messages[0];
         }
     }

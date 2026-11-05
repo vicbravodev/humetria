@@ -92,6 +92,17 @@ describe('parsePreviewErrors', () => {
         ).toEqual({ unionized_raise: 'Escribe un porcentaje.' });
     });
 
+    it('leaves out a field that was sent empty: it is not missing until the form is saved', () => {
+        const sent = new URLSearchParams({ value: '', name: 'Bono' });
+
+        expect(
+            parsePreviewErrors(
+                { errors: { value: ['Obligatorio'], name: ['Repetido'] } },
+                sent,
+            ),
+        ).toEqual({ name: 'Repetido' });
+    });
+
     it('has none for an answer without errors', () => {
         expect(parsePreviewErrors({ message: 'x' })).toEqual({});
         expect(parsePreviewErrors('nope')).toEqual({});

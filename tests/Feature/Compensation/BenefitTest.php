@@ -6,6 +6,7 @@ use App\Modules\Compensation\Enums\BenefitKind;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
+use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -281,3 +282,28 @@ it('lets owner and hr read and write, and keeps viewer and committee out', funct
     'committee' => [TenantRole::Committee, false],
     'complaints' => [TenantRole::Complaints, false],
 ]);
+
+it('opens «Nueva prestación» as a page with what its form chooses from (board V4-Comp-Prestacion, decision A14)', function (): void {
+    Scenario::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
+
+    $this->get(route('tenant.compensation.benefits.create', $this->tenant))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('compensation/benefit-create')
+            ->has('kinds', 4)->has('frequencies', 3)->has('groups', 2)->has('sbc_integrations', 3)
+            ->where('scenarios', 2));
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get(route('tenant.compensation.benefits.create', $this->tenant))->assertForbidden();
+});
+
+it('creates a benefit with its seniority table from the page and goes back to the benefits', function (): void {
+    $this->post(route('tenant.compensation.benefits.store', $this->tenant), benefitForm([
+        'kind' => 'salary_percent', 'value' => '10', 'tenure_table' => [['from_years' => '5', 'value' => '12'], ['from_years' => '10', 'value' => '15']],
+    ]))->assertRedirect(route('tenant.compensation.benefits.index', $this->tenant))->assertSessionHasNoErrors();
+
+    expect(Benefit::query()->where('name', 'Bono de transporte')->sole()->terms()->sole()->tenure_table)
+        ->toEqual([['from_years' => 5, 'value' => 1200], ['from_years' => 10, 'value' => 1500]]);
+
+    $this->post(route('tenant.compensation.benefits.store', $this->tenant), benefitForm(['name' => 'Otro', 'tenure_table' => [['from_years' => 'cinco', 'value' => '12']]]))
+        ->assertSessionHasErrors('tenure_table');
+});

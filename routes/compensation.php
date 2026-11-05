@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Compensation\Http\Controllers\AnnexController;
 use App\Modules\Compensation\Http\Controllers\BenefitController;
 use App\Modules\Compensation\Http\Controllers\BenefitOptionsController;
+use App\Modules\Compensation\Http\Controllers\BenefitPreviewController;
 use App\Modules\Compensation\Http\Controllers\BenefitTermController;
 use App\Modules\Compensation\Http\Controllers\CompensationController;
 use App\Modules\Compensation\Http\Controllers\GradeOptionsController;
@@ -29,6 +30,8 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
 
     Route::get('admin/{tenant:slug}/compensation/benefits', [BenefitController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.benefits.index');
     Route::post('admin/{tenant:slug}/compensation/benefits', [BenefitController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.benefits.store');
+    Route::get('admin/{tenant:slug}/compensation/benefits/create', [BenefitController::class, 'create'])->where('tenant', $notReserved)->name('tenant.compensation.benefits.create');
+    Route::post('admin/{tenant:slug}/compensation/benefits/preview', BenefitPreviewController::class)->where('tenant', $notReserved)->middleware('throttle:compensation-preview')->name('tenant.compensation.benefits.preview');
     Route::get('admin/{tenant:slug}/compensation/benefits/grades', GradeOptionsController::class)->where('tenant', $notReserved)->name('tenant.compensation.benefits.grades');
     Route::put('admin/{tenant:slug}/compensation/benefits/{benefit}', [BenefitController::class, 'update'])->where('tenant', $notReserved)->whereUuid('benefit')->name('tenant.compensation.benefits.update');
     Route::post('admin/{tenant:slug}/compensation/benefits/{benefit}/archive', [BenefitController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('benefit')->name('tenant.compensation.benefits.archive');

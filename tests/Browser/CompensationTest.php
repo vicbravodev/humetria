@@ -587,3 +587,41 @@ it('leads from the data of the contract on the start to each of them', function 
     'missing data' => ['Completar 2 datos', 'compensation/tabulator'],
     'scenarios to compare' => ['Comparar los 2', 'compensation/scenarios/compare'],
 ]);
+
+it('shows a new benefit with what it costs today as it is answered (board V4-Comp-Prestacion)', function (bool $dark, bool $mobile): void {
+    $url = startWithData();
+
+    visitPage('compensation/benefit-create', "{$url}/compensation/benefits/create", $dark, $mobile, fn ($page) => $page
+        ->assertSee('Nueva prestación')
+        ->click('Monto fijo')
+        ->type('[name="value"]', '100')
+        ->assertSee('al año, a 1 persona, con sus cuotas'))
+        ->assertSee('¿Cuenta para las cuotas del IMSS?')
+        ->assertSee('Al guardar, tus 2 escenarios se recalculan solos');
+})->with($looks);
+
+it('saves a new benefit that grows with seniority from its page', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/benefits")
+        ->click('Nueva prestación')
+        ->assertPathIs("{$url}/compensation/benefits/create")
+        ->type('[name="name"]', 'Bono de puntualidad')
+        ->type('[name="value"]', '10')
+        ->click('label:has([name="has_seniority"][value="yes"])')
+        ->type('[name="tenure_table[0][value]"]', '10')
+        ->click('Agregar renglón')
+        ->type('[name="tenure_table[1][from_years]"]', '5')
+        ->type('[name="tenure_table[1][value]"]', '12')
+        ->click('Nunca')
+        ->press('Guardar prestación')
+        ->assertPathIs("{$url}/compensation/benefits")
+        ->assertSee('Prestación creada.')
+        ->assertSee('Bono de puntualidad')
+        ->assertNoJavaScriptErrors();
+
+    $saved = Benefit::query()->withoutGlobalScopes()->where('name', 'Bono de puntualidad')->sole();
+
+    expect($saved->kind->value)->toBe('salary_percent')->and($saved->sbc_integration->value)->toBe('never')
+        ->and($saved->terms()->withoutGlobalScopes()->sole()->tenure_table)->toEqual([['from_years' => 0, 'value' => 1000], ['from_years' => 5, 'value' => 1200]]);
+});
