@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Telework\Support\Writing;
+namespace App\Support\Writing;
 
 /**
  * One choice of a question: a single option (radio rows) or several (checkbox rows), with what the board marks at first.

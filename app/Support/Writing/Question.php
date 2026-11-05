@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Telework\Support\Writing;
+namespace App\Support\Writing;
 
 /** One question of a document written with questions; its answers make the section with the same key. */
 final readonly class Question

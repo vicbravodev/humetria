@@ -6,9 +6,9 @@ namespace App\Modules\Telework\Actions;
 
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Models\DocumentDraft;
-use App\Modules\Telework\Support\Writing\Writer;
-use App\Modules\Telework\Support\Writing\WrittenTemplate;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Support\Writing\Writer;
+use App\Support\Writing\WrittenTemplate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;

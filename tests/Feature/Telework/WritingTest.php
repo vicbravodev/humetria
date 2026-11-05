@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use App\Modules\Telework\Actions\SaveWriting;
 use App\Modules\Telework\Models\DocumentDraft;
-use App\Modules\Telework\Support\Writing\Writer;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Support\Writing\Writer;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

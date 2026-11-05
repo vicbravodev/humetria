@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * Cómo se empieza a teletrabajar (num. 5.6) with the four questions of docs/02 («Documentos con preguntas»): who asks, who
  * approves and how soon, what is signed and what equipment is handed over. Incisos a) to d) of 5.6 are base texts with the

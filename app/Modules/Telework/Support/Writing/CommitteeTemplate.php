@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * Participación en las comisiones (num. 5.14) with the three questions of docs/02 («Documentos con preguntas»): how someone
  * in telework gets to a commission, how they take part from afar and in what time.

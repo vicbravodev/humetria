@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * Mantenimiento del equipo (num. 5.8) with the four questions of docs/02 («Documentos con preguntas»): what equipment, how
  * often, who does it and how a fault is reported.

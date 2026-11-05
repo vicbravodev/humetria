@@ -7,13 +7,14 @@ namespace App\Modules\Telework\Support;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Models\DocumentDraft;
 use App\Modules\Telework\Models\TeleworkDocument;
-use App\Modules\Telework\Support\Writing\Field;
-use App\Modules\Telework\Support\Writing\Question;
-use App\Modules\Telework\Support\Writing\Writer;
-use App\Modules\Telework\Support\Writing\WrittenTemplate;
+use App\Modules\Telework\Support\Writing\Templates;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Writer;
+use App\Support\Writing\WrittenTemplate;
 use Carbon\CarbonImmutable;
 
 /**
@@ -23,7 +24,7 @@ use Carbon\CarbonImmutable;
  */
 final readonly class WritingPage
 {
-    public function __construct(private Writer $writer, private Companies $companies, private WorkCenters $workCenters, private AckAudience $audience) {}
+    public function __construct(private Writer $writer, private Templates $templates, private Companies $companies, private WorkCenters $workCenters, private AckAudience $audience) {}
 
     /**
      * @param  array{href: string, label: string, center: string|null}  $back  Where «Guardar y volver» leads, and the center
@@ -83,7 +84,7 @@ final readonly class WritingPage
 
         return [
             'documents' => array_map(function (DocumentKind $kind) use ($inForce, $started, $centers): array {
-                $template = $this->writer->template($kind);
+                $template = $this->templates->template($kind);
                 $versions = $inForce->get($kind->value);
                 $latest = $versions?->last();
 
@@ -112,7 +113,7 @@ final readonly class WritingPage
         $center = array_find($this->workCenters->all(), fn (WorkCenterSummary $center): bool => $center->id === $document->work_center_id);
 
         return [
-            'title' => $this->writer->template($document->kind)?->title() ?? $document->kind->label(),
+            'title' => $this->templates->template($document->kind)?->title() ?? $document->kind->label(),
             'company' => $this->companies->current()->tradeName,
             'owner' => $this->companies->current()->tradeName.($center === null ? '' : " · {$center->name}"),
             'version' => $document->version,

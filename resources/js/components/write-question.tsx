@@ -5,7 +5,7 @@ import QuestionHeading from '@/components/humetria/question-heading';
 import { minutesLeft } from '@/lib/question-flow';
 import type { FlowAnswers, FlowQuestion } from '@/lib/question-flow';
 
-/** One question of a NOM-037 document at a time (boards V2-Politica and V3-Doc-Riesgos), with where it goes. */
+/** One question of a document at a time (boards V2-Politica and V3-Doc-Riesgos), with where it goes. */
 export default function WriteQuestion({
     questions,
     index,

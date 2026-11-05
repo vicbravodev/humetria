@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Telework\Support\Writing;
+namespace App\Support\Writing;
 
 /** The answers of a draft by field, read the way a template writes its text. */
 final readonly class Answers

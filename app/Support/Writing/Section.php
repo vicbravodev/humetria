@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Telework\Support\Writing;
+namespace App\Support\Writing;
 
 /**
  * One section of a written document: the text the answers make (null while its question is not answered), or a base text

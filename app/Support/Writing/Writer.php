@@ -2,32 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Telework\Support\Writing;
+namespace App\Support\Writing;
 
-use App\Modules\Telework\Enums\DocumentKind;
 use Illuminate\Validation\ValidationException;
 
 /**
- * The engine of the NOM-037 documents written with questions (decisión A3): which kinds are written that way, what their
- * answers start from, which answers a template takes, and the text they make with the paragraphs RH rewrote.
+ * The engine of the documents written with questions (decisión A3), whatever the module: what the answers of a template start
+ * from, which answers it takes, and the text they make with the paragraphs RH rewrote. Which kinds are written with which
+ * template is each module's own (NOM-037's Templates, NOM-035's Templates).
  */
 final readonly class Writer
 {
-    /** The template a kind is written with, or null for a kind that is only uploaded (the inspection report). */
-    public function template(DocumentKind $kind): ?WrittenTemplate
-    {
-        return match ($kind) {
-            DocumentKind::Policy => new PolicyTemplate,
-            DocumentKind::RiskInformation => new RiskTemplate,
-            DocumentKind::ImplementationProcess => new ImplementationTemplate,
-            DocumentKind::MaintenanceProgram => new MaintenanceTemplate,
-            DocumentKind::Reversibility => new ReversibilityTemplate,
-            DocumentKind::FamilyViolence => new FamilyViolenceTemplate,
-            DocumentKind::CommitteeParticipation => new CommitteeTemplate,
-            DocumentKind::InspectionReport => null,
-        };
-    }
-
     /**
      * Every field of the template with what the board marks before anyone answers.
      *

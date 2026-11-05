@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * The Política de Teletrabajo (num. 5.2 a–l) written with eight questions (board V2-Politica). Each section has the key of
  * the inciso it covers. The first four questions, their options and their text are the board's; c, f, j and k are the

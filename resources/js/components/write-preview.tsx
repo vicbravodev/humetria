@@ -1,12 +1,12 @@
 import DocumentPreview from '@/components/humetria/document-preview';
 import PreviewSection from '@/components/humetria/preview-section';
 import TopicChips from '@/components/humetria/topic-chips';
-import WriteSectionEdit from '@/components/telework/write-section-edit';
+import WriteSectionEdit from '@/components/write-section-edit';
 import { reached, topicStates } from '@/lib/question-flow';
 import type { FlowQuestion, FlowSection, FlowTopic } from '@/lib/question-flow';
 
 /**
- * The NOM-037 document beside its questions (boards V2-Politica and V3-Doc-Riesgos): the incisos it covers as chips, when
+ * The document beside its questions (boards V2-Politica and V3-Doc-Riesgos): the incisos it covers as chips, when
  * the norm names them (done once their question is passed), and the text as far as the questions went. While the
  * questions go on, the base texts fold into one line; on the review every section shows, each with the way to rewrite it.
  */

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Telework\Support\Writing;
+namespace App\Support\Writing;
 
 /**
- * A NOM-037 document written with questions (decisión A3): its questions and the text its answers make. The wording is a
- * draft for a lawyer to review before production (TODO-LEGAL); what the boards and the DOF give is used as it is.
+ * A document written with questions (decisión A3): its questions and the text its answers make. The wording is a draft for
+ * a lawyer to review before production (TODO-LEGAL); what the boards and the DOF give is used as it is.
  */
 interface WrittenTemplate
 {

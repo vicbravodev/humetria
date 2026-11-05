@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * Riesgos de trabajar desde casa (num. 5.3) with four questions (board V3-Doc-Riesgos; docs/02, «Documentos con
  * preguntas»). The question of the risks, its options, what it marks and the text of the first three risks are the board's.
