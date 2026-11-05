@@ -85,8 +85,8 @@ export default function Evidence({
 
 Evidence.layout = {
     breadcrumbs: [
-        { title: 'NOM-035' },
-        { title: 'Quejas y denuncias' },
+        { title: 'Quejas' },
+        { title: 'Canal' },
         { title: 'Evidencia' },
     ],
 };

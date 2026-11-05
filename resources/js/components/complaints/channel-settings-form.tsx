@@ -15,10 +15,12 @@ export default function ChannelSettingsForm({
     settings,
     bounds,
     activating,
+    onSaved,
 }: {
     settings: ChannelSettings;
     bounds: ChannelBounds;
     activating: boolean;
+    onSaved?: () => void;
 }) {
     const tenantSlug = useTenantSlug();
     const route = activating ? activate : update;
@@ -27,6 +29,7 @@ export default function ChannelSettingsForm({
         <Form
             {...route.form(tenantSlug)}
             options={{ preserveScroll: true }}
+            onSuccess={() => onSaved?.()}
             noValidate
             className="flex flex-col gap-7"
         >

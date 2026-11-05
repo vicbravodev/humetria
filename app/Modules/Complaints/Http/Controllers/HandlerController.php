@@ -35,7 +35,8 @@ final class HandlerController extends Controller
         $designate->handle($request->userId(), $request->workCenterId(), $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Persona designada.']);
 
-        return to_route('tenant.complaints.handlers.index', $tenant);
+        // Designating happens on the channel (board V4-Quejas-Designar) or on the list of handlers: back where it was asked.
+        return back(fallback: route('tenant.complaints.handlers.index', $tenant));
     }
 
     public function destroy(mixed $tenant, string $handler, EndHandler $end): RedirectResponse

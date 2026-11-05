@@ -26,22 +26,74 @@ it('shows the channel before it is activated, with its procedure and deadlines',
     [$url] = complaintsPanel();
 
     visitPage('complaints/channel', "{$url}/complaints/channel", $dark, $mobile)
-        ->assertSee('Quejas y denuncias')
+        ->assertSee('Canal de quejas y denuncias')
         ->assertSee('Sin activar')
+        ->assertSee('Activa el canal')
         ->assertSee('Procedimiento')
         ->assertSee('Activar el canal');
 })->with($looks);
 
-it('shows an active channel with its link and the actions on it', function (bool $dark, bool $mobile): void {
+it('shows an active channel with who receives each complaint, what is missing, its link and what came', function (bool $dark, bool $mobile): void {
     [$url, $tenant] = complaintsPanel();
-    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    $owner = App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $tenant->id)->firstOrFail()->user_id;
+    App\Models\User::query()->whereKey($owner)->update(['name' => 'Olga Owner']);
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $owner]);
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create(['published_on' => '2026-11-04']);
+    Complaint::factory()->count(2)->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
 
     visitPage('complaints/channel', "{$url}/complaints/channel", $dark, $mobile)
-        ->assertSee('Activo')
-        ->assertSee($channel->publicUrl())
+        ->assertSee('Recibe quejas desde el 4 nov')
+        ->assertSee('Falta 1 cosa para que el canal sea seguro')
+        ->assertSee('Nadie atiende las quejas contra la dirección o el dueño')
+        ->assertSee('A quién llega cada queja')
+        ->assertSee('Olga Owner')
+        ->assertSee('Cubierto')
+        ->assertSee('Nadie todavía')
+        ->assertSee(preg_replace('#^https?://#', '', $channel->publicUrl()))
         ->assertSee('Copiar enlace')
-        ->assertSee('Guardar ajustes');
+        ->assertSee('Cartel para imprimir')
+        ->assertSee('Lo que ha llegado')
+        ->assertSee('menos de 5')
+        ->assertSee('Si llega una inspección');
 })->with($looks);
+
+it('designates from the channel who handles the complaints against the management, leaving out the owner', function (bool $dark, bool $mobile): void {
+    [$url, $tenant] = complaintsPanel();
+    $owner = App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $tenant->id)->firstOrFail()->user_id;
+    App\Models\User::query()->whereKey($owner)->update(['name' => 'Olga Owner']);
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $owner]);
+    $hr = memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
+    $hr->forceFill(['name' => 'Rita Recursos'])->save();
+    ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+
+    visitPage('complaints/channel', "{$url}/complaints/channel", $dark, $mobile, fn ($page) => $page->click('Designar a alguien'))
+        ->assertSee('¿Quién atiende las quejas contra la dirección o el dueño?')
+        ->assertSee('Olga Owner no puede: es contra su rol')
+        ->assertSee('Usuarios')
+        ->click('#handler-person')
+        ->assertSee('Rita Recursos · RH')
+        ->assertDontSee('Olga Owner · Dueño')
+        ->keys('[role="combobox"][aria-controls="handler-person-options"]', 'Enter')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Persona designada.')
+        ->assertDontSee('Nadie todavía')
+        ->assertNoJavaScriptErrors();
+
+    expect(ComplaintHandler::query()->withoutGlobalScopes()->where('user_id', $hr->id)->exists())->toBeTrue();
+})->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
+
+it('edits how the channel is handled from its dialog', function (): void {
+    [$url, $tenant] = complaintsPanel();
+    ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+
+    visit("{$url}/complaints/channel")
+        ->click('Editar')
+        ->fill('acknowledge_within_days', '5')
+        ->press('Guardar ajustes')
+        ->assertSee('Ajustes guardados.')
+        ->assertSee('5 días')
+        ->assertNoJavaScriptErrors();
+});
 
 it('activates the channel from the page', function (): void {
     [$url] = complaintsPanel();
@@ -49,7 +101,7 @@ it('activates the channel from the page', function (): void {
     visit("{$url}/complaints/channel")
         ->press('Activar el canal')
         ->assertSee('El canal quedó activo.')
-        ->assertSee('Enlace del canal')
+        ->assertSee('Cómo llegan las personas')
         ->assertNoJavaScriptErrors();
 
     expect(ComplaintChannel::query()->withoutGlobalScopes()->count())->toBe(1);
@@ -69,17 +121,16 @@ it('pauses and resumes the channel from the page', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
-it('shows who handles the complaints and who each kind of complaint would reach', function (bool $dark, bool $mobile): void {
+it('shows who handles the complaints and for which scope', function (bool $dark, bool $mobile): void {
     [$url, $tenant] = complaintsPanel();
     $owner = App\Modules\Tenancy\Models\TenantMembership::query()->where('tenant_id', $tenant->id)->firstOrFail();
     ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $owner->user_id]);
 
     visitPage('complaints/handlers', "{$url}/complaints/handlers", $dark, $mobile)
-        ->assertSee('Quién atiende')
+        ->assertSee('Quiénes atienden')
         ->assertSee('Toda la empresa')
-        ->assertSee('A quién llegaría cada queja')
-        ->assertSee('Falta')
-        ->assertSee('Designar');
+        ->assertSee('Quitar')
+        ->assertSee('Designar a alguien');
 })->with($looks);
 
 it('shows the empty list of handlers with its next step', function (): void {
@@ -95,11 +146,12 @@ it('designates a handler from the page and shows them in the list', function ():
     $hr->forceFill(['name' => 'Ana Recursos'])->save();
 
     visit("{$url}/complaints/handlers")
+        ->click('Designar a alguien')
         ->click('#handler-person')
         ->type('[role="combobox"][aria-controls="handler-person-options"]', 'recursos')
-        ->assertSee('Ana Recursos')
+        ->assertSee('Ana Recursos · RH')
         ->keys('[role="combobox"][aria-controls="handler-person-options"]', 'Enter')
-        ->press('Designar')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Persona designada.')
         ->assertSee('Ana Recursos')
         ->assertNoJavaScriptErrors();
@@ -523,8 +575,8 @@ it('shows the checklist and the summary with the minimum on the channel page', f
     Complaint::factory()->count(3)->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id]);
 
     visit("{$url}/complaints/channel")
-        ->assertSee('Al menos una persona que atienda')
-        ->assertSee('Casos recibidos: menos de 5')
+        ->assertSee('Nadie atiende las quejas todavía')
+        ->assertSee('Lo que ha llegado')
         ->assertSee('menos de 5')
         ->assertNoJavaScriptErrors();
 });
@@ -544,7 +596,7 @@ it('opens the poster from the channel page', function (): void {
     [$url, $tenant] = complaintsPanel();
     ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
 
-    visit("{$url}/complaints/channel")->click('Cartel')->assertSee('¿Algo no está bien en tu trabajo?')->assertNoJavaScriptErrors();
+    visit("{$url}/complaints/channel")->click('Cartel para imprimir')->assertSee('¿Algo no está bien en tu trabajo?')->assertNoJavaScriptErrors();
 });
 
 it('asks for a real address on the optional step and lets it stay empty', function (): void {

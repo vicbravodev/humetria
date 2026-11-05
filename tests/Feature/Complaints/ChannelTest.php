@@ -49,6 +49,40 @@ it('shows the channel page to the people who manage it, with what an inactive ch
             ->has('settings.procedure'));
 });
 
+it('says who receives each kind of complaint by name, for the whole company, and who could be designated (board V4-Quejas-Canal)', function (): void {
+    $hr = memberOf($this->tenant, TenantRole::Hr);
+    $committee = memberOf($this->tenant, TenantRole::Committee);
+    $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $this->tenant->id]);
+    App\Modules\Complaints\Models\ComplaintHandler::factory()->company($this->tenant->id)->create(['user_id' => $this->owner->id]);
+    App\Modules\Complaints\Models\ComplaintHandler::factory()->company($this->tenant->id)->create(['user_id' => $hr->id]);
+    App\Modules\Complaints\Models\ComplaintHandler::factory()->forCenter($this->tenant->id, $plant->id)->create(['user_id' => $committee->id]);
+    ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create();
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.complaints.channel.show', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('coverage', 6)
+            ->where('coverage.1', ['kind' => 'coworker', 'label' => 'Compañera o compañero', 'excludedRole' => null, 'handlers' => [
+                ['name' => $this->owner->name, 'roleLabel' => 'Dueño'],
+                ['name' => $hr->name, 'roleLabel' => 'RH'],
+            ]])
+            ->where('coverage.2.kind', 'hr')
+            ->where('coverage.2.excludedRole', 'hr')
+            ->where('coverage.2.handlers', [['name' => $this->owner->name, 'roleLabel' => 'Dueño']])
+            ->where('coverage.3.excludedRole', 'owner')
+            ->where('coverage.3.handlers', [['name' => $hr->name, 'roleLabel' => 'RH']])
+            ->where('handlersCount', 3)
+            ->has('candidates', 3)
+            ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $committee->id, 'label' => $committee->name, 'role' => 'committee', 'roleLabel' => 'Comisión de seguridad e higiene']))
+            ->where('channel.qr', fn (string $qr): bool => str_starts_with($qr, 'data:image/')));
+});
+
+it('gives no QR for a channel that was never activated', function (): void {
+    $this->actingAs($this->owner)
+        ->get(route('tenant.complaints.channel.show', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('channel.qr', null)->where('handlersCount', 0)->where('coverage.0.handlers', []));
+});
+
 it('activates the channel: a code, today as the publication day, an audit entry, a log line and the event', function (): void {
     Event::fake([ComplaintChannelPublished::class]);
     Log::spy();
