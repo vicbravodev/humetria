@@ -9,7 +9,7 @@ import { useTeleworkApplies } from '@/hooks/use-telework-applies';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { QUESTIONS } from '@/lib/telework/applies';
 import { dashboard } from '@/routes/tenant';
-import { center } from '@/routes/tenant/telework';
+import { center, certificate } from '@/routes/tenant/telework';
 import { update } from '@/routes/tenant/telework/applies';
 
 type Props = {
@@ -80,6 +80,10 @@ export default function TeleworkApplies({ workCenter, declaration }: Props) {
                             center={workCenter.name}
                             declaredOn={declaration.declaredOn}
                             panelHref={dashboard(tenantSlug)}
+                            certificateHref={certificate([
+                                tenantSlug,
+                                workCenter.id,
+                            ])}
                             onRestart={wizard.restart}
                         />
                     )}

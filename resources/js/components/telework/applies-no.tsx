@@ -11,11 +11,13 @@ export default function AppliesNo({
     center,
     declaredOn,
     panelHref,
+    certificateHref,
     onRestart,
 }: {
     center: string;
     declaredOn: string;
     panelHref: NavItem['href'];
+    certificateHref: NavItem['href'];
     onRestart: () => void;
 }) {
     return (
@@ -38,6 +40,9 @@ export default function AppliesNo({
             <div className="flex flex-wrap gap-3">
                 <Button size="lg" asChild>
                     <Link href={panelHref}>Volver al panel</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                    <Link href={certificateHref}>Ver constancia</Link>
                 </Button>
                 <Button size="lg" variant="ghost" onClick={onRestart}>
                     Cambiar respuestas

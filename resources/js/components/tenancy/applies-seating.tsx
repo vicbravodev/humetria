@@ -5,6 +5,7 @@ import AppliesSeatingAction from '@/components/tenancy/applies-seating-action';
 import { useSeatingApplies } from '@/hooks/use-seating-applies';
 import type { SeatingDeclaration } from '@/hooks/use-seating-applies';
 import { SECTORS, seatingResult } from '@/lib/applicability';
+import { certificate } from '@/routes/tenant/seating';
 import type { NavItem } from '@/types';
 
 const STANDING: { value: 'yes' | 'no'; label: string }[] = [
@@ -80,6 +81,10 @@ export default function AppliesSeating({
                         onSave={form.save}
                         routeHref={routeHref}
                         panelHref={panelHref}
+                        certificateHref={certificate([
+                            tenantSlug,
+                            workCenterId,
+                        ])}
                     />
                 }
             />

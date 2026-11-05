@@ -4,7 +4,7 @@ import type { NavItem } from '@/types';
 
 /**
  * The one action of the Ley Silla result (board V2-Aplica-Otras): keep the answers while they differ from what is
- * declared; once kept, the route where it applies, or back to the panel where it does not.
+ * declared; once kept, the route where it applies, or back to the panel and the certificate where it does not.
  */
 export default function AppliesSeatingAction({
     applies,
@@ -14,6 +14,7 @@ export default function AppliesSeatingAction({
     onSave,
     routeHref,
     panelHref,
+    certificateHref,
 }: {
     applies: boolean | null;
     changed: boolean;
@@ -22,6 +23,7 @@ export default function AppliesSeatingAction({
     onSave: () => void;
     routeHref: NavItem['href'];
     panelHref: NavItem['href'];
+    certificateHref: NavItem['href'];
 }) {
     if (applies === null) {
         return null;
@@ -42,6 +44,11 @@ export default function AppliesSeatingAction({
                     {applies ? 'Ver mi ruta' : 'Volver al panel'}
                 </Link>
             </Button>
+            {!applies && (
+                <Button size="lg" variant="outline" asChild>
+                    <Link href={certificateHref}>Ver constancia</Link>
+                </Button>
+            )}
             {declaredOn !== null && (
                 <span className="text-sm text-muted-foreground">
                     Declarado el {declaredOn}

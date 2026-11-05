@@ -43,6 +43,9 @@ export default function DashboardRouteNorm({
                         name={row.name}
                         route={row.route}
                         answerHref={norm.answer?.(tenantSlug, row.id) ?? null}
+                        certificateHref={
+                            norm.certificate?.(tenantSlug, row.id) ?? null
+                        }
                     />
                 ))}
             </ul>

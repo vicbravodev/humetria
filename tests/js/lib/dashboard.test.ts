@@ -102,9 +102,10 @@ describe('stageLine', () => {
 });
 
 describe('normsInUse', () => {
-    it('lists each standard with the centers it applies to, and leaves out the ones that apply to none', () => {
+    // Rediseño v2 (decisión A2): a standard that applies nowhere stays, with the certificate of each center in its place.
+    it('lists every standard with every center, and none without centers', () => {
         const plant = center('Planta', { nom037: at(1) });
-        const offices = center('Oficinas', {});
+        const offices = center('Oficinas', { seating: unanswered });
 
         expect(
             normsInUse([plant, offices]).map(({ norm, rows }) => [
@@ -114,16 +115,9 @@ describe('normsInUse', () => {
         ).toEqual([
             ['nom035', ['Planta', 'Oficinas']],
             ['nom037', ['Planta', 'Oficinas']],
+            ['seating', ['Planta', 'Oficinas']],
         ]);
         expect(normsInUse([])).toEqual([]);
-    });
-
-    it('lists a standard some center still has to answer «¿Te aplica?» for', () => {
-        expect(
-            normsInUse([center('Planta', { seating: unanswered })]).map(
-                ({ norm }) => norm.key,
-            ),
-        ).toEqual(['nom035', 'seating']);
     });
 });
 

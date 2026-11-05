@@ -90,3 +90,44 @@ it('keeps the Ley Silla declaration of the center', function (): void {
 
     expect(SeatingProfile::query()->withoutGlobalScopes()->sole()->sector)->toBe(Sector::Industrial);
 });
+
+// Decisiones A2 y D6: where a standard does not apply, a certificate to print on a letter sheet.
+it('prints the certificate that NOM-037 does not apply, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $plant = applicabilityCompany();
+    TeleworkProfile::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'declared_on' => '2026-02-03']);
+
+    visitPage('telework/certificate', "/admin/acme/telework/centers/{$plant->id}/certificate", $dark, $mobile)
+        ->assertSee('NOM-037-STPS-2023 · Teletrabajo')
+        ->assertSee('Constancia de que la norma no aplica')
+        ->assertSee('3 de febrero de 2026')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('prints the certificate that Ley Silla does not apply, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $plant = applicabilityCompany();
+    SeatingProfile::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'sector' => null, 'no_standing_positions' => true, 'declared_on' => '2026-02-03']);
+
+    visitPage('seating/certificate', "/admin/acme/seating/centers/{$plant->id}/certificate", $dark, $mobile)
+        ->assertSee('Ley Silla · trabajo de pie')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('3 de febrero de 2026')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('reaches the certificate from the answer, and from the panel', function (): void {
+    $plant = applicabilityCompany();
+
+    visit("/admin/acme/telework/centers/{$plant->id}/applies")
+        ->click('Empezar')
+        ->radio('outside', 'no')
+        ->click('Siguiente')
+        ->click('Ver constancia')
+        ->assertSee('NOM-037-STPS-2023 · Teletrabajo')
+        ->assertNoJavaScriptErrors();
+
+    visit('/admin/acme')
+        ->assertSeeIn('[data-norm="nom037"]', 'No aplica')
+        ->click('[data-norm="nom037"] li a')
+        ->assertSee('Constancia de que la norma no aplica')
+        ->assertNoJavaScriptErrors();
+});

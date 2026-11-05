@@ -5,17 +5,23 @@ import type { NavItem, RouteProgress } from '@/types';
 
 /**
  * A work center in the route of one standard: its name, its six stages and where it is in words. A center that has not
- * answered «¿Te aplica?» gets the way to answer instead. When its card is narrow the words take a line of their own.
+ * answered «¿Te aplica?» gets the way to answer instead, and one where it does not apply, its certificate. When its card is
+ * narrow the words take a line of their own.
  */
 export default function DashboardRouteRow({
     name,
     route,
     answerHref,
+    certificateHref,
 }: {
     name: string;
     route: RouteProgress;
     answerHref: NavItem['href'] | null;
+    certificateHref: NavItem['href'] | null;
 }) {
+    const certified =
+        !route.applies && route.answered && certificateHref !== null;
+
     return (
         <li className="grid grid-cols-[minmax(0,1fr)_112px] items-center gap-x-4 gap-y-1 py-1 text-sm @[560px]:grid-cols-[minmax(140px,180px)_112px_minmax(0,1fr)]">
             <span className="truncate font-medium">{name}</span>
@@ -27,8 +33,16 @@ export default function DashboardRouteRow({
                 </span>
             )}
             <span className="col-span-2 text-muted-foreground @[560px]:col-span-1">
+                {certified && (
+                    <Link
+                        href={certificateHref}
+                        className="touch-hit text-primary hover:underline"
+                    >
+                        {stageLine(route)}
+                    </Link>
+                )}
                 {route.answered
-                    ? stageLine(route)
+                    ? !certified && stageLine(route)
                     : answerHref !== null && (
                           <Link
                               href={answerHref}

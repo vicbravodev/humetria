@@ -70,25 +70,23 @@ export function stageLine(route: RouteProgress): string {
 }
 
 /**
- * The standards that apply to some center of the page, or that some center still has to answer «¿Te aplica?» for, each
- * with every center of it (those it does not apply to say so).
+ * Every standard, each with every center of the page (rediseño v2, decisión A2): where it applies, where the center still
+ * has to answer «¿Te aplica?», and where it does not apply, with its certificate in place of the route. None without centers.
  */
 export function normsInUse(centers: CenterRoutes[]): {
     norm: Norm;
     rows: { id: string; name: string; route: RouteProgress }[];
 }[] {
-    return NORMS.filter((norm) =>
-        centers.some(
-            (center) => center[norm.key].applies || !center[norm.key].answered,
-        ),
-    ).map((norm) => ({
-        norm,
-        rows: centers.map((center) => ({
-            id: center.id,
-            name: center.name,
-            route: center[norm.key],
-        })),
-    }));
+    return centers.length === 0
+        ? []
+        : NORMS.map((norm) => ({
+              norm,
+              rows: centers.map((center) => ({
+                  id: center.id,
+                  name: center.name,
+                  route: center[norm.key],
+              })),
+          }));
 }
 
 export type NextStep = {

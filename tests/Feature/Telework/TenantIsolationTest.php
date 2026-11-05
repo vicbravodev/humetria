@@ -201,7 +201,7 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
             ['POST', $panel('teleworkers.join', $b[Teleworker::class]->id), ['marital_status' => 'single', 'activities' => 'Captura', 'contact_phone' => '4421234567', ...$address]],
             ['POST', $panel('teleworkers.end', $b[Teleworker::class]->id), ['reason' => 'other', 'ended_on' => now(config()->string('app.display_timezone'))->toDateString()]],
         ],
-        TeleworkProfile::class => [['GET', $panel('applies.show', $center)], ['PUT', $panel('applies.update', $center), ['has_teleworkers' => true]]],
+        TeleworkProfile::class => [['GET', $panel('applies.show', $center)], ['PUT', $panel('applies.update', $center), ['has_teleworkers' => true]], ['GET', $panel('certificate', $center)]],
         TeleworkSettings::class => [],
         Training::class => [['GET', $panel('trainings.evidence', $b[Training::class]->id)]],
         TrainingAttendee::class => [],

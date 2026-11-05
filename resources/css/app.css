@@ -537,6 +537,12 @@
     }
 }
 
+/* A certificate prints alone on a letter sheet (rediseño v2, decisión D6: a page with print CSS, never a PDF). */
+@page certificate {
+    size: letter;
+    margin: 2cm;
+}
+
 @media print {
     *,
     ::before,

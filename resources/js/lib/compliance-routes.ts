@@ -1,6 +1,8 @@
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as seating } from '@/routes/tenant/seating';
 import { index as telework } from '@/routes/tenant/telework';
+import { certificate as seatingCertificate } from '@/routes/tenant/seating';
+import { certificate as teleworkCertificate } from '@/routes/tenant/telework';
 import { show as teleworkApplies } from '@/routes/tenant/telework/applies';
 import { applies as centerApplies } from '@/routes/tenant/work-centers';
 import type { CenterRoutes, NavItem } from '@/types';
@@ -15,6 +17,8 @@ export type Norm = {
     href: (tenantSlug: string) => NavItem['href'];
     /** Where a center answers «¿Te aplica?» for it (decisión A2); NOM-035 applies to every center and asks nothing. */
     answer?: (tenantSlug: string, workCenterId: string) => NavItem['href'];
+    /** Its printable certificate where a center declared that it does not apply (decisiones A2 y D6). */
+    certificate?: (tenantSlug: string, workCenterId: string) => NavItem['href'];
 };
 
 /** The standards in the order of the menu (board 40). */
@@ -32,6 +36,8 @@ export const NORMS: Norm[] = [
         href: telework,
         answer: (tenantSlug, workCenterId) =>
             teleworkApplies([tenantSlug, workCenterId]),
+        certificate: (tenantSlug, workCenterId) =>
+            teleworkCertificate([tenantSlug, workCenterId]),
     },
     {
         key: 'seating',
@@ -42,6 +48,8 @@ export const NORMS: Norm[] = [
             centerApplies([tenantSlug, workCenterId], {
                 query: { norm: 'seating' },
             }),
+        certificate: (tenantSlug, workCenterId) =>
+            seatingCertificate([tenantSlug, workCenterId]),
     },
 ];
 
