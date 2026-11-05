@@ -119,6 +119,10 @@ Route::get('admin/{tenant:slug}/telework/trainings/{training}/evidence', [Traini
 // evidence, so there is no PUT or DELETE.
 Route::get('admin/{tenant:slug}/telework/notices', [NoticeController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.notices.index');
 Route::post('admin/{tenant:slug}/telework/notices/{notice}/review', [NoticeController::class, 'review'])->where('tenant', $notReserved)->name('tenant.telework.notices.review');
+// An accident notice (board V3-Aviso): closed with its evidence, which only who may review it reads, and the place asked to be reviewed again.
+Route::post('admin/{tenant:slug}/telework/notices/{notice}/close', [NoticeController::class, 'close'])->where('tenant', $notReserved)->name('tenant.telework.notices.close');
+Route::get('admin/{tenant:slug}/telework/notices/{notice}/evidence', [NoticeController::class, 'evidence'])->where('tenant', $notReserved)->name('tenant.telework.notices.evidence');
+Route::post('admin/{tenant:slug}/telework/notices/{notice}/place-review', [NoticeController::class, 'placeReview'])->where('tenant', $notReserved)->name('tenant.telework.notices.place-review');
 
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');

@@ -211,7 +211,12 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
             ['POST', $panel('visit-authorizations.cancel', $b[VisitAuthorization::class]->id)],
             ['POST', $portal('visits.confirm', $b[VisitAuthorization::class]->id)],
         ],
-        WorkerNotice::class => [['POST', $panel('notices.review', $b[WorkerNotice::class]->id), ['note' => 'Revisado']]],
+        WorkerNotice::class => [
+            ['POST', $panel('notices.review', $b[WorkerNotice::class]->id), ['note' => 'Revisado']],
+            ['POST', $panel('notices.close', $b[WorkerNotice::class]->id), [], ['evidence' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')]],
+            ['GET', $panel('notices.evidence', $b[WorkerNotice::class]->id)],
+            ['POST', $panel('notices.place-review', $b[WorkerNotice::class]->id)],
+        ],
         Workplace::class => [
             ['POST', $panel('workplaces.retire', $b[Workplace::class]->id)],
             ['POST', $panel('workplaces.remote-check.store', $b[Workplace::class]->id), $decision],

@@ -3,29 +3,37 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Telework\Actions\CloseNotice;
 use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Telework\Actions\RequestPlaceReview;
 use App\Modules\Telework\Actions\ReviewNotice;
 use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Http\Controllers\PortalNoticeController;
 use App\Modules\Telework\Jobs\SendNoticeAnswer;
+use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Notifications\NoticeAnswered;
+use App\Modules\Telework\Support\NoticeEvidence;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\WorkerNoticeFactory;
+use Database\Factories\Telework\WorkplaceFactory;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ReviewNotice::class, PortalNoticeController::class, SendNoticeAnswer::class);
+mutates(ReviewNotice::class, PortalNoticeController::class, SendNoticeAnswer::class, CloseNotice::class, RequestPlaceReview::class, NoticeEvidence::class);
 
 // Rediseño v2, board V3-Aviso (decisión A17; docs/02, «Aviso de accidente»): RH or the Comisión records what was done about
 // an accident (6.9), without clinical detail, and the person learns it in their portal.
@@ -147,5 +155,125 @@ describe('the person learns it', function (): void {
             ->where('notices.data.1.id', $old->id)
             ->where('notices.data.1.answer', null));
         expect($response->getContent())->not->toContain('Nota-interna');
+    });
+});
+
+describe('closing it', function (): void {
+    beforeEach(function (): void {
+        Queue::fake();
+        Storage::fake('telework_files');
+        config()->set('filesystems.telework_files', 'telework_files');
+        $this->actingAs($this->hr);
+    });
+
+    function closeAccident(?UploadedFile $evidence, ?WorkerNotice $notice = null): Illuminate\Testing\TestResponse
+    {
+        return test()->post(route('tenant.telework.notices.close', [test()->tenant, ($notice ?? test()->notice)->id]), $evidence === null ? [] : ['evidence' => $evidence]);
+    }
+
+    it('closes an answered accident with its evidence, kept private, and audits and logs ids only', function (): void {
+        Log::spy();
+        answerAccident(['actions' => ['place_adjusted']]);
+        $this->travelTo('2026-03-04 12:00:00');
+
+        closeAccident(UploadedFile::fake()->create('acuerdo.pdf', 20, 'application/pdf'))->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->notice->refresh();
+        expect($this->notice->closed_at?->toIso8601String())->toBe('2026-03-04T12:00:00+00:00')
+            ->and($this->notice->closed_by)->toBe($this->hr->id)
+            ->and($this->notice->evidence_path)->toEndWith('.pdf');
+        Storage::disk('telework_files')->assertExists((string) $this->notice->evidence_path);
+        expect(AuditEntry::query()->where('event', 'telework.notice_closed')->sole()->subject_id)->toBe($this->notice->id);
+        Log::shouldHaveReceived('info')->with('telework.notice_closed', ['notice_id' => $this->notice->id, 'teleworker_id' => $this->teleworker->id])->once();
+
+        $this->get(route('tenant.telework.notices.evidence', [$this->tenant, $this->notice->id]))->assertOk()->assertHeader('Cache-Control', 'no-store, private');
+    });
+
+    it('takes a photo as evidence, without what the camera wrote in it', function (): void {
+        answerAccident(['actions' => ['place_adjusted']]);
+
+        closeAccident(UploadedFile::fake()->image('cambio.jpg', 40, 40))->assertSessionHasNoErrors();
+
+        expect($this->notice->refresh()->evidence_path)->toEndWith('.jpg');
+    });
+
+    it('needs the evidence, the answer first, and closes once', function (): void {
+        closeAccident(UploadedFile::fake()->create('acuerdo.pdf', 20, 'application/pdf'))->assertSessionHasErrors('notice');
+        answerAccident(['actions' => ['leave']]);
+        closeAccident(null)->assertSessionHasErrors('evidence');
+        closeAccident(UploadedFile::fake()->create('nota.txt', 2, 'text/plain'))->assertSessionHasErrors('evidence');
+        closeAccident(UploadedFile::fake()->create('acuerdo.pdf', 20, 'application/pdf'))->assertSessionHasNoErrors();
+        $first = $this->notice->refresh()->evidence_path;
+
+        closeAccident(UploadedFile::fake()->create('otro.pdf', 20, 'application/pdf'))->assertSessionHasErrors('notice');
+
+        expect($this->notice->refresh()->evidence_path)->toBe($first)
+            ->and(Storage::disk('telework_files')->allFiles())->toHaveCount(1);
+    });
+
+    it('closes only an accident, in the action too', function (): void {
+        $other = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'kind' => NoticeKind::ConditionChange, 'reviewed_by' => $this->hr->id, 'reviewed_at' => now(), 'review_note' => 'Visto']);
+
+        closeAccident(UploadedFile::fake()->create('acuerdo.pdf', 20, 'application/pdf'), $other)->assertSessionHasErrors('notice');
+
+        expect($other->refresh()->closed_at)->toBeNull();
+    });
+
+    it('keeps the evidence and the closing from the Comisión of another center, a viewer and another company', function (): void {
+        answerAccident(['actions' => ['leave']]);
+        closeAccident(UploadedFile::fake()->create('acuerdo.pdf', 20, 'application/pdf'));
+        $elsewhere = memberOf($this->tenant, TenantRole::Committee);
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id, 'user_id' => $elsewhere->id]);
+
+        foreach ([$elsewhere, memberOf($this->tenant, TenantRole::Viewer), memberOf(Tenant::factory()->create(), TenantRole::Hr)] as $outsider) {
+            $this->actingAs($outsider)->get(route('tenant.telework.notices.evidence', [$this->tenant, $this->notice->id]))->assertNotFound();
+        }
+
+        $this->actingAs($this->hr)->get(route('tenant.telework.notices.evidence', [$this->tenant, WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id])->id]))->assertNotFound();
+    });
+});
+
+describe('asking the Comisión to review the place', function (): void {
+    beforeEach(function (): void {
+        Queue::fake();
+        $this->workplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id]);
+        $this->actingAs($this->hr);
+    });
+
+    function askPlaceReview(?WorkerNotice $notice = null): Illuminate\Testing\TestResponse
+    {
+        return test()->post(route('tenant.telework.notices.place-review', [test()->tenant, ($notice ?? test()->notice)->id]));
+    }
+
+    it('asks the person to answer the list of their place again, for the Comisión to review it, once', function (): void {
+        ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+
+        askPlaceReview()->assertSessionHasNoErrors()->assertRedirect();
+        $this->travelTo('2026-03-02 12:00:00');
+        askPlaceReview()->assertSessionHasNoErrors();
+
+        $application = ChecklistApplication::query()->sole();
+        expect($application->workplace_id)->toBe($this->workplace->id)
+            ->and($application->section->value)->toBe(2)
+            ->and($this->notice->refresh()->place_review_requested_at?->toDateString())->toBe('2026-03-01');
+        Queue::assertPushed(App\Modules\Telework\Jobs\SendPortalReminder::class);
+    });
+
+    it('cannot ask before the Comisión publishes its list, nor for a person without a place in use', function (): void {
+        askPlaceReview()->assertSessionHasErrors('work_center');
+        ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        $this->workplace->update(['retired_at' => now()]);
+
+        askPlaceReview()->assertSessionHasErrors('notice');
+
+        expect(ChecklistApplication::query()->count())->toBe(0)->and($this->notice->refresh()->place_review_requested_at)->toBeNull();
+    });
+
+    it('asks only about an accident', function (): void {
+        ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        $other = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'kind' => NoticeKind::ConditionChange]);
+
+        askPlaceReview($other)->assertSessionHasErrors('notice');
+        expect(fn () => resolve(RequestPlaceReview::class)->handle($other))->toThrow(ValidationException::class);
     });
 });

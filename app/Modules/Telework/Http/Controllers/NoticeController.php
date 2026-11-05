@@ -6,12 +6,17 @@ namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Actions\CloseNotice;
+use App\Modules\Telework\Actions\RequestPlaceReview;
 use App\Modules\Telework\Actions\ReviewNotice;
+use App\Modules\Telework\Http\Requests\NoticeCloseRequest;
 use App\Modules\Telework\Http\Requests\NoticeReviewRequest;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Support\FileStore;
 use App\Modules\Telework\Support\NoticeAccess;
+use App\Modules\Telework\Support\NoticeEvidence;
 use App\Modules\Telework\Support\VisibleCenters;
 use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -22,6 +27,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use LogicException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The written notices of the company's teleworkers (numerals 6.3, 6.7, 6.9), for RH and the Comisión of each center
@@ -116,6 +122,45 @@ final class NoticeController extends Controller
 
         $review->handle($this->access->reviewable($user->id, $notice), $request->string('note')->toString(), $user->id, $request->actions());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Revisión registrada.']);
+
+        return back();
+    }
+
+    public function close(NoticeCloseRequest $request, mixed $tenant, string $notice, CloseNotice $close, NoticeEvidence $evidence): RedirectResponse
+    {
+        $user = $request->user();
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
+
+        $found = $this->access->reviewable($user->id, $notice);
+        $close->handle($found, $evidence->store($found, $request->evidence()), $user->id);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Aviso cerrado.']);
+
+        return back();
+    }
+
+    public function evidence(Request $request, mixed $tenant, string $notice, FileStore $files): StreamedResponse
+    {
+        $user = $request->user();
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
+
+        $found = $this->access->reviewable($user->id, $notice);
+        abort_if($found->evidence_path === null, 404);
+        $response = $files->stream($found->evidence_path);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
+    }
+
+    public function placeReview(Request $request, mixed $tenant, string $notice, RequestPlaceReview $ask): RedirectResponse
+    {
+        $user = $request->user();
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
+
+        $ask->handle($this->access->reviewable($user->id, $notice));
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Le pedimos a la persona que conteste de nuevo la lista de su lugar.']);
 
         return back();
     }
