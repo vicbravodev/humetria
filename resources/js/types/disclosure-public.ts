@@ -89,11 +89,17 @@ export type PublicChannel = {
 
 export type PosterProps = {
     company: string;
+    /** The center whose poster it is; null for the company's, whose QR leads to the list of centers. */
+    center: { id: string; name: string } | null;
     url: string;
     /** The QR of the address, an SVG data URI drawn on the server. */
     qr: string;
     /** Whether the page opens; a poster of an inactive link says so on screen, never on paper. */
     active: boolean;
+    /** Whether a complaint can be made from the page: only then the poster says so. */
+    channel: boolean;
+    /** Today as Y-m-d, in the display time zone: the latest day a means can be recorded on. */
+    today: string;
 };
 
 export type DossierSource = { origin: string; publishedOn: string | null };

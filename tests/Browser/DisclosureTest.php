@@ -443,15 +443,22 @@ it('shows the people the channel for complaints and the measures the company cho
         ->assertSee('Revisar las cargas de trabajo');
 })->with($looks);
 
-it('shows the poster with the address and its QR', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-Carteles, decisiones A16 y D6): a letter sheet per center, printed with CSS.
+it('shows the poster of a center with the address and its QR', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
-    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    workIn($tenant);
     resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
 
-    visitPage('disclosure/poster', "{$url}/disclosure/page/poster", $dark, $mobile)
-        ->assertSee('Información para las personas trabajadoras')
-        ->assertSee('Consulte aquí la política de prevención')
-        ->assertSee('Imprimir o guardar PDF')
+    visitPage('disclosure/poster', "{$url}/disclosure/page/poster?center={$plant->id}", $dark, $mobile)
+        ->assertSee('Cartel para imprimir')
+        ->assertSee('Lo que la empresa le informa sobre su bienestar')
+        ->assertSee('Escanee con su celular')
+        ->assertSee('No guardamos quién entra')
+        ->assertDontSee('También ahí puede presentar una queja')
+        ->assertSee('Imprimir el de Planta Querétaro')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth')
         ->assertScript('() => document.querySelector("img[alt^=\'Código QR\']").naturalWidth > 0', true);
 })->with($looks);
 
