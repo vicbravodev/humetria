@@ -1,5 +1,11 @@
 import { usePage } from '@inertiajs/react';
-import { type AnimationEvent, lazy, Suspense, useState } from 'react';
+import {
+    type AnimationEvent,
+    lazy,
+    Suspense,
+    useCallback,
+    useState,
+} from 'react';
 import HumiLauncher from '@/components/assistant/humi-launcher';
 import {
     Sheet,
@@ -7,6 +13,7 @@ import {
     SheetDescription,
     SheetTitle,
 } from '@/components/ui/sheet';
+import { useHumiOpenRequest } from '@/hooks/use-humi-open-request';
 import { useHumiShortcut } from '@/hooks/use-humi-shortcut';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { pageContextOf } from '@/lib/assistant/page-context';
@@ -16,7 +23,7 @@ const HumiPanel = lazy(() => import('@/components/assistant/humi-panel'));
 
 /**
  * Humi in every page of the panel for whoever may use it: the round button, and the panel opened from it (or from Ctrl or
- * Cmd + J) docked at the right of the page when the window is wide, as a sheet over it when it is not. The page behind keeps
+ * Cmd + J, or a page's `openHumi()`) docked at the right of the page when the window is wide, as a sheet over it when it is not. The page behind keeps
  * working while it is docked.
  */
 export default function HumiDock() {
@@ -24,12 +31,14 @@ export default function HumiDock() {
     const tenant = props.tenant;
     const wide = useMediaQuery('(min-width: 1280px)');
     const [open, setOpen] = useState(false);
+    const openNow = useCallback(() => setOpen(true), []);
     const [closedOnce, setClosedOnce] = useState(false);
     const [leaving, setLeaving] = useState(false);
 
     useHumiShortcut(() =>
         open && wide ? setLeaving(true) : setOpen((was) => !was),
     );
+    useHumiOpenRequest(openNow);
 
     if (tenant === undefined || tenant === null || !tenant.can.use_assistant) {
         return null;

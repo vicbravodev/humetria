@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Contracts\TeleworkRoute;
+use App\Modules\Telework\Data\UnreviewedAccidents;
 use App\Modules\Telework\Enums\RowState;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Checklist;
@@ -19,7 +21,9 @@ use App\Modules\Telework\Models\Workplace;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\MemberSummary;
+use App\Modules\Tenancy\Data\RouteProgress;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 
@@ -65,6 +69,7 @@ final readonly class TeleworkPages
         private WorkplaceStanding $standing,
         private Settings $settings,
         private Members $members,
+        private TeleworkRoute $route,
     ) {}
 
     /**
@@ -120,6 +125,43 @@ final readonly class TeleworkPages
             'nextStep' => $this->nextStep($tenant, $center, $reach),
             'tabs' => $this->tabs($tenant, $center, $active, $reach),
             'people' => $manage || $member ? $this->people($tenant, $center, $manage) : null,
+        ];
+    }
+
+    /**
+     * The NOM-037 route of one center (board V2-Ruta-N037): where it stands in its six stages, every row of table 10.3 in
+     * plain words with the stage it belongs to and its way to fix it, the accidents that cannot wait (for who reviews
+     * them) and the way to «Si hoy llegara una inspección».
+     *
+     * @return array<string, mixed>
+     */
+    public function route(mixed $tenant, WorkCenterSummary $center, RouteProgress $progress, int $userId): array
+    {
+        $reach = ['manage' => Gate::allows('manage-telework'), 'member' => $this->gate->isMember($userId, $center->id)];
+        $accidents = Gate::allows('review-workplaces') ? array_values(array_filter($this->route->accidents(), fn (UnreviewedAccidents $accidents): bool => $accidents->workCenterId === $center->id)) : [];
+
+        return [
+            'workCenter' => ['id' => $center->id, 'name' => $center->name],
+            'teleworkers' => $this->headcounts([$center->id])[$center->id]['active'],
+            'route' => ['applies' => $progress->applies, 'done' => $progress->done, 'status' => $progress->status, 'answered' => $progress->answered],
+            'rows' => array_map(fn (ComplianceRow $row): array => [
+                'numeral' => $row->numeral,
+                'title' => self::PLAIN[$row->numeral] ?? $row->label,
+                'detail' => $row->detail,
+                'state' => $row->state->value,
+                'stage' => intdiv(RouteStages::rank($row->numeral), 100) + 1,
+                ...$this->fix($tenant, $center, $row->numeral, $reach, $row->state === RowState::Done),
+            ], $this->rows->for($center->id)),
+            'accidents' => array_map(fn (UnreviewedAccidents $accidents): array => [
+                'person' => $accidents->personName,
+                'count' => $accidents->count,
+                'since' => $accidents->since,
+                'waiting' => CarbonImmutable::parse($accidents->since, config()->string('app.display_timezone'))->diffForHumans(),
+                'href' => $accidents->noticeId === null
+                    ? route('tenant.telework.notices.index', [$tenant, 'center' => $center->id])
+                    : route('tenant.telework.notices.show', [$tenant, $accidents->noticeId]),
+            ], $accidents),
+            'inspectionHref' => route('tenant.telework.inspection', [$tenant, $center->id]),
         ];
     }
 

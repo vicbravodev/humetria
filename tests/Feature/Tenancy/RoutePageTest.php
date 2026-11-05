@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Responses\Models\TraumaScreening;
-use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\RoutePage;
-use Database\Factories\Organization\EmployeeFactory;
-use Database\Factories\Telework\TeleworkerFactory;
-use Database\Factories\Telework\WorkerNoticeFactory;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -32,26 +28,10 @@ function routeOf(string $norm, ?WorkCenter $center = null): Illuminate\Testing\T
     return test()->get(route('tenant.work-centers.route', [test()->tenant, ($center ?? test()->plant)->id, $norm]));
 }
 
-it('shows where the center stands in a route, with the accident notices of that center first', function (): void {
-    $hugo = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Hugo Saiz']);
-    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $hugo->id]);
-    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $person->id, 'submitted_at' => '2026-10-27 18:00:00']);
-    // Another center's notice waits on its own route.
-    $other = WorkCenter::factory()->for($this->tenant)->create();
-    $ana = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $other->id])->id]);
-    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $ana->id]);
-
+it('sends NOM-037 to its own route page (board V2-Ruta-N037)', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
-    routeOf('nom037')->assertInertia(fn (Assert $page) => $page->component('tenancy/route')
-        ->where('norm', 'nom037')
-        ->where('workCenter', ['id' => $this->plant->id, 'name' => 'Planta Querétaro'])
-        ->where('route.applies', true)
-        ->where('route.done.0', false)
-        ->where('route.status', 'define las reglas')
-        ->where('until', null)
-        ->has('urgencies', 1)
-        ->where('urgencies.0.title', 'Hugo Saiz avisó un accidente de trabajo'));
+    routeOf('nom037')->assertRedirect(route('tenant.telework.route', [$this->tenant, $this->plant->id]));
 });
 
 it('puts first the people of the center who wait for a clinical assessment, for whoever channels them', function (TenantRole $role, int $urgencies): void {
@@ -66,11 +46,9 @@ it('puts first the people of the center who wait for a clinical assessment, for 
     'a viewer' => [TenantRole::Viewer, 0],
 ]);
 
-it('says it does not apply, or that the center has to answer, instead of a route', function (): void {
-    TeleworkProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'declared_on' => '2026-10-03']);
+it('says that the center has to answer, instead of a route', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
-    routeOf('nom037')->assertInertia(fn (Assert $page) => $page->where('route', ['applies' => false, 'done' => [], 'status' => 'Nadie teletrabaja más del 40 % · constancia del 3 oct 2026', 'answered' => true]));
     routeOf('seating')->assertInertia(fn (Assert $page) => $page->where('route.answered', false));
 });
 

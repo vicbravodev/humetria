@@ -7,7 +7,7 @@ import AccidentPlaceReview from '@/components/telework/accident-place-review';
 import AccidentTimeline from '@/components/telework/accident-timeline';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dashboard } from '@/routes/tenant';
-import { center } from '@/routes/tenant/telework';
+import { route } from '@/routes/tenant/telework';
 import type { AccidentNotice, Choice } from '@/types';
 
 /** Board V3-Aviso: an accident notice (6.9), followed up in three steps, with who sent it, its timeline and the place. */
@@ -24,7 +24,7 @@ export default function Notice({
             { title: 'Panel', href: dashboard(tenantSlug) },
             {
                 title: `NOM-037 · ${notice.workCenter.name}`,
-                href: center([tenantSlug, notice.workCenter.id]),
+                href: route([tenantSlug, notice.workCenter.id]),
             },
             { title: `Aviso de ${notice.person}` },
         ],

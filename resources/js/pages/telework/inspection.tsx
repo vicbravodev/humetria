@@ -3,7 +3,7 @@ import InspectionDossier from '@/components/telework/inspection-dossier';
 import InspectionList from '@/components/telework/inspection-list';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dashboard } from '@/routes/tenant';
-import { center } from '@/routes/tenant/telework';
+import { route } from '@/routes/tenant/telework';
 import type { InspectionItem } from '@/types';
 
 /** Board V3-Inspeccion: what an inspector would ask for today in a center, what is missing first, and its dossier. */
@@ -26,7 +26,7 @@ export default function TeleworkInspection({
             { title: 'Panel', href: dashboard(tenantSlug) },
             {
                 title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
+                href: route([tenantSlug, workCenter.id]),
             },
             { title: 'Inspección' },
         ],

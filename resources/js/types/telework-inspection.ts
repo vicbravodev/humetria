@@ -3,8 +3,22 @@ export type InspectionItem = {
     numeral: string;
     title: string;
     detail: string | null;
-    state: 'done' | 'partial' | 'missing';
+    state: 'done' | 'partial' | 'missing' | 'not_applicable';
     /** Null for whoever may not open it (the viewer). */
     href: string | null;
     action: string | null;
+};
+
+/** A row of table 10.3 on the route of a center (board V2-Ruta-N037): the stage (1 to 5) it belongs to. */
+export type RouteRow = InspectionItem & { stage: number };
+
+/** The accidents of a center nobody answered yet: who, when only one; since when the oldest waits. */
+export type RouteAccidents = {
+    person: string | null;
+    count: number;
+    /** Y-m-d. */
+    since: string;
+    /** "hace 8 meses". */
+    waiting: string;
+    href: string;
 };
