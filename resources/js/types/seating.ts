@@ -1,13 +1,18 @@
+import type { RouteProgress } from './dashboard';
+
 export type SectorValue = 'services' | 'commerce' | 'analogous' | 'industrial';
 
-/** A work center on the Ley Silla list, with the sector it declared (null while it has not). */
+/** A work center on the Ley Silla list (the pattern of board V2-Centros-N037): who works standing and where its route stands. */
 export type SeatingCenterCard = {
     id: string;
     name: string;
     activity: string;
-    sector: SectorValue | null;
-    sectorLabel: string | null;
+    people: number;
+    route: RouteProgress;
 };
+
+/** How many people work standing in how many of the centers the person sees. */
+export type SeatingSummary = { people: number; centers: number };
 
 export type SectorOption = { value: SectorValue; label: string };
 

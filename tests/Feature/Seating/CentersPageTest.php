@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Seating\Http\Controllers\SeatingController;
+use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatingProfile;
+use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Seating\Support\SeatingPages;
 use App\Modules\Seating\Support\VisibleCenters;
 use App\Modules\Telework\Models\CommitteeAssignment;
@@ -48,17 +50,34 @@ it('lists only the centers the committee sits on', function (): void {
             ->where('centers.data.0.name', 'Planta Norte'));
 });
 
-it('gives each center card its sector, or none while it is undeclared', function (): void {
+// Rediseño v2 (the pattern of board V2-Centros-N037): each center with the people who work standing there, where it stands in
+// its route and what comes next; above, how many people in how many centers.
+it('gives each center its people and where it stands in its route, and the people of every center it sees', function (): void {
     SeatingProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id, 'sector' => 'commerce']);
+    $position = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id]);
+    PositionAssignment::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'position_id' => $position->id]);
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
     $this->get(route('tenant.seating.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('centers.data.0.sector', 'commerce')
-            ->where('centers.data.0.sectorLabel', 'Comercio')
-            ->where('centers.data.1.sector', null)
-            ->where('centers.data.1.sectorLabel', null));
+            ->where('summary', ['people' => 2, 'centers' => 1])
+            ->where('canManage', true)
+            ->where('centers.data', fn ($centers): bool => collect($centers)->firstWhere('id', $this->north->id)['people'] === 2
+                && collect($centers)->firstWhere('id', $this->north->id)['route'] === ['applies' => true, 'done' => [true, false, false, true, false, false], 'status' => 'pon asientos donde hacen falta', 'answered' => true]
+                && collect($centers)->firstWhere('id', $this->south->id)['people'] === 0
+                && collect($centers)->firstWhere('id', $this->south->id)['route']['answered'] === false));
 });
+
+it('reads the list in a fixed number of queries, however many centers it shows', function (): void {
+    WorkCenter::factory()->for($this->tenant)->count(4)->create();
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_SEATING_CENTERS);
+    $this->get(route('tenant.seating.index', $this->tenant))->assertOk();
+});
+
+// Measured, then fixed so that a query per center breaks the test.
+const QUERIES_OF_THE_SEATING_CENTERS = 31;
 
 it('paginates the centers on the server', function (): void {
     WorkCenter::factory()->for($this->tenant)->count(12)->create();
@@ -72,7 +91,7 @@ it('paginates the centers on the server', function (): void {
 
 it('shows the viewer the list without any personal data', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->get(route('tenant.seating.index', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('centers.data.0', fn ($card) => array_keys($card->toArray()) === ['id', 'name', 'activity', 'sector', 'sectorLabel']));
+        ->assertInertia(fn (Assert $page) => $page->where('centers.data.0', fn ($card) => array_keys($card->toArray()) === ['id', 'name', 'activity', 'people', 'route']));
 });
 
 it('opens a center with its declaration and what the person may do', function (TenantRole $role, bool $manage): void {

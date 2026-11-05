@@ -41,15 +41,17 @@ function seatingCenter(): array
     return [$url, WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create(['name' => 'Planta Querétaro', 'main_activity' => 'Manufactura'])];
 }
 
-it('lists the centers of the company with their declared sector', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (the pattern of board V2-Centros-N037): each center with who works standing there, where it stands and its route.
+it('lists the centers of the company with where their route stands', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
     SeatingProfile::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'sector' => 'commerce']);
+    StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
 
     visitPage('seating/index', "{$url}/seating", $dark, $mobile)
-        ->assertSee('Ley Silla')
+        ->assertSee('Trabajo de pie en tus centros')
         ->assertSee('Planta Querétaro')
-        ->assertSee('Comercio')
-        ->assertSee('Abrir centro');
+        ->assertSee('Abrir ruta')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
 it('shows a center with its declaration form', function (bool $dark, bool $mobile): void {
