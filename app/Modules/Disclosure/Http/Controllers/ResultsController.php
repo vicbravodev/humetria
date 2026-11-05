@@ -34,7 +34,10 @@ final class ResultsController extends Controller
         $publish->handle($campaign, $request->user()->id ?? abort(403), $request->boolean('show_measures'));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Resultados publicados para las personas.']);
 
-        return redirect()->route('tenant.disclosure.results', $tenant);
+        // Published from «Comparte los resultados con tu equipo» (board V2-N035-Compartir), it goes back there.
+        return $request->input('back') === 'share'
+            ? redirect()->route('tenant.disclosure.results.share', [$tenant, $campaign])
+            : redirect()->route('tenant.disclosure.results', $tenant);
     }
 
     public function withdraw(Request $request, mixed $tenant, string $campaign, WithdrawResults $withdraw): RedirectResponse

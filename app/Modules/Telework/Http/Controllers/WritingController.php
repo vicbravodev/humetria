@@ -9,10 +9,10 @@ use App\Modules\Telework\Actions\PublishWriting;
 use App\Modules\Telework\Actions\SaveWriting;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Http\Requests\WritingRequest;
-use App\Modules\Telework\Support\Writing\Writer;
-use App\Modules\Telework\Support\Writing\WrittenTemplate;
+use App\Modules\Telework\Support\Writing\Templates;
 use App\Modules\Telework\Support\WritingPage;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Support\Writing\WrittenTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -26,7 +26,7 @@ use Inertia\Response;
  */
 final class WritingController extends Controller
 {
-    public function __construct(private readonly Writer $writer, private readonly WorkCenters $workCenters) {}
+    public function __construct(private readonly Templates $templates, private readonly WorkCenters $workCenters) {}
 
     /** The six supporting documents (board V2-N037-Docs): everyone who reads NOM-037 sees them; whoever manages it writes them. */
     public function index(WritingPage $page): Response
@@ -88,7 +88,7 @@ final class WritingController extends Controller
     private function written(string $kind): array
     {
         $document = DocumentKind::tryFrom($kind);
-        $template = $document === null ? null : $this->writer->template($document);
+        $template = $document === null ? null : $this->templates->template($document);
         abort_if($document === null || $template === null, 404);
 
         return [$document, $template];

@@ -18,6 +18,7 @@ final class ComplianceRoutes
     {
         return [
             'tenant.campaigns.*',
+            'tenant.nom035.*',
             'tenant.telework.*',
             'tenant.seating.*',
             'tenant.assistant.*',

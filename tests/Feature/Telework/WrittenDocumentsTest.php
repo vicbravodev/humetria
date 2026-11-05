@@ -5,16 +5,17 @@ declare(strict_types=1);
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Models\DocumentDraft;
 use App\Modules\Telework\Models\TeleworkDocument;
-use App\Modules\Telework\Support\Writing\Field;
-use App\Modules\Telework\Support\Writing\Question;
-use App\Modules\Telework\Support\Writing\Section;
-use App\Modules\Telework\Support\Writing\Writer;
+use App\Modules\Telework\Support\Writing\Templates;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\Writer;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(Writer::class);
+mutates(Writer::class, Templates::class);
 
 // Rediseño v2 (boards V2-N037-Docs and V3-Doc-Riesgos; docs/02, «Documentos con preguntas»): the six supporting documents
 // are written with the same engine as the policy, each with its three or four questions.
@@ -31,7 +32,7 @@ function firstOptions(DocumentKind $kind): array
 {
     $answers = [];
 
-    foreach (resolve(Writer::class)->template($kind)?->questions() ?? [] as $question) {
+    foreach (resolve(Templates::class)->template($kind)?->questions() ?? [] as $question) {
         foreach ($question->fields as $field) {
             $first = array_key_first($field->options);
             $answers[$field->key] = $field->multiple ? [$first] : $first;
@@ -73,7 +74,7 @@ it('asks for the risks as board V3-Doc-Riesgos does, with the three most common 
 
 it('gives every question a section of its own and writes them all once each is answered', function (DocumentKind $kind): void {
     $writer = resolve(Writer::class);
-    $template = $writer->template($kind);
+    $template = resolve(Templates::class)->template($kind);
     $sections = $writer->sections($template, firstOptions($kind));
     $keys = array_column($sections, 'key');
     $fields = array_merge(...array_map(fn (Question $question): array => array_map(fn (Field $field): string => $field->key, $question->fields), $template->questions()));
@@ -85,7 +86,7 @@ it('gives every question a section of its own and writes them all once each is a
         ->and(array_map(fn (Question $question): string => $question->key, $template->questions()))->each->toBeIn($keys)
         ->and($fields)->toBe(array_values(array_unique($fields)))
         ->and(array_diff($kind->coverableItems(), $keys))->toBe([])
-        ->and(array_filter($template->sections(new App\Modules\Telework\Support\Writing\Answers([])), fn (Section $section): bool => ! $section->base && $section->text !== null))->toBe([]);
+        ->and(array_filter($template->sections(new App\Support\Writing\Answers([])), fn (Section $section): bool => ! $section->base && $section->text !== null))->toBe([]);
 })->with(array_filter(DocumentKind::cases(), fn (DocumentKind $kind): bool => $kind !== DocumentKind::InspectionReport));
 
 it('publishes a supporting document with the incisos its kind covers, and the 10.3 row counts it', function (): void {

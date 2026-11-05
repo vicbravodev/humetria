@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Database\Factories\Results;
 
 use App\Models\User;
+use App\Modules\Results\Enums\Destination;
+use App\Modules\Results\Enums\HowTold;
 use App\Modules\Results\Enums\ReferralStatus;
 use App\Modules\Results\Models\ScreeningReferral;
 use Database\Factories\Responses\TraumaScreeningFactory;
@@ -31,8 +33,12 @@ final class ScreeningReferralFactory extends Factory
             'tenant_id' => fn (array $attributes): string => $this->column('campaigns', 'id', $attributes['campaign_id'], 'tenant_id'),
             'employee_id' => fn (array $attributes): string => $this->column('trauma_screenings', 'campaign_id', $attributes['campaign_id'], 'employee_id'),
             'status' => ReferralStatus::Referred,
+            'destination' => Destination::Imss,
+            'told' => HowTold::InPerson,
             'referred_on' => now()->subWeek()->toDateString(),
-            'institution' => 'IMSS, Unidad de Medicina Familiar 7',
+            'note' => null,
+            'remind_on' => null,
+            'institution' => null,
             'updated_by' => User::factory(),
         ];
     }

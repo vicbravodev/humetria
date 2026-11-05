@@ -12,9 +12,11 @@ use App\Modules\Disclosure\Actions\StartPolicyDraft;
 use App\Modules\Disclosure\Http\Requests\DraftRequest;
 use App\Modules\Disclosure\Http\Requests\PublishRequest;
 use App\Modules\Disclosure\Support\PolicyPages;
+use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,12 +58,15 @@ final class PolicyController extends Controller
         return redirect()->route('tenant.disclosure.policy', $tenant);
     }
 
-    public function publish(PublishRequest $request, mixed $tenant, string $document, PublishPolicy $publish): RedirectResponse
+    /** Published from the route of a center (its stage 1), it goes back to that route. */
+    public function publish(PublishRequest $request, mixed $tenant, string $document, PublishPolicy $publish, WorkCenters $workCenters): RedirectResponse
     {
         $published = $publish->handle($document, $request->workCenterIds(), $request->covers(), $request->boolean('reviewed'), $request->userId());
         Inertia::flash('toast', ['type' => 'success', 'message' => "Política publicada: versión {$published->version}."]);
+        $center = $request->string('center')->toString();
+        $from = Str::isUuid($center) ? $workCenters->findActive($center) : null;
 
-        return redirect()->route('tenant.disclosure.policy', $tenant);
+        return $from === null ? redirect()->route('tenant.disclosure.policy', $tenant) : redirect()->route('tenant.nom035.route', [$tenant, $from->id]);
     }
 
     public function version(mixed $tenant, string $document, PolicyPages $pages): Response

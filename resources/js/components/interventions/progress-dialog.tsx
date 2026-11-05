@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import ChoiceField from '@/components/humetria/choice-field';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import FormDialog from '@/components/interventions/form-dialog';
 import TextField from '@/components/interventions/text-field';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { nextStatuses } from '@/lib/action-form';
@@ -73,21 +73,28 @@ export default function ProgressDialog({
                         multiline
                     />
                     <div className="grid gap-2">
-                        <Label htmlFor="progress-evidence">
-                            Evidencia (PDF, JPG o PNG)
-                        </Label>
-                        <Input
+                        <p className="font-medium">Evidencia (opcional)</p>
+                        <FileDropZone
                             id="progress-evidence"
                             name="evidence"
-                            type="file"
                             accept="application/pdf,image/jpeg,image/png"
+                            title="Arrastra la evidencia aquí o elígela"
+                            hint="PDF, JPG o PNG"
+                            invalid={errors['evidence'] !== undefined}
+                            describedBy="progress-evidence-help progress-evidence-error"
                         />
-                        <p className="text-sm text-muted-foreground">
+                        <p
+                            id="progress-evidence-help"
+                            className="text-sm text-muted-foreground"
+                        >
                             Las listas de asistencia llevan nombres: solo el
                             titular y RH abren el archivo, y no se imprime en el
                             informe.
                         </p>
-                        <InputError message={errors['evidence']} />
+                        <InputError
+                            id="progress-evidence-error"
+                            message={errors['evidence']}
+                        />
                     </div>
                 </>
             )}

@@ -1,5 +1,6 @@
 import ChosenPeopleActions from '@/components/campaigns/chosen-people-actions';
 import ChosenPeopleField from '@/components/campaigns/chosen-people-field';
+import PeopleChecklistEmpty from '@/components/campaigns/people-checklist-empty';
 import PersonCheckRow from '@/components/campaigns/person-check-row';
 import Pagination from '@/components/humetria/pagination';
 import InputError from '@/components/humetria/input-error';
@@ -91,9 +92,10 @@ export default function PeopleChecklist({
                 ))}
             </ul>
             {people.data.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                    Nadie coincide con la búsqueda.
-                </p>
+                <PeopleChecklistEmpty
+                    workCenter={workCenter.label}
+                    searched={search.trim() !== ''}
+                />
             )}
             <Pagination
                 page={people}

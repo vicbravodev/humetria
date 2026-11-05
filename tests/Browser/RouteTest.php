@@ -59,7 +59,7 @@ it('shows a route all done with its dossier, its next evaluation and what stays 
     ResultPublication::factory()->create(['tenant_id' => $plant->tenant_id, 'campaign_id' => $closed->id]);
     ReportDetails::factory()->create(['tenant_id' => $plant->tenant_id, 'campaign_id' => $closed->id]);
 
-    visitPage('tenancy/route', "/admin/acme/work-centers/{$plant->id}/routes/nom035", $dark)
+    visitPage('tenancy/nom035-route', "/admin/acme/work-centers/{$plant->id}/routes/nom035", $dark)
         ->assertSee('Todo al día en la NOM-035')
         ->assertSee('La siguiente evaluación toca antes del')
         ->assertSee('Descargar expediente')

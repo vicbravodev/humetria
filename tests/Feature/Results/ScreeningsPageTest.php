@@ -8,6 +8,7 @@ use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Results\Http\Controllers\ScreeningController;
+use App\Modules\Results\Models\ScreeningReferral;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -95,8 +96,44 @@ it('lists with a fixed number of queries, however many need care', function (int
     $url = route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]);
     $this->get($url);
 
-    // The same whatever the size: nothing is read per row.
-    $this->expectsDatabaseQueryCount(20);
+    // The same whatever the size: nothing is read per row (one more since the redesign, who was channeled already).
+    $this->expectsDatabaseQueryCount(21);
 
     $this->get($url)->assertOk();
 })->with([1, 6]);
+
+// Rediseño v2 (board V4-N035-Canalizacion): who waits first, those channeled a click away, and the person chosen open beside
+// them, with the five destinations and what to say for each.
+it('lists who waits first and who was channeled a click away, and opens the person chosen', function (): void {
+    $luis = screened($this->campaign, 'Luis Pérez', '2026-11-05 15:00:00');
+    $ana = screened($this->campaign, 'Ana López', '2026-11-03 15:00:00');
+    $other = screened($this->campaign, 'Sin Evento', '2026-11-04 15:00:00', requires: false);
+    ScreeningReferral::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->campaign->id, 'employee_id' => $ana->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    $url = fn (array $query = []): string => route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id, ...$query]);
+
+    $this->get($url())->assertInertia(fn (Assert $page) => $page
+        ->where('view', 'pending')
+        ->where('people.total', 1)
+        ->where('people.data.0.id', $luis->id)
+        ->where('selected.id', $luis->id)
+        ->where('selected.reachable', true)
+        ->where('selected.referral', null)
+        ->has('destinations', 5)
+        ->where('destinations.0', ['value' => 'imss', 'label' => 'IMSS', 'hint' => 'Su Unidad de Medicina Familiar', 'script' => App\Modules\Results\Enums\Destination::Imss->script(), 'notice' => App\Modules\Results\Enums\Destination::Imss->notice()]));
+    $this->get($url(['view' => 'channeled']))->assertInertia(fn (Assert $page) => $page
+        ->where('view', 'channeled')
+        ->where('people.total', 1)
+        ->where('selected.id', $ana->id)
+        ->where('selected.referral.destination', 'imss'));
+    // Anyone who requires it can be opened from any view; anyone else is not, and the first of the list opens instead.
+    $this->get($url(['person' => $ana->id]))->assertInertia(fn (Assert $page) => $page->where('selected.id', $ana->id));
+    $this->get($url(['person' => $other->id]))->assertInertia(fn (Assert $page) => $page->where('selected.id', $luis->id));
+});
+
+it('opens nobody when nobody waits in the view', function (): void {
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    $this->get(route('tenant.campaigns.screenings', [$this->tenant, $this->campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('people.total', 0)->where('selected', null));
+});

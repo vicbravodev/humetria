@@ -40,6 +40,20 @@ final readonly class Nom035Route
      */
     public function progress(array $workCenterIds, array $current, array $latest, array $toChannel): array
     {
+        return array_map(Nom035Stages::from(...), $this->facts($workCenterIds, $current, $latest, $toChannel));
+    }
+
+    /**
+     * What the route of each center is read from (the same arguments as `progress()`).
+     *
+     * @param  list<string>  $workCenterIds
+     * @param  list<CampaignRecord>  $current
+     * @param  array<string, CampaignRecord>  $latest
+     * @param  array<string, int>  $toChannel
+     * @return array<string, Nom035Facts> by work center id
+     */
+    public function facts(array $workCenterIds, array $current, array $latest, array $toChannel): array
+    {
         $latestIds = array_values(array_map(fn (CampaignRecord $campaign): string => $campaign->id, $latest));
         $policies = $this->disclosure->withPolicy($workCenterIds);
         $cycles = $this->campaigns->cycles($workCenterIds);
@@ -47,13 +61,13 @@ final readonly class Nom035Route
         $programs = $this->programs->forEvaluations($latestIds);
         $unreported = $this->results->withoutReportDetails($latestIds);
         $people = $this->headcount->byWorkCenter();
-        $progress = [];
+        $facts = [];
 
         foreach ($workCenterIds as $id) {
             $evaluations = array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->workCenterId === $id && $campaign->kind === 'nom035_evaluation');
             $running = array_find($evaluations, fn (CampaignRecord $campaign): bool => $campaign->daysLeft !== null);
             $evaluated = $latest[$id] ?? null;
-            $progress[$id] = Nom035Stages::from(new Nom035Facts(
+            $facts[$id] = new Nom035Facts(
                 in_array($id, $policies, true),
                 $cycles[$id]->standing,
                 $cycles[$id]->until,
@@ -64,10 +78,10 @@ final readonly class Nom035Route
                 $evaluated !== null && in_array($evaluated->id, $shared, true),
                 $evaluated === null ? null : $programs[$evaluated->id] ?? null,
                 $evaluated !== null && ! in_array($evaluated->id, $unreported, true),
-            ));
+            );
         }
 
-        return $progress;
+        return $facts;
     }
 
     /**

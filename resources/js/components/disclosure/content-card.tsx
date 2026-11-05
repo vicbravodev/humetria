@@ -1,28 +1,28 @@
-import { useForm } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
-import ContentEditor from '@/components/disclosure/content-editor';
 import PlainText from '@/components/disclosure/plain-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { countOf } from '@/lib/plural';
-import { store } from '@/routes/tenant/disclosure/contents/draft';
+import { write } from '@/routes/tenant/disclosure';
 import type { ContentBlock } from '@/types';
+
+/** What the button of a block says: written with questions (board V4-Difusion-Contenidos), go on with its draft or write the next. */
+function action(published: boolean, drafting: boolean): string {
+    if (drafting) {
+        return 'Continuar';
+    }
+
+    return published ? 'Nueva versión' : 'Escribir con preguntas';
+}
 
 /**
  * One block of 5.7 that the company writes (pantalla Ajustes: a card with its fields): what it is, the text in force with where
- * it was published, and the draft or the button that starts one.
+ * it was published, and the way to write it with questions.
  */
-export default function ContentCard({
-    block,
-    centersInUse,
-}: {
-    block: ContentBlock;
-    centersInUse: number;
-}) {
+export default function ContentCard({ block }: { block: ContentBlock }) {
     const tenantSlug = useTenantSlug();
-    const start = useForm({});
     const { latest, draft } = block;
 
     return (
@@ -55,43 +55,17 @@ export default function ContentCard({
                     <PlainText text={latest.text} />
                 </div>
             )}
-            {draft === null ? (
-                <div className="grid gap-2">
-                    {latest === null && (
-                        <p className="text-sm text-muted-foreground">
-                            {block.note}
-                        </p>
-                    )}
-                    <div>
-                        <Button
-                            variant="outline"
-                            disabled={start.processing}
-                            onClick={() =>
-                                start.post(
-                                    store.url({
-                                        tenant: tenantSlug,
-                                        kind: block.kind,
-                                    }),
-                                )
-                            }
-                        >
-                            {start.processing ? (
-                                <Spinner />
-                            ) : (
-                                <Pencil aria-hidden />
-                            )}
-                            {latest === null ? 'Escribir' : 'Nueva versión'}
-                        </Button>
-                    </div>
-                </div>
-            ) : (
-                <ContentEditor
-                    key={draft.id}
-                    block={block}
-                    draft={draft}
-                    centersInUse={centersInUse}
-                />
+            {latest === null && draft === null && (
+                <p className="text-sm text-muted-foreground">{block.note}</p>
             )}
+            <div>
+                <Button variant="outline" asChild>
+                    <Link href={write.url([tenantSlug, block.kind])}>
+                        <Pencil aria-hidden />
+                        {action(latest !== null, draft !== null)}
+                    </Link>
+                </Button>
+            </div>
         </section>
     );
 }

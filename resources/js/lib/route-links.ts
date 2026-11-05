@@ -1,78 +1,13 @@
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as complaints } from '@/routes/tenant/complaints';
-import {
-    dossier as disclosureDossier,
-    index as disclosure,
-} from '@/routes/tenant/disclosure';
 import { index as interventions } from '@/routes/tenant/interventions';
-import {
-    dossier as seatingDossier,
-    route as seatingRoute,
-} from '@/routes/tenant/seating';
-import {
-    dossier as teleworkDossier,
-    index as telework,
-    route as teleworkRoute,
-} from '@/routes/tenant/telework';
+import { index as telework } from '@/routes/tenant/telework';
 import { index as teleworkDocuments } from '@/routes/tenant/telework/documents';
 import { index as teleworkTrainings } from '@/routes/tenant/telework/trainings';
 import type { NormKey } from '@/lib/compliance-routes';
 import type { NavItem } from '@/types';
 
 type Href = NavItem['href'];
-
-/** The printable dossier each module keeps for a center: what «Descargar expediente» opens. */
-export function dossierHref(
-    norm: NormKey,
-    tenantSlug: string,
-    workCenterId: string,
-): Href {
-    const args: [string, string] = [tenantSlug, workCenterId];
-
-    switch (norm) {
-        case 'nom035':
-            return disclosureDossier(args);
-        case 'nom037':
-            return teleworkDossier(args);
-        default:
-            return seatingDossier(args);
-    }
-}
-
-/**
- * Where each of the six stages of a route is done today (board V3-Movil), until the pages of each route arrive with its
- * own PR: the policies and documents of the company, the center's page, and the dossier last. NOM-037 and Ley Silla
- * already have their route pages (boards V2-Ruta-N037 and V2-Ruta-Silla), where every stage is done.
- */
-export function stageHrefs(
-    norm: NormKey,
-    tenantSlug: string,
-    workCenterId: string,
-): Href[] {
-    const center: [string, string] = [tenantSlug, workCenterId];
-
-    switch (norm) {
-        case 'nom035':
-            return [
-                disclosure(tenantSlug),
-                campaigns(tenantSlug),
-                campaigns(tenantSlug),
-                disclosure(tenantSlug),
-                interventions(tenantSlug),
-                dossierHref(norm, tenantSlug, workCenterId),
-            ];
-        case 'nom037':
-            return [
-                ...Array.from({ length: 5 }, () => teleworkRoute(center)),
-                dossierHref(norm, tenantSlug, workCenterId),
-            ];
-        default:
-            return [
-                ...Array.from({ length: 5 }, () => seatingRoute(center)),
-                dossierHref(norm, tenantSlug, workCenterId),
-            ];
-    }
-}
 
 export type LiveItem = {
     title: string;

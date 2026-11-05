@@ -20,10 +20,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class Board
 {
-    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private ResultsStanding $results, private ProgramMeasureFeed $program, private ComplaintChannelFeed $channel, private Requirements $requirements) {}
+    public function __construct(private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private ResultsStanding $results, private ProgramMeasureFeed $program, private ComplaintChannelFeed $channel, private Requirements $requirements, private Matrix $matrix) {}
 
     /**
-     * @return array{summary: array{met: int, notice: int, missing: int}, centers: LengthAwarePaginator<int, array<string, mixed>>}
+     * The board as the matrix of what the people must know (board V4-Difusion): every center with its requirements and its
+     * cells, a page at a time, and the rows with how many are ready and the next step.
+     *
+     * @return array{summary: array{met: int, notice: int, missing: int}, centers: LengthAwarePaginator<int, array<string, mixed>>, items: list<array<string, mixed>>, progress: array{ready: int, total: int, minutes: int}, next: array<string, mixed>|null, reach: array{page: bool, confirmed: int, people: int}}
      */
     public function page(): array
     {
@@ -31,12 +34,16 @@ final readonly class Board
         $facts = $this->facts($centers);
         $rows = [];
         $states = [];
+        $cells = [];
+        $byId = [];
 
         foreach ($centers as $center) {
             $requirements = $this->requirements->for($facts[$center->id]);
             $state = $this->overall($requirements);
             $states[] = $state->value;
-            $rows[] = $this->row($center, $requirements, $state);
+            $cells[$center->id] = Matrix::cells($facts[$center->id]);
+            $byId[$center->id] = $center;
+            $rows[] = $this->row($center, $requirements, $state, $cells[$center->id]);
         }
 
         $counts = array_count_values($states);
@@ -48,6 +55,7 @@ final readonly class Board
         return [
             'summary' => $summary,
             'centers' => (new LengthAwarePaginator(array_slice($rows, ($current - 1) * $perPage, $perPage), count($rows), $perPage, $current, ['path' => LengthAwarePaginator::resolveCurrentPath()]))->withQueryString(),
+            ...$this->matrix->of($cells, $facts, $byId),
         ];
     }
 
@@ -80,15 +88,17 @@ final readonly class Board
 
     /**
      * @param  list<Requirement>  $requirements
+     * @param  array<string, string>  $cells  Where each thing of 5.7 stands in it (Matrix::cells).
      * @return array<string, mixed>
      */
-    private function row(WorkCenterSummary $center, array $requirements, RequirementState $state): array
+    private function row(WorkCenterSummary $center, array $requirements, RequirementState $state, array $cells): array
     {
         return [
             'id' => $center->id,
             'name' => $center->name,
             'state' => ['value' => $state->value, 'label' => $state->label()],
             'requirements' => array_map(fn (Requirement $requirement): array => $requirement->toArray(), $requirements),
+            'cells' => $cells,
         ];
     }
 

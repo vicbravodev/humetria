@@ -61,11 +61,33 @@ export type BoardRequirement = {
     detail: string | null;
 };
 
+/** Where one of the six things of 5.7 stands in a center (board V4-Difusion). */
+export type MatrixCell =
+    | 'done'
+    | 'missing'
+    | 'undelivered'
+    | 'ready'
+    | 'waiting'
+    | 'not_applicable';
+
 export type BoardCenter = {
     id: string;
     name: string;
     state: Choice<'met' | 'notice' | 'missing'>;
     requirements: BoardRequirement[];
+    /** By thing of 5.7: a, b, c, d, e and f. */
+    cells: Record<string, MatrixCell>;
+};
+
+/** A row of the matrix: one of the six things the people must know, with its way in for whoever manages. */
+export type MatrixItem = {
+    key: string;
+    numeral: string;
+    label: string;
+    caption: string;
+    /** Its writing started and was left. */
+    draft: boolean;
+    action: { label: string; href: string; primary: boolean } | null;
 };
 
 /** How many work centers are in each overall state. */
@@ -73,7 +95,18 @@ export type BoardSummary = { met: number; notice: number; missing: number };
 
 export type DisclosureIndexProps = {
     summary: BoardSummary;
+    /** The columns of the matrix, a page at a time. */
     centers: Paginated<BoardCenter>;
+    /** The six rows, a fixed catalog. */
+    items: MatrixItem[];
+    progress: { ready: number; total: number; minutes: number };
+    next: {
+        item: string;
+        title: string;
+        text: string;
+        action: { label: string; href: string };
+    } | null;
+    reach: { page: boolean; confirmed: number; people: number };
     can: { manage: boolean };
 };
 
@@ -137,6 +170,21 @@ export type DisseminationProps = {
     today: string;
     publishedDay: string | null;
     records: Paginated<DisseminationRecordRow>;
+    /** The centers in use, a page at a time: who confirmed the policy there and where their results stand. */
+    centers: Paginated<EvidenceCenter>;
+};
+
+/** A center on the evidence of the disclosure (board V4-Difusion-Registro). */
+export type EvidenceCenter = {
+    id: string;
+    name: string;
+    /** Null while the center has no policy in force. */
+    acks: { confirmed: number; active: number } | null;
+    results: {
+        state: 'ready' | 'done' | 'waiting' | 'not_applicable';
+        closedOn: string | null;
+        campaignId: string | null;
+    };
 };
 
 /** A physical or in-person means RH recorded as evidence of the disclosure. */
@@ -148,6 +196,10 @@ export type DisseminationRecordRow = {
     items: string[];
     doneOn: string;
     note: string | null;
+    /** How many signed, for a list of signatures. */
+    signatures: number | null;
+    /** Where its photo or PDF opens; null without one. */
+    evidence: string | null;
 };
 
 /** The permanent link to the page of the workers, as the management screen shows it. */
@@ -200,3 +252,23 @@ export type ResultsRow = {
 };
 
 export type ResultsProps = { evaluations: Paginated<ResultsRow> };
+
+/** «Comparte los resultados con tu equipo» (board V2-N035-Compartir): what each person of the center will read. */
+export type ShareResultsProps = {
+    campaign: { id: string; closedOn: string | null };
+    workCenter: { id: string; name: string };
+    company: string;
+    /** Null below the minimum: the page says «menos de N», never the count. */
+    answered: number | null;
+    minimum: number;
+    themes: string[];
+    measures: { title: string; dueOn: string }[];
+    /** The complaints channel, when it is open. */
+    channel: { anonymous: boolean } | null;
+    /** Whether the center has a policy in force. */
+    policy: boolean;
+    /** The day it was published, while it is. */
+    published: string | null;
+    showMeasures: boolean;
+    canPublish: boolean;
+};

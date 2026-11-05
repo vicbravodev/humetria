@@ -44,7 +44,7 @@ final readonly class WorkersPages
     /**
      * What one center publishes: the policy in force there.
      *
-     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, publishedOn: string}|null>, measures: array<string, list<array<string, mixed>>>, channel: array<string, mixed>|null, results: array<string, mixed>|null}
+     * @return array{center: array{id: string, name: string}, others: bool, policy: array<string, mixed>|null, blocks: array<string, array{text: string, sections: list<array{heading: string|null, text: string}>, publishedOn: string}|null>, measures: array<string, list<array<string, mixed>>>, channel: array<string, mixed>|null, results: array<string, mixed>|null}
      */
     public function center(WorkCenterSummary $center): array
     {
@@ -71,7 +71,7 @@ final readonly class WorkersPages
      * The blocks of 5.7 the company wrote (b, c, d and f), each with the text in force in the center and the day it was
      * published, or null while there is none. What other tools provide is joined here, never in place of it.
      *
-     * @return array<string, array{text: string, publishedOn: string}|null>
+     * @return array<string, array{text: string, sections: list<array{heading: string|null, text: string}>, publishedOn: string}|null>
      */
     private function blocks(WorkCenterSummary $center): array
     {
@@ -84,7 +84,7 @@ final readonly class WorkersPages
 
             $fact = $this->policies->ofKind($kind, [$center->id])[$center->id] ?? null;
             $document = $fact === null ? null : Document::query()->find($fact->documentId);
-            $blocks[$kind->inciso()] = $fact === null || $document === null ? null : ['text' => ContentPages::text($document), 'publishedOn' => Days::moment($fact->publishedAt)];
+            $blocks[$kind->inciso()] = $fact === null || $document === null ? null : ['text' => ContentPages::text($document), 'sections' => ContentPages::sections($document), 'publishedOn' => Days::moment($fact->publishedAt)];
         }
 
         return $blocks;
@@ -117,6 +117,7 @@ final readonly class WorkersPages
                     'levels' => array_map(fn (RiskLevel $level): array => ['value' => $level->value, 'label' => $level->label()], RiskLevel::cases()),
                     'guide' => in_array('nom035.guide-iii', $fact->shown->instruments, true) ? 'iii' : 'ii',
                     'answered' => $breakdown->answered,
+                    'themes' => ResultThemes::of($breakdown),
                     'final' => $breakdown->final,
                     'categories' => array_map(fn (RiskGroup $group): array => ['key' => $group->key, 'label' => $group->label, 'levels' => $group->levels], $breakdown->categories),
                     'domains' => array_map(fn (RiskGroup $group): array => ['key' => $group->key, 'label' => $group->label, 'category' => $group->category, 'levels' => $group->levels], $breakdown->domains),

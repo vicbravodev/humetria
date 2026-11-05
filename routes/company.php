@@ -30,8 +30,12 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/archive', [WorkCenterController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.archive');
     // «¿Te aplica?» (rediseño v2, decisión A2): what NOM-035 and Ley Silla ask of a center, and the answers of one or more.
     Route::get('admin/{tenant:slug}/work-centers/{workCenter}/applies', [WorkCenterApplicabilityController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.applies');
-    // The route of one standard in one center (boards V3-Movil and V3-AlDia).
+    // The route of one standard in one center: each goes to its own page (boards V2-Ruta-N035, V2-Ruta-N037 and V2-Ruta-Silla).
     Route::get('admin/{tenant:slug}/work-centers/{workCenter}/routes/{norm}', [RouteController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->whereIn('norm', ['nom035', 'nom037', 'seating'])->name('tenant.work-centers.route');
+    // The NOM-035 route of a center (board V2-Ruta-N035, V3-AlDia once done) and «Si hoy llegara una inspección» (V3-Inspeccion),
+    // under NOM-035 in the menu: NOM-035 spans several modules, so Tenancy puts it together from their contracts.
+    Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/route', [RouteController::class, 'nom035'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.route');
+    Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/inspection', [RouteController::class, 'inspection'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.inspection');
     // The first time of a company (board V3-Onboarding): two questions per center, and its routes.
     Route::get('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding');
     Route::put('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding.update');

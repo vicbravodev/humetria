@@ -1,31 +1,46 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { HeartHandshake } from 'lucide-react';
-import Pagination from '@/components/humetria/pagination';
 import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/humetria/page-header';
 import ConfidentialBanner from '@/components/results/confidential-banner';
-import ReferralSummary from '@/components/results/referral-summary';
-import ScreenedPerson from '@/components/results/screened-person';
+import ReferralPanel from '@/components/results/referral-panel';
+import ReferralProgress from '@/components/results/referral-progress';
 import ScreeningRule from '@/components/results/screening-rule';
+import ScreeningsList from '@/components/results/screenings-list';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { resultsTrail } from '@/lib/results';
 import type {
+    DestinationOption,
     Paginated,
     ReferralCounts,
-    ScreenedPerson as Person,
+    ScreenedPerson,
     ScreeningCounts,
+    ScreeningView,
+    SelectedPerson,
 } from '@/types';
 
+/**
+ * Board V4-N035-Canalizacion: who the Guía I says needs a clinical assessment, who waits first, and the person chosen open
+ * beside them to record where they were channeled and how they were told. Never what they answered.
+ */
 export default function Screenings({
     campaign,
     counts,
     referralCounts,
+    view,
     people,
+    selected,
+    destinations,
+    today,
 }: {
     campaign: { id: string; workCenter: string; kindLabel: string };
     counts: ScreeningCounts;
     referralCounts: ReferralCounts;
-    people: Paginated<Person>;
+    view: ScreeningView;
+    people: Paginated<ScreenedPerson>;
+    selected: SelectedPerson | null;
+    destinations: DestinationOption[];
+    /** Y-m-d in Mexico: the day a record takes by default. */
+    today: string;
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
@@ -35,25 +50,29 @@ export default function Screenings({
     return (
         <>
             <Head title={`Canalización · ${campaign.workCenter}`} />
-            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7 px-4 py-6 md:px-10 md:py-8">
                 <ConfidentialBanner />
-                <PageHeader
-                    title="Personas que requieren valoración clínica"
-                    description={
-                        <>
-                            <strong className="font-semibold text-foreground">
-                                {counts.requiring} de {counts.answered} personas
-                            </strong>{' '}
-                            que contestaron la Guía I en {campaign.workCenter}{' '}
-                            requieren valoración clínica. Canalízalas a atención
-                            (numeral 5.5) y conserva el registro (numeral 5.8).
-                        </>
-                    }
-                />
-                {people.total > 0 && (
-                    <ReferralSummary counts={referralCounts} />
-                )}
-                {people.total === 0 ? (
+                <header className="flex flex-wrap items-end justify-between gap-6">
+                    <div className="flex max-w-[760px] flex-col gap-2">
+                        <p className="text-caption font-semibold tracking-[0.04em] text-primary uppercase">
+                            NOM-035 · Guía I · numerales 5.5 y 5.8
+                        </p>
+                        <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em]">
+                            Canaliza a quien lo necesite
+                        </h1>
+                        <p className="text-lg text-muted-foreground">
+                            Estas personas de {campaign.workCenter} vivieron un
+                            acontecimiento traumático severo y muestran señales
+                            que conviene revisar. La norma pide que las
+                            canalices a atención médica o psicológica y que
+                            guardes el registro.
+                        </p>
+                    </div>
+                    {counts.requiring > 0 && (
+                        <ReferralProgress counts={referralCounts} />
+                    )}
+                </header>
+                {counts.requiring === 0 ? (
                     <EmptyState
                         icon={HeartHandshake}
                         title="Nadie requiere valoración clínica"
@@ -62,18 +81,26 @@ export default function Screenings({
                         aparecerá aquí.
                     </EmptyState>
                 ) : (
-                    <ol aria-label="Personas" className="flex flex-col gap-3">
-                        {people.data.map((person) => (
-                            <ScreenedPerson
-                                key={person.id}
+                    <div className="grid items-start gap-6 min-[1100px]:grid-cols-[380px_minmax(0,1fr)]">
+                        <ScreeningsList
+                            campaignId={campaign.id}
+                            view={view}
+                            counts={referralCounts}
+                            people={people}
+                            selectedId={selected?.id ?? null}
+                        />
+                        {selected !== null && (
+                            <ReferralPanel
+                                key={`${selected.id}:${selected.referral?.referredOn ?? ''}`}
                                 campaignId={campaign.id}
-                                person={person}
+                                person={selected}
+                                destinations={destinations}
+                                today={today}
                             />
-                        ))}
-                    </ol>
+                        )}
+                    </div>
                 )}
                 <ScreeningRule />
-                <Pagination page={people} label="Páginas de personas" />
             </div>
         </>
     );

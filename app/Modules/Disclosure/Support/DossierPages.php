@@ -6,6 +6,7 @@ namespace App\Modules\Disclosure\Support;
 
 use App\Actions\RecordAudit;
 use App\Modules\Disclosure\Enums\DocumentKind;
+use App\Modules\Disclosure\Enums\RequirementState;
 use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
@@ -41,7 +42,7 @@ final readonly class DossierPages
      *
      * @throws ModelNotFoundException when the center is not one in use of this company.
      */
-    public function show(string $workCenterId): array
+    public function show(string $workCenterId, bool $readyOnly = false): array
     {
         $center = $this->workCenters->findActive($workCenterId) ?? throw new ModelNotFoundException;
         $facts = $this->board->facts([$center])[$center->id];
@@ -50,7 +51,7 @@ final readonly class DossierPages
 
         return [
             'header' => ['company' => $this->companies->current()->tradeName, 'legalName' => $this->workCenters->profile($center->id)->legalName ?? '', 'workCenter' => $center->name, 'issuedOn' => Days::moment(now())],
-            'requirements' => array_map(fn (Requirement $requirement): array => $requirement->toArray(), $this->requirements->for($facts)),
+            'requirements' => array_values(array_map(fn (Requirement $requirement): array => $requirement->toArray(), array_filter($this->requirements->for($facts), fn (Requirement $requirement): bool => ! $readyOnly || $requirement->state === RequirementState::Met))),
             'policy' => $facts->policy === null ? null : ['version' => $facts->policy->version, 'publishedOn' => Days::moment($facts->policy->publishedAt), 'covers' => $facts->policy->covers],
             'acknowledgments' => $facts->acknowledgments,
             'records' => array_values(DisseminationRecord::query()->where('work_center_id', $center->id)->orderByDesc('done_on')->orderByDesc('id')->limit(100)->get()->map(fn (DisseminationRecord $record): array => [

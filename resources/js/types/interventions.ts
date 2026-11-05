@@ -74,6 +74,7 @@ export type ProgramRequirement = 'required' | 'not_required' | 'below_minimum';
 
 export type ProgramCampaign = {
     id: string;
+    workCenterId: string;
     workCenter: string;
     kindLabel: string;
     closedOn: string | null;

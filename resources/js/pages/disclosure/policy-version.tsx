@@ -4,6 +4,7 @@ import PolicySections from '@/components/disclosure/policy-sections';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { disclosureCrumbs } from '@/lib/nom035/crumbs';
 import { countOf } from '@/lib/plural';
 import { policy } from '@/routes/tenant/disclosure';
 import type { PolicyVersion } from '@/types';
@@ -15,11 +16,11 @@ export default function PolicyVersionPage({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'NOM-035' },
-            { title: 'Política y difusión', href: policy(tenantSlug) },
+        breadcrumbs: disclosureCrumbs(
+            tenantSlug,
+            { title: 'Política de prevención', href: policy(tenantSlug) },
             { title: `Versión ${version.version}` },
-        ],
+        ),
     });
 
     return (

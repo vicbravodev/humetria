@@ -1,61 +1,42 @@
-import { describe, expect, it } from 'vitest';
-import { nextAction, referralStep, REFERRAL_STEPS } from '@/lib/referral';
+import { describe, expect, it } from 'vite-plus/test';
+import { channeledLine, referralChip } from '@/lib/referral';
 import type { ScreeningReferral } from '@/types';
 
 const record = (status: ScreeningReferral['status']): ScreeningReferral => ({
     status,
     statusLabel: status === 'referred' ? 'Canalizada' : 'Atendida',
+    destination: 'imss',
+    destinationLabel: 'IMSS',
+    told: 'in_person',
+    toldLabel: 'En persona, en privado',
     referredOn: '2026-11-18',
     referredOnLabel: '18 nov 2026',
-    institution: 'IMSS',
+    note: null,
+    remindOn: null,
+    institution: null,
 });
 
-describe('referralStep', () => {
-    it('is the first step while nothing is recorded', () => {
-        expect(referralStep(null)).toBe(0);
-    });
-
-    it('moves to the second step once referred', () => {
-        expect(referralStep(record('referred'))).toBe(1);
-    });
-
-    it('ends on the third step when attended', () => {
-        expect(referralStep(record('attended'))).toBe(2);
-    });
-});
-
-describe('nextAction', () => {
-    it('offers to record the referral while pending, as the main action', () => {
-        expect(nextAction(null)).toEqual({
-            label: 'Registrar canalización',
-            status: 'referred',
-            primary: true,
+describe('referralChip', () => {
+    it('says who waits, who was channeled and who was attended', () => {
+        expect(referralChip(null)).toEqual({
+            label: 'Por canalizar',
+            tone: 'pending',
         });
-    });
-
-    it('offers to record the attention once referred', () => {
-        expect(nextAction(record('referred'))).toEqual({
-            label: 'Registrar atención',
-            status: 'attended',
-            primary: false,
+        expect(referralChip(record('referred'))).toEqual({
+            label: 'Canalizada',
+            tone: 'done',
         });
-    });
-
-    it('only lets an attended record be edited', () => {
-        expect(nextAction(record('attended'))).toEqual({
-            label: 'Editar registro',
-            status: 'attended',
-            primary: false,
-        });
+        expect(referralChip(record('attended')).label).toBe('Atendida');
     });
 });
 
-describe('REFERRAL_STEPS', () => {
-    it('names the three steps in order', () => {
-        expect(REFERRAL_STEPS).toEqual([
-            'Por canalizar',
-            'Canalizada',
-            'Atendida',
-        ]);
+describe('channeledLine', () => {
+    it('counts the channeled and the attended against everyone who requires it', () => {
+        expect(channeledLine({ pending: 9, referred: 2, attended: 1 })).toEqual(
+            { done: 3, total: 12, text: '3 de 12 canalizadas' },
+        );
+        expect(
+            channeledLine({ pending: 1, referred: 0, attended: 0 }).text,
+        ).toBe('0 de 1 canalizada');
     });
 });

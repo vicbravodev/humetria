@@ -26,12 +26,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property list<string> $covered_items
  * @property CarbonImmutable $done_on
  * @property string|null $note
+ * @property string|null $evidence_path The photo or PDF on the private disk; the scanned sheet of a list of signatures.
+ * @property int|null $signatures How many signed, for a list of signatures.
  * @property int $recorded_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
 #[Table('disclosure_dissemination_records')]
-#[Fillable(['tenant_id', 'work_center_id', 'medium', 'covered_items', 'done_on', 'note', 'recorded_by'])]
+#[Fillable(['tenant_id', 'work_center_id', 'medium', 'covered_items', 'done_on', 'note', 'evidence_path', 'signatures', 'recorded_by'])]
 #[UseFactory(DisseminationRecordFactory::class)]
 final class DisseminationRecord extends Model
 {
@@ -43,6 +45,6 @@ final class DisseminationRecord extends Model
      */
     protected function casts(): array
     {
-        return ['medium' => Medium::class, 'covered_items' => 'array', 'done_on' => 'immutable_date'];
+        return ['medium' => Medium::class, 'covered_items' => 'array', 'done_on' => 'immutable_date', 'signatures' => 'integer'];
     }
 }

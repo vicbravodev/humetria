@@ -4,7 +4,9 @@ import {
     meterText,
     programStartText,
     programTools,
+    byRisk,
     programTrail,
+    themeCoverage,
     requirementText,
     SCOPE_LABELS,
     stateVariant,
@@ -12,7 +14,8 @@ import {
     subjectsText,
     tabHref,
 } from '@/lib/interventions';
-import { index, show } from '@/routes/tenant/campaigns';
+import { index } from '@/routes/tenant/campaigns';
+import { route } from '@/routes/tenant/nom035';
 import type { ProgramAction, ProgramPageProps } from '@/types';
 
 const action = (overrides: Partial<ProgramAction> = {}): ProgramAction => ({
@@ -68,10 +71,12 @@ describe('SCOPE_LABELS', () => {
 });
 
 describe('programTrail', () => {
-    it('goes from NOM-035 through the evaluation to the Programa', () => {
+    // Rediseño v2 (board V2-N035-Plan): the Programa is entered from stage 5 of the route of its center, and leads back to it.
+    it('goes from NOM-035 through the route of the center to the Programa', () => {
         expect(
             programTrail('acme', {
                 id: 'c1',
+                workCenterId: 'w1',
                 workCenter: 'Planta Norte',
                 kindLabel: 'Evaluación NOM-035',
                 closedOn: '19 nov 2026',
@@ -79,7 +84,7 @@ describe('programTrail', () => {
             }),
         ).toEqual([
             { title: 'NOM-035', href: index('acme') },
-            { title: 'Planta Norte', href: show(['acme', 'c1']) },
+            { title: 'Planta Norte', href: route(['acme', 'w1']) },
             { title: 'Programa de intervención' },
         ]);
     });
@@ -186,6 +191,7 @@ describe('programTools', () => {
     const page = (overrides: Partial<ProgramPageProps>): ProgramPageProps => ({
         campaign: {
             id: 'c1',
+            workCenterId: 'w1',
             workCenter: 'Planta',
             kindLabel: 'Evaluación NOM-035',
             closedOn: '19 nov 2026',
@@ -233,5 +239,40 @@ describe('programTools', () => {
                 page({ followUpEvaluations: null, followUpSuggestion: null }),
             ),
         ).toMatchObject({ evaluations: [], suggestion: undefined });
+    });
+});
+
+describe('themeCoverage', () => {
+    it('counts the themes with actions and the actions, as the board heads the Programa', () => {
+        const row = (total: number) => ({ meter: { done: 0, total } });
+
+        expect(themeCoverage([row(1), row(0), row(2)])).toEqual({
+            covered: 2,
+            total: 3,
+            actions: 3,
+            text: '2 de 3 temas con acciones',
+        });
+        expect(themeCoverage([row(1)]).text).toBe('1 de 1 tema con acciones');
+    });
+});
+
+describe('byRisk', () => {
+    it('puts first the rows with the highest level, the ones RH added last', () => {
+        const row = (
+            id: string,
+            value: 'medium' | 'high' | 'very_high' | null,
+        ) => ({
+            id,
+            level: value === null ? null : { value, label: value },
+        });
+
+        expect(
+            byRisk([
+                row('a', 'medium'),
+                row('b', null),
+                row('c', 'very_high'),
+                row('d', 'high'),
+            ]).map((each) => each.id),
+        ).toEqual(['c', 'd', 'a', 'b']);
     });
 });

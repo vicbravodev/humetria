@@ -2,8 +2,8 @@ import { Head, Link } from '@inertiajs/react';
 import { Check, X } from 'lucide-react';
 import SaveError from '@/components/humetria/save-error';
 import SetupFrame from '@/components/setup-frame';
-import WritePreview from '@/components/telework/write-preview';
-import WriteQuestion from '@/components/telework/write-question';
+import WritePreview from '@/components/write-preview';
+import WriteQuestion from '@/components/write-question';
 import WriteReview from '@/components/telework/write-review';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { useWriting } from '@/hooks/use-writing';
@@ -112,6 +112,7 @@ export default function TeleworkWrite(props: Props) {
                     index={writing.index}
                     sections={props.sections}
                     editUrl={url}
+                    baseNote="Texto base de Humetría, listo para editar."
                 />
             </div>
         </SetupFrame>

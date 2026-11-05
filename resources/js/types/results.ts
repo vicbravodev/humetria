@@ -92,13 +92,43 @@ export type ScreeningCounts = {
 /** Where a person's channeling stands once recorded; no record means still pending. */
 export type ReferralStatus = 'referred' | 'attended';
 
-/** The record of a person's channeling (num. 5.5, 5.8 c): the day is Y-m-d for the picker, and written for reading. */
+/** Where a person was channeled (board V4-N035-Canalizacion), from a closed list. */
+export type ReferralDestination =
+    | 'imss'
+    | 'company_medical'
+    | 'external_psychological'
+    | 'other'
+    | 'declined';
+
+/** How the person was told: in person, or through a notice in their portal. */
+export type ReferralTold = 'in_person' | 'portal';
+
+/**
+ * The record of a person's channeling (num. 5.5, 5.8 c): where to, how they were told, the day (Y-m-d for the picker, and
+ * written for reading), a note without clinical detail and the day to ask how they are. `institution` is the free text of a
+ * record written before the redesign.
+ */
 export type ScreeningReferral = {
     status: ReferralStatus;
     statusLabel: string;
+    destination: ReferralDestination;
+    destinationLabel: string;
+    told: ReferralTold;
+    toldLabel: string;
     referredOn: string;
     referredOnLabel: string;
-    institution: string;
+    note: string | null;
+    remindOn: string | null;
+    institution: string | null;
+};
+
+/** A destination as the form offers it, with what to say in person (as «tú») and what the portal says (as «usted»). */
+export type DestinationOption = {
+    value: ReferralDestination;
+    label: string;
+    hint: string;
+    script: string;
+    notice: string;
 };
 
 /** How many of who requires a clinical assessment are pending, referred and attended. */
@@ -125,6 +155,9 @@ export type ScreenedPerson = {
     answeredOn: string;
     referral: ScreeningReferral | null;
 };
+
+/** The person open beside the list: whether a notice in their portal can reach them (it is announced by email). */
+export type SelectedPerson = ScreenedPerson & { reachable: boolean };
 
 /** The work center as the report names it (num. 7.7 a). */
 export type ReportCenter = {
@@ -230,3 +263,6 @@ export type ShareDurationOption = {
     value: string;
     label: string;
 };
+
+/** Which people the channeling list shows: who waits, or who was already channeled. */
+export type ScreeningView = 'pending' | 'channeled';

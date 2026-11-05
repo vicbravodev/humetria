@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * Apoyo si alguien vive violencia en casa (num. 5.13) with the four questions of docs/02 («Documentos con preguntas»): who
  * to turn to inside the company, where it is referred outside, which temporary adjustments the company offers (5.13 asks

@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.6 · 3 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.7 · 5 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -348,10 +348,21 @@ Guías II y III. Los resultados aparecen al cerrarla y ya no cambian.
 **Qué hacemos.** Owner y RH ven quiénes requieren valoración clínica, con su área y el día en que contestaron. El rol
 de consulta no la ve, ni contada. Cada consulta de la lista queda en la bitácora.
 
-Por cada persona registran la constancia de su canalización: **canalizada** o **atendida** (sin registro, sigue
-**pendiente**), el día y la institución, sin diagnóstico ni notas. Cada cambio queda en la bitácora con quién lo hizo y
-el estado; el log solo dice que se guardó un registro, sin la persona, el estado ni la institución. El registro vive
-en la misma empresa y apunta a la Guía I (identificada a propósito), nunca a una respuesta de las Guías II o III.
+Por cada persona registran la constancia de su canalización (rediseño v2, decisión A7): **a dónde** se canalizó, de una
+lista cerrada (IMSS, servicio médico de la empresa, apoyo psicológico externo, otra institución o **«No quiso atenderse»**,
+que también cuenta como canalizada: se le ofreció), **cómo se le dijo** (en persona y en privado, con un guion corto, o con
+un aviso en su portal personal), el día y, si se quiere, una **nota corta sin detalle clínico** (200 caracteres, «cita en la
+UMF 12 el lunes») y un **recordatorio a 30 días** para preguntar cómo sigue. Más adelante se marca **atendida** (sin
+registro, sigue **pendiente**). Nunca se guardan respuestas ni diagnósticos. Cada cambio queda en la bitácora con quién lo
+hizo y el estado; el log solo dice que se guardó un registro, sin la persona, el destino ni la nota. El recordatorio va por
+correo a quien registró, si todavía puede ver la Guía I, sin nombre ni destino. El aviso en el portal se anuncia por correo
+a la persona sin decir de qué trata; en su página lee, en usted, que la empresa le ofrece apoyo y a dónde le propone acudir,
+sin la nota de RH. El registro vive en la misma empresa y apunta a la Guía I (identificada a propósito), nunca a una
+respuesta de las Guías II o III.
+
+**Por qué la nota.** La versión anterior no admitía notas para no guardar datos clínicos. El rediseño la pide para el
+seguimiento práctico (una cita, un horario); se limita en largo, se rotula «sin detalle clínico», no sale en correos, logs
+ni bitácora, y solo la ven owner y RH, como el resto del registro.
 
 **Qué dice la norma.** Identificar a los trabajadores que fueron sujetos a acontecimientos traumáticos severos y
 canalizarlos para su atención (num. 5.5); llevar el registro de sus nombres (num. 5.8 c).
@@ -825,3 +836,4 @@ un centro certificado puede publicar el texto de 5.7 d y listo.
 | 1.4 | 2026-11-03 | Sección G, Programa de intervención: nuevos C-30 a C-36 (una fila por categoría, dominio y calificación final en Medio o más; contenido de la acción; niveles; sujetos; qué pide la Tabla; evidencia y conservación; recordatorios). C-29 suma que el inciso g imprime el Programa. El programa de intervención sale de lo que no se cubre. |
 | 1.5 | 2026-11-03 | Nueva sección H, canal de quejas y denuncias: C-40 a C-49 (mecanismo, la Comisión como receptora, el escrito 6.5, categorías, acceso por asignación, enrutamiento por conflicto, anonimato técnico, estadísticas con mínimo, retención y purga, plazos); «mecanismo de quejas (8.1 b)» sale de lo que no se cubre. |
 | 1.6 | 2026-11-03 | Nueva sección I, política de prevención y difusión: C-50 a C-56 (política por escrito con versiones inmutables; la Guía IV como plantilla; qué es difundir y con qué medios; acuse de lectura; resultados para las personas; la página permanente y su enlace; revisar la política con riesgo Medio o más). 5.1, 5.7 y la consulta de resultados (7.8) salen de lo que no se cubre. |
+| 1.7 | 2026-11-05 | C-28: la canalización registra a dónde (lista cerrada, con «No quiso atenderse»), cómo se le dijo (en persona o aviso en su portal), una nota corta sin detalle clínico y un recordatorio a 30 días (rediseño v2, decisión A7). |

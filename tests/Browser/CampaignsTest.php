@@ -516,12 +516,14 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
     App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
 
     visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver canalización'))
-        ->assertSee('Personas que requieren valoración clínica')
-        ->assertSee('1 de 1 personas')
+        ->assertSee('Canaliza a quien lo necesite')
+        ->assertSee('0 de 1 canalizada')
         ->assertSee('Ana López');
 })->with($looks);
 
-it('shows the channeling of each person and the dialog that records it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-N035-Canalizacion): the person chosen open beside the list, with where to channel them, how to tell
+// them and what to say.
+it('shows the person to channel beside the list, with what to say, in both themes and on a phone', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
     $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
@@ -529,12 +531,14 @@ it('shows the channeling of each person and the dialog that records it, in both 
     $person->update(['name' => 'Ana López']);
     App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
 
-    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/screenings", $dark, $mobile, fn ($page) => $page->click('Registrar canalización'))
-        ->assertSee('Canalización de Ana López')
-        ->assertSee('Institución');
+    visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/screenings", $dark, $mobile, fn ($page) => $page->click('IMSS'))
+        ->assertSeeIn('[aria-labelledby="referral-person"]', 'Ana López')
+        ->assertSee('¿A dónde la canalizas?')
+        ->assertSee('Te proponemos acudir a tu Unidad de Medicina Familiar del IMSS')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
-it('records that a person was referred, choosing the day and writing the institution', function (): void {
+it('records where a person was channeled and how they were told, and moves them to the channeled', function (): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
     $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
@@ -542,17 +546,40 @@ it('records that a person was referred, choosing the day and writing the institu
     App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
 
     visit("/admin/acme/campaigns/{$campaign->id}/screenings")
+        ->assertButtonDisabled('Registrar canalización')
+        ->click('Apoyo psicológico externo')
+        ->click('Aviso en su portal')
+        ->assertSee('Le proponemos acudir al programa de apoyo psicológico')
+        ->fill('#referral-note', 'Cita el lunes')
         ->click('Registrar canalización')
-        ->click('#referred-on')
-        ->click('[data-day="'.now('America/Mexico_City')->format('Y-m-d').'"] button')
-        ->fill('#report-institution', 'IMSS, Unidad de Medicina Familiar 7')
-        ->click('[role=dialog] button[type=submit]')
         ->assertSee('Canalización registrada.')
-        ->assertSee('IMSS, Unidad de Medicina Familiar 7')
-        ->assertSee('Registrar atención')
+        ->assertSee('1 de 1 canalizada')
+        ->assertSee('Guardar cambios')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+
+    expect(App\Modules\Results\Models\ScreeningReferral::query()->withoutGlobalScopes()->sole())
+        ->destination->value->toBe('external_psychological')
+        ->told->value->toBe('portal')
+        ->note->toBe('Cita el lunes');
 });
+
+// The message the person reads in their portal, as «usted».
+it('shows the person the message of their company in their portal, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $person = staffOf($tenant, $plant, 1)->first();
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
+    App\Modules\Results\Models\ScreeningReferral::factory()->create(['tenant_id' => $tenant->id, 'campaign_id' => $campaign->id, 'employee_id' => $person->id, 'told' => 'portal']);
+    workIn($tenant);
+    $token = resolve(App\Modules\Telework\Contracts\PortalAccess::class)->token($person->id);
+    Illuminate\Support\Facades\Auth::logout();
+
+    visitPage('results/portal-support', "/portal/{$token}/support", $dark, $mobile)
+        ->assertSee('Le proponemos acudir a su Unidad de Medicina Familiar del IMSS')
+        ->assertSee('Confidencial');
+})->with($looks);
 
 it('shows the 7.7 report of a closed evaluation, ready to print', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
@@ -676,4 +703,40 @@ it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out 
     foreach ([800, 1024, 1100, 1280, 1440, 1600] as $width) {
         resizeTo($page, $width)->assertScript($rows, true);
     }
+});
+
+// Rediseño v2 (C7): a list with nobody in its view says why, and «Nadie coincide» is kept for a search that found nobody.
+it('tells an empty view of the people of an evaluation apart from a search that found nobody', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 3);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}?status=answered")
+        ->assertSee('Nadie ha contestado todavía')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+
+    visit("/admin/acme/campaigns/{$campaign->id}?q=Zeta")
+        ->assertSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+});
+
+it('tells a center with nobody to send the Guía I apart from a search that found nobody', function (): void {
+    $tenant = campaignsCompany();
+    $empty = WorkCenter::factory()->for($tenant)->create(['name' => 'Bodega Sur']);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 3);
+
+    visit("/admin/acme/campaigns/trauma?work_center={$empty->id}")
+        ->assertSee('Nadie trabaja en Bodega Sur')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+
+    visit("/admin/acme/campaigns/trauma?work_center={$plant->id}&q=Zeta")
+        ->assertSee('Nadie coincide con la búsqueda')
+        ->assertNoJavaScriptErrors();
 });

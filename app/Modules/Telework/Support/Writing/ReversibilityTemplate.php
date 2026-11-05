@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support\Writing;
 
+use App\Support\Writing\Answers;
+use App\Support\Writing\Field;
+use App\Support\Writing\Question;
+use App\Support\Writing\Section;
+use App\Support\Writing\WrittenTemplate;
+
 /**
  * Regreso a la oficina (num. 5.10, LFT 330-G) with the four questions of docs/02 («Documentos con preguntas»): who may ask,
  * how far ahead, how it is agreed and written down, and what happens with the equipment.

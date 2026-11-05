@@ -62,6 +62,30 @@ it('warns on the poster that the page is not active, and gives a new address aft
     $this->actingAs($this->hr)->get(route('tenant.disclosure.page.poster', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('url', fn ($url) => $url !== $old));
 });
 
+// Rediseño v2 (board V4-Carteles, decisiones A16 y D6): a letter sheet per center, its QR to the page of that center.
+it('prints the poster of one center with the QR to its own page, and says a complaint can be made there only when it can', function (): void {
+    $link = resolve(IssuePageLink::class)->handle($this->hr->id);
+    $url = route('workers.center', [(string) $link->token(), $this->plant->id]);
+
+    $this->actingAs($this->hr)->get(route('tenant.disclosure.page.poster', $this->tenant).'?center='.$this->plant->id)
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('center', ['id' => $this->plant->id, 'name' => $this->plant->name])
+            ->where('url', $url)
+            ->where('qr', resolve(QrCode::class)->dataUri($url))
+            ->where('channel', false)
+            // The day a means hung from here is recorded, in the display time zone.
+            ->where('today', App\Modules\Disclosure\Support\Days::today()));
+
+    $this->actingAs($this->hr)->get(route('tenant.disclosure.page.poster', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('center', null));
+});
+
+it('has no poster of a center of another company or archived: a 404', function (): void {
+    resolve(IssuePageLink::class)->handle($this->hr->id);
+    $foreign = WorkCenter::factory()->for(Tenant::factory()->create())->create();
+
+    $this->actingAs($this->hr)->get(route('tenant.disclosure.page.poster', $this->tenant).'?center='.$foreign->id)->assertNotFound();
+});
+
 it('has no poster before the link exists or when its key was dropped: a 404', function (): void {
     $this->actingAs($this->hr)->get(route('tenant.disclosure.page.poster', $this->tenant))->assertNotFound();
 
@@ -137,4 +161,16 @@ it('does not find the dossier of a center of another company, an archived one or
         $this->actingAs($this->hr)->get(route('tenant.disclosure.dossier', [$this->tenant, $id]))->assertNotFound();
     }
     expect(AuditEntry::query()->where('event', 'disclosure.dossier_viewed')->count())->toBe(0);
+});
+
+// Board V3-Inspeccion: «Solo lo que tienes», to hand to the inspector.
+it('keeps only the requirements the center meets when asked for what it has', function (): void {
+    $policy = Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id, 'published_by' => $this->hr->id, 'covers' => ['a', 'b', 'c']]);
+    DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'work_center_id' => $this->plant->id]);
+    $url = route('tenant.disclosure.dossier', [$this->tenant, $this->plant->id]);
+
+    $this->actingAs($this->hr)->get($url.'?ready=1')->assertInertia(fn (Assert $page) => $page
+        ->where('requirements', fn ($rows): bool => collect($rows)->pluck('code')->all() === ['D1', 'D2']));
+    $this->actingAs($this->hr)->get($url)->assertInertia(fn (Assert $page) => $page
+        ->where('requirements', fn ($rows): bool => count($rows) > 2));
 });

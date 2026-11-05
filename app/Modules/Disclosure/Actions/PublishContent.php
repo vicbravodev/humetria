@@ -40,7 +40,7 @@ final readonly class PublishContent
             // Two publications of the same kind take turns, so they never pick the same number.
             DB::select('select pg_advisory_xact_lock(hashtext(?))', ["disclosure_documents:{$tenantId}:{$draft->kind->value}"]);
 
-            if (trim(array_column($draft->content, 'text', 'key')['body'] ?? '') === '') {
+            if (array_all($draft->content, fn (array $section): bool => trim($section['text']) === '')) {
                 throw ValidationException::withMessages(['body' => 'Escribe el texto antes de publicarlo.']);
             }
 

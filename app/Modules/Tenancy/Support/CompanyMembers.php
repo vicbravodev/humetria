@@ -77,6 +77,11 @@ final class CompanyMembers implements Members
         return $this->managing[$this->current->id()] ??= $this->withPermission('manage-complaint-channel');
     }
 
+    public function screeningViewers(): array
+    {
+        return $this->withPermission('view-trauma-screenings');
+    }
+
     /** @return list<MemberSummary> */
     private function loadReviewers(): array
     {

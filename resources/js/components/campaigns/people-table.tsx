@@ -2,6 +2,7 @@ import { Mail, MailX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import GuideStatusBadge from '@/components/campaigns/guide-status-badge';
 import Initials from '@/components/humetria/initials';
+import { peopleEmpty } from '@/lib/evaluation';
 import {
     Table,
     TableBody,
@@ -11,7 +12,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { CampaignPerson } from '@/types';
+import type { CampaignPerson, PeopleFilters } from '@/types';
 
 /**
  * Who was invited, how their link reaches them and whether each answered each guide: one page of them. What anyone
@@ -19,12 +20,17 @@ import type { CampaignPerson } from '@/types';
  */
 export default function PeopleTable({
     people,
+    filters,
     action,
 }: {
     people: CampaignPerson[];
+    /** What narrowed the list: an empty one then says whether nobody matched or why the view has nobody (C7). */
+    filters: PeopleFilters;
     /** What can be done for one person, like sending their link again. */
     action?: (person: CampaignPerson) => ReactNode;
 }) {
+    const empty = peopleEmpty(filters);
+
     return (
         <Table>
             <TableCaption className="sr-only">
@@ -90,9 +96,12 @@ export default function PeopleTable({
                     <TableRow>
                         <TableCell
                             colSpan={action === undefined ? 4 : 5}
-                            className="py-8 text-center text-sm text-muted-foreground"
+                            className="py-10 text-center whitespace-normal"
                         >
-                            Nadie coincide con los filtros.
+                            <p className="font-semibold">{empty.title}</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {empty.text}
+                            </p>
                         </TableCell>
                     </TableRow>
                 )}

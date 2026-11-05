@@ -60,6 +60,7 @@ final readonly class ProgramPages
         return [
             'campaign' => [
                 'id' => $campaign->id,
+                'workCenterId' => $campaign->workCenterId,
                 'workCenter' => $this->workCenters->profile($campaign->workCenterId)->name ?? '',
                 'kindLabel' => $campaign->kindLabel,
                 'closedOn' => $campaign->closedOn,

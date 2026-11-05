@@ -2,19 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Modules\Campaigns\Models\Campaign;
-use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Http\Controllers\RouteController;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
-use App\Modules\Tenancy\Support\RoutePage;
 use Illuminate\Support\Carbon;
-use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RoutePage::class);
+mutates(RouteController::class);
 
-// Rediseño v2 (boards V3-Movil and V3-AlDia): the route of one standard in one center, with what cannot wait before it, and
-// the all-done state with the next obligation once the six stages are done.
+// Rediseño v2: the route of one standard in one center, the panel's way in, sends each standard to its own route page.
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-10-30 18:00:00');
@@ -34,17 +30,13 @@ it('sends NOM-037 to its own route page (board V2-Ruta-N037)', function (): void
     routeOf('nom037')->assertRedirect(route('tenant.telework.route', [$this->tenant, $this->plant->id]));
 });
 
-it('puts first the people of the center who wait for a clinical assessment, for whoever channels them', function (TenantRole $role, int $urgencies): void {
-    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
-    TraumaScreening::factory()->count(2)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
+// Rediseño v2: NOM-035 has its own route page too (board V2-Ruta-N035), where who waits to be channeled goes first
+// (tests/Feature/Tenancy/Nom035RoutePageTest.php).
+it('sends NOM-035 to its own route page (board V2-Ruta-N035)', function (): void {
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
-    $this->actingAs(memberOf($this->tenant, $role));
-
-    routeOf('nom035')->assertInertia(fn (Assert $page) => $page->has('urgencies', $urgencies)->has('until'));
-})->with([
-    'HR' => [TenantRole::Hr, 1],
-    'a viewer' => [TenantRole::Viewer, 0],
-]);
+    routeOf('nom035')->assertRedirect(route('tenant.nom035.route', [$this->tenant, $this->plant->id]));
+});
 
 it('sends Ley Silla to its own route page (board V2-Ruta-Silla)', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));

@@ -32,6 +32,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Evidence files
+    |--------------------------------------------------------------------------
+    |
+    | The heaviest scanned sheet of signatures or PDF of a means, and the heaviest photo of a poster, in kilobytes.
+    |
+    */
+
+    'max_document_kb' => 20480,
+    'max_photo_kb' => 8192,
+
+    /*
+    |--------------------------------------------------------------------------
     | The permanent page of the workers (criterio C-55)
     |--------------------------------------------------------------------------
     |

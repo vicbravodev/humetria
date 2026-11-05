@@ -43,9 +43,12 @@ interface ResponseReader
     public function requiresAssessment(string $campaignId, string $employeeId): bool;
 
     /**
-     * Who requires a clinical assessment in a campaign (num. 5.5), by when they answered, a page at a time.
+     * Who requires a clinical assessment in a campaign (num. 5.5), by when they answered, a page at a time: only those among
+     * `$among` when given, and never those in `$except` (who the caller already channeled, say).
      *
+     * @param  list<string>|null  $among  employee ids
+     * @param  list<string>  $except  employee ids
      * @return LengthAwarePaginator<int, ScreeningRecord>
      */
-    public function requiringAssessment(string $campaignId, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator;
+    public function requiringAssessment(string $campaignId, int $perPage = 25, string $pageName = 'page', ?array $among = null, array $except = []): LengthAwarePaginator;
 }

@@ -15,11 +15,14 @@ export default function PublishDialog({
     onOpenChange,
     documentId,
     centersInUse,
+    center = null,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     documentId: string;
     centersInUse: number;
+    /** The center whose route it was written from, to go back to it once published. */
+    center?: string | null;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -29,7 +32,10 @@ export default function PublishDialog({
             onOpenChange={onOpenChange}
             title="Publicar la política"
             description="Se guarda como la siguiente versión y ya no se puede cambiar: es la evidencia de lo que el centro prometió. Las personas la recibirán por correo para confirmar que la leyeron."
-            form={publish.form({ tenant: tenantSlug, document: documentId })}
+            form={publish.form(
+                { tenant: tenantSlug, document: documentId },
+                center === null ? {} : { query: { center } },
+            )}
             submit="Publicar"
         >
             {(errors) => (

@@ -15,39 +15,46 @@ $looks = [
     'dark mobile' => [true, true],
 ];
 
-it('offers to write the policy from the template when there is none', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V2-N035-Politica, decisión A3): the policy is written with questions; the page keeps its version in
+// force and its history.
+it('offers to write the policy with questions when there is none', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 
     visitPage('disclosure/policy', "{$url}/disclosure/policy", $dark, $mobile)
         ->assertSee('Política de prevención')
-        ->assertSee('Aún no hay un borrador')
-        ->assertSee('Redactar a partir de la plantilla');
+        ->assertSee('Aún no hay una política')
+        ->assertSee('Escribir con preguntas');
 })->with($looks);
 
-it('writes the draft: starts it from the template and saves what HR writes', function (): void {
+it('writes the policy with questions, one at a time, with the text beside it', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 
-    visit("{$url}/disclosure/policy")
-        ->press('Redactar a partir de la plantilla')
-        ->assertSee('Compromisos')
-        ->assertSee('Es obligación de supervisores, gerentes y directores')
-        ->fill('#section-responsibles-text', 'La dirección de Recursos Humanos.')
-        ->press('Guardar borrador')
-        ->assertSee('Borrador guardado.')
-        ->assertValue('#section-responsibles-text', 'La dirección de Recursos Humanos.');
+    visitPage('disclosure/policy-write', "{$url}/disclosure/write/policy", $dark, $mobile)
+        ->assertSee('NOM-035 · Etapa 1 · Política de prevención')
+        ->assertSee('Se guarda en cada respuesta')
+        ->assertSee('Pregunta 1 de 6')
+        ->assertSee('¿Quién firma la política en nombre de la empresa?')
+        ->assertSee('Política de prevención de riesgos psicosociales')
+        ->assertSee('La firma la dirección general.')
+        ->assertSee('Texto de la Guía de referencia IV, listo para editar.')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with($looks);
+
+it('keeps each answer and goes on to the next question', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/disclosure/write/policy")
+        ->radio('signature', 'hr')
+        ->assertSee('La firma la dirección de Recursos Humanos.')
+        ->click('Siguiente')
+        ->assertSee('Pregunta 2 de 6')
+        ->assertSee('¿Quién responde de aplicarla?')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Disclosure\Models\Document::query()->withoutGlobalScopes()->sole())
+        ->answers->toMatchArray(['signature' => 'hr'])
+        ->step->toBe(1);
 });
-
-it('shows the draft sections to edit', function (bool $dark, bool $mobile): void {
-    $url = signInToPanel();
-    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
-    resolve(StartPolicyDraft::class)->handle(null);
-
-    visitPage('disclosure/policy', "{$url}/disclosure/policy", $dark, $mobile)
-        ->assertSee('Responsables')
-        ->assertSee('Recursos')
-        ->assertSee('Principio 1')
-        ->assertSee('Guardar borrador');
-})->with($looks);
 
 /** A policy published to the only center of the company the user signed in to; returns the id of that version. */
 function publishedPolicyForBrowser(): string
@@ -66,24 +73,29 @@ function publishedPolicyForBrowser(): string
     return resolve(PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $user->id)->id;
 }
 
-it('shows the board with the center that has no policy yet', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-Difusion): the six things of 5.7 × the centers, in place of the board of requirements and its tabs.
+it('shows what the people must know, by center, with the next step', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create(['name' => 'Planta Querétaro']);
 
     visitPage('disclosure/index', "{$url}/disclosure", $dark, $mobile)
-        ->assertSee('Política y difusión')
+        ->assertSee('Lo que tus personas deben conocer')
+        ->assertSee('1 de 6 listas')
+        ->assertSee('Escribe tu política de prevención')
         ->assertSee('Planta Querétaro')
-        ->assertSee('Aún no hay una política publicada para este centro.')
-        ->assertSee('Falta');
+        ->assertSee('Medidas contra la violencia laboral')
+        ->assertSee('Escribir · 5 min')
+        ->assertSee('Página de las personas')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
-it('shows the board with the center the policy reached', function (bool $dark, bool $mobile): void {
+it('marks the policy published in the center it reached', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     publishedPolicyForBrowser();
 
     visitPage('disclosure/index', "{$url}/disclosure", $dark, $mobile)
-        ->assertSee('Cumple')
-        ->assertSee('Versión 1, publicada el');
+        ->assertSee('Publicada, versión 1 del')
+        ->assertSee('Sin difundir');
 })->with($looks);
 
 it('shows the version in force and its history', function (bool $dark, bool $mobile): void {
@@ -93,7 +105,7 @@ it('shows the version in force and its history', function (bool $dark, bool $mob
     visitPage('disclosure/policy', "{$url}/disclosure/policy", $dark, $mobile)
         ->assertSee('Versión 1')
         ->assertSee('Historial de versiones')
-        ->assertSee('Nueva versión desde la vigente');
+        ->assertSee('Nueva versión');
 })->with($looks);
 
 it('reads a published version', function (bool $dark, bool $mobile): void {
@@ -105,22 +117,24 @@ it('reads a published version', function (bool $dark, bool $mobile): void {
         ->assertSee('Compromisos');
 })->with($looks);
 
-it('publishes the draft from the dialog', function (): void {
+it('publishes the policy from the end of its questions and goes back to the route of the center', function (): void {
     $url = signInToPanel();
-    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $center = WorkCenter::factory()->for($tenant)->create();
+    workIn($tenant);
+    resolve(App\Modules\Disclosure\Actions\SaveWriting::class)->handle(resolve(App\Modules\Disclosure\Support\Writing\Templates::class)->template(App\Modules\Disclosure\Enums\DocumentKind::Policy) ?? throw new LogicException, App\Modules\Disclosure\Enums\DocumentKind::Policy, [
+        'signature' => 'hr', 'responsibles' => ['hr'], 'resources' => ['channel'], 'practices' => ['h'], 'principles' => ['p3'], 'dissemination' => ['page'],
+    ], 6, App\Models\User::query()->firstOrFail()->id);
 
-    visit("{$url}/disclosure/policy")
-        ->press('Redactar a partir de la plantilla')
-        ->fill('#section-responsibles-text', 'La dirección de Recursos Humanos.')
-        ->fill('#section-resources-text', 'Un presupuesto anual.')
-        ->press('Guardar borrador')
-        ->assertSee('Borrador guardado.')
+    visit("{$url}/disclosure/write/policy?center={$center->id}")
+        ->assertSee('Tu política cubre lo que pide la norma')
+        ->assertSee('Son responsables de aplicar esta política: Recursos Humanos.')
         ->press('Publicar')
         ->assertSee('Publicar la política')
         ->check('input[name="reviewed"]')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Política publicada: versión 1.')
-        ->assertSee('Historial de versiones');
+        ->assertNoJavaScriptErrors();
 });
 
 /** The personal link to the policy of an employee the published policy asked; returns its address. */
@@ -175,16 +189,44 @@ function askedForBrowser(int $people = 3): void
     App\Modules\Disclosure\Models\Acknowledgment::query()->where('document_id', $policy->id)->where('employee_id', $staff[0]->id)->update(['channel' => 'portal', 'acknowledged_at' => now()]);
 }
 
-it('follows who confirmed the policy', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-Difusion-Registro): the evidence of the disclosure, with who confirmed by center on top.
+it('follows who confirmed the policy, by center', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     askedForBrowser();
 
     visitPage('disclosure/dissemination', "{$url}/disclosure/dissemination", $dark, $mobile)
-        ->assertSee('Difusión de la política')
-        ->assertSee('1 de 3 personas confirmaron')
+        ->assertSee('Cómo pruebas que lo difundiste')
+        ->assertSee('Quién confirmó que leyó la política')
+        ->assertSee('1 de 3 personas')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('Recordar a 2 personas')
+        ->assertSee('Resultados para las personas')
         ->assertSee('Pendientes')
-        ->assertSee('Recordar a los pendientes');
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
+
+it('says why a view of the confirmations is empty, and «Nadie coincide» only for a search', function (): void {
+    $url = signInToPanel();
+    askedForBrowser(1);
+
+    visit("{$url}/disclosure/dissemination?status=pending")
+        ->assertSee('Nadie tiene pendiente confirmar')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+    visit("{$url}/disclosure/dissemination?q=zzzz")
+        ->assertSee('Nadie coincide');
+});
+
+it('registers paper signatures with how many signed and the scanned sheet', function (): void {
+    $url = signInToPanel();
+    askedForBrowser(1);
+
+    visit("{$url}/disclosure/dissemination")
+        ->press('Registrar firmas en papel')
+        ->assertSee('Cuántas personas firmaron')
+        ->assertSee('Arrastra la hoja escaneada aquí o elígela')
+        ->assertNoJavaScriptErrors();
+});
 
 it('records paper acknowledgments of the people ticked', function (): void {
     $url = signInToPanel();
@@ -203,9 +245,10 @@ it('opens the form to record a means of disclosure', function (): void {
     askedForBrowser(1);
 
     visit("{$url}/disclosure/dissemination")
-        ->assertSee('Aún no registras ningún medio')
-        ->press('Registrar un medio')
+        ->assertSee('Aún no registras ninguno')
+        ->click('section[aria-labelledby="media"] button:has-text("Cartel")')
         ->assertSee('Cómo se dio a conocer')
+        ->assertSee('Arrastra la foto o el PDF aquí o elígelo')
         ->assertSee('Qué cubrió (numeral 5.7)')
         ->press('Cancelar')
         ->assertDontSee('Cómo se dio a conocer');
@@ -219,7 +262,7 @@ it('shows the physical means recorded', function (bool $dark, bool $mobile): voi
     visitPage('disclosure/dissemination', "{$url}/disclosure/dissemination", $dark, $mobile)
         ->assertSee('Medios físicos')
         ->assertSee('Cartel')
-        ->assertSee('Registrar un medio');
+        ->assertSee('Registrar otro');
 })->with($looks);
 
 it('offers to create the link of the page of the workers', function (bool $dark, bool $mobile): void {
@@ -291,10 +334,14 @@ it('shows the people the policy of their center', function (bool $dark, bool $mo
 
     visitPage('disclosure-public/center', "{$url}/centers/".WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->firstOrFail()->id, $dark, $mobile)
         ->assertSee('Planta Norte')
-        ->assertSee('Política de prevención')
-        ->assertSee('Acme Manufacturas S.A. de C.V.')
+        ->assertSee('Para las personas trabajadoras')
+        ->assertSee('Nuestra política')
         ->assertSee('Es obligación de supervisores, gerentes y directores')
-        ->assertSee('Otro centro de trabajo');
+        ->assertSee('Para confirmar que la leyó, use el enlace personal que le llegó por correo.')
+        ->assertSee('no guardamos quién visita esta página')
+        ->assertSee('Otro centro')
+        ->click('Leer completa')
+        ->assertSee('Acme Manufacturas S.A. de C.V.');
 })->with($looks);
 
 it('says a center has no policy yet', function (): void {
@@ -327,21 +374,14 @@ it('shows the blocks of 5.7 the company writes by hand', function (bool $dark, b
         ->assertSee('Sin publicar');
 })->with($looks);
 
-it('writes a block, saves it and publishes it', function (): void {
+it('writes a block with questions from its card', function (): void {
     $url = signInToPanel();
-    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
 
     visit("{$url}/disclosure/contents")
-        ->click('section[aria-labelledby="block-violence_measures"] button:has-text("Escribir")')
-        ->assertSee('Guardar borrador')
-        ->fill('#content-violence_measures', 'Las quejas las atiende la Comisión.')
-        ->press('Guardar borrador')
-        ->assertSee('Borrador guardado.')
-        ->press('Publicar')
-        ->assertSee('Publicar: Medidas contra la violencia laboral')
-        ->click('[role="dialog"] button[type="submit"]')
-        ->assertSee('Publicado: versión 1.')
-        ->assertSee('Las quejas las atiende la Comisión.');
+        ->click('section[aria-labelledby="block-violence_measures"] a:has-text("Escribir con preguntas")')
+        ->assertSee('Pregunta 1 de 4')
+        ->assertSee('¿Qué consideran violencia laboral?')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows the evaluations RH can publish to the people', function (bool $dark, bool $mobile): void {
@@ -371,7 +411,10 @@ it('publishes results and the people read them on their page, of the whole cente
     $link = route('workers.center', [(string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id)->token(), $plant->id], absolute: false);
 
     visitPage('disclosure-public/center', $link, false, true)
-        ->assertSee('Resultados de la identificación y análisis de los factores de riesgo psicosocial')
+        ->assertSee('Resultados de la evaluación')
+        ->assertSee('contestaron 12 personas')
+        ->assertSee('Lo que más atención necesita')
+        ->click('Ver todas las cifras')
         ->assertSee('Calificación final (12 cuestionarios)')
         ->assertSee('no son un promedio');
 });
@@ -392,21 +435,30 @@ it('shows the people the channel for complaints and the measures the company cho
     $url = route('workers.center', [(string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle($hr->id)->token(), $plant->id], absolute: false);
 
     visitPage('disclosure-public/center', $url, $dark, $mobile)
+        ->assertSee('¿Algo no está bien en su trabajo?')
         ->assertSee('Presentar una queja o denuncia')
-        ->assertSee('El canal permite presentar la queja o la denuncia de forma anónima.')
+        ->assertSee('Puede avisar sin dar su nombre.')
+        ->click('Lo que hacemos para prevenir')
         ->assertSee('Del Programa de intervención')
         ->assertSee('Revisar las cargas de trabajo');
 })->with($looks);
 
-it('shows the poster with the address and its QR', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-Carteles, decisiones A16 y D6): a letter sheet per center, printed with CSS.
+it('shows the poster of a center with the address and its QR', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
-    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    workIn($tenant);
     resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
 
-    visitPage('disclosure/poster', "{$url}/disclosure/page/poster", $dark, $mobile)
-        ->assertSee('Información para las personas trabajadoras')
-        ->assertSee('Consulte aquí la política de prevención')
-        ->assertSee('Imprimir o guardar PDF')
+    visitPage('disclosure/poster', "{$url}/disclosure/page/poster?center={$plant->id}", $dark, $mobile)
+        ->assertSee('Cartel para imprimir')
+        ->assertSee('Lo que la empresa le informa sobre su bienestar')
+        ->assertSee('Escanee con su celular')
+        ->assertSee('No guardamos quién entra')
+        ->assertDontSee('También ahí puede presentar una queja')
+        ->assertSee('Imprimir el de Planta Querétaro')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth')
         ->assertScript('() => document.querySelector("img[alt^=\'Código QR\']").naturalWidth > 0', true);
 })->with($looks);
 
@@ -421,3 +473,31 @@ it('prints the dossier of the disclosure of a center', function (bool $dark, boo
         ->assertSee('Contenidos del numeral 5.7')
         ->assertSee('no certifica el cumplimiento de la norma');
 })->with($looks);
+
+// Rediseño v2 (board V4-Difusion-Contenidos, decisión A3): the blocks of 5.7 are written with questions, with the phone beside.
+it('writes a block of 5.7 with questions, with how the people will read it on their phone', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('disclosure/content-write', "{$url}/disclosure/write/violence_measures", $dark, $mobile)
+        ->assertSee('NOM-035 · numeral 5.7 b')
+        ->assertSee('Medidas contra la violencia laboral')
+        ->assertSee('Pregunta 1 de 4')
+        ->assertSee('¿Qué consideran violencia laboral?')
+        ->assertSee('Así lo verán en su celular')
+        ->assertSee('Gritos, insultos o amenazas, humillaciones o burlas y acoso u hostigamiento.')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with($looks);
+
+it('reviews the draft of the health effects and publishes it to the centers', function (): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+
+    visit("{$url}/disclosure/write/health_effects")
+        ->assertSee('Revisa el borrador antes de publicarlo')
+        ->assertSee('Los factores de riesgo psicosocial son aquellos')
+        ->press('Usar este borrador')
+        ->press('Publicar en tus centros')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Publicado: versión 1.')
+        ->assertNoJavaScriptErrors();
+});
