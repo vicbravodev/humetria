@@ -307,7 +307,8 @@ it('shows the action plan with its measures and its pause agreements', function 
     PauseAgreement::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'position_id' => $position->id]);
 
     visitPage('seating/plan', "{$url}/seating/centers/{$center->id}/plan", $dark, $mobile)
-        ->assertSee('Plan de acción')
+        ->assertSee('Plan de medidas y pausas')
+        ->assertSee('Planeada')
         ->assertSee('Alternar tareas para cambiar de postura')
         ->assertSee('3 por turno de 10 min')
         ->assertSee('Arrastra la evidencia aquí o elígela')

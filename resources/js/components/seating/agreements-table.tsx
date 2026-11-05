@@ -9,23 +9,43 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import AgreementMissingRow from '@/components/seating/agreement-missing-row';
 import type { AgreementRow, Paginated } from '@/types';
 
-/** The agreements on pauses with the people of each position, the latest first; the earlier ones stay as history. */
+/**
+ * The agreements on pauses with the people of each position, the latest first; the earlier ones stay as history. Under them
+ * (board LS-Plan), the positions whose seat goes apart and still have none, with the way to register it.
+ */
 export default function AgreementsTable({
     agreements,
+    missing,
+    action,
 }: {
     agreements: Paginated<AgreementRow>;
+    /** The positions without an agreement, by name. */
+    missing: string[];
+    /** Where an agreement is registered; null for who may not. */
+    action: string | null;
 }) {
     return (
         <section
             aria-label="Acuerdos de pausas"
             className="flex flex-col gap-4"
         >
-            <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
-                Acuerdos de pausas
-            </h2>
-            {agreements.total === 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-xl leading-7 font-semibold tracking-[-0.01em]">
+                    Acuerdos de pausas
+                </h2>
+                {action !== null && (
+                    <a
+                        href={action}
+                        className="touch-hit inline-flex h-10 items-center rounded-md border border-input bg-card px-4 font-medium hover:bg-muted"
+                    >
+                        Registrar acuerdo
+                    </a>
+                )}
+            </div>
+            {agreements.total === 0 && missing.length === 0 ? (
                 <EmptyState icon={Timer} title="Sin acuerdos de pausas">
                     Registra qué pausas se acordaron con las personas de cada
                     puesto y cómo se llegó al acuerdo.
@@ -66,6 +86,13 @@ export default function AgreementsTable({
                                         )}
                                     </TableCell>
                                 </TableRow>
+                            ))}
+                            {missing.map((name) => (
+                                <AgreementMissingRow
+                                    key={name}
+                                    name={name}
+                                    action={action}
+                                />
                             ))}
                         </TableBody>
                     </Table>

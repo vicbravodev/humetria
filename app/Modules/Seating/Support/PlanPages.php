@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Seating\Support;
 
+use App\Modules\Instruments\Data\SeatPlacement;
 use App\Modules\Seating\Enums\MeasureKind;
 use App\Modules\Seating\Enums\MeasureStatus;
+use App\Modules\Seating\Enums\RowState;
 use App\Modules\Seating\Models\PauseAgreement;
 use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\StandingPosition;
@@ -16,14 +18,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * What the action plan page sends to the browser: the measures and the pause agreements of a center, a page at a time each.
- * No row names a person but the one who answers for a measure.
+ * What the action plan page sends to the browser: the measures and the pause agreements of a center, a page at a time each,
+ * with whether R7 is met and the positions still without an agreement on pauses. No row names a person but the one who
+ * answers for a measure.
  */
 final readonly class PlanPages
 {
     private const int PER_PAGE = 15;
 
-    public function __construct(private Members $members) {}
+    public function __construct(private Members $members, private ComplianceRows $rows) {}
 
     /**
      * @return array<string, mixed>
@@ -33,9 +36,17 @@ final readonly class PlanPages
         $manage = Gate::allows('manage-seating');
         $people = $manage ? $this->members->all() : [];
         $names = $this->namesOf($center->id);
+        $rule = new ComplianceRow('r7', RowState::Met);
+
+        foreach ($this->rows->for($center->id) as $row) {
+            $rule = $row->key === 'r7' ? $row : $rule;
+        }
 
         return [
             'workCenter' => ['id' => $center->id, 'name' => $center->name],
+            // Board LS-Plan: whether each assessment of a medium or high level has its measure (R7).
+            'measuresRule' => ['state' => $rule->state->value, 'count' => $rule->count],
+            'withoutAgreement' => $this->withoutAgreement($center->id),
             'measures' => $this->measures($tenant, $center->id, $names),
             'agreements' => $this->agreements($tenant, $center->id, $names),
             'editing' => $manage && $editing !== null ? $this->editing($editing, $center->id) : null,
@@ -44,6 +55,20 @@ final readonly class PlanPages
             'statuses' => array_map(fn (MeasureStatus $status): array => ['value' => $status->value, 'label' => $status->label()], MeasureStatus::cases()),
             'owners' => array_map(fn (MemberSummary $member): array => ['value' => (string) $member->userId, 'label' => $member->name], $people),
         ];
+    }
+
+    /**
+     * The positions whose seat goes apart from the workstation (result B or C) with no agreement on pauses yet (R11), by name.
+     *
+     * @return list<string>
+     */
+    private function withoutAgreement(string $workCenterId): array
+    {
+        return array_values(StandingPosition::query()->where('work_center_id', $workCenterId)
+            ->whereIn('placement', [SeatPlacement::Nearby, SeatPlacement::WithinCenter])
+            ->where(fn ($query) => $query->whereNull('nature_allows')->orWhere('nature_allows', true))
+            ->whereNotIn('id', PauseAgreement::query()->where('work_center_id', $workCenterId)->select('position_id'))
+            ->orderBy('name')->get(['name'])->map(fn (StandingPosition $position): string => $position->name)->all());
     }
 
     /**
