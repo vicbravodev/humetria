@@ -1,6 +1,7 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import ScenarioEditor from '@/components/compensation/scenario-editor';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import type { ScenarioDefaults } from '@/lib/compensation/raise-draft';
 import type { OtherScenario } from '@/lib/compensation/scenario-draft';
 import { index } from '@/routes/tenant/compensation';
 import type { AssumptionField, ChoiceOption, ScenarioDetail } from '@/types';
@@ -10,7 +11,7 @@ export default function Scenario(props: {
     scenario: ScenarioDetail | null;
     assumptions: AssumptionField[];
     states: ChoiceOption[];
-    defaults: { effective_on: string; horizon_years: number };
+    defaults: ScenarioDefaults;
     horizons: number[];
     others: OtherScenario[];
 }) {

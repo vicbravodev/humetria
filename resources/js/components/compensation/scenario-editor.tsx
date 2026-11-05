@@ -9,6 +9,7 @@ import { useLivePreview } from '@/hooks/use-live-preview';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { RaiseDraft } from '@/lib/compensation/raise-draft';
 import { initialRaiseDraft } from '@/lib/compensation/raise-draft';
+import type { ScenarioDefaults } from '@/lib/compensation/raise-draft';
 import type { OtherScenario } from '@/lib/compensation/scenario-draft';
 import { parsePreview } from '@/lib/compensation/scenario-draft';
 import {
@@ -33,7 +34,7 @@ export default function ScenarioEditor({
     scenario: ScenarioDetail | null;
     assumptions: AssumptionField[];
     states: ChoiceOption[];
-    defaults: { effective_on: string; horizon_years: number };
+    defaults: ScenarioDefaults;
     horizons: number[];
     others: OtherScenario[];
 }) {
@@ -67,7 +68,7 @@ export default function ScenarioEditor({
                                     ? 'Nuevo escenario'
                                     : 'Escenario'
                             }
-                            defaultValue={scenario?.name ?? ''}
+                            defaultValue={scenario?.name ?? defaults.name}
                             error={shown['name']}
                         />
                         <div className="grid items-start gap-7 min-[1240px]:grid-cols-[minmax(0,1fr)_400px]">

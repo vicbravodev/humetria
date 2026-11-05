@@ -39,11 +39,18 @@ final class ScenarioController extends Controller
         ]);
     }
 
-    public function create(ScenarioEditor $editor): Response
+    public function create(Request $request, ScenarioEditor $editor): Response
     {
         Gate::authorize('manage-compensation');
 
-        return Inertia::render('compensation/scenario', $editor->props(null, $this->today()));
+        $prefill = [];
+
+        // A link may start the scenario somewhere (the point in between of a comparison); the editor checks each value.
+        foreach (['name', 'raise_unit', 'unionized_raise', 'trusted_raise', 'retroactive_months'] as $key) {
+            $prefill[$key] = $request->query($key);
+        }
+
+        return Inertia::render('compensation/scenario', $editor->props(null, $this->today(), $prefill));
     }
 
     public function edit(mixed $tenant, string $scenario, ScenarioEditor $editor): Response

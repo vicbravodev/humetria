@@ -25,7 +25,12 @@ final readonly class ScenarioEditor
     /**
      * @return array<string, mixed>
      */
-    public function props(?Scenario $scenario, CarbonImmutable $today): array
+    /**
+     * @param  array<string, mixed>  $prefill  what a new scenario starts with, as a link types it (the point in between of a
+     *                                         comparison); anything that is not a valid value is left at its default
+     * @return array<string, mixed>
+     */
+    public function props(?Scenario $scenario, CarbonImmutable $today, array $prefill = []): array
     {
         $states = [];
 
@@ -37,7 +42,7 @@ final readonly class ScenarioEditor
             'scenario' => $scenario === null ? null : $this->scenario($scenario),
             'assumptions' => $this->assumptions($scenario === null ? AssumptionKey::defaultSnapshot() : $scenario->assumptions),
             'states' => $states,
-            'defaults' => ['effective_on' => $today->addYear()->startOfYear()->toDateString(), 'horizon_years' => 3],
+            'defaults' => ['effective_on' => $today->addYear()->startOfYear()->toDateString(), 'horizon_years' => 3, ...self::prefill($prefill)],
             'horizons' => [3, 4, 5],
             'others' => $this->others($scenario),
         ];
@@ -84,6 +89,31 @@ final readonly class ScenarioEditor
             'default_state' => $scenario->default_state ?? '',
             'archived' => $scenario->archived_at !== null,
             'term_changes' => $this->termChanges($scenario),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $prefill
+     * @return array{name: string, raise_unit: string, unionized_raise: string, trusted_raise: string, retroactive_months: int}
+     */
+    private static function prefill(array $prefill): array
+    {
+        $unit = RaiseUnit::tryFrom(is_string($prefill['raise_unit'] ?? null) ? $prefill['raise_unit'] : '') ?? RaiseUnit::Percent;
+        $raise = function (string $key) use ($prefill, $unit): ?string {
+            $text = is_string($prefill[$key] ?? null) ? trim($prefill[$key]) : '';
+            $valid = $unit === RaiseUnit::Amount ? BenefitValue::parse($text) !== null : PercentBasisPoints::parse($text) !== null;
+
+            return $valid ? $text : null;
+        };
+        $name = is_string($prefill['name'] ?? null) ? trim($prefill['name']) : '';
+        $months = is_string($prefill['retroactive_months'] ?? null) && ctype_digit($prefill['retroactive_months']) ? (int) $prefill['retroactive_months'] : 0;
+
+        return [
+            'name' => mb_strlen($name) <= 120 ? $name : '',
+            'raise_unit' => $unit->value,
+            'unionized_raise' => $raise('unionized_raise') ?? '0',
+            'trusted_raise' => $raise('trusted_raise') ?? '',
+            'retroactive_months' => $months <= 36 ? $months : 0,
         ];
     }
 

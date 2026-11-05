@@ -2,6 +2,17 @@ import type { RaiseUnit } from '@/lib/compensation/scenario-draft';
 import { stepRaise } from '@/lib/compensation/scenario-draft';
 import { countOf } from '@/lib/plural';
 
+/** What a new scenario starts with: the next 1 January, 3 years, and what a link asked for (the point in between of a comparison). */
+export type ScenarioDefaults = {
+    effective_on: string;
+    horizon_years: number;
+    name: string;
+    raise_unit: RaiseUnit;
+    unionized_raise: string;
+    trusted_raise: string;
+    retroactive_months: number;
+};
+
 /** The values of «El aumento al salario» while they are moved. */
 export type RaiseDraft = {
     unit: RaiseUnit;
@@ -34,7 +45,7 @@ export function peopleHint(
         : `${countOf(people, 'persona', 'personas')}${extra}`;
 }
 
-/** The raise of a scenario as the editor starts it: a new one at 0 %, the trusted copying the unionized (empty). */
+/** The raise of a scenario as the editor starts it: a new one from its defaults (0 %, the trusted copying the unionized). */
 export function initialRaiseDraft(
     scenario: {
         raise_unit: RaiseUnit;
@@ -44,14 +55,14 @@ export function initialRaiseDraft(
         horizon_years: number;
         effective_on: string;
     } | null,
-    defaults: { effective_on: string; horizon_years: number },
+    defaults: ScenarioDefaults,
 ): RaiseDraft {
     if (scenario === null) {
         return {
-            unit: 'percent',
-            unionized: '0',
-            trusted: '',
-            months: 0,
+            unit: defaults.raise_unit,
+            unionized: defaults.unionized_raise,
+            trusted: defaults.trusted_raise,
+            months: defaults.retroactive_months,
             horizon: String(defaults.horizon_years),
             effectiveOn: defaults.effective_on,
         };

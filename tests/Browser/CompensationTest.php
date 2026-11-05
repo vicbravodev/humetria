@@ -240,17 +240,34 @@ it('compares two ticked scenarios by concept', function (bool $dark, bool $mobil
         ->click('Comparar 2')
         ->assertPathBeginsWith("{$url}/compensation/scenarios/compare")
         ->assertSee('Comparar escenarios')
-        ->assertSee('$9,125.00')
-        ->assertSee('$10,950.00')
+        ->assertSee('$9,125')
+        ->assertSee('$10,950')
         ->assertSee('IMSS: invalidez y vida')
         ->assertNoJavaScriptErrors();
 
     $ids = Scenario::query()->withoutGlobalScopes()->pluck('id')->all();
 
     visitPage('compensation/scenario-compare', "{$url}/compensation/scenarios/compare?ids[]={$ids[0]}&ids[]={$ids[1]}", $dark, $mobile)
+        ->assertSee('La distancia a negociar')
+        ->assertSee('Entre «Cinco» y «Seis» hay')
+        ->assertSee('1 mes de retroactivo')
         ->assertSee('Costo del primer año')
         ->assertSee('Salario');
 })->with($looks);
+
+it('tries the point in between of two scenarios in a new one', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $five = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Cinco', 'group_changes' => ['unionized' => 500, 'trusted' => null]]);
+    $six = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Seis', 'group_changes' => ['unionized' => 600, 'trusted' => null]]);
+
+    visit("{$url}/compensation/scenarios/compare?ids[]={$five->id}&ids[]={$six->id}")
+        ->click('Probar un punto medio')
+        ->assertPathIs("{$url}/compensation/scenarios/create")
+        ->assertValue('name', 'Punto medio')
+        ->assertValue('unionized_raise', '5.5')
+        ->assertNoJavaScriptErrors();
+});
 
 it('shows the report of a scenario with its numbers and assumptions', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();

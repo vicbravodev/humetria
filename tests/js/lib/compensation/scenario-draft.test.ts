@@ -118,9 +118,18 @@ describe('leftOutText', () => {
 });
 
 const amount: RaiseUnit = 'amount';
+const percent: RaiseUnit = 'percent';
 
 describe('initialRaiseDraft', () => {
-    const defaults = { effective_on: '2027-01-01', horizon_years: 3 };
+    const defaults = {
+        effective_on: '2027-01-01',
+        horizon_years: 3,
+        name: '',
+        raise_unit: percent,
+        unionized_raise: '0',
+        trusted_raise: '',
+        retroactive_months: 0,
+    };
     const saved = {
         raise_unit: amount,
         unionized_raise: '608',
@@ -136,6 +145,25 @@ describe('initialRaiseDraft', () => {
             unionized: '0',
             trusted: '',
             months: 0,
+            horizon: '3',
+            effectiveOn: '2027-01-01',
+        });
+    });
+
+    it('starts a new one at the point a link asks for', () => {
+        expect(
+            initialRaiseDraft(null, {
+                ...defaults,
+                raise_unit: amount,
+                unionized_raise: '550',
+                trusted_raise: '300',
+                retroactive_months: 2,
+            }),
+        ).toEqual({
+            unit: 'amount',
+            unionized: '550',
+            trusted: '300',
+            months: 2,
             horizon: '3',
             effectiveOn: '2027-01-01',
         });
@@ -161,6 +189,11 @@ describe('the trusted raise', () => {
     const draft = initialRaiseDraft(null, {
         effective_on: '2027-01-01',
         horizon_years: 3,
+        name: '',
+        raise_unit: percent,
+        unionized_raise: '0',
+        trusted_raise: '',
+        retroactive_months: 0,
     });
 
     it('steps from the unionized raise while it copies it, then from its own', () => {
