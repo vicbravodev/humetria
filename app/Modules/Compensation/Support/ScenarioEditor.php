@@ -9,18 +9,13 @@ use App\Modules\Compensation\Enums\RaiseUnit;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
-use App\Modules\Compensation\Support\Calculation\Money;
-use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
 
 /** What the editor of a scenario needs to draw it: the scenario as the form types it, the assumptions, the states, the defaults of a new one and the other scenarios it is weighed against. */
 final readonly class ScenarioEditor
 {
-    /** The most other scenarios the editor weighs this one against. */
-    public const int OTHERS = 4;
-
-    public function __construct(private WorkCenters $workCenters, private ScenarioInputBuilder $inputs) {}
+    public function __construct(private WorkCenters $workCenters, private OtherScenarios $others) {}
 
     /**
      * @return array<string, mixed>
@@ -44,32 +39,8 @@ final readonly class ScenarioEditor
             'states' => $states,
             'defaults' => ['effective_on' => $today->addYear()->startOfYear()->toDateString(), 'horizon_years' => 3, ...self::prefill($prefill)],
             'horizons' => [3, 4, 5],
-            'others' => $this->others($scenario),
+            'others' => $this->others->except($scenario),
         ];
-    }
-
-    /**
-     * The latest active scenarios but this one, with what each costs in its first year: «Frente a tus otros escenarios».
-     *
-     * @return list<array{id: string, name: string, first_year_cents: int, first_year_text: string}>
-     */
-    private function others(?Scenario $scenario): array
-    {
-        $others = Scenario::query()
-            ->whereNull('archived_at')
-            ->when($scenario !== null, fn ($query) => $query->whereKeyNot($scenario?->id))
-            ->orderByDesc('created_at')->orderByDesc('id')
-            ->limit(self::OTHERS)
-            ->get();
-
-        $rows = [];
-
-        foreach ($others as $other) {
-            $cents = ScenarioCost::firstYear($this->inputs->build($other))->firstYearCents();
-            $rows[] = ['id' => $other->id, 'name' => $other->name, 'first_year_cents' => $cents, 'first_year_text' => Money::pesos($cents)];
-        }
-
-        return $rows;
     }
 
     /**

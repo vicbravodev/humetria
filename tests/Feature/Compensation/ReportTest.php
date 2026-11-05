@@ -201,3 +201,52 @@ it('says what the scenario raises in words, a fixed amount a month too (decision
     $this->get(reportUrl($this->tenant, $amount))
         ->assertInertia(fn (Assert $page) => $page->where('scenario.raise_text', '$608 al mes a sindicalizados · $300 al mes a confianza'));
 });
+
+it('sends the numbers its charts draw in cents, adding up to the first year (board V4-Comp-Reporte)', function (): void {
+    $this->get(reportUrl($this->tenant, $this->scenario))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('scenario.raise_unit', 'percent')
+            // The salary is $82,125.00 over the 12 months; its 3 retroactive months add to it.
+            ->where('concepts.0.first_year_cents', fn (int $cents): bool => $cents > 8_212_500)
+            ->where('headline', function ($headline): bool {
+                $headline = collect($headline)->all();
+
+                return $headline['first_year_cents'] === $headline['recurring_cents'] + $headline['retroactive_cents']
+                    && $headline['recurring_cents'] === $headline['after_cents'] - $headline['before_cents'];
+            })
+            ->where('concepts', fn ($concepts): bool => collect($concepts)->sum('first_year_cents') > 0)
+            ->where('projection', fn ($years): bool => collect($years)->every(fn ($year): bool => is_int($year['cost_cents']))));
+
+    $page = $this->get(reportUrl($this->tenant, $this->scenario))->viewData('page')['props'];
+
+    expect(collect($page['concepts'])->sum('first_year_cents'))->toBe($page['headline']['first_year_cents'])
+        ->and($page['projection'][0]['cost_cents'])->toBe($page['headline']['first_year_cents']);
+});
+
+it('says what each person of a category receives more a month, by group, from the tabulator', function (): void {
+    $supervisor = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Supervisor', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $supervisor->id, 'daily_salary_cents' => 80_000, 'effective_from' => '2026-01-01']);
+    reportStaff($this->tenant, $supervisor, $this->area, 'E-100', ['staff_group' => 'trusted']);
+    $this->scenario->update(['group_changes' => ['unionized' => 500, 'trusted' => 300]]);
+
+    $this->get(reportUrl($this->tenant, $this->scenario))
+        ->assertInertia(fn (Assert $page) => $page->where('raises', [
+            // $25 a day more for 30.4 days, and 3 % of $800 is $24 a day.
+            ['label' => 'Operador · A', 'group' => 'unionized', 'people' => 9, 'monthly_raise_cents' => 76_000],
+            ['label' => 'Supervisor · A', 'group' => 'trusted', 'people' => 1, 'monthly_raise_cents' => 72_960],
+        ]));
+});
+
+it('weighs the scenario against the other active ones of the account only, never the union\'s (decision D1)', function (): void {
+    Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Revisión 2027 · 4 %', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
+    Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Archivada', 'archived_at' => now()]);
+    $union = Tenant::factory()->union()->create();
+    Scenario::factory()->create(['tenant_id' => $union->id, 'name' => 'Sindicato · 7 %']);
+
+    $this->get(reportUrl($this->tenant, $this->scenario))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('others', 1)
+            ->where('others.0.name', 'Revisión 2027 · 4 %')
+            ->where('others.0.first_year_cents', fn (int $cents): bool => $cents > 0)
+            ->where('others.0.first_year_text', fn (string $text): bool => preg_match('/\A\$[\d,]+\z/', $text) === 1));
+});
