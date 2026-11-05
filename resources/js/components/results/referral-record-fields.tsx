@@ -20,7 +20,7 @@ export default function ReferralRecordFields({
     return (
         <fieldset className="grid gap-4">
             <legend className="mb-3 text-lg font-semibold">3. Registro</legend>
-            <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            <div className="grid gap-4 @lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
                 <div className="grid content-start gap-2">
                     <Label htmlFor="referred-on">Fecha</Label>
                     <DatePicker

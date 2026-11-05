@@ -25,7 +25,7 @@ export default function ReferralChoices<V extends string>({
             <div
                 className={cn(
                     'grid gap-2.5',
-                    columns === 2 && 'sm:grid-cols-2',
+                    columns === 2 && '@lg:grid-cols-2',
                 )}
             >
                 {options.map((option) => (

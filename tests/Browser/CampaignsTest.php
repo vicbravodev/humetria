@@ -538,6 +538,20 @@ it('shows the person to channel beside the list, with what to say, in both theme
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
+it('puts the person to channel under the list below 1240 px, with every option and the date readable', function (int $width): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => staffOf($tenant, $plant, 1)->first()->id, 'requires_clinical_assessment' => true]);
+
+    $page = visit("/admin/acme/campaigns/{$campaign->id}/screenings")->assertSee('¿A dónde la canalizas?');
+
+    resizeTo($page, $width)
+        // No option is squeezed to a column of single words, and the date reads in its field.
+        ->assertScript('() => [...document.querySelectorAll("[aria-labelledby=referral-person] fieldset label")].every((option) => option.getBoundingClientRect().width >= 220)', true)
+        ->assertScript('() => { const field = document.querySelector("[aria-labelledby=referral-person] [data-slot=date-picker]"); return field.querySelector("span").getBoundingClientRect().height < field.getBoundingClientRect().height - 8; }', true);
+})->with([1100, 1440]);
+
 it('records where a person was channeled and how they were told, and moves them to the channeled', function (): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);

@@ -43,7 +43,7 @@ export default function ReferralPanel({
     return (
         <section
             aria-labelledby="referral-person"
-            className="flex flex-col gap-7 card p-5 md:p-7"
+            className="@container flex flex-col gap-7 card p-5 md:p-7"
         >
             <header className="flex items-center gap-3.5">
                 <Initials name={person.name} className="size-11" />
