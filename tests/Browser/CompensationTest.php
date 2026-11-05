@@ -63,7 +63,9 @@ it('shows Compensación as the start of a union', function (bool $dark, bool $mo
         ->assertSee('Compensación')
         ->assertSee('Antes de costear, 3 pasos')
         ->assertSee('Cargar el padrón')
-        ->assertSee('La empresa no ve tus datos ni tus propuestas.');
+        ->assertSee('La empresa no ve tus datos ni tus propuestas.')
+        // The first step keeps its text whole: on a phone its button goes under the text, not squeezed beside it.
+        ->assertScript('() => { const step = document.querySelector("[aria-labelledby=first-steps] li"); return step.querySelector("span.font-semibold:not([aria-hidden])").getBoundingClientRect().width > step.getBoundingClientRect().width / 2; }', true);
 })->with($looks);
 
 it('shows a union its own proposals, with what the company pays today', function (): void {

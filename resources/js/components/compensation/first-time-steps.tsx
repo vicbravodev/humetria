@@ -36,11 +36,11 @@ export default function FirstTimeSteps() {
                     de minutos.
                 </p>
             </div>
-            <ol className="grid gap-3">
+            <ol className="@container grid gap-3">
                 {STEPS.map((step, index) => (
                     <li
                         key={step.title}
-                        className="flex flex-wrap items-start gap-x-4 gap-y-3 rounded-lg border px-4 py-4"
+                        className="grid grid-cols-[32px_minmax(0,1fr)] items-start gap-x-4 gap-y-3 rounded-lg border px-4 py-4 @[520px]:grid-cols-[32px_minmax(0,1fr)_auto]"
                     >
                         <span
                             aria-hidden
@@ -52,14 +52,17 @@ export default function FirstTimeSteps() {
                         >
                             {index + 1}
                         </span>
-                        <span className="grid min-w-0 flex-1 gap-0.5">
+                        <span className="grid min-w-0 gap-0.5">
                             <span className="font-semibold">{step.title}</span>
                             <span className="text-sm text-muted-foreground">
                                 {step.text}
                             </span>
                         </span>
                         {index === 0 && (
-                            <Button asChild>
+                            <Button
+                                asChild
+                                className="col-start-2 justify-self-start @[520px]:col-start-auto"
+                            >
                                 <Link href={importRoster(tenantSlug)}>
                                     Cargar el padrón
                                 </Link>
