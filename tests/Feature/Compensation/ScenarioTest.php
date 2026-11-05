@@ -228,3 +228,18 @@ it('searches the benefits of the company on the server for the editor', function
         ->assertJsonCount(1)->assertJsonPath('0.label', 'Bono de Transporte')->assertJsonPath('0.unit', 'pesos');
     $this->getJson(route('tenant.compensation.scenarios.benefits', [$this->tenant, 'q' => 'bono']))->assertJsonCount(1);
 });
+
+it('saves a raise of a fixed amount a month from the editor and copies it to a duplicate', function (): void {
+    $url = route('tenant.compensation.scenarios.store', $this->tenant);
+
+    $this->post($url, scenarioForm(['raise_unit' => 'amount', 'unionized_raise' => '608', 'trusted_raise' => '300.50']))->assertSessionHasNoErrors();
+    $saved = Scenario::query()->sole();
+
+    expect($saved->raise_unit->value)->toBe('amount')->and($saved->group_changes)->toEqual(['unionized' => 60_800, 'trusted' => 30_050]);
+
+    $this->post($url, scenarioForm(['raise_unit' => 'amount', 'unionized_raise' => '608.555']))->assertSessionHasErrors(['unionized_raise']);
+    $this->post($url, scenarioForm(['raise_unit' => 'monto']))->assertSessionHasErrors(['raise_unit']);
+    $this->post(route('tenant.compensation.scenarios.duplicate', [$this->tenant, $saved->id]));
+
+    expect(Scenario::query()->whereKeyNot($saved->id)->sole()->raise_unit->value)->toBe('amount');
+});

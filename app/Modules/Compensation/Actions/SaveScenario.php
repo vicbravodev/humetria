@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Actions;
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Data\TermChange;
 use App\Modules\Compensation\Enums\AssumptionKey;
+use App\Modules\Compensation\Enums\RaiseUnit;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
@@ -27,6 +28,9 @@ final readonly class SaveScenario
     private const string EARLIEST = '2023-01-01';
 
     private const int MAX_RAISE_BP = 10_000;
+
+    /** The largest fixed amount a month, $100,000, in cents. */
+    private const int MAX_RAISE_CENTS = 10_000_000;
 
     private const int MAX_YEARS_AHEAD = 10;
 
@@ -72,6 +76,7 @@ final readonly class SaveScenario
                 'effective_on' => $data->effectiveOn,
                 'retroactive_months' => $data->retroactiveMonths,
                 'horizon_years' => $data->horizonYears,
+                'raise_unit' => $data->raiseUnit,
                 'group_changes' => ['unionized' => $data->unionizedRaiseBp, 'trusted' => $data->trustedRaiseBp],
                 'term_changes' => array_map(fn (TermChange $change): array => ['benefit_id' => $change->benefitId, 'value' => $change->value, 'tenure_table' => $change->tenureTable], $data->termChanges),
                 'assumptions' => $this->assumptions($data, $scenario),
@@ -149,10 +154,13 @@ final readonly class SaveScenario
     private function raiseProblems(ScenarioData $data): array
     {
         $errors = [];
+        [$max, $message] = $data->raiseUnit === RaiseUnit::Amount
+            ? [self::MAX_RAISE_CENTS, 'El monto al mes va de $0 a $100,000.']
+            : [self::MAX_RAISE_BP, 'El aumento va de 0 % a 100 %.'];
 
         foreach (['unionized_raise' => $data->unionizedRaiseBp, 'trusted_raise' => $data->trustedRaiseBp] as $field => $raise) {
-            if ($raise !== null && ($raise < 0 || $raise > self::MAX_RAISE_BP)) {
-                $errors[$field] = 'El aumento va de 0 % a 100 %.';
+            if ($raise !== null && ($raise < 0 || $raise > $max)) {
+                $errors[$field] = $message;
             }
         }
 

@@ -207,6 +207,7 @@ return [
     ],
 
     'attributes' => [
+        'raise_unit' => 'tipo de aumento',
         'procedure' => 'procedimiento',
         'acknowledge_within_days' => 'plazo para acusar recibo',
         'resolve_within_days' => 'plazo para responder',

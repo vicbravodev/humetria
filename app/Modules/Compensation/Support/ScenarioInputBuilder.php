@@ -8,6 +8,7 @@ use App\Modules\Compensation\Data\BenefitSpec;
 use App\Modules\Compensation\Data\IndividualSalary;
 use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Enums\PayGroup;
+use App\Modules\Compensation\Enums\RaiseUnit;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
@@ -51,11 +52,12 @@ final readonly class ScenarioInputBuilder
             individuals: $individuals,
             gradeSalaries: $this->gradeSalaries($on),
             benefits: $this->currentSpecs($benefits, $on),
-            raises: $this->raises($scenario),
+            raises: $scenario->raise_unit === RaiseUnit::Percent ? $this->raises($scenario) : [],
             proposed: $this->proposed($scenario, $benefits),
             workRiskPremium: $this->riskPremium($on),
             defaultState: $scenario->default_state,
             gaps: $this->roster->gaps(),
+            monthlyAmounts: $scenario->raise_unit === RaiseUnit::Amount ? $this->amounts($scenario) : [],
         );
     }
 
@@ -154,6 +156,22 @@ final readonly class ScenarioInputBuilder
         }
 
         return $raises;
+    }
+
+    /** @return array<string, int> the fixed amount a month of each group that has one, in cents */
+    private function amounts(Scenario $scenario): array
+    {
+        $amounts = [];
+
+        foreach (PayGroup::cases() as $group) {
+            $cents = $scenario->group_changes[$group->value] ?? null;
+
+            if ($cents !== null) {
+                $amounts[$group->value] = $cents;
+            }
+        }
+
+        return $amounts;
     }
 
     private function riskPremium(CarbonImmutable $on): ?Rate
