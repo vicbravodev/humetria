@@ -677,3 +677,39 @@ it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out 
         resizeTo($page, $width)->assertScript($rows, true);
     }
 });
+
+// Rediseño v2 (C7): a list with nobody in its view says why, and «Nadie coincide» is kept for a search that found nobody.
+it('tells an empty view of the people of an evaluation apart from a search that found nobody', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 3);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}?status=answered")
+        ->assertSee('Nadie ha contestado todavía')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+
+    visit("/admin/acme/campaigns/{$campaign->id}?q=Zeta")
+        ->assertSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+});
+
+it('tells a center with nobody to send the Guía I apart from a search that found nobody', function (): void {
+    $tenant = campaignsCompany();
+    $empty = WorkCenter::factory()->for($tenant)->create(['name' => 'Bodega Sur']);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 3);
+
+    visit("/admin/acme/campaigns/trauma?work_center={$empty->id}")
+        ->assertSee('Nadie trabaja en Bodega Sur')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+
+    visit("/admin/acme/campaigns/trauma?work_center={$plant->id}&q=Zeta")
+        ->assertSee('Nadie coincide con la búsqueda')
+        ->assertNoJavaScriptErrors();
+});

@@ -104,6 +104,7 @@ export default function CampaignPeopleSection({
                 )}
                 <PeopleTable
                     people={people.people.data}
+                    filters={filters}
                     {...(active ? { action } : {})}
                 />
             </div>

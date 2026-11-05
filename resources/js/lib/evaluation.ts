@@ -6,6 +6,7 @@ import type {
     AreaParticipation,
     CampaignDetail,
     CampaignProgress,
+    PeopleFilters,
     StandingCount,
 } from '@/types';
 
@@ -144,6 +145,53 @@ export function visibleStandings(
             always.includes(standing.value) ||
             standing.count > 0 ||
             standing.value === current,
+    );
+}
+
+const EMPTY_VIEWS: Record<string, { title: string; text: string }> = {
+    pending: {
+        title: 'Nadie tiene guías pendientes',
+        text: 'Todas las personas invitadas ya contestaron.',
+    },
+    unreachable: {
+        title: 'Todas tienen correo',
+        text: 'Cada persona invitada recibe su enlace por correo.',
+    },
+    failed: {
+        title: 'Ningún envío falló',
+        text: 'Si un enlace no llega, la persona aparece aquí para reenviárselo.',
+    },
+    answered: {
+        title: 'Nadie ha contestado todavía',
+        text: 'Aquí verás a quien conteste, nunca lo que contestó.',
+    },
+    cancelled: {
+        title: 'Nadie tiene guías canceladas',
+        text: 'Aquí aparece a quien se le cancela una guía.',
+    },
+};
+
+/**
+ * Why the list of people is empty (C7): a search or an area that found nobody, or a view with nobody in it yet,
+ * which says what puts someone there.
+ */
+export function peopleEmpty(filters: PeopleFilters): {
+    title: string;
+    text: string;
+} {
+    // The guide is a view, like the standing: it has one chosen whenever the evaluation applies only one.
+    if (filters.q.trim() !== '' || filters.area !== null) {
+        return {
+            title: 'Nadie coincide',
+            text: 'Cambia la búsqueda o quita un filtro para ver más personas.',
+        };
+    }
+
+    return (
+        EMPTY_VIEWS[filters.status] ?? {
+            title: 'Nadie está invitado',
+            text: 'Las personas del centro aparecen aquí al lanzar la evaluación.',
+        }
     );
 }
 
