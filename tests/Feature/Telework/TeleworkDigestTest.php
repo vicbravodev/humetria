@@ -280,3 +280,24 @@ it('counts as new what expired since the last digest, however long ago it went',
 
     expect(digestLinesFor($this->owner->email))->toContain('1 lugar de trabajo venció y quedó pendiente de validar.');
 });
+
+// PR 7 (board V3-Correos): the Comisión's email also counts what waits in Ley Silla for its centers, read through Seating's
+// contract: the assessments to sign and the signed ones still missing from the minutes of a tour.
+it('counts in the Comisión email what waits in Ley Silla for their centers', function (): void {
+    $cora = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+    digestWorkplace($this->center, '2025-12-16 18:00:00');
+    Database\Factories\Seating\RiskAssessmentFactory::new()->count(2)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    Database\Factories\Seating\RiskAssessmentFactory::new()->signed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    Database\Factories\Seating\RiskAssessmentFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->other->id]);
+
+    resolve(SendTeleworkDigests::class)->handle();
+
+    expect(digestLinesFor($cora->email))->toBe([
+        '1 lugar de trabajo venció y quedó pendiente de validar.',
+        '2 evaluaciones de trabajo de pie por firmar.',
+        '1 evaluación de trabajo de pie firmada por registrar en el acta de recorrido.',
+    ])->and(digestLinesFor($this->owner->email))->not->toContain('2 evaluaciones de trabajo de pie por firmar.');
+    Notification::assertSentOnDemand(TeleworkDigest::class, fn (TeleworkDigest $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === $cora->email
+        && $notification->toMail($notifiable)->subject === 'Tienes 4 pendientes como integrante de la Comisión');
+});

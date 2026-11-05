@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Actions;
 
+use App\Modules\Seating\Contracts\CommitteeWork;
+use App\Modules\Seating\Data\CommitteeTask;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Enums\TrainingStanding;
@@ -44,6 +46,7 @@ final readonly class SendTeleworkDigests
         private CommitteeGate $gate,
         private WorkplaceStanding $standing,
         private TrainingDue $training,
+        private CommitteeWork $seating,
     ) {}
 
     /**
@@ -179,6 +182,38 @@ final readonly class SendTeleworkDigests
 
             if ($count > 0) {
                 $lines[] = trans_choice($texts[$section], $count);
+                $total += $count;
+            }
+        }
+
+        if ($centers !== null) {
+            [$lines, $total] = $this->seatingLines($centers, $lines, $total);
+        }
+
+        return [$lines, $total];
+    }
+
+    /**
+     * What waits in Ley Silla for a Comisión member's centers, read through Seating's contract (board V3-Correos): the
+     * assessments to sign and the signed ones missing from the minutes of a tour.
+     *
+     * @param  list<string>  $centers
+     * @param  list<string>  $lines
+     * @return array{0: list<string>, 1: int}
+     */
+    private function seatingLines(array $centers, array $lines, int $total): array
+    {
+        $tasks = $this->seating->waiting($centers);
+        $texts = [
+            'signatures' => '{1} :count evaluación de trabajo de pie por firmar.|[2,*] :count evaluaciones de trabajo de pie por firmar.',
+            'minutes' => '{1} :count evaluación de trabajo de pie firmada por registrar en el acta de recorrido.|[2,*] :count evaluaciones de trabajo de pie firmadas por registrar en el acta de recorrido.',
+        ];
+
+        foreach ($texts as $kind => $text) {
+            $count = array_sum(array_map(fn (CommitteeTask $task): int => $task->count, array_filter($tasks, fn (CommitteeTask $task): bool => $task->kind === $kind)));
+
+            if ($count > 0) {
+                $lines[] = trans_choice($text, $count);
                 $total += $count;
             }
         }
