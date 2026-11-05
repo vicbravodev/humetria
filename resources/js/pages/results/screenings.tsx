@@ -81,7 +81,7 @@ export default function Screenings({
                         aparecerá aquí.
                     </EmptyState>
                 ) : (
-                    <div className="grid items-start gap-6 min-[1100px]:grid-cols-[380px_minmax(0,1fr)]">
+                    <div className="grid items-start gap-6 min-[1240px]:grid-cols-[380px_minmax(0,1fr)]">
                         <ScreeningsList
                             campaignId={campaign.id}
                             view={view}

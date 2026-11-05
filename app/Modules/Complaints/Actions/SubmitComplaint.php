@@ -111,7 +111,7 @@ final readonly class SubmitComplaint
             $company = $this->companies->current();
 
             foreach ($this->members->complaintManagers() as $manager) {
-                Notification::route('mail', $manager->email)->notify(new DailyCapReached($company->tradeName, $cap, route('tenant.complaints.channel.show', $company->slug)));
+                Notification::route('mail', $manager->email)->notify(new DailyCapReached($company, $cap, route('tenant.complaints.channel.show', $company->slug)));
             }
 
             Log::info('complaints.cap_reached', ['channel_id' => $channel->id]);

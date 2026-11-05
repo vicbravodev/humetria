@@ -24,7 +24,7 @@ it('shows the form to create the owner account', function (bool $dark, bool $mob
     visitPage('tenancy/accept-invitation', '/admin/invitations/'.str_repeat('a', 64), $dark, $mobile)
         ->assertSee('Olga Owner te invitó a')
         ->assertSee('Grupo Ejemplo')
-        ->assertSee('como RH · opera evaluaciones, centros y empleados')
+        ->assertSee('como Ayuda con las rutas · opera evaluaciones, centros y empleados')
         ->assertSee('Crea tu cuenta')
         ->assertValue('#email', 'ana@acme.mx')
         ->assertValue('name', 'Ana Pérez')

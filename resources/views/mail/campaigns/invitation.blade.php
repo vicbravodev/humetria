@@ -1,5 +1,5 @@
 {{-- The first email of an evaluation: what it is, that the answers about work are anonymous, and how long it takes. --}}
-<x-mail::message :company="$company" preheader="Unos {{ $minutes }} minutos, desde su celular. Sus respuestas sobre su trabajo son anónimas.">
+<x-mail::message :company="$company" :confidential="true" preheader="Unos {{ $minutes }} minutos, desde su celular. Sus respuestas sobre su trabajo son anónimas.">
 <x-slot:reason>Recibe este correo porque {{ $company->tradeName }} lo registró para la evaluación NOM-035.@if ($contact) ¿Dudas? Escriba a <a href="mailto:{{ $contact }}">{{ $contact }}</a>.@endif</x-slot:reason>
 <h1>Le invitamos a contestar la evaluación de su centro de trabajo</h1>
 <p>Hola, {{ $name }}:</p>

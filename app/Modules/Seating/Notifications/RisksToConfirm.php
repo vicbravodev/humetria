@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Seating\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -16,7 +17,7 @@ final class RisksToConfirm extends Notification
     public function __construct(
         private readonly string $url,
         private readonly string $name,
-        private readonly string $company,
+        private readonly CompanySummary $company,
     ) {}
 
     /**
@@ -29,8 +30,8 @@ final class RisksToConfirm extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->subject('Conozca el resultado de la evaluación de su trabajo de pie')->greeting("Hola, {$this->name}")
-            ->line("{$this->company} evaluó los riesgos de su trabajo de pie y definió medidas para cuidarle.")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Conozca el resultado de la evaluación de su trabajo de pie')->greeting("Hola, {$this->name}")
+            ->line("{$this->company->tradeName} evaluó los riesgos de su trabajo de pie y definió medidas para cuidarle.")
             ->line('Puede ver el resultado y confirmar que se lo explicaron desde su página personal.')
             ->action('Ver y confirmar', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');

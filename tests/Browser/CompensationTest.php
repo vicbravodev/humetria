@@ -63,7 +63,9 @@ it('shows Compensación as the start of a union', function (bool $dark, bool $mo
         ->assertSee('Compensación')
         ->assertSee('Antes de costear, 3 pasos')
         ->assertSee('Cargar el padrón')
-        ->assertSee('La empresa no ve tus datos ni tus propuestas.');
+        ->assertSee('La empresa no ve tus datos ni tus propuestas.')
+        // The first step keeps its text whole: on a phone its button goes under the text, not squeezed beside it.
+        ->assertScript('() => { const step = document.querySelector("[aria-labelledby=first-steps] li"); return step.querySelector("span.font-semibold:not([aria-hidden])").getBoundingClientRect().width > step.getBoundingClientRect().width / 2; }', true);
 })->with($looks);
 
 it('shows a union its own proposals, with what the company pays today', function (): void {
@@ -367,6 +369,17 @@ it('draws the report still with reduced motion, and prints it in the light theme
         ->assertNoJavaScriptErrors();
 });
 
+// With reduced motion a dialog only fades in: no scale and no slide (design-system.md, «Movimiento»).
+it('opens a dialog with a fade only when the person asks for reduced motion', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    visit("{$url}/compensation/scenarios/{$scenario->id}/report", ['reducedMotion' => 'reduce'])
+        ->click('Compartir')
+        ->assertScript('() => { const style = getComputedStyle(document.querySelector("[data-slot=dialog-content]")); return [style.getPropertyValue("--tw-enter-scale").trim() || "1", style.getPropertyValue("--tw-enter-translate-y").trim() || "0"].join(); }', '1,0')
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens the report of a scenario from its list', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
@@ -517,6 +530,16 @@ it('shows the editor of a new scenario with its assumptions', function (bool $da
         ->click('Revisar')
         ->assertSee('Meta de inflación del Banco de México');
 })->with($looks);
+
+it('reads the start date of a scenario in one line beside the retroactive and the years, at 1440 px', function (): void {
+    $url = signInToPanel();
+
+    $page = visit("{$url}/compensation/scenarios/create")->assertSee('Vigente desde');
+
+    resizeTo($page, 1440)
+        ->assertScript('() => { const field = document.getElementById("scenario-effective_on"); return field.querySelector("span").getBoundingClientRect().height < field.getBoundingClientRect().height - 8; }', true)
+        ->assertNoJavaScriptErrors();
+});
 
 it('costs the scenario as it is moved, against the others of the account, before saving anything (board V4-Comp-Escenario)', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();

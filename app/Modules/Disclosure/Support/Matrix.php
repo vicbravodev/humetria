@@ -49,11 +49,11 @@ final readonly class Matrix
 
     /** What the next step says for each thing still to write. */
     private const array STEPS = [
-        'a' => ['Escribe tu política de prevención', 'Al terminar se publica en tus %d centros y llega a tus personas para que confirmen que la leyeron.'],
-        'd' => ['Escribe cómo presentar una queja', 'Al terminar se publica en la página de tus %d centros, junto a tu canal de quejas cuando lo abras.'],
-        'b' => ['Escribe las medidas contra la violencia laboral', 'Al terminar se publica en la página de tus %d centros. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
-        'c' => ['Escribe las medidas de prevención y control', 'Al terminar se publica en la página de tus %d centros. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
-        'f' => ['Revisa el borrador de las alteraciones a la salud', 'Es un borrador de Humetría. Revísalo con un médico antes de publicarlo en tus %d centros.'],
+        'a' => ['Escribe tu política de prevención', 'Al terminar se publica en %s y llega a tus personas para que confirmen que la leyeron.'],
+        'd' => ['Escribe cómo presentar una queja', 'Al terminar se publica en la página de %s, junto a tu canal de quejas cuando lo abras.'],
+        'b' => ['Escribe las medidas contra la violencia laboral', 'Al terminar se publica en la página de %s. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
+        'c' => ['Escribe las medidas de prevención y control', 'Al terminar se publica en la página de %s. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
+        'f' => ['Revisa el borrador de las alteraciones a la salud', 'Es un borrador de Humetría. Revísalo con un médico antes de publicarlo en %s.'],
     ];
 
     public function __construct(private Templates $templates, private ComplaintChannelFeed $channel, private Companies $companies) {}
@@ -229,7 +229,7 @@ final readonly class Matrix
                     0 => '',
                     1 => '1 pregunta con opciones. ',
                     default => "{$questions} preguntas con opciones. ",
-                }.sprintf($step[1], $centers),
+                }.sprintf($step[1], $centers === 1 ? 'tu centro' : "tus {$centers} centros"),
                 'action' => ['label' => $drafting ? 'Continuar' : 'Empezar', 'href' => route('tenant.disclosure.write', [$tenantSlug, $kind->value])],
             ];
         }

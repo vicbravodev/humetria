@@ -5,7 +5,6 @@ import RequirementRow from '@/components/disclosure/requirement-row';
 import PageHeader from '@/components/humetria/page-header';
 import PrintButton from '@/components/humetria/print-button';
 import { Button } from '@/components/ui/button';
-import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { disclosureCrumbs } from '@/lib/nom035/crumbs';
 import { index } from '@/routes/tenant/disclosure';
@@ -14,7 +13,6 @@ import type { DossierProps } from '@/types';
 export default function Dossier(data: DossierProps) {
     const tenantSlug = useTenantSlug();
     const { header, requirements, note } = data;
-    useLightPrint();
     setLayoutProps({
         breadcrumbs: disclosureCrumbs(
             tenantSlug,

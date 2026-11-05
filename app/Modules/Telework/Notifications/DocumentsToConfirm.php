@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +20,7 @@ final class DocumentsToConfirm extends Notification
     public function __construct(
         private readonly string $url,
         private readonly string $name,
-        private readonly string $company,
+        private readonly CompanySummary $company,
         private readonly array $documents,
     ) {}
 
@@ -33,9 +34,9 @@ final class DocumentsToConfirm extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->subject('Tienes documentos por confirmar')->greeting("Hola, {$this->name}");
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Tienes documentos por confirmar')->greeting("Hola, {$this->name}");
 
-        $mail->line("{$this->company} publicó documentos de teletrabajo que debes leer y confirmar en el panel:");
+        $mail->line("{$this->company->tradeName} publicó documentos de teletrabajo que debes leer y confirmar en el panel:");
 
         foreach ($this->documents as $document) {
             $mail->line("- {$document}");

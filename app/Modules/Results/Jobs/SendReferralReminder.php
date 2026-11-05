@@ -36,6 +36,7 @@ final class SendReferralReminder implements ShouldQueue, ShouldQueueAfterCommit
         }
 
         Notification::route('mail', $who->email)->notify(new ReferralFollowUp(
+            $company,
             route('tenant.campaigns.screenings', [$company->slug, $referral->campaign_id, 'view' => 'channeled', 'person' => $referral->employee_id]),
         ));
     }

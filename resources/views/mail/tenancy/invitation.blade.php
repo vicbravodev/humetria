@@ -1,8 +1,8 @@
 {{-- The link to join a company: who invited, the role and what it allows, the company, and whom the link works for. --}}
-<x-mail::message preheader="Entrarás como {{ $role }}. La invitación vence en {{ $days }} días.">
+<x-mail::message preheader="Entrarás con el rol {{ $role }}. La invitación vence en {{ $days }} días.">
 <x-slot:reason>Recibes este correo porque {{ $inviter === null ? "te invitaron a {$tradeName}" : "{$inviter} te invitó" }}. Si no esperabas esta invitación, ignórala: nadie entrará con tu correo.</x-slot:reason>
 <h1>{{ $subject }}</h1>
-<p>Entrarás como <strong>{{ $role }}</strong>: {{ $does }}</p>
+<p>Entrarás con el rol <strong>{{ $role }}</strong>: {{ $does }}</p>
 <table class="box" cellpadding="0" cellspacing="0" role="presentation">
 <tr>
 <td width="40" style="padding-right: 0;">

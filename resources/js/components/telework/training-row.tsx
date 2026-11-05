@@ -43,7 +43,12 @@ export default function TrainingRow({ row }: { row: Row }) {
             <ul aria-label="Temas" className="flex flex-wrap gap-2">
                 {row.topics.map((topic) => (
                     <li key={topic}>
-                        <Badge variant="secondary">{topic}</Badge>
+                        <Badge
+                            variant="secondary"
+                            className="h-auto min-h-[26px] py-1 whitespace-normal"
+                        >
+                            {topic}
+                        </Badge>
                     </li>
                 ))}
             </ul>

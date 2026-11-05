@@ -47,7 +47,7 @@ final readonly class SendClosingSummary implements ShouldQueue
         $risk = $guide === null ? null : $this->distribution->of($guide, $this->responses->anonymous($campaign->id, $guide));
 
         Notification::route('mail', $owner)->notify(new ClosingSummary(
-            tradeName: $company->tradeName,
+            company: $company,
             workCenter: $this->workCenters->profile($campaign->workCenterId)->name ?? '',
             answered: $campaign->answered[$measured] ?? 0,
             invited: $campaign->invited[$measured] ?? 0,

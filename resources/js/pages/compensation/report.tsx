@@ -6,7 +6,6 @@ import ReportShares from '@/components/compensation/report-shares';
 import ShareDialog from '@/components/compensation/share-dialog';
 import { Button } from '@/components/ui/button';
 import { useIsUnion } from '@/hooks/use-is-union';
-import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { reportSubtitle } from '@/lib/compensation/report-notes';
 import { index } from '@/routes/tenant/compensation';
@@ -19,7 +18,6 @@ export default function Report(report: ScenarioReport) {
     const union = useIsUnion();
     const company = usePage().props.tenant?.trade_name ?? null;
     const { scenario } = report;
-    useLightPrint();
     setLayoutProps({
         breadcrumbs: [
             { title: 'Compensación', href: index(tenantSlug) },

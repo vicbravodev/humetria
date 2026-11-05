@@ -87,3 +87,19 @@ it('writes the plain-text email as text, with the link spelled out', function ()
         ->toContain('Aceptar: https://humetria.test/a')
         ->not->toContain('<');
 });
+
+it('signs every email with the seal «hecho con humetría», also Humetría’s own (decision A15)', function (): void {
+    expect((string) genericMail()->render())->toMatch('#<p class="seal"[^>]*>hecho con <strong[^>]*>humetría</strong></p>#');
+});
+
+it('heads the email of a company with its initials and name when it has no logo, and nothing confidential unless asked', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false);
+    $html = (string) genericMail()->markdown('notifications::email', ['company' => $company])->render();
+
+    expect($html)->toMatch('#<td class="badge initials"[^>]*>AD</td>#')
+        ->toContain('<span class="company-name"')
+        ->toContain('Autopartes Demo</span>')
+        ->not->toContain('alt="Humetría"')
+        ->not->toContain('Confidencial')
+        ->not->toContain('<p class="legal"');
+});

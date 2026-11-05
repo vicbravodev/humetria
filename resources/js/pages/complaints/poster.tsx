@@ -4,7 +4,6 @@ import ComplaintsHeader from '@/components/complaints/complaints-header';
 import PosterSheet from '@/components/complaints/poster-sheet';
 import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
-import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show } from '@/routes/tenant/complaints/channel';
 
@@ -24,7 +23,6 @@ export default function Poster({
     paused: boolean;
 }) {
     const tenantSlug = useTenantSlug();
-    useLightPrint();
     setLayoutProps({
         breadcrumbs: [
             { title: 'Quejas' },

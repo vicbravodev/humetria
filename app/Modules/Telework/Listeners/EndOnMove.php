@@ -40,6 +40,7 @@ final readonly class EndOnMove
 
         if ($owner !== null && $person !== null) {
             Notification::route('mail', $owner)->notify(new TeleworkMoved(
+                $company,
                 $person->name,
                 $this->workCenters->profile($event->fromWorkCenterId)->name ?? '',
                 $this->workCenters->profile($event->toWorkCenterId)->name ?? '',

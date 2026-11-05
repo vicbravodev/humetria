@@ -76,6 +76,14 @@ it('lays out the six things the people must know, in the order of the board, eac
         ]));
 });
 
+it('speaks of the one center when the company has only one', function (): void {
+    $this->south->update(['archived_at' => now()]);
+    $this->actingAs($this->hr);
+
+    matrix()->assertInertia(fn (Assert $page) => $page
+        ->where('next.text', '6 preguntas con opciones. Al terminar se publica en tu centro y llega a tus personas para que confirmen que la leyeron.'));
+});
+
 it('counts a thing as ready where it is published and in front of the people, and moves the next step on', function (): void {
     $this->actingAs($this->hr);
     resolve(IssuePageLink::class)->handle($this->hr->id);

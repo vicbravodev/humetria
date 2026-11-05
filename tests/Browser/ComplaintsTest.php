@@ -71,8 +71,8 @@ it('designates from the channel who handles the complaints against the managemen
         ->assertSee('Olga Owner no puede: es contra su rol')
         ->assertSee('Usuarios')
         ->click('#handler-person')
-        ->assertSee('Rita Recursos · RH')
-        ->assertDontSee('Olga Owner · Dueño')
+        ->assertSee('Rita Recursos · Ayuda con las rutas')
+        ->assertDontSee('Olga Owner · Administra todo')
         ->keys('[role="combobox"][aria-controls="handler-person-options"]', 'Enter')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Persona designada.')
@@ -149,7 +149,7 @@ it('designates a handler from the page and shows them in the list', function ():
         ->click('Designar a alguien')
         ->click('#handler-person')
         ->type('[role="combobox"][aria-controls="handler-person-options"]', 'recursos')
-        ->assertSee('Ana Recursos · RH')
+        ->assertSee('Ana Recursos · Ayuda con las rutas')
         ->keys('[role="combobox"][aria-controls="handler-person-options"]', 'Enter')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Persona designada.')
@@ -177,7 +177,7 @@ it('says the channel is paused and offers the other way, or that the link is gon
     $code = $case === 'paused' ? ComplaintChannel::factory()->forTenant($tenant->id)->paused()->create()->access_code : 'ZZZZZZZZZZZZZZZZ';
 
     visitPage('complaints-public/unavailable', "/c/{$code}")
-        ->assertSee($case === 'paused' ? 'El canal no está disponible por ahora' : 'Este enlace no está disponible')
+        ->assertSee($case === 'paused' ? 'El canal no está disponible por ahora' : 'Este enlace ya no está disponible')
         ->assertSee('Otra vía')
         ->assertSee('Inspección Federal del Trabajo');
 })->with(['paused', 'gone']);

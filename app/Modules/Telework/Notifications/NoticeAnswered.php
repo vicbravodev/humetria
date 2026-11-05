@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -17,7 +18,7 @@ final class NoticeAnswered extends Notification
     public function __construct(
         private readonly string $url,
         private readonly string $name,
-        private readonly string $company,
+        private readonly CompanySummary $company,
     ) {}
 
     /**
@@ -30,8 +31,8 @@ final class NoticeAnswered extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->subject('Su empresa respondió su aviso')->greeting("Hola, {$this->name}")
-            ->line("{$this->company} leyó el aviso de accidente que envió y registró lo que se hizo. Puede verlo en su portal.")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Su empresa respondió su aviso')->greeting("Hola, {$this->name}")
+            ->line("{$this->company->tradeName} leyó el aviso de accidente que envió y registró lo que se hizo. Puede verlo en su portal.")
             ->action('Ver mi aviso', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta.');
     }

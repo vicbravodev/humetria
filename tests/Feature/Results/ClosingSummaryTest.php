@@ -93,7 +93,8 @@ it('tells the owner how the evaluation closed: participation, risk levels, the d
         ->toMatch('#Siguiente paso: <a [^>]*>completa el Programa de intervención</a>\.#')
         ->toContain(route('tenant.campaigns.program', ['autopartes', $this->campaign->id]))
         ->toContain('Recibes este aviso porque eres el dueño de Autopartes Demo.')
-        ->toContain('alt="Humetría"');
+        // The company's email (decision A15): its initials and name, not Humetría's logo.
+        ->toContain('Autopartes Demo</span>')->not->toContain('alt="Humetría"');
 });
 
 it('points to the Programa de intervención only when someone falls in Medio or more', function (): void {

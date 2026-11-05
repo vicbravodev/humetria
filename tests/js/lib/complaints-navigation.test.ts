@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import {
+    activeChild,
+    complianceNavItems,
+    mainNavItems,
+} from '@/lib/app-navigation';
 import { toUrl } from '@/lib/utils';
 import type { CurrentTenant } from '@/types';
 
@@ -100,5 +104,19 @@ describe('the complaints in the navigation', () => {
 
         expect(mainNavItems(handler, false)).toEqual([]);
         expect(complianceNavItems(handler)).toEqual([]);
+    });
+
+    it('lights Canal on the poster and the evidence of the channel, and Casos on a case', () => {
+        const children =
+            complianceNavItems(tenant('owner', true, true)).find(
+                (item) => item.title === 'Quejas',
+            )?.children ?? [];
+        const lit = (path: string) => activeChild(children, path)?.title;
+
+        expect(lit('/admin/acme/complaints/poster')).toBe('Canal');
+        expect(lit('/admin/acme/complaints/evidence')).toBe('Canal');
+        expect(lit('/admin/acme/complaints/channel')).toBe('Canal');
+        expect(lit('/admin/acme/complaints/cases/9')).toBe('Casos');
+        expect(lit('/admin/acme/complaints')).toBe('Casos');
     });
 });

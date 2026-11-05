@@ -8,7 +8,6 @@ import Combobox from '@/components/humetria/combobox';
 import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { disclosureCrumbs } from '@/lib/nom035/crumbs';
 import { serverSource } from '@/lib/server-options';
@@ -28,7 +27,6 @@ export default function Poster({
 }: PosterProps) {
     const tenantSlug = useTenantSlug();
     const [recording, setRecording] = useState(false);
-    useLightPrint();
     setLayoutProps({
         breadcrumbs: disclosureCrumbs(tenantSlug, { title: 'Cartel' }),
     });

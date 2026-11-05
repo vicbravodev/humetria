@@ -114,6 +114,18 @@ it('prints the certificate that Ley Silla does not apply, in both themes and on 
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 
+// A sheet on paper is read on white: the certificate prints in the light theme even when the screen is dark.
+it('prints the certificate in the light theme and gives the dark one back after printing', function (): void {
+    $plant = applicabilityCompany();
+    TeleworkProfile::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'declared_on' => '2026-02-03']);
+
+    visit("/admin/acme/telework/centers/{$plant->id}/certificate")->inDarkMode()
+        ->assertSee('Constancia de que la norma no aplica')
+        ->assertScript('() => { window.dispatchEvent(new Event("beforeprint")); return document.documentElement.classList.contains("dark"); }', false)
+        ->assertScript('() => { window.dispatchEvent(new Event("afterprint")); return document.documentElement.classList.contains("dark"); }', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('reaches the certificate from the answer, and from the panel', function (): void {
     $plant = applicabilityCompany();
 

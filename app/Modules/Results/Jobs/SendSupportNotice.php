@@ -37,6 +37,6 @@ final class SendSupportNotice implements ShouldQueue, ShouldQueueAfterCommit
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new SupportWaiting(route('portal.support.show', $access->token($person->id)), $person->name, $company->tradeName));
+        Notification::route('mail', $person->email)->notify(new SupportWaiting(route('portal.support.show', $access->token($person->id)), $person->name, $company));
     }
 }

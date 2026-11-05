@@ -353,7 +353,7 @@ it('says a center has no policy yet', function (): void {
 
 it('shows a link that does not open the page that says so and names nobody', function (bool $dark, bool $mobile): void {
     visitPage('disclosure-public/inactive', '/workers/'.str_repeat('a', 43), $dark, $mobile)
-        ->assertSee('Este enlace ya no está activo')
+        ->assertSee('Este enlace ya no está disponible')
         ->assertSee('Pídale a Recursos Humanos de su empresa el enlace vigente.')
         ->assertDontSee('Acme');
 })->with($looks);
@@ -487,6 +487,15 @@ it('writes a block of 5.7 with questions, with how the people will read it on th
         ->assertSee('Gritos, insultos o amenazas, humillaciones o burlas y acoso u hostigamiento.')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
+
+it('puts how the people will read a block under its questions below 1240 px, so the questions keep their width', function (): void {
+    $url = signInToPanel();
+
+    $page = visit("{$url}/disclosure/write/violence_measures")->assertSee('¿Qué consideran violencia laboral?');
+
+    resizeTo($page, 1100)
+        ->assertScript('() => document.querySelector("fieldset").getBoundingClientRect().width > 500', true);
+});
 
 it('reviews the draft of the health effects and publishes it to the centers', function (): void {
     $url = signInToPanel();

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Actions;
 
+use App\Modules\Seating\Contracts\CommitteeWork;
+use App\Modules\Seating\Data\CommitteeTask;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Enums\TrainingStanding;
@@ -19,6 +21,7 @@ use App\Modules\Telework\Support\TrainingDue;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Context;
@@ -43,6 +46,7 @@ final readonly class SendTeleworkDigests
         private CommitteeGate $gate,
         private WorkplaceStanding $standing,
         private TrainingDue $training,
+        private CommitteeWork $seating,
     ) {}
 
     /**
@@ -59,7 +63,7 @@ final readonly class SendTeleworkDigests
                     $company = $this->companies->enter($tenantId);
 
                     if (! $company->blocked) {
-                        $counts = $this->digest($company->tradeName, $company->slug);
+                        $counts = $this->digest($company);
                         $sent['owner'] += $counts['owner'];
                         $sent['committee'] += $counts['committee'];
                     }
@@ -78,8 +82,9 @@ final readonly class SendTeleworkDigests
     /**
      * @return array{owner: int, committee: int}
      */
-    private function digest(string $company, string $slug): array
+    private function digest(CompanySummary $company): array
     {
+        $slug = $company->slug;
         $sent = ['owner' => 0, 'committee' => 0];
         $owner = $this->companies->contact();
 
@@ -103,7 +108,7 @@ final readonly class SendTeleworkDigests
      * @param  list<string>|null  $centers  null: every center of the company.
      * @return int 1 when the digest went, 0 when there was nothing to say or it already went today.
      */
-    private function deliver(string $recipient, string $email, string $company, ?string $name, array $sections, ?array $centers, string $slug): int
+    private function deliver(string $recipient, string $email, CompanySummary $company, ?string $name, array $sections, ?array $centers, string $slug): int
     {
         $now = CarbonImmutable::now();
         $today = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay();
@@ -177,6 +182,38 @@ final readonly class SendTeleworkDigests
 
             if ($count > 0) {
                 $lines[] = trans_choice($texts[$section], $count);
+                $total += $count;
+            }
+        }
+
+        if ($centers !== null) {
+            [$lines, $total] = $this->seatingLines($centers, $lines, $total);
+        }
+
+        return [$lines, $total];
+    }
+
+    /**
+     * What waits in Ley Silla for a Comisión member's centers, read through Seating's contract (board V3-Correos): the
+     * assessments to sign and the signed ones missing from the minutes of a tour.
+     *
+     * @param  list<string>  $centers
+     * @param  list<string>  $lines
+     * @return array{0: list<string>, 1: int}
+     */
+    private function seatingLines(array $centers, array $lines, int $total): array
+    {
+        $tasks = $this->seating->waiting($centers);
+        $texts = [
+            'signatures' => '{1} :count evaluación de trabajo de pie por firmar.|[2,*] :count evaluaciones de trabajo de pie por firmar.',
+            'minutes' => '{1} :count evaluación de trabajo de pie firmada por registrar en el acta de recorrido.|[2,*] :count evaluaciones de trabajo de pie firmadas por registrar en el acta de recorrido.',
+        ];
+
+        foreach ($texts as $kind => $text) {
+            $count = array_sum(array_map(fn (CommitteeTask $task): int => $task->count, array_filter($tasks, fn (CommitteeTask $task): bool => $task->kind === $kind)));
+
+            if ($count > 0) {
+                $lines[] = trans_choice($text, $count);
                 $total += $count;
             }
         }

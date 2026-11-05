@@ -6,6 +6,7 @@ namespace App\Modules\Seating\Actions;
 
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Seating\Enums\AssessmentStatus;
+use App\Modules\Seating\Jobs\SendStandingQuestions;
 use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
@@ -74,6 +75,8 @@ final readonly class StartAssessment
             ]);
 
             Log::info('seating.assessment_started', ['assessment_id' => $assessment->id, 'work_center_id' => $workCenterId]);
+            // The person is asked their 2 questions once the draft is committed (board V3-Correos).
+            SendStandingQuestions::dispatch($this->tenant->id(), $employeeId);
 
             return $assessment;
         });

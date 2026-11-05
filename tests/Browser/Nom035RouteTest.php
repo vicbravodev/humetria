@@ -96,3 +96,13 @@ it('shows the summary each person will read before sharing the results, in both 
         ->assertSee('Publicar para Oficina')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('puts what each person will read under the summary below 1240 px, so the summary keeps its width', function (): void {
+    $office = evaluatedOffice();
+    $closed = Campaign::query()->withoutGlobalScopes()->where('work_center_id', $office->id)->sole();
+
+    $page = visit("/admin/acme/disclosure/results/{$closed->id}/share")->assertSee('Comparte los resultados con tu equipo');
+
+    resizeTo($page, 1100)
+        ->assertScript('() => document.querySelector("h1").parentElement.getBoundingClientRect().width > 600', true);
+});

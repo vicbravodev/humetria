@@ -1,9 +1,11 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { UserPlus } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
 import PageHeader from '@/components/humetria/page-header';
-import InviteMemberDialog from '@/components/tenancy/invite-member-dialog';
 import MembersTable from '@/components/tenancy/members-table';
-import RoleCapabilities from '@/components/tenancy/role-capabilities';
+import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { create } from '@/routes/tenant/members/invitations';
 import type {
     MemberInvitationRow,
     MemberRow,
@@ -23,6 +25,7 @@ export default function Members({
     // Always set here: this page only exists inside a company.
     const { tenant } = usePage().props;
     const tradeName = tenant?.trade_name ?? '';
+    const tenantSlug = useTenantSlug();
 
     return (
         <>
@@ -32,7 +35,12 @@ export default function Members({
                     title="Usuarios"
                     description={`Quién entra a Humetría por ${tradeName} y qué puede hacer.`}
                 >
-                    <InviteMemberDialog tradeName={tradeName} roles={roles} />
+                    <Button asChild>
+                        <Link href={create(tenantSlug)}>
+                            <UserPlus aria-hidden />
+                            Invitar
+                        </Link>
+                    </Button>
                 </PageHeader>
                 <div className="flex flex-col gap-3">
                     <MembersTable
@@ -53,7 +61,6 @@ export default function Members({
                         pinned={false}
                     />
                 </div>
-                <RoleCapabilities />
             </div>
         </>
     );

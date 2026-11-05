@@ -21,6 +21,8 @@ export type NavItem = {
     badge?: number;
     /** Pages of the same tool, listed under it while it is open (NOM-037 · Documentos). */
     children?: NavItem[];
+    /** Pages that belong to this one though their address does not hang from it (the poster of the channel lights Canal). */
+    also?: NonNullable<InertiaLinkProps['href']>[];
 };
 
 /** The company's campaigns in course: how many, and of the soonest to close, its days left and percent gone by. */

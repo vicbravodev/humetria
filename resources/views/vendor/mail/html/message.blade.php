@@ -2,9 +2,11 @@
     'preheader' => null,
     // Why the person gets this email, at the foot.
     'reason' => null,
-    // An email to an employee carries their company (a CompanySummary): its logo or name, "Confidencial" and the seal
-    // "hecho con humetría". Without it, the email is Humetría's: its logo and the legal line.
+    // An email of a company carries it (a CompanySummary): its logo, or its initials and name. Without it, the email is
+    // Humetría's: its logo and the legal line. Every one ends with the gray seal "hecho con humetría" (decision A15).
     'company' => null,
+    // The survey's: "Confidencial" next to the company.
+    'confidential' => false,
 ])
 <x-mail::layout :preheader="$preheader">
 <x-slot:header>
@@ -15,10 +17,12 @@
 @if ($company->logo)
 <img src="{{ $company->logo->url }}" width="{{ $company->logo->width }}" height="{{ $company->logo->height }}" alt="{{ $company->tradeName }}" class="company-logo">
 @else
-<span class="company-name">{{ $company->tradeName }}</span>
+<table cellpadding="0" cellspacing="0" role="presentation"><tr><td class="badge initials" width="32" height="32">{{ $company->initials() }}</td><td class="company-cell"><span class="company-name">{{ $company->tradeName }}</span></td></tr></table>
 @endif
 </td>
+@if ($confidential)
 <td align="right" class="confidential"><img src="{{ asset('mail/lock.png') }}" width="14" height="14" alt="" class="inline-icon"> Confidencial</td>
+@endif
 </tr>
 </table>
 @else
@@ -38,9 +42,8 @@
 @if ($reason)
 <p class="reason">{!! $reason !!}</p>
 @endif
-@if ($company)
 <p class="seal">hecho con <strong>humetría</strong></p>
-@else
+@if (! $company)
 <p class="legal">Humetría{{ config('mail.legal.address') ? ' · '.config('mail.legal.address') : '' }}@if (config('mail.legal.privacy_url')) · <a href="{{ config('mail.legal.privacy_url') }}">Aviso de privacidad</a>@endif</p>
 @endif
 </x-slot:footer>

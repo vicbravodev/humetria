@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -18,6 +19,7 @@ final class TeleworkMoved extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
+        private readonly CompanySummary $company,
         private readonly string $person,
         private readonly string $from,
         private readonly string $to,
@@ -34,7 +36,7 @@ final class TeleworkMoved extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
             ->subject("{$this->person} cambió de centro de trabajo: terminó su teletrabajo")
             ->greeting('Hola')
             ->line("{$this->person} pasó de {$this->from} a {$this->to}. El padrón de teletrabajo y la Comisión son de cada centro, así que su teletrabajo en {$this->from} terminó con el motivo «cambio de centro».")

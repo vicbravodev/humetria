@@ -63,14 +63,14 @@ it('says who receives each kind of complaint by name, for the whole company, and
         ->assertInertia(fn (Assert $page) => $page
             ->has('coverage', 6)
             ->where('coverage.1', ['kind' => 'coworker', 'label' => 'Compañera o compañero', 'excludedRole' => null, 'handlers' => [
-                ['name' => $this->owner->name, 'roleLabel' => 'Dueño'],
-                ['name' => $hr->name, 'roleLabel' => 'RH'],
+                ['name' => $this->owner->name, 'roleLabel' => 'Administra todo'],
+                ['name' => $hr->name, 'roleLabel' => 'Ayuda con las rutas'],
             ]])
             ->where('coverage.2.kind', 'hr')
             ->where('coverage.2.excludedRole', 'hr')
-            ->where('coverage.2.handlers', [['name' => $this->owner->name, 'roleLabel' => 'Dueño']])
+            ->where('coverage.2.handlers', [['name' => $this->owner->name, 'roleLabel' => 'Administra todo']])
             ->where('coverage.3.excludedRole', 'owner')
-            ->where('coverage.3.handlers', [['name' => $hr->name, 'roleLabel' => 'RH']])
+            ->where('coverage.3.handlers', [['name' => $hr->name, 'roleLabel' => 'Ayuda con las rutas']])
             ->where('handlersCount', 3)
             ->has('candidates', 3)
             ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $committee->id, 'label' => $committee->name, 'role' => 'committee', 'roleLabel' => 'Comisión de seguridad e higiene']))

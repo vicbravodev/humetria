@@ -41,6 +41,7 @@ final class SendAccidentAlert implements ShouldQueue, ShouldQueueAfterCommit
         $center = $workCenters->findActive($teleworker->work_center_id);
 
         Notification::route('mail', $contact)->notify(new AccidentReported(
+            $company,
             $person === null ? 'Una persona' : $person->name,
             $center === null ? '' : $center->name,
             str_replace('.', '', $notice->occurred_on->isoFormat('D MMM')),

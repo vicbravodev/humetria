@@ -6,7 +6,6 @@ import ReportFocus from '@/components/results/report-focus';
 import ReportHeader from '@/components/results/report-header';
 import ReportIncises from '@/components/results/report-incises';
 import ReportSummary from '@/components/results/report-summary';
-import { useLightPrint } from '@/hooks/use-light-print';
 import type { NomReport, RiskLevelInfo } from '@/types';
 
 /**
@@ -21,8 +20,6 @@ export default function ReportDocument({
     report: NomReport;
     levels: RiskLevelInfo[];
 }) {
-    useLightPrint();
-
     return (
         <article className="flex flex-col gap-12">
             <ReportHeader report={report} />

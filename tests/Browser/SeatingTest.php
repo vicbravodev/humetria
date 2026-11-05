@@ -112,6 +112,17 @@ it('shows the result of Figura 1 as its questions are answered', function (): vo
         ->assertNoJavaScriptErrors();
 });
 
+it('keeps the questions of Figura 1 readable, with the figure beside them only when there is room', function (int $width): void {
+    [$url, $center] = seatingCenter();
+
+    $page = visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->press('@position-next')
+        ->assertSee('Paso 2 de 5');
+
+    resizeTo($page, $width)
+        ->assertScript('() => document.querySelector("fieldset:has(input[name=can_work_seated])").getBoundingClientRect().width >= 300', true);
+})->with([1100, 1240, 1440]);
+
 it('shows a saved position with its result and its people', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
     $position = StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Cajera']);
@@ -209,6 +220,32 @@ it('asks the two questions one at a time, never moving on alone, and sends them'
         ->assertSee('Gracias, quedó enviado')
         ->assertSee('La Comisión lo tomará en cuenta en su evaluación.')
         ->assertNoJavaScriptErrors();
+})->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
+
+// Board V3-Estados, «Portal sin conexión»: what the person answered stays on the phone and goes out when the connection is back.
+it('keeps the answers when the connection drops and sends them when it is back', function (bool $dark, bool $mobile): void {
+    [$url, $ana] = seatingPortal();
+
+    $page = visitPage('seating/portal', $url, $dark, $mobile)
+        ->click('@portal-accept')
+        ->click('input[name="footwear"][value="1"]')
+        ->press('Siguiente')
+        ->click('input[name="discomfort"][value="2"]');
+    // Every request fails as without a network until `__offline` is turned off.
+    $page->script('() => { const send = XMLHttpRequest.prototype.send; window.__offline = true; XMLHttpRequest.prototype.send = function (...args) { if (window.__offline) { setTimeout(() => this.onerror?.(), 0); return; } send.apply(this, args); }; }');
+    $page->press('Enviar mis respuestas')
+        ->assertSee('Sin conexión.')
+        ->assertSee('Sus respuestas siguen en este teléfono y se envían al volver la conexión.')
+        ->assertSee('Pregunta 2 de 2')
+        ->assertNoAccessibilityIssues(1);
+
+    expect(PersonInput::query()->withoutGlobalScopes()->count())->toBe(0);
+
+    $page->script('() => { window.__offline = false; window.dispatchEvent(new Event("online")); }');
+    $page->assertSee('Gracias, quedó enviado')->assertDontSee('Sin conexión.')->assertNoJavaScriptErrors();
+
+    expect(PersonInput::query()->withoutGlobalScopes()->sole()->discomfort)->toBe(2)
+        ->and(PersonInput::query()->withoutGlobalScopes()->sole()->employee_id)->toBe($ana->id);
 })->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
 it('tells the person when they already answered', function (): void {

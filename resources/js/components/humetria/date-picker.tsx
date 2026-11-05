@@ -70,6 +70,7 @@ export default function DatePicker({
                 <CalendarDays className="size-5 shrink-0 text-muted-foreground" />
                 <span
                     className={cn(
+                        'min-w-0 truncate',
                         written === undefined && 'text-muted-foreground',
                     )}
                 >

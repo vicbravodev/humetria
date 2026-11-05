@@ -23,7 +23,7 @@ export default function ProgramCard({
             aria-labelledby="program-title"
             className="flex flex-col gap-3.5 card p-6"
         >
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex size-9 items-center justify-center rounded-[10px] bg-accent text-primary">
                     <ClipboardList aria-hidden="true" className="size-[18px]" />
                 </span>

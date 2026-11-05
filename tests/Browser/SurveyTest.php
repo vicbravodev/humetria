@@ -53,7 +53,7 @@ it('explains a link that does not work, naming no company', function (bool $dark
     invitedPerson();
 
     visitPage('campaigns/survey', '/survey/not-the-token', $dark, $mobile)
-        ->assertSee('Este enlace no es válido')
+        ->assertSee('Este enlace ya no está disponible')
         ->assertDontSee('Autopartes del Bajío');
 })->with($looks);
 

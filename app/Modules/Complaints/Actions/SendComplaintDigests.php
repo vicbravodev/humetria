@@ -82,22 +82,22 @@ final readonly class SendComplaintDigests
 
     private function digest(CompanySummary $company, ComplaintChannel $channel, MemberSummary $member): int
     {
-        $lines = DB::transaction(fn (): array => $this->newsFor($channel, $member));
+        [$lines, $open] = DB::transaction(fn (): array => $this->newsFor($channel, $member));
 
         if ($lines === []) {
             return 0;
         }
 
-        Notification::route('mail', $member->email)->notify(new ComplaintsDigest($company->tradeName, $member->name, $lines, route('tenant.complaints.index', $company->slug)));
+        Notification::route('mail', $member->email)->notify(new ComplaintsDigest($company, $member->name, $open, $lines, route('tenant.complaints.index', $company->slug)));
 
         return 1;
     }
 
     /**
      * The lines of a handler's digest, and the assignments marked as told: what is new to them, what has a reply, and what is
-     * past its deadline today.
+     * past its deadline today; with how many of their cases are open.
      *
-     * @return list<string>
+     * @return array{0: list<string>, 1: int}
      */
     private function newsFor(ComplaintChannel $channel, MemberSummary $member): array
     {
@@ -106,6 +106,7 @@ final readonly class SendComplaintDigests
         $entries = ComplaintEntry::query()->whereIn('complaint_id', $cases->keys()->all())->get(['complaint_id', 'kind', 'position', 'occurred_on', 'occurred_at']);
         $new = 0;
         $replies = 0;
+        $open = 0;
         $moved = [];
 
         foreach ($assignments as $assignment) {
@@ -120,6 +121,7 @@ final readonly class SendComplaintDigests
             $moved[$case->id] = $this->lastMovement($case, array_values($mine->all()));
 
             if ($case->status !== ComplaintStatus::Closed) {
+                $open++;
                 $new += $assignment->notified_position === null ? 1 : 0;
                 $replies += $assignment->notified_position !== null && $mine->contains(fn (ComplaintEntry $entry): bool => $entry->kind === EntryKind::ReporterMessage->value && $entry->position > $assignment->notified_position) ? 1 : 0;
             }
@@ -129,7 +131,7 @@ final readonly class SendComplaintDigests
             }
         }
 
-        return $this->lines($new, $replies, $this->reminders(array_values($cases->all()), $moved, $channel, $member));
+        return [$this->lines($new, $replies, $this->reminders(array_values($cases->all()), $moved, $channel, $member)), $open];
     }
 
     /**

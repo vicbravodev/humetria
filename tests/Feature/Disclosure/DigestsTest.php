@@ -141,3 +141,40 @@ it('runs from the command and from the Monday schedule, at 09:45 display time, o
         ->and($events->first()->timezone)->toBe('America/Mexico_City')
         ->and($events->first()->onOneServer && $events->first()->withoutOverlapping)->toBeTrue();
 });
+
+// Board V4-Correos-2: while people of the policy in force have not confirmed it, the Monday email says how many are missing,
+// how many confirmed, and its one button reminds them from the record of the disclosure.
+it('says how many people are missing to confirm the policy in force, and offers to remind them', function (): void {
+    digestPolicy($this, [$this->north, $this->south]);
+    $policy = Document::query()->sole();
+    $people = staffOf($this->tenant, $this->north, 3);
+
+    foreach ($people as $index => $person) {
+        $ack = App\Modules\Disclosure\Models\Acknowledgment::factory();
+        ($index === 0 ? $ack->portal() : $ack)->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'employee_id' => $person->id]);
+    }
+
+    expect(resolve(SendDisclosureDigests::class)->handle())->toBe(1);
+
+    Notification::assertSentOnDemand(DisclosureDigest::class, function (DisclosureDigest $digest, array $channels, AnonymousNotifiable $notifiable): bool {
+        $mail = $digest->toMail($notifiable);
+
+        return $mail->subject === 'Faltan 2 personas por confirmar la política'
+            && $mail->introLines === ['1 de 3 personas confirmaron que leyeron la política de prevención. Puedes mandarles un recordatorio o imprimir la lista para que firmen en papel.']
+            && $mail->actionText === 'Recordar a 2'
+            && $mail->actionUrl === route('tenant.disclosure.dissemination', 'acme')
+            && str_contains((string) $mail->render(), 'Te lo enviamos cada lunes mientras falten confirmaciones.');
+    });
+});
+
+it('says «Falta 1 persona» when only one is missing, with the rest of what waits after it', function (): void {
+    digestPolicy($this, [$this->north]);
+    $ana = staffOf($this->tenant, $this->north, 1)->sole();
+    App\Modules\Disclosure\Models\Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => Document::query()->sole()->id, 'employee_id' => $ana->id]);
+
+    resolve(SendDisclosureDigests::class)->handle();
+
+    Notification::assertSentOnDemand(DisclosureDigest::class, fn (DisclosureDigest $digest, array $channels, AnonymousNotifiable $notifiable): bool => $digest->toMail($notifiable)->subject === 'Falta 1 persona por confirmar la política'
+        && $digest->toMail($notifiable)->introLines === ['0 de 1 personas confirmaron que leyeron la política de prevención. Puedes mandarles un recordatorio o imprimir la lista para que firmen en papel.', '1 centro sin política publicada.']
+        && $digest->toMail($notifiable)->actionText === 'Recordar a 1');
+});

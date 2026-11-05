@@ -89,11 +89,17 @@ final readonly class SendDisclosureDigests
             }
         }
 
-        if ($lines === [] || $owner === null) {
+        // Who of the people of the centers with a policy confirmed it (board V4-Correos-2).
+        $asked = array_values(array_filter(array_map(fn ($fact): ?array => $fact->acknowledgments, $facts)));
+        $total = array_sum(array_column($asked, 'active'));
+        $confirmed = array_sum(array_column($asked, 'confirmed'));
+        $confirmations = ['confirmed' => $confirmed, 'total' => $total, 'pending' => $total - $confirmed];
+
+        if (($lines === [] && $confirmations['pending'] === 0) || $owner === null) {
             return 0;
         }
 
-        Notification::route('mail', $owner)->notify(new DisclosureDigest($company->tradeName, $lines, route('tenant.disclosure.index', $company->slug)));
+        Notification::route('mail', $owner)->notify(new DisclosureDigest($company, $lines, route('tenant.disclosure.index', $company->slug), $confirmations, route('tenant.disclosure.dissemination', $company->slug)));
 
         return 1;
     }

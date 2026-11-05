@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -18,7 +19,7 @@ final class HandlersChanged extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        private readonly string $company,
+        private readonly CompanySummary $company,
         private readonly string $person,
         private readonly bool $designated,
         private readonly string $url,
@@ -38,10 +39,10 @@ final class HandlersChanged extends Notification implements ShouldQueue
     {
         $change = $this->designated ? "{$this->person} fue designada o designado para atender" : "{$this->person} dejó de atender";
 
-        return (new MailMessage)
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
             ->subject('Cambió quién atiende el canal de quejas')
             ->greeting('Hola')
-            ->line("En {$this->company}, {$change} las quejas y denuncias del canal.")
+            ->line("En {$this->company->tradeName}, {$change} las quejas y denuncias del canal.")
             ->line('Recibes este aviso porque también las atiendes. Si no esperabas el cambio, avísale a quien administra la cuenta.')
             ->action('Ver quién atiende', $this->url);
     }

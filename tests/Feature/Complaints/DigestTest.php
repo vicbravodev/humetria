@@ -71,11 +71,17 @@ it('tells each handler how many new cases they have, with counts only, and the l
         }
         $mail = $notification->toMail($notifiable);
 
+        // Board V4-Correos-2: how many cases wait, the counts, why it says no more, and one button to the cases.
         return in_array('Tienes 2 casos nuevos.', digestLinesOf($notification), true)
+            && in_array('Por privacidad, este correo no incluye lo que dicen.', digestLinesOf($notification), true)
+            && $mail->actionText === 'Ver mis casos'
             && $mail->actionUrl === route('tenant.complaints.index', 'acme')
-            && $mail->subject === 'Novedades en el canal de quejas';
+            && $mail->subject === 'Tienes 2 casos por atender'
+            && str_contains((string) $mail->render(), 'Lo recibes porque te designaron para atender quejas en Acme.');
     });
-    Notification::assertSentOnDemand(ComplaintsDigest::class, fn (ComplaintsDigest $notification, array $channels, object $notifiable): bool => $notifiable->routes['mail'] === $this->hr->email && in_array('Tienes 1 caso nuevo.', digestLinesOf($notification), true));
+    Notification::assertSentOnDemand(ComplaintsDigest::class, fn (ComplaintsDigest $notification, array $channels, object $notifiable): bool => $notifiable->routes['mail'] === $this->hr->email
+        && in_array('Tienes 1 caso nuevo.', digestLinesOf($notification), true)
+        && $notification->toMail($notifiable)->subject === 'Tienes 1 caso por atender');
 });
 
 it('says nothing of what a case is: no reference, no words, no name, no type', function (): void {

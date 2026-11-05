@@ -3,6 +3,7 @@ import { FilePlus2, FileText, GraduationCap } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { countOf } from '@/lib/plural';
 import { index as documents } from '@/routes/tenant/telework/documents';
 import { index as supporting } from '@/routes/tenant/telework/supporting';
 import { index as trainings } from '@/routes/tenant/telework/trainings';
@@ -27,7 +28,7 @@ export default function CentersCompany({
         {
             icon: FileText,
             title: 'Política de Teletrabajo',
-            text: `Vigente en ${company.policyCenters} de ${company.centers} centros · numeral 5.2`,
+            text: `Vigente en ${company.policyCenters} de ${countOf(company.centers, 'centro', 'centros')} · numeral 5.2`,
             href:
                 canManage && !policyDone
                     ? write([tenantSlug, 'policy'])
@@ -60,10 +61,10 @@ export default function CentersCompany({
                     Para toda la empresa
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                    Se hace una vez y cubre a tus{' '}
+                    Se hace una vez y cubre{' '}
                     {company.centers === 1
-                        ? 'centro'
-                        : `${company.centers} centros`}
+                        ? 'a tu centro'
+                        : `a tus ${company.centers} centros`}
                     .
                 </p>
             </div>

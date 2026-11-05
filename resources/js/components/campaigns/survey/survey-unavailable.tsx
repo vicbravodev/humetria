@@ -1,23 +1,17 @@
 import {
     CircleCheck,
     CirclePause,
-    Link2Off,
     TimerOff,
     type LucideIcon,
 } from 'lucide-react';
 import StatusMessage from '@/components/humetria/status-message';
+import LinkUnavailable from '@/components/link-unavailable';
 import type { SurveyUnavailable } from '@/types';
 
 const MESSAGES: Record<
-    SurveyUnavailable,
+    Exclude<SurveyUnavailable, 'invalid'>,
     { icon: LucideIcon; caption: string; title: string; body: string }
 > = {
-    invalid: {
-        icon: Link2Off,
-        caption: 'Enlace no válido',
-        title: 'Este enlace no es válido',
-        body: 'Revise que lo haya abierto completo desde su correo. Si su empresa le envió uno nuevo, use el más reciente.',
-    },
     closed: {
         icon: TimerOff,
         caption: 'Evaluación cerrada',
@@ -44,6 +38,17 @@ export default function SurveyUnavailableNotice({
 }: {
     reason: SurveyUnavailable;
 }) {
+    if (reason === 'invalid') {
+        return (
+            <div className="flex flex-1 items-center justify-center py-8">
+                <LinkUnavailable>
+                    Revise que lo haya abierto completo desde su correo. Si su
+                    empresa le envió uno nuevo, use el más reciente.
+                </LinkUnavailable>
+            </div>
+        );
+    }
+
     const message = MESSAGES[reason];
 
     return (

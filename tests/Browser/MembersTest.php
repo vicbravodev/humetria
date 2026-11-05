@@ -41,16 +41,23 @@ it('lists who has access and the pending invitations', function (bool $dark, boo
         ->assertSee('(tú)')
         ->assertSee('Beto Ramírez')
         ->assertSee('Carla Díaz')
-        ->assertSee('Pendiente')
-        ->assertSee('Qué puede hacer cada rol');
+        ->assertSee('Pendiente');
 })->with($looks);
 
-it('passes the checks with the invite dialog and a row menu open', function (bool $dark, bool $mobile): void {
+it('invites from its own page, with what each role can do beside the form (board V3-Roles)', function (bool $dark, bool $mobile): void {
     acmeWithPeople();
 
-    visitPage('tenancy/members', '/admin/acme/members', $dark, $mobile, fn (AwaitableWebpage $page) => $page
-        ->click('Invitar')
-        ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.'));
+    visitPage('tenancy/invite-member', '/admin/acme/members/invitations/create', $dark, $mobile)
+        ->assertSee('Invitar a alguien')
+        ->assertSee('Qué hará en Humetría')
+        ->assertSee('Ayuda con las rutas')
+        ->assertSee('Qué puede hacer cada quien')
+        ->assertSee('Canalización y datos de salud')
+        ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.');
+})->with($looks);
+
+it('passes the checks with a row menu open', function (bool $dark, bool $mobile): void {
+    acmeWithPeople();
 
     visitPage('tenancy/members', '/admin/acme/members', $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('@member-actions')
@@ -106,8 +113,8 @@ it('shows the role being saved, and holds the field until it is', function (): v
     $page = visit('/admin/acme/members');
     // Every request waits 400 ms to leave, so the save is still under way when the field is read.
     $page->script(SLOW_REQUESTS);
-    $page->click('@member-role')->click('[role="option"]:has-text("Consulta")')
-        ->assertSeeIn('@member-role', 'Consulta')
+    $page->click('@member-role')->click('[role="option"]:has-text("Solo consulta")')
+        ->assertSeeIn('@member-role', 'Solo consulta')
         ->assertAttribute('@member-role', 'aria-busy', 'true')
         ->assertScript('() => document.querySelector(\'[data-test="member-role"]\').disabled', true)
         ->assertSee('Rol actualizado.')
@@ -119,9 +126,9 @@ it('changes a role and takes access away', function (): void {
     $tenant = acmeWithPeople();
 
     visit('/admin/acme/members')
-        ->click('@member-role')->click('[role="option"]:has-text("Consulta")')
+        ->click('@member-role')->click('[role="option"]:has-text("Solo consulta")')
         ->assertSee('Rol actualizado.')
-        ->assertSeeIn('@member-role', 'Consulta')
+        ->assertSeeIn('@member-role', 'Solo consulta')
         ->click('@member-actions')->click('Quitar acceso')
         ->assertSee('¿Quitar el acceso de Beto Ramírez?')
         ->press('Quitar acceso')

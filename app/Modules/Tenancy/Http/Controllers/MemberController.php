@@ -20,6 +20,7 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\DisplayDate;
+use App\Modules\Tenancy\Support\RoleMatrix;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -70,10 +71,18 @@ final class MemberController extends Controller
                     'status_label' => $invitation->status()->label(),
                     'expires_on' => DisplayDate::day($invitation->expires_at),
                 ]),
-            'roles' => array_map(
-                fn (TenantRole $role): array => ['value' => $role->value, 'label' => $role->label()],
-                $tenant->type->assignableRoles(),
-            ),
+            'roles' => $this->assignable($tenant),
+        ]);
+    }
+
+    /** «Invitar a alguien» (board V3-Roles): the roles the owner can give and what each one can do. */
+    public function create(Tenant $tenant): Response
+    {
+        $this->authorizeOwner();
+
+        return Inertia::render('tenancy/invite-member', [
+            'roles' => $this->assignable($tenant),
+            'matrix' => RoleMatrix::for($tenant->type),
         ]);
     }
 
@@ -146,6 +155,14 @@ final class MemberController extends Controller
             'is_you' => $user->id === $you->id,
             'since' => DisplayDate::day($member->created_at),
         ];
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function assignable(Tenant $tenant): array
+    {
+        return array_map(fn (TenantRole $role): array => ['value' => $role->value, 'label' => $role->label()], $tenant->type->assignableRoles());
     }
 
     private function authorizeOwner(): void

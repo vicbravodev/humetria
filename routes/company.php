@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/restore', [WorkCenterController::class, 'restore'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.restore');
 
     Route::get('admin/{tenant:slug}/members', [MemberController::class, 'index'])->where('tenant', $notReserved)->name('tenant.members.index');
+    Route::get('admin/{tenant:slug}/members/invitations/create', [MemberController::class, 'create'])->where('tenant', $notReserved)->name('tenant.members.invitations.create');
     Route::post('admin/{tenant:slug}/members/invitations', [MemberController::class, 'invite'])->where('tenant', $notReserved)->name('tenant.members.invitations.store');
     Route::post('admin/{tenant:slug}/members/invitations/{invitation}/resend', [MemberController::class, 'resend'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.resend');
     Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');

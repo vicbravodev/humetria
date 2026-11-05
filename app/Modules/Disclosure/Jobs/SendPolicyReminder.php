@@ -61,6 +61,6 @@ final class SendPolicyReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new PolicyToConfirm(route('portal.policy.show', $access->token($person->id)), $person->name, $company->tradeName));
+        Notification::route('mail', $person->email)->notify(new PolicyToConfirm(route('portal.policy.show', $access->token($person->id)), $person->name, $company));
     }
 }

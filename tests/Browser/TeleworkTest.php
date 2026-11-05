@@ -267,7 +267,7 @@ it('shows the person what the Comisión asked for and lets them authorize a visi
 
 it('tells a link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
     visitPage('telework/portal', '/portal/not-a-link', $dark, $mobile)
-        ->assertSee('Este enlace no es válido');
+        ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
 /** @return array{string, WorkCenter, Tenant} The panel of RH in acme, and a center of it (with a published list unless said otherwise). */
@@ -376,7 +376,7 @@ it('shows the person the checklist with its instructions, the notice and the con
 
 it('tells a checklist link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
     visitPage('telework/portal-checklist', '/portal/not-a-link/checklists/'.Str::uuid(), $dark, $mobile)
-        ->assertSee('Este enlace no es válido');
+        ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
 it('lets the person answer on their phone with a flagged answer, pick a photo and send it once', function (): void {
@@ -837,7 +837,9 @@ it('shows the trainings with who is due and the topics not covered', function (b
         ->assertSee('Temas del 8.1 sin cubrir')
         ->assertSee('Riesgo ergonómico por posturas forzosas')
         ->assertSee('Capacitaciones registradas')
-        ->assertSee('1 persona');
+        ->assertSee('1 persona')
+        // A long topic wraps inside its card instead of pushing the card past the edge of a phone.
+        ->assertScript(spilledOut(), '');
 })->with($looks);
 
 it('shows the trainings page before there is anything to show', function (): void {
@@ -961,6 +963,9 @@ it('lists the centers with where each stands in its route on the NOM-037 page', 
     visitPage('telework/index', "{$url}/telework", $dark, $mobile)
         ->assertSee('Teletrabajo en tus centros')
         ->assertSee('Para toda la empresa')
+        // With a single center, the company row speaks of that one center.
+        ->assertSee('Se hace una vez y cubre a tu centro.')
+        ->assertSee('Vigente en 0 de 1 centro · numeral 5.2')
         ->assertSee('Planta Querétaro')
         ->assertSee('de 6 etapas')
         ->assertSee('Abrir ruta')

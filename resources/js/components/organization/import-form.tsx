@@ -44,10 +44,7 @@ export default function ImportForm({
                     />
                     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
                         <div className="grid gap-6">
-                            <ImportFileField
-                                error={errors['file']}
-                                rows={summary?.rows}
-                            />
+                            <ImportFileField error={errors['file']} />
                             {summary !== undefined && (
                                 <ImportStats summary={summary} />
                             )}
