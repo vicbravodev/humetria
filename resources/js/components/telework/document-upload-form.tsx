@@ -13,11 +13,14 @@ import type { DocumentKindOption } from '@/types';
 /** Publishes a document in five steps: kind, PDF, work centers, items covered, confirm (pantallas: Empleados-CSV). */
 export default function DocumentUploadForm({
     kinds,
+    chosenKind,
 }: {
     kinds: DocumentKindOption[];
+    /** The kind «Ya lo tengo» came for (board V2-N037-Docs), already chosen. */
+    chosenKind: string | null;
 }) {
     const tenantSlug = useTenantSlug();
-    const [kind, setKind] = useState('');
+    const [kind, setKind] = useState(chosenKind ?? '');
     const chosen = kinds.find((option) => option.value === kind);
 
     return (

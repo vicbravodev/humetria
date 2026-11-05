@@ -1,4 +1,5 @@
 import { Form } from '@inertiajs/react';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,22 +19,23 @@ export default function ReviewAttachForm({
                 tenant: tenantSlug,
                 authorization: authorizationId,
             })}
-            className="flex flex-wrap items-center gap-2"
+            className="grid gap-2"
         >
             {({ processing, errors }) => (
                 <>
-                    <input
+                    <FileDropZone
                         name="document"
-                        type="file"
                         accept="application/pdf"
-                        aria-label="Autorización firmada en PDF"
-                        className="min-w-0 rounded-md border border-input bg-card px-3 py-1.5 text-[14px] file:mr-3 file:font-medium"
+                        title="Autorización firmada en PDF"
+                        hint="Arrástrala aquí o elígela"
+                        invalid={errors['document'] !== undefined}
                     />
                     <Button
                         type="submit"
                         size="sm"
                         variant="outline"
                         disabled={processing}
+                        className="justify-self-start"
                     >
                         {processing && <Spinner />}
                         Adjuntar PDF

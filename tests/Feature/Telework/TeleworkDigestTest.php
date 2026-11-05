@@ -62,7 +62,7 @@ function digestLinesFor(string $email): array
         $mail = $notification->toMail($notifiable);
         $lines = array_slice(array_map(strval(...), $mail->introLines), 1);
 
-        return $mail->subject === 'Resumen de teletrabajo' && $channels === ['mail'];
+        return ($mail->subject === 'Resumen de teletrabajo' || str_ends_with((string) $mail->subject, 'como integrante de la Comisión')) && $channels === ['mail'];
     });
 
     return $lines;
@@ -235,20 +235,22 @@ it('links the owner to the dashboard of the only center with people, or to the l
     expect(digestUrlFor($this->owner->email))->toBe(route('tenant.telework.index', $this->tenant));
 });
 
-it('links a Comisión member to the dashboard of its only center, or to the list when it sits on several', function (): void {
+// Rediseño v2 (boards V3-Correos and V2-Comision): the Comisión's email says how much waits for it and opens its queue.
+it('tells a Comisión member how many things wait for them and opens their queue', function (): void {
     $cora = memberOf($this->tenant, TenantRole::Committee);
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
     digestWorkplace($this->center, '2025-12-16 18:00:00');
+    digestWorkplace($this->center, '2025-12-16 18:00:00');
     resolve(SendTeleworkDigests::class)->handle();
 
-    expect(digestUrlFor($cora->email))->toBe(route('tenant.telework.center', [$this->tenant, $this->center->id]));
+    Notification::assertSentOnDemand(TeleworkDigest::class, function (TeleworkDigest $notification, array $channels, AnonymousNotifiable $notifiable) use ($cora): bool {
+        $mail = $notification->toMail($notifiable);
 
-    Notification::fake();
-    DigestDelivery::query()->delete();
-    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->other->id, 'user_id' => $cora->id]);
-    resolve(SendTeleworkDigests::class)->handle();
-
-    expect(digestUrlFor($cora->email))->toBe(route('tenant.telework.index', $this->tenant));
+        return $notifiable->routes['mail'] === $cora->email
+            && $mail->subject === 'Tienes 2 pendientes como integrante de la Comisión'
+            && $mail->actionText === 'Ver mis pendientes'
+            && $mail->actionUrl === route('tenant.telework.index', $this->tenant);
+    });
 });
 
 it('adds the digests of the owner and the Comisión, and reaches the Comisión of a company without an owner', function (): void {

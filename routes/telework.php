@@ -21,6 +21,7 @@ use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use App\Modules\Telework\Http\Controllers\TrainingController;
 use App\Modules\Telework\Http\Controllers\VisitController;
 use App\Modules\Telework\Http\Controllers\WorkCenterOptionsController;
+use App\Modules\Telework\Http\Controllers\WritingController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
@@ -30,6 +31,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.index');
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}', [TeleworkController::class, 'center'])->where('tenant', $notReserved)->name('tenant.telework.center');
 // The printable dossier of the center for an inspection (criterio C-30); every view is audited.
+// The NOM-037 route of a center (board V2-Ruta-N037).
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/route', [TeleworkController::class, 'route'])->where('tenant', $notReserved)->name('tenant.telework.route');
+// What an inspector would ask for today in a center, and its dossier (board V3-Inspeccion).
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/inspection', [TeleworkController::class, 'inspection'])->where('tenant', $notReserved)->name('tenant.telework.inspection');
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.dossier');
 
 // «¿Te aplica?» (board V2-Aplica): whether someone of the center works away from it more than 40 % of their time.
@@ -119,6 +124,18 @@ Route::get('admin/{tenant:slug}/telework/trainings/{training}/evidence', [Traini
 // evidence, so there is no PUT or DELETE.
 Route::get('admin/{tenant:slug}/telework/notices', [NoticeController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.notices.index');
 Route::post('admin/{tenant:slug}/telework/notices/{notice}/review', [NoticeController::class, 'review'])->where('tenant', $notReserved)->name('tenant.telework.notices.review');
+// An accident notice (board V3-Aviso): closed with its evidence, which only who may review it reads, and the place asked to be reviewed again.
+Route::get('admin/{tenant:slug}/telework/notices/{notice}', [NoticeController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.notices.show');
+Route::post('admin/{tenant:slug}/telework/notices/{notice}/close', [NoticeController::class, 'close'])->where('tenant', $notReserved)->name('tenant.telework.notices.close');
+Route::get('admin/{tenant:slug}/telework/notices/{notice}/evidence', [NoticeController::class, 'evidence'])->where('tenant', $notReserved)->name('tenant.telework.notices.evidence');
+Route::post('admin/{tenant:slug}/telework/notices/{notice}/place-review', [NoticeController::class, 'placeReview'])->where('tenant', $notReserved)->name('tenant.telework.notices.place-review');
 
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');
+
+// Writing a document with questions (boards V2-Politica and V3-Doc-Riesgos; decisión A3): every answer is kept. The six
+// supporting documents are listed together (board V2-N037-Docs).
+Route::get('admin/{tenant:slug}/telework/documents/supporting', [WritingController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.supporting.index');
+Route::get('admin/{tenant:slug}/telework/documents/{kind}/write', [WritingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.writing.show');
+Route::put('admin/{tenant:slug}/telework/documents/{kind}/write', [WritingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.writing.update');
+Route::post('admin/{tenant:slug}/telework/documents/{kind}/write/publish', [WritingController::class, 'publish'])->where('tenant', $notReserved)->name('tenant.telework.writing.publish');

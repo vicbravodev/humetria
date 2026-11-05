@@ -332,3 +332,12 @@ it('sends the evidence of each row in full', function (): void {
         ->where('committee', ['constitutedOn' => '2026-01-10', 'members' => ['Zoe Comisión'], 'actHref' => null])
         ->where('evidence', ['checklists' => 0, 'photos' => 0, 'href' => route('tenant.telework.reviews.index', [$this->tenant, $this->center->id])]));
 });
+
+// Board V3-Inspeccion: «Solo lo que tienes», to hand to the inspector.
+it('keeps only the rows the center can show when asked for what it has', function (): void {
+    dossierPerson();
+
+    $this->actingAs($this->owner)->get(dossierUrl().'?ready=1')->assertInertia(fn (Assert $page) => $page
+        ->where('rows', fn ($rows): bool => collect($rows)->every(fn (array $row): bool => $row['state'] === 'done') && collect($rows)->pluck('numeral')->contains('5.1')));
+    $this->actingAs($this->owner)->get(dossierUrl())->assertInertia(fn (Assert $page) => $page->has('rows', 17));
+});

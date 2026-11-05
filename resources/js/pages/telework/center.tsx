@@ -9,7 +9,6 @@ import CenterTabs from '@/components/telework/center-tabs';
 import ComplianceRows from '@/components/telework/compliance-rows';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { headcountText } from '@/lib/telework/center';
-import { index } from '@/routes/tenant/telework';
 import type {
     CenterProgress,
     CenterTab,
@@ -18,6 +17,7 @@ import type {
     Paginated,
     CenterPerson,
 } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function TeleworkCenter({
     workCenter,
@@ -44,10 +44,9 @@ export default function TeleworkCenter({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'NOM-037', href: index(tenantSlug) },
-            { title: workCenter.name },
-        ],
+        breadcrumbs: teleworkCrumbs(tenantSlug, workCenter, {
+            title: 'Personas',
+        }),
     });
 
     return (

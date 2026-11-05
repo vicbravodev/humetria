@@ -361,6 +361,11 @@ ve la NOM-035 ni el resto de la empresa.
 5.2 a) a l) cubre, y Humetría advierte cuáles faltan. Cada versión queda guardada con su fecha. Humetría no redacta la
 política ni ofrece plantilla (decisión del usuario, 2026-10-30).
 
+**Cambio (decisión A3 del rediseño, 2026-11-04).** Además del PDF, la política **se escribe con 8 preguntas** (board
+V2-Politica) que cubren los 12 incisos; los ejemplos C, F, J y K del Apéndice 1 del DOF van literales como texto base que
+RH edita. Publicarla crea la versión siguiente en cada centro en uso, igual que un PDF, y pide los acuses (C-20). Toda la
+redacción va marcada `TODO-LEGAL` (`app/Modules/Telework/Support/Writing/`): la valida un abogado antes de producción.
+
 **Qué dice la norma.** [DOF, 5.2 a) a l)], literal en el anexo. La política puede ir sola o dentro de otra política
 [DOF, 10.3, obs. a 5.2]. El Apéndice 1 es solo de referencia: «no se considerará como incumplimiento si el patrón
 elaboró su propia política (…) sin tomar en consideración el contenido de dicho Apéndice» [DOF, 10.3, obs. a 5.2].
@@ -393,6 +398,10 @@ la modalidad de teletrabajo)» [DOF, 10.3, obs. a 5.2].
 Pueden ser secciones de la misma política o PDF aparte. Humetría no redacta textos legales: guarda el documento y
 muestra la lista de contenido mínimo.
 
+**Cambio (decisión A3, 2026-11-04).** Cada uno también se escribe con 3 o 4 preguntas (boards V2-N037-Docs y
+V3-Doc-Riesgos; `docs/rediseno/docs/02`, «Documentos con preguntas»), con redacción marcada `TODO-LEGAL`. Subir el PDF
+sigue siendo la opción secundaria («Ya lo tengo»).
+
 ### C-22. Equipo entregado: listado, acuse o negativa · Norma
 
 **Qué hacemos.** Por persona, el listado de equipo entregado (silla ergonómica u otra apropiada, insumos, aditamentos
@@ -415,7 +424,8 @@ estaría en incumplimiento» [RC, promovente 58, l. 3528].
 
 **Qué hacemos.** La empresa sube en PDF su material sobre riesgos del teletrabajo (agentes físicos, químicos y
 biológicos; factores ergonómicos y psicosociales), igual que la política. Humetría registra el acuse de cada persona
-teletrabajadora y de cada integrante de la Comisión.
+teletrabajadora y de cada integrante de la Comisión. Desde la decisión A3 (2026-11-04) también se escribe con preguntas
+(board V3-Doc-Riesgos), con redacción marcada `TODO-LEGAL`.
 
 **Qué dice la norma.** [DOF, 5.3] y la tabla 10.3, que lo verifica como «Documental y entrevista» y acepta «charlas» o
 «material impreso o digital».
@@ -693,6 +703,7 @@ marca en ningún caso. «No aplica» nunca marca. Los criterios usados:
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 1.2 | 2026-11-05 | C-19, C-21, C-23: la política y los documentos también se escriben con preguntas (decisión A3 del rediseño, `docs/rediseno/PREGUNTAS-FRONT-BACK.md`); la redacción va marcada `TODO-LEGAL` hasta que la valide un abogado. |
 | 1.1 | 2026-10-30 | C-23: la información de riesgos es un PDF de la empresa, como la política (sin texto base). |
 | 1 | 2026-10-30 | Aprobado: el usuario aprueba la tabla del anexo como valor inicial de la respuesta favorable. |
 | 0.2 | 2026-10-30 | Decisiones del usuario: lista editable desde el principio con versiones (C-07, C-10), periodicidad predefinida o propia con 12 meses por defecto (C-14), rol de la Comisión (C-17), política en PDF (C-19, C-21), solo registro de capacitación (C-24), consentimiento base (C-25). Un solo PR para toda la NOM-037. Queda por aprobar el anexo. |

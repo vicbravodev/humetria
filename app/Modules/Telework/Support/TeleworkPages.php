@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Contracts\TeleworkRoute;
+use App\Modules\Telework\Data\UnreviewedAccidents;
+use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\RowState;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Checklist;
@@ -13,13 +16,16 @@ use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Telework\Models\Training;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\MemberSummary;
+use App\Modules\Tenancy\Data\RouteProgress;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 
@@ -35,6 +41,37 @@ final readonly class TeleworkPages
 
     private const int PEOPLE_PER_PAGE = 15;
 
+    /** The six supporting documents of the first stage (5.3, 5.6, 5.8, 5.10, 5.13 and 5.14), in the order of the norm. */
+    public const array SUPPORT = [
+        DocumentKind::RiskInformation,
+        DocumentKind::ImplementationProcess,
+        DocumentKind::MaintenanceProgram,
+        DocumentKind::Reversibility,
+        DocumentKind::FamilyViolence,
+        DocumentKind::CommitteeParticipation,
+    ];
+
+    /** The rows of table 10.3 in plain words, as an inspector would ask for them (board V3-Inspeccion). */
+    private const array PLAIN = [
+        '5.1' => 'Lista de personas en teletrabajo',
+        '5.1.1' => 'Conexión y condiciones de cada lugar',
+        '5.1.2' => 'Cada persona con un lugar fijo y convenido',
+        '5.2' => 'Política de Teletrabajo completa y leída',
+        '5.3' => 'Los riesgos de trabajar desde casa, explicados',
+        '5.4 y 7' => 'Lista de verificación con todos los temas',
+        '5.5' => 'Cada lugar revisado y validado por la Comisión',
+        '5.5.1' => 'La revisión periódica de cada lugar',
+        '5.6' => 'Cómo se empieza a teletrabajar',
+        '5.7' => 'Equipo entregado a cada persona',
+        '5.8' => 'Mantenimiento del equipo',
+        '5.9 y 8' => 'Capacitación del último año',
+        '5.10' => 'Regreso a la oficina',
+        '5.11' => 'Accidentes avisados, con seguimiento',
+        '5.12' => 'Comisión con acceso al expediente',
+        '5.13' => 'Apoyo si vive violencia en casa',
+        '5.14' => 'Participación en comisiones',
+    ];
+
     public function __construct(
         private VisibleCenters $visible,
         private ComplianceRows $rows,
@@ -44,6 +81,7 @@ final readonly class TeleworkPages
         private WorkplaceStanding $standing,
         private Settings $settings,
         private Members $members,
+        private TeleworkRoute $route,
     ) {}
 
     /**
@@ -58,16 +96,138 @@ final readonly class TeleworkPages
         $rows = $this->rows->forMany($ids);
         $people = $this->headcounts($ids);
         $pending = $this->pendingReviews($ids);
+        $profiles = TeleworkProfile::query()->whereIn('work_center_id', $ids)->get(['work_center_id', 'has_teleworkers', 'declared_on'])->keyBy('work_center_id');
+        $accidents = [];
 
-        return ['centers' => $page->through(fn (WorkCenterSummary $center): array => [
-            'id' => $center->id,
-            'name' => $center->name,
-            'activity' => $center->mainActivity,
-            'teleworkers' => $people[$center->id]['active'],
-            'aspirants' => $people[$center->id]['aspirants'],
-            'pendingReviews' => $pending[$center->id] ?? 0,
-            ...$this->progress($rows[$center->id] ?? []),
-        ])];
+        foreach (Gate::allows('review-workplaces') ? $this->route->accidents() : [] as $waiting) {
+            $accidents[$waiting->workCenterId] = $waiting->personName ?? "{$waiting->count} personas";
+        }
+
+        return [
+            'centers' => $page->through(function (WorkCenterSummary $center) use ($rows, $people, $pending, $profiles, $accidents): array {
+                $profile = $profiles->get($center->id);
+                $route = RouteStages::from($rows[$center->id] ?? [], $profile?->has_teleworkers, $profile === null ? null : str_replace('.', '', $profile->declared_on->isoFormat('D MMM YYYY')));
+
+                return [
+                    'id' => $center->id,
+                    'name' => $center->name,
+                    'activity' => $center->mainActivity,
+                    'teleworkers' => $people[$center->id]['active'],
+                    'aspirants' => $people[$center->id]['aspirants'],
+                    'pendingReviews' => $pending[$center->id] ?? 0,
+                    ...$this->progress($rows[$center->id] ?? []),
+                    'route' => ['applies' => $route->applies, 'done' => $route->done, 'status' => $route->status, 'answered' => $route->answered],
+                    'accident' => $accidents[$center->id] ?? null,
+                ];
+            }),
+            ...$this->companyWide($userId),
+            'canManage' => Gate::allows('manage-telework'),
+        ];
+    }
+
+    /**
+     * The queue of a member of the Comisión (board V2-Comision; decisión A5, with its account): in each center it sits on,
+     * the lists of places that wait for its decision, with whose they are, and the notices nobody reviewed; and who sits
+     * with it. Only its centers, nothing of NOM-035 nor health data.
+     *
+     * @return array<string, mixed>
+     */
+    public function queue(mixed $tenant, int $userId, string $name): array
+    {
+        $ids = $this->gate->workCenterIds($userId);
+        $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && in_array($center->id, $ids, true)));
+        $waiting = $this->waitingLists(array_map(fn (WorkCenterSummary $center): string => $center->id, $centers));
+        $notices = [];
+
+        foreach (WorkerNotice::query()->whereNull('reviewed_at')->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->get(['teleworker_id']) as $notice) {
+            $notices[$notice->teleworker_id] = ($notices[$notice->teleworker_id] ?? 0) + 1;
+        }
+
+        $centerOf = [];
+
+        foreach (Teleworker::query()->whereIn('id', array_keys($notices))->get(['id', 'work_center_id']) as $person) {
+            $centerOf[$person->id] = $person->work_center_id;
+        }
+        $reviewers = $this->members->reviewers();
+        $tasks = [];
+        $seats = [];
+
+        foreach ($centers as $center) {
+            $people = $waiting[$center->id] ?? [];
+            $count = array_sum(array_map(fn (string $id): int => ($centerOf[$id] ?? null) === $center->id ? $notices[$id] : 0, array_keys($notices)));
+            array_push($tasks, ...array_filter([
+                $people === [] ? null : ['kind' => 'lists', 'workCenter' => $center->name, 'count' => count($people), 'people' => $people, 'href' => route('tenant.telework.reviews.index', [$tenant, $center->id])],
+                $count === 0 ? null : ['kind' => 'notices', 'workCenter' => $center->name, 'count' => $count, 'people' => [], 'href' => route('tenant.telework.notices.index', [$tenant, 'center' => $center->id])],
+            ]));
+            $seated = $this->gate->userIdsOf($center->id);
+            $members = array_values(array_map(fn (MemberSummary $member): string => $member->name, array_filter($reviewers, fn (MemberSummary $member): bool => in_array($member->userId, $seated, true))));
+            $seats[] = ['id' => $center->id, 'name' => $center->name, 'members' => $members, 'href' => route('tenant.telework.route', [$tenant, $center->id])];
+        }
+
+        return ['name' => $name, 'tasks' => $tasks, 'centers' => $seats];
+    }
+
+    /**
+     * By center, the names of the people whose sent list waits for the Comisión, in the order they were sent.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, list<string>>
+     */
+    private function waitingLists(array $ids): array
+    {
+        $applications = ChecklistApplication::query()->awaitingReview()
+            ->whereIn('workplace_id', Workplace::query()->whereIn('teleworker_id', Teleworker::query()->whereIn('work_center_id', $ids)->select('id'))->select('id'))
+            ->orderBy('submitted_at')->orderBy('id')->get(['workplace_id']);
+        $places = [];
+
+        foreach (Workplace::query()->whereIn('id', $applications->map(fn (ChecklistApplication $application): string => $application->workplace_id)->unique()->values()->all())->get(['id', 'teleworker_id']) as $place) {
+            $places[$place->id] = $place->teleworker_id;
+        }
+
+        $people = Teleworker::query()->whereIn('id', array_values(array_unique($places)))->get(['id', 'employee_id', 'work_center_id'])->keyBy('id');
+        $names = $this->roster->findMany(array_values($people->map(fn (Teleworker $person): string => $person->employee_id)->all()));
+        $waiting = [];
+
+        foreach ($applications as $application) {
+            $person = $people->get($places[$application->workplace_id] ?? '');
+
+            if ($person !== null && isset($names[$person->employee_id])) {
+                $waiting[$person->work_center_id][] = $names[$person->employee_id]->name;
+            }
+        }
+
+        return $waiting;
+    }
+
+    /**
+     * «Para toda la empresa» (board V2-Centros-N037): how many people telework in how many of the centers the user sees,
+     * how many of those centers have their policy in force, and how many of the six supporting documents are in force in
+     * all of them.
+     *
+     * @return array{summary: array{teleworkers: int, centers: int}, company: array{policyCenters: int, documentsReady: int, centers: int}}
+     */
+    private function companyWide(int $userId): array
+    {
+        $limit = $this->visible->limitedTo($userId);
+        $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && ($limit === null || in_array($center->id, $limit, true))));
+        $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
+        $active = Teleworker::query()->whereIn('work_center_id', $ids)->where('status', TeleworkerStatus::Active)->get(['work_center_id']);
+        $kinds = [];
+
+        foreach (TeleworkDocument::query()->inForce()->whereIn('work_center_id', $ids)->get(['work_center_id', 'kind']) as $document) {
+            $kinds[$document->kind->value][$document->work_center_id] = true;
+        }
+
+        $everywhere = fn (DocumentKind $kind): bool => $ids !== [] && count($kinds[$kind->value] ?? []) === count($ids);
+
+        return [
+            'summary' => ['teleworkers' => $active->count(), 'centers' => $active->unique('work_center_id')->count()],
+            'company' => [
+                'policyCenters' => count($kinds[DocumentKind::Policy->value] ?? []),
+                'documentsReady' => count(array_filter(self::SUPPORT, $everywhere)),
+                'centers' => count($ids),
+            ],
+        ];
     }
 
     /**
@@ -99,6 +259,75 @@ final readonly class TeleworkPages
             'nextStep' => $this->nextStep($tenant, $center, $reach),
             'tabs' => $this->tabs($tenant, $center, $active, $reach),
             'people' => $manage || $member ? $this->people($tenant, $center, $manage) : null,
+        ];
+    }
+
+    /**
+     * The NOM-037 route of one center (board V2-Ruta-N037): where it stands in its six stages, every row of table 10.3 in
+     * plain words with the stage it belongs to and its way to fix it, the accidents that cannot wait (for who reviews
+     * them) and the way to «Si hoy llegara una inspección».
+     *
+     * @return array<string, mixed>
+     */
+    public function route(mixed $tenant, WorkCenterSummary $center, RouteProgress $progress, int $userId): array
+    {
+        $reach = ['manage' => Gate::allows('manage-telework'), 'member' => $this->gate->isMember($userId, $center->id)];
+        $accidents = Gate::allows('review-workplaces') ? array_values(array_filter($this->route->accidents(), fn (UnreviewedAccidents $accidents): bool => $accidents->workCenterId === $center->id)) : [];
+
+        return [
+            'workCenter' => ['id' => $center->id, 'name' => $center->name],
+            'teleworkers' => $this->headcounts([$center->id])[$center->id]['active'],
+            'route' => ['applies' => $progress->applies, 'done' => $progress->done, 'status' => $progress->status, 'answered' => $progress->answered],
+            'rows' => array_map(fn (ComplianceRow $row): array => [
+                'numeral' => $row->numeral,
+                'title' => self::PLAIN[$row->numeral] ?? $row->label,
+                'detail' => $row->detail,
+                'state' => $row->state->value,
+                'stage' => intdiv(RouteStages::rank($row->numeral), 100) + 1,
+                ...$this->fix($tenant, $center, $row->numeral, $reach, $row->state === RowState::Done),
+            ], $this->rows->for($center->id)),
+            'accidents' => array_map(fn (UnreviewedAccidents $accidents): array => [
+                'person' => $accidents->personName,
+                'count' => $accidents->count,
+                'since' => $accidents->since,
+                'waiting' => CarbonImmutable::parse($accidents->since, config()->string('app.display_timezone'))->diffForHumans(),
+                'href' => $accidents->noticeId === null
+                    ? route('tenant.telework.notices.index', [$tenant, 'center' => $center->id])
+                    : route('tenant.telework.notices.show', [$tenant, $accidents->noticeId]),
+            ], $accidents),
+            'inspectionHref' => route('tenant.telework.inspection', [$tenant, $center->id]),
+        ];
+    }
+
+    /**
+     * «Si hoy llegara una inspección» (board V3-Inspeccion): the rows of table 10.3 that apply, split into what the center
+     * can show and what is missing (the accidents first, then in the order of the route), each in plain words with its
+     * way to fix it for who may; and the dossier for who may read it.
+     *
+     * @return array<string, mixed>
+     */
+    public function inspection(mixed $tenant, WorkCenterSummary $center, int $userId): array
+    {
+        $manage = Gate::allows('manage-telework');
+        $member = $this->gate->isMember($userId, $center->id);
+        $reach = ['manage' => $manage, 'member' => $member];
+        $applicable = array_values(array_filter($this->rows->for($center->id), fn (ComplianceRow $row): bool => $row->state !== RowState::NotApplicable));
+        $item = fn (ComplianceRow $row): array => [
+            'numeral' => $row->numeral,
+            'title' => self::PLAIN[$row->numeral] ?? $row->label,
+            'detail' => $row->detail,
+            'state' => $row->state->value,
+            ...$this->fix($tenant, $center, $row->numeral, $reach, $row->state === RowState::Done),
+        ];
+        $missing = array_values(array_filter($applicable, fn (ComplianceRow $row): bool => $row->state !== RowState::Done));
+        usort($missing, fn (ComplianceRow $a, ComplianceRow $b): int => ($a->numeral === '5.11' ? -1 : RouteStages::rank($a->numeral)) <=> ($b->numeral === '5.11' ? -1 : RouteStages::rank($b->numeral)));
+
+        return [
+            'workCenter' => ['id' => $center->id, 'name' => $center->name],
+            'applicable' => count($applicable),
+            'ready' => array_map($item, array_values(array_filter($applicable, fn (ComplianceRow $row): bool => $row->state === RowState::Done))),
+            'missing' => array_map($item, $missing),
+            'dossierHref' => $manage || $member ? route('tenant.telework.dossier', [$tenant, $center->id]) : null,
         ];
     }
 
@@ -218,12 +447,12 @@ final readonly class TeleworkPages
     }
 
     /**
-     * Where to fix a row, when the person may open it: nothing for the viewer.
+     * Where to fix a row, when the person may open it: nothing for the viewer. A row already done opens where its evidence is.
      *
      * @param  array{manage: bool, member: bool}  $reach
      * @return array{href: string|null, action: string|null}
      */
-    private function fix(mixed $tenant, WorkCenterSummary $center, string $numeral, array $reach): array
+    private function fix(mixed $tenant, WorkCenterSummary $center, string $numeral, array $reach, bool $done = false): array
     {
         $none = ['href' => null, 'action' => null];
 
@@ -232,9 +461,17 @@ final readonly class TeleworkPages
         }
 
         $documents = ['href' => route('tenant.telework.documents.index', [$tenant, 'center' => $center->id]), 'action' => 'Ver documentos'];
+        // Rediseño v2 (decisión A3): whoever manages NOM-037 writes the policy and the supporting documents with questions.
+        $write = ! $done && $reach['manage'];
 
         return match ($numeral) {
-            '5.1' => $reach['manage'] ? ['href' => route('tenant.telework.teleworkers.create', [$tenant, $center->id]), 'action' => 'Registrar persona'] : $none,
+            '5.2' => $write ? ['href' => route('tenant.telework.writing.show', [$tenant, 'policy', 'center' => $center->id]), 'action' => 'Continuar'] : $documents,
+            '5.3', '5.6', '5.8', '5.10', '5.13', '5.14' => $write ? ['href' => route('tenant.telework.supporting.index', $tenant), 'action' => 'Ver los documentos de apoyo'] : $documents,
+            '5.1' => match (true) {
+                $done => ['href' => route('tenant.telework.center', [$tenant, $center->id]), 'action' => 'Ver personas'],
+                $reach['manage'] => ['href' => route('tenant.telework.teleworkers.create', [$tenant, $center->id]), 'action' => 'Registrar persona'],
+                default => $none,
+            },
             '5.1.1', '5.1.2', '5.5' => $reach['member'] ? ['href' => route('tenant.telework.reviews.index', [$tenant, $center->id]), 'action' => 'Ver las listas por revisar'] : $none,
             '5.4 y 7', '5.5.1' => ['href' => route('tenant.telework.checklist.show', [$tenant, $center->id]), 'action' => 'Ver la lista'],
             '5.7' => $reach['manage'] ? ['href' => route('tenant.telework.center', [$tenant, $center->id]).'#padron', 'action' => 'Ver el padrón'] : $none,

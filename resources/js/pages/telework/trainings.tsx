@@ -12,6 +12,8 @@ import type {
     TrainingPerson,
     TrainingRow as Row,
 } from '@/types';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Trainings({
     trainings,
@@ -30,8 +32,11 @@ export default function Trainings({
     topics: TrainingChoice[];
     modalities: TrainingChoice[];
 }) {
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [{ title: 'NOM-037' }, { title: 'Capacitación' }],
+        breadcrumbs: teleworkCrumbs(tenantSlug, null, {
+            title: 'Capacitación',
+        }),
     });
 
     return (

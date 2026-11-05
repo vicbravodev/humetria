@@ -33,7 +33,7 @@ final readonly class CompanyTeleworkRoute implements TeleworkRoute
 
     public function accidents(): array
     {
-        $notices = WorkerNotice::query()->where('kind', NoticeKind::WorkRisk)->whereNull('reviewed_at')->orderBy('submitted_at')->orderBy('id')->get(['teleworker_id', 'submitted_at']);
+        $notices = WorkerNotice::query()->where('kind', NoticeKind::WorkRisk)->whereNull('reviewed_at')->orderBy('submitted_at')->orderBy('id')->get(['id', 'teleworker_id', 'submitted_at']);
 
         if ($notices->isEmpty()) {
             return [];
@@ -47,7 +47,7 @@ final readonly class CompanyTeleworkRoute implements TeleworkRoute
             $person = $people->get($notice->teleworker_id);
 
             if ($person !== null) {
-                $centers[$person->work_center_id] ??= ['count' => 0, 'employee' => $person->employee_id, 'since' => $notice->submitted_at->setTimezone($zone)->toDateString()];
+                $centers[$person->work_center_id] ??= ['count' => 0, 'employee' => $person->employee_id, 'since' => $notice->submitted_at->setTimezone($zone)->toDateString(), 'notice' => $notice->id];
                 $centers[$person->work_center_id]['count']++;
             }
         }
@@ -57,7 +57,8 @@ final readonly class CompanyTeleworkRoute implements TeleworkRoute
         $accidents = [];
 
         foreach ($centers as $centerId => $center) {
-            $accidents[] = new UnreviewedAccidents($centerId, $center['count'], $center['count'] === 1 ? ($names[$center['employee']]->name ?? null) : null, $center['since']);
+            $lone = $center['count'] === 1;
+            $accidents[] = new UnreviewedAccidents($centerId, $center['count'], $lone ? ($names[$center['employee']]->name ?? null) : null, $center['since'], $lone ? $center['notice'] : null);
         }
 
         return $accidents;

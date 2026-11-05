@@ -13,6 +13,7 @@ use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\Consent;
 use App\Modules\Telework\Models\DigestDelivery;
+use App\Modules\Telework\Models\DocumentDraft;
 use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\EvidencePhoto;
 use App\Modules\Telework\Models\EvidenceRequest;
@@ -35,6 +36,7 @@ use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\ChecklistFactory;
 use Database\Factories\Telework\CommitteeAssignmentFactory;
 use Database\Factories\Telework\DigestDeliveryFactory;
+use Database\Factories\Telework\DocumentDraftFactory;
 use Database\Factories\Telework\EquipmentItemFactory;
 use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\SafetyCommitteeFactory;
@@ -85,6 +87,7 @@ function isolationWorld(Tenant $tenant): array
         CommitteeAssignment::class => CommitteeAssignmentFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]),
         Consent::class => Consent::query()->create([...$tenantId, 'version' => 1, 'text' => 'Consentimiento', 'created_by' => User::factory()->create()->id]),
         DigestDelivery::class => DigestDeliveryFactory::new()->create($tenantId),
+        DocumentDraft::class => DocumentDraftFactory::new()->create($tenantId),
         EquipmentItem::class => EquipmentItemFactory::new()->create([...$tenantId, 'teleworker_id' => $person->id]),
         EvidencePhoto::class => EvidencePhoto::query()->create([...$tenantId, 'evidence_request_id' => $request->id, 'path' => 'evidence/'.Str::uuid().'.jpg', 'uploaded_at' => now()]),
         EvidenceRequest::class => $request,
@@ -181,6 +184,8 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
         CommitteeAssignment::class => [['POST', $panel('committee.members.store', $center), ['user_id' => $reviewer]]],
         Consent::class => [],
         DigestDelivery::class => [],
+        // Reached by kind, never by id: the company's own draft is the only one its writing page reads.
+        DocumentDraft::class => [],
         EquipmentItem::class => [['POST', $portal('equipment.respond', $b[EquipmentItem::class]->id), ['received' => true]]],
         EvidencePhoto::class => [['GET', $panel('evidence-photos.show', $b[EvidencePhoto::class]->id)]],
         EvidenceRequest::class => [['POST', $portal('evidence.store', $b[EvidenceRequest::class]->id), [], ['photo_general_0' => UploadedFile::fake()->image('a.jpg')]]],
@@ -211,7 +216,12 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
             ['POST', $panel('visit-authorizations.cancel', $b[VisitAuthorization::class]->id)],
             ['POST', $portal('visits.confirm', $b[VisitAuthorization::class]->id)],
         ],
-        WorkerNotice::class => [['POST', $panel('notices.review', $b[WorkerNotice::class]->id), ['note' => 'Revisado']]],
+        WorkerNotice::class => [
+            ['POST', $panel('notices.review', $b[WorkerNotice::class]->id), ['note' => 'Revisado']],
+            ['POST', $panel('notices.close', $b[WorkerNotice::class]->id), [], ['evidence' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')]],
+            ['GET', $panel('notices.evidence', $b[WorkerNotice::class]->id)],
+            ['POST', $panel('notices.place-review', $b[WorkerNotice::class]->id)],
+        ],
         Workplace::class => [
             ['POST', $panel('workplaces.retire', $b[Workplace::class]->id)],
             ['POST', $panel('workplaces.remote-check.store', $b[Workplace::class]->id), $decision],

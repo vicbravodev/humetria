@@ -17,21 +17,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * One version of a NOM-037 document (PDF) of a work center, with the items of the norm it covers. Several centers may
- * share the same file. Never updated or deleted.
+ * One version of a NOM-037 document of a work center, with the items of the norm it covers: a PDF the company uploaded
+ * (`path`, which several centers may share) or a text written with questions (`body`, its sections, with the version of
+ * the template it was written with). Never updated or deleted.
  *
  * @property string $id
  * @property string $tenant_id
  * @property string $work_center_id
  * @property DocumentKind $kind
  * @property int $version
- * @property string $path
+ * @property string|null $path
+ * @property list<array{key: string, heading: string, text: string}>|null $body
+ * @property string|null $template_version
  * @property list<string> $covered_items
  * @property int $uploaded_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'kind', 'version', 'path', 'covered_items', 'uploaded_by'])]
+#[Fillable(['tenant_id', 'work_center_id', 'kind', 'version', 'path', 'body', 'template_version', 'covered_items', 'uploaded_by'])]
 #[UseFactory(TeleworkDocumentFactory::class)]
 final class TeleworkDocument extends Model
 {
@@ -43,7 +46,7 @@ final class TeleworkDocument extends Model
      */
     protected function casts(): array
     {
-        return ['kind' => DocumentKind::class, 'covered_items' => 'array'];
+        return ['kind' => DocumentKind::class, 'covered_items' => 'array', 'body' => 'array'];
     }
 
     /**

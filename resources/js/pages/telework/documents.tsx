@@ -12,20 +12,25 @@ import type {
     DocumentRow as Row,
     Paginated,
 } from '@/types';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Documents({
     documents,
     filters,
     kinds,
     canManage,
+    chosenKind,
 }: {
     documents: Paginated<Row>;
     filters: DocumentFilters;
     kinds: DocumentKindOption[];
     canManage: boolean;
+    chosenKind: string | null;
 }) {
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [{ title: 'NOM-037' }, { title: 'Documentos' }],
+        breadcrumbs: teleworkCrumbs(tenantSlug, null, { title: 'Documentos' }),
     });
 
     return (
@@ -36,7 +41,9 @@ export default function Documents({
                     title="Documentos de NOM-037"
                     description="La política y los demás documentos que pide la norma, en PDF y por centro de trabajo. Cada archivo nuevo es una versión nueva: nada se borra."
                 />
-                {canManage && <DocumentUploadForm kinds={kinds} />}
+                {canManage && (
+                    <DocumentUploadForm kinds={kinds} chosenKind={chosenKind} />
+                )}
                 <DocumentsToolbar filters={filters} />
                 {documents.total === 0 ? (
                     <EmptyState icon={FileText} title="Aún no hay documentos">

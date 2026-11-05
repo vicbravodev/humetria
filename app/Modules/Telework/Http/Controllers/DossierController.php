@@ -19,7 +19,7 @@ use Inertia\Response;
 /**
  * The printable dossier of one work center for a STPS inspection. Owner, hr and the Comisión assigned to the center
  * read it; the viewer, another center's Comisión, another company and a made-up center are all a 404. Every view is
- * audited and logged, with the center's id only.
+ * audited and logged, with the center's id only. `?ready=1` keeps only what the center can show (board V3-Inspeccion).
  */
 final class DossierController extends Controller
 {
@@ -35,6 +35,6 @@ final class DossierController extends Controller
         $audit->handle('telework.dossier_viewed', null, $record);
         Log::info('telework.dossier_viewed', $record);
 
-        return Inertia::render('telework/dossier', $dossier->build($tenant, $profile, $user->name, $manage));
+        return Inertia::render('telework/dossier', $dossier->build($tenant, $profile, $user->name, $manage, $request->boolean('ready')));
     }
 }

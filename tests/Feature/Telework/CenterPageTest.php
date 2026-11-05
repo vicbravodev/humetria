@@ -26,9 +26,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 const QUERIES_CENTER = 49;
 
-const QUERIES_INDEX = 39;
+const QUERIES_INDEX = 47;
 
-const QUERIES_INDEX_NOTHING_TO_REVIEW = 30;
+const QUERIES_INDEX_NOTHING_TO_REVIEW = 35;
 
 mutates(TeleworkController::class, TeleworkPages::class, VisibleCenters::class);
 
@@ -101,7 +101,8 @@ it('lists the 17 rows of table 10.3 with their state, detail and where to fix th
         ->where('rows.0.href', route('tenant.telework.teleworkers.create', [$this->tenant, $this->center->id]))
         ->where('rows.3.numeral', '5.2')
         ->where('rows.3.state', 'missing')
-        ->where('rows.3.href', route('tenant.telework.documents.index', [$this->tenant, 'center' => $this->center->id]))
+        // Rediseño v2 (decisión A3): the policy is written with questions, from the route of its center.
+        ->where('rows.3.href', route('tenant.telework.writing.show', [$this->tenant, 'policy', 'center' => $this->center->id]))
         ->where('rows.16.numeral', '5.14')
         ->where('progress', ['done' => 7, 'applicable' => 16]));
 });
@@ -242,11 +243,11 @@ it('lists the centers the user may see, with their progress, counts and pending 
         ->where('centers.data.1', fn ($center) => $center['name'] === 'Planta Sur' && $center['teleworkers'] === 0 && $center['applicable'] === 10));
 });
 
-it('lists to the committee only its centers, and to the viewer every one without names', function (): void {
+it('gives the committee its queue of only its centers (board V2-Comision), and the viewer every center without names', function (): void {
     centerPerson();
 
     $this->actingAs($this->cora)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
-        ->has('centers.data', 1)->where('centers.data.0.name', 'Planta Norte'));
+        ->component('telework/queue')->has('centers', 1)->where('centers.0.name', 'Planta Norte'));
 
     $response = $this->actingAs($this->viewer)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
         ->has('centers.data', 2));
@@ -308,26 +309,29 @@ it('links the dossier from the center dashboard only to whoever may open it', fu
 it('links each row to where each role fixes it, and nowhere for the viewer', function (string $who): void {
     $center = $this->center->id;
     $documents = [route('tenant.telework.documents.index', [$this->tenant, 'center' => $center]), 'Ver documentos'];
+    // Rediseño v2 (decisión A3): whoever manages NOM-037 writes the policy and the supporting documents with questions.
+    $policy = $who === 'owner' ? [route('tenant.telework.writing.show', [$this->tenant, 'policy', 'center' => $center]), 'Continuar'] : $documents;
+    $supporting = $who === 'owner' ? [route('tenant.telework.supporting.index', $this->tenant), 'Ver los documentos de apoyo'] : $documents;
     $list = [route('tenant.telework.checklist.show', [$this->tenant, $center]), 'Ver la lista'];
     $reviews = $who === 'cora' ? [route('tenant.telework.reviews.index', [$this->tenant, $center]), 'Ver las listas por revisar'] : [null, null];
     $expected = $who === 'viewer' ? array_fill_keys(['5.1', '5.1.1', '5.1.2', '5.2', '5.3', '5.4 y 7', '5.5', '5.5.1', '5.6', '5.7', '5.8', '5.9 y 8', '5.10', '5.11', '5.12', '5.13', '5.14'], [null, null]) : [
         '5.1' => $who === 'owner' ? [route('tenant.telework.teleworkers.create', [$this->tenant, $center]), 'Registrar persona'] : [null, null],
         '5.1.1' => $reviews,
         '5.1.2' => $reviews,
-        '5.2' => $documents,
-        '5.3' => $documents,
+        '5.2' => $policy,
+        '5.3' => $supporting,
         '5.4 y 7' => $list,
         '5.5' => $reviews,
         '5.5.1' => $list,
-        '5.6' => $documents,
+        '5.6' => $supporting,
         '5.7' => $who === 'owner' ? [route('tenant.telework.center', [$this->tenant, $center]).'#padron', 'Ver el padrón'] : [null, null],
-        '5.8' => $documents,
+        '5.8' => $supporting,
         '5.9 y 8' => $who === 'owner' ? [route('tenant.telework.trainings.index', [$this->tenant, 'center' => $center]), 'Ver capacitaciones'] : [null, null],
-        '5.10' => $documents,
+        '5.10' => $supporting,
         '5.11' => [route('tenant.telework.notices.index', [$this->tenant, 'center' => $center]), 'Ver los avisos'],
         '5.12' => [route('tenant.telework.committee.show', [$this->tenant, $center]), 'Ver la Comisión'],
-        '5.13' => $documents,
-        '5.14' => $documents,
+        '5.13' => $supporting,
+        '5.14' => $supporting,
     ];
 
     $this->actingAs($this->{$who})->get(centerUrl())->assertInertia(fn (Assert $page) => $page
@@ -425,8 +429,8 @@ it('counts in the list two people, two aspirants and two lists to review in a ce
     }
 
     $this->actingAs($this->owner)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
-        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 6, 'applicable' => 16])
-        ->where('centers.data.1', ['id' => $this->other->id, 'name' => 'Planta Sur', 'activity' => $this->other->main_activity, 'teleworkers' => 0, 'aspirants' => 0, 'pendingReviews' => 0, 'done' => 0, 'applicable' => 10]));
+        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 6, 'applicable' => 16, 'route' => ['applies' => true, 'done' => [false, true, false, true, true, false], 'status' => 'define las reglas', 'answered' => true], 'accident' => null])
+        ->where('centers.data.1', ['id' => $this->other->id, 'name' => 'Planta Sur', 'activity' => $this->other->main_activity, 'teleworkers' => 0, 'aspirants' => 0, 'pendingReviews' => 0, 'done' => 0, 'applicable' => 10, 'route' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false], 'accident' => null]));
 });
 
 it('does not look for whose lists wait for review when none does', function (): void {

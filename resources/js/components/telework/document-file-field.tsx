@@ -1,4 +1,5 @@
 import { Upload } from 'lucide-react';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import SettingRow from '@/components/humetria/setting-row';
 import InputError from '@/components/humetria/input-error';
 
@@ -14,15 +15,15 @@ export default function DocumentFileField({
             title="Paso 2 · Archivo PDF"
             description="Cada archivo que subas queda como una versión nueva; las anteriores se conservan."
         >
-            <input
+            <FileDropZone
                 name="document"
-                type="file"
                 accept="application/pdf"
-                aria-label="Documento en PDF"
-                aria-invalid={error === undefined ? undefined : true}
-                className="w-full rounded-md border border-input bg-card px-4 py-2.5 text-base file:mr-3 file:font-medium"
+                title="Arrastra el PDF aquí o elígelo"
+                hint="Un documento en PDF"
+                invalid={error !== undefined}
+                describedBy="document-file-error"
             />
-            <InputError message={error} />
+            <InputError id="document-file-error" message={error} />
         </SettingRow>
     );
 }

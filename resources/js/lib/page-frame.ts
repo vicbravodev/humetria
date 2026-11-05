@@ -12,6 +12,8 @@ const STANDALONE_NAMES = new Set([
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.
     'telework/applies',
+    // A document written with questions has the same frame: the questions and the text beside them, nothing else.
+    'telework/write',
     'tenancy/applies',
     'tenancy/onboarding',
     // An error page stands alone: the address may not even be a page of the panel.

@@ -1,7 +1,6 @@
-import { Users } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
-import EmptyState from '@/components/humetria/empty-state';
 import SearchField from '@/components/humetria/search-field';
+import AckPeopleEmpty from '@/components/telework/ack-people-empty';
 import AckChoiceBar from '@/components/telework/ack-choice-bar';
 import AckPersonRow from '@/components/telework/ack-person-row';
 import type { useChosenPeople } from '@/hooks/use-chosen-people';
@@ -58,9 +57,7 @@ export default function AckPeopleList({
                 />
             )}
             {people.data.length === 0 ? (
-                <EmptyState icon={Users} title="Nadie coincide">
-                    Prueba con otro nombre o cambia de vista.
-                </EmptyState>
+                <AckPeopleEmpty filters={filters} />
             ) : (
                 <ul className="flex flex-col divide-y rounded-lg border bg-card">
                     {people.data.map((person) => (

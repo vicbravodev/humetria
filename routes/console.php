@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
 use App\Modules\Seating\Actions\SendSeatingDigests;
+use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
 use Illuminate\Support\Facades\Artisan;
@@ -39,6 +40,10 @@ Artisan::command('telework:send-digests', function (SendTeleworkDigests $sendDig
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
 })->purpose('Email the owner and each Comisión member what waits for them in NOM-037');
 
+Artisan::command('telework:remind-accidents', function (RemindUnansweredAccidents $remind): void {
+    $this->info('Recordatorios de accidentes enviados: '.$remind->handle());
+})->purpose('Remind RH, once, of each accident notice nobody answered in three days');
+
 Artisan::command('seating:schedule-checks', function (ScheduleSeatingChecks $schedule): void {
     $this->info('Evaluaciones marcadas por reevaluar: '.$schedule->handle());
 })->purpose('Mark for reassessment the current assessments that turn a year old');
@@ -61,6 +66,7 @@ Schedule::command('interventions:send-digests')->weeklyOn(1, '9:30')->timezone(c
 Schedule::command('disclosure:send-digests')->weeklyOn(1, '9:45')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('telework:send-digests')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('telework:remind-accidents')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:schedule-checks')->dailyAt('07:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();

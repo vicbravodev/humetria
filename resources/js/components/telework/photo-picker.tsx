@@ -1,5 +1,5 @@
 import { Camera, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 
 /** "Agregar foto": JPG or PNG from the camera or the gallery; the server re-encodes them without metadata. */
 export default function PhotoPicker({
@@ -13,29 +13,15 @@ export default function PhotoPicker({
 }) {
     return (
         <div className="grid gap-2">
-            <Button
-                asChild
-                variant="outline"
-                className="h-12 justify-self-start"
-            >
-                <label className="cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring">
-                    <Camera aria-hidden className="size-5" />
-                    Agregar foto
-                    <input
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        multiple
-                        className="sr-only"
-                        data-testid={`photo-${id}`}
-                        onChange={(event) =>
-                            onPhotos([
-                                ...photos,
-                                ...Array.from(event.target.files ?? []),
-                            ])
-                        }
-                    />
-                </label>
-            </Button>
+            <FileDropZone
+                icon={Camera}
+                accept="image/jpeg,image/png"
+                multiple
+                title="Agregar foto"
+                hint="De su cámara o su galería, en JPG o PNG"
+                testId={`photo-${id}`}
+                onFiles={(files) => onPhotos([...photos, ...files])}
+            />
             <ul className="grid gap-1">
                 {photos.map((photo, index) => (
                     <li

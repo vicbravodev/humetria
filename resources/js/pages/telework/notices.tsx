@@ -3,6 +3,8 @@ import PageHeader from '@/components/humetria/page-header';
 import NoticeList from '@/components/telework/notice-list';
 import NoticeToolbar from '@/components/telework/notice-toolbar';
 import type { NoticeFilters, NoticeRow, Paginated } from '@/types';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Notices({
     notices,
@@ -11,8 +13,9 @@ export default function Notices({
     notices: Paginated<NoticeRow>;
     filters: NoticeFilters;
 }) {
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [{ title: 'NOM-037' }, { title: 'Avisos' }],
+        breadcrumbs: teleworkCrumbs(tenantSlug, null, { title: 'Avisos' }),
     });
 
     return (

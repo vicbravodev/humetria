@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show } from '@/routes/tenant/telework/committee';
 import type { TeleworkerSummary } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Teleworker({
     workCenter,
@@ -21,6 +22,11 @@ export default function Teleworker({
     teleworker: TeleworkerSummary | null;
 }) {
     const tenantSlug = useTenantSlug();
+    setLayoutProps({
+        breadcrumbs: teleworkCrumbs(tenantSlug, workCenter, {
+            title: teleworker?.name ?? 'Agregar persona',
+        }),
+    });
 
     return (
         <>
@@ -67,7 +73,3 @@ export default function Teleworker({
         </>
     );
 }
-
-Teleworker.layout = {
-    breadcrumbs: [{ title: 'NOM-037' }, { title: 'Personas' }],
-};

@@ -65,3 +65,39 @@ export type AckDocument = {
 
 /** A published document the person has to read and confirm in their portal. */
 export type PortalDocument = { id: string; title: string; publishedOn: string };
+
+/** A version of a NOM-037 document written with questions, as people read it. */
+export type WrittenDocument = {
+    title: string;
+    company: string;
+    /** "Autopartes Demo · Planta Querétaro". */
+    owner: string;
+    version: number;
+    /** "12 oct 2026". */
+    publishedOn: string;
+    sections: { heading: string; text: string }[];
+};
+
+/** What publishing a written document means (board V2-Politica): who it reaches and the version in force. */
+export type WritingPublication = {
+    /** Confirmations it asks for; null for a document nobody confirms. */
+    audience: number | null;
+    centers: number;
+    version: { number: number; publishedOn: string } | null;
+};
+
+/** One of the six supporting documents (board V2-N037-Docs). */
+export type SupportingDocument = {
+    kind: string;
+    name: string;
+    summary: string;
+    /** "5.3". */
+    numeral: string;
+    minutes: number;
+    /** In force in every center in use, uploaded or written. */
+    ready: boolean;
+    /** Its writing with questions started. */
+    started: boolean;
+    /** Its latest version in force; "12 oct 2026". */
+    version: { id: string; number: number; publishedOn: string } | null;
+};

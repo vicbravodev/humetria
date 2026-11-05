@@ -3,7 +3,6 @@ import DossierHeaderBlock from '@/components/telework/dossier-header';
 import DossierSection from '@/components/telework/dossier-section';
 import DossierToolbar from '@/components/telework/dossier-toolbar';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/telework';
 import type {
     DossierChecklist,
     DossierCommittee,
@@ -18,6 +17,7 @@ import type {
     DossierTraining,
     DossierWorkplace,
 } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 /** The printable dossier of a center: one section per row of table 10.3, in order, with its evidence or «Falta». */
 export default function Dossier({
@@ -41,11 +41,11 @@ export default function Dossier({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'NOM-037', href: index(tenantSlug) },
-            { title: header.workCenter },
+        breadcrumbs: teleworkCrumbs(
+            tenantSlug,
+            { id: data.workCenterId, name: header.workCenter },
             { title: 'Expediente' },
-        ],
+        ),
     });
 
     return (

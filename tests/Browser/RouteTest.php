@@ -25,16 +25,17 @@ function routeCompany(): WorkCenter
     return $plant;
 }
 
-// Rediseño v2 (board V3-Movil): the route of one standard in one center, what cannot wait first.
+// Rediseño v2 (boards V3-Movil and V2-Ruta-N037): the route of one standard in one center, what cannot wait first. NOM-037
+// has its own page, wide or on a phone.
 it('shows the route of a center as the redesign draws it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
     $plant = routeCompany();
 
-    visitPage('tenancy/route', "/admin/acme/work-centers/{$plant->id}/routes/nom037", $dark, $mobile)
-        ->assertSee('Tu ruta de teletrabajo')
-        ->assertSeeIn('[aria-labelledby="urgent"]', 'Hugo Saiz avisó un accidente de trabajo')
-        ->assertSeeIn('[aria-labelledby="next-step"]', 'Define las reglas del teletrabajo')
-        ->assertSeeIn('ol[aria-label="Etapas"] li:first-child', 'Aquí vas')
-        ->assertSeeIn('ol[aria-label="Etapas"] li:nth-child(4)', 'Hecho')
+    visitPage('telework/route', "/admin/acme/work-centers/{$plant->id}/routes/nom037", $dark, $mobile)
+        ->assertSee('Tu ruta para cumplir con el teletrabajo')
+        ->assertSeeIn('[aria-labelledby="before"]', 'Hugo Saiz avisó un accidente el 27 feb')
+        ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:first-child', 'Aquí vas')
+        ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:first-child', 'Define las reglas del teletrabajo')
+        ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:nth-child(4)', 'Hecho')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 
@@ -43,7 +44,7 @@ it('opens the route of a center from the panel', function (): void {
 
     visit('/admin/acme')
         ->click('[data-norm="nom037"] li a[href$="/routes/nom037"]')
-        ->assertSee('Tu ruta de teletrabajo')
+        ->assertSee('Tu ruta para cumplir con el teletrabajo')
         ->assertNoJavaScriptErrors();
 
     expect($plant->name)->toBe('Planta Querétaro');

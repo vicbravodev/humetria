@@ -18,6 +18,9 @@ import type {
     AckProgress,
     Paginated,
 } from '@/types';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { index as documentsIndex } from '@/routes/tenant/telework/documents';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Acknowledgements({
     document,
@@ -40,6 +43,7 @@ export default function Acknowledgements({
     canManage: boolean;
     canAcknowledge: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     const choice = useChosenPeople(document.id);
     const [chosenAll, setAll] = useState<AckAllMatching | null>(null);
     const all = liveAll(chosenAll, filters);
@@ -48,11 +52,12 @@ export default function Acknowledgements({
         choice.clear();
     };
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'NOM-037' },
-            { title: 'Documentos' },
+        breadcrumbs: teleworkCrumbs(
+            tenantSlug,
+            null,
+            { title: 'Documentos', href: documentsIndex(tenantSlug) },
             { title: 'Confirmaciones' },
-        ],
+        ),
     });
 
     return (

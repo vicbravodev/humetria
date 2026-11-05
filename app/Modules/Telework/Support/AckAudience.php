@@ -72,6 +72,23 @@ final readonly class AckAudience
     }
 
     /**
+     * How many confirmations a new version of `$kind` in these centers would ask for, or null for a kind nobody confirms.
+     *
+     * @param  list<string>  $centers
+     */
+    public function headcount(DocumentKind $kind, array $centers): ?int
+    {
+        $reviewers = fn (): array => array_map(fn (MemberSummary $member): int => $member->userId, $this->members->reviewers());
+
+        return match ($kind) {
+            DocumentKind::Policy => array_sum(array_map(count(...), $this->roster->activeIdsInMany($centers))),
+            DocumentKind::RiskInformation => Teleworker::query()->whereIn('work_center_id', $centers)->where('status', TeleworkerStatus::Active)->count()
+                + CommitteeAssignment::query()->whereIn('work_center_id', $centers)->whereIn('user_id', $reviewers())->count(),
+            default => null,
+        };
+    }
+
+    /**
      * The requests of a document that still count: those of the people expected today.
      *
      * @return Builder<Acknowledgement>
