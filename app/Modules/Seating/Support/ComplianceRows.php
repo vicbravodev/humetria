@@ -34,7 +34,14 @@ final readonly class ComplianceRows
      */
     public function for(string $workCenterId): array
     {
-        $facts = ComplianceFacts::of($workCenterId, $this->committee);
+        return $this->fromFacts(ComplianceFacts::of($workCenterId, $this->committee));
+    }
+
+    /**
+     * @return list<ComplianceRow>
+     */
+    public function fromFacts(ComplianceFacts $facts): array
+    {
         $eligible = $facts->positions->filter(fn (StandingPosition $position): bool => $position->nature_allows !== false);
         $current = $this->currentOfPeople($facts, $eligible);
 

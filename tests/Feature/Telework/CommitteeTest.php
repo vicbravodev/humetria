@@ -349,6 +349,19 @@ it('answers who is on the committee of a center and which centers a person sits 
         ->and($gate->workCenterIds(User::factory()->create()->id))->toBe([]);
 });
 
+it('tells which centers have someone on the committee who still reviews, in one read', function (): void {
+    registerCommittee()->assertSessionHasNoErrors();
+    $demoted = WorkCenter::factory()->for($this->tenant)->create();
+    $other = memberOf($this->tenant, TenantRole::Committee);
+    registerCommittee(['member_ids' => [$other->id]], $demoted)->assertSessionHasNoErrors();
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+    workIn($this->tenant);
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->assign($other, $this->tenant, TenantRole::Viewer);
+
+    expect(resolve(CommitteeGate::class)->centersWithMembers([$this->center->id, $demoted->id, $empty->id]))->toBe([$this->center->id])
+        ->and(resolve(CommitteeGate::class)->centersWithMembers([]))->toBe([]);
+});
+
 it('does not see the assignments of another company', function (): void {
     registerCommittee()->assertSessionHasNoErrors();
     workIn(Tenant::factory()->create());
