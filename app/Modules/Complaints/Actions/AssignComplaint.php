@@ -13,7 +13,7 @@ use App\Modules\Tenancy\Contracts\CurrentTenant;
 
 /**
  * Gives a complaint to every active handler its conflict leaves: whoever handles the work center of the complaint (or the
- * whole company), except the role the complaint is against. At receipt the system assigns and writes neither audit nor log
+ * whole company), except the role the complaint is against and whoever stepped aside from it. At receipt the system assigns and writes neither audit nor log
  * line with the case (the moment of the line would tie it to the case); a person who assigns by hand is audited.
  */
 final readonly class AssignComplaint
@@ -26,7 +26,10 @@ final readonly class AssignComplaint
      */
     public function handle(Complaint $complaint, ?int $assignedBy = null): int
     {
-        $already = ComplaintAssignment::query()->where('complaint_id', $complaint->id)->whereNull('ended_on')->get()->map(fn (ComplaintAssignment $assignment): int => $assignment->user_id)->all();
+        // Who holds it already, and who declared a conflict with it: a recusal is never undone by assigning again.
+        $already = ComplaintAssignment::query()->where('complaint_id', $complaint->id)
+            ->where(fn ($query) => $query->whereNull('ended_on')->orWhere('end_reason', 'recused'))
+            ->get()->map(fn (ComplaintAssignment $assignment): int => $assignment->user_id)->all();
         $assigned = 0;
 
         foreach ($this->coverage->handlerIds($complaint->respondent_kind, $complaint->work_center_id) as $userId) {
