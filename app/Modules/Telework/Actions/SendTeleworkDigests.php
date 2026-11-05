@@ -108,13 +108,13 @@ final readonly class SendTeleworkDigests
         $now = CarbonImmutable::now();
         $today = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay();
         $since = DigestDelivery::query()->where('recipient', $recipient)->where('day', '<', $today->toDateString())->orderByDesc('delivered_at')->first(['delivered_at'])->delivered_at ?? $now->subDay();
-        $lines = $this->lines($sections, $centers, $since, $now, $today);
+        [$lines, $total] = $this->lines($sections, $centers, $since, $now, $today);
 
         if ($lines === []) {
             return 0;
         }
 
-        return DB::transaction(function () use ($recipient, $email, $company, $name, $lines, $centers, $slug, $today, $now): int {
+        return DB::transaction(function () use ($recipient, $email, $company, $name, $lines, $total, $slug, $today, $now): int {
             // The unique key settles two runs racing: only the one that wrote the row sends.
             $written = DB::table('telework_digest_deliveries')->insertOrIgnore([
                 // The query builder turns the uuid into its string itself: the cast only narrows the type.
@@ -129,21 +129,21 @@ final readonly class SendTeleworkDigests
                 return 0;
             }
 
-            Notification::route('mail', $email)->notify(new TeleworkDigest($company, $name, $lines, $this->link($slug, $centers)));
+            // The Comisión's opens its queue, and says how much waits (rediseño v2, boards V3-Correos and V2-Comision).
+            $committee = $recipient !== 'owner';
+            Notification::route('mail', $email)->notify(new TeleworkDigest($company, $name, $lines, $committee ? route('tenant.telework.index', $slug) : $this->link($slug), $committee ? $total : null));
 
             return 1;
         });
     }
 
     /**
-     * Where the digest leads: the dashboard of the one center it is about, or the list of centers when there are several.
-     * The owner's centers are those with people in telework.
-     *
-     * @param  list<string>|null  $centers  null: every center of the company.
+     * Where the owner's digest leads: the dashboard of the one center with people in telework, or the list of centers when
+     * there are several.
      */
-    private function link(string $slug, ?array $centers): string
+    private function link(string $slug): string
     {
-        $centers ??= array_values(Teleworker::query()->distinct()->get(['work_center_id'])->map(fn (Teleworker $teleworker): string => $teleworker->work_center_id)->all()); // @pest-mutate-ignore: UnwrapArrayValues
+        $centers = array_values(Teleworker::query()->distinct()->get(['work_center_id'])->map(fn (Teleworker $teleworker): string => $teleworker->work_center_id)->all()); // @pest-mutate-ignore: UnwrapArrayValues
 
         return count($centers) === 1 ? route('tenant.telework.center', [$slug, $centers[0]]) : route('tenant.telework.index', $slug);
     }
@@ -151,7 +151,7 @@ final readonly class SendTeleworkDigests
     /**
      * @param  list<'expired'|'training'|'notices'|'lists'|'plans'>  $sections
      * @param  list<string>|null  $centers
-     * @return list<string>
+     * @return array{0: list<string>, 1: int} the lines, and how many things they count
      */
     private function lines(array $sections, ?array $centers, CarbonImmutable $since, CarbonImmutable $now, CarbonImmutable $today): array
     {
@@ -170,16 +170,18 @@ final readonly class SendTeleworkDigests
             'plans' => '{1} :count plan de acción vencido.|[2,*] :count planes de acción vencidos.',
         ];
         $lines = [];
+        $total = 0;
 
         foreach ($sections as $section) {
             $count = $counts[$section]();
 
             if ($count > 0) {
                 $lines[] = trans_choice($texts[$section], $count);
+                $total += $count;
             }
         }
 
-        return $lines;
+        return [$lines, $total];
     }
 
     /**

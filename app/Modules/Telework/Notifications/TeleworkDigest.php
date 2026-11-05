@@ -11,7 +11,8 @@ use Illuminate\Notifications\Notification;
 
 /**
  * The daily email to the owner or a Comisión member: counts of what is waiting for them, in the panel voice ("tú"). Counts
- * only, never a name or a note.
+ * only, never a name or a note. The Comisión's says in its subject how many things wait, and opens its queue (rediseño
+ * v2, boards V3-Correos and V2-Comision).
  */
 final class TeleworkDigest extends Notification implements ShouldQueue
 {
@@ -25,6 +26,7 @@ final class TeleworkDigest extends Notification implements ShouldQueue
         private readonly ?string $name,
         private readonly array $lines,
         private readonly string $url,
+        private readonly ?int $pending = null,
     ) {
         $this->afterCommit();
     }
@@ -39,13 +41,14 @@ final class TeleworkDigest extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->subject('Resumen de teletrabajo')->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
+        $subject = $this->pending === null ? 'Resumen de teletrabajo' : "Tienes {$this->pending} pendientes como integrante de la Comisión";
+        $mail = (new MailMessage)->subject($subject)->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
             ->line("Esto espera tu atención en {$this->company}:");
 
         foreach ($this->lines as $line) {
             $mail->line($line);
         }
 
-        return $mail->action('Abrir Humetría', $this->url);
+        return $mail->action($this->pending === null ? 'Abrir Humetría' : 'Ver mis pendientes', $this->url);
     }
 }
