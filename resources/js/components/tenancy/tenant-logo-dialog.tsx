@@ -1,4 +1,6 @@
 import { Form, Link } from '@inertiajs/react';
+import { ImageUp } from 'lucide-react';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,8 +11,6 @@ import {
     DialogFooter,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { destroy, update } from '@/routes/companies/logo';
 import type { TenantRow } from '@/types';
@@ -59,31 +59,24 @@ export default function TenantLogoDialog({
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="tenant-logo">
-                                    {tenant.logo_url === null
-                                        ? 'Logo'
-                                        : 'Cambiar logo'}
-                                </Label>
-                                <Input
+                                <FileDropZone
                                     id="tenant-logo"
                                     name="logo"
-                                    type="file"
                                     accept="image/png,image/jpeg,image/webp"
-                                    aria-invalid={
-                                        errors['logo'] === undefined
-                                            ? undefined
-                                            : true
+                                    icon={ImageUp}
+                                    title={
+                                        tenant.logo_url === null
+                                            ? 'Arrastra aquí el logo o elígelo'
+                                            : 'Cambiar logo: arrástralo o elígelo'
                                     }
-                                    aria-describedby="tenant-logo-help"
+                                    hint="PNG, JPG o WebP de hasta 2 MB y al menos 40 px de alto. Mejor con fondo transparente."
+                                    invalid={errors['logo'] !== undefined}
+                                    describedBy="tenant-logo-error"
                                 />
-                                <p
-                                    id="tenant-logo-help"
-                                    className="text-sm text-muted-foreground"
-                                >
-                                    PNG, JPG o WebP de hasta 2 MB y al menos 40
-                                    px de alto. Mejor con fondo transparente.
-                                </p>
-                                <InputError message={errors['logo']} />
+                                <InputError
+                                    id="tenant-logo-error"
+                                    message={errors['logo']}
+                                />
                             </div>
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>

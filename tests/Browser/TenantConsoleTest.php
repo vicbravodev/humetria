@@ -214,6 +214,16 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Editar')->assertSee('Editar empresa'));
 })->with($looks);
 
+// C4: the logo is dropped on the zone or chosen from it.
+it('passes the accessibility and CSP checks with the logo dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Logo de los correos')
+        ->assertSee('Arrastra aquí el logo o elígelo')
+        ->assertSee('PNG, JPG o WebP de hasta 2 MB'));
+})->with($looks);
+
 it('activates a company that has not started, choosing the date', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);

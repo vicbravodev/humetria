@@ -6,7 +6,6 @@ import {
     formatMobile,
     headcountText,
     importButtonText,
-    importFileHint,
     importStep,
     importStepState,
     importStats,
@@ -159,17 +158,6 @@ describe('importStepState', () => {
             'current',
             'next',
         ]);
-    });
-});
-
-describe('importFileHint', () => {
-    it('says what the box holds: nothing yet, a file to check or its rows', () => {
-        expect(importFileHint(null, undefined)).toBe(
-            'Con las columnas de la plantilla, una fila por persona.',
-        );
-        expect(importFileHint('a.csv', undefined)).toBe('Listo para revisar');
-        expect(importFileHint('a.csv', 1)).toBe('1 fila');
-        expect(importFileHint('a.csv', 1200)).toBe('1,200 filas');
     });
 });
 

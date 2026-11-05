@@ -134,20 +134,6 @@ export function importStepState(
     return number < step ? 'done' : 'next';
 }
 
-/** The line under the file box: what to drop, a chosen file to check, or how many rows the checked one has. */
-export function importFileHint(
-    name: string | null,
-    rows: number | undefined,
-): string {
-    if (name === null) {
-        return 'Con las columnas de la plantilla, una fila por persona.';
-    }
-
-    return rows === undefined
-        ? 'Listo para revisar'
-        : `${rows.toLocaleString('es-MX')} ${rows === 1 ? 'fila' : 'filas'}`;
-}
-
 export type ImportStat = {
     label: string;
     value: number;
