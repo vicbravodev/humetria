@@ -1,11 +1,15 @@
-import { GitBranch } from 'lucide-react';
-import SettingRow from '@/components/humetria/setting-row';
+import { useState } from 'react';
+import FigureOneResult from '@/components/seating/figure-one-result';
 import YesNoField from '@/components/seating/yes-no-field';
+import { figureOne } from '@/lib/seating/position-steps';
 import type { StandingPosition } from '@/types';
 
 type Errors = Partial<Record<string, string>>;
 
-/** Questions 3 to 5 of Figura 1, in the DOF's words; the result is derived on the server and shown once saved. */
+/**
+ * Questions 3 to 5 of Figura 1 in the DOF's words (board LS-Puesto), and beside them the result as they are answered. The
+ * result the position keeps is computed on the server when it is saved.
+ */
 export default function FigureOneFields({
     position,
     errors,
@@ -13,32 +17,46 @@ export default function FigureOneFields({
     position: StandingPosition | null;
     errors: Errors;
 }) {
+    const [answers, setAnswers] = useState({
+        canWorkSeated: position?.canWorkSeated ?? null,
+        hasSpaceForSeat: position?.hasSpaceForSeat ?? null,
+        needsToBeNearby: position?.needsToBeNearby ?? null,
+    });
+    const { result, thirdNeeded } = figureOne(answers);
+    const answer = (key: keyof typeof answers) => (value: boolean) =>
+        setAnswers((now) => ({ ...now, [key]: value }));
+
     return (
-        <SettingRow
-            icon={GitBranch}
-            title="Figura 1: dónde va el asiento"
-            description="Contesta las tres preguntas del flujograma de las Disposiciones. El resultado (A, B o C) lo calcula la plataforma."
-        >
+        <div className="grid gap-8 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]">
             <div className="grid gap-5">
                 <YesNoField
                     name="can_work_seated"
-                    legend="La persona trabajadora, ¿puede realizar sus actividades sentada?"
-                    value={position?.canWorkSeated ?? null}
+                    legend="1. La persona trabajadora, ¿puede realizar sus actividades sentada?"
+                    value={answers.canWorkSeated}
                     error={errors['can_work_seated']}
+                    onAnswer={answer('canWorkSeated')}
                 />
                 <YesNoField
                     name="has_space_for_seat"
-                    legend="En su lugar de trabajo, ¿existe el espacio para colocar un asiento o silla con respaldo?"
-                    value={position?.hasSpaceForSeat ?? null}
+                    legend="2. En su lugar de trabajo, ¿existe el espacio para colocar un asiento o silla con respaldo?"
+                    value={answers.hasSpaceForSeat}
                     error={errors['has_space_for_seat']}
+                    onAnswer={answer('hasSpaceForSeat')}
                 />
                 <YesNoField
                     name="needs_to_be_nearby"
-                    legend="La persona trabajadora, ¿requiere estar cerca de su lugar de trabajo?"
-                    value={position?.needsToBeNearby ?? null}
+                    legend="3. La persona trabajadora, ¿requiere estar cerca de su lugar de trabajo?"
+                    value={answers.needsToBeNearby}
                     error={errors['needs_to_be_nearby']}
+                    hint={
+                        thirdNeeded || result === null
+                            ? undefined
+                            : 'Con las dos primeras ya hay resultado; esta respuesta solo queda en el registro del puesto.'
+                    }
+                    onAnswer={answer('needsToBeNearby')}
                 />
             </div>
-        </SettingRow>
+            <FigureOneResult result={result} />
+        </div>
     );
 }

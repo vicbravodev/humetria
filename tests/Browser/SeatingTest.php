@@ -90,9 +90,27 @@ it('shows the form of a new position with the questions of Figure 1', function (
 
     visitPage('seating/position', "{$url}/seating/centers/{$center->id}/positions/create", $dark, $mobile)
         ->assertSee('Nuevo puesto')
+        ->assertSee('Paso 1 de 5')
         ->assertSee('Figura 1: dónde va el asiento')
-        ->assertSee('Guardar puesto');
+        ->assertSee('Siguiente: Figura 1');
 })->with($looks);
+
+// Board LS-Puesto: Figura 1 gives its result as it is answered; with the first two questions, the third is not needed.
+it('shows the result of Figura 1 as its questions are answered', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->press('@position-next')
+        ->assertSee('Paso 2 de 5')
+        ->click('label:has(input[name="can_work_seated"][value="1"])')
+        ->click('label:has(input[name="has_space_for_seat"][value="1"])')
+        ->assertSeeIn('[aria-current="true"]', 'En su lugar de trabajo')
+        ->assertSee('Con las dos primeras ya hay resultado')
+        ->click('label:has(input[name="has_space_for_seat"][value="0"])')
+        ->click('label:has(input[name="needs_to_be_nearby"][value="1"])')
+        ->assertSeeIn('[aria-current="true"]', 'Cerca de su lugar')
+        ->assertNoJavaScriptErrors();
+});
 
 it('shows a saved position with its result and its people', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
@@ -116,7 +134,15 @@ it('shows what a new position still misses instead of saving it', function (): v
         ->click('Prolongada')
         ->type('continuous_minutes', '240')
         ->type('max_people_at_once', '2')
+        ->press('@position-next')
+        ->assertSee('Paso 2 de 5')
+        ->press('@position-next')
+        ->assertSee('Paso 3 de 5')
+        ->press('@position-next')
+        ->assertSee('Paso 4 de 5')
         ->press('Guardar puesto')
+        // The step of the first field it misses opens again.
+        ->assertSee('Paso 2 de 5')
         ->assertSee('es obligatorio')
         ->assertNoJavaScriptErrors();
 });
