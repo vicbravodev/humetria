@@ -210,7 +210,7 @@ it('says on the link page who sent the invitation and the role it gives', functi
         ->assertInertia(fn (Assert $page) => $page
             ->where('inviter', 'Olga Owner')
             ->where('role', 'hr')
-            ->where('role_label', 'RH'));
+            ->where('role_label', 'Ayuda con las rutas'));
 });
 
 it('names no sender when the invitation has none, nor anything on an invalid link', function (): void {
@@ -218,7 +218,7 @@ it('names no sender when the invitation has none, nor anything on an invalid lin
     TenantInvitation::factory()->role(TenantRole::Viewer)->withToken($token)->create(['invited_by' => null]);
 
     $this->get(route('invitations.show', $token))
-        ->assertInertia(fn (Assert $page) => $page->where('inviter', null)->where('role', 'viewer')->where('role_label', 'Consulta'));
+        ->assertInertia(fn (Assert $page) => $page->where('inviter', null)->where('role', 'viewer')->where('role_label', 'Solo consulta'));
 
     $this->get(route('invitations.show', Str::random(64)))
         ->assertInertia(fn (Assert $page) => $page->where('inviter', null)->where('role', null)->where('role_label', null));

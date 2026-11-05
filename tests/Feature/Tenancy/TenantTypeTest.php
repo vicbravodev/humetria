@@ -155,5 +155,5 @@ it('lists only the roles a union can hand out', function (): void {
 
     $this->actingAs(memberOf($union, TenantRole::Owner))
         ->get(route('tenant.members.index', $union))
-        ->assertInertia(fn (Assert $page) => $page->where('roles', [['value' => 'hr', 'label' => 'RH']]));
+        ->assertInertia(fn (Assert $page) => $page->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas']]));
 });

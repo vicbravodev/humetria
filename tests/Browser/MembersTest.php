@@ -106,8 +106,8 @@ it('shows the role being saved, and holds the field until it is', function (): v
     $page = visit('/admin/acme/members');
     // Every request waits 400 ms to leave, so the save is still under way when the field is read.
     $page->script(SLOW_REQUESTS);
-    $page->click('@member-role')->click('[role="option"]:has-text("Consulta")')
-        ->assertSeeIn('@member-role', 'Consulta')
+    $page->click('@member-role')->click('[role="option"]:has-text("Solo consulta")')
+        ->assertSeeIn('@member-role', 'Solo consulta')
         ->assertAttribute('@member-role', 'aria-busy', 'true')
         ->assertScript('() => document.querySelector(\'[data-test="member-role"]\').disabled', true)
         ->assertSee('Rol actualizado.')
@@ -119,9 +119,9 @@ it('changes a role and takes access away', function (): void {
     $tenant = acmeWithPeople();
 
     visit('/admin/acme/members')
-        ->click('@member-role')->click('[role="option"]:has-text("Consulta")')
+        ->click('@member-role')->click('[role="option"]:has-text("Solo consulta")')
         ->assertSee('Rol actualizado.')
-        ->assertSeeIn('@member-role', 'Consulta')
+        ->assertSeeIn('@member-role', 'Solo consulta')
         ->click('@member-actions')->click('Quitar acceso')
         ->assertSee('¿Quitar el acceso de Beto Ramírez?')
         ->press('Quitar acceso')

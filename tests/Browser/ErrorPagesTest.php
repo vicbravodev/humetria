@@ -27,7 +27,7 @@ it('tells a person which role keeps them out of a section, and takes them back t
     visitPage('error', route('tenant.employees.index', $tenant, absolute: false), $dark, $mobile)
         ->assertSee('Error 403')
         ->assertSee('Esta sección no está en tu rol')
-        ->assertSee('Tu rol en Autopartes Demo es Consulta, que ve resultados e informes.')
+        ->assertSee('Tu rol en Autopartes Demo es Solo consulta, que ve resultados e informes.')
         ->click('Volver al panel')
         ->assertPathBeginsWith('/admin');
 })->with('error looks');

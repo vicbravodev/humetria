@@ -284,7 +284,7 @@ it('shows the handlers page with who handles and the people who could, and nothi
             ->where('handlers.0.scope', 'Toda la empresa')
             ->where('handlers.1.scope', 'Planta Querétaro')
             ->has('candidates', 2)
-            ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $this->hr->id, 'label' => $this->hr->name, 'role' => 'hr', 'roleLabel' => 'RH']))
+            ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $this->hr->id, 'label' => $this->hr->name, 'role' => 'hr', 'roleLabel' => 'Ayuda con las rutas']))
             ->missing('coverage')
             ->where('channelStatus', 'inactive'));
 });

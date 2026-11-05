@@ -49,10 +49,10 @@ it('says who invited the person, to which company and as what', function (): voi
         ->and($mail->actionText)->toBe('Aceptar invitación')
         ->and($mail->actionUrl)->toBe(url('admin/invitations/tok'))
         ->and($html)
-        ->toContain('Entrarás como RH. La invitación vence en 7 días.')
+        ->toContain('Entrarás con el rol Ayuda con las rutas. La invitación vence en 7 días.')
         ->toMatch('#<h1[^>]*>Olga te invitó a Autopartes Demo en Humetría</h1>#')
-        ->toContain('Entrarás como <strong')
-        ->toContain('RH</strong>: podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.')
+        ->toContain('Entrarás con el rol <strong')
+        ->toContain('Ayuda con las rutas</strong>: podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.')
         ->toContain('La invitación vence el 6 de noviembre y solo funciona con lucia@autopartes.mx.')
         ->toContain('Si el botón no funciona, copia este enlace en tu navegador:')
         ->toContain('Recibes este correo porque Olga Owner te invitó. Si no esperabas esta invitación, ignórala: nadie entrará con tu correo.')
@@ -63,9 +63,9 @@ it('says who invited the person, to which company and as what', function (): voi
 it('writes what each role will do', function (TenantRole $role, string $line): void {
     expect((string) invitationEmail($this->tenant, $this->olga, $role)->render())->toContain($line);
 })->with([
-    'owner' => [TenantRole::Owner, 'Dueño</strong>: administrarás la cuenta, sus miembros y todo lo que RH lleva: NOM-035, NOM-037 y Ley Silla.'],
-    'hr' => [TenantRole::Hr, 'RH</strong>: podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.'],
-    'viewer' => [TenantRole::Viewer, 'Consulta</strong>: podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.'],
+    'owner' => [TenantRole::Owner, 'Administra todo</strong>: administrarás la cuenta, sus miembros y todo lo que RH lleva: NOM-035, NOM-037 y Ley Silla.'],
+    'hr' => [TenantRole::Hr, 'Ayuda con las rutas</strong>: podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.'],
+    'viewer' => [TenantRole::Viewer, 'Solo consulta</strong>: podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.'],
 ]);
 
 it('shows the company with its initials, its active work centers and its people', function (): void {

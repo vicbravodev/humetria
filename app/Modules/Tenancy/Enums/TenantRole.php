@@ -20,9 +20,9 @@ enum TenantRole: string
     public function label(): string
     {
         return match ($this) {
-            self::Owner => 'Dueño',
-            self::Hr => 'RH',
-            self::Viewer => 'Consulta',
+            self::Owner => 'Administra todo',
+            self::Hr => 'Ayuda con las rutas',
+            self::Viewer => 'Solo consulta',
             self::Committee => 'Comisión de seguridad e higiene',
             self::Complaints => 'Atención de quejas',
         };

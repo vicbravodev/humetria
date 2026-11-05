@@ -49,16 +49,16 @@ it('lists the people with access, the owner first, and the open invitations', fu
             ->component('tenancy/members')
             ->where('members.data', fn ($members): bool => collect($members)->pluck('name')->all() === ['Olga Owner', 'Ana Lectora', 'Beto RH'])
             ->where('members.data.0.is_you', true)
-            ->where('members.data.0.role_label', 'Dueño')
+            ->where('members.data.0.role_label', 'Administra todo')
             ->where('members.data.2', fn ($row): bool => collect($row)->except('id')->all() === [
-                'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'RH', 'is_you' => false, 'since' => '29 oct 2026',
+                'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'Ayuda con las rutas', 'is_you' => false, 'since' => '29 oct 2026',
             ])
             ->where('invitations.total', 1)
             ->where('invitations.data.0', [
-                'id' => $invitation->id, 'name' => 'Carla', 'email' => 'carla@acme.mx', 'role' => 'viewer', 'role_label' => 'Consulta',
+                'id' => $invitation->id, 'name' => 'Carla', 'email' => 'carla@acme.mx', 'role' => 'viewer', 'role_label' => 'Solo consulta',
                 'status' => 'pending', 'status_label' => 'Invitación enviada', 'expires_on' => '5 nov 2026',
             ])
-            ->where('roles', [['value' => 'hr', 'label' => 'RH'], ['value' => 'viewer', 'label' => 'Consulta'], ['value' => 'committee', 'label' => 'Comisión de seguridad e higiene'], ['value' => 'complaints', 'label' => 'Atención de quejas']]));
+            ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas'], ['value' => 'viewer', 'label' => 'Solo consulta'], ['value' => 'committee', 'label' => 'Comisión de seguridad e higiene'], ['value' => 'complaints', 'label' => 'Atención de quejas']]));
 });
 
 it('pages the people with access and the invitations, each on its own, the owner always first', function (): void {
@@ -196,3 +196,9 @@ it('answers 404 to the invitation of another company or to the owner invitation'
     expect($foreign->refresh()->cancelled_at)->toBeNull()
         ->and($ownerInvitation->refresh()->cancelled_at)->toBeNull();
 })->with(['resend', 'cancel']);
+
+it('names each company role by what it does (rediseño v2, decisión A6)', function (): void {
+    expect(array_map(fn (TenantRole $role): string => $role->label(), TenantRole::cases()))->toBe([
+        'Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas',
+    ]);
+});
