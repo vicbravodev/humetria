@@ -146,3 +146,38 @@ it('keeps one draft per company and document in the database too', function (): 
     expect(fn () => DB::transaction(fn () => DocumentDraft::factory()->create(['tenant_id' => $this->tenant->id, 'kind' => $draft->kind])))
         ->toThrow(QueryException::class, 'telework_document_drafts_kind_unique');
 });
+
+it('keeps a section RH rewrote in place of the text the answers make, until it is put back', function (): void {
+    $this->actingAs($this->hr);
+
+    saveWriting(['section' => 'f', 'text' => "  Quien teletrabaja tiene los mismos derechos.\r\n\r\nY las mismas prestaciones.  "])->assertSessionHasNoErrors();
+
+    expect(DocumentDraft::query()->sole()->edits)->toBe(['f' => "Quien teletrabaja tiene los mismos derechos.\n\nY las mismas prestaciones."]);
+    $this->get(route('tenant.telework.writing.show', [$this->tenant, 'policy']))
+        ->assertInertia(fn (Assert $page) => $page->where('sections.9', ['key' => 'f', 'heading' => 'Mismos derechos', 'text' => "Quien teletrabaja tiene los mismos derechos.\n\nY las mismas prestaciones.", 'base' => true, 'edited' => true]));
+
+    saveWriting(['section' => 'f', 'text' => null])->assertSessionHasNoErrors();
+
+    expect(DocumentDraft::query()->sole()->edits)->toBe([]);
+});
+
+it('drops the rewritten text of a section when its question gets another answer, and only that one', function (): void {
+    $this->actingAs($this->hr);
+    saveWriting(['section' => 'b', 'text' => 'Nos vemos los lunes.']);
+    saveWriting(['section' => 'e', 'text' => 'De 7 a 15.']);
+
+    saveWriting(['answers' => ['frequency' => 'daily', 'schedule' => 'nine', 'disconnect' => 'end']]);
+
+    expect(DocumentDraft::query()->sole()->edits)->toBe(['e' => 'De 7 a 15.']);
+});
+
+it('refuses to rewrite a section the document does not have, or too long a text', function (array $data): void {
+    $this->actingAs($this->hr);
+
+    saveWriting($data)->assertSessionHasErrors();
+
+    expect(DocumentDraft::query()->exists())->toBeFalse();
+})->with([
+    'unknown section' => [['section' => 'z', 'text' => 'Algo']],
+    'too long' => [['section' => 'f', 'text' => str_repeat('a', 5001)]],
+]);

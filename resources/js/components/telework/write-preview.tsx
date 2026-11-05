@@ -1,13 +1,14 @@
 import DocumentPreview from '@/components/humetria/document-preview';
 import PreviewSection from '@/components/humetria/preview-section';
 import TopicChips from '@/components/humetria/topic-chips';
+import WriteSectionEdit from '@/components/telework/write-section-edit';
 import { reached, topicStates } from '@/lib/question-flow';
 import type { FlowQuestion, FlowSection, FlowTopic } from '@/lib/question-flow';
 
 /**
  * The NOM-037 document beside its questions (boards V2-Politica and V3-Doc-Riesgos): the incisos it covers as chips, when
  * the norm names them (done once their question is passed), and the text as far as the questions went. While the
- * questions go on, the base texts fold into one line.
+ * questions go on, the base texts fold into one line; on the review every section shows, each with the way to rewrite it.
  */
 export default function WritePreview({
     owner,
@@ -17,6 +18,7 @@ export default function WritePreview({
     questions,
     index,
     sections,
+    editUrl,
 }: {
     owner: string;
     title: string;
@@ -26,6 +28,8 @@ export default function WritePreview({
     /** The question on screen; the number of questions is the review. */
     index: number;
     sections: FlowSection[];
+    /** Where a section rewritten on the review is kept. */
+    editUrl: string;
 }) {
     const reviewing = index >= questions.length;
     const current = questions[index]?.key ?? null;
@@ -50,13 +54,21 @@ export default function WritePreview({
                 />
             )}
             <DocumentPreview owner={owner} title={title}>
-                {shown.map((section) => (
-                    <PreviewSection
-                        key={section.key}
-                        section={section}
-                        current={section.key === current}
-                    />
-                ))}
+                {shown.map((section) =>
+                    reviewing ? (
+                        <WriteSectionEdit
+                            key={`${section.key}:${section.text ?? ''}`}
+                            section={section}
+                            url={editUrl}
+                        />
+                    ) : (
+                        <PreviewSection
+                            key={section.key}
+                            section={section}
+                            current={section.key === current}
+                        />
+                    ),
+                )}
                 {!reviewing && based.length > 0 && (
                     <div className="flex flex-col gap-0.5 py-2.5">
                         <p className="font-semibold text-muted-foreground">

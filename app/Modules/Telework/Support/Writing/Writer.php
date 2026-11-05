@@ -98,6 +98,48 @@ final readonly class Writer
         ], $template->sections(new Answers($answers)));
     }
 
+    /**
+     * The paragraphs RH rewrote that still stand: a question that gets another answer drops the one of its section.
+     *
+     * @param  array<string, string>  $edits
+     * @param  array<string, string|list<string>|null>  $before
+     * @param  array<string, string|list<string>|null>  $after
+     * @return array<string, string>
+     */
+    public function standing(WrittenTemplate $template, array $edits, array $before, array $after): array
+    {
+        foreach ($template->questions() as $question) {
+            if (array_any($question->fields, fn (Field $field): bool => ($before[$field->key] ?? null) !== ($after[$field->key] ?? null))) {
+                unset($edits[$question->key]);
+            }
+        }
+
+        return $edits;
+    }
+
+    /**
+     * The paragraphs RH rewrote with one more: an empty text puts back the one the answers make.
+     *
+     * @param  array<string, string>  $edits
+     * @param  array{section: string, text: string}  $edit
+     * @return array<string, string>
+     *
+     * @throws ValidationException when the document has no such section.
+     */
+    public function rewrite(WrittenTemplate $template, array $edits, array $edit): array
+    {
+        $keys = array_map(fn (Section $section): string => $section->key, $template->sections(new Answers([])));
+
+        if (! in_array($edit['section'], $keys, true)) {
+            throw ValidationException::withMessages(['section' => 'El documento no tiene esa sección.']);
+        }
+
+        $text = trim(str_replace("\r\n", "\n", $edit['text']));
+        unset($edits[$edit['section']]);
+
+        return $text === '' ? $edits : [...$edits, $edit['section'] => $text];
+    }
+
     /** @return list<Field> */
     private function fields(WrittenTemplate $template): array
     {

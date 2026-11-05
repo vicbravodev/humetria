@@ -302,6 +302,8 @@ return [
         'actions.*' => 'qué se hizo',
         'answers' => 'respuestas',
         'step' => 'pregunta',
+        'section' => 'sección',
+        'text' => 'texto',
         'active_until' => 'fecha de vigencia',
         'activities' => 'actividades principales',
         'area' => 'área',

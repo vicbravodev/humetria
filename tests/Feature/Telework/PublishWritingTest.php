@@ -215,3 +215,12 @@ it('counts as the policy in force on the route of each center and for the whole 
     $this->get(route('tenant.telework.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('company.policyCenters', 2));
 });
+
+it('publishes the sections RH rewrote as they wrote them', function (): void {
+    writtenPolicy(edits: ['f' => 'Quien teletrabaja tiene los mismos derechos que quien va al centro.']);
+    $this->actingAs($this->hr);
+
+    publishWriting();
+
+    expect(collect(TeleworkDocument::query()->firstOrFail()->body)->firstWhere('key', 'f')['text'])->toBe('Quien teletrabaja tiene los mismos derechos que quien va al centro.');
+});

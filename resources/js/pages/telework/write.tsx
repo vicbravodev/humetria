@@ -42,11 +42,8 @@ type Props = {
 /** A NOM-037 document written with questions (boards V2-Politica and V3-Doc-Riesgos; decisión A3). */
 export default function TeleworkWrite(props: Props) {
     const tenantSlug = useTenantSlug();
-    const writing = useWriting(
-        update.url([tenantSlug, props.document.kind]),
-        props,
-        props.questions.length,
-    );
+    const url = update.url([tenantSlug, props.document.kind]);
+    const writing = useWriting(url, props, props.questions.length);
     const reviewing = writing.index >= props.questions.length;
 
     return (
@@ -114,6 +111,7 @@ export default function TeleworkWrite(props: Props) {
                     questions={props.questions}
                     index={writing.index}
                     sections={props.sections}
+                    editUrl={url}
                 />
             </div>
         </SetupFrame>

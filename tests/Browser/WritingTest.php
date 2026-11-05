@@ -135,3 +135,32 @@ it('lets the person read a written document from their portal before confirming 
         ->assertSee('Volver a su portal')
         ->assertSee('La jornada en teletrabajo es de 9:00 a 18:00.');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('shows the review with every section to read and rewrite, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    writingCompany();
+    answeredPolicy();
+
+    visitPage('telework/write', '/admin/acme/telework/documents/policy/write', $dark, $mobile)
+        ->assertSee('Tu política cubre los 12 temas')
+        ->assertSee('Lista para revisar')
+        ->assertSee('Cambios de domicilio')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('rewrites a section on the review and puts back the text of the answers', function (): void {
+    writingCompany();
+    answeredPolicy();
+
+    visit('/admin/acme/telework/documents/policy/write')
+        ->click('Editar Mismos derechos')
+        ->clear('#section-f')
+        ->type('#section-f', 'Quien teletrabaja tiene los mismos derechos que quien va al centro.')
+        ->click('Guardar')
+        ->assertSee('Quien teletrabaja tiene los mismos derechos que quien va al centro.')
+        ->click('Volver al texto de tus respuestas')
+        ->assertSee('gozarán del mismo trato que el personal en la modalidad presencial')
+        ->assertDontSee('Quien teletrabaja tiene los mismos derechos que quien va al centro.')
+        ->assertNoJavaScriptErrors();
+
+    expect(DocumentDraft::query()->withoutGlobalScopes()->sole()->edits)->toBe([]);
+});

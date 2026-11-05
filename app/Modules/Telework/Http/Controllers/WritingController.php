@@ -53,7 +53,7 @@ final class WritingController extends Controller
         [$document, $template] = $this->written($kind);
         $user = $request->user();
         abort_if($user === null, 403);
-        $save->handle($template, $document, $request->answers(), $request->step(), $user->id);
+        $save->handle($template, $document, $request->answers(), $request->step(), $user->id, $request->edit());
 
         return back(fallback: route('tenant.telework.writing.show', [$tenant, $document->value]));
     }
