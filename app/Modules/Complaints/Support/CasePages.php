@@ -10,6 +10,7 @@ use App\Modules\Complaints\Enums\EntryKind;
 use App\Modules\Complaints\Enums\IdentityMode;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
+use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintEntry;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -56,7 +57,8 @@ final readonly class CasePages
                 'resolution' => $complaint->resolution?->label(),
             ],
             'access' => $this->access($complaint),
-            'entries' => $this->entries($complaint),
+            ...$this->thread($complaint),
+            ...$this->deadlines($complaint),
             'can' => [
                 'acknowledge' => $complaint->acknowledged_at === null && $complaint->status === ComplaintStatus::New,
                 'review' => $complaint->status === ComplaintStatus::New,
@@ -70,17 +72,48 @@ final readonly class CasePages
     }
 
     /**
-     * The thread of the case, the newest entry first, a page at a time.
+     * The thread of the case in its three parts (board V4-Quejas-Caso): the conversation the person reads, the notes only the
+     * handlers read and the log of what happened to the case. Each one the newest entry first, a page at a time.
      *
-     * @return LengthAwarePaginator<int, array<string, mixed>>
+     * @return array{conversation: LengthAwarePaginator<int, array<string, mixed>>, notes: LengthAwarePaginator<int, array<string, mixed>>, log: LengthAwarePaginator<int, array<string, mixed>>}
      */
-    private function entries(Complaint $complaint): LengthAwarePaginator
+    private function thread(Complaint $complaint): array
     {
         $names = $this->names();
-
-        return ComplaintEntry::query()->where('complaint_id', $complaint->id)->orderByDesc('position')
-            ->paginate(self::ENTRIES_PER_PAGE, ['*'], 'entries')->withQueryString()
+        $part = fn (array $kinds, string $page): LengthAwarePaginator => ComplaintEntry::query()->where('complaint_id', $complaint->id)
+            ->whereIn('kind', $kinds)->orderByDesc('position')
+            ->paginate(self::ENTRIES_PER_PAGE, ['*'], $page)->withQueryString()
             ->through(fn (ComplaintEntry $entry): array => $this->row($entry, $names));
+
+        return [
+            'conversation' => $part([EntryKind::ReporterMessage->value, EntryKind::HandlerMessage->value], 'conversation'),
+            'notes' => $part([EntryKind::InternalNote->value], 'notes'),
+            'log' => $part([EntryKind::StatusChange->value, EntryKind::AssignmentChange->value, EntryKind::Recusal->value], 'log'),
+        ];
+    }
+
+    /**
+     * The deadlines the company set itself (criterio C-49), counted from the day the case came, and the draft of the
+     * acknowledgement that promises the answer by its day. Days only: an anonymous case never shows an hour.
+     *
+     * @return array{acknowledgement: string, today: string, deadlines: array{acknowledgeBy: string, respondBy: string, acknowledgedOn: string|null, closedOn: string|null}}
+     */
+    private function deadlines(Complaint $complaint): array
+    {
+        $channel = ComplaintChannel::query()->find($complaint->channel_id);
+        $respondBy = $complaint->received_on->addDays($channel->resolve_within_days ?? config()->integer('complaints.deadlines.resolve_days'));
+        $zone = config()->string('app.display_timezone');
+
+        return [
+            'acknowledgement' => "{$complaint->type->acknowledgementOpening()} una persona designada que no está involucrada. Le responderemos aquí a más tardar el {$respondBy->isoFormat('D [de] MMMM')}. Puede escribirnos si quiere agregar algo.",
+            'today' => Dates::today()->toDateString(),
+            'deadlines' => [
+                'acknowledgeBy' => $complaint->received_on->addDays($channel->acknowledge_within_days ?? config()->integer('complaints.deadlines.acknowledge_days'))->toDateString(),
+                'respondBy' => $respondBy->toDateString(),
+                'acknowledgedOn' => $complaint->acknowledged_at?->setTimezone($zone)->toDateString(),
+                'closedOn' => $complaint->closed_on?->toDateString(),
+            ],
+        ];
     }
 
     /**

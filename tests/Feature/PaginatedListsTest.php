@@ -180,7 +180,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         App\Modules\Complaints\Models\ComplaintAssignment::factory()->create(['tenant_id' => $tenant->id, 'complaint_id' => $complaint->id, 'user_id' => auth()->id()]);
 
         return route('tenant.complaints.cases.show', [$tenant, $complaint->id]);
-    }, ['entries']],
+    }, ['conversation', 'notes', 'log']],
     'notices a person sent' => ['telework/portal-notices', function () {
         [$tenant] = listsCompany();
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);

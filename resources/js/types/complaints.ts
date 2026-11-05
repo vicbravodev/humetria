@@ -87,6 +87,9 @@ export type CaseRow = {
     identity: 'anonymous' | 'confidential';
     /** The acknowledgement the company set itself is late. */
     overdue: boolean;
+    acknowledged: boolean;
+    /** The day the deadline that counts now falls: the acknowledgement until it is sent, then the answer. */
+    dueOn: string;
 };
 
 export type CaseFilters = {
@@ -96,7 +99,8 @@ export type CaseFilters = {
     status: 'open' | 'closed';
 };
 
-export type CaseCounts = { open: number; closed: number };
+/** How many cases each tab holds, and how many of the open ones wait for their acknowledgement. */
+export type CaseCounts = { open: number; closed: number; awaiting: number };
 
 /** One case as its handler reads it: the only place where a complaint's words reach a screen. */
 export type CaseDetail = {
@@ -138,6 +142,14 @@ export type CaseEntryRow = {
     when: string | null;
     time: string | null;
     text: string | null;
+};
+
+/** The deadlines the company set itself for a case (criterio C-49), and the days its steps were taken: days, never hours. */
+export type CaseDeadlines = {
+    acknowledgeBy: string;
+    respondBy: string;
+    acknowledgedOn: string | null;
+    closedOn: string | null;
 };
 
 /** What the handler may do with the case as it stands. */

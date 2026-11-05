@@ -301,10 +301,12 @@ it('lists the cases assigned to the handler, without what they say', function (b
     [$url] = handlerWithCases();
 
     visitPage('complaints/index', "{$url}/complaints", $dark, $mobile)
-        ->assertSee('Información confidencial.')
+        ->assertSee('Solo ves los casos que te asignaron.')
+        ->assertSee('Antes de seguir')
+        ->assertSee('Esperan acuse de recibo')
         ->assertSee('ABCD2345')
         ->assertSee('WXYZ6789')
-        ->assertSee('Acuse vencido')
+        ->assertSee('Acuse venció hace')
         ->assertSee('Planta Querétaro')
         ->assertDontSee('humilla')
         ->assertDontSee('Rosa Aguilar');
@@ -314,7 +316,8 @@ it('shows the empty inbox with what makes it fill', function (): void {
     [$url] = complaintsPanel();
 
     visitPage('complaints/index', "{$url}/complaints")
-        ->assertSee('Sin casos abiertos');
+        ->assertSee('No tienes casos abiertos')
+        ->assertSee('Revisar el canal');
 });
 
 it('narrows the inbox by a reference from the page', function (): void {
@@ -331,18 +334,21 @@ it('opens a confidential case with the words of the person and their name', func
     [$url, $case] = handlerWithCases();
 
     visitPage('complaints/show', "{$url}/complaints/cases/{$case->id}", $dark, $mobile)
-        ->assertSee('Caso ABCD2345')
+        ->assertSee('ABCD2345')
+        ->assertSee('Espera acuse')
         ->assertSee('humilla frente a todos')
         ->assertSee('Rosa Aguilar')
         ->assertSee('Cel. 442 000 0000')
-        ->assertSee('Tu consulta queda registrada');
+        ->assertSee('Tu consulta quedó registrada')
+        ->assertSee('Plazos que te fijaste');
 })->with($looks);
 
 it('opens an anonymous case saying that there is nobody to ask for', function (): void {
     [$url, , $case] = handlerWithCases();
 
     visitPage('complaints/show', "{$url}/complaints/cases/{$case->id}")
-        ->assertSee('Anónima: no hay nombre')
+        ->assertSee('Anónima: no sabemos quién es')
+        ->assertSee('anónima · recibida el 2 de noviembre de 2026')
         ->assertSee('Las cargas del turno de noche');
 });
 
@@ -350,7 +356,7 @@ it('opens a case from the inbox', function (): void {
     [$url] = handlerWithCases();
 
     visit("{$url}/complaints")
-        ->click('ABCD2345')
+        ->click('[aria-label="Acusar recibo: ABCD2345"]')
         ->assertSee('Lo que cuenta la persona')
         ->assertNoJavaScriptErrors();
 });
@@ -359,21 +365,26 @@ it('works a case from the page: acknowledges it, writes to the person, takes a n
     [$url, $case] = handlerWithCases();
 
     visit("{$url}/complaints/cases/{$case->id}")
-        ->press('Acusar recibo')
+        ->assertValue('#case-acknowledgement', 'Recibimos su denuncia. La atiende una persona designada que no está involucrada. Le responderemos aquí a más tardar el 31 de octubre. Puede escribirnos si quiere agregar algo.')
+        ->press('Enviar acuse de recibo')
         ->assertSee('Acuse enviado.')
-        ->assertSee('Acusamos recibo de su queja')
-        ->fill('#case-message', 'Gracias por avisarnos, revisaremos lo que cuenta.')
+        ->assertSee('Le responderemos aquí a más tardar el 31 de octubre')
+        ->press('Empezar la revisión')
+        ->assertSee('El caso pasó a revisión.')
+        ->fill('#case-reply', 'Gracias por avisarnos, revisaremos lo que cuenta.')
         ->press('Enviar a la persona')
         ->assertSee('Mensaje enviado a la persona.')
+        ->click('Agregar nota')
         ->fill('#case-note', 'Hablé con el jefe de turno.')
         ->press('Guardar nota')
-        ->assertSee('Nota interna (la persona no la ve)')
-        ->press('Pasar a revisión')
-        ->assertSee('El caso pasó a revisión.')
-        ->click('Cerrar el caso')
+        ->assertSee('Nota guardada.')
+        ->assertSee('Hablé con el jefe de turno.')
+        ->click('Cerrar con una respuesta')
         ->click('Se tomaron medidas')
-        ->click('[role="dialog"] form button')
+        ->fill('#case-answer', 'Hablamos con las personas involucradas.')
+        ->press('Cerrar y responder')
         ->assertSee('Caso cerrado.')
+        ->assertSee('Hablamos con las personas involucradas.')
         ->assertSee('Abrir de nuevo')
         ->assertNoJavaScriptErrors();
 
@@ -390,22 +401,38 @@ it('shows a worked case with its thread, in light, dark and on a phone', functio
     App\Modules\Complaints\Models\ComplaintEntry::factory()->fromReporter('2026-10-02')->create(['tenant_id' => $case->tenant_id, 'complaint_id' => $case->id, 'position' => 3, 'body' => 'Sigue pasando esta semana.']);
 
     visitPage('complaints/show', "{$url}/complaints/cases/{$case->id}", $dark, $mobile)
+        ->assertSee('Conversación con la persona')
         ->assertSee('Sigue pasando esta semana.')
-        ->assertSee('Mensaje de la persona')
-        ->assertSee('Nota interna (la persona no la ve)')
-        ->assertSee('Escribir a la persona');
+        ->assertSee('La persona no las ve')
+        ->assertSee('Hablé con el jefe de turno.')
+        ->assertSee('Acuse de recibo')
+        ->assertSee('Bitácora del caso');
 })->with($looks);
 
 it('steps aside from a case, which then no longer opens', function (): void {
     [$url, $case] = handlerWithCases();
 
     visit("{$url}/complaints/cases/{$case->id}")
-        ->click('Excusarme')
+        ->click('Excusarme de este caso')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Te excusaste del caso.')
         ->assertNoJavaScriptErrors();
 
     visit("{$url}/complaints/cases/{$case->id}")->assertSee('404');
+});
+
+it('keeps a case for a legal process from its switch, and lets it go again', function (): void {
+    [$url, $case] = handlerWithCases();
+
+    visit("{$url}/complaints/cases/{$case->id}")
+        ->click('[role="switch"]')
+        ->assertSee('Retención legal activada.')
+        ->assertAttribute('[role="switch"]', 'aria-checked', 'true')
+        ->click('[role="switch"]')
+        ->assertSee('Retención legal levantada.')
+        ->assertNoJavaScriptErrors();
+
+    expect($case->refresh()->on_hold)->toBeFalse();
 });
 
 /** A channel with a complaint whose reference and key the person knows. */

@@ -262,6 +262,7 @@ return [
         'remind' => 'recordatorio',
         'attended' => 'atendida',
         'resolution' => 'resolución',
+        'body' => 'texto',
         'description' => 'descripción',
         'scores' => 'condicionantes',
         'scores.standing_time' => 'tiempo de pie',
