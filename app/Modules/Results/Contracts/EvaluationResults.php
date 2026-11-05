@@ -27,4 +27,13 @@ interface EvaluationResults
      * @return list<int>|null
      */
     public function finalLevels(CampaignRecord $campaign): ?array;
+
+    /**
+     * How many people of each evaluation, of those who require a clinical assessment, are already channeled or attended
+     * (num. 5.5), in one read; an evaluation with none is left out.
+     *
+     * @param  list<string>  $campaignIds
+     * @return array<string, int> by campaign id
+     */
+    public function channeledCounts(array $campaignIds): array;
 }
