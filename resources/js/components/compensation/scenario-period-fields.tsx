@@ -27,7 +27,7 @@ export default function ScenarioPeriodFields({
     const limit = monthsLimit(draft.horizon);
 
     return (
-        <div className="grid items-start gap-5 sm:grid-cols-3">
+        <div className="grid items-start gap-5 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <div className="grid gap-2">
                 <Label htmlFor="scenario-effective_on">Vigente desde</Label>
                 <DatePicker

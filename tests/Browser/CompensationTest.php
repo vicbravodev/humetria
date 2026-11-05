@@ -520,6 +520,16 @@ it('shows the editor of a new scenario with its assumptions', function (bool $da
         ->assertSee('Meta de inflación del Banco de México');
 })->with($looks);
 
+it('reads the start date of a scenario in one line beside the retroactive and the years, at 1440 px', function (): void {
+    $url = signInToPanel();
+
+    $page = visit("{$url}/compensation/scenarios/create")->assertSee('Vigente desde');
+
+    resizeTo($page, 1440)
+        ->assertScript('() => { const field = document.getElementById("scenario-effective_on"); return field.querySelector("span").getBoundingClientRect().height < field.getBoundingClientRect().height - 8; }', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('costs the scenario as it is moved, against the others of the account, before saving anything (board V4-Comp-Escenario)', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
