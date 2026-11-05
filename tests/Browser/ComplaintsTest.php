@@ -586,9 +586,10 @@ it('shows the poster with a QR that draws, ready to print', function (bool $dark
     ComplaintChannel::factory()->forTenant($tenant->id)->active()->create(['procedure' => 'Se acusa recibo y la atiende una persona designada.']);
 
     visitPage('complaints/poster', "{$url}/complaints/poster", $dark, $mobile)
-        ->assertSee('¿Algo no está bien en tu trabajo?')
-        ->assertSee('Imprimir o guardar PDF')
-        ->assertSee('Se acusa recibo y la atiende una persona designada.')
+        ->assertSee('¿Algo no está bien en su trabajo?')
+        ->assertSee('Le respondemos en 30 días.')
+        ->assertSee('Violencia laboral')
+        ->assertSee('Imprimir')
         ->assertScript('() => { const image = document.querySelector("img[alt^=\"Código QR\"]"); return image !== null && image.complete && image.naturalWidth > 0; }', true);
 })->with($looks);
 
@@ -596,7 +597,7 @@ it('opens the poster from the channel page', function (): void {
     [$url, $tenant] = complaintsPanel();
     ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
 
-    visit("{$url}/complaints/channel")->click('Cartel para imprimir')->assertSee('¿Algo no está bien en tu trabajo?')->assertNoJavaScriptErrors();
+    visit("{$url}/complaints/channel")->click('Cartel para imprimir')->assertSee('¿Algo no está bien en su trabajo?')->assertNoJavaScriptErrors();
 });
 
 it('asks for a real address on the optional step and lets it stay empty', function (): void {

@@ -31,7 +31,11 @@ it('draws the QR of an address as an SVG data URI that the policy of the pages a
         ->and(resolve(QrCodeImage::class)->dataUri('https://humetria.test/c/ZZZZZZZZ23456789'))->not->toBe($uri);
 });
 
-it('shows the poster of an active channel with its QR, its address and a paragraph of the procedure', function (): void {
+// Rediseño v2 (board V4-Carteles, decisión A16): the letter sheet promises the answer in the days the company set, instead of
+// a paragraph of the procedure, which the person reads on the channel's page.
+it('shows the poster of an active channel with its QR, its address and the days to the answer', function (): void {
+    $this->channel->forceFill(['resolve_within_days' => 20])->save();
+
     $this->actingAs($this->owner)->get(route('tenant.complaints.poster', $this->tenant))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -40,15 +44,8 @@ it('shows the poster of an active channel with its QR, its address and a paragra
             ->where('url', $this->channel->publicUrl())
             ->where('shortUrl', preg_replace('#^https?://#', '', $this->channel->publicUrl()))
             ->where('qr', resolve(QrCodeImage::class)->dataUri($this->channel->publicUrl()))
-            ->where('procedure', "1. Se recibe la queja.\n2. La atiende una persona designada."));
-});
-
-it('keeps the poster to a short paragraph of the procedure', function (): void {
-    $this->channel->forceFill(['procedure' => str_repeat('palabra ', 200)])->save();
-
-    $response = $this->actingAs($this->owner)->get(route('tenant.complaints.poster', $this->tenant));
-
-    expect(mb_strlen($response->viewData('page')['props']['procedure']))->toBeLessThanOrEqual(401)->and($response->viewData('page')['props']['procedure'])->toEndWith('…');
+            ->where('resolveWithinDays', 20)
+            ->missing('procedure'));
 });
 
 it('gives the new address after the code is rotated, and the printed one no more', function (): void {
