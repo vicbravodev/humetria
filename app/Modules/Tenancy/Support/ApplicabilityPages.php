@@ -7,6 +7,9 @@ namespace App\Modules\Tenancy\Support;
 use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Seating\Contracts\SeatingApplicability;
+use App\Modules\Telework\Contracts\TeleworkApplicability;
+use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 
 /**
@@ -15,7 +18,45 @@ use App\Modules\Tenancy\Data\WorkCenterSummary;
  */
 final readonly class ApplicabilityPages
 {
-    public function __construct(private Headcount $headcount, private Nom035Guides $guides, private SeatingApplicability $seating) {}
+    private const int CENTERS_PER_PAGE = 10;
+
+    public function __construct(
+        private Headcount $headcount,
+        private Nom035Guides $guides,
+        private SeatingApplicability $seating,
+        private TeleworkApplicability $telework,
+        private WorkCenters $workCenters,
+        private Companies $companies,
+    ) {}
+
+    /**
+     * The first-time setup (board V3-Onboarding): every center in use, a page at a time, with its people, the size that
+     * decides its NOM-035 guides and what it answered before for NOM-037 and Ley Silla.
+     *
+     * @return array<string, mixed>
+     */
+    public function onboarding(): array
+    {
+        $page = $this->workCenters->activePage(self::CENTERS_PER_PAGE, 'page');
+        $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, $page->items()));
+        $people = $this->headcount->byWorkCenter();
+        $telework = $this->telework->declarations($ids);
+        $seating = $this->seating->declarations($ids);
+
+        return [
+            'company' => $this->companies->current()->tradeName,
+            'centers' => $page->through(fn (WorkCenterSummary $center): array => [
+                'id' => $center->id,
+                'name' => $center->name,
+                'activity' => $center->mainActivity,
+                'people' => $people[$center->id] ?? 0,
+                'range' => $this->range($people[$center->id] ?? 0),
+                'hasTeleworkers' => $telework[$center->id] ?? null,
+                'standing' => isset($seating[$center->id]) ? $seating[$center->id]->standing : null,
+                'sector' => isset($seating[$center->id]) ? $seating[$center->id]->sector : null,
+            ]),
+        ];
+    }
 
     /**
      * @param  'nom035'|'seating'  $norm  the tab it opens on

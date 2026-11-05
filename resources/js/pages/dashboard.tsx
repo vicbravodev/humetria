@@ -29,7 +29,7 @@ type Props = {
  * and the week at the side; the side drops below the content under 1240 px.
  */
 export default function Dashboard(props: Props) {
-    const { auth } = usePage().props;
+    const { auth, tenant } = usePage().props;
 
     return (
         <>
@@ -47,7 +47,13 @@ export default function Dashboard(props: Props) {
                             <DashboardRoutes centers={props.centers} />
                         </div>
                         <aside className="flex flex-col gap-4">
-                            <DashboardNextStep centers={props.centers.data} />
+                            <DashboardNextStep
+                                centers={props.centers.data}
+                                setsUp={
+                                    tenant?.can.manage_telework === true &&
+                                    tenant.can.manage_seating
+                                }
+                            />
                             <DashboardWeek items={props.week} />
                         </aside>
                     </div>

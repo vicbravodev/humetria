@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\OnboardingController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterApplicabilityController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
@@ -28,6 +29,9 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/archive', [WorkCenterController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.archive');
     // «¿Te aplica?» (rediseño v2, decisión A2): what NOM-035 and Ley Silla ask of a center, and the answers of one or more.
     Route::get('admin/{tenant:slug}/work-centers/{workCenter}/applies', [WorkCenterApplicabilityController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.applies');
+    // The first time of a company (board V3-Onboarding): two questions per center, and its routes.
+    Route::get('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding');
+    Route::put('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding.update');
     Route::put('admin/{tenant:slug}/work-centers/applicability', [WorkCenterApplicabilityController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.applicability.update');
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/restore', [WorkCenterController::class, 'restore'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.restore');
 

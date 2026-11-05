@@ -89,6 +89,13 @@ export function normsInUse(centers: CenterRoutes[]): {
           }));
 }
 
+/** How many centers of the page still have to answer «¿Te aplica?» for some standard (board V3-Onboarding). */
+export function unansweredCenters(centers: CenterRoutes[]): number {
+    return centers.filter((center) =>
+        NORMS.some((norm) => !center[norm.key].answered),
+    ).length;
+}
+
 export type NextStep = {
     norm: NormKey;
     /** 1 to 6. */

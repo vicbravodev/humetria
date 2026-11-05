@@ -71,8 +71,9 @@ it('shows the panel as the redesign draws it, in both themes and on a phone', fu
         ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom037"]', 'Contesta si te aplica')
         ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:first-child', 'Falta contestar')
         ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:last-child', 'Etapa 1 de 6 · identifica los puestos de pie')
-        ->assertSeeIn('[aria-labelledby="next-step"]', 'Define tu política de prevención')
-        ->assertSeeIn('[aria-labelledby="next-step"]', 'NOM-035 · etapa 1 de 6 · 1 centro')
+        // Board V3-Onboarding: before any stage, the questions of the center that has not answered «¿Te aplica?».
+        ->assertSeeIn('[aria-labelledby="next-step"]', 'Dos preguntas por centro y armamos todo')
+        ->assertSeeIn('[aria-labelledby="next-step"]', '1 centro sin contestar')
         ->assertSeeIn('[aria-labelledby="week"]', 'Nada vence en los próximos 7 días.')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);

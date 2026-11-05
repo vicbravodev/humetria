@@ -11,7 +11,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * What one or more work centers answer to «¿Te aplica?» (boards V2-Aplica-Otras and V3-Onboarding). Whoever manages both
- * NOM-037 and Ley Silla answers; a standard left out of a center is not touched.
+ * NOM-037 and Ley Silla answers; a standard left out of a center is not touched, except in the first-time setup, which asks
+ * both questions of every center.
  */
 final class ApplicabilityRequest extends FormRequest
 {
@@ -27,12 +28,14 @@ final class ApplicabilityRequest extends FormRequest
      */
     public function rules(SeatingApplicability $seating): array
     {
+        $asked = $this->routeIs('tenant.work-centers.onboarding.update') ? 'required' : 'nullable';
+
         return [
             'centers' => ['required', 'array', 'list', 'max:'.self::MOST_CENTERS],
             'centers.*' => ['array:id,has_teleworkers,standing,sector'],
             'centers.*.id' => ['required', 'uuid', 'distinct'],
-            'centers.*.has_teleworkers' => ['nullable', 'boolean'],
-            'centers.*.standing' => ['nullable', 'boolean'],
+            'centers.*.has_teleworkers' => [$asked, 'boolean'],
+            'centers.*.standing' => [$asked, 'boolean'],
             'centers.*.sector' => ['nullable', 'required_if_accepted:centers.*.standing', 'string', Rule::in($seating->sectors())],
         ];
     }

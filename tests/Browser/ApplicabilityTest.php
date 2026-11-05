@@ -131,3 +131,36 @@ it('reaches the certificate from the answer, and from the panel', function (): v
         ->assertSee('Constancia de que la norma no aplica')
         ->assertNoJavaScriptErrors();
 });
+
+// Rediseño v2 (board V3-Onboarding): the first time of a company, two questions per center and its routes.
+it('sets the company up as the redesign draws it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $plant = applicabilityCompany();
+    staffOf($plant->tenant, $plant, 30);
+    WorkCenter::factory()->for($plant->tenant)->create(['name' => 'Oficinas Monterrey', 'main_activity' => 'Administración y ventas']);
+
+    visitPage('tenancy/onboarding', '/admin/acme/work-centers/onboarding', $dark, $mobile)
+        ->assertSee('Dos preguntas por centro y armamos todo')
+        ->assertSee('Manufactura · 30 personas registradas')
+        ->assertSeeIn('[aria-labelledby="summary"]', 'NOM-035 · Guías I y II')
+        ->assertSee('Contesta los 2 centros')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('creates the routes from the panel, two questions per center', function (): void {
+    $plant = applicabilityCompany();
+
+    visit('/admin/acme')
+        ->assertSee('Dos preguntas por centro y armamos todo')
+        ->click('Empezar')
+        ->assertSee('Paso 2 de 2')
+        ->click("label:has(input[name=\"telework-{$plant->id}\"][value=\"no\"])")
+        ->click("label:has(input[name=\"standing-{$plant->id}\"][value=\"yes\"])")
+        ->assertSee('Falta el sector')
+        ->click("label:has(input[name=\"sector-{$plant->id}\"][value=\"commerce\"])")
+        ->assertSee('Crear mis 2 rutas')
+        ->click('Crear mis 2 rutas')
+        ->assertSee('Listo: tus rutas están en el panel')
+        ->assertSeeIn('[data-norm="seating"]', 'Etapa 1 de 6 · identifica los puestos de pie')
+        ->assertSeeIn('[data-norm="nom037"]', 'No aplica')
+        ->assertNoJavaScriptErrors();
+});

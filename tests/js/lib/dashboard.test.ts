@@ -3,6 +3,7 @@ import {
     greeting,
     nextStep,
     normsInUse,
+    unansweredCenters,
     panelSummary,
     stageLine,
     stageStates,
@@ -118,6 +119,18 @@ describe('normsInUse', () => {
             ['seating', ['Planta', 'Oficinas']],
         ]);
         expect(normsInUse([])).toEqual([]);
+    });
+});
+
+describe('unansweredCenters', () => {
+    it('counts the centers that still have to answer «¿Te aplica?» for some standard', () => {
+        expect(
+            unansweredCenters([
+                center('Planta', { seating: unanswered }),
+                center('Oficinas', { nom037: unanswered, seating: unanswered }),
+                center('Bodega', {}),
+            ]),
+        ).toBe(2);
     });
 });
 
