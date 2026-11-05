@@ -285,6 +285,7 @@ it('shows the action plan with its measures and its pause agreements', function 
         ->assertSee('Plan de acción')
         ->assertSee('Alternar tareas para cambiar de postura')
         ->assertSee('3 por turno de 10 min')
+        ->assertSee('Arrastra la evidencia aquí o elígela')
         ->assertSee('Registrar un acuerdo de pausas');
 })->with($looks);
 
@@ -306,6 +307,8 @@ it('lists the documents of a center with their incisos and the form to add one',
         ->assertSee('Acta de febrero')
         ->assertSee('Acta de la Comisión')
         ->assertSee('B, C')
+        // C4: the file is dropped on or chosen from the zone, never the native field.
+        ->assertSee('Arrastra el PDF aquí o elígelo')
         ->assertSee('Guardar documento');
 })->with($looks);
 

@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import SeatChoiceField from '@/components/seating/seat-choice-field';
 import { Button } from '@/components/ui/button';
@@ -75,14 +76,20 @@ export default function DocumentForm({
                         <InputError message={errors['incisos.0']} />
                     </fieldset>
                     <div className="grid gap-2">
-                        <Label htmlFor="document-file">Archivo PDF</Label>
-                        <Input
+                        <p className="font-medium">Archivo</p>
+                        <FileDropZone
                             id="document-file"
                             name="file"
-                            type="file"
                             accept="application/pdf"
+                            title="Arrastra el PDF aquí o elígelo"
+                            hint="Un documento en PDF"
+                            invalid={errors['file'] !== undefined}
+                            describedBy="document-file-error"
                         />
-                        <InputError message={errors['file']} />
+                        <InputError
+                            id="document-file-error"
+                            message={errors['file']}
+                        />
                     </div>
                     <Button className="w-fit" disabled={processing}>
                         {processing && <Spinner />}
