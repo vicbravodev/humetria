@@ -60,7 +60,7 @@ function inventory(): array
         'handlers changed' => [fn () => new HandlersChanged($company, 'Rita', true, $url), true],
         'news on your case' => [fn () => new NewsOnYourCase($url), false],
         'you were designated' => [fn () => new YouWereDesignated($company, 'Rita', 'de todo', $url), true],
-        'disclosure digest' => [fn () => new DisclosureDigest($company, ['1 centro sin política.'], $url), true],
+        'disclosure digest' => [fn () => new DisclosureDigest($company, ['1 centro sin política.'], $url, ['confirmed' => 1, 'total' => 3, 'pending' => 2], $url), true],
         'policy to confirm' => [fn () => new PolicyToConfirm($url, 'Ana', $company), true],
         'program digest' => [fn () => new ProgramDigest($company, 'Olga', ['1 acción vencida.'], $url), true],
         'closing summary' => [fn () => new ClosingSummary($company, 'Planta', 8, 10, null, null, true, 0, $url), true],
