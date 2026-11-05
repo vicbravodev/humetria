@@ -112,6 +112,17 @@ it('shows the result of Figura 1 as its questions are answered', function (): vo
         ->assertNoJavaScriptErrors();
 });
 
+it('keeps the questions of Figura 1 readable, with the figure beside them only when there is room', function (int $width): void {
+    [$url, $center] = seatingCenter();
+
+    $page = visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->press('@position-next')
+        ->assertSee('Paso 2 de 5');
+
+    resizeTo($page, $width)
+        ->assertScript('() => document.querySelector("fieldset:has(input[name=can_work_seated])").getBoundingClientRect().width >= 300', true);
+})->with([1100, 1240, 1440]);
+
 it('shows a saved position with its result and its people', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
     $position = StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Cajera']);
