@@ -21,6 +21,7 @@ use App\Modules\Telework\Http\Controllers\TeleworkSettingsController;
 use App\Modules\Telework\Http\Controllers\TrainingController;
 use App\Modules\Telework\Http\Controllers\VisitController;
 use App\Modules\Telework\Http\Controllers\WorkCenterOptionsController;
+use App\Modules\Telework\Http\Controllers\WritingController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
@@ -131,3 +132,7 @@ Route::post('admin/{tenant:slug}/telework/notices/{notice}/place-review', [Notic
 
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');
+
+// Writing a document with questions (boards V2-Politica and V3-Doc-Riesgos; decisión A3): every answer is kept.
+Route::get('admin/{tenant:slug}/telework/documents/{kind}/write', [WritingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.writing.show');
+Route::put('admin/{tenant:slug}/telework/documents/{kind}/write', [WritingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.writing.update');

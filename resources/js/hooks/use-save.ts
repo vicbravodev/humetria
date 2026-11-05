@@ -4,9 +4,12 @@ import { useRef, useState } from 'react';
 
 /**
  * A PUT that keeps what the person answered when it does not reach the server (V3-Estados, «No se pudo guardar»): it says
- * so and lets them try again with the same answers. Validation errors come back as usual, in `errors`.
+ * so and lets them try again with the same answers. Validation errors come back as usual, in `errors`. A page that keeps
+ * its own steps keeps them across the save with `preserveState`.
  */
-export function useSave() {
+export function useSave({
+    preserveState = false,
+}: { preserveState?: boolean } = {}) {
     const [processing, setProcessing] = useState(false);
     const [failed, setFailed] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -20,6 +23,7 @@ export function useSave() {
         last.current = () => {
             router.put(url, data, {
                 preserveScroll: true,
+                preserveState,
                 onStart: () => {
                     setProcessing(true);
                     setFailed(false);
