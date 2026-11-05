@@ -82,3 +82,9 @@ it('never uses floats in the calculation code', function (): void {
 
     expect($found)->toBe([]);
 });
+
+it('writes cents as whole pesos, a half going up, for the headline numbers', function (int $cents, string $expected): void {
+    expect(Money::pesos($cents))->toBe($expected);
+})->with([
+    [123_949_999, '$1,239,500'], [123_950_049, '$1,239,500'], [123_950_050, '$1,239,501'], [0, '$0'], [49, '$0'], [50, '$1'], [-123_450, '-$1,235'],
+]);

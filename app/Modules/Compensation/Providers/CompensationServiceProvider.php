@@ -15,8 +15,13 @@ use Illuminate\Support\ServiceProvider;
  */
 final class CompensationServiceProvider extends ServiceProvider
 {
+    /** Previews a person may ask for a minute: the editor asks once the typing stops, so this is a lot of typing. */
+    private const int PREVIEWS_PER_MINUTE = 120;
+
     public function boot(): void
     {
+        RateLimiter::for('compensation-preview', fn (Request $request): Limit => Limit::perMinute(self::PREVIEWS_PER_MINUTE)->by('compensation-preview:'.($request->user()->id ?? $request->ip())));
+
         // Per link, so a negotiating table can open one at once; a cap per address keeps anyone from trying links in bulk.
         // The link is hashed: a key never holds it.
         RateLimiter::for('compensation-report-links', function (Request $request): array {

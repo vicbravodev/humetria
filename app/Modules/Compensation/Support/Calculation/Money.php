@@ -39,6 +39,14 @@ final class Money
         return $cents->toScale(0, RoundingMode::HalfUp)->toInt();
     }
 
+    /** "$2,933" for 293,275 cents: whole pesos, a half going up, for the headline numbers. */
+    public static function pesos(int $cents): string
+    {
+        $pesos = self::round(BigRational::ofFraction($cents, 100));
+
+        return ($pesos < 0 ? '-' : '').'$'.number_format(abs($pesos));
+    }
+
     /** "$2,932.75"; a negative amount is "-$2,932.75". */
     public static function format(int $cents): string
     {

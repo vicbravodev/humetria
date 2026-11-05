@@ -42,7 +42,7 @@ final class ScenarioRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [$this->isPreview() ? 'nullable' : 'required', 'string', 'max:255'],
             'effective_on' => ['required', 'date_format:Y-m-d'],
             'retroactive_months' => ['required', 'integer'],
             'horizon_years' => ['required', 'integer'],
@@ -115,6 +115,11 @@ final class ScenarioRequest extends FormRequest
             $this->filled('default_state') ? $this->string('default_state')->toString() : null,
             $this->unit(),
         );
+    }
+
+    private function isPreview(): bool
+    {
+        return $this->routeIs('tenant.compensation.scenarios.preview');
     }
 
     private function unit(): RaiseUnit

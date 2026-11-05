@@ -15,6 +15,7 @@ use App\Modules\Compensation\Http\Controllers\SalaryOverrideController;
 use App\Modules\Compensation\Http\Controllers\SalaryOverrideImportController;
 use App\Modules\Compensation\Http\Controllers\ScenarioComparisonController;
 use App\Modules\Compensation\Http\Controllers\ScenarioController;
+use App\Modules\Compensation\Http\Controllers\ScenarioPreviewController;
 use App\Modules\Compensation\Http\Controllers\TabulatorController;
 use App\Modules\Compensation\Http\Controllers\TabulatorImportController;
 use App\Modules\Compensation\Http\Middleware\BlockWhileImpersonating;
@@ -47,6 +48,7 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::get('admin/{tenant:slug}/compensation/scenarios/create', [ScenarioController::class, 'create'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.create');
     Route::get('admin/{tenant:slug}/compensation/scenarios/compare', ScenarioComparisonController::class)->where('tenant', $notReserved)->name('tenant.compensation.scenarios.compare');
     Route::get('admin/{tenant:slug}/compensation/scenarios/benefits', BenefitOptionsController::class)->where('tenant', $notReserved)->name('tenant.compensation.scenarios.benefits');
+    Route::post('admin/{tenant:slug}/compensation/scenarios/preview', ScenarioPreviewController::class)->where('tenant', $notReserved)->middleware('throttle:compensation-preview')->name('tenant.compensation.scenarios.preview');
     Route::post('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.store');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.edit');
     Route::put('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'update'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.update');
