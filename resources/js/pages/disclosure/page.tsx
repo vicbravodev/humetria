@@ -21,7 +21,7 @@ export default function Page({ link }: PageLinkProps) {
             <Head title="Página de las personas" />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Política y difusión"
+                    caption="NOM-035 · Difusión"
                     title="Página de las personas"
                     description="Un enlace permanente, para el cartel y el correo, donde las personas ven la política, las medidas, cómo presentar una queja y los resultados (numerales 5.7 y 7.8). Solo lee: no pide cuenta ni guarda quién entra."
                 />

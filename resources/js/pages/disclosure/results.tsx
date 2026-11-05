@@ -21,7 +21,7 @@ export default function Results({ evaluations }: ResultsProps) {
             <Head title="Resultados para las personas" />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Política y difusión"
+                    caption="NOM-035 · Difusión"
                     title="Resultados para las personas"
                     description="Las personas tienen derecho a consultar el resultado de la evaluación (numeral 7.8). Tú decides cuándo se publica cada una: solo se muestran cifras del centro completo y de grupos grandes, nunca de áreas pequeñas."
                 />
