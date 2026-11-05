@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Ruta terminada · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app a:focus-visible,.app button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app h1,.app h2,.app p,.app ol{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 20px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.cyc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.cyc span{height:10px;border-radius:999px;background:var(--primary)}
+.live{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 20px;border-top:1px solid var(--border)}
+.live:first-child{border-top:0}
+.tl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative}
+.tl::before{content:"";position:absolute;left:12px;right:12px;top:11px;height:2px;background:var(--border)}
+.tlp{display:flex;flex-direction:column;gap:8px;position:relative}
+.tld{width:24px;height:24px;border-radius:999px;background:var(--card);border:2px solid var(--input)}
+.tld.ok{background:var(--primary);border-color:var(--primary)}
+.tld.now{border:2px solid var(--primary);box-shadow:0 0 0 4px var(--accent)}
+@media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr) !important}.tl{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:20px}.tl::before{display:none}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row sm" style="gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="mfg">Comercializadora Rivera</span><span class="mfg" aria-hidden="true">/</span><span class="mfg">NOM-035</span><span class="mfg" aria-hidden="true">/</span><span class="w5">Tienda Centro</span></div>
+<div style="padding: 44px 48px 56px; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px">
+<header style="display: flex; flex-direction: column; gap: 16px">
+<span style="width: 56px; height: 56px; border-radius: 999px; background: var(--primary); color: var(--pfg); display: inline-flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+<h1 style="font-size: 34px; line-height: 42px; font-weight: 600; letter-spacing: -0.015em">Todo al día en la NOM-035</h1>
+<p class="mfg" style="font-size: 18px; line-height: 28px; max-width: 720px">Terminaste las 6 etapas el 14 de octubre de 2026. Tu expediente está completo. La siguiente evaluación toca antes del 14 de octubre de 2028.</p>
+<div class="cyc" aria-hidden="true" style="max-width: 420px"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+<div class="row" style="gap: 12px; flex-wrap: wrap"><button type="button" class="btn btn-p">Descargar expediente</button><button type="button" class="btn btn-o">Programar la siguiente evaluación</button></div>
+</header>
+
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start">
+<section aria-labelledby="vivo" style="display: flex; flex-direction: column; gap: 12px">
+<div><h2 id="vivo" style="font-size: 20px; line-height: 28px; font-weight: 600">Lo que sigue vivo mientras tanto</h2><p class="sm mfg">Terminar la ruta no apaga la norma. Esto te lo recordamos cuando toque.</p></div>
+<div class="card" style="overflow: hidden">
+<div class="live"><div><p class="w5">Acciones del programa de intervención</p><p class="sm mfg">3 de 5 hechas · la siguiente vence el 30 nov</p></div><a href="V2-N035-Plan.dc.html" class="sm w5">Ver programa</a></div>
+<div class="live"><div><p class="w5">Quien entra nuevo recibe la política</p><p class="sm mfg">Automático al darlo de alta · 2 este mes, ambos confirmaron</p></div><span class="sm mfg">Automático</span></div>
+<div class="live"><div><p class="w5">Si alguien vive un acontecimiento traumático severo</p><p class="sm mfg">Aplica la Guía I a esa persona cuando pase, sin esperar al siguiente ciclo</p></div><a href="#" class="sm w5">Aplicar Guía I</a></div>
+<div class="live"><div><p class="w5">Avisos de violencia o trato injusto</p><p class="sm mfg">Ninguno abierto</p></div><span class="sm mfg">Al día</span></div>
+</div>
+</section>
+
+<aside class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 18px" aria-labelledby="cic">
+<h2 id="cic" class="w6" style="font-size: 18px">Tu ciclo</h2>
+<div class="tl">
+<div class="tlp"><span class="tld ok"></span><p class="sm w5">Oct 2026</p><p class="sm mfg">Ruta terminada</p></div>
+<div class="tlp"><span class="tld now"></span><p class="sm w5">Hoy</p><p class="sm mfg">Seguimiento</p></div>
+<div class="tlp"><span class="tld"></span><p class="sm w5">Ago 2028</p><p class="sm mfg">Te avisamos</p></div>
+<div class="tlp"><span class="tld"></span><p class="sm w5">Oct 2028</p><p class="sm mfg">Nueva evaluación</p></div>
+</div>
+<p class="sm mfg">Te avisamos 60 días antes. Cuando empiece el nuevo ciclo, tu política y tu programa se copian como punto de partida.</p>
+</aside>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

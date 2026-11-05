@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Tu marca · consultor · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--seal:#6B7472;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--seal:#C9D3D0;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button,.app input{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible,.app input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.inp{height:48px;width:100%;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:0 14px;font-size:16px}
+.lg{width:40px;height:40px;border-radius:10px;border:1.5px dashed var(--input);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--mfg);flex-shrink:0}
+.pv{border:1px solid var(--border);border-radius:14px;background:var(--card);overflow:hidden}
+.pvh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)}
+@media (max-width:1100px){.cols{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row sm" style="gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><a href="V2-Consultor.dc.html" style="color: var(--mfg)">Tus clientes</a><span class="mfg" aria-hidden="true">/</span><span class="w5">Tu marca</span></div>
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 56px; padding: 36px 48px 56px; max-width: 1320px; margin: 0 auto; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 8px"><h1 style="font-size: 30px; line-height: 38px; font-weight: 600; letter-spacing: -0.015em">Tu marca</h1><p class="mfg" style="font-size: 17px; line-height: 26px">Tus clientes y sus personas verán tu logo en el panel, la encuesta, los reportes y los correos.</p></div>
+<div style="display: flex; flex-direction: column; gap: 10px"><p class="w5">Logo</p>
+<div style="border: 1.5px dashed var(--input); border-radius: 14px; background: var(--muted); padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center"><span class="lg" style="width: 56px; height: 56px; font-size: 18px; background: var(--card)">CN</span><p class="w5">Arrastra tu logo o elige un archivo</p><p class="sm mfg">SVG o PNG con fondo transparente, al menos 400 px de ancho</p><button type="button" class="btn btn-o" style="height: 44px">Elegir archivo</button></div>
+<p class="sm mfg">Probamos tu logo en fondo claro y oscuro. Si no se lee en uno, te pedimos una versión para ese fondo.</p></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><label for="nc" class="w5">Nombre comercial</label><input id="nc" class="inp" value="Consultoría Norte"></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px"><div style="display: flex; flex-direction: column; gap: 8px"><label for="ce" class="w5">Correo en reportes</label><input id="ce" class="inp" value="hola@consultorianorte.mx"></div><div style="display: flex; flex-direction: column; gap: 8px"><label for="te" class="w5">Teléfono</label><input id="te" class="inp" value="81 0000 0000"></div></div>
+<div class="row sm" style="gap: 10px; padding: 14px 16px; border-radius: 12px; background: var(--accent)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Solo cambia el logo. Los colores y la tipografía se quedan para que todo siga siendo legible y accesible.</span></div>
+<div><button type="button" class="btn btn-p">Guardar marca</button></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px; min-width: 0">
+<p class="sm w5 mfg">Así se verá</p>
+<div class="pv"><div class="pvh"><span class="lg">CN</span><span class="w6" style="flex-grow: 1">Consultoría Norte</span><span class="sm w5" style="color: var(--primary)">Panel</span></div><div style="padding: 16px; display: flex; flex-direction: column; gap: 6px"><p class="w6">Tus clientes</p><p class="sm mfg">Lo que ven tú y tu equipo al entrar.</p></div></div>
+<div class="pv"><div class="pvh"><span class="lg">CN</span><span class="w6" style="flex-grow: 1">Grupo Textil del Bajío</span><span class="sm w5" style="color: var(--primary)">Confidencial</span></div><div style="padding: 16px; display: flex; flex-direction: column; gap: 8px"><p class="w6" style="font-size: 18px">Encuesta sobre su trabajo</p><p class="sm mfg">Lo que ve cada persona al contestar. Tu logo arriba, la empresa del cliente al lado.</p><p class="sm" style="color: var(--seal)">hecho con humetría</p></div></div>
+<div class="pv"><div class="pvh"><span class="lg">CN</span><span class="w6" style="flex-grow: 1">Informe de resultados · NOM-035</span></div><div style="padding: 16px; display: flex; flex-direction: column; gap: 8px"><p class="sm mfg">Portada del informe y del expediente, con tu correo y teléfono al pie.</p><p class="sm" style="color: var(--seal)">hecho con humetría</p></div></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

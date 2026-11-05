@@ -6,181 +6,157 @@ namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
-use App\Modules\Instruments\Contracts\Instruments;
-use App\Modules\Instruments\Contracts\Nom035Guides;
-use App\Modules\Instruments\Data\RiskLevel;
-use App\Modules\Organization\Contracts\Headcount;
-use App\Modules\Responses\Contracts\ResponseReader;
-use App\Modules\Results\Contracts\EvaluationResults;
+use App\Modules\Complaints\Contracts\ComplaintsToAcknowledge;
+use App\Modules\Complaints\Data\ComplaintToAcknowledge;
+use App\Modules\Seating\Contracts\SeatingRoute;
+use App\Modules\Telework\Contracts\TeleworkRoute;
+use App\Modules\Telework\Data\UnreviewedAccidents;
+use App\Modules\Tenancy\Data\RouteProgress;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * What the company's panel shows: the evaluation in course that closes soonest, what comes next, where each work
- * center stands in its two-year cycle and the closed evaluations. Campaigns and results are read through their
- * contracts; answers only ever counted, and scored only through the minimum group.
+ * What the company's panel shows (rediseño v2, board V2-Panel): what to attend first, where each work center stands in the
+ * route of each standard, and what falls due this week. Each module tells its part through its contracts; the urgencies
+ * reach only whoever may act on them, and a complaint is told by its kind and deadline, never by what it says.
  */
 final readonly class DashboardPage
 {
-    private const int MAX_STEPS = 5;
+    private const int CENTERS_PER_PAGE = 10;
 
-    private const int CYCLE_PER_PAGE = 10;
+    private const int URGENCIES = 5;
 
-    private const int CLOSED_PER_PAGE = 5;
+    private const int WEEK = 5;
 
     public function __construct(
         private CampaignRecords $campaigns,
-        private EvaluationResults $results,
-        private ResponseReader $responses,
-        private Instruments $instruments,
-        private Nom035Guides $guides,
-        private Headcount $headcount,
+        private Nom035Route $nom035,
+        private TeleworkRoute $telework,
+        private SeatingRoute $seating,
+        private ComplaintsToAcknowledge $complaints,
+        private PanelUrgencies $urgencies,
     ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function props(bool $canManage, bool $canSeeScreenings): array
-    {
-        $current = $this->campaigns->current();
-        $active = array_values(array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->daysLeft !== null));
-        $drafts = array_values(array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->launchedOn === null));
-        $closed = $this->campaigns->closedEvaluations(self::CLOSED_PER_PAGE, 'closed');
-        $cycle = $this->cycle();
-        $names = $this->names([...array_map(fn (CampaignRecord $campaign): string => $campaign->workCenterId, $current), ...array_map(fn (CampaignRecord $campaign): string => $campaign->workCenterId, $closed->items())]);
-        $steps = $this->steps($current, $drafts, $names, $canManage, $canSeeScreenings);
-
-        return [
-            'today' => ucfirst(CarbonImmutable::now(config()->string('app.display_timezone'))->isoFormat('dddd D [de] MMMM')),
-            // Every evaluation hangs from a work center: until there is one, the panel points there first.
-            'hasWorkCenters' => $cycle->total() > 0,
-            'counts' => ['active' => count($active), 'drafts' => count($drafts)],
-            'active' => $active === [] ? null : [
-                'id' => $active[0]->id,
-                'workCenter' => $names[$active[0]->workCenterId] ?? '',
-                'kindLabel' => $active[0]->kindLabel,
-                'instruments' => $this->titles($active[0]->instruments),
-                'closesOn' => $active[0]->closesOn,
-                'daysLeft' => $active[0]->daysLeft,
-                ...self::progress($active[0]),
-            ],
-            'nextSteps' => array_slice($steps, 0, self::MAX_STEPS),
-            'pendingSteps' => count($steps),
-            'cycle' => $cycle,
-            'closed' => $closed->through(fn (CampaignRecord $campaign): array => [
-                'id' => $campaign->id,
-                'workCenter' => $names[$campaign->workCenterId] ?? '',
-                'instruments' => $this->titles($campaign->instruments),
-                'closedOn' => $campaign->closedOn,
-                ...self::progress($campaign),
-                'final' => $this->results->finalLevels($campaign),
-            ]),
-            'levels' => array_map(fn (RiskLevel $level): array => ['value' => $level->value, 'label' => $level->label()], RiskLevel::cases()),
-        ];
-    }
-
-    /**
-     * Drafts to launch and reports to complete for whoever manages campaigns; people to channel for whoever may see
-     * the Guía I.
-     *
-     * @param  list<CampaignRecord>  $current
-     * @param  list<CampaignRecord>  $drafts
-     * @param  array<string, string>  $names
-     * @return list<array{kind: string, campaignId: string, workCenter: string, workers: int|null, instruments: list<string>, people: int|null}>
-     */
-    private function steps(array $current, array $drafts, array $names, bool $canManage, bool $canSeeScreenings): array
-    {
-        $step = fn (string $kind, CampaignRecord $campaign, ?int $people = null): array => [
-            'kind' => $kind,
-            'campaignId' => $campaign->id,
-            'workCenter' => $names[$campaign->workCenterId] ?? '',
-            // What a draft will apply, to how many.
-            'workers' => $kind === 'launch' ? $campaign->workers : null,
-            'instruments' => $kind === 'launch' ? $this->titles($campaign->instruments) : [],
-            'people' => $people,
-        ];
-        $closed = array_values(array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->closed && $campaign->kind === 'nom035_evaluation'));
-        $launched = array_values(array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->launchedOn !== null));
-        $unreported = $canManage ? $this->results->withoutReportDetails(array_map(fn (CampaignRecord $campaign): string => $campaign->id, $closed)) : [];
-        $requiring = $canSeeScreenings ? $this->responses->requiringCounts(array_map(fn (CampaignRecord $campaign): string => $campaign->id, $launched)) : [];
-
-        return [
-            ...($canManage ? array_map(fn (CampaignRecord $draft): array => $step('launch', $draft), $drafts) : []),
-            ...array_map(fn (CampaignRecord $campaign): array => $step('report', $campaign), array_values(array_filter($closed, fn (CampaignRecord $campaign): bool => in_array($campaign->id, $unreported, true)))),
-            ...array_map(fn (CampaignRecord $campaign): array => $step('screenings', $campaign, $requiring[$campaign->id]), array_values(array_filter($launched, fn (CampaignRecord $campaign): bool => isset($requiring[$campaign->id])))),
-        ];
-    }
-
-    /**
-     * The work centers in use, by name, each with its people, its guides and where it stands in its cycle.
-     *
-     * @return LengthAwarePaginator<int, array{id: string, name: string, workers: int, instruments: list<string>, standing: string, from: string|null, until: string|null, elapsed: int}>
-     */
-    private function cycle(): LengthAwarePaginator
+    public function props(string $tenantSlug, int $userId, bool $seesScreenings, bool $reviewsNotices, bool $handlesComplaints): array
     {
         $page = WorkCenter::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')
-            ->paginate(self::CYCLE_PER_PAGE, ['id', 'name'], 'cycle')->withQueryString();
-        $ids = array_values(array_map(fn (WorkCenter $workCenter): string => $workCenter->id, $page->items()));
-        $cycles = $ids === [] ? [] : $this->campaigns->cycles($ids);
-        $headcount = $ids === [] ? [] : $this->headcount->byWorkCenter();
+            ->paginate(self::CENTERS_PER_PAGE, ['id', 'name'], 'centers')->withQueryString();
+        $ids = array_values(array_map(fn (WorkCenter $center): string => $center->id, $page->items()));
+        $names = $this->names();
+        $current = $this->campaigns->current();
+        $latest = $ids === [] ? [] : $this->campaigns->latestClosedEvaluations($ids);
+        // Any launched campaign may have Guía I to channel, a Guía I by event included.
+        $launched = array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->launchedOn !== null);
+        $evaluations = array_values(array_unique(array_map(fn (CampaignRecord $campaign): string => $campaign->id, [...array_values($latest), ...$launched])));
+        $toChannel = $seesScreenings && $evaluations !== [] ? $this->nom035->toChannel($evaluations) : [];
+        $routes = $ids === [] ? ['nom035' => [], 'nom037' => [], 'seating' => []] : [
+            'nom035' => $this->nom035->progress($ids, $current, $latest, $toChannel),
+            'nom037' => $this->telework->progress($ids),
+            'seating' => $this->seating->progress($ids),
+        ];
+        $urgencies = [
+            ...($reviewsNotices ? array_map(fn (UnreviewedAccidents $accidents): array => $this->urgencies->accident($accidents, $names, $tenantSlug), $this->telework->accidents()) : []),
+            ...$this->urgencies->screenings($toChannel, [...array_values($latest), ...$launched], $names, $tenantSlug),
+            ...($handlesComplaints ? array_map(fn (ComplaintToAcknowledge $complaint): array => $this->complaint($complaint, $tenantSlug), $this->complaints->soonest($userId, self::URGENCIES)) : []),
+        ];
 
-        return $page->through(function (WorkCenter $workCenter) use ($cycles, $headcount): array {
-            $workers = $headcount[$workCenter->id] ?? 0;
-            $cycle = $cycles[$workCenter->id];
-
-            return [
-                'id' => $workCenter->id,
-                'name' => $workCenter->name,
-                'workers' => $workers,
-                'instruments' => array_map(fn (string $numeral): string => "Guía {$numeral}", $this->guides->for($workers)),
-                'standing' => $cycle->standing,
-                'from' => $cycle->from,
-                'until' => $cycle->until,
-                'elapsed' => $cycle->elapsed,
-            ];
-        });
+        return [
+            'today' => ucfirst($this->today()->isoFormat('dddd D [de] MMMM')),
+            // Every route hangs from a work center: until there is one, the panel points there first.
+            'hasWorkCenters' => $page->total() > 0,
+            'summary' => [
+                'norms' => ($ids === [] ? 0 : 1) + (self::anyApplies($routes['nom037']) ? 1 : 0) + (self::anyApplies($routes['seating']) ? 1 : 0),
+                'centers' => $page->total(),
+            ],
+            'urgencies' => array_slice($urgencies, 0, self::URGENCIES),
+            'week' => $this->week($current, $names),
+            'centers' => $page->through(fn (WorkCenter $center): array => [
+                'id' => $center->id,
+                'name' => $center->name,
+                'nom035' => self::route($routes['nom035'][$center->id]),
+                'nom037' => self::route($routes['nom037'][$center->id]),
+                'seating' => self::route($routes['seating'][$center->id]),
+            ]),
+        ];
     }
 
     /**
-     * @param  list<string>  $ids
-     * @return array<string, string> work center names by id, archived ones included
+     * @return array{norm: string, title: string, detail: string, action: string, href: string}
      */
-    private function names(array $ids): array
+    private function complaint(ComplaintToAcknowledge $complaint, string $tenantSlug): array
     {
-        if ($ids === []) {
-            return [];
-        }
+        $today = $this->today();
+        $when = match ($complaint->dueOn) {
+            $today->toDateString() => 'Vence hoy',
+            $today->addDay()->toDateString() => 'Vence mañana',
+            default => ($complaint->dueOn < $today->toDateString() ? 'Venció el ' : 'Vence el ').self::day($complaint->dueOn),
+        };
 
+        return [
+            'norm' => 'Quejas',
+            'title' => $complaint->title,
+            'detail' => "{$when} · la ves porque te designaron · sin contenido aquí",
+            'action' => 'Acusar recibo',
+            'href' => route('tenant.complaints.cases.show', ['tenant' => $tenantSlug, 'complaint' => $complaint->id], false),
+        ];
+    }
+
+    /**
+     * The evaluations in course that close within the next seven days, the soonest first.
+     *
+     * @param  list<CampaignRecord>  $current
+     * @param  array<string, string>  $names
+     * @return list<array{day: string, text: string}>
+     */
+    private function week(array $current, array $names): array
+    {
+        $closing = array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->kind === 'nom035_evaluation' && $campaign->daysLeft !== null && $campaign->daysLeft <= 7);
+
+        return array_slice(array_values(array_map(fn (CampaignRecord $campaign): array => [
+            'day' => ucfirst(str_replace('.', '', $this->today()->addDays($campaign->daysLeft ?? 0)->isoFormat('ddd D MMM'))),
+            'text' => 'cierra la evaluación NOM-035 de '.($names[$campaign->workCenterId] ?? ''),
+        ], $closing)), 0, self::WEEK);
+    }
+
+    /** @return array<string, string> every work center's name by id, archived ones included */
+    private function names(): array
+    {
         $names = [];
 
-        foreach (WorkCenter::query()->whereIn('id', array_unique($ids))->get(['id', 'name']) as $workCenter) {
-            $names[$workCenter->id] = $workCenter->name;
+        foreach (WorkCenter::query()->get(['id', 'name']) as $center) {
+            $names[$center->id] = $center->name;
         }
 
         return $names;
     }
 
-    /**
-     * @param  list<string>  $keys
-     * @return list<string> "Guía I", "Guía III"
-     */
-    private function titles(array $keys): array
+    private function today(): CarbonImmutable
     {
-        return array_map(fn (string $key): string => $this->instruments->definition($key)->shortTitle, $keys);
+        return CarbonImmutable::now(config()->string('app.display_timezone'));
     }
 
     /**
-     * The guide that measures the campaign (the last one applied): answered against the sample when Guía III takes
-     * one, against everyone invited to it when not.
-     *
-     * @return array{completed: int, target: int}
+     * @param  array<string, RouteProgress>  $routes
      */
-    private static function progress(CampaignRecord $campaign): array
+    private static function anyApplies(array $routes): bool
     {
-        $main = array_last($campaign->instruments) ?? '';
-        $sampleSize = $main === 'nom035.guide-iii' ? $campaign->sampleSize : null;
+        return array_any($routes, fn (RouteProgress $route): bool => $route->applies);
+    }
 
-        return ['completed' => $campaign->answered[$main] ?? 0, 'target' => $sampleSize ?? $campaign->invited[$main] ?? 0];
+    /**
+     * @return array{applies: bool, done: list<bool>, status: string, answered: bool}
+     */
+    private static function route(RouteProgress $route): array
+    {
+        return ['applies' => $route->applies, 'done' => $route->done, 'status' => $route->status, 'answered' => $route->answered];
+    }
+
+    /** A Y-m-d day as the design system writes it: "27 feb 2026". */
+    private static function day(string $date): string
+    {
+        return str_replace('.', '', CarbonImmutable::parse($date)->isoFormat('D MMM YYYY'));
     }
 }

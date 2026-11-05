@@ -42,6 +42,14 @@ final readonly class CommitteeGate implements Committee
         return array_values(array_filter($assigned, $this->isReviewer(...)));
     }
 
+    public function centersWithMembers(array $workCenterIds): array
+    {
+        $seated = CommitteeAssignment::query()->whereIn('work_center_id', $workCenterIds)->get(['work_center_id', 'user_id'])
+            ->filter(fn (CommitteeAssignment $assignment): bool => $this->isReviewer($assignment->user_id));
+
+        return array_values(array_unique($seated->map(fn (CommitteeAssignment $assignment): string => $assignment->work_center_id)->all()));
+    }
+
     private function isReviewer(int $userId): bool
     {
         return array_any($this->members->reviewers(), fn (MemberSummary $member): bool => $member->userId === $userId);

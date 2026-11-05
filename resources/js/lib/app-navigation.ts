@@ -6,7 +6,6 @@ import {
     Laptop,
     Armchair,
     Inbox,
-    MessageSquareWarning,
     UserCog,
     Users,
 } from 'lucide-react';
@@ -18,9 +17,6 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as campaigns } from '@/routes/tenant/campaigns';
-import { index as complaintCases } from '@/routes/tenant/complaints';
-import { show as channel } from '@/routes/tenant/complaints/channel';
-import { index as complaintHandlers } from '@/routes/tenant/complaints/handlers';
 import { index as disclosure } from '@/routes/tenant/disclosure';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as programs } from '@/routes/tenant/interventions';
@@ -32,64 +28,69 @@ import { index as teleworkNotices } from '@/routes/tenant/telework/notices';
 import { edit as teleworkSettings } from '@/routes/tenant/telework/settings';
 import { index as teleworkTrainings } from '@/routes/tenant/telework/trainings';
 import { index as workCenters } from '@/routes/tenant/work-centers';
+import {
+    complaintCasesItems,
+    complaints,
+    handlesOrManagesComplaints,
+} from '@/lib/complaints-navigation';
 import { toUrl } from '@/lib/utils';
-import type { BreadcrumbItem, CurrentTenant, InCourse, NavItem } from '@/types';
+import type { BreadcrumbItem, InCourse, NavItem, NavTenant } from '@/types';
 
-/** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
-export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'> &
-    Partial<Pick<CurrentTenant, 'type'>>;
+export type { NavTenant } from '@/types';
 
 /** A union has no compliance tools (the server answers 404 to them); everything else is a company's. */
 const isUnion = (tenant: NavTenant): boolean => tenant.type === 'union';
 
+/** The company's own pages the role may open: a union has no work centers, and its people are its members. */
+const companyItems = (tenant: NavTenant): NavItem[] => [
+    { title: 'Panel', href: tenantDashboard(tenant.slug), icon: House },
+    ...(isUnion(tenant)
+        ? []
+        : [
+              {
+                  title: 'Centros de trabajo',
+                  href: workCenters(tenant.slug),
+                  icon: Factory,
+              },
+          ]),
+    ...(tenant.can.manage_organization
+        ? [
+              {
+                  title: isUnion(tenant) ? 'Agremiados' : 'Empleados',
+                  href: employees(tenant.slug),
+                  icon: Users,
+              },
+          ]
+        : []),
+    ...(tenant.can.manage_members
+        ? [{ title: 'Usuarios', href: members(tenant.slug), icon: UserCog }]
+        : []),
+];
+
 /**
- * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
- * without one; the company's own pages appear only inside a company, and only those its role may open. A superadmin
- * outside a company gets none: /admin sends them to Empresas, which is their start.
+ * The pages of the panel, as the sidebar and the ⌘K palette list them (board 40, V4-Menu-Roles). Panel is the current
+ * company's, or /admin without one; the company's own pages appear only inside a company, and only those its role may
+ * open. A superadmin outside a company gets none: /admin sends them to Empresas, which is their start. The committee's
+ * only pages are NOM-037's and Ley Silla's (under Cumplimiento); the outside handler of complaints sees its cases and
+ * nothing else of the company.
  */
 export const mainNavItems = (
     tenant: NavTenant | null,
     isSuperadmin: boolean,
 ): NavItem[] => {
-    // The committee's only pages are NOM-037's (under Cumplimiento), so its main sidebar has nothing else.
-    if (tenant?.role === 'committee' || tenant?.role === 'complaints') {
-        return [];
-    }
-
     if (tenant === null) {
         return isSuperadmin
             ? []
             : [{ title: 'Panel', href: dashboard(), icon: House }];
     }
 
-    const panel: NavItem = {
-        title: 'Panel',
-        href: tenantDashboard(tenant.slug),
-        icon: House,
-    };
-    const workCentersItem: NavItem = {
-        title: 'Centros de trabajo',
-        href: workCenters(tenant.slug),
-        icon: Factory,
-    };
-    const items = isUnion(tenant) ? [panel] : [panel, workCentersItem];
+    if (tenant.role === 'committee') {
+        return [];
+    }
 
-    const employeesItem = {
-        title: 'Empleados',
-        href: employees(tenant.slug),
-        icon: Users,
-    };
-    const membersItem = {
-        title: 'Usuarios',
-        href: members(tenant.slug),
-        icon: UserCog,
-    };
-
-    return [
-        ...items,
-        ...(tenant.can.manage_organization ? [employeesItem] : []),
-        ...(tenant.can.manage_members ? [membersItem] : []),
-    ];
+    return tenant.role === 'complaints'
+        ? complaintCasesItems(tenant)
+        : companyItems(tenant);
 };
 
 /** NOM-037's own pages, under its entry: only those the role may open (the server answers 403 to the rest anyway). */
@@ -125,35 +126,6 @@ const seating = (tenant: NavTenant): NavItem => ({
 });
 
 /**
- * The channel for complaints and reports of NOM-035 (8.1 b): the cases of whoever handles them, and the channel and who
- * handles it for whoever manages it. A handler's start is its cases; a manager who handles none starts at the channel.
- */
-const complaints = (tenant: NavTenant): NavItem => ({
-    title: 'Quejas',
-    href: tenant.can.handle_complaints
-        ? complaintCases(tenant.slug)
-        : channel(tenant.slug),
-    icon: MessageSquareWarning,
-    children: [
-        ...(tenant.can.handle_complaints
-            ? [{ title: 'Casos', href: complaintCases(tenant.slug) }]
-            : []),
-        ...(tenant.can.manage_complaint_channel
-            ? [
-                  { title: 'Canal', href: channel(tenant.slug) },
-                  {
-                      title: 'Quién atiende',
-                      href: complaintHandlers(tenant.slug),
-                  },
-              ]
-            : []),
-    ],
-});
-
-const handlesOrManagesComplaints = (tenant: NavTenant): boolean =>
-    tenant.can.handle_complaints || tenant.can.manage_complaint_channel;
-
-/**
  * NOM-035's entry: the evaluations, the Programas de intervención (num. 8.3 to 8.5) and the policy and its disclosure (5.1,
  * 5.7), for whoever may read each; with only the evaluations it stays a plain link.
  */
@@ -184,19 +156,14 @@ const nom035 = (tenant: NavTenant, inCourse: number): NavItem => {
 
 /**
  * The compliance tools of the current company, for every role: who may change them is the page's to say. The committee
- * sees only NOM-037 and Ley Silla.
+ * sees only NOM-037 and Ley Silla; the outside handler of complaints has its cases in the main section instead.
  */
 export const complianceNavItems = (
     tenant: NavTenant | null,
     inCourse = 0,
 ): NavItem[] => {
-    if (tenant === null || isUnion(tenant)) {
+    if (tenant === null || isUnion(tenant) || tenant.role === 'complaints') {
         return [];
-    }
-
-    // The handler of complaints has no tool of the company but the channel.
-    if (tenant.role === 'complaints') {
-        return tenant.can.handle_complaints ? [complaints(tenant)] : [];
     }
 
     return [

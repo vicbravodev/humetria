@@ -21,4 +21,12 @@ interface Committee
      * @return list<int>
      */
     public function userIdsOf(string $workCenterId): array;
+
+    /**
+     * Of those work centers, the ones with someone on the Comisión who still holds a reviewing role, in one read.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return list<string>
+     */
+    public function centersWithMembers(array $workCenterIds): array;
 }

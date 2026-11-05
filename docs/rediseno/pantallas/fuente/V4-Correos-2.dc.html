@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Correos de quejas y compensación · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--bsoft:#7FD3C6;--bdeep:#064A43;--r-alto:#BC6A48;--r-alto-bg:#F8E7DF;--r-alto-fg:#9A4527;--r-medio:#C9A24A;--r-medio-bg:#F7EFD9;--r-medio-fg:#7A5F1C;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08);--float:0 2px 6px rgba(20,33,31,.06),0 16px 40px -8px rgba(20,33,31,.16);--edge:transparent}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--bsoft:#1E8C7F;--bdeep:#B8F5EC;--r-alto:#E08A66;--r-alto-bg:#3B241C;--r-alto-fg:#F2A686;--r-medio:#D9B865;--r-medio-bg:#352C17;--r-medio-fg:#E6C982;--raised:0 0 0 1px #1C2826;--float:0 0 0 1px #26332F,0 16px 40px -8px rgba(0,0,0,.5);--edge:rgba(255,255,255,.06)}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app a:hover{text-decoration:underline;text-underline-offset:3px}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible,.app textarea:focus-visible,.app input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app h3,.app p,.app ul,.app ol{margin:0}
+.app ul,.app ol{padding-left:20px}
+.sm{font-size:14px;line-height:20px}.xs{font-size:13px;line-height:18px}
+.mfg{color:var(--mfg)}.pri{color:var(--primary)}.alto{color:var(--r-alto-fg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.h1{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-0.015em}
+.lead{font-size:18px;line-height:28px;color:var(--mfg)}
+.h2{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.005em}
+.h3{font-size:17px;line-height:24px;font-weight:600}
+.num{font-size:28px;line-height:34px;font-weight:600;letter-spacing:-0.01em}
+.big{font-size:40px;line-height:46px;font-weight:600;letter-spacing:-0.02em}
+.btn{height:44px;padding:0 18px;border-radius:8px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.btn-g{color:var(--primary) !important}
+.btn-o:hover,.btn-g:hover{background:var(--muted)}
+.app .btn{font-size:15px}.app .btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn-i{width:44px;padding:0}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.av{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sec);color:var(--fg);flex-shrink:0}
+.navi{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 10px;border-radius:8px;font-size:15px;color:var(--fg) !important;text-decoration:none !important}
+.navi svg{color:var(--mfg)}
+.navi.on{background:var(--card);font-weight:500;box-shadow:0 0 0 1px var(--border)}
+.navi.on svg{color:var(--primary)}
+.navi .cnt{margin-left:auto;font-size:12px;font-weight:600;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--r-alto-bg);color:var(--r-alto-fg);display:inline-flex;align-items:center;justify-content:center}
+.panel{background:var(--bg);border-radius:14px;box-shadow:var(--raised);border-top:1px solid var(--edge)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px}
+.pad{padding:20px 24px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:var(--muted);color:var(--mfg);border:1px solid var(--border)}
+.chip.ok{background:var(--accent);color:var(--primary);border-color:transparent}
+.chip.no{background:var(--r-alto-bg);color:var(--r-alto-fg);border-color:transparent}
+.chip.med{background:var(--r-medio-bg);color:var(--r-medio-fg);border-color:transparent}
+.dot{width:8px;height:8px;border-radius:999px;background:currentColor;flex-shrink:0}
+.st{width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.st.ok{background:var(--primary);color:var(--pfg)}
+.st.no{border:1.5px dashed var(--r-alto)}
+.st.nx{box-shadow:inset 0 0 0 2px var(--primary)}
+.st.na{background:var(--off);color:var(--mfg)}
+.bar{height:8px;border-radius:999px;background:var(--off);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:999px;background:var(--primary)}
+.li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 20px;border-top:1px solid var(--border)}
+.li:first-child{border-top:0}
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl th{font-size:13px;font-weight:500;color:var(--mfg);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--muted)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+.inp{height:44px;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:0 12px;display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg)}
+.ta{min-height:110px;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:10px 12px;font-size:15px;line-height:22px;font-family:inherit;color:var(--fg);width:100%;resize:vertical}
+.lbl{font-size:14px;font-weight:500}
+.hint{font-size:13px;line-height:18px;color:var(--mfg)}
+.opt{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:52px;padding:13px 16px;border-radius:10px;border:1px solid var(--border);background:var(--card);text-align:left;cursor:pointer;font-size:15px;line-height:22px}
+.opt:hover{border-color:var(--input)}
+.opt.on{border-color:var(--primary);background:var(--accent);box-shadow:inset 0 0 0 1px var(--primary)}
+.opt .radio{width:18px;height:18px;border-radius:999px;border:1.5px solid var(--input);flex-shrink:0;margin-top:2px;background:var(--card)}
+.opt.on .radio{border:5px solid var(--primary)}
+.opt .ck{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--input);flex-shrink:0;margin-top:2px;background:var(--card)}
+.opt.on .ck{background:var(--primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--primary)}
+.seg{display:inline-flex;padding:3px;border-radius:10px;background:var(--muted);border:1px solid var(--border);gap:2px}
+.seg button,.seg a{height:36px;padding:0 14px;border-radius:8px;border:0;background:transparent;font-size:14px;font-weight:500;color:var(--mfg) !important;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none !important}
+.seg .on{background:var(--card);color:var(--fg) !important;box-shadow:0 1px 2px rgba(20,33,31,.08),0 0 0 1px var(--border)}
+.seg .n{font-size:12px;color:var(--mfg)}
+.ban{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;font-size:15px;line-height:22px}
+.ban.warn{background:var(--r-medio-bg);color:var(--fg)}
+.ban.warn svg{color:var(--r-medio-fg)}
+.ban.bad{background:var(--r-alto-bg)}
+.ban.bad svg{color:var(--r-alto-fg)}
+.ban.info{background:var(--accent)}
+.ban.info svg{color:var(--primary)}
+.ban.mut{background:var(--muted);border:1px solid var(--border)}
+.next{border-radius:16px;background:var(--card);border:1px solid var(--border);box-shadow:var(--raised);padding:24px 28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;position:relative;overflow:hidden}
+.next::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
+.eyebrow{font-size:13px;line-height:18px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--primary)}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 16px;font-size:15px}
+.kv dt{color:var(--mfg)}.kv dd{margin:0}
+.crumb{gap:8px;padding:14px 24px;border-bottom:1px solid var(--border);font-size:14px}
+.crumb a{color:var(--mfg)}
+.ph{display:block;height:10px;border-radius:999px;background:var(--off)}
+.divh{height:1px;background:var(--border)}
+.qrbox{width:96px;height:96px;border-radius:10px;background:var(--card);border:1px solid var(--border);padding:8px;flex-shrink:0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+@media (max-width:1240px){.cols{grid-template-columns:minmax(0,1fr) !important}}@media (max-width:1080px){.side{width:100% !important}.side .navs{flex-direction:row !important;flex-wrap:wrap}.side .foot{display:none !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 40px 48px 64px; background: var(--frame)"><div class="col" style="gap: 28px; max-width: 1340px; margin: 0 auto">
+<header class="col" style="gap: 8px"><span class="eyebrow">Comunicaciones</span><h1 class="h1">Correos de quejas y compensación</h1>
+<p class="lead" style="max-width: 820px">Ningún correo de quejas incluye el contenido de un caso. La queja anónima no recibe correos: se consulta con referencia y clave.</p></header>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; align-items: start" class="cols">
+<section class="col" style="gap: 8px"><span class="eyebrow">Quien atiende · una vez al día</span>
+<div class="card" style="overflow: hidden"><div class="col" style="gap: 2px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="xs mfg">De: Autopartes Demo vía Humetría</span><span class="w6">Tienes 2 casos por atender</span></div>
+<div class="col" style="gap: 14px; padding: 24px"><div class="row" style="gap: 10px"><span class="av" style="border-radius: 8px">AD</span><span class="w6">Autopartes Demo</span></div><p class="w6" style="font-size: 18px">Hola, Olga</p><p class="sm">Hay 2 casos que esperan acuse de recibo. El primero vence mañana. Por privacidad, este correo no incluye lo que dicen.</p><span class="btn btn-p" style="align-self: flex-start">Ver mis casos</span><p class="xs mfg">Lo recibes porque te designaron para atender quejas en Autopartes Demo.</p><div class="divh"></div><p class="xs mfg" style="text-align: center">hecho con <span class="w6">humetría</span></p></div></div></section>
+<section class="col" style="gap: 8px"><span class="eyebrow">Persona · queja confidencial</span>
+<div class="card" style="overflow: hidden"><div class="col" style="gap: 2px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="xs mfg">De: Autopartes Demo vía Humetría</span><span class="w6">Recibimos su queja</span></div>
+<div class="col" style="gap: 14px; padding: 24px"><div class="row" style="gap: 10px"><span class="av" style="border-radius: 8px">AD</span><span class="w6">Autopartes Demo</span></div><p class="w6" style="font-size: 18px">Hola</p><p class="sm">Su queja con referencia K7T-2HPD ya la leyó la persona designada. Le responderemos a más tardar el 2 de diciembre. Para ver los mensajes, entre con su referencia.</p><span class="btn btn-p" style="align-self: flex-start">Ver cómo va</span><p class="xs mfg">Solo usted y quien atiende su queja pueden verla.</p><div class="divh"></div><p class="xs mfg" style="text-align: center">hecho con <span class="w6">humetría</span></p></div></div></section>
+<section class="col" style="gap: 8px"><span class="eyebrow">Designación · persona externa</span>
+<div class="card" style="overflow: hidden"><div class="col" style="gap: 2px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="xs mfg">De: Autopartes Demo vía Humetría</span><span class="w6">Te designaron para atender quejas</span></div>
+<div class="col" style="gap: 14px; padding: 24px"><div class="row" style="gap: 10px"><span class="av" style="border-radius: 8px">AD</span><span class="w6">Autopartes Demo</span></div><p class="w6" style="font-size: 18px">Hola, Lic. Patricia Leal</p><p class="sm">Autopartes Demo te designó para atender las quejas contra la dirección. Entras con tu enlace personal, sin contraseña, y solo ves los casos que te toquen.</p><span class="btn btn-p" style="align-self: flex-start">Aceptar y entrar</span><p class="xs mfg">Si no esperabas este correo, ignóralo y no tendrás acceso.</p><div class="divh"></div><p class="xs mfg" style="text-align: center">hecho con <span class="w6">humetría</span></p></div></div></section>
+<section class="col" style="gap: 8px"><span class="eyebrow">Compensación · reporte compartido</span>
+<div class="card" style="overflow: hidden"><div class="col" style="gap: 2px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="xs mfg">De: Autopartes Demo vía Humetría</span><span class="w6">Te compartieron un reporte de compensación</span></div>
+<div class="col" style="gap: 14px; padding: 24px"><div class="row" style="gap: 10px"><span class="av" style="border-radius: 8px">AD</span><span class="w6">Autopartes Demo</span></div><p class="w6" style="font-size: 18px">Hola</p><p class="sm">Autopartes Demo te compartió el reporte "Revisión 2027 · 5 %". El enlace vence el sábado 7 de noviembre a las 16:06.</p><span class="btn btn-p" style="align-self: flex-start">Ver reporte</span><p class="xs mfg">Los grupos de menos de 5 personas se muestran juntos. No necesitas cuenta.</p><div class="divh"></div><p class="xs mfg" style="text-align: center">hecho con <span class="w6">humetría</span></p></div></div></section>
+<section class="col" style="gap: 8px"><span class="eyebrow">RH · difusión</span>
+<div class="card" style="overflow: hidden"><div class="col" style="gap: 2px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="xs mfg">De: Autopartes Demo vía Humetría</span><span class="w6">Faltan 50 personas por confirmar la política</span></div>
+<div class="col" style="gap: 14px; padding: 24px"><div class="row" style="gap: 10px"><span class="av" style="border-radius: 8px">AD</span><span class="w6">Autopartes Demo</span></div><p class="w6" style="font-size: 18px">Hola, Olga</p><p class="sm">41 de 91 personas confirmaron que leyeron la política de prevención. Puedes mandarles un recordatorio o imprimir la lista para que firmen en papel.</p><span class="btn btn-p" style="align-self: flex-start">Recordar a 50</span><p class="xs mfg">Te lo enviamos cada lunes mientras falten confirmaciones.</p><div class="divh"></div><p class="xs mfg" style="text-align: center">hecho con <span class="w6">humetría</span></p></div></div></section>
+<section class="col" style="gap: 8px"><span class="eyebrow">Persona · NOM-035</span>
+<div class="card" style="overflow: hidden"><div class="col" style="gap: 2px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><span class="xs mfg">De: Autopartes Demo vía Humetría</span><span class="w6">La política de su centro de trabajo</span></div>
+<div class="col" style="gap: 14px; padding: 24px"><div class="row" style="gap: 10px"><span class="av" style="border-radius: 8px">AD</span><span class="w6">Autopartes Demo</span></div><p class="w6" style="font-size: 18px">Hola, Francisco</p><p class="sm">Autopartes Demo publicó su política para prevenir riesgos psicosociales y la violencia laboral. Léala y confirme que la leyó; toma 3 minutos.</p><span class="btn btn-p" style="align-self: flex-start">Leer y confirmar</span><p class="xs mfg">En la misma página puede presentar una queja de forma anónima.</p><div class="divh"></div><p class="xs mfg" style="text-align: center">hecho con <span class="w6">humetría</span></p></div></div></section>
+</div>
+</div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["claro", "oscuro"], "default": "claro", "section": "Tema"}, "$preview": {"width": 1440, "height": 1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

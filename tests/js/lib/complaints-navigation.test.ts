@@ -78,18 +78,23 @@ describe('the complaints in the navigation', () => {
         ).toBe(false);
     });
 
-    it('leaves the outside handler with the complaints and nothing else of the company', () => {
+    // Board 40 (V4-Menu-Roles): the outside handler's menu is its cases, with no section of the company around them.
+    it('leaves the outside handler with its cases and nothing else of the company', () => {
         const handler = tenant('complaints', true, false);
 
-        expect(mainNavItems(handler, false)).toEqual([]);
-        expect(complianceNavItems(handler).map((item) => item.title)).toEqual([
-            'Quejas',
-        ]);
+        expect(
+            mainNavItems(handler, false).map((item) => [
+                item.title,
+                toUrl(item.href),
+            ]),
+        ).toEqual([['Casos', '/admin/acme/complaints']]);
+        expect(complianceNavItems(handler)).toEqual([]);
     });
 
     it('leaves an outside handler who cannot handle with nothing at all', () => {
-        expect(complianceNavItems(tenant('complaints', false, false))).toEqual(
-            [],
-        );
+        const handler = tenant('complaints', false, false);
+
+        expect(mainNavItems(handler, false)).toEqual([]);
+        expect(complianceNavItems(handler)).toEqual([]);
     });
 });

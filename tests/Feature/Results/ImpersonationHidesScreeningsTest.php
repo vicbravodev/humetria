@@ -51,10 +51,10 @@ it('hides the Guía I counts of the results from an impersonating superadmin', f
 it('leaves the people to channel out of the dashboard of an impersonating superadmin', function (): void {
     $this->actingAs($this->owner)
         ->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('nextSteps.0.kind', 'screenings'));
+        ->assertInertia(fn (Assert $page) => $page->where('urgencies.0.title', '2 personas esperan valoración clínica'));
 
     impersonateOwnerOf($this->tenant);
 
     $this->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('nextSteps', []));
+        ->assertInertia(fn (Assert $page) => $page->where('urgencies', []));
 });

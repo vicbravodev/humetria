@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Seating\Http\Controllers\AcknowledgmentRequestController;
 use App\Modules\Seating\Http\Controllers\AssessmentController;
+use App\Modules\Seating\Http\Controllers\CertificateController;
 use App\Modules\Seating\Http\Controllers\DocumentController;
 use App\Modules\Seating\Http\Controllers\DossierController;
 use App\Modules\Seating\Http\Controllers\MeasureController;
@@ -89,5 +90,7 @@ Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyCo
 Route::post('admin/{tenant:slug}/seating/centers/{workCenter}/survey/close', [SurveyController::class, 'close'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey.close');
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.survey');
 
+// Where it does not apply, the certificate to print (rediseño v2, decisión D6: a page, never a PDF).
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/certificate', [CertificateController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.certificate');
 // The printable dossier of the center for an inspection; every view is audited.
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.dossier');

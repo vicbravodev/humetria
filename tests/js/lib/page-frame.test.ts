@@ -15,6 +15,9 @@ describe('isStandalone', () => {
         'complaints-public/follow-up',
         'disclosure/portal-policy',
         'disclosure-public/center',
+        'telework/applies',
+        'tenancy/applies',
+        'tenancy/onboarding',
     ])('leaves %s outside the panel', (name) => {
         expect(isStandalone(name)).toBe(true);
     });

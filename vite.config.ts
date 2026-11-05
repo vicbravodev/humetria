@@ -64,6 +64,8 @@ export default defineConfig({
     lint: {
         ...frontendArchitecture,
         ignorePatterns: [
+            // Like the formatter: docs/ holds design prototypes (docs/rediseno), not code of the app.
+            'docs/**',
             'vendor/**',
             'node_modules/**',
             'public/**',

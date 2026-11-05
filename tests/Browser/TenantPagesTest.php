@@ -30,12 +30,14 @@ it('lists the companies of a person with several, the blocked one with its statu
     TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
+    // C2 of the rediseño v2: one card with a row per company, as the panel lists its centers.
     visitPage('tenancy/companies', '/admin', $dark, $mobile)
         ->assertSee('Elige una empresa')
-        ->assertSee('Acme Industrial')
-        ->assertSee('Sin iniciar')
-        ->assertSee('Beta Foods')
-        ->assertSee('Desactivada');
+        ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Acme Industrial')
+        ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Sin iniciar')
+        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Beta Foods')
+        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Desactivada')
+        ->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="companies"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
 })->with($looks);
 
 it('opens the company that was chosen from the list', function (): void {

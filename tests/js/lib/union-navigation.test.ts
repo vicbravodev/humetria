@@ -22,7 +22,8 @@ describe('a union account', () => {
         );
     });
 
-    it('keeps the panel, employees and users, and drops the work centers', () => {
-        expect(titles(union)).toEqual(['Panel', 'Empleados', 'Usuarios']);
+    // Board 40 (V4-Menu-Roles): a union's people are its members, «Agremiados».
+    it('keeps the panel, its members and users, and drops the work centers', () => {
+        expect(titles(union)).toEqual(['Panel', 'Agremiados', 'Usuarios']);
     });
 });

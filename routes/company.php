@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\OnboardingController;
+use App\Modules\Tenancy\Http\Controllers\RouteController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
+use App\Modules\Tenancy\Http\Controllers\WorkCenterApplicabilityController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterOptionsController;
 use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
@@ -25,6 +28,14 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::post('admin/{tenant:slug}/work-centers', [WorkCenterController::class, 'store'])->where('tenant', $notReserved)->name('tenant.work-centers.store');
     Route::put('admin/{tenant:slug}/work-centers/{workCenter}', [WorkCenterController::class, 'update'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.update');
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/archive', [WorkCenterController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.archive');
+    // «¿Te aplica?» (rediseño v2, decisión A2): what NOM-035 and Ley Silla ask of a center, and the answers of one or more.
+    Route::get('admin/{tenant:slug}/work-centers/{workCenter}/applies', [WorkCenterApplicabilityController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.applies');
+    // The route of one standard in one center (boards V3-Movil and V3-AlDia).
+    Route::get('admin/{tenant:slug}/work-centers/{workCenter}/routes/{norm}', [RouteController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->whereIn('norm', ['nom035', 'nom037', 'seating'])->name('tenant.work-centers.route');
+    // The first time of a company (board V3-Onboarding): two questions per center, and its routes.
+    Route::get('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding');
+    Route::put('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding.update');
+    Route::put('admin/{tenant:slug}/work-centers/applicability', [WorkCenterApplicabilityController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.applicability.update');
     Route::post('admin/{tenant:slug}/work-centers/{workCenter}/restore', [WorkCenterController::class, 'restore'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.work-centers.restore');
 
     Route::get('admin/{tenant:slug}/members', [MemberController::class, 'index'])->where('tenant', $notReserved)->name('tenant.members.index');

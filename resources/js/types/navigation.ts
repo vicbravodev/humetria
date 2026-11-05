@@ -1,5 +1,10 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
+import type { CurrentTenant } from '@/types/tenancy';
+
+/** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
+export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'> &
+    Partial<Pick<CurrentTenant, 'type'>>;
 
 /** One step of the top bar's trail; without href it is a label (a section, or the page itself). */
 export type BreadcrumbItem = {

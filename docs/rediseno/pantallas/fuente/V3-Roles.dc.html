@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Invitar a alguien · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button,.app input{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible,.app input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.inp{height:48px;width:100%;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:0 14px;font-size:16px}
+.role{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:12px;border:1px solid var(--input);background:var(--card);text-align:left;width:100%;cursor:pointer}
+.role.on{border:2px solid var(--primary);background:var(--accent);padding:15px}
+.radio{width:20px;height:20px;border-radius:999px;border:1.5px solid var(--input);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--card);margin-top:2px}
+.role.on .radio{border:2px solid var(--primary)}
+.role.on .radio::after{content:"";width:10px;height:10px;border-radius:999px;background:var(--primary)}
+.mx{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;line-height:20px}
+.mx th{text-align:left;font-weight:500;color:var(--mfg);padding:10px 12px;background:var(--muted);border-bottom:1px solid var(--border)}
+.mx td{padding:12px;border-bottom:1px solid var(--border)}
+.mx tr:last-child td{border-bottom:0}
+.y{color:var(--primary);font-weight:600}
+.n{color:var(--mfg)}
+.ck{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px}
+.box{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--input);background:var(--card);display:inline-flex}
+.box.on{background:var(--primary);border-color:var(--primary)}
+@media (max-width:1100px){.cols{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row sm" style="gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><a href="V2-Panel.dc.html" style="color: var(--mfg)">Panel</a><span class="mfg" aria-hidden="true">/</span><a href="#" style="color: var(--mfg)">Usuarios</a><span class="mfg" aria-hidden="true">/</span><span class="w5">Invitar</span></div>
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 48px; padding: 36px 48px 56px; max-width: 1320px; margin: 0 auto; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 22px">
+<h1 style="font-size: 30px; line-height: 38px; font-weight: 600; letter-spacing: -0.015em">Invitar a alguien</h1>
+<div style="display: flex; flex-direction: column; gap: 8px"><label for="em" class="w5">Correo</label><input id="em" class="inp" value="julia.ramos@autopartes.mx"></div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px"><legend class="w5" style="padding: 0; margin-bottom: 10px">Qué hará en Humetría</legend>
+<button type="button" class="role" aria-pressed="false"><span class="radio"></span><span><span class="w6" style="display: block">Administra todo</span><span class="sm mfg">Rutas, usuarios, configuración y datos confidenciales. Para quien lleva RH.</span></span></button>
+<button type="button" class="role on" aria-pressed="true"><span class="radio"></span><span><span class="w6" style="display: block">Ayuda con las rutas</span><span class="sm mfg">Avanza tareas y documentos. No ve canalización ni datos de salud.</span></span></button>
+<button type="button" class="role" aria-pressed="false"><span class="radio"></span><span><span class="w6" style="display: block">Solo consulta</span><span class="sm mfg">Ve rutas, resultados agregados y expedientes. Para dirección.</span></span></button>
+</fieldset>
+<p class="sm mfg">Los integrantes de la Comisión y las personas trabajadoras no se invitan aquí: reciben su enlace personal desde la ruta. Quien atiende quejas se designa desde el canal de quejas.</p>
+<fieldset style="border: 0; margin: 0; padding: 0"><legend class="w5" style="padding: 0; margin-bottom: 6px">En qué centros</legend>
+<div class="ck"><span class="box on" aria-hidden="true"></span>Planta Querétaro</div>
+<div class="ck"><span class="box" aria-hidden="true"></span>Oficinas Monterrey</div>
+</fieldset>
+<div class="row" style="gap: 12px"><button type="button" class="btn btn-p">Enviar invitación</button><button type="button" class="btn btn-o">Cancelar</button></div>
+</div>
+
+<section class="card" style="overflow: hidden" aria-labelledby="mx">
+<div style="padding: 18px 20px; border-bottom: 1px solid var(--border)"><h2 id="mx" class="w6" style="font-size: 18px">Qué puede hacer cada quien</h2></div>
+<div style="overflow-x: auto"><table class="mx">
+<thead><tr><th>Puede</th><th>Administra todo</th><th>Ayuda con las rutas</th><th>Solo consulta</th><th>Comisión</th><th>Persona</th></tr></thead>
+<tbody>
+<tr><td class="w5">Ver rutas y expedientes</td><td class="y">Sí</td><td class="y">Sí</td><td class="y">Sí</td><td class="n">Solo su cola</td><td class="n">No</td></tr>
+<tr><td class="w5">Avanzar tareas y documentos</td><td class="y">Sí</td><td class="y">Sí</td><td class="n">No</td><td class="n">Solo validar y firmar</td><td class="n">Solo lo suyo</td></tr>
+<tr><td class="w5">Resultados NOM-035 agregados</td><td class="y">Sí</td><td class="y">Sí</td><td class="y">Sí</td><td class="n">No</td><td class="n">El resumen</td></tr>
+<tr><td class="w5">Canalización y datos de salud</td><td class="y">Sí</td><td class="n">No</td><td class="n">No</td><td class="n">No</td><td class="n">No</td></tr>
+<tr><td class="w5">Avisos de accidentes</td><td class="y">Sí</td><td class="y">Sí</td><td class="n">Solo ver</td><td class="n">Si afecta un lugar</td><td class="n">Los suyos</td></tr>
+<tr><td class="w5">Contenido de quejas y denuncias</td><td class="n">Solo si se le designa</td><td class="n">Solo si se le designa</td><td class="n">No</td><td class="n">Solo si se le designa</td><td class="n">Las suyas, con referencia y clave</td></tr>
+<tr><td class="w5">Canal de quejas: quién atiende y conteos</td><td class="y">Sí</td><td class="n">No</td><td class="n">No</td><td class="n">No</td><td class="n">No</td></tr>
+<tr><td class="w5">Compensación: salarios y escenarios</td><td class="y">Sí</td><td class="n">No</td><td class="n">Reportes compartidos</td><td class="n">No</td><td class="n">No</td></tr>
+<tr><td class="w5">Usuarios y configuración</td><td class="y">Sí</td><td class="n">No</td><td class="n">No</td><td class="n">No</td><td class="n">No</td></tr>
+</tbody></table></div>
+<p class="sm mfg" style="padding: 14px 20px; border-top: 1px solid var(--border)">Cada vez que alguien abre datos confidenciales, queda registrado quién y cuándo. Quien atiende quejas puede ser alguien sin cuenta (un asesor externo): entra con un enlace personal y solo ve los casos que le tocan. Nadie ve una queja en su contra.</p>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

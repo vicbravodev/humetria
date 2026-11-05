@@ -15,13 +15,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * What a work center declares for Ley Silla: its sector, and that it has no people working standing, with who declared it
+ * What a work center declares for Ley Silla: its sector (none where nobody works standing), and that it has no people working standing, with who declared it
  * and when. One per center; declaring again replaces it.
  *
  * @property string $id
  * @property string $tenant_id
  * @property string $work_center_id
- * @property Sector $sector
+ * @property Sector|null $sector
  * @property bool $no_standing_positions
  * @property int $declared_by
  * @property CarbonImmutable $declared_on

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Comparar escenarios · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--bsoft:#7FD3C6;--bdeep:#064A43;--r-alto:#BC6A48;--r-alto-bg:#F8E7DF;--r-alto-fg:#9A4527;--r-medio:#C9A24A;--r-medio-bg:#F7EFD9;--r-medio-fg:#7A5F1C;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08);--float:0 2px 6px rgba(20,33,31,.06),0 16px 40px -8px rgba(20,33,31,.16);--edge:transparent}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--bsoft:#1E8C7F;--bdeep:#B8F5EC;--r-alto:#E08A66;--r-alto-bg:#3B241C;--r-alto-fg:#F2A686;--r-medio:#D9B865;--r-medio-bg:#352C17;--r-medio-fg:#E6C982;--raised:0 0 0 1px #1C2826;--float:0 0 0 1px #26332F,0 16px 40px -8px rgba(0,0,0,.5);--edge:rgba(255,255,255,.06)}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app a:hover{text-decoration:underline;text-underline-offset:3px}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible,.app textarea:focus-visible,.app input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app h3,.app p,.app ul,.app ol{margin:0}
+.app ul,.app ol{padding-left:20px}
+.sm{font-size:14px;line-height:20px}.xs{font-size:13px;line-height:18px}
+.mfg{color:var(--mfg)}.pri{color:var(--primary)}.alto{color:var(--r-alto-fg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.h1{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-0.015em}
+.lead{font-size:18px;line-height:28px;color:var(--mfg)}
+.h2{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.005em}
+.h3{font-size:17px;line-height:24px;font-weight:600}
+.num{font-size:28px;line-height:34px;font-weight:600;letter-spacing:-0.01em}
+.big{font-size:40px;line-height:46px;font-weight:600;letter-spacing:-0.02em}
+.btn{height:44px;padding:0 18px;border-radius:8px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.btn-g{color:var(--primary) !important}
+.btn-o:hover,.btn-g:hover{background:var(--muted)}
+.app .btn{font-size:15px}.app .btn-sm{height:36px;padding:0 12px;font-size:14px}
+.btn-i{width:44px;padding:0}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.av{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sec);color:var(--fg);flex-shrink:0}
+.navi{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 10px;border-radius:8px;font-size:15px;color:var(--fg) !important;text-decoration:none !important}
+.navi svg{color:var(--mfg)}
+.navi.on{background:var(--card);font-weight:500;box-shadow:0 0 0 1px var(--border)}
+.navi.on svg{color:var(--primary)}
+.navi .cnt{margin-left:auto;font-size:12px;font-weight:600;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--r-alto-bg);color:var(--r-alto-fg);display:inline-flex;align-items:center;justify-content:center}
+.panel{background:var(--bg);border-radius:14px;box-shadow:var(--raised);border-top:1px solid var(--edge)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px}
+.pad{padding:20px 24px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:var(--muted);color:var(--mfg);border:1px solid var(--border)}
+.chip.ok{background:var(--accent);color:var(--primary);border-color:transparent}
+.chip.no{background:var(--r-alto-bg);color:var(--r-alto-fg);border-color:transparent}
+.chip.med{background:var(--r-medio-bg);color:var(--r-medio-fg);border-color:transparent}
+.dot{width:8px;height:8px;border-radius:999px;background:currentColor;flex-shrink:0}
+.st{width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.st.ok{background:var(--primary);color:var(--pfg)}
+.st.no{border:1.5px dashed var(--r-alto)}
+.st.nx{box-shadow:inset 0 0 0 2px var(--primary)}
+.st.na{background:var(--off);color:var(--mfg)}
+.bar{height:8px;border-radius:999px;background:var(--off);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:999px;background:var(--primary)}
+.li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 20px;border-top:1px solid var(--border)}
+.li:first-child{border-top:0}
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl th{font-size:13px;font-weight:500;color:var(--mfg);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--muted)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+.inp{height:44px;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:0 12px;display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg)}
+.ta{min-height:110px;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:10px 12px;font-size:15px;line-height:22px;font-family:inherit;color:var(--fg);width:100%;resize:vertical}
+.lbl{font-size:14px;font-weight:500}
+.hint{font-size:13px;line-height:18px;color:var(--mfg)}
+.opt{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:52px;padding:13px 16px;border-radius:10px;border:1px solid var(--border);background:var(--card);text-align:left;cursor:pointer;font-size:15px;line-height:22px}
+.opt:hover{border-color:var(--input)}
+.opt.on{border-color:var(--primary);background:var(--accent);box-shadow:inset 0 0 0 1px var(--primary)}
+.opt .radio{width:18px;height:18px;border-radius:999px;border:1.5px solid var(--input);flex-shrink:0;margin-top:2px;background:var(--card)}
+.opt.on .radio{border:5px solid var(--primary)}
+.opt .ck{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--input);flex-shrink:0;margin-top:2px;background:var(--card)}
+.opt.on .ck{background:var(--primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--primary)}
+.seg{display:inline-flex;padding:3px;border-radius:10px;background:var(--muted);border:1px solid var(--border);gap:2px}
+.seg button,.seg a{height:36px;padding:0 14px;border-radius:8px;border:0;background:transparent;font-size:14px;font-weight:500;color:var(--mfg) !important;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none !important}
+.seg .on{background:var(--card);color:var(--fg) !important;box-shadow:0 1px 2px rgba(20,33,31,.08),0 0 0 1px var(--border)}
+.seg .n{font-size:12px;color:var(--mfg)}
+.ban{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;font-size:15px;line-height:22px}
+.ban.warn{background:var(--r-medio-bg);color:var(--fg)}
+.ban.warn svg{color:var(--r-medio-fg)}
+.ban.bad{background:var(--r-alto-bg)}
+.ban.bad svg{color:var(--r-alto-fg)}
+.ban.info{background:var(--accent)}
+.ban.info svg{color:var(--primary)}
+.ban.mut{background:var(--muted);border:1px solid var(--border)}
+.next{border-radius:16px;background:var(--card);border:1px solid var(--border);box-shadow:var(--raised);padding:24px 28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;position:relative;overflow:hidden}
+.next::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
+.eyebrow{font-size:13px;line-height:18px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--primary)}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 16px;font-size:15px}
+.kv dt{color:var(--mfg)}.kv dd{margin:0}
+.crumb{gap:8px;padding:14px 24px;border-bottom:1px solid var(--border);font-size:14px}
+.crumb a{color:var(--mfg)}
+.ph{display:block;height:10px;border-radius:999px;background:var(--off)}
+.divh{height:1px;background:var(--border)}
+.qrbox{width:96px;height:96px;border-radius:10px;background:var(--card);border:1px solid var(--border);padding:8px;flex-shrink:0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+@media (max-width:1240px){.cols{grid-template-columns:minmax(0,1fr) !important}}@media (max-width:1080px){.side{width:100% !important}.side .navs{flex-direction:row !important;flex-wrap:wrap}.side .foot{display:none !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; padding: 8px 8px 8px 0">
+<aside class="side" style="width: 236px; flex-shrink: 0; padding: 18px 14px 14px; display: flex; flex-direction: column; gap: 18px">
+<div style="padding: 4px 10px 0"><svg width="120" height="24" viewBox="0 0 322.05 64" role="img" aria-label="humetría"><g transform="translate(-3 0)"><path d="M12 6V58M12 36C12 17 52 17 52 36V58" fill="none" stroke="var(--primary)" stroke-width="10" stroke-linecap="round"></path><clipPath id="clpv"><path d="M19.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z"></path></clipPath><path d="M29.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--bsoft)"></path><path d="M19.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--primary)"></path><path d="M29.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--bdeep)" clip-path="url(#clpv)"></path><path d="M74.96 61V17H82V33.85Q83.57 31.39 85.96 30.11Q88.35 28.82 91.37 28.82Q95.07 28.82 97.78 30.33Q100.48 31.83 101.89 35.01Q103.31 38.18 103.31 43.27V61H96.27V44.91Q96.27 41.14 95.39 39.09Q94.51 37.05 92.97 36.23Q91.43 35.42 89.42 35.42Q85.83 35.35 83.92 37.74Q82 40.13 82 44.59V61ZM120.91 61.75Q117.2 61.75 114.53 60.25Q111.86 58.74 110.41 55.53Q108.97 52.33 108.97 47.3V29.57H116.01V45.66Q116.01 49.37 116.89 51.45Q117.77 53.52 119.31 54.34Q120.85 55.15 122.86 55.15Q126.44 55.22 128.39 52.83Q130.34 50.44 130.34 45.98V29.57H137.31V61H130.71L130.4 56.54Q128.89 59.05 126.47 60.4Q124.05 61.75 120.91 61.75ZM144.35 61V29.57H150.95L151.27 33.78Q152.71 31.33 154.98 30.07Q157.24 28.82 160.13 28.82Q163.9 28.82 166.54 30.51Q169.18 32.21 170.38 35.67Q171.76 32.34 174.27 30.58Q176.79 28.82 180.18 28.82Q185.65 28.82 188.61 32.31Q191.56 35.79 191.5 43.02V61H184.52V44.91Q184.52 41.14 183.7 39.09Q182.89 37.05 181.5 36.23Q180.12 35.42 178.3 35.42Q175.03 35.35 173.24 37.74Q171.45 40.13 171.45 44.59V61H164.41V44.91Q164.41 41.14 163.62 39.09Q162.83 37.05 161.45 36.23Q160.07 35.42 158.25 35.42Q154.98 35.35 153.19 37.74Q151.39 40.13 151.39 44.59V61ZM211.93 61.75Q207.34 61.75 203.79 59.65Q200.23 57.54 198.19 53.83Q196.15 50.13 196.15 45.29Q196.15 40.45 198.22 36.74Q200.3 33.03 203.91 30.92Q207.53 28.82 212.18 28.82Q216.39 28.82 219.78 30.99Q223.18 33.15 225.16 37.24Q227.14 41.33 227.14 46.98H203.44Q203.75 50.94 206.36 53.21Q208.97 55.47 212.55 55.47Q215.45 55.47 217.33 54.18Q219.22 52.89 220.29 50.82L226.51 53.46Q225.19 55.97 223.15 57.86Q221.1 59.74 218.31 60.75Q215.51 61.75 211.93 61.75ZM203.88 41.58H219.53Q219.34 39.31 218.21 37.84Q217.08 36.36 215.45 35.61Q213.81 34.85 211.99 34.85Q210.23 34.85 208.44 35.57Q206.65 36.3 205.39 37.81Q204.13 39.31 203.88 41.58ZM244.3 61.75Q239.33 61.75 236.72 59.27Q234.11 56.79 234.11 52.14V35.61H228.9V29.57H234.11V19.77H241.09V29.57H249.58V35.61H241.09V50.82Q241.09 53.02 242.13 54.15Q243.17 55.28 245.18 55.28Q245.81 55.28 246.56 55.03Q247.31 54.78 248.26 54.09L250.83 59.43Q249.2 60.56 247.57 61.16Q245.93 61.75 244.3 61.75ZM255.74 61V29.57H262.78V35.29Q264.66 32.34 267.68 30.89Q270.7 29.45 273.9 29.45V36.17Q271.01 36.17 268.47 36.96Q265.92 37.74 264.35 39.5Q262.78 41.26 262.78 44.15V61ZM278.24 61V29.57H285.22V61ZM302.88 61.75Q297.22 61.75 294.11 59.24Q291 56.73 291 52.14Q291 47.23 294.3 44.66Q297.6 42.08 303.51 42.08H311.49Q311.11 38.62 309.54 36.8Q307.97 34.98 304.89 34.98Q302.63 34.98 300.93 35.92Q299.23 36.86 298.04 38.87L291.88 36.61Q292.89 34.54 294.55 32.75Q296.22 30.95 298.76 29.89Q301.31 28.82 304.89 28.82Q309.48 28.82 312.56 30.61Q315.64 32.4 317.12 35.73Q318.59 39.06 318.59 43.78L318.41 61H311.93L311.74 57.17Q310.49 59.37 308.25 60.56Q306.02 61.75 302.88 61.75ZM303.76 55.85Q306.09 55.85 307.88 54.81Q309.67 53.77 310.64 52.01Q311.62 50.25 311.62 48.11V47.49H305.77Q301.56 47.49 299.86 48.65Q298.17 49.81 298.17 51.95Q298.17 53.77 299.64 54.81Q301.12 55.85 303.76 55.85Z" fill="var(--fg)"></path><path d="M279.48 23.47L286.54 15.13" stroke="var(--primary)" stroke-width="6.42" stroke-linecap="round" fill="none"></path></g></svg>
+</div>
+<button type="button" class="row" style="gap: 10px; height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); cursor: pointer; text-align: left"><span class="av" style="width: 26px; height: 26px; border-radius: 6px; font-size: 11px">AD</span><span class="sm w5" style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Autopartes Demo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<nav aria-label="Principal" class="navs" style="display: flex; flex-direction: column; gap: 2px"><a href="V2-Panel.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span>Panel</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg><span>Centros de trabajo</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Empleados</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Usuarios</span></a><span class="sm mfg w5" style="padding: 16px 10px 6px">Cumplimiento</span><a href="V2-Ruta-N035.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>NOM-035</span></a><a href="V2-Centros-N037.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg><span>NOM-037</span></a><a href="V2-Ruta-Silla.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/></svg><span>Ley Silla</span></a><a href="V4-Quejas-Bandeja.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Quejas</span></a><span class="sm mfg w5" style="padding: 16px 10px 6px">Herramientas</span><a href="V4-Comp-Inicio.dc.html" class="navi on" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg><span>Compensación</span></a></nav>
+<div class="foot" style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 14px 6px 0; border-top: 1px solid var(--border)"><span class="av">OO</span><span style="display: flex; flex-direction: column; min-width: 0"><span class="sm w5">Olga Owner</span><span class="sm mfg">owner@demo.test</span></span></div>
+</aside>
+<main class="panel" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; overflow: hidden">
+<div class="row crumb"><a href="V2-Panel.dc.html">Panel</a><span class="mfg" aria-hidden="true">/</span><a href="V4-Comp-Inicio.dc.html">Compensación</a><span class="mfg" aria-hidden="true">/</span><span class="w5">Comparar</span></div>
+<div style="padding: 36px 40px 64px; width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px">
+
+<header class="row" style="gap: 24px; align-items: flex-end; flex-wrap: wrap"><div class="col" style="flex: 1 1 560px; gap: 8px"><span class="eyebrow">Compensación</span><h1 class="h1">Comparar escenarios</h1><p class="lead">Ordenados del más barato al más caro. Abajo, lo que separa tu propuesta de la del sindicato.</p></div><a href="#" class="btn btn-o"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir comparación</a></header>
+<section style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px" class="cols"><div class="card col" style="gap: 8px; padding: 22px"><span class="chip" style="align-self: flex-start">Empresa</span><span class="w6">Revisión 2027 · 4 %</span><span class="sm mfg">4 % sindicalizados · 2.5 % confianza · sin retroactivo</span><div class="divh" style="margin: 6px 0"></div><span class="xs mfg">Primer año</span><span class="num">$710,062</span><span class="sm">Cada año después: <span class="w6">$709,885</span></span></div><div class="card col" style="gap: 8px; padding: 22px"><span class="chip" style="align-self: flex-start">Empresa</span><span class="w6">Revisión 2027 · 5 %</span><span class="sm mfg">5 % sindicalizados · 3 % confianza · 2 meses de retroactivo</span><div class="divh" style="margin: 6px 0"></div><span class="xs mfg">Primer año</span><span class="num">$1,023,676</span><span class="sm mfg">+$313,614 sobre la más baja</span><span class="sm">Cada año después: <span class="w6">$877,243</span></span></div><div class="card col" style="gap: 8px; padding: 22px"><span class="chip med" style="align-self: flex-start">Sindicato</span><span class="w6">Contrapropuesta del sindicato · 7 %</span><span class="sm mfg">7 % sindicalizados · 4 % confianza · 1 mes de retroactivo</span><div class="divh" style="margin: 6px 0"></div><span class="xs mfg">Primer año</span><span class="num">$1,329,832</span><span class="sm mfg">+$619,770 sobre la más baja</span><span class="sm">Cada año después: <span class="w6">$1,223,947</span></span></div></section>
+<section class="next" style="grid-template-columns: minmax(0,1fr) minmax(0,1fr)">
+<div class="col" style="gap: 8px"><span class="eyebrow">La distancia a negociar</span><p class="h2">Entre tu 5 % y el 7 % del sindicato hay $306,156 el primer año</p><p class="mfg">Y $346,704 cada año después. Casi todo viene del salario de sindicalizados.</p></div>
+<div class="col" style="gap: 10px; padding: 18px; border-radius: 12px; background: var(--muted)"><p class="w6">Cómo se mueve</p>
+<div class="row sm" style="justify-content: space-between"><span>1 punto a sindicalizados</span><span class="w6">≈ $126,900 al año</span></div>
+<div class="row sm" style="justify-content: space-between"><span>1 punto a confianza</span><span class="w6">≈ $80,900 al año</span></div>
+<div class="row sm" style="justify-content: space-between"><span>1 mes de retroactivo</span><span class="w6">≈ $73,100</span></div>
+<a href="V4-Comp-Escenario.dc.html" class="btn btn-o btn-sm" style="align-self: flex-start; margin-top: 4px">Probar un punto medio</a></div>
+</section>
+<section class="card" style="overflow: hidden">
+<div class="pad row" style="justify-content: space-between"><h2 class="h3">Primer año por concepto</h2></div>
+<table class="tbl"><thead><tr><th>Concepto</th><th class="r">4 %</th><th class="r">5 %</th><th class="r">Sindicato 7 %</th><th class="r">7 % frente a 5 %</th></tr></thead><tbody><tr><td>Salario</td><td class="r">$526,377</td><td class="r">$763,549</td><td class="r">$986,529</td><td class="r w5">+$222,980</td></tr><tr><td>Aguinaldo</td><td class="r">$21,632</td><td class="r">$31,379</td><td class="r">$40,542</td><td class="r w5">+$9,163</td></tr><tr><td>Prima vacacional</td><td class="r">$9,051</td><td class="r">$13,099</td><td class="r">$16,942</td><td class="r w5">+$3,843</td></tr><tr><td>Cuotas del IMSS</td><td class="r">$108,437</td><td class="r">$151,001</td><td class="r">$202,293</td><td class="r w5">+$51,292</td></tr><tr><td>Infonavit</td><td class="r">$27,853</td><td class="r">$40,408</td><td class="r">$52,205</td><td class="r w5">+$11,798</td></tr><tr><td>Impuesto sobre nómina</td><td class="r">$16,712</td><td class="r">$24,241</td><td class="r">$31,320</td><td class="r w5">+$7,080</td></tr>
+<tr><td class="w6">Costo del primer año</td><td class="r w6">$710,062</td><td class="r w6">$1,023,676</td><td class="r w6">$1,329,832</td><td class="r w6">+$306,156</td></tr>
+<tr><td class="w6">Cada año después</td><td class="r w5">$709,885</td><td class="r w5">$877,243</td><td class="r w5">$1,223,947</td><td class="r w5">+$346,704</td></tr></tbody></table>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["claro", "oscuro"], "default": "claro", "section": "Tema"}, "$preview": {"width": 1440, "height": 1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

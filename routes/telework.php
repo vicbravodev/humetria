@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Modules\Telework\Http\Controllers\AcknowledgementController;
+use App\Modules\Telework\Http\Controllers\ApplicabilityController;
+use App\Modules\Telework\Http\Controllers\CertificateController;
 use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Http\Controllers\CommitteeController;
 use App\Modules\Telework\Http\Controllers\DocumentController;
@@ -29,6 +31,12 @@ Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}', [TeleworkController::class, 'center'])->where('tenant', $notReserved)->name('tenant.telework.center');
 // The printable dossier of the center for an inspection (criterio C-30); every view is audited.
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.dossier');
+
+// «¿Te aplica?» (board V2-Aplica): whether someone of the center works away from it more than 40 % of their time.
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/applies', [ApplicabilityController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.applies.show');
+// Where it does not apply, the certificate to print (decisión D6: a page, never a PDF).
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/certificate', [CertificateController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.certificate');
+Route::put('admin/{tenant:slug}/telework/centers/{workCenter}/applies', [ApplicabilityController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.applies.update');
 
 Route::get('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'edit'])->where('tenant', $notReserved)->name('tenant.telework.settings.edit');
 Route::put('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.settings.update');

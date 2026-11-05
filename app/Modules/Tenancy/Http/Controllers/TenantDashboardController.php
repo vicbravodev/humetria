@@ -21,9 +21,16 @@ final class TenantDashboardController extends Controller
             return to_route('tenant.compensation.index', $tenant);
         }
 
+        $user = $request->user();
+        // The route sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403);
+
         return Inertia::render('dashboard', $page->props(
-            $request->user()?->can('manage-campaigns') ?? false,
-            $request->user()?->can('view-trauma-screenings') ?? false,
+            $tenant->slug,
+            $user->id,
+            seesScreenings: $user->can('view-trauma-screenings'),
+            reviewsNotices: $user->can('review-workplaces'),
+            handlesComplaints: $user->can('handle-complaints'),
         ));
     }
 }

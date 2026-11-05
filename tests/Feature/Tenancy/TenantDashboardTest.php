@@ -6,18 +6,31 @@ use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Complaints\Models\Complaint;
+use App\Modules\Complaints\Models\ComplaintAssignment;
+use App\Modules\Complaints\Models\ComplaintChannel;
+use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Responses\Models\TraumaScreening;
-use App\Modules\Results\Models\ReportDetails;
+use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\DashboardPage;
+use App\Modules\Tenancy\Support\Nom035Route;
+use App\Modules\Tenancy\Support\PanelUrgencies;
+use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\WorkerNoticeFactory;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(TenantDashboardController::class, DashboardPage::class);
+mutates(TenantDashboardController::class, DashboardPage::class, Nom035Route::class, PanelUrgencies::class);
+
+// Rediseño v2 (board V2-Panel): the panel became «Atiende primero», «Dónde vas» by standard and center, the next step and
+// «Esta semana». The evaluation in course, its steps, the two-year cycle and the closed evaluations it showed before now live
+// in the NOM-035 line of each center and in NOM-035's own pages.
 
 beforeEach(function (): void {
     // Friday 30 Oct 2026, noon in Mexico City.
@@ -47,89 +60,26 @@ it('reminds a company without active work centers to add one', function (string 
 
     $this->actingAs(ownerOf($this->tenant))
         ->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->component('dashboard')->where('hasWorkCenters', false)->where('active', null));
+        ->assertInertia(fn (Assert $page) => $page->component('dashboard')->where('hasWorkCenters', false)->where('centers.total', 0));
 })->with(['none', 'only archived']);
 
-it('stops reminding once the company has an active work center', function (): void {
+it('dates the greeting and counts the standards that apply in how many centers', function (): void {
+    $plant = WorkCenter::factory()->for($this->tenant)->create();
     WorkCenter::factory()->for($this->tenant)->create();
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id]);
+    // Someone works standing there: Ley Silla applies once the center says so (A2).
+    SeatingProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);
 
     $this->actingAs(ownerOf($this->tenant))
-        ->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('hasWorkCenters', true));
-});
-
-it('dates the greeting and shows the evaluation in course that closes soonest, with who answered of how many', function (): void {
-    $offices = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficinas Monterrey']);
-    $sooner = Campaign::factory()->active('2026-11-10')->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $offices->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'workers' => 60]);
-    panelGuides($sooner, 'nom035.guide-iii', InstrumentStatus::Completed, 2);
-    panelGuides($sooner, 'nom035.guide-iii', InstrumentStatus::Pending, 3);
-    panelGuides($sooner, 'nom035.guide-i', InstrumentStatus::Pending, 5);
-    Campaign::factory()->active('2026-12-01')->create(['tenant_id' => $this->tenant->id]);
-    Campaign::factory()->create(['tenant_id' => $this->tenant->id]);
-    Campaign::factory()->active('2026-11-01')->create(); // Another company's.
-
-    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.dashboard', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->where('today', 'Viernes 30 de octubre')
-            ->where('counts', ['active' => 2, 'drafts' => 1])
-            ->where('active', [
-                'id' => $sooner->id,
-                'workCenter' => 'Oficinas Monterrey',
-                'kindLabel' => 'Evaluación NOM-035',
-                'instruments' => ['Guía I', 'Guía III'],
-                'closesOn' => '10 nov 2026',
-                'daysLeft' => 11,
-                'completed' => 2,
-                'target' => 5,
-            ]));
+            ->where('hasWorkCenters', true)
+            ->where('summary', ['norms' => 3, 'centers' => 2]));
 });
 
-it('measures a sampled Guía III against its sample', function (): void {
-    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'population' => 'sample', 'workers' => 100, 'sample_size' => 80, 'quotas' => ['female' => 80]]);
-    panelGuides($campaign, 'nom035.guide-iii', InstrumentStatus::Completed, 1);
-
-    $this->actingAs(ownerOf($this->tenant))
-        ->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('active.completed', 1)->where('active.target', 80));
-});
-
-it('lists what comes next for whoever may act on it: drafts to launch, reports to complete and people to channel', function (TenantRole $role, array $kinds): void {
-    $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Querétaro']);
-    $draft = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'workers' => 30]);
-    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'closed_at' => '2026-10-29 18:00:00']);
-    TraumaScreening::factory()->count(2)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
-    TraumaScreening::factory()->create(['campaign_id' => $closed->id]);
-    // Reported already, or closed too long ago to be on the go: neither comes next.
-    ReportDetails::factory()->create(['campaign_id' => Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id])->id]);
-    Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'closed_at' => '2026-08-01 18:00:00']);
-
-    $steps = [
-        'launch' => ['kind' => 'launch', 'campaignId' => $draft->id, 'workCenter' => 'Planta Querétaro', 'workers' => 30, 'instruments' => ['Guía I', 'Guía II'], 'people' => null],
-        'report' => ['kind' => 'report', 'campaignId' => $closed->id, 'workCenter' => 'Planta Querétaro', 'workers' => null, 'instruments' => [], 'people' => null],
-        'screenings' => ['kind' => 'screenings', 'campaignId' => $closed->id, 'workCenter' => 'Planta Querétaro', 'workers' => null, 'instruments' => [], 'people' => 2],
-    ];
-
-    $this->actingAs(memberOf($this->tenant, $role))
-        ->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('nextSteps', array_map(fn (string $kind): array => $steps[$kind], $kinds))
-            ->where('pendingSteps', count($kinds)));
-})->with([
-    'owner' => [TenantRole::Owner, ['launch', 'report', 'screenings']],
-    'HR' => [TenantRole::Hr, ['launch', 'report', 'screenings']],
-    'viewer' => [TenantRole::Viewer, []],
-]);
-
-it('shows five steps at most, counting them all', function (): void {
-    Campaign::factory()->count(6)->create(['tenant_id' => $this->tenant->id]);
-
-    $this->actingAs(ownerOf($this->tenant))
-        ->get(route('tenant.dashboard', $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->has('nextSteps', 5)->where('pendingSteps', 6));
-});
-
-it('pages each work center in use with where it stands in its two-year cycle', function (): void {
+it('pages each work center in use with where it stands in each route', function (): void {
     $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Querétaro']);
     WorkCenter::factory()->for($this->tenant)->archived()->create();
     staffOf($this->tenant, $plant, 20);
@@ -138,57 +88,130 @@ it('pages each work center in use with where it stands in its two-year cycle', f
     $this->actingAs(ownerOf($this->tenant))
         ->get(route('tenant.dashboard', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('cycle.total', 1)
-            ->where('cycle.data.0', [
+            ->where('centers.total', 1)
+            ->where('centers.data.0', [
                 'id' => $plant->id,
                 'name' => 'Planta Querétaro',
-                'workers' => 20,
-                'instruments' => ['Guía I', 'Guía II'],
-                'standing' => 'up_to_date',
-                'from' => '29 oct 2026',
-                'until' => '29 oct 2028',
-                'elapsed' => 0,
+                // Evaluated, nobody to channel and no Programa needed; no policy, results not shared, report not filled in.
+                'nom035' => ['applies' => true, 'done' => [false, true, true, false, true, false], 'status' => 'define tu política de prevención', 'answered' => true],
+                // Rediseño v2 (decisión A2): nobody teleworks nor works standing there, and it has not answered «¿Te aplica?».
+                'nom037' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false],
+                'seating' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false],
             ]));
 });
 
-it('pages the closed evaluations with their participation and final score, never an answer', function (): void {
-    $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Querétaro']);
+it('tells how the evaluation in course goes, measured against the sample of a Guía III that takes one', function (): void {
+    $offices = WorkCenter::factory()->for($this->tenant)->create();
+    DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $offices->id]);
+    $campaign = Campaign::factory()->active('2026-11-06')->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $offices->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'population' => 'sample', 'workers' => 100, 'sample_size' => 80, 'quotas' => ['female' => 80]]);
+    panelGuides($campaign, 'nom035.guide-iii', InstrumentStatus::Completed, 2);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+        ->get(route('tenant.dashboard', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('centers.data.0.nom035.status', '2 de 80 contestaron, cierra en 7 días'));
+});
+
+it('keeps the channeling unseen for whoever may not see the Guía I (num. 5.5): its stage reads as done', function (TenantRole $role, bool $done): void {
+    $plant = WorkCenter::factory()->for($this->tenant)->create();
     $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'closed_at' => '2026-10-29 18:00:00']);
-    panelGuides($closed, 'nom035.guide-ii', InstrumentStatus::Completed, 5);
-    panelGuides($closed, 'nom035.guide-ii', InstrumentStatus::Pending, 1);
+    TraumaScreening::factory()->count(2)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
+
+    $this->actingAs(memberOf($this->tenant, $role))
+        ->get(route('tenant.dashboard', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('centers.data.0.nom035.done.2', $done));
+})->with([
+    'HR, who channels them' => [TenantRole::Hr, false],
+    'a viewer' => [TenantRole::Viewer, true],
+]);
+
+it('puts first what is urgent, for whoever may act on it, and never what a complaint says', function (TenantRole $role, array $norms): void {
+    $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Querétaro']);
+    $person = memberOf($this->tenant, $role);
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'name' => 'Hugo Saiz']);
+    $teleworker = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id]);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id, 'submitted_at' => '2026-02-27 18:00:00']);
+    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'closed_at' => '2026-10-29 18:00:00']);
+    TraumaScreening::factory()->count(9)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
+    $channel = ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create(['acknowledge_within_days' => 1]);
+    $complaint = Complaint::factory()->create(['tenant_id' => $this->tenant->id, 'channel_id' => $channel->id, 'received_on' => '2026-10-30']);
+    ComplaintAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $person->id]);
+    $urgent = [
+        'NOM-037' => ['norm' => 'NOM-037', 'title' => 'Hugo Saiz avisó un accidente de trabajo', 'detail' => 'Planta Querétaro · espera desde el 27 feb 2026', 'action' => 'Revisar aviso', 'href' => route('tenant.telework.notices.index', ['tenant' => $this->tenant, 'center' => $plant->id], false)],
+        'NOM-035' => ['norm' => 'NOM-035', 'title' => '9 personas esperan valoración clínica', 'detail' => 'Planta Querétaro · Guía I · canalízalas a atención', 'action' => 'Canalizar', 'href' => route('tenant.campaigns.screenings', [$this->tenant, $closed->id], false)],
+        'Quejas' => ['norm' => 'Quejas', 'title' => 'Una denuncia espera acuse de recibo', 'detail' => 'Vence mañana · la ves porque te designaron · sin contenido aquí', 'action' => 'Acusar recibo', 'href' => route('tenant.complaints.cases.show', [$this->tenant, $complaint->id], false)],
+    ];
+
+    $response = $this->actingAs($person)->get(route('tenant.dashboard', $this->tenant));
+
+    $response->assertInertia(fn (Assert $page) => $page->where('urgencies', array_map(fn (string $norm): array => $urgent[$norm], $norms)));
+    expect(json_encode($response->viewData('page')['props']))->not->toContain('compañera')->not->toContain('espalda');
+})->with([
+    'owner' => [TenantRole::Owner, ['NOM-037', 'NOM-035', 'Quejas']],
+    'viewer' => [TenantRole::Viewer, []],
+]);
+
+it('tells when the acknowledgment of a complaint falls due, and gathers the accidents and the people to channel', function (string $received, string $when): void {
+    $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Querétaro']);
+    $owner = ownerOf($this->tenant);
+
+    foreach (['Ana Ruiz', 'Luis Peña'] as $name) {
+        $employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'name' => $name]);
+        WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id])->id]);
+    }
+
+    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'closed_at' => '2026-10-29 18:00:00']);
+    TraumaScreening::factory()->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
+    $channel = ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create(['acknowledge_within_days' => 2]);
+    $complaint = Complaint::factory()->create(['tenant_id' => $this->tenant->id, 'channel_id' => $channel->id, 'received_on' => $received]);
+    ComplaintAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $owner->id]);
+
+    $this->actingAs($owner)
+        ->get(route('tenant.dashboard', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('urgencies.0.title', '2 personas avisaron un accidente de trabajo')
+            ->where('urgencies.1.title', '1 persona espera valoración clínica')
+            ->where('urgencies.1.detail', 'Planta Querétaro · Guía I · canalízala a atención')
+            ->where('urgencies.2.detail', "{$when} · la ves porque te designaron · sin contenido aquí"));
+})->with([
+    'today' => ['2026-10-28', 'Vence hoy'],
+    'later' => ['2026-10-31', 'Vence el 2 nov 2026'],
+    'overdue' => ['2026-10-20', 'Venció el 22 oct 2026'],
+]);
+
+it('lists what falls due this week: the evaluations that close in the next seven days', function (): void {
+    $offices = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficinas Monterrey']);
+    Campaign::factory()->active('2026-11-04')->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $offices->id]);
+    Campaign::factory()->active('2026-11-30')->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id]);
+
+    $this->actingAs(ownerOf($this->tenant))
+        ->get(route('tenant.dashboard', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('week', [['day' => 'Mié 4 nov', 'text' => 'cierra la evaluación NOM-035 de Oficinas Monterrey']]));
+});
+
+it('never carries an answer to the panel', function (): void {
+    $plant = WorkCenter::factory()->for($this->tenant)->create();
+    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);
     AnonymousResponse::factory()->count(5)->create(['campaign_id' => $closed->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
-    $small = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'closed_at' => '2026-10-01 18:00:00']);
-    AnonymousResponse::factory()->count(4)->create(['campaign_id' => $small->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
 
     $response = $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get(route('tenant.dashboard', $this->tenant));
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->has('levels', 5)
-        ->where('closed.total', 2)
-        ->where('closed.data.0.id', $closed->id)
-        ->where('closed.data.0.workCenter', 'Planta Querétaro')
-        ->where('closed.data.0.instruments', ['Guía I', 'Guía II'])
-        ->where('closed.data.0.closedOn', '29 oct 2026')
-        ->where('closed.data.0.completed', 5)
-        ->where('closed.data.0.target', 6)
-        ->where('closed.data.0.final', fn ($levels): bool => array_sum($levels->all()) === 5)
-        // Under the minimum group, no score at all.
-        ->where('closed.data.1.final', null));
 
     expect(json_encode($response->viewData('page')['props']))->not->toContain('"answers"')->not->toContain('always');
 });
 
-it('reads the panel in the same number of queries however much the company holds', function (int $evaluations): void {
-    foreach (range(1, $evaluations) as $ignored) {
+it('reads the panel in the same number of queries however much the company holds', function (int $centers): void {
+    foreach (range(1, $centers) as $ignored) {
         $center = WorkCenter::factory()->for($this->tenant)->create();
         staffOf($this->tenant, $center, 2);
-        Campaign::factory()->create(['tenant_id' => $this->tenant->id]);
+        Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id]);
         Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
         Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
     }
 
     $this->actingAs(ownerOf($this->tenant));
-    $this->expectsDatabaseQueryCount(23 + min($evaluations, 5));
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_PANEL);
 
     $this->get(route('tenant.dashboard', $this->tenant))->assertOk();
 })->with([1, 3]);
+
+// Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2).
+const QUERIES_OF_THE_PANEL = 57;

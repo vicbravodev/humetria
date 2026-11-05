@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Configura tu empresa · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p,.app ul{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.q{display:flex;flex-direction:column;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.pill{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--input);background:var(--card);font-size:15px;font-weight:500;cursor:pointer}
+.pill.on{border:2px solid var(--primary);background:var(--accent);padding:0 15px}
+.sum{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--border);font-size:15px}
+.tag{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap}
+.t-yes{background:var(--accent);color:var(--primary)}
+.t-no{background:var(--muted);color:var(--mfg)}
+.t-q{background:var(--card);color:var(--mfg);border:1px dashed var(--input)}
+@media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row" style="gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border)"><span class="sm mfg" style="flex-grow: 1">Autopartes Demo · primera vez</span><span class="sm mfg">Paso 2 de 2</span></div>
+<div style="padding: 40px 48px 56px; max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px">
+<header style="display: flex; flex-direction: column; gap: 10px; max-width: 760px">
+<h1 style="font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.015em">Dos preguntas por centro y armamos todo</h1>
+<p class="mfg" style="font-size: 18px; line-height: 28px">Con esto sabemos qué normas te tocan en cada centro y creamos tus rutas. Puedes cambiarlo después.</p>
+</header>
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 32px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 16px; min-width: 0">
+<sc-for list="{{cs}}" as="c" hint-placeholder-count="2">
+<section class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 20px">
+<div><h2 class="w6" style="font-size: 20px">{{c.n}}</h2><p class="sm mfg">{{c.d}} · {{c.p}} personas registradas</p></div>
+<div class="q"><p class="w5">¿Alguien trabaja desde su casa más del 40 % de su tiempo?</p><div class="seg"><button type="button" class="{{c.casaSi}}" onClick="{{c.setCasaSi}}">Sí</button><button type="button" class="{{c.casaNo}}" onClick="{{c.setCasaNo}}">No</button></div></div>
+<div class="q"><p class="w5">¿Alguien trabaja de pie la mayor parte de su jornada?</p><div class="seg"><button type="button" class="{{c.pieSi}}" onClick="{{c.setPieSi}}">Sí</button><button type="button" class="{{c.pieNo}}" onClick="{{c.setPieNo}}">No</button></div></div>
+<sc-if value="{{c.showSec}}" hint-placeholder-val="{{ false }}"><div class="q"><p class="w5">¿A qué se dedica el centro?</p><div class="seg"><sc-for list="{{c.secs}}" as="o" hint-placeholder-count="4"><button type="button" class="{{o.cls}}" onClick="{{o.pick}}">{{o.t}}</button></sc-for></div></div></sc-if>
+</section>
+</sc-for>
+<button type="button" class="btn" style="align-self: flex-start; border: 1px dashed var(--input); background: var(--card)">Agregar otro centro</button>
+</div>
+
+<aside class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 14px" aria-live="polite">
+<p class="sm w6" style="color: var(--primary)">Lo que te toca</p>
+<sc-for list="{{cs}}" as="c" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 6px">
+<p class="w6">{{c.n}}</p>
+<div class="sum"><span>NOM-035 · {{c.guias}}</span><span class="tag t-yes">Aplica</span></div>
+<div class="sum"><span>NOM-037 · teletrabajo</span><span class="{{c.t37cls}}">{{c.t37}}</span></div>
+<div class="sum"><span>Ley Silla · trabajo de pie</span><span class="{{c.tlscls}}">{{c.tls}}</span></div>
+</div>
+</sc-for>
+<p class="sm mfg">Donde no aplica, guardamos una constancia con fecha para tu expediente.</p>
+<button type="button" class="btn btn-p" disabled="{{incomplete}}">{{cta}}</button>
+</aside>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { c: [{ casa: 'si', pie: 'si', sec: 2 }, { casa: null, pie: null, sec: null }] };
+  }
+  renderVals() {
+    const s = this.state;
+    const META = [{ n: 'Planta Querétaro', d: 'Manufactura', p: 30 }, { n: 'Oficinas Monterrey', d: 'Administración y ventas', p: 60 }];
+    const SEC = ['Comercio', 'Servicios', 'Industrial', 'Otro parecido'];
+    const upd = (i, patch) => () => this.setState({ c: s.c.map((x, j) => (j === i ? Object.assign({}, x, patch) : x)) });
+    let rutas = 0; let incomplete = false;
+    const cs = META.map((m, i) => {
+      const c = s.c[i];
+      const guias = m.p <= 15 ? 'Guía I' : m.p <= 50 ? 'Guías I y II' : 'Guías I y III';
+      rutas += 1;
+      let t37 = 'Falta contestar'; let t37cls = 'tag t-q';
+      if (c.casa === 'si') { t37 = 'Aplica'; t37cls = 'tag t-yes'; rutas += 1; } else if (c.casa === 'no') { t37 = 'No aplica'; t37cls = 'tag t-no'; }
+      let tls = 'Falta contestar'; let tlscls = 'tag t-q';
+      if (c.pie === 'no') { tls = 'No aplica'; tlscls = 'tag t-no'; }
+      else if (c.pie === 'si' && c.sec === null) { tls = 'Falta el sector'; }
+      else if (c.pie === 'si') { tls = c.sec === 2 ? 'En algunos puestos' : 'Aplica'; tlscls = 'tag t-yes'; rutas += 1; }
+      if (c.casa === null || c.pie === null || (c.pie === 'si' && c.sec === null)) incomplete = true;
+      return {
+        n: m.n, d: m.d, p: m.p, guias, t37, t37cls, tls, tlscls,
+        casaSi: c.casa === 'si' ? 'pill on' : 'pill', casaNo: c.casa === 'no' ? 'pill on' : 'pill',
+        pieSi: c.pie === 'si' ? 'pill on' : 'pill', pieNo: c.pie === 'no' ? 'pill on' : 'pill',
+        setCasaSi: upd(i, { casa: 'si' }), setCasaNo: upd(i, { casa: 'no' }),
+        setPieSi: upd(i, { pie: 'si' }), setPieNo: upd(i, { pie: 'no', sec: null }),
+        showSec: c.pie === 'si',
+        secs: SEC.map((t, k) => ({ t, cls: c.sec === k ? 'pill on' : 'pill', pick: upd(i, { sec: k }) }))
+      };
+    });
+    return {
+      tema: this.props.tema ?? 'claro', cs, incomplete,
+      cta: incomplete ? 'Contesta los 2 centros' : 'Crear mis ' + rutas + ' rutas'
+    };
+  }
+}
+</script>
+</body>
+</html>

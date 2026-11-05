@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Everything the thirteen requirements of a work center read, loaded once and in a fixed number of queries however many
- * positions, people or seats it has.
+ * positions, people, seats or centers there are.
  */
 final readonly class ComplianceFacts
 {
@@ -53,23 +53,52 @@ final readonly class ComplianceFacts
 
     public static function of(string $workCenterId, Committee $committee): self
     {
-        $positions = StandingPosition::query()->where('work_center_id', $workCenterId)->get(['id', 'nature_allows', 'placement', 'max_people_at_once']);
-        $signed = RiskAssessment::query()->where('work_center_id', $workCenterId)->where('status', AssessmentStatus::Signed)->orderBy('signed_at')->orderBy('id')
-            ->get(['id', 'employee_id', 'position_id', 'level', 'scores', 'signed_at', 'reassessment_due', 'recorded_in_document_id']);
+        return self::ofMany([$workCenterId], $committee)[$workCenterId];
+    }
 
-        return new self(
-            SeatingProfile::query()->where('work_center_id', $workCenterId)->first(['id', 'no_standing_positions']),
-            $positions,
-            PositionAssignment::query()->whereIn('position_id', $positions->pluck('id')->all())->whereNull('ends_on')->get(['employee_id', 'position_id', 'starts_on']),
-            Seat::query()->where('work_center_id', $workCenterId)->get(['position_id', 'use', 'quantity', 'condition', 'signposted']),
-            $signed,
-            RiskAcknowledgment::query()->whereIn('assessment_id', $signed->pluck('id')->all())->get(['assessment_id'])->map(fn (RiskAcknowledgment $acknowledgment): string => $acknowledgment->assessment_id)->values()->all(),
-            MedicalReferral::query()->where('work_center_id', $workCenterId)->get(['employee_id'])->map(fn (MedicalReferral $referral): string => $referral->employee_id)->unique()->values()->all(),
-            PreventiveMeasure::query()->where('work_center_id', $workCenterId)->get(['assessment_id', 'position_id', 'status', 'due_on']),
-            PauseAgreement::query()->where('work_center_id', $workCenterId)->get(['position_id'])->map(fn (PauseAgreement $agreement): string => $agreement->position_id)->values()->all(),
-            InternalRegulation::query()->where('work_center_id', $workCenterId)->first(['id', 'parts', 'status']),
-            SeatingDocument::query()->where('work_center_id', $workCenterId)->where('kind', DocumentKind::DiagnosisProgram)->exists(),
-            $committee->userIdsOf($workCenterId) !== [],
-        );
+    /**
+     * The same for several centers, in the same fixed number of queries whatever their number: each kind of record is read
+     * once for all of them and split by center.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return array<string, self> by work center id, in the order given
+     */
+    public static function ofMany(array $workCenterIds, Committee $committee): array
+    {
+        $positions = StandingPosition::query()->whereIn('work_center_id', $workCenterIds)->get(['id', 'work_center_id', 'nature_allows', 'placement', 'max_people_at_once']);
+        $signed = RiskAssessment::query()->whereIn('work_center_id', $workCenterIds)->where('status', AssessmentStatus::Signed)->orderBy('signed_at')->orderBy('id')
+            ->get(['id', 'work_center_id', 'employee_id', 'position_id', 'level', 'scores', 'signed_at', 'reassessment_due', 'recorded_in_document_id']);
+        $profiles = SeatingProfile::query()->whereIn('work_center_id', $workCenterIds)->get(['id', 'work_center_id', 'no_standing_positions', 'declared_on']);
+        $assignments = PositionAssignment::query()->whereIn('position_id', $positions->modelKeys())->whereNull('ends_on')->get(['employee_id', 'position_id', 'starts_on']);
+        $seats = Seat::query()->whereIn('work_center_id', $workCenterIds)->get(['work_center_id', 'position_id', 'use', 'quantity', 'condition', 'signposted']);
+        $acknowledgments = RiskAcknowledgment::query()->whereIn('assessment_id', $signed->modelKeys())->get(['assessment_id']);
+        $referrals = MedicalReferral::query()->whereIn('work_center_id', $workCenterIds)->get(['work_center_id', 'employee_id']);
+        $measures = PreventiveMeasure::query()->whereIn('work_center_id', $workCenterIds)->get(['work_center_id', 'assessment_id', 'position_id', 'status', 'due_on']);
+        $agreements = PauseAgreement::query()->whereIn('work_center_id', $workCenterIds)->get(['work_center_id', 'position_id']);
+        $regulations = InternalRegulation::query()->whereIn('work_center_id', $workCenterIds)->get(['id', 'work_center_id', 'parts', 'status']);
+        $diagnosed = SeatingDocument::query()->whereIn('work_center_id', $workCenterIds)->where('kind', DocumentKind::DiagnosisProgram)->get(['work_center_id']);
+        $seated = $committee->centersWithMembers($workCenterIds);
+        $facts = [];
+
+        foreach ($workCenterIds as $id) {
+            $here = $positions->where('work_center_id', $id)->values();
+            $signedHere = $signed->where('work_center_id', $id)->values();
+            $facts[$id] = new self(
+                $profiles->firstWhere('work_center_id', $id),
+                $here,
+                $assignments->filter(fn (PositionAssignment $assignment): bool => $here->contains('id', $assignment->position_id))->values(),
+                $seats->where('work_center_id', $id)->values(),
+                $signedHere,
+                array_values($acknowledgments->filter(fn (RiskAcknowledgment $acknowledgment): bool => $signedHere->contains('id', $acknowledgment->assessment_id))->map(fn (RiskAcknowledgment $acknowledgment): string => $acknowledgment->assessment_id)->all()),
+                array_values(array_unique($referrals->where('work_center_id', $id)->map(fn (MedicalReferral $referral): string => $referral->employee_id)->all())),
+                $measures->where('work_center_id', $id)->values(),
+                array_values($agreements->where('work_center_id', $id)->map(fn (PauseAgreement $agreement): string => $agreement->position_id)->all()),
+                $regulations->firstWhere('work_center_id', $id),
+                $diagnosed->contains('work_center_id', $id),
+                in_array($id, $seated, true),
+            );
+        }
+
+        return $facts;
     }
 }

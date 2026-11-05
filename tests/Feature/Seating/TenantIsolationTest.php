@@ -35,6 +35,7 @@ it('answers 404 for the center of another company and never changes its profile'
 
     $this->get(route('tenant.seating.center', [$this->a, $this->centerB->id]))->assertNotFound();
     $this->put(route('tenant.seating.profile.update', [$this->a, $this->centerB->id]), ['sector' => 'industrial', 'no_standing_positions' => true])->assertNotFound();
+    $this->get(route('tenant.seating.certificate', [$this->a, $this->centerB->id]))->assertNotFound();
 
     workIn($this->b);
     expect(SeatingProfile::query()->sole()->sector->value)->toBe('services');

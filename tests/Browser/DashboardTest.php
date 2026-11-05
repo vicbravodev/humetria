@@ -7,14 +7,22 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Support\CampaignClock;
+use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Responses\Models\TraumaScreening;
+use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\WorkerNoticeFactory;
 
-/** A company like the demo: an evaluation in course, a draft ready to launch and one closed with its scores. */
+/**
+ * A company like the demo: an evaluation in course in Oficinas Monterrey; in Planta Querétaro a draft, one closed with two
+ * people to channel, and someone who teleworks and reported an accident.
+ */
 function panelCompany(): string
 {
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
@@ -35,6 +43,12 @@ function panelCompany(): string
 
     AnonymousResponse::factory()->count(5)->create(['campaign_id' => $closed->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035Answers('nom035.guide-ii', 'sometimes')]);
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
+    // Its policy reached Oficinas Monterrey, so the route there is at the evaluation.
+    DocumentCenter::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $offices->id]);
+    // Planta Querétaro said that someone works standing; Oficinas Monterrey has not answered «¿Te aplica?» yet.
+    SeatingProfile::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+    $hugo = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Hugo Saiz']);
+    WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $hugo->id])->id]);
 
     $user = App\Models\User::factory()->create(['name' => 'Rita Ramírez']);
     TenantMembership::factory()->for($tenant)->for($user)->role(TenantRole::Hr)->create();
@@ -43,19 +57,41 @@ function panelCompany(): string
     return '/admin/acme';
 }
 
+// Rediseño v2 (board V2-Panel): what is urgent, where each route goes by center, the next step and the week.
 it('shows the panel as the redesign draws it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
     visitPage('dashboard', panelCompany(), $dark, $mobile)
         ->assertSee('Hola, Rita')
-        ->assertSee('Tienes una evaluación en curso y un borrador listo para lanzar.')
-        ->assertSeeIn('[aria-labelledby="active-evaluation"]', 'Oficinas Monterrey')
-        ->assertSeeIn('[aria-labelledby="active-evaluation"]', '11 días')
-        ->assertSeeIn('[aria-labelledby="next-steps"]', 'Lanza la evaluación de Planta Querétaro')
-        ->assertSeeIn('[aria-labelledby="next-steps"]', 'Completa el informe 7.7 de Planta Querétaro')
-        ->assertSeeIn('[aria-labelledby="next-steps"]', '2 personas requieren valoración clínica')
-        ->assertSeeIn('[aria-labelledby="cycle"]', 'Al día')
-        ->assertSeeIn('[aria-labelledby="closed"]', 'en riesgo alto o muy alto')
+        ->assertSee('Llevas 3 normas en 2 centros. Primero lo urgente, luego dónde vas en cada una.')
+        ->assertSeeIn('[aria-labelledby="urgent"]', 'Hugo Saiz avisó un accidente de trabajo')
+        ->assertSeeIn('[aria-labelledby="urgent"]', '2 personas esperan valoración clínica')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom035"]', 'Oficinas Monterrey')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom035"]', 'Etapa 2 de 6 · 3 de 6 contestaron, cierra en 11 días')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom037"]', 'Etapa 1 de 6 · define las reglas')
+        // Rediseño v2 (decisión A2): where nobody teleworks or works standing yet, the center answers «¿Te aplica?» first.
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom037"]', 'Contesta si te aplica')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:first-child', 'Falta contestar')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:last-child', 'Etapa 1 de 6 · identifica los puestos de pie')
+        // Board V3-Onboarding: before any stage, the questions of the center that has not answered «¿Te aplica?».
+        ->assertSeeIn('[aria-labelledby="next-step"]', 'Dos preguntas por centro y armamos todo')
+        ->assertSeeIn('[aria-labelledby="next-step"]', '1 centro sin contestar')
+        ->assertSeeIn('[aria-labelledby="week"]', 'Nada vence en los próximos 7 días.')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('drops the side column below the content under 1240 px', function (): void {
+    $page = visitPage('dashboard', panelCompany());
+    $side = <<<'JS'
+        () => {
+            const routes = document.querySelector('[aria-labelledby="routes"]').getBoundingClientRect();
+            const step = document.querySelector('[aria-labelledby="next-step"]').getBoundingClientRect();
+
+            return step.left >= routes.right ? 'beside' : (step.top >= routes.bottom ? 'below' : 'overlap');
+        }
+        JS;
+
+    resizeTo($page, 1440)->assertScript($side, 'beside');
+    resizeTo($page, 1100)->assertScript($side, 'below');
+});
 
 it('counts the evaluations in course in the sidebar and tells when the next one closes, until it folds', function (): void {
     visitPage('dashboard', panelCompany())
@@ -81,35 +117,6 @@ it('starts an action from the ⌘K palette, grouped under its heading', function
         ->assertPathIs('/admin/acme/employees/import');
 });
 
-it('reminds whoever is missing from the panel', function (): void {
-    visitPage('dashboard', panelCompany())
-        ->click('Recordar a quien falta')
-        ->assertSee('Enlace reenviado a 3 personas.');
-});
-
-/** Where the arc of the evaluation in course sits in its card: centered or not, and its figures beside it or below. */
-function activeCardLayout(): string
-{
-    return <<<'JS'
-        () => {
-            const card = document.querySelector('[aria-labelledby="active-evaluation"]').getBoundingClientRect();
-            const meter = document.querySelector('[aria-labelledby="active-evaluation"] [data-slot="arc-meter"]').getBoundingClientRect();
-            const kpis = document.querySelector('[data-test="active-kpis"]').getBoundingClientRect();
-            const centered = Math.abs((meter.left + meter.right) / 2 - (card.left + card.right) / 2) <= 2;
-
-            return `${centered ? 'centered' : 'aside'} ${kpis.top < meter.bottom && kpis.left >= meter.right ? 'beside' : 'below'}`;
-        }
-        JS;
-}
-
-it('centers the arc over its figures on a phone and sets them beside it on a desktop', function (bool $dark): void {
-    $page = visitPage('dashboard', panelCompany(), $dark);
-
-    foreach ([375 => 'centered below', 768 => 'centered below', 1280 => 'aside beside'] as $width => $layout) {
-        resizeTo($page, $width)->assertScript(activeCardLayout(), $layout);
-    }
-})->with(['light' => false, 'dark' => true]);
-
 it('keeps the page name whole in the top bar at every width, shortening a long company name first', function (): void {
     $url = panelCompany();
     Tenant::query()->where('slug', 'acme')->update(['trade_name' => 'Martínez, Aponte y Galarza e Hija']);
@@ -122,12 +129,12 @@ it('keeps the page name whole in the top bar at every width, shortening a long c
     }
 });
 
-it('fits each work center of the cycle inside its card at every width', function (): void {
+it('fits each center of each route inside its card at every width', function (): void {
     $page = visitPage('dashboard', panelCompany());
 
     foreach ([375, 768, 1024, 1280] as $width) {
         // How many rows spill past their card's edge.
-        resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="cycle"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
+        resizeTo($page, $width)->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="routes"] li, [aria-labelledby="urgent"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
     }
 });
 
@@ -147,3 +154,21 @@ it('fills the width up to 1440 px and centers the page beyond it', function (boo
     resizeTo($page, 1280)->assertScript($width, 'full centered');
     resizeTo($page, 2400)->assertScript($width, '1440 centered');
 })->with(['light' => false, 'dark' => true]);
+
+// Board 40 (V4-Menu-Roles): on a phone the menu becomes a bar at the bottom with Panel, Cumplimiento, Quejas and Más.
+it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', function (): void {
+    $page = visit(panelCompany())->on()->mobile();
+
+    $page->assertSeeIn('nav[aria-label="Menú principal"]', 'Panel')
+        ->assertSeeIn('nav[aria-label="Menú principal"]', 'Quejas')
+        ->click('Cumplimiento')
+        ->click('[role="menu"] a[href$="/seating"]')
+        ->assertPathIs('/admin/acme/seating')
+        ->click('Más')
+        ->assertSeeIn('[data-mobile="true"]', 'Centros de trabajo')
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the bottom bar off a wide screen', function (): void {
+    visit(panelCompany())->assertScript('() => getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).display', 'none');
+});

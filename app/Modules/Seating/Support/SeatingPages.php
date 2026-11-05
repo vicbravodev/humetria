@@ -75,8 +75,8 @@ final readonly class SeatingPages
         return [
             'workCenter' => ['id' => $center->id, 'name' => $center->name, 'activity' => $center->mainActivity],
             'profile' => $profile === null ? null : [
-                'sector' => $profile->sector->value,
-                'sectorLabel' => $profile->sector->label(),
+                'sector' => $profile->sector?->value,
+                'sectorLabel' => $profile->sector?->label(),
                 'noStandingPositions' => $profile->no_standing_positions,
                 'declaredOn' => $profile->declared_on->toDateString(),
                 'note' => $profile->note,
