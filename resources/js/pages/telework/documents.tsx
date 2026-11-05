@@ -12,6 +12,8 @@ import type {
     DocumentRow as Row,
     Paginated,
 } from '@/types';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Documents({
     documents,
@@ -24,8 +26,9 @@ export default function Documents({
     kinds: DocumentKindOption[];
     canManage: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [{ title: 'NOM-037' }, { title: 'Documentos' }],
+        breadcrumbs: teleworkCrumbs(tenantSlug, null, { title: 'Documentos' }),
     });
 
     return (

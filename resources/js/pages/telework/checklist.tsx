@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, setLayoutProps, router } from '@inertiajs/react';
 import { ListChecks, Send, Copy } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import ChecklistSections from '@/components/telework/checklist-sections';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { draft, publish } from '@/routes/tenant/telework/checklist';
 import type { ChecklistQuestion, RequirementOption } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function ChecklistPage({
     workCenter,
@@ -29,6 +30,11 @@ export default function ChecklistPage({
     missingLabels: Record<string, string[]>;
 }) {
     const tenantSlug = useTenantSlug();
+    setLayoutProps({
+        breadcrumbs: teleworkCrumbs(tenantSlug, workCenter, {
+            title: 'Lista de verificación',
+        }),
+    });
     const target = { tenant: tenantSlug, workCenter: workCenter.id };
     const isDraft = checklist.status === 'draft';
     const act = (route: ReturnType<typeof publish>) =>
@@ -93,7 +99,3 @@ export default function ChecklistPage({
         </>
     );
 }
-
-ChecklistPage.layout = {
-    breadcrumbs: [{ title: 'NOM-037' }, { title: 'Lista de verificación' }],
-};

@@ -6,8 +6,8 @@ import PageHeader from '@/components/humetria/page-header';
 import ReviewRow from '@/components/telework/review-row';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { pendingReviewsText } from '@/lib/telework/review';
-import { show } from '@/routes/tenant/telework/committee';
 import type { Paginated, ReviewRow as Row } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Reviews({
     workCenter,
@@ -18,14 +18,9 @@ export default function Reviews({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'NOM-037' },
-            {
-                title: 'Comisión',
-                href: show({ tenant: tenantSlug, workCenter: workCenter.id }),
-            },
-            { title: 'Listas por revisar' },
-        ],
+        breadcrumbs: teleworkCrumbs(tenantSlug, workCenter, {
+            title: 'Listas por revisar',
+        }),
     });
 
     return (

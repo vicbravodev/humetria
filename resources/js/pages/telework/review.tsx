@@ -9,6 +9,7 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { reviewFacts } from '@/lib/telework/review';
 import { index } from '@/routes/tenant/telework/reviews';
 import type { ReviewDetail } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Review({
     workCenter,
@@ -19,14 +20,15 @@ export default function Review({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'NOM-037' },
+        breadcrumbs: teleworkCrumbs(
+            tenantSlug,
+            workCenter,
             {
                 title: 'Listas por revisar',
                 href: index({ tenant: tenantSlug, workCenter: workCenter.id }),
             },
             { title: review.person.name },
-        ],
+        ),
     });
 
     return (

@@ -1,6 +1,8 @@
-import { Head } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
 import SettingsForm from '@/components/telework/settings-form';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function Settings({
     periodMonths,
@@ -13,6 +15,10 @@ export default function Settings({
     maxMonths: number;
     consent: { version: number; text: string };
 }) {
+    const tenantSlug = useTenantSlug();
+    setLayoutProps({
+        breadcrumbs: teleworkCrumbs(tenantSlug, null, { title: 'Ajustes' }),
+    });
     return (
         <>
             <Head title="Ajustes de NOM-037" />
@@ -33,7 +39,3 @@ export default function Settings({
         </>
     );
 }
-
-Settings.layout = {
-    breadcrumbs: [{ title: 'NOM-037' }, { title: 'Ajustes' }],
-};

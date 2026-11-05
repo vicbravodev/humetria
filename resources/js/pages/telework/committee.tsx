@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, setLayoutProps, Link } from '@inertiajs/react';
 import { ClipboardCheck, FileText, ListChecks, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/humetria/page-header';
@@ -10,6 +10,7 @@ import { index as documentsIndex } from '@/routes/tenant/telework/documents';
 import { index as reviewsIndex } from '@/routes/tenant/telework/reviews';
 import { create } from '@/routes/tenant/telework/teleworkers';
 import type { Committee, CommitteePerson } from '@/types';
+import { teleworkCrumbs } from '@/lib/telework/crumbs';
 
 export default function CommitteePage({
     workCenter,
@@ -29,6 +30,11 @@ export default function CommitteePage({
     canReview: boolean;
 }) {
     const tenantSlug = useTenantSlug();
+    setLayoutProps({
+        breadcrumbs: teleworkCrumbs(tenantSlug, workCenter, {
+            title: 'Comisión',
+        }),
+    });
 
     return (
         <>
@@ -102,7 +108,3 @@ export default function CommitteePage({
         </>
     );
 }
-
-CommitteePage.layout = {
-    breadcrumbs: [{ title: 'NOM-037' }, { title: 'Comisión' }],
-};
