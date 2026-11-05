@@ -837,7 +837,9 @@ it('shows the trainings with who is due and the topics not covered', function (b
         ->assertSee('Temas del 8.1 sin cubrir')
         ->assertSee('Riesgo ergonómico por posturas forzosas')
         ->assertSee('Capacitaciones registradas')
-        ->assertSee('1 persona');
+        ->assertSee('1 persona')
+        // A long topic wraps inside its card instead of pushing the card past the edge of a phone.
+        ->assertScript(spilledOut(), '');
 })->with($looks);
 
 it('shows the trainings page before there is anything to show', function (): void {
