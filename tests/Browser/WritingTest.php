@@ -164,3 +164,20 @@ it('rewrites a section on the review and puts back the text of the answers', fun
 
     expect(DocumentDraft::query()->withoutGlobalScopes()->sole()->edits)->toBe([]);
 });
+
+// Board V3-Doc-Riesgos: a supporting document with the same questions and preview as the policy.
+it('writes the risks of working from home with questions, as the redesign draws it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    writingCompany();
+    DocumentDraft::factory()->create(['tenant_id' => Tenant::query()->sole()->id, 'kind' => 'risk_information', 'answers' => ['work' => 'computer', 'risks' => ['posture', 'electric', 'isolation']], 'step' => 1]);
+
+    visitPage('telework/write', '/admin/acme/telework/documents/risk_information/write', $dark, $mobile)
+        ->assertSee('NOM-037 · Documentos de apoyo · Riesgos de trabajar desde casa')
+        ->assertSee('Pregunta 2 de 4')
+        ->assertSee('¿Qué riesgos quieres explicarle a tu equipo?')
+        ->assertSee('Caídas o tropiezos con cables')
+        ->assertSee('Riesgos de trabajar desde casa y cómo prevenirlos')
+        ->assertSee('Para quienes trabajan desde casa con computadora y teléfono más del 40 % de su tiempo.')
+        ->assertSee('Instalación eléctrica. No conecte varios aparatos a una sola extensión; avise si un contacto está dañado.')
+        ->assertDontSee('Los 12 temas')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);

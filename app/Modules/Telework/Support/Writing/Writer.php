@@ -18,7 +18,13 @@ final readonly class Writer
     {
         return match ($kind) {
             DocumentKind::Policy => new PolicyTemplate,
-            default => null,
+            DocumentKind::RiskInformation => new RiskTemplate,
+            DocumentKind::ImplementationProcess => new ImplementationTemplate,
+            DocumentKind::MaintenanceProgram => new MaintenanceTemplate,
+            DocumentKind::Reversibility => new ReversibilityTemplate,
+            DocumentKind::FamilyViolence => new FamilyViolenceTemplate,
+            DocumentKind::CommitteeParticipation => new CommitteeTemplate,
+            DocumentKind::InspectionReport => null,
         };
     }
 
