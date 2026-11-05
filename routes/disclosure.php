@@ -11,6 +11,7 @@ use App\Modules\Disclosure\Http\Controllers\PolicyController;
 use App\Modules\Disclosure\Http\Controllers\PosterController;
 use App\Modules\Disclosure\Http\Controllers\ResultsController;
 use App\Modules\Disclosure\Http\Controllers\ShareResultsController;
+use App\Modules\Disclosure\Http\Controllers\WritingController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}. The panel of the policy
@@ -23,6 +24,11 @@ Route::put('admin/{tenant:slug}/disclosure/policy/draft/{document}', [PolicyCont
 Route::delete('admin/{tenant:slug}/disclosure/policy/draft/{document}', [PolicyController::class, 'discard'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.policy.draft.destroy');
 Route::post('admin/{tenant:slug}/disclosure/policy/draft/{document}/publish', [PolicyController::class, 'publish'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.policy.publish');
 Route::get('admin/{tenant:slug}/disclosure/policy/versions/{document}', [PolicyController::class, 'version'])->where('tenant', $notReserved)->whereUuid('document')->name('tenant.disclosure.policy.version');
+
+// The policy and the blocks of 5.7 written with questions (decisión A3): every answer is kept in the draft of its kind, which
+// publishes through the routes above and below.
+Route::get('admin/{tenant:slug}/disclosure/write/{kind}', [WritingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.write');
+Route::put('admin/{tenant:slug}/disclosure/write/{kind}', [WritingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.disclosure.write.update');
 
 // The follow-up of the acknowledgments: who confirmed the policy, the paper ones RH records and the reminder to the pending.
 Route::get('admin/{tenant:slug}/disclosure/dissemination', [DisseminationController::class, 'index'])->where('tenant', $notReserved)->name('tenant.disclosure.dissemination');

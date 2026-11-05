@@ -11,8 +11,6 @@ use App\Modules\Telework\Support\Writing\Templates;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
-use App\Support\Writing\Field;
-use App\Support\Writing\Question;
 use App\Support\Writing\Writer;
 use App\Support\Writing\WrittenTemplate;
 use Carbon\CarbonImmutable;
@@ -44,21 +42,7 @@ final readonly class WritingPage
                 'caption' => $kind === DocumentKind::Policy ? "NOM-037 · Etapa 1 · {$template->name()}" : "NOM-037 · Documentos de apoyo · {$template->name()}",
                 'owner' => "{$this->companies->current()->tradeName} · todos los centros",
             ],
-            'questions' => array_map(fn (Question $question): array => [
-                'key' => $question->key,
-                'topic' => $question->topic,
-                'title' => $question->title,
-                'hint' => $question->hint,
-                'fields' => array_map(fn (Field $field): array => [
-                    'key' => $field->key,
-                    'legend' => $field->legend,
-                    'shown' => $field->shown,
-                    'multiple' => $field->multiple,
-                    'columns' => $field->columns,
-                    // Two arrays to array_map() number the result anew: the keys of the labels are never read.
-                    'options' => array_map(fn (string $value, string $label): array => ['value' => $value, 'label' => $label], array_keys($field->options), array_values($field->options)), // @pest-mutate-ignore: UnwrapArrayValues
-                ], $question->fields),
-            ], $template->questions()),
+            'questions' => $this->writer->questions($template),
             'answers' => $answers,
             'step' => $draft->step ?? 0,
             'sections' => $this->writer->sections($template, $answers, $draft->edits ?? []),

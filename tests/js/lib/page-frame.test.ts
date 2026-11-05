@@ -19,6 +19,7 @@ describe('isStandalone', () => {
         'telework/applies',
         'tenancy/applies',
         'tenancy/onboarding',
+        'disclosure/policy-write',
     ])('leaves %s outside the panel', (name) => {
         expect(isStandalone(name)).toBe(true);
     });

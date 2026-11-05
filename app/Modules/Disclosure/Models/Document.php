@@ -29,6 +29,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property list<array{key: string, heading: string, text: string, items: list<string>, list_style: string|null}> $content
  * @property string|null $template_version
  * @property list<string>|null $covers
+ * @property array<string, string|list<string>>|null $answers What RH answered, by field, when it was written with questions.
+ * @property array<string, string>|null $edits The paragraphs RH rewrote, by section, when it was written with questions.
+ * @property int|null $step The question it was on; the number of questions is the review.
  * @property int|null $created_by
  * @property CarbonImmutable|null $published_at
  * @property int|null $published_by
@@ -37,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $centers_count
  */
 #[Table('disclosure_documents')]
-#[Fillable(['tenant_id', 'kind', 'version', 'status', 'content', 'template_version', 'covers', 'created_by', 'published_at', 'published_by'])]
+#[Fillable(['tenant_id', 'kind', 'version', 'status', 'content', 'template_version', 'covers', 'answers', 'edits', 'step', 'created_by', 'published_at', 'published_by'])]
 #[UseFactory(DocumentFactory::class)]
 final class Document extends Model
 {
@@ -63,6 +66,9 @@ final class Document extends Model
             'version' => 'integer',
             'content' => 'array',
             'covers' => 'array',
+            'answers' => 'array',
+            'edits' => 'array',
+            'step' => 'integer',
             'published_at' => 'immutable_datetime',
         ];
     }

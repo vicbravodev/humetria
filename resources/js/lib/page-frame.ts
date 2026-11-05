@@ -16,6 +16,7 @@ const STANDALONE_NAMES = new Set([
     'telework/applies',
     // A document written with questions has the same frame: the questions and the text beside them, nothing else.
     'telework/write',
+    'disclosure/policy-write',
     'tenancy/applies',
     'tenancy/onboarding',
     // An error page stands alone: the address may not even be a page of the panel.

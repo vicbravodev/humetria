@@ -19,6 +19,7 @@ export default function WritePreview({
     index,
     sections,
     editUrl,
+    baseNote,
 }: {
     owner: string;
     title: string;
@@ -30,6 +31,8 @@ export default function WritePreview({
     sections: FlowSection[];
     /** Where a section rewritten on the review is kept. */
     editUrl: string;
+    /** What the base texts are, under their headings while the questions go on. */
+    baseNote: string;
 }) {
     const reviewing = index >= questions.length;
     const current = questions[index]?.key ?? null;
@@ -75,7 +78,7 @@ export default function WritePreview({
                             {based.map(({ heading }) => heading).join(', ')}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Texto base de Humetría, listo para editar.
+                            {baseNote}
                         </p>
                     </div>
                 )}

@@ -52,7 +52,7 @@ it('shows the six stages of the center, each with what it asks in plain words an
             'detail' => 'Aún no hay una política vigente en este centro',
             'state' => 'missing',
             'stage' => 1,
-            'href' => route('tenant.disclosure.policy', $this->tenant),
+            'href' => route('tenant.disclosure.write', [$this->tenant, 'policy', 'center' => $this->center->id]),
             'action' => 'Escribir la política',
         ])
         ->where('rows.1', [
@@ -122,6 +122,7 @@ it('reads the Programa where it stands, and the stages met with the way to see t
     nom035Route()->assertInertia(fn (Assert $page) => $page
         ->where('rows.0.state', 'done')
         ->where('rows.0.action', 'Ver')
+        ->where('rows.0.href', route('tenant.disclosure.policy', $this->tenant))
         ->where('rows.3.state', 'done')
         ->where('rows.4', [
             'numeral' => '8.3 a 8.5',

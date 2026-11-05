@@ -1,5 +1,10 @@
 import type { Paginated } from './demos';
 import type { Choice } from './interventions';
+import type {
+    FlowAnswers,
+    FlowQuestion,
+    FlowSection,
+} from '@/lib/question-flow';
 
 /** A section of a policy as the page edits and shows it: plain text, a list of items and how they are marked. */
 export type PolicySectionData = {
@@ -219,4 +224,30 @@ export type ShareResultsProps = {
     published: string | null;
     showMeasures: boolean;
     canPublish: boolean;
+};
+
+/** The policy or a block of 5.7 written with questions (boards V2-N035-Politica and V4-Difusion-Contenidos; decisión A3). */
+export type DisclosureWritingProps = {
+    document: {
+        kind: string;
+        /** The inciso of 5.7 it is about: «a» for the policy. */
+        inciso: string;
+        title: string;
+        caption: string;
+        owner: string;
+        company: string;
+    };
+    questions: FlowQuestion[];
+    answers: FlowAnswers;
+    /** The question it was on; the number of questions is the review. */
+    step: number;
+    sections: FlowSection[];
+    minutes: number;
+    publication: {
+        draftId: string | null;
+        centersInUse: number;
+        version: { number: number; publishedOn: string } | null;
+    };
+    /** Where «Guardar y volver» leads, and the center whose route it is. */
+    back: { href: string; label: string; center: string | null };
 };

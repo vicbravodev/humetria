@@ -83,7 +83,7 @@ final readonly class RoutePage
         return [
             $facts,
             $evaluated,
-            $this->rows->for($tenantSlug, $facts, $evaluated, $waiting?->id),
+            $this->rows->for($tenantSlug, $center->id, $facts, $evaluated, $waiting?->id),
             $this->urgencies->screenings($toChannel, $evaluations, [$center->id => $center->name], $tenantSlug),
         ];
     }

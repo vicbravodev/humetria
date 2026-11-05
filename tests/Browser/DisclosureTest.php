@@ -15,39 +15,46 @@ $looks = [
     'dark mobile' => [true, true],
 ];
 
-it('offers to write the policy from the template when there is none', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V2-N035-Politica, decisión A3): the policy is written with questions; the page keeps its version in
+// force and its history.
+it('offers to write the policy with questions when there is none', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 
     visitPage('disclosure/policy', "{$url}/disclosure/policy", $dark, $mobile)
         ->assertSee('Política de prevención')
-        ->assertSee('Aún no hay un borrador')
-        ->assertSee('Redactar a partir de la plantilla');
+        ->assertSee('Aún no hay una política')
+        ->assertSee('Escribir con preguntas');
 })->with($looks);
 
-it('writes the draft: starts it from the template and saves what HR writes', function (): void {
+it('writes the policy with questions, one at a time, with the text beside it', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
 
-    visit("{$url}/disclosure/policy")
-        ->press('Redactar a partir de la plantilla')
-        ->assertSee('Compromisos')
-        ->assertSee('Es obligación de supervisores, gerentes y directores')
-        ->fill('#section-responsibles-text', 'La dirección de Recursos Humanos.')
-        ->press('Guardar borrador')
-        ->assertSee('Borrador guardado.')
-        ->assertValue('#section-responsibles-text', 'La dirección de Recursos Humanos.');
+    visitPage('disclosure/policy-write', "{$url}/disclosure/write/policy", $dark, $mobile)
+        ->assertSee('NOM-035 · Etapa 1 · Política de prevención')
+        ->assertSee('Se guarda en cada respuesta')
+        ->assertSee('Pregunta 1 de 6')
+        ->assertSee('¿Quién firma la política en nombre de la empresa?')
+        ->assertSee('Política de prevención de riesgos psicosociales')
+        ->assertSee('La firma la dirección general.')
+        ->assertSee('Texto de la Guía de referencia IV, listo para editar.')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with($looks);
+
+it('keeps each answer and goes on to the next question', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/disclosure/write/policy")
+        ->radio('signature', 'hr')
+        ->assertSee('La firma la dirección de Recursos Humanos.')
+        ->click('Siguiente')
+        ->assertSee('Pregunta 2 de 6')
+        ->assertSee('¿Quién responde de aplicarla?')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Disclosure\Models\Document::query()->withoutGlobalScopes()->sole())
+        ->answers->toMatchArray(['signature' => 'hr'])
+        ->step->toBe(1);
 });
-
-it('shows the draft sections to edit', function (bool $dark, bool $mobile): void {
-    $url = signInToPanel();
-    workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
-    resolve(StartPolicyDraft::class)->handle(null);
-
-    visitPage('disclosure/policy', "{$url}/disclosure/policy", $dark, $mobile)
-        ->assertSee('Responsables')
-        ->assertSee('Recursos')
-        ->assertSee('Principio 1')
-        ->assertSee('Guardar borrador');
-})->with($looks);
 
 /** A policy published to the only center of the company the user signed in to; returns the id of that version. */
 function publishedPolicyForBrowser(): string
@@ -93,7 +100,7 @@ it('shows the version in force and its history', function (bool $dark, bool $mob
     visitPage('disclosure/policy', "{$url}/disclosure/policy", $dark, $mobile)
         ->assertSee('Versión 1')
         ->assertSee('Historial de versiones')
-        ->assertSee('Nueva versión desde la vigente');
+        ->assertSee('Nueva versión');
 })->with($looks);
 
 it('reads a published version', function (bool $dark, bool $mobile): void {
@@ -105,22 +112,24 @@ it('reads a published version', function (bool $dark, bool $mobile): void {
         ->assertSee('Compromisos');
 })->with($looks);
 
-it('publishes the draft from the dialog', function (): void {
+it('publishes the policy from the end of its questions and goes back to the route of the center', function (): void {
     $url = signInToPanel();
-    WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $center = WorkCenter::factory()->for($tenant)->create();
+    workIn($tenant);
+    resolve(App\Modules\Disclosure\Actions\SaveWriting::class)->handle(resolve(App\Modules\Disclosure\Support\Writing\Templates::class)->template(App\Modules\Disclosure\Enums\DocumentKind::Policy) ?? throw new LogicException, App\Modules\Disclosure\Enums\DocumentKind::Policy, [
+        'signature' => 'hr', 'responsibles' => ['hr'], 'resources' => ['channel'], 'practices' => ['h'], 'principles' => ['p3'], 'dissemination' => ['page'],
+    ], 6, App\Models\User::query()->firstOrFail()->id);
 
-    visit("{$url}/disclosure/policy")
-        ->press('Redactar a partir de la plantilla')
-        ->fill('#section-responsibles-text', 'La dirección de Recursos Humanos.')
-        ->fill('#section-resources-text', 'Un presupuesto anual.')
-        ->press('Guardar borrador')
-        ->assertSee('Borrador guardado.')
+    visit("{$url}/disclosure/write/policy?center={$center->id}")
+        ->assertSee('Tu política cubre lo que pide la norma')
+        ->assertSee('Son responsables de aplicar esta política: Recursos Humanos.')
         ->press('Publicar')
         ->assertSee('Publicar la política')
         ->check('input[name="reviewed"]')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Política publicada: versión 1.')
-        ->assertSee('Historial de versiones');
+        ->assertNoJavaScriptErrors();
 });
 
 /** The personal link to the policy of an employee the published policy asked; returns its address. */

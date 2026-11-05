@@ -1,4 +1,5 @@
 import { index } from '@/routes/tenant/campaigns';
+import { index as disclosure } from '@/routes/tenant/disclosure';
 import { route } from '@/routes/tenant/nom035';
 import type { BreadcrumbItem } from '@/types';
 
@@ -17,6 +18,21 @@ export function nom035Crumbs(
             title: workCenter.name,
             href: route([tenantSlug, workCenter.id]),
         },
+        ...tail,
+    ];
+}
+
+/**
+ * The breadcrumbs of a page of the disclosure (boards V4-Difusion and V4-Difusion-Registro): NOM-035, «Difusión» (the
+ * matrix of what the people must know), then the page itself.
+ */
+export function disclosureCrumbs(
+    tenantSlug: string,
+    ...tail: BreadcrumbItem[]
+): BreadcrumbItem[] {
+    return [
+        { title: 'NOM-035', href: index(tenantSlug) },
+        { title: 'Difusión', href: disclosure(tenantSlug) },
         ...tail,
     ];
 }

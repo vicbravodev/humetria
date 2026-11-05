@@ -23,16 +23,17 @@ final readonly class Nom035Rows
     private const string SMALL = 'No aplica: hasta 15 personas solo contestan la Guía I';
 
     /**
+     * @param  string  $workCenterId  the center whose route it is: stage 1 writes its policy from it and comes back
      * @param  CampaignRecord|null  $evaluated  the latest evaluation closed within the cycle
      * @param  string|null  $channelAt  the evaluation whose people wait to be channeled, when one has
      * @return list<Row>
      */
-    public function for(string $tenantSlug, Nom035Facts $facts, ?CampaignRecord $evaluated, ?string $channelAt): array
+    public function for(string $tenantSlug, string $workCenterId, Nom035Facts $facts, ?CampaignRecord $evaluated, ?string $channelAt): array
     {
         $evaluation = $evaluated?->id;
 
         return [
-            $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', route('tenant.disclosure.policy', $tenantSlug), 'Escribir la política'),
+            $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política'),
             $this->evaluation($tenantSlug, $facts, $evaluation),
             $this->after($evaluation, $this->channeling($tenantSlug, $facts, $evaluation, $channelAt)),
             $this->chapterSeven($facts, $evaluation, $this->row(4, '7.8', 'Resultados a disposición de las personas', $facts->shared ? null : 'Aún no compartes los resultados de la última evaluación', 'manage-disclosure', $evaluation === null ? null : route('tenant.disclosure.results.share', [$tenantSlug, $evaluation]), 'Preparar el resumen')),

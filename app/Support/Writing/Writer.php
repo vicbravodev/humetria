@@ -131,6 +131,30 @@ final readonly class Writer
         return $text === '' ? $edits : [...$edits, $edit['section'] => $text];
     }
 
+    /**
+     * The questions as a page receives them: each with its fields and their options in order.
+     *
+     * @return list<array{key: string, topic: string, title: string, hint: string|null, fields: list<array{key: string, legend: string, shown: bool, multiple: bool, columns: int, options: list<array{value: string, label: string}>}>}>
+     */
+    public function questions(WrittenTemplate $template): array
+    {
+        return array_map(fn (Question $question): array => [
+            'key' => $question->key,
+            'topic' => $question->topic,
+            'title' => $question->title,
+            'hint' => $question->hint,
+            'fields' => array_map(fn (Field $field): array => [
+                'key' => $field->key,
+                'legend' => $field->legend,
+                'shown' => $field->shown,
+                'multiple' => $field->multiple,
+                'columns' => $field->columns,
+                // Two arrays to array_map() number the result anew: the keys of the labels are never read.
+                'options' => array_map(fn (string $value, string $label): array => ['value' => $value, 'label' => $label], array_keys($field->options), array_values($field->options)), // @pest-mutate-ignore: UnwrapArrayValues
+            ], $question->fields),
+        ], $template->questions());
+    }
+
     /** @return list<Field> */
     private function fields(WrittenTemplate $template): array
     {

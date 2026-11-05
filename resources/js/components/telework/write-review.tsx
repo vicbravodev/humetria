@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import FlowProgress from '@/components/humetria/flow-progress';
 import WritePublish from '@/components/telework/write-publish';
+import WriteMissing from '@/components/write-missing';
 import { Button } from '@/components/ui/button';
 import type { FlowQuestion } from '@/lib/question-flow';
 import type { WritingPublication } from '@/types';
@@ -27,34 +28,7 @@ export default function WriteReview({
 }) {
     if (missing.length > 0) {
         return (
-            <div className="flex flex-col gap-6">
-                <FlowProgress
-                    label="Casi listo"
-                    left={null}
-                    value={questions.length - missing.length}
-                    max={questions.length}
-                />
-                <h1 className="text-2xl leading-8 font-semibold tracking-[-0.01em] text-balance md:text-[26px] md:leading-[34px]">
-                    {missing.length === 1
-                        ? 'Te falta contestar una pregunta'
-                        : `Te faltan ${missing.length} preguntas`}
-                </h1>
-                <ul className="flex flex-col gap-2.5">
-                    {missing.map((question) => (
-                        <li key={question.key}>
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                onClick={() =>
-                                    onGo(questions.indexOf(question))
-                                }
-                            >
-                                {question.topic}
-                            </Button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <WriteMissing missing={missing} questions={questions} onGo={onGo} />
         );
     }
 

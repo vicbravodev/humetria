@@ -112,6 +112,7 @@ export default function TeleworkWrite(props: Props) {
                     index={writing.index}
                     sections={props.sections}
                     editUrl={url}
+                    baseNote="Texto base de Humetría, listo para editar."
                 />
             </div>
         </SetupFrame>
