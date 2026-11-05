@@ -5,7 +5,6 @@ import RegulationBody from '@/components/seating/regulation-body';
 import RegulationEmpty from '@/components/seating/regulation-empty';
 import RegulationNotice from '@/components/seating/regulation-notice';
 import { Button } from '@/components/ui/button';
-import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type { RegulationRecord } from '@/types';
@@ -22,7 +21,6 @@ export default function SeatingRegulation({
     canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
-    useLightPrint();
     setLayoutProps({
         breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
             title: 'Reglamento interior',

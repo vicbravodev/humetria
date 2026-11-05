@@ -4,7 +4,6 @@ import CompensationHeader from '@/components/compensation/compensation-header';
 import ReportBody from '@/components/compensation/report-body';
 import SharedUnavailable from '@/components/compensation/shared-unavailable';
 import Logo from '@/components/humetria/logo';
-import { useLightPrint } from '@/hooks/use-light-print';
 import { reportSubtitle } from '@/lib/compensation/report-notes';
 import type { ScenarioReport } from '@/types';
 
@@ -21,8 +20,6 @@ export default function SharedReport({
     expiresAt: string | null;
     report: ScenarioReport | null;
 }) {
-    useLightPrint();
-
     if (report === null) {
         return (
             <>

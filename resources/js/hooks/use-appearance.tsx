@@ -94,6 +94,10 @@ export function initializeTheme(): void {
 
     // Set up system theme change listener
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
+
+    // A page on paper is read on white: every page prints in the light theme, whatever the screen shows.
+    window.addEventListener('beforeprint', () => applyTheme('light'));
+    window.addEventListener('afterprint', handleSystemThemeChange);
 }
 
 export function useAppearance(): UseAppearanceReturn {
