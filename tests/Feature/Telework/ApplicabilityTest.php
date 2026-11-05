@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Telework\Actions\DeclareApplicability;
+use App\Modules\Telework\Contracts\TeleworkApplicability;
 use App\Modules\Telework\Models\TeleworkProfile;
+use App\Modules\Telework\Support\CompanyTeleworkApplicability;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DeclareApplicability::class);
+mutates(DeclareApplicability::class, CompanyTeleworkApplicability::class);
 
 // Rediseño v2 (board V2-Aplica, decisión A2): before its route, each center answers whether someone works away from it more
 // than 40 % of their time (LFT 330-A), and the answer is kept with who gave it and when.
@@ -111,4 +113,17 @@ it('keeps one answer per center in the database too', function (): void {
 
     expect(fn () => DB::transaction(fn () => TeleworkProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $profile->work_center_id])))
         ->toThrow(QueryException::class, 'telework_profiles_work_center_unique');
+});
+
+it('answers for other modules what each center declared, and records a new answer the same way', function (): void {
+    $offices = WorkCenter::factory()->for($this->tenant)->create();
+    WorkCenter::factory()->for($this->tenant)->create();
+    TeleworkProfile::factory()->teleworks()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $offices->id]);
+    $theirs = TeleworkProfile::factory()->create();
+    $applicability = app(TeleworkApplicability::class);
+
+    $applicability->declare($this->center->id, false, $this->hr->id);
+
+    expect($applicability->declarations([$this->center->id, $offices->id, $theirs->work_center_id]))->toEqual([$this->center->id => false, $offices->id => true])
+        ->and(AuditEntry::query()->where('event', 'telework.applicability_declared')->count())->toBe(1);
 });

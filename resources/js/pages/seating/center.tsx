@@ -59,7 +59,12 @@ export default function SeatingCenter({
                         ...(profile === null
                             ? []
                             : [
-                                  { icon: Factory, text: profile.sectorLabel },
+                                  {
+                                      icon: Factory,
+                                      text:
+                                          profile.sectorLabel ??
+                                          'Nadie trabaja de pie',
+                                  },
                                   {
                                       icon: CalendarCheck,
                                       text: `Declarado el ${describeDate(profile.declaredOn) ?? profile.declaredOn}`,
@@ -90,7 +95,7 @@ export default function SeatingCenter({
                         />
                     ) : (
                         <p className="text-muted-foreground">
-                            {profile === null
+                            {profile?.sectorLabel == null
                                 ? 'Este centro todavía no declara su sector.'
                                 : `Sector declarado: ${profile.sectorLabel}.`}
                         </p>

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Enums\Sector;
+use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -59,4 +61,32 @@ it('declares that it does not apply when everyone works at the center', function
         ->assertNoJavaScriptErrors();
 
     expect(TeleworkProfile::query()->withoutGlobalScopes()->sole()->has_teleworkers)->toBeFalse();
+});
+
+// Rediseño v2 (board V2-Aplica-Otras): what NOM-035 and Ley Silla ask of one center.
+it('tells what NOM-035 asks of the center, as the redesign draws it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $plant = applicabilityCompany();
+    staffOf($plant->tenant, $plant, 60);
+
+    visitPage('tenancy/applies', "/admin/acme/work-centers/{$plant->id}/applies", $dark, $mobile)
+        ->assertSee('¿Qué te pide cada norma en este centro?')
+        ->assertSee('Guías I y III')
+        ->assertSee('Con 60 personas, la muestra mínima la ves al crear la evaluación.')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('keeps the Ley Silla declaration of the center', function (): void {
+    $plant = applicabilityCompany();
+
+    visit("/admin/acme/work-centers/{$plant->id}/applies?norm=seating")
+        ->assertSee('Primero, ¿alguien trabaja de pie?')
+        ->radio('standing', 'yes')
+        ->assertSee('Falta saber a qué se dedica')
+        ->radio('sector', 'industrial')
+        ->assertSee('Solo donde el trabajo permite sentarse')
+        ->click('Guardar declaración')
+        ->assertSee('Ver mi ruta')
+        ->assertNoJavaScriptErrors();
+
+    expect(SeatingProfile::query()->withoutGlobalScopes()->sole()->sector)->toBe(Sector::Industrial);
 });

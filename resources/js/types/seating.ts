@@ -13,8 +13,9 @@ export type SectorOption = { value: SectorValue; label: string };
 
 /** What a work center declared for Ley Silla: its sector and whether nobody works standing there. */
 export type SeatingProfile = {
-    sector: SectorValue;
-    sectorLabel: string;
+    /** None where the center declared that nobody works standing without naming it (rediseño v2, V3-Onboarding). */
+    sector: SectorValue | null;
+    sectorLabel: string | null;
     noStandingPositions: boolean;
     declaredOn: string;
     note: string | null;

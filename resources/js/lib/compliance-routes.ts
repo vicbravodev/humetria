@@ -2,6 +2,7 @@ import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as seating } from '@/routes/tenant/seating';
 import { index as telework } from '@/routes/tenant/telework';
 import { show as teleworkApplies } from '@/routes/tenant/telework/applies';
+import { applies as centerApplies } from '@/routes/tenant/work-centers';
 import type { CenterRoutes, NavItem } from '@/types';
 
 export type NormKey = keyof Omit<CenterRoutes, 'id' | 'name'>;
@@ -37,6 +38,10 @@ export const NORMS: Norm[] = [
         title: 'Ley Silla',
         subtitle: 'Trabajo de pie',
         href: seating,
+        answer: (tenantSlug, workCenterId) =>
+            centerApplies([tenantSlug, workCenterId], {
+                query: { norm: 'seating' },
+            }),
     },
 ];
 

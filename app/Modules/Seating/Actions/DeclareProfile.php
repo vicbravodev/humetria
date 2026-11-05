@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * A work center declares its sector (criterio C-03) and whether it has people working standing. Declaring again replaces
- * the declaration, with the new date and author.
+ * A work center declares its sector (criterio C-03) and whether it has people working standing; where nobody does, the
+ * sector may be left undeclared. Declaring again replaces the declaration, with the new date and author.
  */
 final readonly class DeclareProfile
 {
     public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
 
-    public function handle(string $workCenterId, Sector $sector, bool $noStandingPositions, ?string $note, int $userId): SeatingProfile
+    public function handle(string $workCenterId, ?Sector $sector, bool $noStandingPositions, ?string $note, int $userId): SeatingProfile
     {
         return DB::transaction(function () use ($workCenterId, $sector, $noStandingPositions, $note, $userId): SeatingProfile {
             $profile = SeatingProfile::query()->updateOrCreate(['work_center_id' => $workCenterId], [
@@ -32,7 +32,7 @@ final readonly class DeclareProfile
                 'note' => $note,
             ]);
 
-            $record = ['work_center_id' => $workCenterId, 'sector' => $sector->value, 'no_standing_positions' => $noStandingPositions];
+            $record = ['work_center_id' => $workCenterId, 'sector' => $sector?->value, 'no_standing_positions' => $noStandingPositions];
             $this->audit->handle('seating.profile_declared', $profile, $record);
             Log::info('seating.profile_declared', $record);
 

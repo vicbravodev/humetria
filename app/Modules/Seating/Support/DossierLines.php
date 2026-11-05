@@ -64,7 +64,7 @@ final class DossierLines
         $lines = [];
 
         if ($facts->profile !== null) {
-            $lines[] = self::line("Sector declarado: {$facts->profile->sector->label()}", $facts->profile->declared_on);
+            $facts->profile->sector !== null && $lines[] = self::line("Sector declarado: {$facts->profile->sector->label()}", $facts->profile->declared_on);
             $facts->profile->no_standing_positions && $lines[] = self::line('Declara que no tiene puestos en bipedestación');
         }
 
