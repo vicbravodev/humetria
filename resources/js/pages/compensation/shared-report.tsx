@@ -13,7 +13,6 @@ import Logo from '@/components/humetria/logo';
 import PageHeader from '@/components/humetria/page-header';
 import PrintButton from '@/components/humetria/print-button';
 import { useLightPrint } from '@/hooks/use-light-print';
-import { raiseSummary } from '@/lib/compensation/scenarios';
 import type { ScenarioReport } from '@/types';
 
 export default function SharedReport({
@@ -58,7 +57,7 @@ export default function SharedReport({
                 <PageHeader
                     caption="Reporte de impacto"
                     title={report.scenario.name}
-                    description={`Desde el ${report.scenario.effective_on} · ${raiseSummary(report.scenario.unionized_raise, report.scenario.trusted_raise)}.`}
+                    description={`Desde el ${report.scenario.effective_on} · ${report.scenario.raise_text}.`}
                 >
                     <span className="print:hidden">
                         <PrintButton />

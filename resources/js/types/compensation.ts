@@ -129,12 +129,17 @@ export type ScenarioRow = {
     unionized_raise: string;
     /** Null when the trusted staff copy the unionized raise. */
     trusted_raise: string | null;
+    /** "4 % sindicalizados · 2.5 % confianza" or "$608 al mes a sindicalizados y confianza". */
+    raise_text: string;
     changed_benefits: number;
     people: number;
-    /** The change over the 12 months plus the retroactive months, written as money. */
+    first_year_cents: number;
+    /** The change over the 12 months plus the retroactive months, in whole pesos. */
     first_year_text: string;
-    /** What the change costs per year from the effective date, written as money. */
+    /** What the change costs per year from the effective date, in whole pesos. */
     recurring_text: string;
+    /** The first year over what is paid today, as a percent: "3.7". */
+    over_today_text: string;
     archived: boolean;
 };
 
@@ -165,23 +170,6 @@ export type AssumptionField = {
     source: string;
     /** `AAAA-MM-DD`. */
     set_on: string;
-};
-
-/** A scenario in the comparison, with its totals written as money. */
-export type CompareScenario = {
-    id: string;
-    name: string;
-    people: number;
-    first_year_text: string;
-    recurring_text: string;
-};
-
-/** A concept of the cost with what each compared scenario changes in it, in the order of the scenarios. */
-export type CompareRow = {
-    type: 'salary' | 'benefit' | 'contribution';
-    key: string;
-    label: string;
-    cells: string[];
 };
 
 /** The cost of one slice of the roster (an area, a category and level, a group) over the first 12 months, written as money. */
@@ -249,6 +237,8 @@ export type ScenarioReport = {
         retroactive_months: number;
         unionized_raise: string;
         trusted_raise: string | null;
+        /** "5 % sindicalizados · 3 % confianza" or "$608 al mes a sindicalizados y confianza". */
+        raise_text: string;
     };
     coverage: {
         total: number;

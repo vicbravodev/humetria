@@ -48,8 +48,25 @@ it('shows Compensación as the start of a union', function (bool $dark, bool $mo
 
     visitPage('compensation/index', '/admin/sindicato', $dark, $mobile)
         ->assertSee('Compensación')
-        ->assertSee('Cargar el padrón');
+        ->assertSee('Antes de costear, 3 pasos')
+        ->assertSee('Cargar el padrón')
+        ->assertSee('La empresa no ve tus datos ni tus propuestas.');
 })->with($looks);
+
+it('shows a union its own proposals, with what the company pays today', function (): void {
+    $union = Tenant::factory()->union()->create(['slug' => 'sindicato']);
+    $this->actingAs(ownerOf($union));
+    $operator = JobGrade::factory()->create(['tenant_id' => $union->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $union->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    Employee::factory()->create(['tenant_id' => $union->id, 'work_center_id' => null, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'employee_number' => 'E-001']);
+    Scenario::factory()->create(['tenant_id' => $union->id, 'name' => 'Propuesta del sindicato · 8 %', 'group_changes' => ['unionized' => 800, 'trusted' => null]]);
+
+    visitPage('compensation/index', '/admin/sindicato/compensation')
+        ->assertSee('Tus propuestas')
+        ->assertSee('Hoy la empresa paga')
+        ->assertSee('1 agremiado')
+        ->assertSee('Propuesta del sindicato · 8 %');
+});
 
 it('shows the catalog of benefits with the base ones and the risk premium', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
@@ -492,16 +509,45 @@ it('shows what is wrong in the editor without saving', function (): void {
     expect(Scenario::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
-it('leads from Compensación to the benefits, the tabulator and the individual salaries', function (string $link, string $path): void {
+/** A company with one person costed at $500 a day and two scenarios, so the start shows its data and its scenarios. */
+function startWithData(): string
+{
     $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL', 'employee_number' => 'E-001']);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => null, 'employee_number' => 'E-900']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027 · 4 %', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027 · 5 %', 'retroactive_months' => 2, 'group_changes' => ['unionized' => 500, 'trusted' => 300]]);
+
+    return $url;
+}
+
+it('shows the data of the contract and the scenarios with their cost on the start (board V4-Comp-Inicio)', function (bool $dark, bool $mobile): void {
+    $url = startWithData();
+
+    visitPage('compensation/index', "{$url}/compensation", $dark, $mobile)
+        ->assertSee('Los datos de tu contrato')
+        ->assertSee('El cálculo cubre 1 de 2 personas. Con 2 datos más, el número es exacto.')
+        ->assertSee('1 sin categoría ni nivel')
+        ->assertSee('Tus escenarios')
+        ->assertSee('5 % sindicalizados · 3 % confianza · 2 meses de retroactivo')
+        ->assertSee('Comparar los 2')
+        ->assertSee('Para la mesa de negociación')
+        ->assertDontSee('a confianza, cerca de');
+})->with($looks);
+
+it('leads from the data of the contract on the start to each of them', function (string $link, string $path): void {
+    $url = startWithData();
 
     visit("{$url}/compensation")
         ->click($link)
-        ->assertPathIs("{$url}/compensation/{$path}")
+        ->assertPathIs("{$url}/{$path}")
         ->assertNoJavaScriptErrors();
 })->with([
-    'benefits' => ['Prestaciones', 'benefits'],
-    'tabulator' => ['Tabulador', 'tabulator'],
-    'individual salaries' => ['Sueldos individuales', 'overrides'],
-    'scenarios' => ['Escenarios', 'scenarios'],
+    'tabulator' => ['Tabulador', 'compensation/tabulator'],
+    'benefits' => ['Prestaciones', 'compensation/benefits'],
+    'missing data' => ['Completar 2 datos', 'compensation/tabulator'],
+    'scenarios to compare' => ['Comparar los 2', 'compensation/scenarios/compare'],
 ]);

@@ -194,3 +194,10 @@ it('loads with a bounded number of queries', function (): void {
 
     expect(count(DB::getQueryLog()))->toBeLessThanOrEqual(80);
 });
+
+it('says what the scenario raises in words, a fixed amount a month too (decision A13)', function (): void {
+    $amount = Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'raise_unit' => 'amount', 'group_changes' => ['unionized' => 60_800, 'trusted' => 30_000]]);
+
+    $this->get(reportUrl($this->tenant, $amount))
+        ->assertInertia(fn (Assert $page) => $page->where('scenario.raise_text', '$608 al mes a sindicalizados · $300 al mes a confianza'));
+});

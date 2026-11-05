@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { useIsUnion } from '@/hooks/use-is-union';
 import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { raiseSummary } from '@/lib/compensation/scenarios';
 import { annex, edit } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioReport } from '@/types';
 
@@ -34,7 +33,7 @@ export default function Report(report: ScenarioReport) {
                 <PageHeader
                     caption="Reporte de impacto"
                     title={scenario.name}
-                    description={`Desde el ${scenario.effective_on} · ${raiseSummary(scenario.unionized_raise, scenario.trusted_raise)}.`}
+                    description={`Desde el ${scenario.effective_on} · ${scenario.raise_text}.`}
                 >
                     <Button variant="outline" asChild className="print:hidden">
                         <Link

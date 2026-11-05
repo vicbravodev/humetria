@@ -88,3 +88,7 @@ it('writes cents as whole pesos, a half going up, for the headline numbers', fun
 })->with([
     [123_949_999, '$1,239,500'], [123_950_049, '$1,239,500'], [123_950_050, '$1,239,501'], [0, '$0'], [49, '$0'], [50, '$1'], [-123_450, '-$1,235'],
 ]);
+
+it('writes about how much in hundreds of pesos, for a figure to negotiate', function (int $cents, string $expected): void {
+    expect(Money::about($cents))->toBe($expected);
+})->with([[12_690_512, '$126,900'], [12_695_000, '$127,000'], [4_999, '$0'], [5_000, '$100'], [0, '$0']]);

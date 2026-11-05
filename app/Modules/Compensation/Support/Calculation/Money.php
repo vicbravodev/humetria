@@ -47,6 +47,12 @@ final class Money
         return ($pesos < 0 ? '-' : '').'$'.number_format(abs($pesos));
     }
 
+    /** "$126,900" for 12,690,512 cents: the nearest hundred pesos, for a figure to negotiate with ("cerca de"). */
+    public static function about(int $cents): string
+    {
+        return self::pesos(self::round(BigRational::ofFraction($cents, 10_000)) * 10_000);
+    }
+
     /** "$2,932.75"; a negative amount is "-$2,932.75". */
     public static function format(int $cents): string
     {

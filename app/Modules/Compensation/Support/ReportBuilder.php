@@ -64,6 +64,7 @@ final readonly class ReportBuilder
                 'horizon_years' => $scenario->horizon_years, 'retroactive_months' => $scenario->retroactive_months,
                 'unionized_raise' => PercentBasisPoints::format($scenario->group_changes['unionized'] ?? 0),
                 'trusted_raise' => ($scenario->group_changes['trusted'] ?? null) === null ? null : PercentBasisPoints::format($scenario->group_changes['trusted']),
+                'raise_text' => RaiseText::of($scenario),
             ],
             'coverage' => $this->coverage($cost, $shared),
             'headline' => [

@@ -2,6 +2,7 @@ export type * from './assistant';
 export type * from './auth';
 export type * from './campaigns';
 export type * from './compensation';
+export type * from './compensation-compare';
 export type * from './dashboard';
 export type * from './interventions';
 export type * from './demos';

@@ -67,8 +67,10 @@ it('lists the scenarios newest first with their cost, paginated ten at a time', 
             ->where('scenarios.data.0.horizon_years', 3)->where('scenarios.data.0.retroactive_months', 2)
             ->where('scenarios.data.0.unionized_raise', '5')->where('scenarios.data.0.trusted_raise', '3')
             ->where('scenarios.data.0.people', 10)
-            ->where('scenarios.data.0.first_year_text', fn (string $text): bool => str_starts_with($text, '$') && $text !== '$0.00')
-            ->where('scenarios.data.1.id', $old->id)->where('scenarios.data.1.first_year_text', '$0.00')
+            // In whole pesos, as the headline numbers of the redesign (board V4-Comp-Inicio).
+            ->where('scenarios.data.0.first_year_text', fn (string $text): bool => str_starts_with($text, '$') && $text !== '$0')
+            ->where('scenarios.data.0.raise_text', '5 % sindicalizados · 3 % confianza')
+            ->where('scenarios.data.1.id', $old->id)->where('scenarios.data.1.first_year_text', '$0')
             ->where('scenarios.data.1.trusted_raise', null)
             ->where('counts', ['active' => 2, 'archived' => 1])
             ->where('filters', ['status' => 'active']));
