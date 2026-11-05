@@ -49,6 +49,11 @@ it('takes each stage from its requirements, in the order of the route', function
     'R13 committee' => ['r13', 6, 'documenta para la inspección'],
 ]);
 
+it('leaves seats, assessments and pauses ahead while the center has no position registered', function (): void {
+    expect(RouteStages::from(seatingRows(['r1' => [RowState::Missing, 1]]), false, false, null))
+        ->toEqual(new RouteProgress(true, [false, false, false, false, true, true], 'identifica los puestos de pie'));
+});
+
 it('counts the people left to assess', function (): void {
     expect(RouteStages::from(seatingRows(['r2' => [RowState::Missing, 6]]), false, true, null)->status)->toBe('evalúa a 6 personas')
         ->and(RouteStages::from(seatingRows(['r2' => [RowState::Missing, 1]]), false, true, null)->status)->toBe('evalúa a 1 persona');
