@@ -28,7 +28,7 @@ export default function ShareResults(props: ShareResultsProps) {
             <Head
                 title={`Compartir los resultados · ${props.workCenter.name}`}
             />
-            <div className="mx-auto grid w-full max-w-[1180px] gap-10 px-4 py-6 min-[1100px]:grid-cols-[minmax(0,1fr)_360px] md:px-12 md:py-10">
+            <div className="mx-auto grid w-full max-w-[1180px] gap-10 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,1fr)_360px] md:px-12 md:py-10">
                 <div className="flex min-w-0 flex-col gap-7">
                     <header className="flex flex-col gap-2">
                         <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em]">
