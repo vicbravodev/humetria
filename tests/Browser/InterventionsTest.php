@@ -66,6 +66,8 @@ it('shows the Programa: where it stands, what the Tabla asks and its rows', func
 
     visitPage('interventions/show', "{$url}/campaigns/{$campaign}/program", $dark, $mobile)
         ->assertSee('Con acciones vencidas')
+        // Rediseño v2 (board V2-N035-Plan): how many themes have actions, heading the Programa.
+        ->assertSeeIn('[aria-labelledby="program-coverage"]', 'temas con acciones')
         ->assertSee('1 de 2 acciones hechas')
         ->assertSee('Lo que pide la Tabla')
         ->assertSee('Qué se atiende')

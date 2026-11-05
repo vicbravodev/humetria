@@ -44,7 +44,7 @@ it('shows the Programa of a closed evaluation with its rows, from the most gener
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('interventions/show')
-            ->where('campaign', ['id' => $campaign->id, 'workCenter' => 'Planta Norte', 'kindLabel' => 'Evaluación NOM-035', 'closedOn' => '19 nov 2026', 'guide' => 'Guía II'])
+            ->where('campaign', ['id' => $campaign->id, 'workCenterId' => $campaign->work_center_id, 'workCenter' => 'Planta Norte', 'kindLabel' => 'Evaluación NOM-035', 'closedOn' => '19 nov 2026', 'guide' => 'Guía II'])
             ->where('requirement', null)
             ->where('program.highestLevel', ['value' => 'very_high', 'label' => 'Muy alto'])
             ->where('program.responsible', null)

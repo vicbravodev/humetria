@@ -1,4 +1,5 @@
 import ProgramActions from '@/components/interventions/program-actions';
+import ProgramCoverage from '@/components/interventions/program-coverage';
 import ProgramFollowUp from '@/components/interventions/program-follow-up';
 import ProgramHeader from '@/components/interventions/program-header';
 import ProgramRows from '@/components/interventions/program-rows';
@@ -7,7 +8,7 @@ import ProgramTabs from '@/components/interventions/program-tabs';
 import TableChecklist from '@/components/interventions/table-checklist';
 import { useProgramTab } from '@/hooks/use-program-tab';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { programTools } from '@/lib/interventions';
+import { byRisk, programTools } from '@/lib/interventions';
 import { program as programRoute } from '@/routes/tenant/campaigns';
 import type { ProgramData, ProgramPageProps } from '@/types';
 
@@ -35,6 +36,7 @@ export default function ProgramBody({
                 program={program}
                 members={page.members}
             />
+            <ProgramCoverage rows={program.items} />
             <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
                 <ProgramSummary program={program} />
                 <TableChecklist requirements={program.requirements} />
@@ -51,7 +53,7 @@ export default function ProgramBody({
             />
             {tab === 'rows' && (
                 <ProgramRows
-                    rows={program.items}
+                    rows={byRisk(program.items)}
                     campaignId={campaignId}
                     tools={tools}
                 />

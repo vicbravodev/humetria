@@ -1,4 +1,5 @@
-import { index, show } from '@/routes/tenant/campaigns';
+import { index } from '@/routes/tenant/campaigns';
+import { route } from '@/routes/tenant/nom035';
 import type {
     ActionStatusValue,
     BadgeVariant,
@@ -51,7 +52,10 @@ export function programTrail(
 ): BreadcrumbItem[] {
     return [
         { title: 'NOM-035', href: index(tenantSlug) },
-        { title: campaign.workCenter, href: show([tenantSlug, campaign.id]) },
+        {
+            title: campaign.workCenter,
+            href: route([tenantSlug, campaign.workCenterId]),
+        },
         { title: 'Programa de intervención' },
     ];
 }
@@ -156,4 +160,35 @@ export function programTools(props: ProgramPageProps): ProgramTools | null {
         suggestion: props.followUpSuggestion?.date,
         today: props.today,
     };
+}
+
+/** «2 de 7 temas con acciones · 2 acciones» (board V2-N035-Plan): the themes with an action not cancelled, and how many. */
+export function themeCoverage(rows: { meter: { total: number } }[]): {
+    covered: number;
+    total: number;
+    actions: number;
+    text: string;
+} {
+    const covered = rows.filter((row) => row.meter.total > 0).length;
+
+    return {
+        covered,
+        total: rows.length,
+        actions: rows.reduce((sum, row) => sum + row.meter.total, 0),
+        text: `${covered} de ${rows.length} ${rows.length === 1 ? 'tema' : 'temas'} con acciones`,
+    };
+}
+
+const RISK_ORDER = ['very_high', 'high', 'medium', 'low', 'null'];
+
+/** The rows with the highest level first, as the board orders the themes; those RH added, without one, last. */
+export function byRisk<R extends { level: { value: string } | null }>(
+    rows: R[],
+): R[] {
+    const rank = (row: R) =>
+        row.level === null
+            ? RISK_ORDER.length
+            : RISK_ORDER.indexOf(row.level.value);
+
+    return rows.toSorted((a, b) => rank(a) - rank(b));
 }
