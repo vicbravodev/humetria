@@ -16,9 +16,11 @@ use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Http\Requests\BenefitRequest;
 use App\Modules\Compensation\Models\Benefit;
+use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
 use App\Modules\Compensation\Support\BaseCatalog;
 use App\Modules\Compensation\Support\BenefitRows;
+use App\Modules\Compensation\Support\ContractStatus;
 use App\Modules\Compensation\Support\PremiumRate;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +35,7 @@ use Inertia\Response;
  */
 final class BenefitController extends Controller
 {
-    public function index(Request $request, BaseCatalog $catalog, ListBenefits $list, CountBenefits $count, BenefitRows $rows): Response
+    public function index(Request $request, BaseCatalog $catalog, ListBenefits $list, CountBenefits $count, BenefitRows $rows, ContractStatus $status): Response
     {
         Gate::authorize('view-compensation');
 
@@ -46,19 +48,29 @@ final class BenefitController extends Controller
             'benefits' => $rows->through($list->handle($search, $archived), $today),
             'counts' => $count->handle(),
             'filters' => ['q' => $search, 'status' => $archived ? 'archived' : 'active'],
-            'kinds' => array_map(fn (BenefitKind $kind): array => ['value' => $kind->value, 'label' => $kind->label(), 'unit' => $kind->unit()], BenefitKind::cases()),
-            'frequencies' => array_map(fn (Frequency $frequency): array => ['value' => $frequency->value, 'label' => $frequency->label()], Frequency::cases()),
-            'groups' => array_map(fn (PayGroup $group): array => ['value' => $group->value, 'label' => $group->label()], PayGroup::cases()),
-            'sbc_integrations' => array_map(fn (SbcIntegration $integration): array => ['value' => $integration->value, 'label' => $integration->label()], SbcIntegration::cases()),
+            ...$this->choices(),
             'risk_premium' => $this->riskPremium($today),
+            'status' => $status->handle($today),
+        ]);
+    }
+
+    /** «Nueva prestación» as a page (board V4-Comp-Prestacion, decision A14), with its cost as it is answered. */
+    public function create(): Response
+    {
+        Gate::authorize('manage-compensation');
+
+        return Inertia::render('compensation/benefit-create', [
+            ...$this->choices(),
+            'scenarios' => Scenario::query()->whereNull('archived_at')->count(),
         ]);
     }
 
     public function store(BenefitRequest $request, SaveBenefit $save): RedirectResponse
     {
         $save->handle($request->toData(), $request->firstTerm());
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Prestación creada.']);
 
-        return $this->done('Prestación creada.');
+        return to_route('tenant.compensation.benefits.index', request()->route('tenant'));
     }
 
     public function update(BenefitRequest $request, mixed $tenant, string $benefit, SaveBenefit $save): RedirectResponse
@@ -97,6 +109,21 @@ final class BenefitController extends Controller
         $premium = WorkRiskPremium::query()->where('effective_from', '<=', $today->toDateString())->orderByDesc('effective_from')->first();
 
         return $premium === null ? null : ['rate' => PremiumRate::format($premium->rate_scaled), 'effective_from' => $premium->effective_from->toDateString()];
+    }
+
+    /**
+     * The fixed catalogs the form of a benefit chooses from.
+     *
+     * @return array<string, list<array<string, string>>>
+     */
+    private function choices(): array
+    {
+        return [
+            'kinds' => array_map(fn (BenefitKind $kind): array => ['value' => $kind->value, 'label' => $kind->label(), 'unit' => $kind->unit()], BenefitKind::cases()),
+            'frequencies' => array_map(fn (Frequency $frequency): array => ['value' => $frequency->value, 'label' => $frequency->label()], Frequency::cases()),
+            'groups' => array_map(fn (PayGroup $group): array => ['value' => $group->value, 'label' => $group->label()], PayGroup::cases()),
+            'sbc_integrations' => array_map(fn (SbcIntegration $integration): array => ['value' => $integration->value, 'label' => $integration->label()], SbcIntegration::cases()),
+        ];
     }
 
     private function done(string $message): RedirectResponse

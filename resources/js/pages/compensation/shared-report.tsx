@@ -1,21 +1,17 @@
 import { Head } from '@inertiajs/react';
 import { Link2 } from 'lucide-react';
-import ReportAssumptions from '@/components/compensation/report-assumptions';
-import ReportConcepts from '@/components/compensation/report-concepts';
-import ReportCoverage from '@/components/compensation/report-coverage';
-import ReportCuts from '@/components/compensation/report-cuts';
-import ReportHeadline from '@/components/compensation/report-headline';
-import ReportLiability from '@/components/compensation/report-liability';
-import ReportTimeline from '@/components/compensation/report-timeline';
-import ReportWarnings from '@/components/compensation/report-warnings';
+import CompensationHeader from '@/components/compensation/compensation-header';
+import ReportBody from '@/components/compensation/report-body';
 import SharedUnavailable from '@/components/compensation/shared-unavailable';
 import Logo from '@/components/humetria/logo';
-import PageHeader from '@/components/humetria/page-header';
-import PrintButton from '@/components/humetria/print-button';
 import { useLightPrint } from '@/hooks/use-light-print';
-import { raiseSummary } from '@/lib/compensation/scenarios';
+import { reportSubtitle } from '@/lib/compensation/report-notes';
 import type { ScenarioReport } from '@/types';
 
+/**
+ * The report of a scenario opened from a link that expires (board V4-Comp-Reporte, «compartida por enlace»): the same report,
+ * read-only, with the small groups folded; a link that opens nothing says so, whatever the reason.
+ */
 export default function SharedReport({
     company,
     expiresAt,
@@ -44,34 +40,30 @@ export default function SharedReport({
     return (
         <>
             <Head title={`Reporte · ${report.scenario.name}`} />
-            <main className="mx-auto flex min-h-svh w-full max-w-[1120px] flex-col gap-8 px-4 py-6 md:px-6 print:p-0">
+            <main className="mx-auto flex min-h-svh w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 print:p-0">
                 <Logo className="h-7 print:hidden" />
-                <p className="flex flex-wrap items-center gap-3 rounded-[10px] border bg-card px-4 py-3 text-sm print:hidden">
+                <p className="flex items-start gap-3 rounded-xl bg-accent px-4 py-3 text-sm text-accent-foreground print:hidden">
                     <Link2
                         aria-hidden
-                        className="size-[18px] shrink-0 text-primary"
+                        className="mt-0.5 size-[18px] shrink-0 text-primary"
                     />
-                    {company} compartió este reporte contigo. Los grupos de
-                    pocas personas se muestran juntos como «Otros». El enlace
-                    vence el {expiresAt}.
-                </p>
-                <PageHeader
-                    caption="Reporte de impacto"
-                    title={report.scenario.name}
-                    description={`Desde el ${report.scenario.effective_on} · ${raiseSummary(report.scenario.unionized_raise, report.scenario.trusted_raise)}.`}
-                >
-                    <span className="print:hidden">
-                        <PrintButton />
+                    <span>
+                        {company} compartió este reporte contigo. El enlace
+                        vence el {expiresAt}. Los grupos de pocas personas se
+                        muestran juntos como «Otros».
                     </span>
-                </PageHeader>
-                <ReportCoverage report={report} />
-                <ReportWarnings report={report} />
-                <ReportHeadline report={report} />
-                <ReportConcepts concepts={report.concepts} />
-                <ReportCuts cuts={report.cuts} />
-                <ReportTimeline report={report} />
-                <ReportLiability report={report} />
-                <ReportAssumptions assumptions={report.assumptions} />
+                </p>
+                <CompensationHeader
+                    eyebrow="Reporte de impacto · Compensación"
+                    title={report.scenario.name}
+                    lead={reportSubtitle(report, company)}
+                />
+                <ReportBody
+                    report={report}
+                    union={false}
+                    shared
+                    stickyClassName="top-0"
+                />
             </main>
         </>
     );

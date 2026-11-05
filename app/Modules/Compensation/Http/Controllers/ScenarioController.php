@@ -39,11 +39,18 @@ final class ScenarioController extends Controller
         ]);
     }
 
-    public function create(ScenarioEditor $editor): Response
+    public function create(Request $request, ScenarioEditor $editor): Response
     {
         Gate::authorize('manage-compensation');
 
-        return Inertia::render('compensation/scenario', $editor->props(null, $this->today()));
+        $prefill = [];
+
+        // A link may start the scenario somewhere (the point in between of a comparison); the editor checks each value.
+        foreach (['name', 'raise_unit', 'unionized_raise', 'trusted_raise', 'retroactive_months'] as $key) {
+            $prefill[$key] = $request->query($key);
+        }
+
+        return Inertia::render('compensation/scenario', $editor->props(null, $this->today(), $prefill));
     }
 
     public function edit(mixed $tenant, string $scenario, ScenarioEditor $editor): Response
@@ -57,16 +64,12 @@ final class ScenarioController extends Controller
     // parameters in order.
     public function store(ScenarioRequest $request, SaveScenario $save): RedirectResponse
     {
-        $save->handle($request->toData());
-
-        return $this->done('Escenario guardado.');
+        return $this->done($save->handle($request->toData()));
     }
 
     public function update(ScenarioRequest $request, mixed $tenant, string $scenario, SaveScenario $save): RedirectResponse
     {
-        $save->handle($request->toData(Scenario::query()->findOrFail($scenario)->id));
-
-        return $this->done('Escenario guardado.');
+        return $this->done($save->handle($request->toData(Scenario::query()->findOrFail($scenario)->id)));
     }
 
     public function duplicate(mixed $tenant, string $scenario, DuplicateScenario $duplicate): RedirectResponse
@@ -87,11 +90,12 @@ final class ScenarioController extends Controller
         return back();
     }
 
-    private function done(string $message): RedirectResponse
+    /** «Guardar y ver reporte» (board V4-Comp-Escenario): a saved scenario opens its report. */
+    private function done(Scenario $saved): RedirectResponse
     {
-        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Escenario guardado.']);
 
-        return to_route('tenant.compensation.scenarios.index', request()->route('tenant'));
+        return to_route('tenant.compensation.scenarios.report', [request()->route('tenant'), $saved->id]);
     }
 
     private function today(): CarbonImmutable

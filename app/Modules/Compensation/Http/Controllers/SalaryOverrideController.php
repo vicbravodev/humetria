@@ -10,6 +10,7 @@ use App\Modules\Compensation\Actions\ListSalaryOverrides;
 use App\Modules\Compensation\Actions\SaveSalaryOverride;
 use App\Modules\Compensation\Http\Requests\OverrideRequest;
 use App\Modules\Compensation\Models\SalaryOverride;
+use App\Modules\Compensation\Support\ContractStatus;
 use App\Modules\Compensation\Support\CsvFile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,7 @@ use Inertia\Response;
  */
 final class SalaryOverrideController extends Controller
 {
-    public function index(Request $request, ListSalaryOverrides $list): Response
+    public function index(Request $request, ListSalaryOverrides $list, ContractStatus $status): Response
     {
         Gate::authorize('view-compensation');
 
@@ -35,6 +36,7 @@ final class SalaryOverrideController extends Controller
             'people' => $list->handle($search, $today),
             'filters' => ['q' => $search],
             'max_rows' => CsvFile::MAX_ROWS,
+            'status' => $status->handle($today),
         ]);
     }
 

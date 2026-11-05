@@ -225,3 +225,9 @@ it('costs a built scenario end to end: ten people at 500 pesos and a 5 percent r
         ->and(array_find($cost->concepts, fn ($concept): bool => $concept->key === 'salary')?->deltaCents())->toBe(9_125_000)
         ->and($cost->deltaCents())->toBeGreaterThan(9_125_000);
 });
+
+it('turns a raise of a fixed amount into the monthly amount of each group, with no rate', function (): void {
+    $input = builtInput(Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'raise_unit' => 'amount', 'group_changes' => ['unionized' => 60_800, 'trusted' => null]]));
+
+    expect($input->raises)->toBe([])->and($input->monthlyAmounts)->toBe(['unionized' => 60_800]);
+});

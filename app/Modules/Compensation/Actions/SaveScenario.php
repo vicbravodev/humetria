@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Actions;
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Data\TermChange;
 use App\Modules\Compensation\Enums\AssumptionKey;
+use App\Modules\Compensation\Enums\RaiseUnit;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
@@ -27,6 +28,9 @@ final readonly class SaveScenario
     private const string EARLIEST = '2023-01-01';
 
     private const int MAX_RAISE_BP = 10_000;
+
+    /** The largest fixed amount a month, $100,000, in cents. */
+    private const int MAX_RAISE_CENTS = 10_000_000;
 
     private const int MAX_YEARS_AHEAD = 10;
 
@@ -51,38 +55,57 @@ final readonly class SaveScenario
     public function handle(ScenarioData $data): Scenario
     {
         $scenario = $data->id === null ? null : Scenario::query()->findOrFail($data->id);
-        $name = trim($data->name);
-        $errors = [
-            ...$this->nameProblem($name),
-            ...$this->periodProblems($data),
-            ...$this->raiseProblems($data),
-            ...$this->assumptionProblems($data),
-            ...$this->termProblems($data),
-            ...($data->defaultState !== null && ! array_key_exists($data->defaultState, $this->workCenters->states()) ? ['default_state' => 'Elige un estado de la lista.'] : []),
-        ];
+        $errors = $this->problems($data);
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
-        return DB::transaction(function () use ($scenario, $data, $name): Scenario {
+        return DB::transaction(function () use ($scenario, $data): Scenario {
             $saved = $scenario ?? new Scenario(['tenant_id' => $this->currentTenant->id()]);
-            $saved->fill([
-                'name' => $name,
-                'effective_on' => $data->effectiveOn,
-                'retroactive_months' => $data->retroactiveMonths,
-                'horizon_years' => $data->horizonYears,
-                'group_changes' => ['unionized' => $data->unionizedRaiseBp, 'trusted' => $data->trustedRaiseBp],
-                'term_changes' => array_map(fn (TermChange $change): array => ['benefit_id' => $change->benefitId, 'value' => $change->value, 'tenure_table' => $change->tenureTable], $data->termChanges),
-                'assumptions' => $this->assumptions($data, $scenario),
-                'default_state' => $data->defaultState,
-            ])->save();
+            $saved->fill([...$this->attributes($data), 'assumptions' => $this->assumptions($data, $scenario)])->save();
 
             // Ids only: a raise or a new term is money, which stays out of logs.
             Log::info('compensation.scenario_saved', ['scenario_id' => $saved->id, 'created' => $scenario === null]);
 
             return $saved;
         });
+    }
+
+    /**
+     * What is wrong with a scenario, by field; empty when it can be saved.
+     *
+     * @return array<string, string>
+     */
+    public function problems(ScenarioData $data): array
+    {
+        return [
+            ...$this->nameProblem(trim($data->name)),
+            ...$this->periodProblems($data),
+            ...$this->raiseProblems($data),
+            ...$this->assumptionProblems($data),
+            ...$this->termProblems($data),
+            ...($data->defaultState !== null && ! array_key_exists($data->defaultState, $this->workCenters->states()) ? ['default_state' => 'Elige un estado de la lista.'] : []),
+        ];
+    }
+
+    /**
+     * The columns of the scenario, but its assumptions: what its cost depends on.
+     *
+     * @return array<model-property<Scenario>, mixed>
+     */
+    public function attributes(ScenarioData $data): array
+    {
+        return [
+            'name' => trim($data->name),
+            'effective_on' => $data->effectiveOn,
+            'retroactive_months' => $data->retroactiveMonths,
+            'horizon_years' => $data->horizonYears,
+            'raise_unit' => $data->raiseUnit,
+            'group_changes' => ['unionized' => $data->unionizedRaiseBp, 'trusted' => $data->trustedRaiseBp],
+            'term_changes' => array_map(fn (TermChange $change): array => ['benefit_id' => $change->benefitId, 'value' => $change->value, 'tenure_table' => $change->tenureTable], $data->termChanges),
+            'default_state' => $data->defaultState,
+        ];
     }
 
     /**
@@ -149,10 +172,13 @@ final readonly class SaveScenario
     private function raiseProblems(ScenarioData $data): array
     {
         $errors = [];
+        [$max, $message] = $data->raiseUnit === RaiseUnit::Amount
+            ? [self::MAX_RAISE_CENTS, 'El monto al mes va de $0 a $100,000.']
+            : [self::MAX_RAISE_BP, 'El aumento va de 0 % a 100 %.'];
 
         foreach (['unionized_raise' => $data->unionizedRaiseBp, 'trusted_raise' => $data->trustedRaiseBp] as $field => $raise) {
-            if ($raise !== null && ($raise < 0 || $raise > self::MAX_RAISE_BP)) {
-                $errors[$field] = 'El aumento va de 0 % a 100 %.';
+            if ($raise !== null && ($raise < 0 || $raise > $max)) {
+                $errors[$field] = $message;
             }
         }
 

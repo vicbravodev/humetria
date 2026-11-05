@@ -1,13 +1,15 @@
-import { Head } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import BenefitsEmpty from '@/components/compensation/benefits-empty';
 import BenefitsTable from '@/components/compensation/benefits-table';
 import BenefitsToolbar from '@/components/compensation/benefits-toolbar';
-import CreateBenefitSheet from '@/components/compensation/create-benefit-sheet';
+import ContractDataFrame from '@/components/compensation/contract-data-frame';
+import NewBenefitButton from '@/components/compensation/new-benefit-button';
 import RiskPremiumCard from '@/components/compensation/risk-premium-card';
-import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { benefitQuery, benefitsHeadline } from '@/lib/compensation/benefits';
+import type { ContractStatus } from '@/lib/compensation/start';
+import { index } from '@/routes/tenant/compensation';
 import { grades } from '@/routes/tenant/compensation/benefits';
 import type {
     BenefitCounts,
@@ -27,6 +29,7 @@ export default function Benefits({
     groups,
     sbc_integrations,
     risk_premium,
+    status,
 }: {
     benefits: Paginated<BenefitRow>;
     counts: BenefitCounts;
@@ -36,6 +39,7 @@ export default function Benefits({
     groups: ChoiceOption[];
     sbc_integrations: ChoiceOption[];
     risk_premium: RiskPremium | null;
+    status: ContractStatus;
 }) {
     const tenantSlug = useTenantSlug();
     const choices = {
@@ -47,37 +51,43 @@ export default function Benefits({
     };
     const filtered =
         Object.keys(benefitQuery({ ...filters, status: 'active' })).length > 0;
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Compensación', href: index(tenantSlug) },
+            { title: 'Datos del contrato' },
+        ],
+    });
 
     return (
         <>
             <Head title="Prestaciones" />
-            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <PageHeader
+            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+                <ContractDataFrame
+                    status={status}
+                    current="benefits"
                     title="Prestaciones"
-                    description={`${benefitsHeadline(counts)} Aquí defines lo que da el contrato y sus términos de hoy: el punto de partida de cada escenario.`}
+                    lead={`${benefitsHeadline(counts)} Aquí defines lo que da el contrato y sus términos de hoy: el punto de partida de cada escenario.`}
+                    action={<NewBenefitButton />}
                 >
-                    <CreateBenefitSheet choices={choices} />
-                </PageHeader>
-                <RiskPremiumCard premium={risk_premium} />
-                <BenefitsToolbar filters={filters} counts={counts} />
-                {benefits.data.length === 0 ? (
-                    <BenefitsEmpty
-                        filtered={filtered}
-                        archived={filters.status === 'archived'}
+                    <RiskPremiumCard premium={risk_premium} />
+                    <BenefitsToolbar filters={filters} counts={counts} />
+                    {benefits.data.length === 0 ? (
+                        <BenefitsEmpty
+                            filtered={filtered}
+                            archived={filters.status === 'archived'}
+                        />
+                    ) : (
+                        <BenefitsTable
+                            benefits={benefits.data}
+                            choices={choices}
+                        />
+                    )}
+                    <Pagination
+                        page={benefits}
+                        label="Páginas de prestaciones"
                     />
-                ) : (
-                    <BenefitsTable benefits={benefits.data} choices={choices} />
-                )}
-                <Pagination page={benefits} label="Páginas de prestaciones" />
+                </ContractDataFrame>
             </div>
         </>
     );
 }
-
-Benefits.layout = {
-    breadcrumbs: [
-        { title: 'Herramientas' },
-        { title: 'Compensación' },
-        { title: 'Prestaciones' },
-    ],
-};

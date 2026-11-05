@@ -1,4 +1,3 @@
-import { SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import GradeSalarySheet from '@/components/compensation/grade-salary-sheet';
 import { Button } from '@/components/ui/button';
@@ -20,11 +19,11 @@ export default function GradeRowAction({ grade }: { grade: TabulatorRow }) {
                     <Button
                         variant="ghost"
                         size="sm"
-                        aria-label={`Salarios de ${gradeName(grade)}`}
+                        aria-label={`Historial de ${gradeName(grade)}`}
+                        className="text-primary"
                         data-test="grade-salaries"
                     >
-                        <SlidersHorizontal />
-                        Salarios
+                        Historial
                     </Button>
                 </SheetTrigger>
             }

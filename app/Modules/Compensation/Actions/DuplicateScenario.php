@@ -20,6 +20,7 @@ final readonly class DuplicateScenario
             'effective_on' => $scenario->effective_on,
             'retroactive_months' => $scenario->retroactive_months,
             'horizon_years' => $scenario->horizon_years,
+            'raise_unit' => $scenario->raise_unit,
             'group_changes' => $scenario->group_changes,
             'term_changes' => $scenario->term_changes,
             'assumptions' => $scenario->assumptions,

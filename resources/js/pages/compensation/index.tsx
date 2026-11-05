@@ -1,44 +1,64 @@
-import { Head, Link } from '@inertiajs/react';
-import { Calculator } from 'lucide-react';
-import SetupLinks from '@/components/compensation/setup-links';
-import EmptyState from '@/components/humetria/empty-state';
-import PageHeader from '@/components/humetria/page-header';
-import { Button } from '@/components/ui/button';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { create as importPage } from '@/routes/tenant/employees/import';
+import { Head, setLayoutProps } from '@inertiajs/react';
+import CompensationHeader from '@/components/compensation/compensation-header';
+import ContractStatusCard from '@/components/compensation/contract-status-card';
+import FirstTimeSteps from '@/components/compensation/first-time-steps';
+import NegotiationTip from '@/components/compensation/negotiation-tip';
+import NewScenarioButton from '@/components/compensation/new-scenario-button';
+import ScenarioStartList from '@/components/compensation/scenario-start-list';
+import { useIsUnion } from '@/hooks/use-is-union';
+import type { ContractStatus } from '@/lib/compensation/start';
+import type { Paginated, ScenarioCounts, ScenarioRow } from '@/types';
 
-export default function CompensationIndex() {
-    const tenantSlug = useTenantSlug();
+/** The start of Compensación (board V4-Comp-Inicio): a company, a union with its own data, or the first time. */
+export default function CompensationIndex(props: {
+    status: ContractStatus;
+    first_time: boolean;
+    scenarios: Paginated<ScenarioRow>;
+    counts: ScenarioCounts;
+    today: { people: number; cost_text: string } | null;
+    negotiation: {
+        unionized_point_text: string;
+        trusted_point_text: string;
+    } | null;
+}) {
+    const union = useIsUnion();
+    setLayoutProps({ breadcrumbs: [{ title: 'Compensación' }] });
 
     return (
         <>
             <Head title="Compensación" />
-            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <PageHeader
+            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+                <CompensationHeader
+                    eyebrow="Herramientas"
                     title="Compensación"
-                    description="Costea una propuesta de revisión de contrato colectivo: salario y prestaciones, a corto y largo plazo, con todos sus supuestos."
-                />
-                <SetupLinks />
-                <EmptyState
-                    icon={Calculator}
-                    title="Todavía no hay nada que costear"
-                    action={
-                        <Button asChild>
-                            <Link href={importPage(tenantSlug)}>
-                                Cargar el padrón
-                            </Link>
-                        </Button>
-                    }
+                    lead="Costea una propuesta de revisión del contrato: cuánto cuesta el primer año, cuánto cada año después y con qué supuestos."
                 >
-                    Empieza por el padrón con la categoría y el nivel de cada
-                    persona. Después podrás capturar el tabulador y armar tus
-                    escenarios.
-                </EmptyState>
+                    {!props.first_time && <NewScenarioButton />}
+                </CompensationHeader>
+                {props.first_time ? (
+                    <FirstTimeSteps />
+                ) : (
+                    <ContractStatusCard status={props.status} />
+                )}
+                {!props.first_time && (
+                    <ScenarioStartList
+                        scenarios={props.scenarios}
+                        counts={props.counts}
+                        today={props.today}
+                    />
+                )}
+                {props.negotiation !== null && props.counts.active > 0 && (
+                    <NegotiationTip
+                        unionized={props.negotiation.unionized_point_text}
+                        trusted={props.negotiation.trusted_point_text}
+                    />
+                )}
+                <p className="text-caption text-muted-foreground">
+                    {union
+                        ? 'La empresa no ve tus datos ni tus propuestas. Cuando quieras, comparte un reporte con un enlace que vence.'
+                        : 'Tus datos de compensación solo los ve quien tú invites. Puedes compartir un reporte con un enlace que vence.'}
+                </p>
             </div>
         </>
     );
 }
-
-CompensationIndex.layout = {
-    breadcrumbs: [{ title: 'Herramientas' }, { title: 'Compensación' }],
-};

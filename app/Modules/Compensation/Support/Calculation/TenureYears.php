@@ -18,11 +18,10 @@ final class TenureYears
 {
     public static function at(CarbonImmutable $hiredOn, CarbonImmutable $on): int
     {
-        $hired = $hiredOn->startOfDay();
-        $years = $on->year - $hired->year;
+        $years = $on->year - $hiredOn->year;
 
-        // addYearsNoOverflow keeps Feb 29 from rolling into March 1 in a year without it.
-        if ($hired->addYearsNoOverflow($years)->isAfter($on->startOfDay())) {
+        // The anniversary of this year, with Feb 29 kept in February (Feb 28 in a year without it), compared as dates.
+        if (self::after($hiredOn->month, self::clamped($hiredOn, $on->year, $hiredOn->month), $on->month, $on->day)) {
             $years--;
         }
 
@@ -32,13 +31,26 @@ final class TenureYears
     /** Whole months of service on an exact day; the same clamping of the day of the month as the anniversary. */
     public static function monthsAt(CarbonImmutable $hiredOn, CarbonImmutable $on): int
     {
-        $hired = $hiredOn->startOfDay();
-        $months = ($on->year - $hired->year) * 12 + $on->month - $hired->month;
+        $months = ($on->year - $hiredOn->year) * 12 + $on->month - $hiredOn->month;
 
-        if ($hired->addMonthsNoOverflow($months)->isAfter($on->startOfDay())) {
+        if (self::clamped($hiredOn, $on->year, $on->month) > $on->day) {
             $months--;
         }
 
         return max($months, 0);
+    }
+
+    /** The day of hire in that month of that year, or the month's last day when it has fewer days. */
+    private static function clamped(CarbonImmutable $hiredOn, int $year, int $month): int
+    {
+        $leap = $year % 4 === 0 && ($year % 100 !== 0 || $year % 400 === 0);
+        $days = [31, $leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][$month - 1];
+
+        return min($hiredOn->day, $days);
+    }
+
+    private static function after(int $month, int $day, int $otherMonth, int $otherDay): bool
+    {
+        return $month > $otherMonth || ($month === $otherMonth && $day > $otherDay);
     }
 }

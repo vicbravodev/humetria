@@ -215,6 +215,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
     'benefits' => ['compensation/benefits', fn () => route('tenant.compensation.benefits.index', listsCompany()[0]), ['benefits']],
     'tabulator' => ['compensation/tabulator', fn () => route('tenant.compensation.tabulator.index', listsCompany()[0]), ['grades']],
     'salary overrides' => ['compensation/overrides', fn () => route('tenant.compensation.overrides.index', listsCompany()[0]), ['people']],
+    'compensation start' => ['compensation/index', fn () => route('tenant.compensation.index', listsCompany()[0]), ['scenarios']],
     'scenarios' => ['compensation/scenarios', fn () => route('tenant.compensation.scenarios.index', listsCompany()[0]), ['scenarios']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],

@@ -4,7 +4,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
-import { raiseSummary } from '@/lib/compensation/scenarios';
 import { countOf } from '@/lib/plural';
 import { edit } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioRow } from '@/types';
@@ -56,7 +55,7 @@ export default function ScenarioTableRow({
                 </span>
             </TableCell>
             <TableCell className="whitespace-normal">
-                {raiseSummary(scenario.unionized_raise, scenario.trusted_raise)}
+                {scenario.raise_text}
                 {scenario.changed_benefits > 0 && (
                     <span className="block text-sm text-muted-foreground">
                         {countOf(

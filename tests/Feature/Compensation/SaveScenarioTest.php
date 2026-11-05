@@ -6,6 +6,7 @@ use App\Modules\Compensation\Actions\SaveScenario;
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Data\TermChange;
 use App\Modules\Compensation\Enums\AssumptionKey;
+use App\Modules\Compensation\Enums\RaiseUnit;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
@@ -225,4 +226,16 @@ it('writes a log with the ids and no raise or amount', function (): void {
 
     Log::shouldHaveReceived('info')->with('compensation.scenario_saved', ['scenario_id' => $scenario->id, 'created' => true])->once();
     Log::shouldHaveReceived('info')->with('compensation.scenario_saved', ['scenario_id' => $scenario->id, 'created' => false])->once();
+});
+
+it('saves a raise as a fixed amount a month per group, in cents, and refuses one below zero or over $100,000', function (): void {
+    $scenario = resolve(SaveScenario::class)->handle(scenarioData(['raiseUnit' => RaiseUnit::Amount, 'unionizedRaiseBp' => 60_800, 'trustedRaiseBp' => 30_000]));
+
+    expect($scenario->raise_unit)->toBe(RaiseUnit::Amount)
+        ->and($scenario->group_changes)->toEqual(['unionized' => 60_800, 'trusted' => 30_000])
+        ->and(scenarioRefusedWith(scenarioData(['raiseUnit' => RaiseUnit::Amount, 'unionizedRaiseBp' => -1])))->toHaveKey('unionized_raise')
+        ->and(scenarioRefusedWith(scenarioData(['raiseUnit' => RaiseUnit::Amount, 'trustedRaiseBp' => 10_000_001])))->toHaveKey('trusted_raise')
+        // $500 a month is 50,000 cents: over 100 % as a percent, an ordinary amount.
+        ->and(scenarioRefusedWith(scenarioData(['raiseUnit' => RaiseUnit::Amount, 'unionizedRaiseBp' => 10_000_000])))->toBe([])
+        ->and(resolve(SaveScenario::class)->handle(scenarioData(['name' => 'Por ciento']))->raise_unit)->toBe(RaiseUnit::Percent);
 });

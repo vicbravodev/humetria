@@ -12,8 +12,8 @@ use Carbon\CarbonImmutable;
 /**
  * Everything the first-year cost of a scenario depends on, already read: no model, no query.
  *
- * `raises` are fractions of the salary by staff group ("unionized", "trusted"); the trusted copy the unionized when they
- * have none of their own. `proposed` benefits replace the current one with the same key, or are new.
+ * `raises` are fractions of the salary by staff group ("unionized", "trusted") and `monthlyAmounts` fixed amounts a month in
+ * cents added to the salary before the raise; the trusted copy the unionized when they have neither of their own. `proposed` benefits replace the current one with the same key, or are new.
  */
 final readonly class ScenarioInput
 {
@@ -26,6 +26,7 @@ final readonly class ScenarioInput
      * @param  list<BenefitSpec>  $proposed
      * @param  ?Rate  $workRiskPremium  the account's premium; null leaves the work risk line uncalculated
      * @param  ?string  $defaultState  where people with no state are taken to work; null leaves their payroll tax uncalculated
+     * @param  array<string, int>  $monthlyAmounts
      */
     public function __construct(
         public CarbonImmutable $effectiveOn,
@@ -40,6 +41,7 @@ final readonly class ScenarioInput
         public ?Rate $workRiskPremium,
         public ?string $defaultState,
         public RosterGaps $gaps,
+        public array $monthlyAmounts = [],
     ) {}
 
     /**
@@ -47,12 +49,13 @@ final readonly class ScenarioInput
      *
      * @param  array<string, Rate>  $raises
      * @param  list<BenefitSpec>  $proposed
+     * @param  array<string, int>  $monthlyAmounts
      */
-    public function withChanges(array $raises, array $proposed): self
+    public function withChanges(array $raises, array $proposed, array $monthlyAmounts = []): self
     {
         return new self(
             $this->effectiveOn, $this->retroMonths, $this->fiscal, $this->cells, $this->individuals, $this->gradeSalaries,
-            $this->benefits, $raises, $proposed, $this->workRiskPremium, $this->defaultState, $this->gaps,
+            $this->benefits, $raises, $proposed, $this->workRiskPremium, $this->defaultState, $this->gaps, $monthlyAmounts,
         );
     }
 }

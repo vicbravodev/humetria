@@ -1,5 +1,5 @@
+import type { RaiseUnit } from '@/lib/compensation/scenario-draft';
 import type { TermChangeForm } from '@/lib/compensation/scenarios';
-import type { Paginated, ReportShareRow } from '@/types';
 import type { ChoiceOption } from '@/types/organization';
 
 export type {
@@ -94,6 +94,8 @@ export type TabulatorRow = {
     level: string;
     current: SalaryEntry | null;
     salaries: (SalaryEntry & { id: string })[];
+    /** The people costed in it today. */
+    people: number;
 };
 
 /** The problems that kept a salaries CSV from being imported, each row numbered as the spreadsheet numbers it. */
@@ -128,12 +130,17 @@ export type ScenarioRow = {
     unionized_raise: string;
     /** Null when the trusted staff copy the unionized raise. */
     trusted_raise: string | null;
+    /** "4 % sindicalizados · 2.5 % confianza" or "$608 al mes a sindicalizados y confianza". */
+    raise_text: string;
     changed_benefits: number;
     people: number;
-    /** The change over the 12 months plus the retroactive months, written as money. */
+    first_year_cents: number;
+    /** The change over the 12 months plus the retroactive months, in whole pesos. */
     first_year_text: string;
-    /** What the change costs per year from the effective date, written as money. */
+    /** What the change costs per year from the effective date, in whole pesos. */
     recurring_text: string;
+    /** The first year over what is paid today, as a percent: "3.7". */
+    over_today_text: string;
     archived: boolean;
 };
 
@@ -144,6 +151,8 @@ export type ScenarioDetail = {
     effective_on: string;
     retroactive_months: number;
     horizon_years: number;
+    raise_unit: RaiseUnit;
+    /** A percent ("5.75") or, for an amount, pesos a month ("608.5"). */
     unionized_raise: string;
     /** Empty when the trusted staff copy the unionized raise. */
     trusted_raise: string;
@@ -162,133 +171,4 @@ export type AssumptionField = {
     source: string;
     /** `AAAA-MM-DD`. */
     set_on: string;
-};
-
-/** A scenario in the comparison, with its totals written as money. */
-export type CompareScenario = {
-    id: string;
-    name: string;
-    people: number;
-    first_year_text: string;
-    recurring_text: string;
-};
-
-/** A concept of the cost with what each compared scenario changes in it, in the order of the scenarios. */
-export type CompareRow = {
-    type: 'salary' | 'benefit' | 'contribution';
-    key: string;
-    label: string;
-    cells: string[];
-};
-
-/** The cost of one slice of the roster (an area, a category and level, a group) over the first 12 months, written as money. */
-export type ReportCut = {
-    label: string;
-    people: number;
-    before_text: string;
-    after_text: string;
-    delta_text: string;
-};
-
-/** A concept of the cost cascade over the first 12 months, written as money. */
-export type ReportConcept = {
-    type: 'salary' | 'benefit' | 'contribution';
-    key: string;
-    label: string;
-    before_text: string;
-    after_text: string;
-    delta_text: string;
-    first_year_text: string;
-};
-
-/** One year of the projection: what the company pays without the change and with it. */
-export type ReportYear = {
-    year: number;
-    /** `AAAA-MM-DD`. */
-    effective_on: string;
-    people: number;
-    before_text: string;
-    after_text: string;
-    delta_text: string;
-    retroactive_text: string | null;
-};
-
-/** What the report says before the numbers can be trusted. */
-export type ReportWarnings = {
-    individual: { count: number; percent: string; over_tenth: boolean };
-    uncosted: { label: string; people: number }[];
-    /** The employer lines that could not be calculated. */
-    uncalculated: string[];
-    /** The fiscal values carried past their vigencia. */
-    stale: string[];
-};
-
-/** The worker's gross against the company's cost, per concept. */
-export type ReportPersonValue = {
-    rows: {
-        label: string;
-        type: 'salary' | 'benefit' | 'contribution';
-        person_text: string | null;
-        company_text: string;
-        exempt: boolean;
-    }[];
-    person_total_text: string;
-    company_total_text: string;
-};
-
-/** The internal report of a scenario, as the page takes it. */
-export type ScenarioReport = {
-    scenario: {
-        id: string;
-        name: string;
-        effective_on: string;
-        horizon_years: number;
-        retroactive_months: number;
-        unionized_raise: string;
-        trusted_raise: string | null;
-    };
-    coverage: {
-        total: number;
-        costed: number;
-        /** Employee numbers of the people who cannot be costed. */
-        missing: string[];
-        missing_more: number;
-        missing_without_number: number;
-    };
-    headline: {
-        people: number;
-        retroactive_months: number;
-        first_year_text: string;
-        recurring_text: string;
-        retroactive_text: string;
-        before_text: string;
-        after_text: string;
-    };
-    concepts: ReportConcept[];
-    months: {
-        month: string;
-        before_text: string;
-        after_text: string;
-        delta_text: string;
-    }[];
-    cuts: { areas: ReportCut[]; grades: ReportCut[]; groups: ReportCut[] };
-    projection: ReportYear[];
-    seniority: {
-        people: number;
-        before_text: string;
-        after_text: string;
-        delta_text: string;
-    };
-    sensitivity: {
-        one_point_text: string;
-        base_text: string;
-        minus_text: string;
-        plus_text: string;
-    };
-    assumptions: Omit<AssumptionField, 'key'>[];
-    warnings: ReportWarnings;
-    person_value: ReportPersonValue;
-    can_annex: boolean;
-    /** The links to the report that still open; null for whoever cannot share it. */
-    shares: Paginated<ReportShareRow> | null;
 };

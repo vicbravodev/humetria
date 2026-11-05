@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 use App\Modules\Compensation\Support\Calculation\Sensitivity;
@@ -74,4 +75,26 @@ it('costs nothing for an empty roster', function (): void {
     $result = Sensitivity::around(scenarioInput(['cells' => [], 'raises' => ['unionized' => Rate::scaled(5, 2)]]));
 
     expect($result->onePointCents)->toBe(0)->and($result->plusOneCents)->toBe(0);
+});
+
+it('keeps the fixed amount of the proposal a point lower and a point higher', function (): void {
+    $cells = [scenarioCell(), scenarioCell(group: StaffGroup::Trusted)];
+    $result = Sensitivity::around(scenarioInput(['cells' => $cells, 'amounts' => ['unionized' => 60_800]]));
+    $higher = ScenarioCost::firstYear(scenarioInput(['cells' => $cells, 'amounts' => ['unionized' => 60_800, 'trusted' => 60_800], 'raises' => ['unionized' => Rate::scaled(1, 2), 'trusted' => Rate::scaled(1, 2)]]))->firstYearCents();
+
+    expect($result->plusOneCents)->toBe($higher)
+        ->and($result->minusOneCents)->toBe($result->baseCents)
+        ->and($result->onePointCents)->toBe(Sensitivity::around(scenarioInput(['cells' => $cells]))->onePointCents);
+});
+
+it('prices a point to one group alone over the 12 months, without retroactivity', function (): void {
+    $cells = [scenarioCell(2), scenarioCell(group: StaffGroup::Trusted)];
+    $input = scenarioInput(['cells' => $cells, 'retroMonths' => 3, 'raises' => ['unionized' => Rate::scaled(5, 2)]]);
+    $unionized = ScenarioCost::firstYear(scenarioInput(['cells' => $cells, 'raises' => ['unionized' => Rate::scaled(1, 2), 'trusted' => Rate::zero()]]))->deltaCents();
+    $trusted = ScenarioCost::firstYear(scenarioInput(['cells' => $cells, 'raises' => ['unionized' => Rate::zero(), 'trusted' => Rate::scaled(1, 2)]]))->deltaCents();
+
+    expect(Sensitivity::pointFor($input, PayGroup::Unionized))->toBe($unionized)
+        ->and(Sensitivity::pointFor($input, PayGroup::Trusted))->toBe($trusted)
+        ->and($unionized)->toBe(2 * $trusted)->toBeGreaterThan(2 * 182_500)
+        ->and(Sensitivity::pointFor(scenarioInput(['cells' => []]), PayGroup::Unionized))->toBe(0);
 });

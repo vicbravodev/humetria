@@ -49,22 +49,8 @@ final readonly class SaveBenefit
             throw ValidationException::withMessages($errors);
         }
 
-        return DB::transaction(function () use ($benefit, $data, $name, $grades, $term): Benefit {
-            $attributes = [
-                'name' => $name,
-                'kind' => $data->kind,
-                'frequency' => $data->frequency,
-                'applies_to_group' => $data->group,
-                'job_grade_ids' => $grades,
-                'min_tenure_months' => $data->minTenureMonths,
-                'sbc_integration' => $data->sbcIntegration,
-                'sbc_cap_cents' => $data->sbcIntegration === SbcIntegration::UpToCap ? $data->sbcCapCents : null,
-                'in_payroll_tax' => $data->inPayrollTax,
-                'in_ptu_base' => $data->inPtuBase,
-                'in_seniority_base' => $data->inSeniorityBase,
-                'income_tax_exempt' => $data->incomeTaxExempt,
-                'cap_cents' => $data->capCents,
-            ];
+        return DB::transaction(function () use ($benefit, $data, $term): Benefit {
+            $attributes = $this->attributes($data);
 
             $saved = $benefit ?? new Benefit(['tenant_id' => $this->currentTenant->id()]);
             $saved->fill($attributes)->save();
@@ -78,6 +64,30 @@ final readonly class SaveBenefit
 
             return $saved;
         });
+    }
+
+    /**
+     * The columns of a benefit the company defines: what its cost depends on.
+     *
+     * @return array<model-property<Benefit>, mixed>
+     */
+    public function attributes(BenefitData $data): array
+    {
+        return [
+            'name' => trim($data->name),
+            'kind' => $data->kind,
+            'frequency' => $data->frequency,
+            'applies_to_group' => $data->group,
+            'job_grade_ids' => array_values(array_unique($data->jobGradeIds)),
+            'min_tenure_months' => $data->minTenureMonths,
+            'sbc_integration' => $data->sbcIntegration,
+            'sbc_cap_cents' => $data->sbcIntegration === SbcIntegration::UpToCap ? $data->sbcCapCents : null,
+            'in_payroll_tax' => $data->inPayrollTax,
+            'in_ptu_base' => $data->inPtuBase,
+            'in_seniority_base' => $data->inSeniorityBase,
+            'income_tax_exempt' => $data->incomeTaxExempt,
+            'cap_cents' => $data->capCents,
+        ];
     }
 
     /**

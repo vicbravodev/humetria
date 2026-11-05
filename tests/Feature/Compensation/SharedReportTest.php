@@ -155,3 +155,24 @@ it('never opens the link of another company from this company\'s tenant or the o
 
     expect($response->getContent())->not->toContain('Secreta de Beta');
 });
+
+it('shows what each category receives more a month only for the categories over the minimum, and no other scenario', function (): void {
+    $few = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Director', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $few->id, 'daily_salary_cents' => 300_000, 'effective_from' => '2026-01-01']);
+    Employee::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $few->id, 'area_id' => $this->big->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL']);
+    Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Otra propuesta']);
+
+    $response = $this->get(route('compensation.report.shared', $this->token))->assertOk();
+    $props = $response->viewData('page')['props']['report'];
+
+    // Director (2) is under the minimum, and hiding it alone would leave it to the subtraction: Operador (28) goes with it.
+    expect($props['raises'])->toBe([])
+        ->and($props['others'])->toBe([])
+        ->and(json_encode($props))->not->toContain('Director')->not->toContain('Otra propuesta');
+});
+
+it('shows the raise of a category over the minimum when nothing small is left out', function (): void {
+    $this->get(route('compensation.report.shared', $this->token))
+        ->assertInertia(fn (Assert $page) => $page->where('report.raises', fn ($raises): bool => collect($raises)->pluck('label')->all() === ['Operador · A']
+            && collect($raises)->pluck('people')->all() === [28]));
+});

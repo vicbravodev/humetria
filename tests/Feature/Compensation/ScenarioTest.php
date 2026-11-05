@@ -67,8 +67,10 @@ it('lists the scenarios newest first with their cost, paginated ten at a time', 
             ->where('scenarios.data.0.horizon_years', 3)->where('scenarios.data.0.retroactive_months', 2)
             ->where('scenarios.data.0.unionized_raise', '5')->where('scenarios.data.0.trusted_raise', '3')
             ->where('scenarios.data.0.people', 10)
-            ->where('scenarios.data.0.first_year_text', fn (string $text): bool => str_starts_with($text, '$') && $text !== '$0.00')
-            ->where('scenarios.data.1.id', $old->id)->where('scenarios.data.1.first_year_text', '$0.00')
+            // In whole pesos, as the headline numbers of the redesign (board V4-Comp-Inicio).
+            ->where('scenarios.data.0.first_year_text', fn (string $text): bool => str_starts_with($text, '$') && $text !== '$0')
+            ->where('scenarios.data.0.raise_text', '5 % sindicalizados · 3 % confianza')
+            ->where('scenarios.data.1.id', $old->id)->where('scenarios.data.1.first_year_text', '$0')
             ->where('scenarios.data.1.trusted_raise', null)
             ->where('counts', ['active' => 2, 'archived' => 1])
             ->where('filters', ['status' => 'active']));
@@ -98,15 +100,16 @@ it('shows a new scenario with the platform assumptions and the states', function
             ->where('horizons', [3, 4, 5]));
 });
 
-it('saves a scenario from the editor and goes back to the list', function (): void {
+it('saves a scenario from the editor and opens its report («Guardar y ver reporte», board V4-Comp-Escenario)', function (): void {
     $benefit = Benefit::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bono de transporte']);
 
-    $this->post(route('tenant.compensation.scenarios.store', $this->tenant), scenarioForm([
+    $response = $this->post(route('tenant.compensation.scenarios.store', $this->tenant), scenarioForm([
         'trusted_raise' => '3', 'default_state' => 'JAL', 'assumptions' => ['turnover' => '8', 'inflation' => '3'],
         'term_changes' => [['benefit_id' => $benefit->id, 'value' => '1500', 'tenure_table' => [['from_years' => '2', 'value' => '1800']]]],
-    ]))->assertRedirect(route('tenant.compensation.scenarios.index', $this->tenant))->assertSessionHasNoErrors();
+    ]));
 
     $saved = Scenario::query()->sole();
+    $response->assertRedirect(route('tenant.compensation.scenarios.report', [$this->tenant, $saved->id]))->assertSessionHasNoErrors();
 
     expect($saved->name)->toBe('Revisión 2027')
         ->and($saved->retroactive_months)->toBe(2)->and($saved->horizon_years)->toBe(4)
@@ -150,7 +153,7 @@ it('edits a scenario and shows it as the editor needs it', function (): void {
         ->assertInertia(fn (Assert $page) => $page
             ->component('compensation/scenario')
             ->where('scenario.id', $scenario->id)->where('scenario.name', 'Primera')
-            ->where('scenario.unionized_raise', '5.75')->where('scenario.trusted_raise', '')
+            ->where('scenario.unionized_raise', '5.75')->where('scenario.trusted_raise', '')->where('scenario.raise_unit', 'percent')
             ->where('scenario.default_state', 'JAL')->where('scenario.horizon_years', 3)
             ->where('scenario.term_changes.0.benefit_id', $benefit->id)
             ->where('scenario.term_changes.0.name', 'Bono de transporte')
@@ -160,7 +163,7 @@ it('edits a scenario and shows it as the editor needs it', function (): void {
             ->where('scenario.term_changes.0.tenure_table', [['from_years' => 2, 'value' => '1800']]));
 
     $this->put(route('tenant.compensation.scenarios.update', [$this->tenant, $scenario->id]), scenarioForm(['name' => 'Segunda', 'unionized_raise' => '6']))
-        ->assertRedirect(route('tenant.compensation.scenarios.index', $this->tenant));
+        ->assertRedirect(route('tenant.compensation.scenarios.report', [$this->tenant, $scenario->id]));
 
     $edited = $scenario->fresh();
 
@@ -227,4 +230,38 @@ it('searches the benefits of the company on the server for the editor', function
     $this->getJson(route('tenant.compensation.scenarios.benefits', [$this->tenant, 'q' => 'transporte']))->assertOk()
         ->assertJsonCount(1)->assertJsonPath('0.label', 'Bono de Transporte')->assertJsonPath('0.unit', 'pesos');
     $this->getJson(route('tenant.compensation.scenarios.benefits', [$this->tenant, 'q' => 'bono']))->assertJsonCount(1);
+});
+
+it('saves a raise of a fixed amount a month from the editor and copies it to a duplicate', function (): void {
+    $url = route('tenant.compensation.scenarios.store', $this->tenant);
+
+    $this->post($url, scenarioForm(['raise_unit' => 'amount', 'unionized_raise' => '608', 'trusted_raise' => '300.50']))->assertSessionHasNoErrors();
+    $saved = Scenario::query()->sole();
+
+    expect($saved->raise_unit->value)->toBe('amount')->and($saved->group_changes)->toEqual(['unionized' => 60_800, 'trusted' => 30_050]);
+
+    $this->post($url, scenarioForm(['raise_unit' => 'amount', 'unionized_raise' => '608.555']))->assertSessionHasErrors(['unionized_raise']);
+    $this->post($url, scenarioForm(['raise_unit' => 'monto']))->assertSessionHasErrors(['raise_unit']);
+    $this->post(route('tenant.compensation.scenarios.duplicate', [$this->tenant, $saved->id]));
+
+    expect(Scenario::query()->whereKeyNot($saved->id)->sole()->raise_unit->value)->toBe('amount');
+});
+
+it('shows the editor what the other active scenarios cost, so this one is weighed against them (board V4-Comp-Escenario)', function (): void {
+    staffOfTen($this->tenant);
+    $scenario = Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Esta', 'created_at' => '2026-01-01']);
+    Scenario::factory()->archived()->create(['tenant_id' => $this->tenant->id, 'name' => 'Archivada']);
+
+    foreach (range(1, 5) as $day) {
+        Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'name' => "Otra {$day}", 'created_at' => "2026-02-0{$day}", 'group_changes' => ['unionized' => 100 * $day, 'trusted' => null]]);
+    }
+
+    $this->get(route('tenant.compensation.scenarios.edit', [$this->tenant, $scenario->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('others', 4)
+            ->where('others.0.name', 'Otra 5')->where('others.3.name', 'Otra 2')
+            ->where('others.0.first_year_cents', fn (int $cents): bool => $cents > 0)
+            ->where('others.0.first_year_text', fn (string $text): bool => preg_match('/\A\$[\d,]+\z/', $text) === 1));
+
+    $this->get(route('tenant.compensation.scenarios.create', $this->tenant))->assertInertia(fn (Assert $page) => $page->has('others', 4)->where('others.3.name', 'Otra 2'));
 });

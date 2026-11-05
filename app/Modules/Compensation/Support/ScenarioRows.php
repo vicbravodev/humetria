@@ -42,10 +42,13 @@ final readonly class ScenarioRows
             'retroactive_months' => $scenario->retroactive_months,
             'unionized_raise' => PercentBasisPoints::format($scenario->group_changes['unionized'] ?? 0),
             'trusted_raise' => $trusted === null ? null : PercentBasisPoints::format($trusted),
+            'raise_text' => RaiseText::of($scenario),
             'changed_benefits' => count($scenario->term_changes),
             'people' => $cost->people,
-            'first_year_text' => Money::format($cost->firstYearCents()),
-            'recurring_text' => Money::format($cost->recurringCents),
+            'first_year_cents' => $cost->firstYearCents(),
+            'first_year_text' => Money::pesos($cost->firstYearCents()),
+            'recurring_text' => Money::pesos($cost->recurringCents),
+            'over_today_text' => ScenarioPreview::share($cost->firstYearCents(), $cost->beforeCents),
             'archived' => $scenario->archived_at !== null,
         ];
     }

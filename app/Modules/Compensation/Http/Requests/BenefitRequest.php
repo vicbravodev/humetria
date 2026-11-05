@@ -11,7 +11,9 @@ use App\Modules\Compensation\Enums\Frequency;
 use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Support\BenefitValue;
+use App\Modules\Compensation\Support\TenureTable;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -37,9 +39,10 @@ final class BenefitRequest extends FormRequest
     public function rules(): array
     {
         $creating = $this->isMethod('POST');
+        $preview = $this->routeIs('tenant.compensation.benefits.preview');
 
         return [
-            'name' => ['required', 'string', 'max:120', self::SINGLE_LINE],
+            'name' => [$preview ? 'nullable' : 'required', 'string', 'max:120', self::SINGLE_LINE],
             'kind' => ['required', 'string', Rule::in(array_column(BenefitKind::cases(), 'value'))],
             'frequency' => ['required', 'string', Rule::in(array_column(Frequency::cases(), 'value'))],
             'group' => ['nullable', 'string', Rule::in(array_column(PayGroup::cases(), 'value'))],
@@ -49,8 +52,21 @@ final class BenefitRequest extends FormRequest
             'sbc_cap' => ['nullable', 'string', new AmountRule],
             'cap' => ['nullable', 'string', new AmountRule],
             'value' => $creating ? ['required', 'string', new AmountRule] : ['prohibited'],
-            'effective_from' => $creating ? ['required', 'date_format:Y-m-d'] : ['prohibited'],
+            'effective_from' => $creating ? [$preview ? 'nullable' : 'required', 'date_format:Y-m-d'] : ['prohibited'],
+            'tenure_table' => $creating ? ['nullable', 'array', 'max:'.TenureTable::MAX_ROWS] : ['prohibited'],
         ];
+    }
+
+    /**
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if ($validator->errors()->isEmpty() && $this->table() === null) {
+                $validator->errors()->add('tenure_table', 'Cada renglón lleva años de servicio, un número entero, y un valor como 12 o 12.5.');
+            }
+        }];
     }
 
     /**
@@ -90,6 +106,29 @@ final class BenefitRequest extends FormRequest
         $date = $this->date('effective_from', 'Y-m-d');
         $value = BenefitValue::parse($this->string('value')->toString());
 
-        return $date === null || $value === null ? null : new TermData($date->toImmutable(), $value);
+        return $date === null || $value === null ? null : new TermData($date->toImmutable(), $value, $this->table() ?: null);
+    }
+
+    /**
+     * The seniority table of the first term as numbers; null when a row is not a whole number of years and a value.
+     *
+     * @return ?list<array{from_years: int, value: int}>
+     */
+    public function table(): ?array
+    {
+        $rows = [];
+
+        foreach ($this->array('tenure_table') as $row) {
+            $years = is_array($row) && is_string($row['from_years'] ?? null) ? $row['from_years'] : '';
+            $value = is_array($row) && is_string($row['value'] ?? null) ? BenefitValue::parse($row['value']) : null;
+
+            if (preg_match('/\A\d{1,3}\z/', $years) !== 1 || $value === null) {
+                return null;
+            }
+
+            $rows[] = ['from_years' => (int) $years, 'value' => $value];
+        }
+
+        return $rows;
     }
 }

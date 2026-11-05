@@ -46,6 +46,12 @@ final readonly class CostBreakdown
         return $this->afterCents - $this->beforeCents;
     }
 
+    /** What one month of retroactivity costs: the first month's change, whether the scenario pays any or not. */
+    public function retroactiveMonthCents(): int
+    {
+        return $this->months === [] ? 0 : $this->months[0]->deltaCents();
+    }
+
     /** The change over the 12 months plus the retroactive months. */
     public function firstYearCents(): int
     {

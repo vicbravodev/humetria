@@ -8,6 +8,7 @@ use App\Modules\Compensation\Data\Assumptions;
 use App\Modules\Compensation\Data\ConceptCost;
 use App\Modules\Compensation\Data\CostBreakdown;
 use App\Modules\Compensation\Data\CostCut;
+use App\Modules\Compensation\Data\GradeRaise;
 use App\Modules\Compensation\Data\MonthlyCost;
 use App\Modules\Compensation\Data\ProjectionYear;
 use App\Modules\Compensation\Data\ScenarioInput;
@@ -41,6 +42,7 @@ final readonly class ReportBuilder
         private Areas $areas,
         private JobGrades $jobGrades,
         private SmallGroups $smallGroups,
+        private OtherScenarios $others,
     ) {}
 
     /**
@@ -64,6 +66,7 @@ final readonly class ReportBuilder
                 'horizon_years' => $scenario->horizon_years, 'retroactive_months' => $scenario->retroactive_months,
                 'unionized_raise' => PercentBasisPoints::format($scenario->group_changes['unionized'] ?? 0),
                 'trusted_raise' => ($scenario->group_changes['trusted'] ?? null) === null ? null : PercentBasisPoints::format($scenario->group_changes['trusted']),
+                'raise_text' => RaiseText::of($scenario), 'raise_unit' => $scenario->raise_unit->value,
             ],
             'coverage' => $this->coverage($cost, $shared),
             'headline' => [
@@ -71,6 +74,8 @@ final readonly class ReportBuilder
                 'first_year_text' => Money::format($cost->firstYearCents()), 'recurring_text' => Money::format($cost->recurringCents),
                 'retroactive_text' => Money::format($cost->retroactiveCents),
                 'before_text' => Money::format($cost->beforeCents), 'after_text' => Money::format($cost->afterCents),
+                'first_year_cents' => $cost->firstYearCents(), 'recurring_cents' => $cost->recurringCents, 'retroactive_cents' => $cost->retroactiveCents,
+                'before_cents' => $cost->beforeCents, 'after_cents' => $cost->afterCents,
             ],
             'concepts' => array_map(fn (ConceptCost $concept): array => $this->concept($concept, $names), array_values(array_filter($cost->concepts, fn (ConceptCost $concept): bool => $concept->beforeCents !== 0 || $concept->afterCents !== 0 || $concept->retroactiveCents !== 0))),
             'months' => array_map(fn (MonthlyCost $month): array => [
@@ -78,6 +83,8 @@ final readonly class ReportBuilder
                 'after_text' => Money::format($month->afterCents), 'delta_text' => Money::format($month->deltaCents()),
             ], $cost->months),
             'cuts' => $this->cuts($cuts),
+            'raises' => $this->raises(ScenarioCost::monthlyRaises($input), $shared),
+            'others' => $shared ? [] : $this->others->except($scenario),
             'projection' => array_map(fn (ProjectionYear $year): array => $this->year($year), $years),
             'seniority' => $this->seniority($input),
             'sensitivity' => $this->sensitivity($input),
@@ -112,6 +119,7 @@ final readonly class ReportBuilder
             'type' => $concept->type->value, 'key' => $concept->key, 'label' => $this->labels->label($concept->type, $concept->key, $names),
             'before_text' => Money::format($concept->beforeCents), 'after_text' => Money::format($concept->afterCents),
             'delta_text' => Money::format($concept->deltaCents()), 'first_year_text' => Money::format($concept->firstYearCents()),
+            'first_year_cents' => $concept->firstYearCents(),
         ];
     }
 
@@ -158,6 +166,33 @@ final readonly class ReportBuilder
     }
 
     /**
+     * What each person of a category and level receives more a month, by group: the sindicalizados first, the most first. For a
+     * link anyone can open, the categories under the platform's minimum of people stay out, with the complementary ones.
+     *
+     * @param  list<GradeRaise>  $raises
+     * @return list<array{label: string, group: string, people: int, monthly_raise_cents: int}>
+     */
+    private function raises(array $raises, bool $shared): array
+    {
+        $headcount = [];
+
+        foreach ($raises as $raise) {
+            $headcount["{$raise->jobGradeId}|{$raise->group->value}"] = $raise->people;
+        }
+
+        $visible = $shared ? array_flip($this->smallGroups->visibleKeys($headcount)) : $headcount;
+        $raises = array_values(array_filter($raises, fn (GradeRaise $raise): bool => isset($visible["{$raise->jobGradeId}|{$raise->group->value}"])));
+        $names = $this->jobGrades->findMany(array_values(array_unique(array_map(fn (GradeRaise $raise): string => $raise->jobGradeId, $raises))));
+        $rows = array_map(fn (GradeRaise $raise): array => [
+            'label' => isset($names[$raise->jobGradeId]) ? "{$names[$raise->jobGradeId]->category} · {$names[$raise->jobGradeId]->level}" : 'Categoría',
+            'group' => $raise->group->value, 'people' => $raise->people, 'monthly_raise_cents' => $raise->monthlyRaiseCents,
+        ], $raises);
+        usort($rows, fn (array $a, array $b): int => [$a['group'] !== PayGroup::Unionized->value, $b['monthly_raise_cents'], $a['label']] <=> [$b['group'] !== PayGroup::Unionized->value, $a['monthly_raise_cents'], $b['label']]);
+
+        return $rows;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function year(ProjectionYear $year): array
@@ -167,6 +202,7 @@ final readonly class ReportBuilder
             'before_text' => Money::format($year->beforeCents), 'after_text' => Money::format($year->afterCents),
             'delta_text' => Money::format($year->deltaCents()),
             'retroactive_text' => $year->retroactiveCents === 0 ? null : Money::format($year->retroactiveCents),
+            'cost_cents' => $year->costCents(),
         ];
     }
 
