@@ -43,4 +43,21 @@ final class ComplaintAssignment extends Model
     {
         return ['assigned_on' => 'immutable_date', 'ended_on' => 'immutable_date', 'notified_position' => 'integer'];
     }
+
+    /**
+     * The people who may not be given the case: whoever holds it now, and whoever excused themselves from it — a recusal is
+     * never undone by assigning or sharing again.
+     *
+     * @return list<int>
+     */
+    public static function barredFrom(string $complaintId): array
+    {
+        $ids = [];
+
+        foreach (self::query()->where('complaint_id', $complaintId)->where(fn ($query) => $query->whereNull('ended_on')->orWhere('end_reason', 'recused'))->get() as $assignment) {
+            $ids[] = $assignment->user_id;
+        }
+
+        return $ids;
+    }
 }

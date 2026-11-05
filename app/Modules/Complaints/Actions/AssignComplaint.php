@@ -26,10 +26,7 @@ final readonly class AssignComplaint
      */
     public function handle(Complaint $complaint, ?int $assignedBy = null): int
     {
-        // Who holds it already, and who declared a conflict with it: a recusal is never undone by assigning again.
-        $already = ComplaintAssignment::query()->where('complaint_id', $complaint->id)
-            ->where(fn ($query) => $query->whereNull('ended_on')->orWhere('end_reason', 'recused'))
-            ->get()->map(fn (ComplaintAssignment $assignment): int => $assignment->user_id)->all();
+        $already = ComplaintAssignment::barredFrom($complaint->id);
         $assigned = 0;
 
         foreach ($this->coverage->handlerIds($complaint->respondent_kind, $complaint->work_center_id) as $userId) {

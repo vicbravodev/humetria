@@ -48,10 +48,10 @@ final class ShareCaseRequest extends FormRequest
     {
         $case = $this->case();
         $eligible = resolve(HandlerCoverage::class)->handlerIds($case->respondent_kind, $case->work_center_id);
-        $has = ComplaintAssignment::query()->where('complaint_id', $case->id)->where('user_id', $this->integer('user_id'))->whereNull('ended_on')->exists();
+        $has = in_array($this->integer('user_id'), ComplaintAssignment::barredFrom($case->id), true);
 
         if (! in_array($this->integer('user_id'), $eligible, true) || $has) {
-            $fail('Esa persona no puede recibir este caso: debe atender quejas, no estar en conflicto con ella y no tenerlo ya.');
+            $fail('Esa persona no puede recibir este caso: debe atender quejas, no estar en conflicto con ella, no tenerlo ya ni haberse excusado de él.');
         }
     }
 }

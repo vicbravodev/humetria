@@ -205,6 +205,18 @@ it('shares a case with another handler the conflict leaves, who then opens it', 
     Log::shouldHaveReceived('info')->with('complaints.assignment_changed', ['complaint_id' => $this->complaint->id, 'reason' => 'shared'])->once();
 });
 
+it('never shares a case with a handler who excused themselves from it, nor offers them', function (): void {
+    ComplaintAssignment::factory()->ended()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $this->complaint->id, 'user_id' => $this->hr->id]);
+
+    $this->actingAs($this->owner)->get(caseUrl($this, 'show'))
+        ->assertInertia(fn (Assert $page) => $page->where('candidates', [['value' => (string) $this->outsider->id, 'label' => $this->outsider->name]]));
+
+    $this->actingAs($this->owner)->post(caseUrl($this, 'share'), ['user_id' => $this->hr->id])->assertSessionHasErrors('user_id');
+
+    expect(ComplaintAssignment::query()->where('complaint_id', $this->complaint->id)->where('user_id', $this->hr->id)->whereNull('ended_on')->exists())->toBeFalse();
+    $this->actingAs($this->hr)->get(caseUrl($this, 'show'))->assertNotFound();
+});
+
 it('does not share a case with someone the conflict leaves out, who is not a handler, or already has it', function (string $who, string $kind): void {
     $viewer = memberOf($this->tenant, TenantRole::Viewer);
     $this->complaint->forceFill(['respondent_kind' => $kind])->save();

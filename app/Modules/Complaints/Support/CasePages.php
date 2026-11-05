@@ -135,13 +135,14 @@ final readonly class CasePages
     }
 
     /**
-     * The handlers who could be given the case: those the conflict leaves and who do not have it yet, by name.
+     * The handlers who could be given the case: those the conflict leaves, who do not have it yet and did not excuse
+     * themselves from it, by name.
      *
      * @return list<array{value: string, label: string}>
      */
     private function candidates(Complaint $complaint): array
     {
-        $has = ComplaintAssignment::query()->where('complaint_id', $complaint->id)->whereNull('ended_on')->get()->map(fn (ComplaintAssignment $assignment): int => $assignment->user_id)->all();
+        $has = ComplaintAssignment::barredFrom($complaint->id);
         $names = $this->names();
         $candidates = [];
 
