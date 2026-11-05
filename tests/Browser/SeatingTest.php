@@ -153,29 +153,54 @@ function seatingPortal(): array
     return [route('portal.seating.show', resolve(IssuePortalLink::class)->handle($ana->id), absolute: false), $ana];
 }
 
+// Board LS-Portal: first who sees the answers and that answering is voluntary; then the two questions, one at a time.
 it('shows the person their own Ley Silla page with the voluntary notice', function (bool $dark, bool $mobile): void {
     [$url] = seatingPortal();
 
     visitPage('seating/portal', $url, $dark, $mobile)
+        ->assertSee('Ley Silla · 2 preguntas')
         ->assertSee('Su trabajo de pie, Ana Ruiz')
-        ->assertSee('es voluntario')
-        ->assertSee('Ergonómico, con buen soporte y amortiguación')
-        ->assertSee('Enviar mis respuestas');
+        ->assertSee('Contestar es voluntario')
+        ->assertSee('Quién ve sus respuestas')
+        ->assertSee('Acepto, quiero contestar')
+        ->assertSee('Prefiero no contestar')
+        ->assertDontSee('Pregunta 1 de 2');
 })->with($looks);
+
+it('asks the two questions one at a time, never moving on alone, and sends them', function (bool $dark, bool $mobile): void {
+    [$url] = seatingPortal();
+
+    visitPage('seating/portal', $url, $dark, $mobile)
+        ->click('@portal-accept')
+        ->assertSee('Pregunta 1 de 2')
+        ->assertSee('¿Cómo es el calzado que usa para trabajar?')
+        ->click('input[name="footwear"][value="1"]')
+        ->assertSee('Pregunta 1 de 2')
+        ->press('Siguiente')
+        ->assertSee('Pregunta 2 de 2')
+        ->click('input[name="discomfort"][value="1"]')
+        ->press('Enviar mis respuestas')
+        ->assertSee('Gracias, quedó enviado')
+        ->assertSee('La Comisión lo tomará en cuenta en su evaluación.')
+        ->assertNoJavaScriptErrors();
+})->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
 it('tells the person when they already answered', function (): void {
     [$url, $ana] = seatingPortal();
     PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    visitPage('seating/portal', $url)->assertSee('Nos contestó el');
+    visitPage('seating/portal', $url)->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
 });
 
-it('asks for the acceptance of the notice before saving any health data', function (): void {
+it('lets the person decline without consequence, and change their mind', function (): void {
     [$url] = seatingPortal();
 
     visit($url)
-        ->press('Enviar mis respuestas')
-        ->assertSee('debe ser aceptado')
+        ->click('Prefiero no contestar')
+        ->assertSee('su evaluación se hace sin estos datos')
+        ->assertDontSee('Pregunta 1 de 2')
+        ->click('Contestar ahora')
+        ->assertSee('Quién ve sus respuestas')
         ->assertNoJavaScriptErrors();
 });
 
