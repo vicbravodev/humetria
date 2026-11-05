@@ -14,7 +14,8 @@ import type {
     FlowSection,
     FlowTopic,
 } from '@/lib/question-flow';
-import { update } from '@/routes/tenant/telework/writing';
+import { publish, update } from '@/routes/tenant/telework/writing';
+import type { WritingPublication } from '@/types';
 
 type Props = {
     document: {
@@ -33,7 +34,9 @@ type Props = {
     /** The incisos of the norm the document covers, when it names them. */
     items: FlowTopic[];
     minutes: number;
-    back: { href: string; label: string };
+    publication: WritingPublication;
+    /** Where «Guardar y volver» leads, and the center whose route it is. */
+    back: { href: string; label: string; center: string | null };
 };
 
 /** A NOM-037 document written with questions (boards V2-Politica and V3-Doc-Riesgos; decisión A3). */
@@ -76,6 +79,13 @@ export default function TeleworkWrite(props: Props) {
                                 writing.answers,
                             )}
                             questions={props.questions}
+                            publication={props.publication}
+                            publishUrl={publish.url(
+                                [tenantSlug, props.document.kind],
+                                props.back.center === null
+                                    ? {}
+                                    : { query: { center: props.back.center } },
+                            )}
                             onGo={writing.go}
                         />
                     ) : (

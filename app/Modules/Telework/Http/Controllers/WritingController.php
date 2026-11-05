@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Telework\Actions\PublishWriting;
 use App\Modules\Telework\Actions\SaveWriting;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Http\Requests\WritingRequest;
@@ -25,18 +26,26 @@ use Inertia\Response;
  */
 final class WritingController extends Controller
 {
-    public function __construct(private readonly Writer $writer) {}
+    public function __construct(private readonly Writer $writer, private readonly WorkCenters $workCenters) {}
 
-    public function show(Request $request, mixed $tenant, string $kind, WritingPage $page, WorkCenters $workCenters): Response
+    public function show(Request $request, mixed $tenant, string $kind, WritingPage $page): Response
     {
         Gate::authorize('manage-telework');
         [$document, $template] = $this->written($kind);
-        $center = $request->string('center')->toString();
-        $from = Str::isUuid($center) ? $workCenters->findActive($center) : null;
 
-        return Inertia::render('telework/write', $page->props($template, $document, $from === null
-            ? ['href' => route('tenant.telework.index', $tenant), 'label' => 'Guardar y volver']
-            : ['href' => route('tenant.telework.route', [$tenant, $from->id]), 'label' => 'Guardar y volver a la ruta']));
+        return Inertia::render('telework/write', $page->props($template, $document, $this->back($request, $tenant)));
+    }
+
+    public function publish(Request $request, mixed $tenant, string $kind, PublishWriting $publish): RedirectResponse
+    {
+        Gate::authorize('manage-telework');
+        [$document, $template] = $this->written($kind);
+        $user = $request->user();
+        abort_if($user === null, 403);
+        $publish->handle($template, $document, $user->id);
+        Inertia::flash('toast', ['type' => 'success', 'message' => "{$template->name()} publicada."]);
+
+        return redirect($this->back($request, $tenant)['href']);
     }
 
     public function update(WritingRequest $request, mixed $tenant, string $kind, SaveWriting $save): RedirectResponse
@@ -47,6 +56,21 @@ final class WritingController extends Controller
         $save->handle($template, $document, $request->answers(), $request->step(), $user->id);
 
         return back(fallback: route('tenant.telework.writing.show', [$tenant, $document->value]));
+    }
+
+    /**
+     * Where «Guardar y volver» leads: the route of the center it came from, or the centers.
+     *
+     * @return array{href: string, label: string, center: string|null}
+     */
+    private function back(Request $request, mixed $tenant): array
+    {
+        $center = $request->string('center')->toString();
+        $from = Str::isUuid($center) ? $this->workCenters->findActive($center) : null;
+
+        return $from === null
+            ? ['href' => route('tenant.telework.index', $tenant), 'label' => 'Guardar y volver', 'center' => null]
+            : ['href' => route('tenant.telework.route', [$tenant, $from->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $from->id];
     }
 
     /** @return array{DocumentKind, WrittenTemplate} */

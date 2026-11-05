@@ -12,22 +12,30 @@ use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\FileStore;
 use App\Modules\Telework\Support\OpenedPortal;
+use App\Modules\Telework\Support\WritingPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * The documents a person was asked to confirm, from their portal: read the PDF and confirm it. Only a document that was
- * asked of that person exists for them; a link that opens nothing does not exist either.
+ * The documents a person was asked to confirm, from their portal: read the PDF, or the page of a text written with
+ * questions, and confirm it. Only a document that was asked of that person exists for them; a link that opens nothing does
+ * not exist either.
  */
 final class PortalDocumentController extends Controller
 {
-    public function file(string $token, string $document, OpenPortal $openPortal, FileStore $files): StreamedResponse
+    public function file(string $token, string $document, OpenPortal $openPortal, FileStore $files, WritingPage $page): StreamedResponse|Response
     {
         $portal = $this->portal($token, $openPortal);
         $asked = Acknowledgement::query()->where('employee_id', $portal->employeeId)->where('document_id', $document)->exists();
         $found = $asked ? TeleworkDocument::query()->find($document) : null;
         abort_if($found === null, 404);
+
+        if ($found->path === null) {
+            return Inertia::render('telework/portal-document', ['token' => $token, 'document' => $page->document($found)]);
+        }
 
         $response = $files->stream($found->path);
         $response->headers->set('Cache-Control', 'private, no-store');

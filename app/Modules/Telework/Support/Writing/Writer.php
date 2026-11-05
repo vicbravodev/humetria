@@ -71,6 +71,16 @@ final readonly class Writer
     }
 
     /**
+     * Whether every question is answered: each single choice taken and each list with something chosen.
+     *
+     * @param  array<string, string|list<string>|null>  $answers
+     */
+    public function complete(WrittenTemplate $template, array $answers): bool
+    {
+        return array_all($this->fields($template), fn (Field $field): bool => ($answers[$field->key] ?? null) !== null && $answers[$field->key] !== []);
+    }
+
+    /**
      * The sections with the paragraphs RH rewrote in place of the ones the answers make.
      *
      * @param  array<string, string|list<string>|null>  $answers

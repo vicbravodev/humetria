@@ -6,22 +6,28 @@ namespace App\Modules\Telework\Support;
 
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Models\DocumentDraft;
+use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\Writing\Field;
 use App\Modules\Telework\Support\Writing\Question;
 use App\Modules\Telework\Support\Writing\Writer;
 use App\Modules\Telework\Support\Writing\WrittenTemplate;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\Tenancy\Data\WorkCenterSummary;
+use Carbon\CarbonImmutable;
 
 /**
  * What the page that writes a NOM-037 document with questions shows (boards V2-Politica and V3-Doc-Riesgos): the questions,
- * the answers kept so far and the question it was on, the text they make and the incisos of the norm it covers.
+ * the answers kept so far and the question it was on, the text they make, the incisos of the norm it covers and what
+ * publishing it means. Also a written version as people read it.
  */
 final readonly class WritingPage
 {
-    public function __construct(private Writer $writer, private Companies $companies) {}
+    public function __construct(private Writer $writer, private Companies $companies, private WorkCenters $workCenters, private AckAudience $audience) {}
 
     /**
-     * @param  array{href: string, label: string}  $back  Where «Guardar y volver» leads.
+     * @param  array{href: string, label: string, center: string|null}  $back  Where «Guardar y volver» leads, and the center
+     *                                                                         whose route it is.
      * @return array<string, mixed>
      */
     public function props(WrittenTemplate $template, DocumentKind $kind, array $back): array
@@ -57,7 +63,51 @@ final readonly class WritingPage
             'sections' => $this->writer->sections($template, $answers, $draft->edits ?? []),
             'items' => array_map(fn (string $key, string $label): array => ['key' => $key, 'label' => $label], array_keys($kind->items()), array_values($kind->items())), // @pest-mutate-ignore: UnwrapArrayValues
             'minutes' => $template->minutes(),
+            'publication' => $this->publication($kind),
             'back' => $back,
         ];
+    }
+
+    /**
+     * A written version as people read it: whose it is, its number, its day and its sections.
+     *
+     * @return array<string, mixed>
+     */
+    public function document(TeleworkDocument $document): array
+    {
+        $center = array_find($this->workCenters->all(), fn (WorkCenterSummary $center): bool => $center->id === $document->work_center_id);
+
+        return [
+            'title' => $this->writer->template($document->kind)?->title() ?? $document->kind->label(),
+            'company' => $this->companies->current()->tradeName,
+            'owner' => $this->companies->current()->tradeName.($center === null ? '' : " · {$center->name}"),
+            'version' => $document->version,
+            'publishedOn' => $this->day($document->created_at),
+            'sections' => array_map(fn (array $section): array => ['heading' => $section['heading'], 'text' => $section['text']], $document->body ?? []),
+        ];
+    }
+
+    /**
+     * Who a new version reaches: the confirmations it asks for (null for a kind nobody confirms), the centers in use and the
+     * version in force there, if any.
+     *
+     * @return array{audience: int|null, centers: int, version: array{number: int, publishedOn: string}|null}
+     */
+    private function publication(DocumentKind $kind): array
+    {
+        $centers = array_map(fn (WorkCenterSummary $center): string => $center->id, array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
+        $latest = TeleworkDocument::query()->inForce()->where('kind', $kind)->whereIn('work_center_id', $centers)->orderByDesc('created_at')->first();
+
+        return [
+            'audience' => $this->audience->headcount($kind, $centers),
+            'centers' => count($centers),
+            'version' => $latest === null ? null : ['number' => $latest->version, 'publishedOn' => $this->day($latest->created_at)],
+        ];
+    }
+
+    /** "12 oct 2026", in the display timezone. */
+    private function day(CarbonImmutable $moment): string
+    {
+        return str_replace('.', '', $moment->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'));
     }
 }

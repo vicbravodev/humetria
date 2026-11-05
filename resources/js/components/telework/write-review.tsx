@@ -1,22 +1,28 @@
 import { Check } from 'lucide-react';
 import FlowProgress from '@/components/humetria/flow-progress';
+import WritePublish from '@/components/telework/write-publish';
 import { Button } from '@/components/ui/button';
 import type { FlowQuestion } from '@/lib/question-flow';
+import type { WritingPublication } from '@/types';
 
 /**
  * The end of the questions (board V2-Politica): what is left to answer, each with its way back, or the document ready to
- * read on the right and to change.
+ * read on the right and to publish.
  */
 export default function WriteReview({
     policy,
     missing,
     questions,
+    publication,
+    publishUrl,
     onGo,
 }: {
     /** The Política de Teletrabajo, which names its 12 topics. */
     policy: boolean;
     missing: FlowQuestion[];
     questions: FlowQuestion[];
+    publication: WritingPublication;
+    publishUrl: string;
     onGo: (step: number) => void;
 }) {
     if (missing.length > 0) {
@@ -71,10 +77,11 @@ export default function WriteReview({
                     ? 'Tu política cubre los 12 temas'
                     : 'Tu documento está listo'}
             </h1>
-            <p className="text-[17px] leading-[26px] text-muted-foreground">
-                {policy ? 'Léela' : 'Léelo'} a la derecha y cambia lo que
-                quieras.
-            </p>
+            <WritePublish
+                policy={policy}
+                publication={publication}
+                url={publishUrl}
+            />
             <div>
                 <Button variant="ghost" onClick={() => onGo(0)}>
                     Revisar las respuestas

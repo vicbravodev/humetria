@@ -12,6 +12,7 @@ use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\AckProgress;
 use App\Modules\Telework\Support\FileStore;
 use App\Modules\Telework\Support\VisibleCenters;
+use App\Modules\Telework\Support\WritingPage;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Database\Eloquent\Builder;
@@ -104,11 +105,16 @@ final class DocumentController extends Controller
         return redirect()->route('tenant.telework.documents.index', $tenant);
     }
 
-    public function file(Request $request, mixed $tenant, string $document, FileStore $files): StreamedResponse
+    /** The PDF of a version, or the page of a version written with questions. */
+    public function file(Request $request, mixed $tenant, string $document, FileStore $files, WritingPage $page): StreamedResponse|Response
     {
         Gate::authorize('view-telework');
         $found = Str::isUuid($document) ? TeleworkDocument::query()->find($document) : null;
         abort_if($found === null || ! in_array($found->work_center_id, $this->limitedCenters($request) ?? [$found->work_center_id], true), 404);
+
+        if ($found->path === null) {
+            return Inertia::render('telework/written-document', ['document' => $page->document($found)]);
+        }
 
         $response = $files->stream($found->path);
         $response->headers->set('Cache-Control', 'private, no-store');
