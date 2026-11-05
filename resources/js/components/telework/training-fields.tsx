@@ -1,5 +1,6 @@
 import Combobox from '@/components/humetria/combobox';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import TrainingAttendeesField from '@/components/telework/training-attendees-field';
 import TrainingTopicsField from '@/components/telework/training-topics-field';
@@ -91,20 +92,22 @@ export default function TrainingFields({
                 error={errors['employee_ids']}
             />
             <div className="grid gap-2">
-                <Label htmlFor="training-evidence">
-                    Lista de asistencia firmada (PDF, opcional)
-                </Label>
-                <input
+                <p className="font-medium">
+                    Lista de asistencia firmada (opcional)
+                </p>
+                <FileDropZone
                     id="training-evidence"
                     name="evidence"
-                    type="file"
                     accept="application/pdf"
-                    aria-invalid={
-                        errors['evidence'] === undefined ? undefined : true
-                    }
-                    className="w-full rounded-md border border-input bg-card px-4 py-2.5 text-base file:mr-3 file:font-medium"
+                    title="Arrastra la lista aquí o elígela"
+                    hint="En PDF"
+                    invalid={errors['evidence'] !== undefined}
+                    describedBy="training-evidence-error"
                 />
-                <InputError message={errors['evidence']} />
+                <InputError
+                    id="training-evidence-error"
+                    message={errors['evidence']}
+                />
             </div>
         </>
     );

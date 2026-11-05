@@ -1,6 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { CalendarCheck, FileText } from 'lucide-react';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import SettingRow from '@/components/humetria/setting-row';
 import InputError from '@/components/humetria/input-error';
 import MemberChoices from '@/components/telework/member-choices';
@@ -53,17 +54,18 @@ export default function RegisterCommitteeForm({
                         }
                         description="Súbela si la tienes a la mano; puedes registrar la Comisión sin ella."
                     >
-                        <input
+                        <FileDropZone
                             name="act"
-                            type="file"
                             accept="application/pdf"
-                            aria-label="Acta en PDF"
-                            aria-invalid={
-                                errors['act'] === undefined ? undefined : true
-                            }
-                            className="w-full rounded-md border border-input bg-card px-4 py-2.5 text-base file:mr-3 file:font-medium"
+                            title="Arrastra el acta aquí o elígela"
+                            hint="En PDF"
+                            invalid={errors['act'] !== undefined}
+                            describedBy="committee-act-error"
                         />
-                        <InputError message={errors['act']} />
+                        <InputError
+                            id="committee-act-error"
+                            message={errors['act']}
+                        />
                     </SettingRow>
                     <MemberChoices
                         candidates={candidates}
