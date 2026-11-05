@@ -1,0 +1,32 @@
+ESTADO: Guanajuato
+IMPUESTO: Impuesto sobre Nominas (objeto: erogaciones por remuneraciones al trabajo personal subordinado)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (compilado del Congreso del Estado)
+
+FUENTES OFICIALES (leidas en PDF):
+1) Ley de Hacienda para el Estado de Guanajuato, compilado del H. Congreso (Instituto de Investigaciones Legislativas); "Reforma: P.O. Num. 227, Tercera Parte, 13-11-2025"
+   https://congreso-gto.s3.amazonaws.com/uploads/reforma/pdf/3663/LHEG_REF_13Noviembre2025.pdf
+2) Ley de Ingresos del Estado de Guanajuato para el Ejercicio Fiscal de 2026 (P.O. 260, 50a Parte, 30-12-2025); copia alojada en un sitio del gobierno del estado:
+   https://salud.guanajuato.gob.mx/download/transparencia/PARAB-GTO-ISPG-26.pdf
+
+ULTIMA REFORMA VISTA: P.O. 13 de noviembre de 2025 (Decreto Legislativo 96; solo agrego el destino de la recaudacion en el art. 17-A; no cambio la tasa). La reforma al art. 8 vino del P.O. 27-dic-2024.
+Nota: no se si hubo reformas posteriores al 13-nov-2025; el compilado del Congreso que lei termina ahi.
+
+LEY Y ARTICULOS: Ley de Hacienda para el Estado de Guanajuato, Titulo Segundo, Cap. Primero "Impuesto sobre Nominas": objeto art. 6 y 6-A; sujetos art. 7; base art. 8; exenciones art. 9; TASA art. 10; pago art. 11; estimulo art. 14; regimen simplificado art. 17; destino art. 17-A.
+
+TASA 2026: 3% (art. 10: "se determinara de acuerdo con la tasa del 3 por ciento").
+- Desde cuando: el art. 10 fue reformado por P.O. 24-dic-2020 (Decreto Legislativo 300). Por su transitorio segundo la tasa del art. 10 (3%) entro en vigor el 1-ene-2022; durante 2021 fue 2.3%. Por tanto 3% desde 1-ene-2022 y sigue en 2026.
+- No hay tasa diferenciada ni sobretasa en el articulo.
+- Art. 14 (estimulo): reduccion del 100% del impuesto sobre las remuneraciones a personas con discapacidad (con manifestacion y certificacion); estimulo para empleadores que contraten personal de investigacion cientifica/tecnologica, segun disposiciones del Gobernador.
+- Art. 17 (regimen simplificado, opcional para contribuyentes del RESICO): impuesto = numero de personas con erogaciones x salario minimo vigente x 30 dias, y a eso la tasa del art. 10; pago bimestral definitivo.
+- Art. 17-A (reforma 13-nov-2025, desde ejercicio 2026): de la recaudacion se destina el equivalente a 0.2 puntos de la tasa a un proyecto de desarrollo social y 0.1 puntos a seguridad publica. Es destino del gasto, no sobretasa al contribuyente.
+
+RESUMEN (en mis palabras):
+- Objeto (art. 6): erogaciones en dinero o especie por trabajo personal subordinado prestado en el estado; tambien rendimientos y anticipos de socios de cooperativas, anticipos a miembros de sociedades y asociaciones civiles, pagos a administradores/comisarios/consejeros, y honorarios asimilados a salarios.
+- Art. 6-A: lista de remuneraciones: sueldos, tiempo extra, premios/bonos, compensaciones, gratificaciones y AGUINALDOS (fr. V), participacion patronal al FONDO DE AHORRO (fr. VI), primas de antiguedad, PTU (fr. VIII), comisiones, comedor, DESPENSA (fr. XI), transporte, seguros, pagos en bienes y servicios, y cualquier otra a cambio del trabajo.
+- Base (art. 8): monto de esas erogaciones.
+- Exenciones (art. 9; deben estar registradas en la contabilidad del patron): indemnizaciones por riesgos de trabajo; pensiones y jubilaciones; indemnizaciones y primas de retiro por rescision o terminacion laboral; gastos funerarios; viaticos y gastos de representacion comprobados; aportaciones SAR, INFONAVIT, ISSSTE, IMSS patron; AHORRO si hay deposito igual de trabajador y patron (fr. VII); comedor, bono de transporte, uniformes, convivios, becas; primas de seguros de gastos medicos o vida; DESPENSA solo hasta el 40% del valor diario de la UMA (fr. XI; el exceso integra la base); cantidades para fines sociales o sindicales.
+- Por tanto: aguinaldo incluido (6-A V); fondo de ahorro: incluido (6-A VI) salvo el ahorro con deposito igual de trabajador y patron (9 VII); PTU incluida (6-A VIII); despensa incluida solo por el excedente de 40% UMA diario (9 XI); indemnizaciones por terminacion excluidas (9 III). Prima vacacional: no aparece con ese nombre; entraria por 6-A XVI (cualquier otra a cambio del trabajo), lectura mia.
+- Pago (art. 11): declaracion mensual a mas tardar el dia 22 del mes siguiente; pago definitivo.
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (la Ley de Ingresos 2027 aun no esta publicada al 2026-11-03 y no encontre iniciativa oficial que cambie el art. 10).

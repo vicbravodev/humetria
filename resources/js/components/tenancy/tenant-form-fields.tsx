@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import TenantField from '@/components/tenancy/tenant-field';
+import TenantTypeChoice from '@/components/tenancy/tenant-type-choice';
 import { slugify } from '@/lib/slug';
 import type { TenantRow } from '@/types';
 
 /**
- * The four fields of a company. When creating, the address follows the trade name until the person types in it;
+ * The fields of a company (and, when creating, its type, which never changes after). When creating, the address follows the trade name until the person types in it;
  * when editing, it never follows it, and changing it warns that the old addresses stop working.
  */
 export default function TenantFormFields({
@@ -19,6 +20,9 @@ export default function TenantFormFields({
 
     return (
         <div className="grid gap-4">
+            {tenant === undefined && (
+                <TenantTypeChoice error={errors['type']} />
+            )}
             <TenantField
                 name="legal_name"
                 label="Razón social"

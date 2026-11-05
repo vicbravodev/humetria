@@ -15,6 +15,15 @@ const COLUMNS = [
     ['Número de empleado', 'numero_de_empleado'],
 ];
 
+/** Columns a file may add; without them, what a person already has is left as it is. */
+const OPTIONAL_COLUMNS = [
+    ['Categoría del tabulador', 'categoria'],
+    ['Nivel del tabulador', 'nivel'],
+    ['Fecha de ingreso', 'fecha_de_ingreso'],
+    ['Grupo', 'grupo'],
+    ['Estado', 'estado'],
+];
+
 /** How to fill the CSV: its columns and the rules of each, with the work centers it can name. */
 export default function ImportInstructions({
     maxRows,
@@ -31,6 +40,19 @@ export default function ImportInstructions({
                 {COLUMNS.map(([label, column]) => (
                     <li key={column} className="flex items-center gap-2 py-2">
                         <Check aria-hidden className="size-4 text-primary" />
+                        <span className="flex-1 text-sm">{label}</span>
+                        <span className="text-caption text-muted-foreground">
+                            {column}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+            <h3 className="text-sm leading-5 font-semibold">
+                Columnas opcionales
+            </h3>
+            <ul className="-mt-2 divide-y">
+                {OPTIONAL_COLUMNS.map(([label, column]) => (
+                    <li key={column} className="flex items-center gap-2 py-2">
                         <span className="flex-1 text-sm">{label}</span>
                         <span className="text-caption text-muted-foreground">
                             {column}
@@ -58,6 +80,11 @@ export default function ImportInstructions({
                     {hasWorkCenters
                         ? '.'
                         : ': aún no hay ninguno; da de alta uno primero.'}
+                </li>
+                <li>
+                    Categoría y nivel van juntos. Fecha de ingreso: AAAA-MM-DD o
+                    DD/MM/AAAA. Grupo: Sindicalizado o Confianza. Si el archivo
+                    no trae una de estas columnas, ese dato no se cambia.
                 </li>
                 <li>
                     Quien ya esté (por número de empleado o, si no tiene, por

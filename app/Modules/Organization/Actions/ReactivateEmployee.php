@@ -20,7 +20,11 @@ final class ReactivateEmployee
         $employee->update(['deactivated_at' => null]);
 
         Log::info('employee.reactivated', ['employee_id' => $employee->id]);
-        event(new EmployeeReactivated($employee->tenant_id, $employee->id, $employee->work_center_id));
+
+        // Only a person who works in a work center has policies to acknowledge there (a union's roster has none).
+        if ($employee->work_center_id !== null) {
+            event(new EmployeeReactivated($employee->tenant_id, $employee->id, $employee->work_center_id));
+        }
 
         return $employee;
     }

@@ -18,6 +18,7 @@ import {
     settingsEntryHref,
     superadminNavItems,
 } from '@/lib/app-navigation';
+import { toolNavItems } from '@/lib/tool-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
 import { index as campaigns } from '@/routes/tenant/campaigns';
@@ -74,7 +75,9 @@ function companyActions(
     };
 
     return [
-        ...(tenant.can.manage_campaigns ? [newEvaluation] : []),
+        ...(tenant.can.manage_campaigns && tenant.type !== 'union'
+            ? [newEvaluation]
+            : []),
         ...(tenant.can.manage_organization ? [importEmployees] : []),
     ];
 }
@@ -90,6 +93,7 @@ export function paletteCommands({
     const pages = [
         ...mainNavItems(tenant, isSuperadmin),
         ...complianceNavItems(tenant),
+        ...toolNavItems(tenant),
         ...(isSuperadmin ? superadminNavItems : []),
     ];
 

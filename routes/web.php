@@ -20,6 +20,7 @@ require __DIR__.'/disclosure-portal.php';
 require __DIR__.'/workers.php';
 require __DIR__.'/complaints-public.php';
 require __DIR__.'/shared-report.php';
+require __DIR__.'/compensation-shared.php';
 
 Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {

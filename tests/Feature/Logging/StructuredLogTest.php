@@ -88,6 +88,8 @@ it('redacts each sensitive key', function (string $key): void {
     'health_note', 'pain_level', 'referral_note', 'assessment_scores', 'discomfort', 'footwear',
     // Humi: what a person asks the assistant, and what it answers, is never a log's business.
     'prompt', 'user_message', 'assistant_message',
+    // Compensación: what a person earns is never a log's business.
+    'salary', 'daily_salary', 'daily_salary_cents', 'salary_cents', 'sbc', 'amount_cents',
     // NOM-035: where a person was referred for a clinical assessment says something about their health.
     'institution',
     // NOM-035 Programa de intervención: what HR writes may name a person, so it never reaches a log.
@@ -97,6 +99,27 @@ it('redacts each sensitive key', function (string $key): void {
     // NOM-035 policy and disclosure: the link of the page and of a person, the words of the policy and the note of a paper acknowledgment.
     'page_url', 'worker_page_link', 'personal_link', 'acknowledgment_note', 'sections', 'policy_text',
 ]);
+
+it('redacts every salary key at any depth', function (): void {
+    Log::channel('single')->info('compensation.scenario_saved', [
+        'scenario' => ['name' => 'Revisión 2027', 'rows' => [['category' => 'Oficial', 'Daily_Salary' => 51234567, 'sbc' => 52465]]],
+        'salary' => 99887766,
+        'totals' => ['salary_cents' => 11223344, 'daily_salary_cents' => 55667788, 'amount_cents' => 33445566],
+    ]);
+
+    $line = lastLogLine($this->logPath);
+
+    expect($line['context']['scenario']['name'])->toBe('Revisión 2027')
+        ->and($line['context']['scenario']['rows'][0]['category'])->toBe('Oficial')
+        ->and($line['context']['scenario']['rows'][0]['Daily_Salary'])->toBe('[REDACTED]')
+        ->and($line['context']['scenario']['rows'][0]['sbc'])->toBe('[REDACTED]')
+        ->and($line['context']['salary'])->toBe('[REDACTED]')
+        ->and($line['context']['totals'])->toBe(['salary_cents' => '[REDACTED]', 'daily_salary_cents' => '[REDACTED]', 'amount_cents' => '[REDACTED]'])
+        ->and(File::get($this->logPath))->not->toContain('51234567')
+        ->not->toContain('99887766')
+        ->not->toContain('52465')
+        ->not->toContain('11223344');
+});
 
 it('keeps lists with numeric keys intact', function (): void {
     Log::channel('single')->info('employees.imported', ['rows' => [10, 20]]);

@@ -1,0 +1,28 @@
+ESTADO: Tlaxcala
+IMPUESTO: Impuesto Sobre Nóminas
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial (Congreso y Periódico Oficial del Estado)
+
+LEY Y ARTÍCULOS
+Código Financiero para el Estado de Tlaxcala y sus Municipios, Título Cuarto, Capítulo VII "Impuesto Sobre Nóminas": arts. 131 (objeto), 132 (sujetos y retención), 133 (base y exclusiones), 134 (tasa), 135 (reducciones por el Ejecutivo), 136 (pago). Ley de Ingresos del Estado 2026, Capítulo II: arts. 13, 15 a 24 (beneficios).
+
+FUENTES OFICIALES
+1. Código Financiero, PDF del Congreso de Tlaxcala, última reforma P.O. 28-nov-2025:
+   https://congresodetlaxcala.gob.mx/archivo/leyes2020/pdf/3_codigo_financier.pdf
+2. Ley de Ingresos del Estado de Tlaxcala para el Ejercicio Fiscal 2026, Decreto 244, Periódico Oficial No. 1 Extraordinario, 28-nov-2025:
+   https://publicaciones.tlaxcala.gob.mx/indices/1Ex28112025.pdf
+(La copia de la Consejería Jurídica con fecha 18-12-2024 devolvió 404; la otra copia suya es de 2014. No usarlas.)
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Código: 28-nov-2025 (el art. 134 se reformó por última vez el 19-dic-2016; el art. 133 se reformó el 18-dic-2024 solo en sus fracciones VII a IX). Ley de Ingresos 2026: 28-nov-2025, vigente del 1-ene al 31-dic-2026.
+
+RESUMEN
+Tasa (art. 134): "se realizará aplicando la tasa del tres por ciento". Sin tasas diferenciadas. Desde 2017 (reforma del 19-dic-2016); sin cambio visto para 2026.
+Beneficios de la Ley de Ingresos 2026 que cambian la tasa efectiva: art. 24, incentivo del 33% del impuesto a pagar (tasa efectiva 2.01%) para contribuyentes con domicilio en el estado, inscritos, al corriente 12 meses, sin medios de defensa sin garantía y con autorización expresa de Finanzas pedida por escrito en los primeros 5 días hábiles del primer mes del trimestre; no aplica a quien goce de los arts. 16 a 18. Art. 17, exención de 100% del ISN de los empleos generados o adicionales en 2026 (certificados de promoción fiscal). Art. 18, incentivo de 20% para quien mantenga su plantilla de dic-2025 y genere empleos nuevos. Art. 135 del Código: el Gobernador puede otorgar reducciones por decreto general. Quien aplique un beneficio indebidamente paga el 3% completo más accesorios (art. 19 de la Ley de Ingresos).
+Sujeto (art. 132): personas físicas o morales que hagan los pagos, habitual o eventualmente; también quien contrate trabajadores domiciliados fuera del estado si el servicio se presta en Tlaxcala, con retención. Los poderes del estado, municipios y organismos son sujetos (Ley de Ingresos, art. 13).
+Base (art. 133): monto total de remuneraciones al trabajo personal subordinado (y a directores, gerentes, administradores, comisarios), incluidos sueldo, extras, honorarios asimilables, aguinaldo, vacaciones, prima vacacional, prima dominical, bonos, compensaciones, ayuda de despensa o habitación, fondo de ahorro, vales de despensa, comedor, transporte, comisiones y gratificaciones, aunque se paguen a quien trabaje fuera del estado.
+No forman parte de la base (art. 133): participación de los trabajadores en las utilidades; indemnizaciones por riesgos de trabajo; pensiones y jubilaciones otorgadas por instituciones de seguridad social; indemnizaciones por rescisión o terminación "excepto el aguinaldo, las vacaciones y la prima vacacional" (fr. IV); gastos funerarios; cuotas IMSS; aportaciones INFONAVIT; aportaciones al SAR; pagos a trabajadores domésticos. Pago mensual a más tardar el día 17 (art. 136).
+Tratamiento de lo que pidieron: aguinaldo, incluido; prima vacacional, incluida; vales de despensa y fondo de ahorro, incluidos (nombrados en la base, sin exclusión); PTU, excluida; indemnizaciones por terminación o rescisión, excluidas, aunque la lista de la base también menciona "prima de antigüedad, cuando sea por rescisión o terminación": la redacción es ambigua en ese punto, por verificar su alcance.
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada).

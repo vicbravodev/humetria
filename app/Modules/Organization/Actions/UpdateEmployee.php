@@ -13,16 +13,20 @@ use Illuminate\Support\Facades\Log;
 
 final readonly class UpdateEmployee
 {
-    public function __construct(private FindOrCreateArea $findOrCreateArea) {}
+    public function __construct(private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade) {}
 
     public function handle(Employee $employee, EmployeeData $data): Employee
     {
         return DB::transaction(function () use ($employee, $data): Employee {
             $from = $employee->work_center_id;
-            $employee->update(EmployeeAttributes::from($data, $this->findOrCreateArea->handle($data->area)));
+            $employee->update([
+                ...EmployeeAttributes::from($data, $this->findOrCreateArea->handle($data->area)),
+                ...EmployeeAttributes::payScale($data, $this->findOrCreateJobGrade->handle($data->jobCategory, $data->jobLevel)),
+            ]);
 
-            if ($employee->work_center_id !== $from) {
-                event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $employee->work_center_id));
+            // Someone who had no work center is placed in one, not moved.
+            if ($from !== null && $data->workCenterId !== null && $data->workCenterId !== $from) {
+                event(new EmployeeMoved($employee->tenant_id, $employee->id, $from, $data->workCenterId));
             }
 
             // sort() also renumbers the keys, so the list stays a list once updated_at is taken out.

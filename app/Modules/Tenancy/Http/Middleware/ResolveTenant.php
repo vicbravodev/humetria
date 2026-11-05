@@ -69,6 +69,7 @@ final class ResolveTenant
             'status' => $status->value,
             'blocked' => $status->isBlocked(),
             'trial_days_left' => $tenant->trialDaysLeft(),
+            'type' => $tenant->type->value,
             'role' => $role->value,
             'role_label' => $role->label(),
             'can' => [
@@ -81,6 +82,8 @@ final class ResolveTenant
                 'view_seating' => $user->can('view-seating'),
                 'manage_seating' => $user->can('manage-seating'),
                 'assess_seating' => $user->can('assess-seating'),
+                'view_compensation' => $user->can('view-compensation'),
+                'manage_compensation' => $user->can('manage-compensation'),
                 'view_interventions' => $user->can('view-interventions'),
                 'manage_interventions' => $user->can('manage-interventions'),
                 'view_disclosure' => $user->can('view-disclosure'),

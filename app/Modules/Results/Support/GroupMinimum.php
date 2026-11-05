@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Support;
 
+use App\Modules\Results\Contracts\SmallGroups;
+
 /**
  * The one place the minimum of respondents per group lives (criterio C-23), for every tool that reports a group. A group
  * under the minimum is not shown, and a list of groups gets complementary suppression: what stays hidden adds up to none
  * or to the minimum at least, so the total minus the groups shown never reveals a small one.
  */
-final readonly class GroupMinimum
+final readonly class GroupMinimum implements SmallGroups
 {
+    public function visibleKeys(array $headcountByGroup): array
+    {
+        return $this->suppress($headcountByGroup)->visible;
+    }
+
     public function isShown(int $answered): bool
     {
         return $answered >= config()->integer('results.min_group');

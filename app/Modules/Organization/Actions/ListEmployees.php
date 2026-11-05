@@ -6,6 +6,7 @@ namespace App\Modules\Organization\Actions;
 
 use App\Modules\Organization\Data\EmployeeFilters;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Models\JobGrade;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -22,12 +23,18 @@ final class ListEmployees
     {
         return Employee::query()
             ->with('area:id,name')
+            // The grade's names come in the same query, as columns: no second query per page.
+            ->addSelect([
+                'job_category' => JobGrade::query()->select('category')->whereColumn('job_grades.id', 'employees.job_grade_id'),
+                'job_level' => JobGrade::query()->select('level')->whereColumn('job_grades.id', 'employees.job_grade_id'),
+            ])
             ->when($filters->active, fn (Builder $query) => $query->whereNull('deactivated_at'), fn (Builder $query) => $query->whereNotNull('deactivated_at'))
             ->when($filters->workCenterId !== null, fn (Builder $query) => $query->where('work_center_id', $filters->workCenterId))
             ->when($filters->areaId !== null, fn (Builder $query) => $query->where('area_id', $filters->areaId))
             ->when($filters->withoutEmail, fn (Builder $query) => $query->whereNull('email'))
             ->matching(['name', 'email', 'employee_number'], $filters->search)
             ->orderBy('name')
+            ->orderBy('employee_number')
             ->orderBy('id')
             ->paginate(self::PER_PAGE)
             ->withQueryString();

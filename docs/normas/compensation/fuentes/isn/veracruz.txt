@@ -1,0 +1,29 @@
+ESTADO: Veracruz
+IMPUESTO: Impuesto sobre Erogaciones por Remuneraciones al Trabajo Personal
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial para la tasa del Código; Ley de Ingresos 2026 no localizada (ver nota)
+
+LEY Y ARTÍCULOS
+Código Financiero para el Estado de Veracruz de Ignacio de la Llave, Libro Tercero, Título Primero, Capítulo Primero: arts. 98 (objeto), 99 (sujetos), 100 (base), 101 (tasa), 102 (causación y pago), 103 (exenciones), 104 (obligaciones, dictamen).
+
+FUENTES OFICIALES
+1. Código Financiero, versión de la Procuraduría Fiscal (Secretaría de Finanzas y Planeación), "Última reforma mediante Decreto número 495, Gaceta Oficial extraordinario 016, 13-ene-2026":
+   https://www.veracruz.gob.mx/finanzas/wp-content/uploads/sites/2/2026/01/CODIGO-FINANCIERO-ESTADO-DE-VERACRUZ-DE-IGNACIO-DE-LA-LLAVE.pdf
+2. Para comparar: versión del portal de gobierno, última actualización G.O. 2-jul-2019 (art. 101 también al 3%):
+   https://repositorio.veracruz.gob.mx/desarrollosocial/wp-content/uploads/sites/8/2019/08/C%C3%B3digo-Financiero-para-el-Estado-de-Veracruz-de-Ignacio-de-la-Llave.pdf
+3. Decreto 491, Presupuesto de Egresos 2026 (no trae cambios al ISN): https://www.veracruz.gob.mx/finanzas/wp-content/uploads/sites/2/2026/01/DECRETO-NUMERO-491-DE-PRESUPUESTO-DE-EGRESOS-DEL-GOBIERNO-2026.pdf
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Código en conjunto: Decreto 495, G.O. ext. 016, 13-ene-2026. Para el art. 101 no aparece una anotación de reforma reciente: el texto del art. 101 es el mismo (3%) que en la versión de jul-2019; la anotación más reciente en ese artículo es la derogación del segundo párrafo (G.O. 20-oct-2015).
+
+RESUMEN
+Tasa (art. 101): "se causará, liquidará y pagará aplicando la tasa del 3%" sobre la base del art. 100. Sin tasa diferenciada ni sobretasa en el Código. Es 3% al menos desde jul-2019 y, por fuentes secundarias, desde 2016.
+OJO CON LA PREMISA "Veracruz subió para 2026": el texto vigente del Código (reforma de 13-ene-2026) dice 3%, igual que el de 2019. Una nota de Excélsior (18-dic-2025) dice que se "incrementó a 3 por ciento", pero no cita decreto ni artículo y no coincide con el texto oficial; no la usé. BHR (secundaria) lista a Veracruz entre los que no cambiaron su tasa para 2026. No encontré el texto publicado de la Ley de Ingresos 2026 de Veracruz, así que queda por verificar si ahí hay una tasa o estímulo distinto; el Código no lo tiene.
+Sujeto: personas físicas y morales que hagan las erogaciones, y los gobiernos federal, estatal y municipal, organismos descentralizados, desconcentrados, autónomos y fideicomisos (art. 99); retención para quien contrate servicios de personas en el estado (art. 98).
+Base (art. 100): monto total de erogaciones por remuneraciones al trabajo personal, subordinado o no (art. 98): sueldos y salarios (cuota diaria, gratificaciones, percepciones, habitación, primas, comisiones, prestaciones en especie), honorarios, emolumentos, aportación patronal al fondo de ahorro, pagos a consejeros, comisarios y fiduciarios, contraprestaciones por servicios personales y análogos. Pago mensual a más tardar el día 17 (art. 102), definitivo; hay dictamen anual por contador público autorizado (art. 104, fr. III).
+Exenciones (art. 103, I), siempre que estén registradas en la contabilidad: ayuda o vales para despensa, vales de restaurante, colegiaturas, becas, seguros de vida y de gastos médicos mayores; indemnizaciones por rescisión o terminación; indemnizaciones por riesgos de trabajo; pensiones y jubilaciones; viáticos y gastos de representación comprobados; herramientas y ropa de trabajo; participación de los trabajadores en las utilidades; aportaciones de seguridad social a cargo del patrón; tiempo extra que no rebase 3 horas diarias ni 3 veces por semana; alimentación y habitación gratuitas; gastos funerarios; ahorro con aportación igual del trabajador y el patrón; despensas en especie o dinero; premios anuales por asistencia y puntualidad; aportaciones a planes de pensiones. También exentos: instituciones de asistencia, ejidos y comunidades y figuras agrarias (fr. II), pagos por trabajo independiente que cause IVA (fr. III), patrón que contrate trabajador de reciente ingreso en puesto de nueva creación con tope de 6 salarios mínimos diarios (fr. IV) y erogaciones a favor de madres solteras o jefes de familia con hijos con discapacidad (fr. V).
+Tratamiento de lo que pidieron: vales de despensa, excluidos; fondo de ahorro, excluido si la aportación es igual del trabajador y el patrón; PTU, excluida; indemnizaciones por rescisión o terminación, excluidas; aguinaldo y prima vacacional, no mencionados en las exenciones, quedan dentro por "gratificaciones, percepciones, primas" (inferencia por silencio, por verificar).
+Nota: en nov-2025 el gobierno estatal anunció un decreto de estímulos para municipios afectados por lluvias; no lo verifiqué en el texto oficial y no lo considero parte de la tasa efectiva general.
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada).

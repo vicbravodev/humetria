@@ -61,6 +61,36 @@ export function headcountText({
         : `${countOf(active, 'persona activa', 'personas activas')} en ${countOf(work_centers, 'centro de trabajo', 'centros de trabajo')}.`;
 }
 
+/** "90 personas activas." for a union, whose people have no work center. */
+export function unionHeadcountText(active: number): string {
+    return active === 0
+        ? 'Nadie activo por ahora.'
+        : `${countOf(active, 'persona activa', 'personas activas')}.`;
+}
+
+/**
+ * The line under a person's name: the position, the company ID (not again when the ID is what they are shown by) and,
+ * for someone deactivated, since when.
+ */
+export function employeeDetails(employee: {
+    name: string;
+    job_title: string;
+    employee_number: string | null;
+    deactivated_on: string | null;
+}): string {
+    return [
+        employee.job_title,
+        employee.employee_number === employee.name
+            ? null
+            : employee.employee_number,
+        employee.deactivated_on === null
+            ? null
+            : `Baja el ${employee.deactivated_on}`,
+    ]
+        .filter((part) => part !== null && part !== '')
+        .join(' · ');
+}
+
 /** The notice about people no survey link reaches: the fact, then the way to see them. */
 export function withoutEmailText(n: number): { fact: string; action: string } {
     return n === 1

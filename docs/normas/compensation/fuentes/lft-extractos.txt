@@ -1,0 +1,17 @@
+Ley Federal del Trabajo (texto vigente, última reforma DOF 14-05-2026). https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf
+(SHA-256 12f09393a1951a91c3f57f579bf611b034edf1a5f78cdbfb828e23ff3a9acbf7). Consultado: 2026-11-03. Resumen por artículo.
+Los arts. 76, 80, 87, 162, 485 y 486 aparecen sin cambios posteriores a las fechas que indica el propio texto (76: reforma DOF 27-12-2022).
+
+Art. 76: más de un año de servicios => vacaciones pagadas de no menos de 12 días laborables, que aumentan 2 días laborables por cada
+   año subsecuente hasta llegar a 20; a partir del sexto año aumentan 2 días por cada cinco años de servicios.
+Art. 80: prima vacacional no menor a 25 % de los salarios del periodo de vacaciones.
+Art. 87: aguinaldo anual, pagadero antes del 20 de diciembre, de por lo menos 15 días de salario; proporcional si no se cumplió el año.
+Art. 84: el salario se integra con cuota diaria, gratificaciones, percepciones, habitación, primas, comisiones, prestaciones en especie
+   y cualquier otra cantidad que se entregue por el trabajo.
+Art. 162: prima de antigüedad de 12 días de salario por cada año de servicios (fr. I); el monto del salario se determina conforme a
+   los arts. 485 y 486 (fr. II); se paga a quien se separe voluntariamente con 15 años o más de servicios, a quien se separe por
+   causa justificada y a quien sea separado, justificado o no el despido (fr. III); retiros voluntarios: reglas de 10 % (fr. IV);
+   muerte: se paga a los beneficiarios (fr. V).
+Art. 485: la base de la indemnización no puede ser menor al salario mínimo.
+Art. 486: si el salario excede del doble del salario mínimo del área geográfica donde se presta el trabajo, se toma esa cantidad
+   como salario máximo (varias áreas: doble del promedio).

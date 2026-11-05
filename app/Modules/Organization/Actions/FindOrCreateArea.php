@@ -12,9 +12,13 @@ final readonly class FindOrCreateArea
 {
     public function __construct(private CurrentTenant $currentTenant) {}
 
-    /** The company's area with that name, whatever the case, or a new one. */
-    public function handle(string $name): Area
+    /** The company's area with that name, whatever the case, or a new one; none when there is no name. */
+    public function handle(?string $name): ?Area
     {
+        if ($name === null) {
+            return null;
+        }
+
         $existing = Area::query()->whereRaw('lower(name) = lower(?)', [$name])->first();
 
         if ($existing !== null) {

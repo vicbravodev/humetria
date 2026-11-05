@@ -1,0 +1,29 @@
+ESTADO: Sonora
+IMPUESTO: Impuesto sobre Remuneraciones al Trabajo Personal (ISRTP)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial (ley en el Congreso de Sonora y portal de Hacienda); estímulos de Ley de Ingresos 2026 vistos solo en el dictamen de la Comisión de Hacienda
+
+LEY Y ARTÍCULOS
+Ley de Hacienda del Estado de Sonora, Título Segundo, Capítulo VI, Sección Primera: arts. 213 (objeto), 214 (base), 215 (sujetos), 216 (tasa), 218 (no causación), 218 BIS, 218 BIS-1, 218 BIS-2, 218 BIS-3 (estímulos), 219 (pago). Cuota adicional: Título Tercero, Capítulo III Bis-3, arts. 292 BIS-9, 292 BIS-10, 292 BIS-11.
+
+FUENTES OFICIALES
+1. Ley de Hacienda del Estado (PDF del Congreso de Sonora, versión ene-2026 que incluye reformas hasta dic-2025):
+   https://gestion.api.congresoson.gob.mx/assets/archivos/2026/01/KLr618dsnsAg3LkTU6zeLDax8cr1nuk.pdf
+2. Página de la Secretaría de Hacienda de Sonora sobre el ISRTP ("3% sobre nómina", estímulo agrícola 50%, pago día 20):
+   https://hacienda.sonora.gob.mx/contribuyentes/impuesto-sobre-remuneracion-al-trabajo-personal-isrtp
+3. Dictamen de la Comisión de Hacienda sobre la iniciativa de Ley de Ingresos y Presupuesto de Ingresos 2026 (art. 7 estímulos); no localicé el texto publicado en el Boletín Oficial:
+   https://recaudacion.sonora.gob.mx/media/206498/iniciativa-de-ley-de-ingresos-y-presupuesto-de-ingresos-del-estado-de-sonora.pdf
+
+FECHA DE ÚLTIMA REFORMA VISTA
+La ley en conjunto: Decreto 81, B.O. No. 51 secc. III, 26-dic-2025 (otros artículos). El art. 216 se reformó por última vez con el Decreto 90, B.O. Edición Especial, 30-dic-2022 (de ahí la tasa de 3%, vigente desde 2023; no es de 2025 como dicen algunos despachos). La cuota adicional del 1% la agregó el Decreto 10, B.O. Edición Especial, 27-dic-2024, con vigencia 1-ene-2025.
+
+RESUMEN
+Tasa general (art. 216): sobre el monto total de remuneraciones en dinero o especie pagadas en un mes, "será del 3%". El segundo párrafo está derogado.
+Cuota adicional (art. 292 BIS-9): cuota adicional del 1% sobre la misma base del art. 214, para seguridad pública y competitividad (FICOSEG). Art. 292 BIS-10: no la causan los contribuyentes del ISRTP con menos de 100 trabajadores registrados en Sonora ante el IMSS, ni la Federación, los Estados y los Municipios. Tasa efectiva: 3% con menos de 100 trabajadores registrados; 4% con 100 o más.
+Estímulos que cambian la tasa efectiva: art. 218 BIS-2 (contribuyentes con hasta 20 trabajadores: se exenta de la base 1 UMA elevada al mes por trabajador, hasta 6 trabajadores; no acumulable con otros). Art. 218 BIS (reducción de 8% del impuesto por aportaciones a instituciones de asistencia; 50% de ese estímulo para remuneración a adultos mayores), 218 BIS-3 (hasta 15% por apoyo al fondo del deporte, ampliable a 20%). Ley de Ingresos 2026 (dictamen, art. 7): 100% por nuevas empresas y empleos nuevos permanentes por 12 meses, 100% por contratar mayores de 55 con ciertos topes, y 50% de reducción para actividades agrícolas, silvícolas, ganaderas, acuícolas o pesca sin transformación (el portal de Hacienda confirma el 50%).
+Sujeto y base: quienes realicen pagos en dinero o especie por remuneración al trabajo personal bajo dirección o dependencia de un patrón, incluidos honorarios a quienes presten servicios en las instalaciones del prestatario (arts. 213-215). Base: monto total de esos pagos (art. 214). Pago mensual a más tardar el día 20 del mes siguiente (art. 219).
+Exclusiones (art. 218): viáticos y gastos de representación comprobados; herramientas y uniformes; comida/comedor, transporte y habitación gratuitos y generales; pagos de instituciones sin fines de lucro; pagos a personas con discapacidad; aportaciones a SAR, INFONAVIT, ISSSTESON, ISSSTE, ISSFAM y cuotas IMSS del patrón; gastos funerarios; becas educacionales; primas de seguro de gastos médicos y de vida generales; aportación del patrón a fondos de ahorro si es igual a la del trabajador y se retira una vez al año; subsidio para el empleo; tiempo extra dentro de los márgenes de la LFT; trabajadoras del hogar. Los conceptos excluidos deben desglosarse en la declaración y estar en contabilidad.
+Tratamiento de lo que pidieron: aguinaldo, prima vacacional, PTU, vales de despensa e indemnizaciones por despido no aparecen entre las exclusiones del art. 218, así que quedan dentro del "monto total de pagos" (el texto no los nombra expresamente; es inferencia por silencio, por verificar con la autoridad si el cálculo depende de ello). Fondo de ahorro: excluido con las condiciones de la fracc. XII.
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada).

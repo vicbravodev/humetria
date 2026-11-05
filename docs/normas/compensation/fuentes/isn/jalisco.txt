@@ -1,0 +1,36 @@
+ESTADO: Jalisco
+IMPUESTO: Impuesto sobre Nominas (erogaciones por remuneraciones al trabajo personal subordinado)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (texto del Congreso del Estado)
+
+FUENTES OFICIALES (descargadas y leidas en PDF):
+1) Ley de Ingresos del Estado de Jalisco para el Ejercicio Fiscal 2026 (Decreto 30121/LXIV/25; vigencia 1 de enero de 2026)
+   https://congresoweb.congresojal.gob.mx/bibliotecavirtual/legislacion/Ingresos/Documentos_PDF-Ingresos/Ley%20de%20Ingresos%20del%20Estado%20de%20Jalisco-240226.pdf
+2) Ley de Hacienda del Estado de Jalisco, compilado de la Biblioteca Virtual del Congreso (fecha de archivo 16-04-2024)
+   https://congresoweb.congresojal.gob.mx/bibliotecavirtual/legislacion/Leyes/Documentos_PDF-Leyes/Ley%20de%20Hacienda%20del%20Estado%20de%20Jalisco%20-160424.pdf
+3) (Comparacion) Ley de Ingresos 2025, art. 13, misma tasa:
+   https://congresoweb.congresojal.gob.mx/bibliotecavirtual/legislacion/Ingresos/Documentos_PDF-Ingresos/Ley%20de%20Ingresos%20del%20Estado%20de%20Jalisco-210125.pdf
+
+ULTIMA REFORMA VISTA:
+- Ley de Hacienda: ultimo decreto en la lista de reformas del compilado: 29526/LXIII/24, publicado 24-feb-2024 (toco, entre otros, arts. 43 y 44 bis). No vi reformas posteriores en ese compilado.
+  Nota: el compilado es de abril 2024; no confirme si hubo reformas a la Ley de Hacienda despues de esa fecha (no aparecen en lo que lei).
+- Ley de Ingresos 2026: decreto 30121/LXIV/25 (ejercicio 2026).
+
+TASA (el articulo de la Ley de Hacienda remite a la Ley de Ingresos):
+- Ley de Hacienda, art. 42: el impuesto se liquida con la tarifa que establezca la Ley de Ingresos del Estado.
+- Ley de Ingresos 2026, Capitulo III, art. 13: la tarifa resulta de multiplicar la tasa del 3.0% por la base de la Ley de Hacienda.
+  Cita: "la tasa del 3.0% a la base que se refiere la Ley de Hacienda del Estado de Jalisco."
+- Tasa unica 3.0% en 2026, sin diferenciada ni sobretasa en ese articulo. El texto de la LI 2025 (art. 13) dice lo mismo (3.0%).
+- Desde cuando: vigente desde 1-ene-2026 por la LI 2026 (y ya era 3.0% en la LI 2025).
+
+RESUMEN (en mis palabras):
+- Objeto (LH art. 39): pagos en efectivo o en especie que personas fisicas o morales hagan en Jalisco por trabajo personal subordinado; incluye patrones sin domicilio en Jalisco que tengan personal subordinado en el estado. Las "remuneraciones" son las contraprestaciones ordinarias o extraordinarias que el patron da a sus empleados.
+- Sujetos (art. 40): quien hace esos pagos, incluida la federacion y sus entes; responsable solidario quien recibe el trabajo aunque otro pague el salario.
+- Base (art. 41): monto total de las erogaciones por remuneraciones al trabajo personal subordinado.
+- Pago (art. 43): a mas tardar el dia 12 del mes siguiente; declaracion obligatoria aun sin erogaciones gravadas.
+- Exenciones (art. 44, fr. I): PTU; indemnizaciones por riesgos o enfermedades profesionales; pensiones y jubilaciones; indemnizaciones por rescision o terminacion de la relacion laboral; gastos funerarios; viaticos comprobados; aportaciones INFONAVIT, fondos de retiro y cuotas IMSS a cargo del patron; remuneraciones a mayores de 60 anos o personas con discapacidad; remuneraciones a empleados en su primer empleo formal (100% el primer ano, 50% el segundo). Fr. II: erogaciones de Estado/municipios y sus entes, instituciones de asistencia social sin fines de lucro registradas, asociaciones de trabajadores y colegios de profesionistas.
+- Art. 44 bis: exencion por mecenazgo cultural (60% del apoyo acreditado, tope 20% del impuesto anual).
+- Aguinaldo, prima vacacional, vales de despensa, fondo de ahorro: el texto NO los menciona de forma expresa ni como incluidos ni excluidos. Por la definicion amplia (contraprestaciones ordinarias o extraordinarias) y al no estar en la lista de exenciones, quedarian dentro de la base; es lectura mia, no texto expreso.
+- PTU: excluida (art. 44, I, a). Indemnizaciones por rescision/terminacion: excluidas (art. 44, I, d).
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (la Ley de Ingresos 2027 aun no esta en el sitio oficial al 2026-11-03; no encontre decreto ni iniciativa oficial con otra tasa).

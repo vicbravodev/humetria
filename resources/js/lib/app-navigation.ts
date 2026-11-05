@@ -36,7 +36,11 @@ import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, CurrentTenant, InCourse, NavItem } from '@/types';
 
 /** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
-export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'>;
+export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'> &
+    Partial<Pick<CurrentTenant, 'type'>>;
+
+/** A union has no compliance tools (the server answers 404 to them); everything else is a company's. */
+const isUnion = (tenant: NavTenant): boolean => tenant.type === 'union';
 
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them. Panel is the current company's, or /admin
@@ -58,14 +62,17 @@ export const mainNavItems = (
             : [{ title: 'Panel', href: dashboard(), icon: House }];
     }
 
-    const items: NavItem[] = [
-        { title: 'Panel', href: tenantDashboard(tenant.slug), icon: House },
-        {
-            title: 'Centros de trabajo',
-            href: workCenters(tenant.slug),
-            icon: Factory,
-        },
-    ];
+    const panel: NavItem = {
+        title: 'Panel',
+        href: tenantDashboard(tenant.slug),
+        icon: House,
+    };
+    const workCentersItem: NavItem = {
+        title: 'Centros de trabajo',
+        href: workCenters(tenant.slug),
+        icon: Factory,
+    };
+    const items = isUnion(tenant) ? [panel] : [panel, workCentersItem];
 
     const employeesItem = {
         title: 'Empleados',
@@ -183,7 +190,7 @@ export const complianceNavItems = (
     tenant: NavTenant | null,
     inCourse = 0,
 ): NavItem[] => {
-    if (tenant === null) {
+    if (tenant === null || isUnion(tenant)) {
         return [];
     }
 

@@ -9,6 +9,7 @@ use App\Modules\Organization\Actions\ImportEmployees;
 use App\Modules\Organization\Actions\PlanEmployeeImport;
 use App\Modules\Organization\Http\Requests\ImportEmployeesRequest;
 use App\Modules\Organization\Support\EmployeeCsv;
+use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,7 @@ use Inertia\Response;
  */
 final class EmployeeImportController extends Controller
 {
-    public function __construct(private readonly WorkCenters $workCenters) {}
+    public function __construct(private readonly WorkCenters $workCenters, private readonly Companies $companies) {}
 
     public function create(): Response
     {
@@ -40,9 +41,11 @@ final class EmployeeImportController extends Controller
     {
         Gate::authorize('manage-organization');
 
-        return new HttpResponse(EmployeeCsv::template($this->activeCenters()[0]->name ?? 'Matriz'), 200, [
+        $union = $this->companies->current()->isUnion();
+
+        return new HttpResponse($union ? EmployeeCsv::unionTemplate() : EmployeeCsv::template($this->activeCenters()[0]->name ?? 'Matriz'), 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="plantilla-empleados.csv"',
+            'Content-Disposition' => 'attachment; filename="'.($union ? 'plantilla-padron.csv' : 'plantilla-empleados.csv').'"',
         ]);
     }
 
@@ -51,7 +54,7 @@ final class EmployeeImportController extends Controller
      */
     public function store(ImportEmployeesRequest $request, mixed $tenant, PlanEmployeeImport $planImport, ImportEmployees $importEmployees): RedirectResponse
     {
-        $read = EmployeeCsv::read($request->content());
+        $read = EmployeeCsv::read($request->content(), $this->companies->current()->isUnion());
 
         if ($read['error'] !== null) {
             throw ValidationException::withMessages(['file' => $read['error']]);

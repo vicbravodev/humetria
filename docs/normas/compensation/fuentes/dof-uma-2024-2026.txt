@@ -1,0 +1,14 @@
+UMA - Unidad de Medida y Actualización. Resumen de los tres avisos del INEGI en el DOF.
+Consultado: 2026-11-03.
+
+1) DOF 09/01/2026 (aviso fechado 8-ene-2026), https://dof.gob.mx/nota_detalle_popup.php?codigo=5778072
+   Diario $117.31 · mensual $3,566.22 · anual $42,794.64. "vigentes a partir del 1º de febrero de 2026".
+   Método (art. 4 de la Ley para determinar el valor de la UMA): diario = diario anterior x (1 + variación anual del INPC de
+   diciembre); mensual = diario x 30.4; anual = mensual x 12.
+2) DOF 10/01/2025 (aviso fechado 9-ene-2025), https://dof.gob.mx/nota_detalle_popup.php?codigo=5746930
+   Diario $113.14 · mensual $3,439.46 · anual $41,273.52. Vigentes a partir del 1º de febrero de 2025.
+3) DOF 10/01/2024 (aviso fechado 9-ene-2024), copia en https://sc.inegi.org.mx/repositorioNormateca/UMA_24.pdf
+   Diario $108.57 · mensual $3,300.53 · anual $39,606.36. Vigentes a partir del 1º de febrero de 2024.
+
+Consecuencia: del 1-feb-2026 al 31-ene-2027 rige $117.31; del 1-feb-2025 al 31-ene-2026, $113.14; de enero a 31-ene de cada año
+rige todavía el valor del año anterior. El aviso de 2027 se publica a principios de enero de 2027 (no existe a la fecha).

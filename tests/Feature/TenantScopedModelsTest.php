@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
+use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,15 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     TenantInvitation::class => 'accepted from outside the company',
     // The audit trail is the superadmin's too, across companies, and some entries have no company.
     AuditEntry::class => 'read across companies by the superadmin',
+];
+
+/**
+ * Models that belong to the platform and have no tenant_id at all, each with its reason. They are the same for every
+ * company and no account writes them.
+ */
+const PLATFORM_MODELS = [
+    // Maintained by Humetria from official sources (UMA, IMSS, ISN...); an account only reads them through the calculator.
+    FiscalParameter::class => 'fiscal and legal values shared by every company',
 ];
 
 /** @return list<class-string<Model>> */
@@ -46,5 +56,12 @@ it('allows an unscoped model only while its table still has a tenant_id', functi
     foreach (array_keys(TENANT_MODELS_WITHOUT_SCOPE) as $class) {
         expect(Schema::hasColumn((new $class)->getTable(), 'tenant_id'))->toBeTrue("{$class} needs no exception")
             ->and(class_uses_recursive($class))->not->toContain(BelongsToCurrentTenant::class);
+    }
+});
+
+it('keeps the platform models free of a tenant_id', function (): void {
+    foreach (array_keys(PLATFORM_MODELS) as $class) {
+        expect(Schema::hasColumn((new $class)->getTable(), 'tenant_id'))->toBeFalse("{$class} is platform data")
+            ->and(in_array(BelongsToCurrentTenant::class, class_uses_recursive($class), true))->toBeFalse();
     }
 });

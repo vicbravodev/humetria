@@ -6,12 +6,19 @@ import EmployeesEmpty from '@/components/organization/employees-empty';
 import EmployeesNotice from '@/components/organization/employees-notice';
 import EmployeesTable from '@/components/organization/employees-table';
 import EmployeesToolbar from '@/components/organization/employees-toolbar';
+import UnionEmployeesTable from '@/components/organization/union-employees-table';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
+import { useIsUnion } from '@/hooks/use-is-union';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { employeeQuery, headcountText } from '@/lib/employees';
+import {
+    employeeQuery,
+    headcountText,
+    unionHeadcountText,
+} from '@/lib/employees';
 import { options as areaOptions } from '@/routes/tenant/areas';
 import { create as importPage } from '@/routes/tenant/employees/import';
+import { options as jobGradeOptions } from '@/routes/tenant/job-grades';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type {
     ChoiceOption,
@@ -26,18 +33,33 @@ export default function Employees({
     counts,
     filters,
     genders,
+    staff_groups,
+    states,
 }: {
     employees: Paginated<EmployeeRow>;
     counts: EmployeeCounts;
     filters: EmployeeFilters;
     genders: ChoiceOption[];
+    staff_groups: ChoiceOption[];
+    states: ChoiceOption[];
 }) {
     // Always set here: this page only exists inside a company.
     const tenantSlug = useTenantSlug();
+    const union = useIsUnion();
     const choices = {
         workCentersUrl: workCenterOptions.url(tenantSlug),
         areasUrl: areaOptions.url(tenantSlug),
+        jobCategoriesUrl: jobGradeOptions.url({
+            tenant: tenantSlug,
+            field: 'category',
+        }),
+        jobLevelsUrl: jobGradeOptions.url({
+            tenant: tenantSlug,
+            field: 'level',
+        }),
         genders,
+        staffGroups: staff_groups,
+        states,
     };
     // The Bajas tab alone is not a search: it gets its own empty state.
     const filtered =
@@ -49,7 +71,11 @@ export default function Employees({
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title="Empleados"
-                    description={headcountText(counts)}
+                    description={
+                        union
+                            ? unionHeadcountText(counts.active)
+                            : headcountText(counts)
+                    }
                 >
                     <Button variant="outline" asChild>
                         <Link href={importPage(tenantSlug)}>
@@ -59,7 +85,7 @@ export default function Employees({
                     </Button>
                     <CreateEmployeeSheet choices={choices} />
                 </PageHeader>
-                {counts.without_email > 0 && (
+                {!union && counts.without_email > 0 && (
                     <EmployeesNotice
                         filters={filters}
                         count={counts.without_email}
@@ -70,6 +96,11 @@ export default function Employees({
                     <EmployeesEmpty
                         filtered={filtered}
                         inactive={filters.status === 'inactive'}
+                    />
+                ) : union ? (
+                    <UnionEmployeesTable
+                        employees={employees.data}
+                        choices={choices}
                     />
                 ) : (
                     <EmployeesTable

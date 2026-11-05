@@ -9,6 +9,7 @@
         "ext-exif": "*",
         "ext-gd": "*",
         "bacon/bacon-qr-code": "^3.1.1",
+        "brick/math": "^1.0",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/ai": "^1.3",
         "laravel/chisel": "^0.1.0",

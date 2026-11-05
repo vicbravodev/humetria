@@ -1,0 +1,29 @@
+ESTADO: Zacatecas
+IMPUESTO: Impuesto Sobre Nóminas
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACIÓN: confirmado en fuente oficial (Congreso del Estado y Periódico Oficial)
+
+LEY Y ARTÍCULOS
+Ley de Hacienda del Estado de Zacatecas, Título Segundo, Capítulo Segundo "Del Impuesto Sobre Nóminas": arts. 37 (objeto), 38 (sujeto y retención), 39 (base), 40 (tasa y causación), 41 (pago), 42 a 44 (obligaciones). Ley de Ingresos del Estado 2026, art. 16 (estímulo).
+
+FUENTES OFICIALES
+1. Ley de Hacienda del Estado de Zacatecas, PDF del Congreso, "Última Reforma POG 22-08-2026 (Decreto 369)":
+   https://congresozac.gob.mx/63/ley&cual=57&tipo=pdf
+2. Suplemento al Periódico Oficial, 28-dic-2024 (Decreto 22, reforma el art. 40 para llevar la tasa a 3.5%):
+   https://congresozac.gob.mx/coz/images/uploads/20241228125501.pdf
+3. Ley de Ingresos del Estado de Zacatecas para el Ejercicio Fiscal 2026, Periódico Oficial 31-dic-2025:
+   https://www.congresozac.gob.mx/65/ley&cual=337&tipo=pdf
+
+FECHA DE ÚLTIMA REFORMA VISTA
+Ley en conjunto: 22-ago-2026 (Decreto 369; una nota interna del mismo PDF dice 28-ago-2026, hay discrepancia de fecha dentro del documento). Art. 40: reformado el 29-dic-2021 (Decreto 19) y el 28-dic-2024 (Decreto 22), con vigencia 1-ene-2025.
+
+RESUMEN
+Tasa (art. 40): el impuesto se causa cuando se hacen los pagos y "se determinará aplicando a la base [...] la tasa del 3.5%". El Decreto 22 subió de 3.0% a 3.5% (la exposición de motivos del suplemento habla de "medio punto porcentual"). Sin tasa diferenciada ni sobretasa. Sin cambio visto para 2026.
+Estímulo (Ley de Ingresos 2026, art. 16): 100% del impuesto para contribuyentes que inicien operaciones y den aviso de alta en 2026, si cumplen sus obligaciones formales; no hay reducción general para micro o pequeñas. Los entes públicos con adeudos anteriores a 2026 pueden convenir reducciones hasta de 75% (enero a marzo de 2026). La Ley para la Inversión y el Empleo de Zacatecas prevé exenciones separadas (no la leí).
+Sujeto (art. 38): personas físicas, morales, unidades económicas, municipios, Estado, Federación y sus organismos, residentes o no, que hagan las erogaciones; obliga a retener a quien contrate servicios con residentes fuera del estado y fija responsabilidad solidaria con intermediarios laborales.
+Base (art. 39): monto total de las erogaciones del art. 37: pagos en efectivo o especie por trabajo personal subordinado prestado en el estado, incluidos salarios, sueldos, sobresueldos, anticipos, viáticos, gastos de representación, aguinaldo, comisiones, premios, gratificaciones, rendimientos, ayudas para despensa, beneficio por supervivencia, participación de los trabajadores en las utilidades, aportación patronal al fondo de ahorro, primas vacacionales, dominicales y por antigüedad, previsión social, ayudas habitacionales y análogos, más asimilados a salarios (art. 94 LISR). Pago mensual dentro de los primeros 17 días naturales del mes siguiente (art. 41).
+Exclusiones: el capítulo del ISN en la ley leída no trae un artículo de exenciones; al contrario, el art. 37 incluye expresamente aguinaldo, PTU, ayudas de despensa, fondo de ahorro y primas vacacionales. Indemnizaciones por terminación o despido no se mencionan (por silencio, "demás prestaciones"; por verificar).
+Tratamiento de lo que pidieron: aguinaldo, PTU, prima vacacional, ayuda de despensa y fondo de ahorro, incluidos (art. 37); vales de despensa, incluidos como "ayudas para despensa"; indemnizaciones, no mencionadas.
+
+CAMBIO PARA 2027
+Sin cambio publicado a la fecha (no localicé iniciativa ni decreto 2027 en fuente oficial; búsqueda limitada). La Ley de Ingresos 2026 seguirá vigente por reconducción mientras no se apruebe la de 2027.

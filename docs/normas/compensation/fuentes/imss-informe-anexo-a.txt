@@ -1,0 +1,18 @@
+IMSS, Informe al Ejecutivo Federal y al Congreso de la Unión 2022-2023, Anexo A, cuadro A.3 «Esquema de financiamiento por tipo
+de seguro, 2022». https://www.imss.gob.mx/sites/all/statics/pdf/informes/20222023/15-anexos.pdf
+(SHA-256 del PDF: 41296ed7bb06b8dfd90589f4d385a29a050479a1b1cf6766cfa666d437681ff8). Consultado: 2026-11-03.
+Es una fuente oficial del Instituto, de 2022: sirve para cruzar las tasas que no cambian (las que cambian por la reforma de 2020
+son solo cesantía y vejez, y están en lss-transitorio-2020-cesantia-vejez.txt).
+
+Tasas patronales que reporta (porcentaje; base: SBC salvo donde dice UMA):
+- Enfermedades y maternidad, prestaciones en especie: cuota fija 20.4 % de la UMA (por persona asegurada, diaria).
+- Cuota excedente: 1.1 % sobre (SBC - 3 UMA) patrón; 0.4 % trabajador.
+- Prestaciones en dinero: 0.7 % patrón.
+- Pensionados (gastos médicos): 1.05 % patrón.
+- Invalidez y vida: 1.75 % patrón.
+- Retiro 2 % patrón. Cesantía y vejez: 3.15 % patrón en 2022 (antes del escalonamiento).
+- Guarderías y prestaciones sociales: 1 % patrón.
+- Riesgos de trabajo: depende de la siniestralidad de cada empresa (prima promedio ponderada 1.907 % en el periodo mar-2022 a feb-2023).
+Nota 6: el tope del SBC se fijó en 15 salarios mínimos en jul-1997 y subió uno por año hasta 25 en 2007; desde 2017 "considera el valor"
+de la UMA. Nota general: "En 2017, con la implementación de la UMA, las contribuciones pagadas al IMSS en cantidades fijas dejaron
+de hacer referencia al salario mínimo."

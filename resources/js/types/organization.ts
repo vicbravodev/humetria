@@ -11,13 +11,22 @@ export type EmployeeRow = {
     email: string | null;
     /** 10 digits. */
     mobile: string | null;
-    gender: 'female' | 'male' | 'other';
+    /** Empty for someone a union loaded without it. */
+    gender: 'female' | 'male' | 'other' | '';
     gender_label: string;
     work_center_id: string;
     work_center: string;
     area: string;
     job_title: string;
     employee_number: string | null;
+    /** Empty while the person has no category and level in the pay scale. */
+    job_category: string;
+    job_level: string;
+    /** `AAAA-MM-DD`. */
+    hired_on: string | null;
+    staff_group: 'unionized' | 'trusted' | '';
+    /** The state's code; empty when not given. */
+    state: string;
     /** The day they were deactivated, written for display; null while active. */
     deactivated_on: string | null;
 };
@@ -25,9 +34,16 @@ export type EmployeeRow = {
 /** A choice of a list (a work center, an area, a gender): what the form sends and what the person reads. */
 export type ChoiceOption = { value: string; label: string };
 
-/** What the employee form chooses from: the routes that search work centers and areas, and the genders. */
+/**
+ * What the employee form chooses from: the routes that search work centers, areas and the pay scale's categories and
+ * levels, and the fixed catalogs (genders, staff groups, states).
+ */
 export type EmployeeChoices = {
     workCentersUrl: string;
     areasUrl: string;
+    jobCategoriesUrl: string;
+    jobLevelsUrl: string;
     genders: ChoiceOption[];
+    staffGroups: ChoiceOption[];
+    states: ChoiceOption[];
 };

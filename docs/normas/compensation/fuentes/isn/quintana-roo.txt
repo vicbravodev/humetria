@@ -1,0 +1,46 @@
+ESTADO: Quintana Roo
+IMPUESTO: Impuesto sobre Nóminas (ley propia, separada de la Ley de Hacienda)
+LEY: Ley del Impuesto sobre Nóminas del Estado de Quintana Roo (POE 15-12-2015, Decreto 372; vigente desde 1-ene-2016)
+ARTÍCULOS: tasa Art. 6 (primer párrafo) y Art. 8; objeto Art. 2; sujetos Art. 4; base Art. 5; no gravado Art. 17
+URL OFICIAL: https://agqroo.qroo.gob.mx/wp-content/uploads/2026/01/1767992694_2_642.pdf
+  (portal de la Agencia/Consejería Jurídica del Estado, "Última reforma publicada en el POE el 16 de diciembre de 2025")
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA EN EL TEXTO: POE 16-12-2025 (Decreto 190, XVIII Legislatura; entra en vigor al día de su publicación)
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO en fuente oficial (texto vigente de la ley).
+
+RESUMEN
+- Tasa: 4% sobre la base gravable (Art. 6; el Art. 8 repite 4% para el pago mensual). Es tasa única, sin tabla
+  ni reducción para micro/pequeñas empresas en el texto. Cita: "se causará y pagará aplicando la tasa del 4% sobre la base gravable".
+- Desde cuándo: el primer párrafo del Art. 6 aparece "reformado POE 23-12-2022"; el Decreto 031 (POE 23-12-2022)
+  entra en vigor el 1-ene-2023. El texto no dice cuál era la tasa anterior; la conclusión "4% desde 2023" se apoya en que
+  ese decreto reformó el párrafo y en que la ley no registra ninguna reforma posterior del párrafo; el Art. 5 se reformó
+  en POE 23-12-2024 y el Art. 6 BIS se adicionó en POE 16-12-2025, sin cambio de tasa.
+- Destino: el Art. 6 etiqueta 12.5% de lo aprobado en la Ley de Ingresos al fideicomiso de seguridad e impartición de justicia
+  (no cambia la tasa del contribuyente). El Art. 8 limita lo que se recauda hasta el monto aprobado en la Ley de Ingresos;
+  el excedente se destina conforme al Art. 14 de la Ley de Disciplina Financiera (no afecta la tasa al patrón).
+- Obra especializada (Art. 3 fr. II): también 4% sobre la mano de obra, con aviso de inicio de obra.
+- Objeto (Art. 2): erogaciones en efectivo o en especie por remuneraciones al trabajo personal prestado en el estado,
+  bajo dirección o dependencia de un patrón, contratista o intermediario; incluye honorarios asimilables a salarios,
+  comisiones, premios, gratificaciones, rendimientos, primas vacacionales, dominicales y de antigüedad, "ordinarias o
+  extraordinarias", y pagos a socios, administradores y consejeros.
+- Sujetos (Art. 4): quien realiza las erogaciones, aun con domicilio fuera del estado; también prestadores de servicios
+  especializados / obra especializada.
+- Base (Art. 5): total de erogaciones del Art. 2, calculado mensualmente.
+- Tratamiento de conceptos:
+  * Aguinaldo: no se nombra; entra por el concepto amplio de gratificaciones / extraordinarias (Art. 2). Por verificar criterio de la autoridad.
+  * Prima vacacional: incluida expresamente (Art. 2).
+  * Vales de despensa: Art. 17 fr. XI excluye "la alimentación, la habitación y las despensas cuando se cobren al trabajador"
+    (redacción condicionada; no es una exclusión general de despensas otorgadas gratis).
+  * Fondo de ahorro: Art. 17 fr. VII excluye el ahorro cuando se integra con depósito igual del trabajador y de la empresa,
+    con la misma periodicidad que el pago de remuneraciones.
+  * PTU: no se menciona en el texto leído.
+  * Indemnizaciones: Art. 17 fr. I no gravadas las indemnizaciones por terminación de la relación laboral y por riesgos o
+    enfermedades profesionales conforme a leyes o contratos (salvo las otorgadas por diferencia y ajuste de sueldos).
+  * Otros no gravados (Art. 17): jubilaciones y pensiones, gastos funerarios, instrumentos de trabajo, cuotas obrero-patronales
+    (INFONAVIT, SAR, IMSS, ISSSTE), trabajadores domésticos, cónyuge/familiares de primer grado en línea recta, trabajadores
+    con discapacidad certificada, y remuneraciones de sindicatos, asociaciones patronales, cámaras, colegios, instituciones de
+    beneficencia, cooperativas de consumo, asociaciones civiles sin fines de lucro y (inciso h, adic. 16-12-2025) la
+    Administración Pública Centralizada y OPD de Quintana Roo.
+- Cambio publicado para 2027: sin cambio publicado a la fecha (la ley leída es la reforma POE 16-12-2025; no se encontró
+  decreto ni Ley de Ingresos 2027 publicados al 2026-11-03).

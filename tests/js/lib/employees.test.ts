@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    employeeDetails,
     employeeQuery,
     formatMobile,
     headcountText,
@@ -10,6 +11,7 @@ import {
     importStepState,
     importStats,
     importSummaryText,
+    unionHeadcountText,
     withoutEmailText,
 } from '@/lib/employees';
 
@@ -60,6 +62,46 @@ describe('headcountText', () => {
         expect(headcountText({ active: 0, work_centers: 0 })).toBe(
             'Nadie activo por ahora.',
         );
+    });
+});
+
+describe('unionHeadcountText', () => {
+    it('says how many people are active, without work centers', () => {
+        expect(unionHeadcountText(90)).toBe('90 personas activas.');
+        expect(unionHeadcountText(1)).toBe('1 persona activa.');
+        expect(unionHeadcountText(0)).toBe('Nadie activo por ahora.');
+    });
+});
+
+describe('employeeDetails', () => {
+    const person = {
+        name: 'Ana López',
+        job_title: 'Operadora',
+        employee_number: 'A-001',
+        deactivated_on: null,
+    };
+
+    it('lists the position and the number, and since when a deactivated person is out', () => {
+        expect(employeeDetails(person)).toBe('Operadora · A-001');
+        expect(
+            employeeDetails({ ...person, deactivated_on: '3 nov 2026' }),
+        ).toBe('Operadora · A-001 · Baja el 3 nov 2026');
+    });
+
+    it('leaves out what is missing', () => {
+        expect(
+            employeeDetails({
+                ...person,
+                job_title: '',
+                employee_number: null,
+            }),
+        ).toBe('');
+    });
+
+    it('does not repeat the company ID of someone shown by it', () => {
+        expect(
+            employeeDetails({ ...person, name: 'A-001', job_title: '' }),
+        ).toBe('');
     });
 });
 

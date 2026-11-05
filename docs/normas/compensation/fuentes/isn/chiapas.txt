@@ -1,0 +1,37 @@
+ESTADO: Chiapas
+IMPUESTO: Impuesto Sobre Nominas (ISN)
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: confirmado en fuente oficial (texto del Congreso del Estado con reformas del P.O. 075 de 9-dic-2025)
+
+LEY Y ARTICULOS
+- Codigo Fiscal del Estado de Chiapas (hasta 31-dic-2025 "Codigo de la Hacienda Publica para el Estado de Chiapas"; el decreto del P.O. 075 de 9-dic-2025 lo renombro y, segun su transitorio, entra en vigor el 1-ene-2026 y las referencias al Codigo de la Hacienda se entienden hechas al Codigo Fiscal). Titulo Segundo, Capitulo I "Del Impuesto Sobre Nominas", arts. 229 a 238.
+  - 229 objeto y conceptos; 230 sujetos; 232 retencion (3%); 235 base y TASA; 236 pago; 238 exentos.
+
+URL OFICIAL
+- Texto del Congreso del Estado de Chiapas (encabezado: "Ultima reforma publicada en el P.O. numero 076, de fecha 10 de diciembre de 2025, Decreto 040"):
+  https://www.congresochiapas.gob.mx/new/Info-Parlamentaria/LEY_0007.pdf
+
+ULTIMA REFORMA VISTA
+- Para el ISN: arts. 232 y 235 reformados por P.O. No. 075, 9-dic-2025, en vigor 1-ene-2026. Encabezado general del texto: P.O. 076, 10-dic-2025 (Decreto 040).
+
+RESUMEN
+Tasa (art. 235, segundo parrafo): 3% sobre la base gravable. Cita corta: "la tasa del 3% sobre la base gravable". Vigente desde 1-ene-2026. La version de 2021 del mismo Codigo (Oficialia Mayor, P.O. 202 de 31-dic-2021) decia 2%, y la de enero 2025 tambien; el alza a 3% es de la reforma de dic-2025. Retencion por contratos de obra o servicios (art. 232): tambien 3%.
+Objeto (art. 229): erogaciones en dinero, especie o servicios por remuneraciones al trabajo personal subordinado prestado en el Estado, sin importar la designacion.
+Sujetos (art. 230): personas fisicas y morales, Federacion, Estado, municipios y organismos, aunque no tengan domicilio fiscal en Chiapas; responsables solidarios quienes contraten o reciban el trabajo.
+Base (art. 235): monto de los pagos del art. 229 hechos como consecuencia de una relacion de trabajo.
+Pago (art. 236): declaracion bimestral definitiva, dentro de los primeros 15 dias de enero, marzo, mayo, julio, septiembre y noviembre; declaracion anual informativa.
+
+TRATO DE CONCEPTOS
+- Art. 229 enumera como remuneracion (gravados): sueldos y salarios, tiempo extra, mano de obra, premios, primas, bonos, VALES DE DESPENSA, estimulos, propinas, incentivos, compensaciones, gratificaciones y AGUINALDOS, PTU, participacion patronal al FONDO DE AHORROS, primas de antiguedad, comisiones, pagos a administradores y consejeros, asimilados a salarios (LISR). No fija topes para despensa ni fondo de ahorro: quedan gravados completos.
+- Prima vacacional: no se nombra; entra como contraprestacion salarial (inferencia).
+- NO son objeto (art. 229, ultimo parrafo): sueldos y prestaciones a discapacitados (conforme al Reglamento), indemnizaciones por riesgo de trabajo, pensiones y jubilaciones, indemnizaciones por despido o terminacion de la relacion laboral, gastos funerales.
+- Exentos de pago (art. 238): ejidos y comunidades y sus uniones, empresas sociales de avecindados, asociaciones rurales de interes colectivo, unidades agricolas industriales de la mujer campesina, y personas morales no lucrativas (sindicatos, asociaciones patronales, camaras, colegios de profesionales, instituciones de asistencia social gratuitas, cooperativas de consumo, etc.).
+
+ESTIMULOS / TASA DIFERENCIADA
+- No hay tasa diferenciada ni reduccion para micro/pequenas empresas en el articulado leido. Estimulos por Ley de Ingresos 2026: NO consultada: POR VERIFICAR.
+
+2027
+- Sin cambio publicado a la fecha.
+
+NOTA
+- Las copias del Congreso de 2015 (Codigo de la Hacienda Publica, Libro Primero) y de la Oficialia Mayor de 2021 estan desactualizadas (2%). No usar.

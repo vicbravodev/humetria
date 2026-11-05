@@ -27,6 +27,8 @@ describe('paletteCommands', () => {
                     view_seating: true,
                     manage_seating: true,
                     assess_seating: true,
+                    view_compensation: true,
+                    manage_compensation: true,
                     view_interventions: true,
                     manage_interventions: true,
                     view_disclosure: true,
@@ -127,6 +129,8 @@ describe('paletteCommands inside a company', () => {
                         view_seating: true,
                         manage_seating: manage,
                         assess_seating: manage,
+                        view_compensation: manage,
+                        manage_compensation: manage,
                         view_interventions: true,
                         manage_interventions: manage,
                         view_disclosure: true,
@@ -176,5 +180,102 @@ describe('paletteCommands while impersonating', () => {
 
         expect(settingsUrl(false)).toBe('/admin/settings/profile');
         expect(settingsUrl(true)).toBe('/admin/settings/appearance');
+    });
+});
+
+describe('paletteCommands inside a union', () => {
+    it('offers loading employees but no evaluation, and no compliance page', () => {
+        const commands = paletteCommands({
+            isSuperadmin: false,
+            tenant: {
+                slug: 'sindicato',
+                type: 'union',
+                role: 'owner',
+                can: {
+                    manage_organization: true,
+                    manage_members: true,
+                    manage_campaigns: true,
+                    view_trauma_screenings: true,
+                    manage_telework: true,
+                    review_workplaces: true,
+                    view_seating: true,
+                    manage_seating: true,
+                    assess_seating: true,
+                    view_compensation: true,
+                    manage_compensation: true,
+                    view_interventions: true,
+                    manage_interventions: true,
+                    view_disclosure: true,
+                    manage_disclosure: true,
+                    use_assistant: true,
+                    manage_complaint_channel: true,
+                    handle_complaints: true,
+                },
+            },
+            sidebarExpanded: true,
+            impersonating: false,
+            actions: actions(),
+        });
+        const ids = commands.map(({ id }) => id);
+
+        expect(ids).toContain('/admin/sindicato/employees/import');
+        expect(ids).not.toContain('new-evaluation');
+        expect(ids).not.toContain('/admin/sindicato/campaigns');
+        expect(ids).not.toContain('/admin/sindicato/telework');
+        expect(ids).not.toContain('/admin/sindicato/work-centers');
+    });
+});
+
+describe('paletteCommands for Compensación', () => {
+    const pagesOf = (type: 'company' | 'union', allowed: boolean) =>
+        paletteCommands({
+            isSuperadmin: false,
+            tenant: {
+                slug: 'acme',
+                type,
+                role: 'owner',
+                can: {
+                    manage_organization: true,
+                    manage_members: true,
+                    manage_campaigns: true,
+                    view_trauma_screenings: true,
+                    manage_telework: true,
+                    review_workplaces: true,
+                    view_seating: true,
+                    manage_seating: true,
+                    assess_seating: true,
+                    view_compensation: allowed,
+                    manage_compensation: allowed,
+                    view_interventions: true,
+                    manage_interventions: true,
+                    view_disclosure: true,
+                    manage_disclosure: true,
+                    use_assistant: true,
+                    manage_complaint_channel: true,
+                    handle_complaints: true,
+                },
+            },
+            sidebarExpanded: true,
+            impersonating: false,
+            actions: actions(),
+        })
+            .filter(({ group }) => group === 'Ir a')
+            .map(({ label, id }) => [label, id]);
+
+    it('lists it under Ir a for whoever may view it, in a company and in a union', () => {
+        expect(pagesOf('company', true)).toContainEqual([
+            'Compensación',
+            '/admin/acme/compensation',
+        ]);
+        expect(pagesOf('union', true)).toContainEqual([
+            'Compensación',
+            '/admin/acme/compensation',
+        ]);
+    });
+
+    it('leaves it out for a role that cannot view it', () => {
+        expect(pagesOf('company', false).map(([label]) => label)).not.toContain(
+            'Compensación',
+        );
     });
 });

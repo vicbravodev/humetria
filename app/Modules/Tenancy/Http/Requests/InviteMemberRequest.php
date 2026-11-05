@@ -28,12 +28,12 @@ final class InviteMemberRequest extends FormRequest
     /**
      * @return array<string, list<In|string>>
      */
-    public function rules(): array
+    public function rules(#[RouteParameter('tenant')] Tenant $tenant): array
     {
         return [
             'name' => ['required', 'string', 'max:255', TenantRules::SINGLE_LINE],
             'email' => ['required', 'string', 'email', 'max:255'],
-            'role' => MemberRoleRules::role(),
+            'role' => MemberRoleRules::role($tenant),
         ];
     }
 

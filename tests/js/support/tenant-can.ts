@@ -9,6 +9,8 @@ export const can = (manage_organization: boolean, manage_members: boolean) => ({
     view_seating: true,
     manage_seating: manage_organization,
     assess_seating: manage_organization,
+    view_compensation: manage_organization,
+    manage_compensation: manage_organization,
     view_interventions: true,
     manage_interventions: manage_organization,
     view_disclosure: true,

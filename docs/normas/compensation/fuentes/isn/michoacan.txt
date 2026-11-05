@@ -1,0 +1,31 @@
+ESTADO: Michoacan de Ocampo
+IMPUESTO: Impuesto sobre Erogaciones por Remuneracion al Trabajo Personal, Prestado Bajo la Direccion y Dependencia de un Patron
+FECHA DE CONSULTA: 2026-11-03
+ESTADO DE VERIFICACION: CONFIRMADO en fuente oficial (Ley de Hacienda en portal del Gobierno del Estado + Ley de Ingresos 2026 del Periodico Oficial). Reserva menor: el compilado de la Ley de Hacienda es de oct-2025; no pude descartar una reforma de dic-2025, pero la Ley de Ingresos 2026 repite la tasa de 3%.
+
+IMPORTANTE: en Michoacan este impuesto NO esta en el Codigo Fiscal; esta en la Ley de Hacienda del Estado (Titulo Segundo, Capitulo VII). El Codigo Fiscal solo aplica supletoriamente (recargos, avisos).
+
+FUENTES OFICIALES (leidas en PDF):
+1) Ley de Hacienda del Estado de Michoacan de Ocampo, compilado publicado en michoacan.gob.mx (oct-2025); encabezado "Ultima reforma publicada en el Periodico Oficial del Estado el 16 de Diciembre de 2024"
+   https://michoacan.gob.mx/wp-content/uploads/2025/10/LEY-DE-HACIENDA-DEL-ESTADO-DE-MICHOACA%CC%81N.pdf
+2) Ley de Ingresos del Estado de Michoacan de Ocampo para el Ejercicio Fiscal 2026 (Decreto 385; Periodico Oficial Tomo CLXXXIX, Num. 64, Decima Primera Seccion, 9-dic-2025; version digital "sin valor legal", copia en el portal del SAT Michoacan)
+   https://satmich.michoacan.gob.mx/archivos_pdf/LEY_INGRESOS_2026.pdf
+
+ULTIMA REFORMA VISTA: Ley de Hacienda: P.O. 16-dic-2024 (cambio la fr. II del art. 47, declaracion anual a mas tardar el 31 de marzo). El art. 45 tiene nota de reforma de 20-dic-2023 y el capitulo de 22-dic-2022.
+
+LEY Y ARTICULOS: Ley de Hacienda, Cap. VII, arts. 42 a 51. Sujetos 42-43; remuneracion y exclusiones 44; TASA Y BASE art. 45; pago art. 47. Ley de Ingresos 2026, art. 14 (remite al Cap. VII y repite la tasa).
+
+TASA 2026: 3% (art. 45 de la Ley de Hacienda: "aplicando la tasa del 3% sobre el monto total de las erogaciones"; Ley de Ingresos 2026 art. 14: "aplicando la tasa del 3%").
+- Tasa unica; no vi tasa diferenciada, sobretasa ni estimulo por tamano en estos textos.
+- Desde cuando: no verifique el ano en que subio a 3% (el art. 45 lleva nota de reforma de 20-dic-2023); esta vigente en 2026 segun la Ley de Ingresos 2026. Una nota de prensa del gobierno estatal dice que en 2026 no hay nuevos impuestos ni cambios de tasa (solo pista, no fuente).
+- Ley de Ingresos 2026, transitorio noveno: programa de saneamiento de adeudos de municipios por este impuesto (convenios hasta 18 meses; fecha de termino no mayor a junio 2027). No cambia la tasa.
+
+RESUMEN (en mis palabras):
+- Sujetos (arts. 42-43): personas fisicas y morales y asociaciones en participacion que, en Michoacan, hagan erogaciones en dinero o especie por remuneracion al trabajo personal subordinado, aunque su domicilio este en otra entidad; Federacion, Estado, municipios y organismos autonomos tambien pagan.
+- Remuneracion (art. 44): sueldos y salarios y todas las prestaciones en dinero o especie, sea cual sea su nombre, derivadas del trabajo subordinado.
+- Base (art. 45): monto total de las erogaciones por remuneraciones al trabajo personal subordinado.
+- No forman parte de la remuneracion (art. 44, lista): herramientas y ropa de trabajo; AHORRO con deposito igual de trabajador y patron (fr. II); cantidades para fines sindicales; aportaciones adicionales de retiro/cesantia/vejez; PTU (fr. V); alimentacion y habitacion onerosas (el trabajador paga al menos 20% de la UMA diaria); DESPENSAS hasta 40% de la UMA diaria (fr. VII); premios de asistencia y puntualidad hasta 10% del salario; fondos de pensiones; tiempo extra dentro de la LFT; becas, seguro de vida y de gastos medicos generales; viaticos y gastos de representacion comprobados; aportaciones del patron a IMSS, INFONAVIT, ISSSTE, Pensiones Civiles, ISSFAM; pensiones y jubilaciones; las VACACIONES (fr. XV). Ademas, no forman parte las prestaciones por terminacion de la relacion laboral y las indemnizaciones por incapacidad fisica.
+- Por tanto: aguinaldo: no aparece excluido, queda incluido como "todas las prestaciones" (lectura mia, no se nombra expresamente); prima vacacional: la fr. XV excluye "las vacaciones"; no queda claro si cubre la prima vacacional, POR VERIFICAR (no la nombra); fondo de ahorro: excluido solo si hay deposito igual (fr. II); despensa: excluida hasta 40% de la UMA diaria (el exceso, incluido por lectura); PTU excluida; indemnizaciones por terminacion excluidas.
+- Pago (art. 47): pagos provisionales mensuales a mas tardar el dia 17 del mes siguiente (ampliacion de 1 a 5 dias habiles segun el sexto digito del RFC) y declaracion anual a mas tardar el 31 de marzo del ano siguiente. Ejercicio fiscal = ano calendario.
+
+CAMBIO PARA 2027: sin cambio publicado a la fecha (la Ley de Ingresos 2027 aun no esta publicada al 2026-11-03; no encontre iniciativa oficial con otra tasa).

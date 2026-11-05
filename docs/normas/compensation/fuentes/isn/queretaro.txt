@@ -1,0 +1,47 @@
+ESTADO: Querétaro
+IMPUESTO: Impuesto sobre Nóminas
+LEY: Ley de Hacienda del Estado de Querétaro, Título Segundo, Capítulo Séptimo "Impuesto sobre Nóminas"
+ARTÍCULOS: objeto Art. 70; sujetos Art. 71; BASE Y TASA Art. 72; obligaciones Art. 73
+URLS OFICIALES:
+  (1) Secretaría de Finanzas del Poder Ejecutivo, "Fundamento legal ISN" (extracto de la ley, hecho con corte a P.O. 77, 20-XII-14, con Art. 72 al día de la reforma P.O. 109, 23-XII-21):
+      https://asistenciasf.queretaro.gob.mx/sites/default/files/impuestos/pdf/1.1%20FUNDAMENTO%20LEGAL%20ISN.pdf
+  (2) Compilación de la Ley de Hacienda del Estado en el portal del Gobierno del Estado (queretaro.gob.mx):
+      https://queretaro.gob.mx/documents/20121/598369/XVIII.+LEY+DE+HACIENDA+DEL+ESTADO+DE+QUER%C3%89TARO.pdf
+  (3) Periódico Oficial "La Sombra de Arteaga" 23-dic-2025 No. 101 (Ley de Ingresos 2026): https://www.infoqro.mx/marcojuridico/leyes/Ley%20de%20Ingresos%202026.pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA: del Art. 72, P.O. No. 109, 23-XII-2021 (deducción a la base; tasa 3%). La compilación (2) tiene como referencia más
+  reciente, en otros artículos, P.O. No. 102, 27-XII-2023.
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO 3% en fuente oficial, CON SALVEDAD: el P.O. 101 del 23-dic-2025 publicó una "Ley que reforma,
+adiciona y deroga diversas disposiciones de la Ley de Hacienda del Estado" (con vigencia 2026) cuyo texto completo no se pudo leer
+(el PDF obtenido solo trae la Ley de Ingresos). El boletín del Poder Legislativo sobre ese dictamen menciona reformas a los
+Arts. 12 y 27 (vehículos) y no menciona el impuesto sobre nóminas; la Ley de Ingresos 2026 solo estima la recaudación
+(Impuesto Sobre Nóminas $6,643,586,280) y no fija tasa. Recomendable releer el Art. 72 en el texto consolidado de La Sombra de
+Arteaga posterior a esa reforma antes de dar la tasa por definitiva.
+
+RESUMEN
+- Tasa: 3% sobre la base mensual (Art. 72). Cita: "aplicar la tasa del 3 por ciento a la base del mismo".
+  Tasa única; el texto leído no trae tasa diferenciada ni reducción para micro/pequeñas.
+- Desde cuándo: el Art. 72 lleva la referencia P.O. 109, 23-XII-21 (reforma para el ejercicio 2022). El propio texto no dice la
+  tasa anterior; esa subida (2% a 3%) solo la menciona la nota de un despacho, no se usa aquí.
+- Deducción a la base: los contribuyentes gozan de una deducción equivalente a ocho veces el salario mínimo general vigente en el
+  estado elevado al mes (Art. 72, primer párrafo). Reduce la base mensual, no cambia la tasa.
+- Sujetos (Art. 71): personas físicas y morales y unidades económicas que hacen los pagos, con domicilio, local o establecimiento en
+  el estado o cuando el servicio se preste en el estado; retención a quien contrata servicios de personal (outsourcing); la
+  Federación, el Estado y los municipios también pagan.
+- Objeto (Art. 70): pagos en efectivo o en especie por remuneraciones al trabajo personal subordinado; pagos a administradores, directores,
+  comisarios o consejeros; honorarios asimilados a salarios que no causen IVA. Incluye sueldos y salarios, tiempo extraordinario, bonos,
+  premios, primas de antigüedad "o por cualquier otro concepto", comisiones, ayudas para despensa o transporte y cualquier otra cantidad o bien.
+- Base (Art. 72): totalidad de las erogaciones del mes de calendario por los conceptos del Art. 70, menos la deducción de 8 SMG mensuales.
+- Tratamiento de conceptos (Art. 72, "No se causará ... por"):
+  * Aguinaldo: no se nombra; entra por "bonos ... o por cualquier otro concepto". Por verificar criterio de la autoridad.
+  * Prima vacacional: no se nombra; mismo razonamiento (primas / cualquier otro concepto). Por verificar.
+  * Vales de despensa: no se causan hasta 40% del salario mínimo general vigente del estado; el excedente se suma a la base (fr. III).
+  * Fondo de ahorro: no se menciona como tal; la fr. IV excluye solo las aportaciones al sistema de ahorro para el retiro (SAR) y
+    aportaciones adicionales del patrón para ese fin. Por verificar si un fondo de ahorro convencional queda dentro.
+  * PTU: excluida (fr. IX).
+  * Indemnizaciones: excluidas las de riesgos y enfermedades profesionales (fr. V) y las "por despido o terminación de la relación laboral" (fr. VIII).
+  * Otras no causadas: herramientas, cuotas de seguridad social, jubilaciones y pensiones, viáticos comprobados, primas de seguro de gastos
+    médicos o de vida.
+- Pago (Art. 73 fr. IV): a más tardar el día 22 del mes siguiente (reforma P.O. 87, 30-IX-21).
+- Cambio publicado para 2027: sin cambio publicado a la fecha.

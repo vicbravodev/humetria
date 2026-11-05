@@ -17,6 +17,9 @@ final class EmployeeCsv
     /** The template's columns; correo, celular and numero_de_empleado may be left out of a file. */
     public const array COLUMNS = ['nombre', 'correo', 'celular', 'genero', 'centro_de_trabajo', 'area', 'puesto', 'numero_de_empleado'];
 
+    /** A union's template: the company ID leads, and it is the only column a file must have. */
+    public const array UNION_COLUMNS = ['numero_de_empleado', 'nombre', 'categoria', 'nivel', 'fecha_de_ingreso', 'grupo', 'estado', 'area', 'puesto'];
+
     private const array REQUIRED = ['nombre', 'genero', 'centro_de_trabajo', 'area', 'puesto'];
 
     public static function template(string $workCenter): string
@@ -26,12 +29,20 @@ final class EmployeeCsv
         return "\u{FEFF}".implode(',', self::COLUMNS)."\n".self::line($example)."\n";
     }
 
+    public static function unionTemplate(): string
+    {
+        $example = ['A-001', 'Ana López', 'Operador', 'A', '2024-03-15', 'Sindicalizado', 'Querétaro', 'Producción', 'Operadora'];
+
+        return "\u{FEFF}".implode(',', self::UNION_COLUMNS)."\n".self::line($example)."\n";
+    }
+
     /**
      * The file's rows, each keyed by column, without the empty ones; or what keeps the whole file from being read.
+     * A union's file needs only the company ID column.
      *
      * @return array{error: string|null, rows: list<array<string, string>>}
      */
-    public static function read(string $content): array
+    public static function read(string $content, bool $union = false): array
     {
         $text = self::utf8($content);
         $lines = preg_split('/\r\n|\r|\n/', $text) ?: [];
@@ -39,7 +50,7 @@ final class EmployeeCsv
         $delimiter = substr_count($header, ';') > substr_count($header, ',') ? ';' : ',';
         $columns = array_map(fn (?string $name): string => Str::of((string) $name)->ascii()->lower()->trim()->replaceMatches('/\s+/', '_')->toString(), str_getcsv($header, $delimiter, '"', ''));
 
-        foreach (self::REQUIRED as $required) {
+        foreach ($union ? ['numero_de_empleado'] : self::REQUIRED as $required) {
             if (! in_array($required, $columns, true)) {
                 return ['error' => "Falta la columna «{$required}». Usa la plantilla.", 'rows' => []];
             }
@@ -60,6 +71,22 @@ final class EmployeeCsv
             count($rows) > self::MAX_ROWS => ['error' => 'El archivo tiene más de 2,000 empleados. Divídelo en varios.', 'rows' => []],
             default => ['error' => null, 'rows' => $rows],
         };
+    }
+
+    /**
+     * A date as a spreadsheet writes it, AAAA-MM-DD or DD/MM/AAAA, as AAAA-MM-DD; null when it is neither or does not exist.
+     */
+    public static function date(string $text): ?string
+    {
+        if (preg_match('#\A(\d{4})-(\d{2})-(\d{2})\z#', $text, $iso) === 1) {
+            [, $year, $month, $day] = $iso;
+        } elseif (preg_match('#\A(\d{1,2})/(\d{1,2})/(\d{4})\z#', $text, $mexican) === 1) {
+            [, $day, $month, $year] = $mexican;
+        } else {
+            return null;
+        }
+
+        return checkdate((int) $month, (int) $day, (int) $year) ? sprintf('%04d-%02d-%02d', $year, $month, $day) : null;
     }
 
     /** Text as UTF-8 without a byte order mark: a file that is not valid UTF-8 is read as Windows-1252, as Excel saves it. */

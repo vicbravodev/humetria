@@ -1,0 +1,42 @@
+ESTADO: Nayarit
+IMPUESTO: Impuesto sobre Nóminas
+LEYES Y ARTÍCULOS:
+  - Ley de Hacienda del Estado de Nayarit (POE 22-dic-2012), Capítulo IV "Del Impuesto sobre Nóminas": objeto Art. 84; sujetos y retención Art. 85;
+    base Art. 86; TASA Art. 87; pago Art. 88; exenciones Art. 89; estimación Art. 90.
+  - Ley de Ingresos del Estado de Nayarit para el Ejercicio Fiscal 2026 (POE 29-dic-2025, Sección Cuarta, Tomo CCXVII, No. 117): Art. 7 (tasa 3%).
+URLS OFICIALES:
+  Ley de Hacienda (texto del Poder Legislativo del Estado): https://congresonayarit.gob.mx/wp-content/uploads/QUE_HACEMOS/LEGISLACION_ESTATAL/leyes/hacienda_del_estado_de_nayarit_ley_de.pdf
+  Ley de Ingresos 2026 (Periódico Oficial): https://periodicooficial.nayarit.gob.mx/descargar_pdf.php?archivo=LI+291225+%2804%29+Estado.pdf
+FECHA DE CONSULTA: 2026-11-03
+ÚLTIMA REFORMA VISTA EN EL TEXTO: "Última enmienda publicada en el Periódico Oficial: 26 de diciembre de 2025" (portada del texto del Congreso).
+  Los Arts. 84 a 89 llevan reformas de P.O. 22-mar-2019 y 8-dic-2021 (esta última vigente desde 1-ene-2022); la enmienda del 26-dic-2025
+  aparece en artículos anteriores al Capítulo IV (Arts. 84 a 89 no la llevan anotada).
+
+ESTADO DE VERIFICACIÓN: CONFIRMADO en fuente oficial (Ley de Hacienda del Congreso + Ley de Ingresos 2026 del Periódico Oficial).
+
+RESUMEN
+- Tasa 2026: 3.0% sobre la base (Ley de Hacienda, Art. 87). La Ley de Ingresos 2026, Art. 7, dice que se causa "a la tasa del 3% (tres por ciento)"
+  sobre la base de la Ley de Hacienda en vigor. Tasa única; la Ley de Ingresos autoriza a la Secretaría de Administración y Finanzas a emitir
+  facilidades y estímulos fiscales por decreto o acuerdo del Ejecutivo (no se leyó ninguno vigente; por verificar si existe alguno en 2026).
+- Desde cuándo: el Art. 87 se reformó el 8-dic-2021, vigencia 1-ene-2022 (el texto del Congreso no conserva la tasa anterior, por lo que
+  "3% desde 2022" se apoya solo en que ese decreto reformó el artículo; otra fuente no oficial lo vincula con el paso a 3%).
+- Objeto (Art. 84): erogaciones en efectivo o en especie por remuneraciones al trabajo personal subordinado y honorarios asimilados a salarios,
+  prestado dentro del estado, con cualquier denominación, bajo la dirección o dependencia de un patrón, contratista, intermediario o terceros.
+- Sujetos (Art. 85): personas físicas y morales, asociaciones en participación y análogas que hacen las erogaciones, incluso sin domicilio en
+  el estado si tienen personal en sucursales, bodegas o agencias; retención a quien contrata servicios de personal; responsables solidarios.
+- Base (Art. 86): monto total de las erogaciones por remuneraciones al trabajo personal subordinado y/o honorarios asimilados a salarios,
+  "aun cuando no exceda del salario mínimo": cuota diaria, gratificaciones, percepciones, habitación, primas, comisiones, prestaciones
+  en especie y cualquier otra cantidad o prestación.
+- Pago (Art. 88): dentro de los primeros 10 días del mes siguiente; la declaración se presenta aun sin erogaciones.
+- Tratamiento de conceptos (Art. 89, exentos):
+  * Aguinaldo: EXENTO (inc. d).
+  * Prima vacacional: no se nombra; entra en "primas" (Art. 86) y no figura en el Art. 89. Por verificar criterio de la autoridad.
+  * Vales de despensa: no se nombran. El inc. b) exenta "gastos de previsión social, en los términos de la LISR" (la LISR incluye despensas);
+    la exención de despensa depende de esa remisión. Por verificar criterio de la autoridad.
+  * Fondo de ahorro: el inc. c) exenta "fondos de ahorro para el retiro constituidos de acuerdo a las leyes de la materia, a cargo del patrón"
+    (fondos para el retiro; un fondo de ahorro convencional cae mejor bajo gastos de previsión social). Por verificar.
+  * PTU: EXENTA (inc. a).
+  * Indemnizaciones: exentas las de riesgos o enfermedades profesionales (inc. e) y las de despido o terminación laboral (inc. i).
+  * Otras exentas: pensiones y jubilaciones, gastos funerarios, becas educacionales y deportivas, pagos a independientes sujetos a IVA,
+    y erogaciones de instituciones de asistencia social (fr. II).
+- Cambio publicado para 2027: sin cambio publicado a la fecha.

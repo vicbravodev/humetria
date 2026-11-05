@@ -3,6 +3,7 @@ import Combobox from '@/components/humetria/combobox';
 import CountTabs from '@/components/humetria/count-tabs';
 import { Input } from '@/components/ui/input';
 import { useEmployeeFilters } from '@/hooks/use-employee-filters';
+import { useIsUnion } from '@/hooks/use-is-union';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { employeeQuery } from '@/lib/employees';
 import { serverSource } from '@/lib/server-options';
@@ -23,6 +24,10 @@ export default function EmployeesToolbar({
     counts: EmployeeCounts;
 }) {
     const tenantSlug = useTenantSlug();
+    const union = useIsUnion();
+    const searchLabel = union
+        ? 'Buscar por nombre o ID de la empresa'
+        : 'Buscar por nombre, correo o número';
     const { text, type, filter } = useEmployeeFilters(tenantSlug, filters);
     const tab = (status: EmployeeFilters['status']) => ({
         count: status === 'active' ? counts.active : counts.inactive,
@@ -45,31 +50,33 @@ export default function EmployeesToolbar({
                     />
                     <Input
                         type="search"
-                        aria-label="Buscar por nombre, correo o número"
-                        placeholder="Buscar por nombre, correo o número"
+                        aria-label={searchLabel}
+                        placeholder={searchLabel}
                         value={text}
                         onChange={(event) => type(event.target.value)}
                         className="pl-10"
                     />
                 </div>
-                <div className="xl:w-48 xl:shrink-0">
-                    <Combobox
-                        id="filter-work-center"
-                        name="work_center"
-                        source={serverSource(
-                            workCenterOptions.url(tenantSlug),
-                            [ALL_CENTERS],
-                        )}
-                        defaultValue={filters.work_center ?? ALL_CENTERS}
-                        placeholder="Centro de trabajo"
-                        onChange={(option) =>
-                            filter({
-                                work_center:
-                                    option.value === '' ? null : option,
-                            })
-                        }
-                    />
-                </div>
+                {!union && (
+                    <div className="xl:w-48 xl:shrink-0">
+                        <Combobox
+                            id="filter-work-center"
+                            name="work_center"
+                            source={serverSource(
+                                workCenterOptions.url(tenantSlug),
+                                [ALL_CENTERS],
+                            )}
+                            defaultValue={filters.work_center ?? ALL_CENTERS}
+                            placeholder="Centro de trabajo"
+                            onChange={(option) =>
+                                filter({
+                                    work_center:
+                                        option.value === '' ? null : option,
+                                })
+                            }
+                        />
+                    </div>
+                )}
                 <div className="xl:w-44 xl:shrink-0">
                     <Combobox
                         id="filter-area"

@@ -8,6 +8,7 @@ import {
     navTrail,
     superadminNavItems,
 } from '@/lib/app-navigation';
+import { toolNavItems } from '@/lib/tool-navigation';
 import type { BreadcrumbItem } from '@/types';
 
 /**
@@ -29,6 +30,10 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                       {
                           label: 'Cumplimiento',
                           items: complianceNavItems(tenant),
+                      },
+                      {
+                          label: 'Herramientas',
+                          items: toolNavItems(tenant),
                       },
                       {
                           label: 'Plataforma',

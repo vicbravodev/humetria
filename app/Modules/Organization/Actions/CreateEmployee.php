@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 final readonly class CreateEmployee
 {
-    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea) {}
+    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade) {}
 
     public function handle(EmployeeData $data): Employee
     {
@@ -22,12 +22,16 @@ final readonly class CreateEmployee
             $employee = Employee::query()->create([
                 'tenant_id' => $this->currentTenant->id(),
                 ...EmployeeAttributes::from($data, $this->findOrCreateArea->handle($data->area)),
+                ...EmployeeAttributes::payScale($data, $this->findOrCreateJobGrade->handle($data->jobCategory, $data->jobLevel)),
             ]);
 
             // Only the id: a person's name and contact data stay out of logs.
             Log::info('employee.created', ['employee_id' => $employee->id]);
 
-            event(new EmployeeCreated($employee->tenant_id, $employee->id, $employee->work_center_id));
+            // A union's people have no work center, which the evaluations need to count them.
+            if ($data->workCenterId !== null) {
+                event(new EmployeeCreated($employee->tenant_id, $employee->id, $data->workCenterId));
+            }
 
             return $employee;
         });

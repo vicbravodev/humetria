@@ -13,6 +13,7 @@ use App\Modules\Organization\Actions\ReactivateEmployee;
 use App\Modules\Organization\Actions\UpdateEmployee;
 use App\Modules\Organization\Data\EmployeeFilters;
 use App\Modules\Organization\Enums\Gender;
+use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
@@ -45,16 +46,22 @@ final class EmployeeController extends Controller
             'counts' => $countEmployees->handle(),
             'employees' => $listEmployees->handle($filters)->through(fn (Employee $employee): array => [
                 'id' => $employee->id,
-                'name' => $employee->name,
+                // A person a union loaded may have no name: the company's employee number identifies them.
+                'name' => $employee->name ?? $employee->employee_number ?? '',
                 'email' => $employee->email,
                 'mobile' => $employee->mobile,
-                'gender' => $employee->gender->value,
-                'gender_label' => $employee->gender->label(),
-                'work_center_id' => $employee->work_center_id,
-                'work_center' => $centerNames[$employee->work_center_id] ?? '',
+                'gender' => $employee->gender->value ?? '',
+                'gender_label' => $employee->gender?->label() ?? '',
+                'work_center_id' => $employee->work_center_id ?? '',
+                'work_center' => $centerNames[$employee->work_center_id ?? ''] ?? '',
                 'area' => $employee->area->name ?? '',
-                'job_title' => $employee->job_title,
+                'job_title' => $employee->job_title ?? '',
                 'employee_number' => $employee->employee_number,
+                'job_category' => $employee->getAttributeValue('job_category') ?? '',
+                'job_level' => $employee->getAttributeValue('job_level') ?? '',
+                'hired_on' => $employee->hired_on?->toDateString(),
+                'staff_group' => $employee->staff_group->value ?? '',
+                'state' => $employee->state ?? '',
                 'deactivated_on' => $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'),
             ]),
             // Each chosen filter with its name, for the fields that search them on the server.
@@ -66,6 +73,8 @@ final class EmployeeController extends Controller
                 'without_email' => $filters->withoutEmail,
             ],
             'genders' => array_map(fn (Gender $gender): array => ['value' => $gender->value, 'label' => $gender->label()], Gender::cases()),
+            'staff_groups' => array_map(fn (StaffGroup $group): array => ['value' => $group->value, 'label' => $group->label()], StaffGroup::cases()),
+            'states' => array_map(fn (string $code, string $label): array => ['value' => $code, 'label' => $label], array_keys($states = $this->workCenters->states()), $states),
         ]);
     }
 

@@ -74,6 +74,13 @@ final class RedactSensitiveData implements ProcessorInterface
             'health_note',
             'pain_level',
             'referral_note',
+            // Compensación: what a person earns, and the salary base built from it, is never a log's business.
+            'amount_cents',
+            'daily_salary',
+            'daily_salary_cents',
+            'salary',
+            'salary_cents',
+            'sbc',
             // NOM-035: where a person was referred for a clinical assessment says something about their health.
             'institution',
             // NOM-035 Programa de intervención: what HR writes may name a person, so it never reaches a log.

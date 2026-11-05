@@ -9,6 +9,7 @@ describe('isStandalone', () => {
         'telework/portal',
         'telework/portal-checklist',
         'results/shared-report',
+        'compensation/shared-report',
         'error',
         'complaints-public/form',
         'complaints-public/follow-up',
@@ -26,6 +27,7 @@ describe('isStandalone', () => {
         'complaints-publicity',
         'disclosure/index',
         'disclosure/policy',
+        'compensation/report',
     ])('keeps %s inside the panel', (name) => {
         expect(isStandalone(name)).toBe(false);
     });

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Requests;
 
 use App\Modules\Tenancy\Data\TenantData;
+use App\Modules\Tenancy\Enums\TenantType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 /**
  * @phpstan-import-type FieldRules from TenantRules
@@ -30,6 +32,7 @@ final class StoreTenantRequest extends FormRequest
             ...TenantRules::names(),
             'rfc' => TenantRules::rfc(),
             'slug' => TenantRules::slug(),
+            'type' => ['nullable', 'string', Rule::enum(TenantType::class)],
         ];
     }
 
@@ -40,6 +43,7 @@ final class StoreTenantRequest extends FormRequest
             tradeName: $this->string('trade_name')->toString(),
             rfc: $this->string('rfc')->toString(),
             slug: $this->string('slug')->toString(),
+            type: TenantType::tryFrom($this->string('type')->toString()) ?? TenantType::Company,
         );
     }
 
