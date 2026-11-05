@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>NOM-037 en tus centros · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--bsoft:#7FD3C6;--bdeep:#064A43;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08);--edge:transparent}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--bsoft:#1E8C7F;--bdeep:#B8F5EC;--raised:0 0 0 1px #1C2826;--edge:rgba(255,255,255,.06)}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:44px;padding:0 18px;border-radius:8px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.btn-o:hover,.btn-g:hover{background:var(--muted)}
+.av{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sec);color:var(--fg);flex-shrink:0}
+.navi{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 10px;border-radius:8px;font-size:15px;color:var(--fg) !important;text-decoration:none !important}
+.navi svg{color:var(--mfg)}
+.navi.on{background:var(--card);font-weight:500;box-shadow:0 0 0 1px var(--border)}
+.navi.on svg{color:var(--primary)}
+.panel{background:var(--bg);border-radius:14px;box-shadow:var(--raised);border-top:1px solid var(--edge)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px}
+.co{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:16px;align-items:center;padding:18px 22px;border-top:1px solid var(--border)}
+.co:first-child{border-top:0}
+.gico{width:40px;height:40px;border-radius:10px;background:var(--accent);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.cr{display:grid;grid-template-columns:minmax(140px,1.1fr) 84px minmax(130px,1fr) minmax(0,1.4fr) 116px;gap:20px;align-items:center;padding:18px 22px;border-top:1px solid var(--border)}
+.cr.h{border-top:0;padding-top:12px;padding-bottom:12px;background:var(--muted);font-size:14px;font-weight:500;color:var(--mfg)}
+.sb{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.sb span{height:8px;border-radius:999px;background:var(--off)}
+.sb span.d{background:var(--primary)}
+.sb span.n{background:var(--card);box-shadow:inset 0 0 0 2px var(--primary)}
+.tag{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:500;background:var(--muted);color:var(--mfg)}
+@media (max-width:1080px){.cr{grid-template-columns:minmax(0,1fr)}.cr.h{display:none}.side{width:100% !important}.side .navs{flex-direction:row !important;flex-wrap:wrap}.side .foot{display:none !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; padding: 8px 8px 8px 0">
+<aside class="side" style="width: 236px; flex-shrink: 0; padding: 18px 14px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="padding: 4px 10px 0"><svg width="120" height="24" viewBox="0 0 322.05 64" role="img" aria-label="humetría"><g transform="translate(-3 0)"><path d="M12 6V58M12 36C12 17 52 17 52 36V58" fill="none" stroke="var(--primary)" stroke-width="10" stroke-linecap="round"></path><clipPath id="clcn"><path d="M19.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z"></path></clipPath><path d="M29.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--bsoft)"></path><path d="M19.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--primary)"></path><path d="M29.5 47a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z" fill="var(--bdeep)" clip-path="url(#clcn)"></path><path d="M74.96 61V17H82V33.85Q83.57 31.39 85.96 30.11Q88.35 28.82 91.37 28.82Q95.07 28.82 97.78 30.33Q100.48 31.83 101.89 35.01Q103.31 38.18 103.31 43.27V61H96.27V44.91Q96.27 41.14 95.39 39.09Q94.51 37.05 92.97 36.23Q91.43 35.42 89.42 35.42Q85.83 35.35 83.92 37.74Q82 40.13 82 44.59V61ZM120.91 61.75Q117.2 61.75 114.53 60.25Q111.86 58.74 110.41 55.53Q108.97 52.33 108.97 47.3V29.57H116.01V45.66Q116.01 49.37 116.89 51.45Q117.77 53.52 119.31 54.34Q120.85 55.15 122.86 55.15Q126.44 55.22 128.39 52.83Q130.34 50.44 130.34 45.98V29.57H137.31V61H130.71L130.4 56.54Q128.89 59.05 126.47 60.4Q124.05 61.75 120.91 61.75ZM144.35 61V29.57H150.95L151.27 33.78Q152.71 31.33 154.98 30.07Q157.24 28.82 160.13 28.82Q163.9 28.82 166.54 30.51Q169.18 32.21 170.38 35.67Q171.76 32.34 174.27 30.58Q176.79 28.82 180.18 28.82Q185.65 28.82 188.61 32.31Q191.56 35.79 191.5 43.02V61H184.52V44.91Q184.52 41.14 183.7 39.09Q182.89 37.05 181.5 36.23Q180.12 35.42 178.3 35.42Q175.03 35.35 173.24 37.74Q171.45 40.13 171.45 44.59V61H164.41V44.91Q164.41 41.14 163.62 39.09Q162.83 37.05 161.45 36.23Q160.07 35.42 158.25 35.42Q154.98 35.35 153.19 37.74Q151.39 40.13 151.39 44.59V61ZM211.93 61.75Q207.34 61.75 203.79 59.65Q200.23 57.54 198.19 53.83Q196.15 50.13 196.15 45.29Q196.15 40.45 198.22 36.74Q200.3 33.03 203.91 30.92Q207.53 28.82 212.18 28.82Q216.39 28.82 219.78 30.99Q223.18 33.15 225.16 37.24Q227.14 41.33 227.14 46.98H203.44Q203.75 50.94 206.36 53.21Q208.97 55.47 212.55 55.47Q215.45 55.47 217.33 54.18Q219.22 52.89 220.29 50.82L226.51 53.46Q225.19 55.97 223.15 57.86Q221.1 59.74 218.31 60.75Q215.51 61.75 211.93 61.75ZM203.88 41.58H219.53Q219.34 39.31 218.21 37.84Q217.08 36.36 215.45 35.61Q213.81 34.85 211.99 34.85Q210.23 34.85 208.44 35.57Q206.65 36.3 205.39 37.81Q204.13 39.31 203.88 41.58ZM244.3 61.75Q239.33 61.75 236.72 59.27Q234.11 56.79 234.11 52.14V35.61H228.9V29.57H234.11V19.77H241.09V29.57H249.58V35.61H241.09V50.82Q241.09 53.02 242.13 54.15Q243.17 55.28 245.18 55.28Q245.81 55.28 246.56 55.03Q247.31 54.78 248.26 54.09L250.83 59.43Q249.2 60.56 247.57 61.16Q245.93 61.75 244.3 61.75ZM255.74 61V29.57H262.78V35.29Q264.66 32.34 267.68 30.89Q270.7 29.45 273.9 29.45V36.17Q271.01 36.17 268.47 36.96Q265.92 37.74 264.35 39.5Q262.78 41.26 262.78 44.15V61ZM278.24 61V29.57H285.22V61ZM302.88 61.75Q297.22 61.75 294.11 59.24Q291 56.73 291 52.14Q291 47.23 294.3 44.66Q297.6 42.08 303.51 42.08H311.49Q311.11 38.62 309.54 36.8Q307.97 34.98 304.89 34.98Q302.63 34.98 300.93 35.92Q299.23 36.86 298.04 38.87L291.88 36.61Q292.89 34.54 294.55 32.75Q296.22 30.95 298.76 29.89Q301.31 28.82 304.89 28.82Q309.48 28.82 312.56 30.61Q315.64 32.4 317.12 35.73Q318.59 39.06 318.59 43.78L318.41 61H311.93L311.74 57.17Q310.49 59.37 308.25 60.56Q306.02 61.75 302.88 61.75ZM303.76 55.85Q306.09 55.85 307.88 54.81Q309.67 53.77 310.64 52.01Q311.62 50.25 311.62 48.11V47.49H305.77Q301.56 47.49 299.86 48.65Q298.17 49.81 298.17 51.95Q298.17 53.77 299.64 54.81Q301.12 55.85 303.76 55.85Z" fill="var(--fg)"></path><path d="M279.48 23.47L286.54 15.13" stroke="var(--primary)" stroke-width="6.42" stroke-linecap="round" fill="none"></path></g></svg></div>
+<nav aria-label="Principal" class="navs" style="display: flex; flex-direction: column; gap: 2px">
+<a href="V2-Panel.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Panel</span></a>
+<a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></svg><span>Centros de trabajo</span></a>
+<a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Empleados</span></a><a href="#" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Usuarios</span></a>
+<span class="sm mfg w5" style="padding: 16px 10px 6px">Cumplimiento</span>
+<a href="V2-Ruta-N035.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>NOM-035</span></a>
+<a href="V2-Centros-N037.dc.html" class="navi on" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg><span>NOM-037</span></a>
+<a href="V2-Ruta-Silla.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/></svg><span>Ley Silla</span></a><a href="V4-Quejas-Bandeja.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Quejas</span><span style="margin-left:auto;font-size:12px;font-weight:600;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--r-alto-bg);color:var(--r-alto-fg);display:inline-flex;align-items:center;justify-content:center">2</span></a><span class="sm mfg w5" style="padding: 16px 10px 6px">Herramientas</span><a href="V4-Comp-Inicio.dc.html" class="navi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg><span>Compensación</span></a>
+</nav>
+<div class="foot" style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 14px 6px 0; border-top: 1px solid var(--border)"><span class="av">OO</span><span style="display: flex; flex-direction: column; min-width: 0"><span class="sm w5">Olga Owner</span><span class="sm mfg">owner@demo.test</span></span></div>
+</aside>
+
+<main class="panel" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; overflow: hidden">
+<div class="row sm" style="gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><a href="V2-Panel.dc.html" style="color: var(--mfg)">Panel</a><span class="mfg" aria-hidden="true">/</span><span class="w5">NOM-037</span></div>
+<div style="padding: 40px 48px 64px; max-width: 1280px; width: 100%; display: flex; flex-direction: column; gap: 36px">
+<header style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end">
+<div style="flex: 1 1 520px; display: flex; flex-direction: column; gap: 8px">
+<h1 style="font-size: 34px; line-height: 42px; font-weight: 600; letter-spacing: -0.015em">Teletrabajo en tus centros</h1>
+<p class="mfg" style="font-size: 18px; line-height: 28px">5 personas en 2 centros trabajan desde casa más del 40 % del tiempo. Algunas cosas se hacen una vez para toda la empresa; otras, en cada centro.</p>
+</div>
+<a href="V2-Aplica.dc.html" class="btn btn-o">Revisar otro centro</a>
+</header>
+
+<section aria-labelledby="emp" style="display: flex; flex-direction: column; gap: 12px">
+<div><h2 id="emp" style="font-size: 20px; line-height: 28px; font-weight: 600">Para toda la empresa</h2><p class="sm mfg">Se hace una vez y cubre a tus 2 centros.</p></div>
+<div class="card" style="overflow: hidden">
+<div class="co"><span class="gico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8M16 17H8"/></svg></span><div style="min-width: 0"><p class="w5">Política de Teletrabajo</p><p class="sm mfg">Empezada · le faltan 12 temas · ≈ 15 min</p></div><a href="V2-Politica.dc.html" class="btn btn-p">Continuar</a></div>
+<div class="co"><span class="gico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6M6 12v6"/></svg></span><div style="min-width: 0"><p class="w5">6 documentos de apoyo</p><p class="sm mfg">1 de 6 listo · cada uno con plantilla de preguntas · ≈ 25 min los que faltan</p></div><a href="V2-N037-Docs.dc.html" class="btn btn-o">Ver documentos</a></div>
+<div class="co"><span class="gico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span><div style="min-width: 0"><p class="w5">Capacitación anual</p><p class="sm mfg">Hecho · las 5 personas vigentes hasta nov 2027</p></div><span class="tag">Al corriente</span></div>
+</div>
+</section>
+
+<section aria-labelledby="cen" style="display: flex; flex-direction: column; gap: 12px">
+<div><h2 id="cen" style="font-size: 20px; line-height: 28px; font-weight: 600">En cada centro</h2><p class="sm mfg">Personas, lugares, Comisión y avisos son de cada centro.</p></div>
+<div class="card" style="overflow: hidden">
+<div class="cr h" aria-hidden="true"><span>Centro</span><span>Personas</span><span>Dónde va</span><span>Lo siguiente</span><span></span></div>
+<div class="cr"><div><p class="w5">Planta Querétaro</p><p class="sm mfg">Manufactura</p></div><span>3</span><div style="display: flex; flex-direction: column; gap: 6px"><div class="sb" aria-hidden="true"><span class="n"></span><span class="d"></span><span></span><span class="d"></span><span></span><span></span></div><span class="sm mfg">2 de 6 etapas</span></div><p class="sm">Revisar el aviso de accidente de Hugo Saiz y 2 listas de lugares</p><a href="V2-Ruta-N037.dc.html" class="btn btn-o">Abrir ruta</a></div>
+<div class="cr"><div><p class="w5">Oficinas Monterrey</p><p class="sm mfg">Administración y ventas</p></div><span>2</span><div style="display: flex; flex-direction: column; gap: 6px"><div class="sb" aria-hidden="true"><span class="n"></span><span class="d"></span><span></span><span></span><span></span><span></span></div><span class="sm mfg">1 de 6 etapas</span></div><p class="sm">Integrar la Comisión del centro para que valide los lugares</p><a href="#" class="btn btn-o">Abrir ruta</a></div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

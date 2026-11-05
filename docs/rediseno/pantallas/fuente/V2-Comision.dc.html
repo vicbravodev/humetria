@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Acceso de la Comisión · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--seal:#6B7472}
+.th-oscuro{--bg:#0F1716;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--seal:#C9D3D0}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--bg);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p,.app ul{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 20px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.task{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:18px;align-items:center;padding:22px 24px;border-top:1px solid var(--border)}
+.task:first-child{border-top:0}
+.num{width:44px;height:44px;border-radius:999px;background:var(--accent);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:17px;font-weight:600}
+.norm{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;font-size:13px;font-weight:600;background:var(--muted);border:1px solid var(--border)}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr) !important}.task{grid-template-columns:44px minmax(0,1fr)}.task .btn{grid-column:1 / -1}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; display: flex; flex-direction: column">
+<div class="row" style="gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--card); flex-wrap: wrap">
+<span style="width: 36px; height: 36px; border-radius: 9px; background: var(--sec); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">AD</span>
+<span style="flex-grow: 1"><span class="w6" style="display: block">Autopartes Demo</span><span class="sm mfg">Comisión de Seguridad e Higiene · Planta Querétaro</span></span>
+<span class="row sm w5" style="gap: 6px; color: var(--primary)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Acceso personal</span>
+</div>
+
+<div style="flex-grow: 1; padding: 48px 24px 56px; display: flex; justify-content: center">
+<div class="cols" style="width: 100%; max-width: 1080px; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 28px; min-width: 0">
+<header style="display: flex; flex-direction: column; gap: 10px">
+<h1 style="font-size: 34px; line-height: 42px; font-weight: 600; letter-spacing: -0.015em">Hola, Rubén</h1>
+<p class="mfg" style="font-size: 18px; line-height: 28px">La Comisión tiene 3 cosas pendientes. No necesitas contraseña: entras con este enlace, que es solo tuyo.</p>
+</header>
+<section aria-label="Pendientes de la Comisión" style="border: 1px solid var(--border); border-radius: 16px; background: var(--card); overflow: hidden">
+<div class="task"><span class="num">1</span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><div class="row" style="gap: 8px"><span class="norm">NOM-037</span><span class="sm mfg">≈ 5 min cada uno</span></div><p class="w6" style="font-size: 18px">Valida 2 lugares de teletrabajo</p><p class="sm mfg">Hugo Saiz y D. Manuel Castellano contestaron la lista de su lugar. Revisa y decide.</p></div><a href="N037-Revision.dc.html" class="btn btn-p">Empezar</a></div>
+<div class="task"><span class="num">2</span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><div class="row" style="gap: 8px"><span class="norm">Ley Silla</span><span class="sm mfg">≈ 3 min cada una</span></div><p class="w6" style="font-size: 18px">Firma 3 evaluaciones de trabajo de pie</p><p class="sm mfg">José Antonio, Óscar y Santiago. Ya tienen los datos: solo confirmas y firmas.</p></div><a href="LS-Evaluacion.dc.html" class="btn btn-o">Revisar y firmar</a></div>
+<div class="task"><span class="num">3</span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><div class="row" style="gap: 8px"><span class="norm">Ley Silla</span><span class="sm mfg">≈ 5 min</span></div><p class="w6" style="font-size: 18px">Asienta 2 evaluaciones en el acta de recorrido</p><p class="sm mfg">Se abre después de firmar las de arriba.</p></div><a href="#" class="btn btn-o">Abrir acta</a></div>
+</section>
+<p class="sm mfg">Si algo no te toca a ti, avísale a Olga Owner de Recursos Humanos.</p>
+</div>
+
+<aside style="display: flex; flex-direction: column; gap: 16px">
+<div style="padding: 20px; border-radius: 16px; background: var(--accent); display: flex; flex-direction: column; gap: 8px">
+<p class="w6">Qué puedes ver aquí</p>
+<p class="sm">Solo lo que le toca a la Comisión de este centro. No ves resultados de NOM-035 ni datos de salud de nadie.</p>
+</div>
+<div style="padding: 20px; border-radius: 16px; border: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; gap: 10px">
+<p class="w6">Integrantes</p>
+<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px" class="sm">
+<li><b class="w5">Rubén Ortiz</b> · por los trabajadores</li>
+<li><b class="w5">Olga Owner</b> · por la empresa</li>
+</ul>
+</div>
+<p class="sm mfg">El enlace vence el 10 nov. <a href="#" class="w5">Pedir uno nuevo</a></p>
+</aside>
+</div>
+</div>
+<p class="sm" style="text-align: center; color: var(--seal); padding-bottom: 20px">hecho con humetría</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

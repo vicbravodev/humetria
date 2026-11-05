@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Correos · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--seal:#6B7472;--r-alto-bg:#F8E7DF;--r-alto-fg:#9A4527}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--seal:#C9D3D0;--r-alto-bg:#3B241C;--r-alto-fg:#F2A686}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.mail{display:flex;flex-direction:column;gap:0;border-radius:16px;border:1px solid var(--border);background:var(--bg);overflow:hidden}
+.meta{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;gap:2px}
+.body{padding:28px;display:flex;justify-content:center}
+.sheet{width:100%;max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:16px}
+.lg{width:36px;height:36px;border-radius:9px;background:var(--sec);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.cta{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 22px;border-radius:10px;background:var(--primary);color:var(--pfg) !important;font-weight:500;align-self:flex-start}
+.who{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:6px;font-size:13px;font-weight:600;background:var(--muted);border:1px solid var(--border);color:var(--mfg)}
+@media (max-width:1000px){.grid{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 40px 48px 56px">
+<div style="max-width: 1340px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px">
+<header style="display: flex; flex-direction: column; gap: 8px"><h1 style="font-size: 30px; line-height: 38px; font-weight: 600; letter-spacing: -0.015em">Correos de las rutas</h1><p class="mfg" style="font-size: 17px; line-height: 26px; max-width: 760px">Llevan el logo de la empresa (o del consultor), un solo botón y el sello al pie. A las personas se les habla de usted; a RH y a la Comisión, de tú.</p></header>
+<div class="grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+
+<article class="mail" aria-label="Correo a la Comisión">
+<div class="meta"><div class="row" style="gap: 8px"><span class="who">Comisión</span><span class="sm mfg">De: Autopartes Demo vía Humetría</span></div><p class="w6">Tienes 3 pendientes como integrante de la Comisión</p></div>
+<div class="body"><div class="sheet">
+<div class="row" style="gap: 10px"><span class="lg">AD</span><span class="w6">Autopartes Demo</span></div>
+<p style="font-size: 22px; line-height: 30px; font-weight: 600">Hola, Rubén</p>
+<p>Hay 2 lugares de teletrabajo por validar y 3 evaluaciones de trabajo de pie por firmar en Planta Querétaro. Te toma unos 20 minutos.</p>
+<a href="V2-Comision.dc.html" class="cta">Ver mis pendientes</a>
+<p class="sm mfg">El enlace es solo tuyo y vence el 10 nov. No necesitas contraseña.</p>
+<p class="sm" style="color: var(--seal)">hecho con humetría</p>
+</div></div>
+</article>
+
+<article class="mail" aria-label="Correo a una persona en teletrabajo">
+<div class="meta"><div class="row" style="gap: 8px"><span class="who">Persona · NOM-037</span><span class="sm mfg">De: Autopartes Demo vía Humetría</span></div><p class="w6">Su espacio de trabajo en casa: una lista de 10 minutos</p></div>
+<div class="body"><div class="sheet">
+<div class="row" style="gap: 10px"><span class="lg">AD</span><span class="w6">Autopartes Demo</span></div>
+<p style="font-size: 22px; line-height: 30px; font-weight: 600">Hola, Francisco</p>
+<p>Para que pueda trabajar desde casa, necesitamos saber cómo es su espacio: luz, silla, instalación eléctrica. Son unas preguntas y, si usted quiere, unas fotos.</p>
+<a href="N037-Portal.dc.html" class="cta">Contestar la lista</a>
+<p class="sm mfg">Solo lo ven Recursos Humanos y la Comisión de Seguridad e Higiene. Puede contestar desde su celular.</p>
+<p class="sm" style="color: var(--seal)">hecho con humetría</p>
+</div></div>
+</article>
+
+<article class="mail" aria-label="Correo a una persona sobre Ley Silla">
+<div class="meta"><div class="row" style="gap: 8px"><span class="who">Persona · Ley Silla</span><span class="sm mfg">De: Autopartes Demo vía Humetría</span></div><p class="w6">2 preguntas sobre su trabajo de pie</p></div>
+<div class="body"><div class="sheet">
+<div class="row" style="gap: 10px"><span class="lg">AD</span><span class="w6">Autopartes Demo</span></div>
+<p style="font-size: 22px; line-height: 30px; font-weight: 600">Hola, Aitor</p>
+<p>Queremos saber cómo es su calzado y si ha sentido alguna molestia al trabajar de pie. Con eso decidimos qué asiento y qué descansos le corresponden.</p>
+<a href="LS-Portal.dc.html" class="cta">Contestar ahora</a>
+<p class="sm mfg">Contestar es voluntario y toma un minuto. No tiene ninguna consecuencia si prefiere no hacerlo.</p>
+<p class="sm" style="color: var(--seal)">hecho con humetría</p>
+</div></div>
+</article>
+
+<article class="mail" aria-label="Correo a RH por un aviso de accidente">
+<div class="meta"><div class="row" style="gap: 8px"><span class="who">RH · se envía al momento</span><span class="sm mfg">De: Humetría</span></div><p class="w6">Hugo Saiz avisó un accidente de trabajo</p></div>
+<div class="body"><div class="sheet">
+<div class="row" style="gap: 10px"><span class="lg">AD</span><span class="w6">Autopartes Demo</span></div>
+<p style="font-size: 22px; line-height: 30px; font-weight: 600">Llegó un aviso de accidente</p>
+<p style="padding: 14px 16px; border-radius: 10px; background: var(--muted)">«Me lastimé la espalda al levantar una caja.»<br><span class="sm mfg">Hugo Saiz · Planta Querétaro · ocurrió el 25 feb</span></p>
+<p>Revísalo y registra qué se hizo. Si pasan 3 días sin respuesta, te lo volvemos a recordar.</p>
+<a href="V3-Aviso.dc.html" class="cta">Revisar aviso</a>
+</div></div>
+</article>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

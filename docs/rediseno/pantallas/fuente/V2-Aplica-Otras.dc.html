@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>¿Te aplica? NOM-035 y Ley Silla · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.tabs{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--muted);border:1px solid var(--border)}
+.tab{height:44px;padding:0 18px;border-radius:9px;border:0;background:transparent;font-size:15px;font-weight:500;color:var(--mfg);cursor:pointer}
+.tab.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(20,33,31,.08)}
+.opt{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 16px;border-radius:12px;border:1px solid var(--input);background:var(--card);cursor:pointer;font-size:17px;line-height:24px;text-align:left;width:100%;transition:background-color 120ms,border-color 120ms}
+.opt:hover{background:var(--muted)}
+.opt.on{border:2px solid var(--primary);background:var(--accent);font-weight:500;padding:11px 15px}
+.radio{width:20px;height:20px;border-radius:999px;border:1.5px solid var(--input);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--card)}
+.opt.on .radio{border:2px solid var(--primary)}
+.opt.on .radio::after{content:"";width:10px;height:10px;border-radius:999px;background:var(--primary)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.res{border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:14px}
+@media (prefers-reduced-motion:reduce){.opt{transition:none}}
+@media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr) !important}.grid2{grid-template-columns:minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row" style="gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border)"><span class="sm mfg" style="flex-grow: 1">Oficinas Monterrey · configuración inicial</span><a href="V2-Panel.dc.html" class="sm w5">Hacerlo después</a></div>
+<div style="padding: 40px 48px 56px; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px">
+<header style="display: flex; flex-direction: column; gap: 14px">
+<h1 style="font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.015em">¿Qué te pide cada norma en este centro?</h1>
+<div class="tabs" role="tablist" aria-label="Norma"><button type="button" role="tab" class="{{t35}}" aria-selected="{{a35}}" onClick="{{go35}}">NOM-035</button><button type="button" role="tab" class="{{tLs}}" aria-selected="{{aLs}}" onClick="{{goLs}}">Ley Silla</button></div>
+</header>
+
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 48px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 28px">
+<sc-if value="{{is35}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<p class="mfg" style="font-size: 17px; line-height: 26px">La NOM-035 aplica a todos los centros de trabajo. El número de personas decide qué cuestionarios contestan.</p>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px"><legend style="font-size: 22px; line-height: 30px; font-weight: 600; padding: 0; margin-bottom: 12px">¿Cuántas personas trabajan en este centro?</legend>
+<sc-for list="{{o35}}" as="o" hint-placeholder-count="3"><button type="button" class="{{o.cls}}" aria-pressed="{{o.pr}}" onClick="{{o.pick}}"><span class="radio"></span><span>{{o.t}}</span></button></sc-for>
+</fieldset>
+<p class="sm mfg">Tienes 60 registradas en Oficinas Monterrey. Lo marcamos por ti; cámbialo si no es correcto.</p>
+</div>
+</sc-if>
+<sc-if value="{{isLs}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 26px">
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px"><legend style="font-size: 22px; line-height: 30px; font-weight: 600; padding: 0; margin-bottom: 12px">¿Alguien trabaja de pie la mayor parte de su jornada?</legend>
+<div class="grid2"><sc-for list="{{oPie}}" as="o" hint-placeholder-count="2"><button type="button" class="{{o.cls}}" aria-pressed="{{o.pr}}" onClick="{{o.pick}}"><span class="radio"></span><span>{{o.t}}</span></button></sc-for></div>
+</fieldset>
+<sc-if value="{{showSector}}" hint-placeholder-val="{{ true }}">
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px"><legend style="font-size: 22px; line-height: 30px; font-weight: 600; padding: 0; margin-bottom: 12px">¿A qué se dedica el centro?</legend>
+<div class="grid2"><sc-for list="{{oSec}}" as="o" hint-placeholder-count="4"><button type="button" class="{{o.cls}}" aria-pressed="{{o.pr}}" onClick="{{o.pick}}"><span class="radio"></span><span>{{o.t}}</span></button></sc-for></div>
+</fieldset>
+</sc-if>
+</div>
+</sc-if>
+</div>
+
+<aside class="res" aria-live="polite" style="background: var(--card); border: 1px solid var(--border)">
+<p class="sm w6" style="color: var(--primary)">{{rTag}}</p>
+<p style="font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em">{{rTitle}}</p>
+<p class="mfg">{{rBody}}</p>
+<sc-if value="{{rHasExtra}}" hint-placeholder-val="{{ false }}"><p class="sm" style="padding: 12px 14px; border-radius: 10px; background: var(--muted)">{{rExtra}}</p></sc-if>
+<a href="{{rHref}}" class="btn btn-p" style="align-self: flex-start">{{rCta}}</a>
+</aside>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { norma: '035', tam: 2, pie: null, sec: null };
+  }
+  renderVals() {
+    const s = this.state;
+    const opts = (k, arr) => arr.map((t, i) => ({ t, cls: s[k] === i ? 'opt on' : 'opt', pr: s[k] === i ? 'true' : 'false', pick: () => this.setState({ [k]: i }) }));
+    let r;
+    if (s.norma === '035') {
+      const R35 = [
+        { title: 'Guía I, solo a quien la necesite', body: 'En centros de hasta 15 personas no se aplican los cuestionarios de factores de riesgo. Identificas a quien haya vivido un acontecimiento traumático severo con la Guía I.', extra: 'La política de prevención y compartirla con tu equipo siguen siendo obligatorias.' },
+        { title: 'Guías I y II para todas las personas', body: 'Todas contestan la Guía I (acontecimientos traumáticos) y la Guía II (factores de riesgo psicosocial).', extra: 'Tu ruta tendrá 6 etapas, igual que en los demás centros.' },
+        { title: 'Guías I y III', body: 'Todas contestan la Guía I. La Guía III, más completa, la contesta todo el centro o una muestra que calculamos por ti.', extra: 'Con 60 personas, la muestra mínima la ves al crear la evaluación.' }
+      ];
+      const x = R35[s.tam];
+      r = { tag: 'Te aplica', title: x.title, body: x.body, extra: x.extra, cta: 'Ver mi ruta', href: 'V2-Ruta-N035.dc.html' };
+    } else if (s.pie === null) {
+      r = { tag: 'Contesta para ver el resultado', title: 'Primero, ¿alguien trabaja de pie?', body: 'Con una o dos respuestas sabes si la Ley Silla te aplica y en qué puestos.', extra: '', cta: 'Ver mi ruta', href: '#' };
+    } else if (s.pie === 1) {
+      r = { tag: 'No te aplica', title: 'Nadie trabaja de pie en este centro', body: 'Guardamos la declaración con fecha y tu nombre. Es lo que muestras si te la piden en una inspección.', extra: 'Si cambia, por ejemplo abres un mostrador, vuelve a contestar.', cta: 'Guardar declaración', href: 'V2-Panel.dc.html' };
+    } else if (s.sec === null) {
+      r = { tag: 'Casi', title: 'Falta saber a qué se dedica', body: 'El sector decide si aplica en todos los puestos o solo en algunos.', extra: '', cta: 'Ver mi ruta', href: '#' };
+    } else if (s.sec === 2) {
+      r = { tag: 'Te aplica en algunos puestos', title: 'Solo donde el trabajo permite sentarse', body: 'En un centro industrial, la ley pide asiento donde la naturaleza del trabajo lo permite. Lo decides puesto por puesto y dejas la razón por escrito.', extra: 'Tu ruta empieza por identificar los puestos de pie.', cta: 'Ver mi ruta', href: 'V2-Ruta-Silla.dc.html' };
+    } else {
+      r = { tag: 'Te aplica', title: 'En todos los puestos de pie', body: 'Cada persona que trabaja de pie debe tener un asiento con respaldo y pausas para descansar.', extra: 'Tu ruta empieza por identificar los puestos de pie.', cta: 'Ver mi ruta', href: 'V2-Ruta-Silla.dc.html' };
+    }
+    return {
+      tema: this.props.tema ?? 'claro',
+      is35: s.norma === '035', isLs: s.norma === 'ls',
+      t35: s.norma === '035' ? 'tab on' : 'tab', tLs: s.norma === 'ls' ? 'tab on' : 'tab',
+      a35: s.norma === '035' ? 'true' : 'false', aLs: s.norma === 'ls' ? 'true' : 'false',
+      go35: () => this.setState({ norma: '035' }), goLs: () => this.setState({ norma: 'ls' }),
+      o35: opts('tam', ['Hasta 15 personas', 'De 16 a 50 personas', 'Más de 50 personas']),
+      oPie: opts('pie', ['Sí', 'No, nadie']),
+      oSec: opts('sec', ['Comercio', 'Servicios', 'Industrial', 'Otro parecido']),
+      showSector: s.pie === 0,
+      rTag: r.tag, rTitle: r.title, rBody: r.body, rExtra: r.extra, rHasExtra: !!r.extra, rCta: r.cta, rHref: r.href
+    };
+  }
+}
+</script>
+</body>
+</html>

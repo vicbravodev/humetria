@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Agregar un cliente · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button,.app input{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible,.app input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p,.app ol{margin:0}
+.sm{font-size:14px;line-height:20px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.inp{height:48px;width:100%;border-radius:8px;border:1px solid var(--input);background:var(--card);padding:0 14px;font-size:16px}
+.fld{display:flex;flex-direction:column;gap:8px}
+.sec{padding:24px;display:flex;flex-direction:column;gap:16px;border-top:1px solid var(--border)}
+.sec:first-child{border-top:0}
+.sn{width:28px;height:28px;border-radius:999px;background:var(--accent);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+.nm{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1px solid var(--input);background:var(--card);text-align:left;cursor:pointer}
+.nm.on{border:2px solid var(--primary);background:var(--accent);padding:13px 15px}
+.box{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--input);flex-shrink:0;background:var(--card);margin-top:2px}
+.nm.on .box{background:var(--primary);border-color:var(--primary)}
+.nx{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px}
+@media (max-width:1100px){.cols{grid-template-columns:minmax(0,1fr) !important}.g3{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row sm" style="gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border)"><a href="V2-Consultor.dc.html" style="color: var(--mfg)">Tus clientes</a><span class="mfg" aria-hidden="true">/</span><span class="w5">Agregar cliente</span></div>
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; padding: 36px 48px 56px; max-width: 1240px; margin: 0 auto; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 22px; min-width: 0">
+<h1 style="font-size: 30px; line-height: 38px; font-weight: 600; letter-spacing: -0.015em">Agregar un cliente</h1>
+<div class="card" style="overflow: hidden">
+<section class="sec" aria-labelledby="s1"><div class="row" style="gap: 10px"><span class="sn">1</span><h2 id="s1" class="w6" style="font-size: 18px">La empresa</h2></div>
+<div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px"><div class="fld"><label for="rs" class="w5">Razón social</label><input id="rs" class="inp" value="Hotelera Costa Azul, S.A. de C.V."></div><div class="fld"><label for="rfc" class="w5">RFC <span class="mfg" style="font-weight: 400">(opcional)</span></label><input id="rfc" class="inp" placeholder="Para el expediente"></div></div></section>
+<section class="sec" aria-labelledby="s2"><div class="row" style="gap: 10px"><span class="sn">2</span><h2 id="s2" class="w6" style="font-size: 18px">Quién de RH la administra</h2></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px"><div class="fld"><label for="nm" class="w5">Nombre</label><input id="nm" class="inp" value="Mónica Treviño"></div><div class="fld"><label for="ml" class="w5">Correo</label><input id="ml" class="inp" value="mtrevino@costaazul.mx"></div></div>
+<p class="sm mfg">Le llega una invitación con tu marca. Tú también puedes entrar a su cuenta.</p></section>
+<section class="sec" aria-labelledby="s3"><div class="row" style="gap: 10px"><span class="sn">3</span><h2 id="s3" class="w6" style="font-size: 18px">Qué normas le vas a llevar</h2></div>
+<div class="g3" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<button type="button" class="nm on" aria-pressed="true"><span class="box"></span><span><span class="w6" style="display: block">NOM-035</span><span class="sm mfg">Riesgo psicosocial</span></span></button>
+<button type="button" class="nm on" aria-pressed="true"><span class="box"></span><span><span class="w6" style="display: block">Ley Silla</span><span class="sm mfg">Trabajo de pie</span></span></button>
+<button type="button" class="nm" aria-pressed="false"><span class="box"></span><span><span class="w6" style="display: block">NOM-037</span><span class="sm mfg">Teletrabajo</span></span></button>
+</div>
+<p class="sm mfg">Los centros y si cada norma aplica se definen en la configuración inicial: 2 preguntas por centro.</p></section>
+</div>
+<div class="row" style="gap: 12px"><button type="button" class="btn btn-p">Crear cliente e invitar</button><a href="V2-Consultor.dc.html" class="btn btn-o">Cancelar</a></div>
+</div>
+<aside class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px" aria-labelledby="des">
+<h2 id="des" class="w6" style="font-size: 18px">Qué pasa después</h2>
+<div class="nx"><span class="sn">1</span><p class="sm">Mónica recibe la invitación y entra con su correo.</p></div>
+<div class="nx"><span class="sn">2</span><p class="sm">Ella o tú contestan la configuración inicial: centros y personas.</p></div>
+<div class="nx"><span class="sn">3</span><p class="sm">Se crean sus rutas y el cliente aparece en tu lista con su avance.</p></div>
+<a href="V3-Onboarding.dc.html" class="sm w5">Ver la configuración inicial</a>
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

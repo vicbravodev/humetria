@@ -1,0 +1,736 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-03T07:40:00Z"
+ },
+ "title": "Humetría · NOM-037, Ley Silla y ajustes",
+ "launch": {
+  "view": "canvas",
+  "page": "pend"
+ },
+ "pages": [
+  {
+   "id": "v2",
+   "name": "v2 · ruta guiada"
+  },
+  {
+   "id": "gaps",
+   "name": "v2 · navegación, roles y cierres"
+  },
+  {
+   "id": "final",
+   "name": "v2 · cierre de gaps"
+  },
+  {
+   "id": "pend",
+   "name": "v2 · quejas, difusión y compensación"
+  },
+  {
+   "id": "n037",
+   "name": "v1 · NOM-037 (referencia)"
+  },
+  {
+   "id": "silla",
+   "name": "v1 · Ley Silla (referencia)"
+  },
+  {
+   "id": "ajustes",
+   "name": "v1 · Panel y NOM-035 (referencia)"
+  }
+ ],
+ "boards": {
+  "V2-Aplica.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "1 · Primera vez: ¿te aplica la NOM-037? (interactiva)",
+   "page": "v2",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V2-Ruta-N037.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1240,
+   "title": "2 · Tu ruta de NOM-037 (centro)",
+   "page": "v2",
+   "expand": "fill"
+  },
+  "V2-Politica.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "3 · Escribe tu política con preguntas (interactiva)",
+   "page": "v2",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V2-Ruta-Silla.dc.html": {
+   "x": 1520,
+   "y": 1360,
+   "w": 1440,
+   "h": 1160,
+   "title": "4 · El mismo patrón en Ley Silla",
+   "page": "v2",
+   "expand": "fill"
+  },
+  "V2-Ruta-N035.dc.html": {
+   "x": 0,
+   "y": 2900,
+   "w": 1440,
+   "h": 1200,
+   "title": "5 · Tu ruta de NOM-035 (después de evaluar)",
+   "page": "v2",
+   "expand": "fill"
+  },
+  "V2-N035-Plan.dc.html": {
+   "x": 1520,
+   "y": 2900,
+   "w": 1440,
+   "h": 1160,
+   "title": "6 · NOM-035 · programa de intervención (interactiva)",
+   "page": "v2",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V2-N035-Politica.dc.html": {
+   "x": 3040,
+   "y": 2900,
+   "w": 1440,
+   "h": 960,
+   "title": "7 · NOM-035 · política de prevención con preguntas (interactiva)",
+   "page": "v2",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V2-Panel.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1080,
+   "title": "8 · Panel de inicio (las 3 rutas)",
+   "page": "gaps",
+   "expand": "fill"
+  },
+  "V2-Centros-N037.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "title": "9 · NOM-037 en todos tus centros",
+   "page": "gaps",
+   "expand": "fill"
+  },
+  "V2-Consultor.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "title": "10 · Consultor: todos tus clientes",
+   "page": "gaps",
+   "expand": "fill"
+  },
+  "V2-Comision.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1440,
+   "h": 900,
+   "title": "11 · Acceso de la Comisión (por enlace)",
+   "page": "gaps",
+   "expand": "fill"
+  },
+  "V2-N035-Compartir.dc.html": {
+   "x": 1520,
+   "y": 1200,
+   "w": 1440,
+   "h": 1000,
+   "title": "12 · NOM-035 · comparte los resultados",
+   "page": "gaps",
+   "expand": "fill"
+  },
+  "V2-N037-Docs.dc.html": {
+   "x": 3040,
+   "y": 1200,
+   "w": 1440,
+   "h": 1000,
+   "title": "13 · NOM-037 · documentos de apoyo",
+   "page": "gaps",
+   "expand": "fill"
+  },
+  "V2-Aplica-Otras.dc.html": {
+   "x": 0,
+   "y": 2320,
+   "w": 1440,
+   "h": 900,
+   "title": "14 · ¿Te aplica? NOM-035 y Ley Silla (interactiva)",
+   "page": "gaps",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V3-Aviso.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "title": "15 · Revisar un aviso de accidente (interactiva)",
+   "page": "final",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V3-Inspeccion.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "16 · Si hoy llegara una inspección + expediente",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-AlDia.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "title": "17 · Ruta terminada: todo al día y próximo ciclo",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Onboarding.dc.html": {
+   "x": 0,
+   "y": 1240,
+   "w": 1440,
+   "h": 1000,
+   "title": "18 · Primera vez de la empresa: una sola configuración (interactiva)",
+   "page": "final",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V3-Doc-Riesgos.dc.html": {
+   "x": 1520,
+   "y": 1240,
+   "w": 1440,
+   "h": 960,
+   "title": "19 · Documento de apoyo con preguntas (riesgos)",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Roles.dc.html": {
+   "x": 3040,
+   "y": 1240,
+   "w": 1440,
+   "h": 960,
+   "title": "20 · Invitar a alguien: roles y qué ve cada uno (con quejas y compensación)",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Correos.dc.html": {
+   "x": 0,
+   "y": 2440,
+   "w": 1440,
+   "h": 1480,
+   "title": "21 · Correos de NOM-037, Ley Silla, Comisión y avisos",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Marca.dc.html": {
+   "x": 1520,
+   "y": 2440,
+   "w": 1440,
+   "h": 960,
+   "title": "22 · Consultor: tu marca",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Alta.dc.html": {
+   "x": 3040,
+   "y": 2440,
+   "w": 1440,
+   "h": 1040,
+   "title": "23 · Consultor: agregar un cliente",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Estados.dc.html": {
+   "x": 0,
+   "y": 4160,
+   "w": 1440,
+   "h": 1040,
+   "title": "24 · Estados vacíos, errores y avisos del sistema",
+   "page": "final",
+   "expand": "fill"
+  },
+  "V3-Movil.dc.html": {
+   "x": 1520,
+   "y": 4160,
+   "w": 390,
+   "h": 844,
+   "title": "25 · Tu ruta en el celular",
+   "page": "final"
+  },
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1640,
+   "title": "Reemplazada por v2 · NOM-037 · centro (tabla de inspección)",
+   "page": "n037",
+   "expand": "fill"
+  },
+  "N037-Inicio.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1080,
+   "title": "Reemplazada por v2 · NOM-037 · inicio y pendientes",
+   "page": "n037",
+   "expand": "fill"
+  },
+  "N037-Persona.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1080,
+   "title": "Se queda · NOM-037 · ficha de aspirante",
+   "page": "n037",
+   "expand": "fill"
+  },
+  "N037-Revision.dc.html": {
+   "x": 0,
+   "y": 1760,
+   "w": 1440,
+   "h": 1180,
+   "title": "Se queda · NOM-037 · revisar lista de un lugar",
+   "page": "n037",
+   "expand": "fill"
+  },
+  "N037-Documentos.dc.html": {
+   "x": 1520,
+   "y": 1760,
+   "w": 1440,
+   "h": 1080,
+   "title": "Reemplazada por v2 · NOM-037 · documentos (cobertura + subir)",
+   "page": "n037",
+   "expand": "fill"
+  },
+  "N037-Portal.dc.html": {
+   "x": 3040,
+   "y": 1760,
+   "w": 390,
+   "h": 844,
+   "title": "Se queda · Portal del teletrabajador (celular)",
+   "page": "n037"
+  },
+  "LS-Centro.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "Reemplazada por v2 · Ley Silla · centro",
+   "page": "silla",
+   "expand": "fill"
+  },
+  "LS-Puesto.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1080,
+   "title": "Se queda · Ley Silla · nuevo puesto, paso Figura 1 (interactiva)",
+   "page": "silla",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "LS-Evaluacion.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1180,
+   "title": "Se queda · Ley Silla · evaluación de una persona (interactiva)",
+   "page": "silla",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "LS-Plan.dc.html": {
+   "x": 0,
+   "y": 1540,
+   "w": 1440,
+   "h": 1040,
+   "title": "Se queda · Ley Silla · plan de medidas y pausas",
+   "page": "silla",
+   "expand": "fill"
+  },
+  "LS-Portal.dc.html": {
+   "x": 1520,
+   "y": 1540,
+   "w": 390,
+   "h": 844,
+   "title": "Se queda · Portal de la persona · Ley Silla (celular, interactiva)",
+   "page": "silla",
+   "is_interactive": true
+  },
+  "Panel.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1120,
+   "title": "Reemplazada por v2 · Panel de inicio · pendientes de las 3 normas",
+   "page": "ajustes",
+   "expand": "fill"
+  },
+  "NOM035-Canalizacion.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1040,
+   "title": "Reemplazada por v2 · NOM-035 · canalización (ver 39)",
+   "page": "ajustes",
+   "expand": "fill"
+  },
+  "V4-Quejas-Canal.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1180,
+   "title": "26 · Quejas · el canal y a quién llega cada queja",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Quejas-Bandeja.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "title": "27 · Quejas · casos por atender (estado: con o sin casos)",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Quejas-Caso.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1160,
+   "title": "28 · Quejas · atender un caso de principio a fin (interactiva)",
+   "page": "pend",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V4-Quejas-Form.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "29 · Quejas · formulario para la persona en celular (interactiva)",
+   "page": "pend",
+   "is_interactive": true
+  },
+  "V4-Difusion.dc.html": {
+   "x": 0,
+   "y": 1560,
+   "w": 1440,
+   "h": 1100,
+   "title": "30 · Difusión · lo que tus personas deben conocer",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Difusion-Contenidos.dc.html": {
+   "x": 1520,
+   "y": 1560,
+   "w": 1440,
+   "h": 1000,
+   "title": "31 · Difusión · escribir los contenidos con preguntas (interactiva)",
+   "page": "pend",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V4-Difusion-Registro.dc.html": {
+   "x": 3040,
+   "y": 1560,
+   "w": 1440,
+   "h": 1000,
+   "title": "32 · Difusión · evidencia: confirmaciones, medios y resultados",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Pagina-Personas.dc.html": {
+   "x": 4560,
+   "y": 1560,
+   "w": 390,
+   "h": 844,
+   "title": "33 · Página de las personas por centro, en celular",
+   "page": "pend",
+   "is_interactive": true
+  },
+  "V4-Comp-Inicio.dc.html": {
+   "x": 0,
+   "y": 3060,
+   "w": 1440,
+   "h": 1000,
+   "title": "34 · Compensación · inicio (empresa, sindicato, primera vez)",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Comp-Escenario.dc.html": {
+   "x": 1520,
+   "y": 3060,
+   "w": 1440,
+   "h": 1000,
+   "title": "35 · Compensación · escenario con costo en vivo (interactiva)",
+   "page": "pend",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V4-Comp-Reporte.dc.html": {
+   "x": 3040,
+   "y": 3060,
+   "w": 1440,
+   "h": 3800,
+   "title": "36 · Compensación · reporte de impacto con análisis (interno o compartido)",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Comp-Comparar.dc.html": {
+   "x": 0,
+   "y": 7100,
+   "w": 1440,
+   "h": 1100,
+   "title": "37 · Compensación · comparar y ver la distancia a negociar",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Comp-Datos.dc.html": {
+   "x": 1520,
+   "y": 7100,
+   "w": 1440,
+   "h": 1000,
+   "title": "38 · Compensación · datos del contrato",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-N035-Canalizacion.dc.html": {
+   "x": 3040,
+   "y": 7100,
+   "w": 1440,
+   "h": 1180,
+   "title": "39 · NOM-035 · canalizar a quien lo necesita (interactiva)",
+   "page": "pend",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "V4-Menu-Roles.dc.html": {
+   "x": 0,
+   "y": 8600,
+   "w": 1440,
+   "h": 1000,
+   "title": "40 · Menú según quién entra (empresa, quejas, sindicato)",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Correos-2.dc.html": {
+   "x": 1520,
+   "y": 8600,
+   "w": 1440,
+   "h": 1300,
+   "title": "41 · Correos de quejas, difusión y compensación",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Carteles.dc.html": {
+   "x": 3040,
+   "y": 8600,
+   "w": 1440,
+   "h": 1100,
+   "title": "42 · Carteles para imprimir (página de las personas y quejas)",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Quejas-Seguimiento.dc.html": {
+   "x": 4560,
+   "y": 8600,
+   "w": 390,
+   "h": 844,
+   "title": "43 · La persona ve cómo va su queja con referencia y clave (interactiva)",
+   "page": "pend",
+   "is_interactive": true
+  },
+  "V4-Comp-Prestacion.dc.html": {
+   "x": 0,
+   "y": 10100,
+   "w": 1440,
+   "h": 1180,
+   "title": "44 · Compensación · nueva prestación",
+   "page": "pend",
+   "expand": "fill"
+  },
+  "V4-Quejas-Designar.dc.html": {
+   "x": 1520,
+   "y": 10100,
+   "w": 1440,
+   "h": 900,
+   "title": "45 · Quejas · designar a alguien externo",
+   "page": "pend",
+   "expand": "fill"
+  }
+ },
+ "order": [
+  "V2-Aplica.dc.html",
+  "V2-Ruta-N037.dc.html",
+  "V2-Politica.dc.html",
+  "V2-Ruta-Silla.dc.html",
+  "V2-Ruta-N035.dc.html",
+  "V2-N035-Plan.dc.html",
+  "V2-N035-Politica.dc.html",
+  "V2-Panel.dc.html",
+  "V2-Centros-N037.dc.html",
+  "V2-Consultor.dc.html",
+  "V2-Comision.dc.html",
+  "V2-N035-Compartir.dc.html",
+  "V2-N037-Docs.dc.html",
+  "V2-Aplica-Otras.dc.html",
+  "V3-Aviso.dc.html",
+  "V3-Inspeccion.dc.html",
+  "V3-AlDia.dc.html",
+  "V3-Onboarding.dc.html",
+  "V3-Doc-Riesgos.dc.html",
+  "V3-Roles.dc.html",
+  "V3-Correos.dc.html",
+  "V3-Marca.dc.html",
+  "V3-Alta.dc.html",
+  "V3-Estados.dc.html",
+  "V3-Movil.dc.html",
+  "Main.dc.html",
+  "N037-Inicio.dc.html",
+  "N037-Persona.dc.html",
+  "N037-Revision.dc.html",
+  "N037-Documentos.dc.html",
+  "N037-Portal.dc.html",
+  "LS-Centro.dc.html",
+  "LS-Puesto.dc.html",
+  "LS-Evaluacion.dc.html",
+  "LS-Plan.dc.html",
+  "LS-Portal.dc.html",
+  "Panel.dc.html",
+  "NOM035-Canalizacion.dc.html",
+  "V4-Quejas-Canal.dc.html",
+  "V4-Quejas-Bandeja.dc.html",
+  "V4-Quejas-Caso.dc.html",
+  "V4-Quejas-Form.dc.html",
+  "V4-Difusion.dc.html",
+  "V4-Difusion-Contenidos.dc.html",
+  "V4-Difusion-Registro.dc.html",
+  "V4-Pagina-Personas.dc.html",
+  "V4-Comp-Inicio.dc.html",
+  "V4-Comp-Escenario.dc.html",
+  "V4-Comp-Reporte.dc.html",
+  "V4-Comp-Comparar.dc.html",
+  "V4-Comp-Datos.dc.html",
+  "V4-N035-Canalizacion.dc.html",
+  "V4-Menu-Roles.dc.html",
+  "V4-Correos-2.dc.html",
+  "V4-Carteles.dc.html",
+  "V4-Quejas-Seguimiento.dc.html",
+  "V4-Comp-Prestacion.dc.html",
+  "V4-Quejas-Designar.dc.html"
+ ],
+ "notes": {
+  "t_v2": {
+   "x": 0,
+   "y": -300,
+   "text": "v2 · Una ruta guiada en lugar de un tablero",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "v2"
+  },
+  "t_v2_035": {
+   "x": 0,
+   "y": 2620,
+   "text": "NOM-035 · lo que falta después de evaluar",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "v2"
+  },
+  "t_gaps": {
+   "x": 0,
+   "y": -300,
+   "text": "Navegación, roles y pantallas que faltaban",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "gaps"
+  },
+  "t_final": {
+   "x": 0,
+   "y": -300,
+   "text": "Cierre de gaps: flujos críticos, arranque, roles, comunicaciones y estados",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "final"
+  },
+  "t_n037": {
+   "x": 0,
+   "y": -300,
+   "text": "NOM-037 · teletrabajo",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "n037"
+  },
+  "t_silla": {
+   "x": 0,
+   "y": -300,
+   "text": "Ley Silla",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "silla"
+  },
+  "t_ajustes": {
+   "x": 0,
+   "y": -300,
+   "text": "Panel y NOM-035: solo ajustes",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "ajustes"
+  },
+  "t_pend": {
+   "x": 0,
+   "y": -300,
+   "text": "Quejas y denuncias: canal, casos y formulario anónimo",
+   "kind": "title1",
+   "maxW": 4960,
+   "page": "pend"
+  },
+  "t_pend_dif": {
+   "x": 0,
+   "y": 1300,
+   "text": "NOM-035 · difusión: lo que las personas deben conocer y cómo lo pruebas",
+   "kind": "title1",
+   "maxW": 4960,
+   "page": "pend"
+  },
+  "t_pend_comp": {
+   "x": 0,
+   "y": 2800,
+   "text": "Compensación: costear una revisión de contrato, para la empresa y el sindicato",
+   "kind": "title1",
+   "maxW": 4960,
+   "page": "pend"
+  },
+  "t_pend_fin": {
+   "x": 0,
+   "y": 8340,
+   "text": "Cierre antes de desarrollo: menú por rol, correos, carteles, seguimiento y formularios faltantes",
+   "kind": "title1",
+   "maxW": 4960,
+   "page": "pend"
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Humetría",
+   "namespace": "humetria",
+   "artifact": "https://claude.ai/artifact/JA4ZDeATtbEkn7cHymwPmb",
+   "version": "1793065593-b706",
+   "copiedAt": "2026-11-03T07:40:00Z"
+  }
+ ]
+}

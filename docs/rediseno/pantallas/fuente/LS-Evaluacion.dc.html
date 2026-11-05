@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>Ley Silla · evaluación de una persona · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--r-medio:#A47F2C;--r-medio-bg:#F6EEDC;--r-medio-fg:#7A5714;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--r-medio:#D2AE62;--r-medio-bg:#33291A;--r-medio-fg:#E9C886;--raised:0 0 0 1px #1C2826}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app h3,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.xs{font-size:13px;line-height:18px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:44px;padding:0 16px;border-radius:8px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.btn-o:hover,.btn-g:hover{background:var(--muted)}
+.btn-sm{height:36px;padding:0 12px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px}
+.badge{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--sec);color:var(--fg)}
+.cond{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;padding:18px 22px;border-top:1px solid var(--border);align-items:start}
+.cond:first-child{border-top:0}
+.cond.flag{background:var(--r-medio-bg)}
+.L{width:28px;height:28px;border-radius:7px;background:var(--muted);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+.src{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:13px;font-weight:500;background:var(--muted);color:var(--mfg);border:1px solid var(--border)}
+.ops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.op{min-height:64px;padding:10px 12px;border-radius:10px;border:1px solid var(--input);background:var(--card);text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;gap:6px;font-size:14px;line-height:20px;transition:background-color 120ms,border-color 120ms}
+.op:hover{background:var(--muted)}
+.op .pt{font-size:13px;font-weight:600;color:var(--mfg)}
+.op.on{border:2px solid var(--primary);background:var(--accent);padding:9px 11px;font-weight:500}
+.op.on .pt{color:var(--primary)}
+.meter{position:relative;height:12px;border-radius:999px;background:linear-gradient(90deg,var(--off),var(--off))}
+.chk{width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.ck-on{background:var(--primary);color:var(--pfg)}
+.ck-off{border:1.5px solid var(--input)}
+@media (prefers-reduced-motion:reduce){.op{transition:none}}
+@media (max-width:1100px){.ev{grid-template-columns:minmax(0,1fr) !important}.cond{grid-template-columns:minmax(0,1fr)}.ops{grid-template-columns:minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px)">
+<div class="row" style="gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap">
+<nav aria-label="Ruta" class="row sm" style="gap: 8px; flex-grow: 1"><a href="LS-Centro.dc.html" style="color: var(--mfg)">Ley Silla</a><span class="mfg" aria-hidden="true">/</span><a href="LS-Centro.dc.html" style="color: var(--mfg)">Planta Querétaro</a><span class="mfg" aria-hidden="true">/</span><a href="#" style="color: var(--mfg)">Evaluaciones</a><span class="mfg" aria-hidden="true">/</span><span class="w5">Lic. José Antonio Chavarría</span></nav>
+<span class="sm mfg">Evaluación 2 de 6 pendientes</span>
+<a href="#" class="btn btn-o btn-sm">Siguiente persona</a>
+</div>
+
+<div class="ev" style="display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; padding: 28px 40px 48px; max-width: 1360px; margin: 0 auto; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 22px; min-width: 0">
+<header style="display: flex; flex-direction: column; gap: 6px">
+<div class="row" style="gap: 12px; flex-wrap: wrap"><h1 style="font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em">Lic. José Antonio Chavarría</h1><span class="badge">Borrador</span></div>
+<p class="sm mfg">Operador de línea · Producción · Figura 1: resultado A · tablas del DOF del 17 jul 2025</p>
+</header>
+
+<div class="row sm" style="gap: 12px; padding: 12px 16px; border-radius: 10px; background: var(--muted); flex-wrap: wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span style="flex: 1 1 300px">Cinco condicionantes vienen del puesto y dos de lo que contestó la persona. Confírmalas o corrígelas: el cambio queda registrado.</span></div>
+
+<section class="card" aria-label="Las siete condicionantes" style="overflow: hidden">
+<sc-for list="{{conds}}" as="c" hint-placeholder-count="7">
+<fieldset class="{{c.rowc}}" style="border: 0; margin: 0">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<legend class="row" style="gap: 10px; padding: 0"><span class="L">{{c.k}}</span><span class="w5">{{c.t}}</span></legend>
+<div class="row" style="gap: 6px; flex-wrap: wrap"><span class="src">{{c.src}}</span></div>
+<sc-if value="{{c.flag}}" hint-placeholder-val="{{ false }}"><p class="xs" style="color: var(--r-medio-fg)">La persona no contestó. Vale 1 hasta que la Comisión la corrija.</p></sc-if>
+</div>
+<div class="ops">
+<sc-for list="{{c.ops}}" as="o" hint-placeholder-count="3">
+<button type="button" class="{{o.cls}}" aria-pressed="{{o.pr}}" onClick="{{o.pick}}"><span>{{o.t}}</span><span class="pt">{{o.pts}}</span></button>
+</sc-for>
+</div>
+</fieldset>
+</sc-for>
+</section>
+</div>
+
+<aside style="display: flex; flex-direction: column; gap: 16px">
+<section class="card" aria-live="polite" aria-labelledby="pun" style="padding: 22px; display: flex; flex-direction: column; gap: 16px">
+<p id="pun" class="sm w6">Puntaje</p>
+<p><span style="font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em">{{total}}</span> <span class="mfg" style="font-size: 18px">de 21</span></p>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="meter" role="img" aria-label="{{meterLabel}}"><span style="position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--primary); width: {{pct}}"></span></div>
+<div class="row xs mfg" style="justify-content: space-between"><span>7 · mínimo</span><span>21 · máximo</span></div>
+</div>
+<p class="sm mfg">El nivel de riesgo se calcula al firmar, con las tablas vigentes.</p>
+</section>
+
+<section class="card" aria-labelledby="fir" style="padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<p id="fir" class="sm w6">Antes de firmar</p>
+<div class="row sm" style="gap: 10px"><span class="chk ck-on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span style="flex-grow: 1">Registro de la Comisión</span><span class="mfg">11 datos del puesto</span></div>
+<div class="row sm" style="gap: 10px"><span class="chk ck-on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span style="flex-grow: 1">Fecha de verificación</span><span class="mfg">3 nov 2026</span></div>
+<div class="row sm" style="gap: 10px"><span class="chk ck-off"></span><span style="flex-grow: 1">Integrante que evalúa</span><a href="#" class="w5">Elegir</a></div>
+<div class="row sm" style="gap: 10px"><span class="chk ck-off"></span><span style="flex-grow: 1">Otros aspectos (edad, embarazo…)</span><a href="#" class="w5">Agregar</a></div>
+<button type="button" class="btn btn-p" style="width: 100%; margin-top: 6px">Firmar evaluación</button>
+<p class="xs mfg" style="text-align: center">Después podrás canalizar, asentarla en un acta y proponer una medida.</p>
+</section>
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { a: 3, b: 2, c: 3, d: 1, e: 2, f: 1, g: 2 };
+  }
+  renderVals() {
+    const s = this.state;
+    const defs = [
+      { k: 'a', t: 'Tiempo de pie sin descanso en posición sedente', src: 'Del puesto', ops: ['30 minutos o menos', 'Más de 30 minutos y hasta una hora', 'Más de una hora'] },
+      { k: 'b', t: 'Posibilidad de cambiar de postura', src: 'Del puesto', ops: ['Sí, con frecuencia', 'Algunas veces', 'No puede cambiar de postura'] },
+      { k: 'c', t: 'Tipo de superficie de trabajo', src: 'Del puesto', ops: ['Piso blando que amortigua (tapete, antifatiga)', 'Piso firme pero no duro (madera, hule)', 'Piso duro sin recubrimiento (concreto, cerámica)'] },
+      { k: 'd', t: 'Características del calzado', src: 'Contestó la persona', ops: ['Ergonómico, con buen soporte', 'Aceptable, pero no específico', 'Inadecuado (duro, sin soporte)'] },
+      { k: 'e', t: 'Espacio disponible para moverse', src: 'Del puesto', ops: ['Amplio, permite moverse libremente', 'Limitado, sin obstáculos', 'Muy reducido, con restricción'] },
+      { k: 'f', t: 'Malestares reportados', src: 'Sin respuesta de la persona', flag: true, ops: ['Ninguno', 'Fatiga ocasional en piernas o espalda', 'Dolor lumbar frecuente, hinchazón o calambres'] },
+      { k: 'g', t: 'Pausas o tareas alternas', src: 'Del puesto', ops: ['Pausas planeadas regulares', 'Algunas pausas no programadas', 'Sin pausas, no puede sentarse'] }
+    ];
+    const conds = defs.map((d) => ({
+      k: d.k, t: d.t, src: d.src, flag: !!d.flag && s[d.k] === 1,
+      rowc: d.flag && s[d.k] === 1 ? 'cond flag' : 'cond',
+      ops: d.ops.map((t, i) => ({
+        t, pts: (i + 1) + (i === 0 ? ' punto' : ' puntos'),
+        cls: s[d.k] === i + 1 ? 'op on' : 'op',
+        pr: s[d.k] === i + 1 ? 'true' : 'false',
+        pick: () => this.setState({ [d.k]: i + 1 })
+      }))
+    }));
+    const total = s.a + s.b + s.c + s.d + s.e + s.f + s.g;
+    const pct = Math.round(((total - 7) / 14) * 100) + '%';
+    return { tema: this.props.tema ?? 'claro', conds, total, pct, meterLabel: 'Puntaje ' + total + ' de 21' };
+  }
+}
+</script>
+</body>
+</html>

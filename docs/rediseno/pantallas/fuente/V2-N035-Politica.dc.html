@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<title>NOM-035 · política de prevención · Humetría</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;display=swap">
+<style>
+.th-claro{--bg:#FBFDFC;--frame:#F2F6F5;--fg:#14211F;--card:#FFFFFF;--sec:#EDF3F1;--muted:#F1F5F4;--mfg:#56635F;--border:#DCE5E2;--input:#7E8C88;--primary:#0B7A6F;--pfg:#FFFFFF;--accent:#E5F1EE;--off:#E3EAE7;--raised:0 1px 2px rgba(20,33,31,.05),0 4px 16px -4px rgba(20,33,31,.08);--paper:0 1px 2px rgba(20,33,31,.06),0 12px 32px -12px rgba(20,33,31,.16)}
+.th-oscuro{--bg:#0F1716;--frame:#0B1211;--fg:#F1FAF8;--card:#141E1C;--sec:#1E2B28;--muted:#1A2523;--mfg:#9DAEAA;--border:#26332F;--input:#62756F;--primary:#3CCFBD;--pfg:#0F1716;--accent:#213330;--off:#24312E;--raised:0 0 0 1px #1C2826;--paper:0 0 0 1px #26332F}
+body{margin:0}
+.app{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;background:var(--frame);color:var(--fg);font-size:16px;line-height:24px}
+.app *{box-sizing:border-box}
+.app a{color:var(--primary);text-decoration:none}
+.app button{font-family:inherit;font-size:inherit;color:inherit}
+.app button:focus-visible,.app a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.app h1,.app h2,.app p{margin:0}
+.sm{font-size:14px;line-height:20px}
+.xs{font-size:13px;line-height:18px}
+.mfg{color:var(--mfg)}
+.w5{font-weight:500}.w6{font-weight:600}
+.row{display:flex;align-items:center}
+.btn{height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none !important;background:transparent;color:var(--fg)}
+.btn-p{background:var(--primary);color:var(--pfg) !important}
+.btn-o{border-color:var(--input);background:var(--card);color:var(--fg) !important}
+.btn-g:hover,.btn-o:hover{background:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.opt{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 16px;border-radius:12px;border:1px solid var(--input);background:var(--card);cursor:pointer;font-size:17px;line-height:24px;text-align:left;width:100%;transition:background-color 120ms,border-color 120ms}
+.opt:hover{background:var(--muted)}
+.opt.on{border:2px solid var(--primary);background:var(--accent);font-weight:500;padding:11px 15px}
+.radio{width:20px;height:20px;border-radius:999px;border:1.5px solid var(--input);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--card)}
+.opt.on .radio{border:2px solid var(--primary)}
+.opt.on .radio::after{content:"";width:10px;height:10px;border-radius:999px;background:var(--primary)}
+.ck{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--input);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--card)}
+.opt.on .ck{background:var(--primary);border-color:var(--primary)}
+.opt.on .ck::after{content:"";width:9px;height:5px;border-left:2.5px solid var(--pfg);border-bottom:2.5px solid var(--pfg);transform:rotate(-45deg) translate(1px,-1px)}
+.bar{height:6px;border-radius:999px;background:var(--off);overflow:hidden}
+.bar span{display:block;height:100%;border-radius:999px;background:var(--primary);transition:width 300ms}
+.paper{background:var(--card);border-radius:6px;box-shadow:var(--paper);padding:40px 44px;display:flex;flex-direction:column;gap:16px;font-size:15px;line-height:24px}
+.sec{padding:10px 12px;margin:0 -12px;border-radius:8px;transition:background-color 200ms}
+.sec.now{background:var(--accent)}
+.ph{height:10px;border-radius:999px;background:var(--off);display:block}
+.inc{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--border);color:var(--mfg);background:var(--card)}
+.inc.ok{background:var(--accent);border-color:transparent;color:var(--primary)}
+@media (prefers-reduced-motion:reduce){.opt,.bar span,.sec{transition:none}}
+@media (max-width:1100px){.cols{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</helmet>
+<div class="app th-{{tema}}" style="min-height: 100vh; padding: 8px">
+<div style="background: var(--bg); border-radius: 14px; box-shadow: var(--raised); min-height: calc(100vh - 16px); display: flex; flex-direction: column">
+<div class="row" style="gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border)">
+<a href="V2-Ruta-N035.dc.html" class="btn btn-g" style="height: 36px; padding: 0 12px; font-size: 14px; color: var(--fg) !important"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>Guardar y volver a la ruta</a>
+<span class="sm mfg" style="flex-grow: 1">NOM-035 · Etapa 1 · Política de prevención</span>
+<span class="row sm mfg" style="gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Se guarda en cada respuesta</span>
+</div>
+
+<div class="cols" style="display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 56px; padding: 40px 48px 56px; max-width: 1360px; width: 100%; margin: 0 auto; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="row sm" style="justify-content: space-between"><span class="w5">{{counter}}</span><span class="mfg">{{left}}</span></div>
+<div class="bar" aria-hidden="true"><span style="width: {{pct}}"></span></div>
+</div>
+
+<sc-if value="{{inQ}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 22px">
+<div><p class="sm w6" style="color: var(--primary); margin-bottom: 6px">{{q.tag}}</p><h1 style="font-size: 26px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em">{{q.t}}</h1><p class="mfg" style="margin-top: 8px">{{q.h}}</p></div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px"><legend style="position: absolute; left: -9999px">{{q.t}}</legend>
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="3"><button type="button" class="{{o.cls}}" aria-pressed="{{o.pr}}" onClick="{{o.pick}}"><span class="{{o.mark}}"></span><span>{{o.t}}</span></button></sc-for>
+</fieldset>
+<div class="row" style="gap: 12px; padding-top: 8px">
+<button type="button" class="btn btn-o" onClick="{{back}}" disabled="{{first}}">Anterior</button>
+<button type="button" class="btn btn-p" onClick="{{next}}" disabled="{{empty}}">Siguiente</button>
+<span class="sm mfg" style="margin-left: 8px">Puedes cambiarlo después</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{fin}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<span style="width: 52px; height: 52px; border-radius: 999px; background: var(--primary); color: var(--pfg); display: inline-flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+<h1 style="font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em">Tu política cubre lo que pide la norma</h1>
+<p class="mfg" style="font-size: 17px; line-height: 26px">Léela a la derecha y edita lo que quieras. Al publicarla, le llega a las 30 personas de Oficina para que confirmen que la leyeron, y queda en tu expediente.</p>
+<div class="row" style="gap: 12px; flex-wrap: wrap"><a href="V2-Ruta-N035.dc.html" class="btn btn-p">Publicar para 30 personas</a><button type="button" class="btn btn-o">Descargar en Word</button></div>
+<button type="button" class="btn btn-g" style="align-self: flex-start; height: 40px; font-size: 14px" onClick="{{restart}}">Ver de nuevo el prototipo</button>
+</div>
+</sc-if>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+<div class="row" style="gap: 8px; flex-wrap: wrap" aria-label="Lo que debe cubrir la política">
+<sc-for list="{{incs}}" as="i" hint-placeholder-count="5"><span class="{{i.cls}}">{{i.t}}</span></sc-for>
+</div>
+<article class="paper" aria-label="Vista previa de la política">
+<div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 14px; border-bottom: 1px solid var(--border)"><p class="xs mfg w5">Demo NOM-035 · Oficina</p><h2 style="font-size: 22px; line-height: 30px; font-weight: 600">Política de prevención de riesgos psicosociales</h2></div>
+<div class="{{c0}}"><p class="w6">Compromiso</p><p>Esta empresa se compromete a prevenir los factores de riesgo psicosocial, prevenir la violencia laboral y promover un entorno organizacional favorable. {{tFirma}}</p></div>
+<div class="{{c1}}"><p class="w6">Cómo avisar de violencia o un trato injusto</p><sc-if value="{{h1}}" hint-placeholder-val="{{ false }}"><p>Cualquier persona puede avisar por {{tMed}}. Nadie recibirá represalias por hacerlo.</p></sc-if><sc-if value="{{n1}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; gap: 8px; padding-top: 6px"><span class="ph" style="width: 90%"></span><span class="ph" style="width: 64%"></span></div></sc-if></div>
+<div class="{{c2}}"><p class="w6">Quién atiende</p><sc-if value="{{h2}}" hint-placeholder-val="{{ false }}"><p>{{tQuien}}</p></sc-if><sc-if value="{{n2}}" hint-placeholder-val="{{ true }}"><div style="padding-top: 6px"><span class="ph" style="width: 80%"></span></div></sc-if></div>
+<div class="{{c3}}"><p class="w6">Entorno favorable</p><sc-if value="{{h3}}" hint-placeholder-val="{{ false }}"><p>Para que el trabajo sea un buen lugar, nos comprometemos a: {{tEnt}}.</p></sc-if><sc-if value="{{n3}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; gap: 8px; padding-top: 6px"><span class="ph" style="width: 86%"></span><span class="ph" style="width: 52%"></span></div></sc-if></div>
+<div class="{{c4}}"><p class="w6">Cómo la damos a conocer</p><sc-if value="{{h4}}" hint-placeholder-val="{{ false }}"><p>Esta política se comparte {{tDif}}.</p></sc-if><sc-if value="{{n4}}" hint-placeholder-val="{{ true }}"><div style="padding-top: 6px"><span class="ph" style="width: 70%"></span></div></sc-if></div>
+</article>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 0, firma: 0, med: [0, 2], quien: null, ent: [], dif: [0] };
+  }
+  renderVals() {
+    const s = this.state;
+    const Q = [
+      { k: 'firma', multi: false, tag: 'Compromiso', t: '¿Quién firma la política en nombre de la empresa?', h: 'Quien firma muestra que el compromiso viene de arriba.', o: ['La dirección general', 'La dirección de Recursos Humanos', 'El dueño o la dueña'] },
+      { k: 'med', multi: true, tag: 'Violencia laboral', t: '¿Cómo puede alguien avisar de violencia o un trato injusto sin miedo?', h: 'Elige todos los que vas a ofrecer. Al menos uno debe ser anónimo.', o: ['Buzón anónimo en Humetría', 'Correo a Recursos Humanos', 'Una persona de confianza designada', 'Línea telefónica externa'] },
+      { k: 'quien', multi: false, tag: 'Quejas', t: '¿Quién atiende esos avisos y en cuánto tiempo responde?', h: 'Un plazo claro da confianza para usar el canal.', o: ['Recursos Humanos, en 5 días hábiles', 'Un comité interno, en 10 días hábiles', 'Una persona externa, en 10 días hábiles'] },
+      { k: 'ent', multi: true, tag: 'Entorno favorable', t: '¿Qué te comprometes a hacer para que el trabajo sea un buen lugar?', h: 'Elige lo que de verdad vas a cumplir.', o: ['Reconocer el buen trabajo', 'Explicar con claridad qué toca a cada quien', 'Respetar horarios y descansos', 'Capacitar a quien lo necesite', 'Pedir la opinión del equipo'] },
+      { k: 'dif', multi: true, tag: 'Difusión', t: '¿Cómo la vas a dar a conocer?', h: 'El portal de Humetría deja constancia de quién la leyó.', o: ['En el portal de Humetría, con acuse', 'En un mural o pizarrón', 'En la inducción de quien entra', 'En reuniones de equipo'] }
+    ];
+    const fin = s.step >= 5;
+    const q = Q[Math.min(s.step, 4)];
+    const val = s[q.k];
+    const opts = q.o.map((t, i) => {
+      const on = q.multi ? val.indexOf(i) >= 0 : val === i;
+      return {
+        t, cls: on ? 'opt on' : 'opt', pr: on ? 'true' : 'false', mark: q.multi ? 'ck' : 'radio',
+        pick: () => {
+          if (q.multi) this.setState({ [q.k]: on ? val.filter((x) => x !== i) : val.concat([i]) });
+          else this.setState({ [q.k]: i });
+        }
+      };
+    });
+    const list = (arr, src) => {
+      const xs = arr.slice().sort().map((i) => src[i].charAt(0).toLowerCase() + src[i].slice(1));
+      if (xs.length <= 1) return xs.join('');
+      return xs.slice(0, -1).join(', ') + ' y ' + xs[xs.length - 1];
+    };
+    const answered = (k) => (Array.isArray(s[k]) ? s[k].length > 0 : s[k] !== null);
+    const passed = (n) => fin || s.step > n;
+    const firmas = ['La firma la dirección general.', 'La firma la dirección de Recursos Humanos.', 'La firma el dueño o la dueña de la empresa.'];
+    const quienes = ['Recursos Humanos atiende cada aviso y responde en un máximo de 5 días hábiles, con discreción.', 'Un comité interno atiende cada aviso y responde en un máximo de 10 días hábiles, con discreción.', 'Una persona externa atiende cada aviso y responde en un máximo de 10 días hábiles, con discreción.'];
+    const difs = ['en el portal de Humetría, donde cada persona confirma que la leyó', 'en un mural o pizarrón', 'en la inducción de quien entra', 'en reuniones de equipo'];
+    const names = ['Riesgos psicosociales', 'Violencia laboral', 'Quejas', 'Entorno favorable', 'Difusión'];
+    const incs = names.map((t, i) => ({ t, cls: passed(i) ? 'inc ok' : 'inc' }));
+    const cls = (n) => (s.step === n && !fin ? 'sec now' : 'sec');
+    return {
+      tema: this.props.tema ?? 'claro',
+      inQ: !fin, fin, q, opts, first: s.step === 0, empty: !answered(q.k),
+      counter: fin ? 'Lista para revisar' : 'Pregunta ' + (s.step + 1) + ' de 5',
+      left: fin ? '' : 'Faltan unos ' + (10 - s.step * 2) + ' min',
+      pct: fin ? '100%' : Math.round((s.step / 5) * 100) + '%',
+      incs,
+      c0: cls(0), c1: cls(1), c2: cls(2), c3: cls(3), c4: cls(4),
+      tFirma: firmas[s.firma],
+      h1: s.med.length > 0, n1: s.med.length === 0, tMed: list(s.med, Q[1].o),
+      h2: s.quien !== null, n2: s.quien === null, tQuien: s.quien !== null ? quienes[s.quien] : '',
+      h3: s.ent.length > 0, n3: s.ent.length === 0, tEnt: list(s.ent, Q[3].o),
+      h4: s.dif.length > 0, n4: s.dif.length === 0, tDif: list(s.dif, difs),
+      next: () => this.setState({ step: s.step + 1 }),
+      back: () => this.setState({ step: Math.max(0, s.step - 1) }),
+      restart: () => this.setState({ step: 0, firma: 0, med: [0, 2], quien: null, ent: [], dif: [0] })
+    };
+  }
+}
+</script>
+</body>
+</html>
