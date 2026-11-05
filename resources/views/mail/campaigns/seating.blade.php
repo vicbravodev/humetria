@@ -1,5 +1,5 @@
 {{-- The survey about seats and rests (criterio C-19): anonymous, short, from the company; no NOM-035. --}}
-<x-mail::message :company="$company" preheader="Unos {{ $minutes }} minutos, desde su celular. Sus respuestas son anónimas.">
+<x-mail::message :company="$company" :confidential="true" preheader="Unos {{ $minutes }} minutos, desde su celular. Sus respuestas son anónimas.">
 <x-slot:reason>Recibe este correo porque {{ $company->tradeName }} lo registró como parte de su centro de trabajo.@if ($contact) ¿Dudas? Escriba a <a href="mailto:{{ $contact }}">{{ $contact }}</a>.@endif</x-slot:reason>
 <h1>Cuéntenos cómo son los asientos y las pausas en su trabajo</h1>
 <p>Hola, {{ $name }}:</p>

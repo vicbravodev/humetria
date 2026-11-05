@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -62,7 +63,7 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
                     TenantRole::Complaints => 'podrás atender, de forma confidencial, las quejas y denuncias que se te asignen en el canal de la empresa.',
                     TenantRole::Viewer => 'podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.',
                 },
-                'initials' => self::initials($this->tradeName),
+                'initials' => CompanySummary::initialsOf($this->tradeName),
                 'size' => $this->size(),
                 'expiresOn' => $expiresOn->isoFormat('D [de] MMMM'),
                 'days' => (int) round(now()->diffInDays($this->expiresAt)),
@@ -77,13 +78,5 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
 
         return trans_choice('{1} :count centro de trabajo|[2,*] :count centros de trabajo', $this->workCenters)
             .' · '.trans_choice('{0} sin personas|{1} :count persona|[2,*] :count personas', $this->people);
-    }
-
-    /** "Autopartes Demo" → "AD": the first letters of its first two words. */
-    private static function initials(string $name): string
-    {
-        $words = array_slice(preg_split('/\s+/', trim($name)) ?: [], 0, 2);
-
-        return mb_strtoupper(implode('', array_map(fn (string $word): string => mb_substr($word, 0, 1), $words)));
     }
 }

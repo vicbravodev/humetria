@@ -25,8 +25,5 @@
 </table>
 <x-mail::action>
 <x-mail::button :url="$actionUrl">{{ $actionText }}</x-mail::button>
-@if ($remind)
-<x-mail::button :url="$actionUrl" color="outline">Ver avance</x-mail::button>
-@endif
 </x-mail::action>
 </x-mail::message>

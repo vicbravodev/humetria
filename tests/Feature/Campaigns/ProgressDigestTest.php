@@ -93,7 +93,6 @@ it('tells the owner each Monday how far each open evaluation got, area by area',
         ->toMatch('#Administración</td>\s*<td[^>]*>\s*<strong[^>]*>6</strong> <span[^>]*>de 14</span>#')
         ->toMatch('#Dirección</td>\s*<td[^>]*>\s*<strong[^>]*>4</strong> <span[^>]*>de 8</span>#')
         ->toMatch('#Ventas</td>\s*<td[^>]*>\s*<strong[^>]*>8</strong> <span[^>]*>de 38</span>#')
-        ->toContain('Ver avance')
         ->toContain('Te mandamos este resumen cada lunes mientras haya una evaluación en curso.')
         ->toContain('alt="Humetría"');
     Log::shouldHaveReceived('info')->with('campaign.digest_sent', ['campaign_id' => $campaign->id]);

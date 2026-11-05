@@ -85,6 +85,17 @@ img {
     line-height: 26px;
 }
 
+/* A company without a logo: its initials in the accent badge, then its name (boards V3-Correos and V4-Correos-2). */
+.initials {
+    font-size: 13px;
+    line-height: 32px;
+    width: 32px;
+}
+
+.company-cell {
+    padding-left: 10px;
+}
+
 .confidential {
     color: #0b7a6f;
     font-size: 13px;

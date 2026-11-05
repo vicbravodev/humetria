@@ -1,5 +1,5 @@
 {{-- A new link to whoever already got one and still has a guide pending, with the last day up front. --}}
-<x-mail::message :company="$company" preheader="Toma unos {{ $minutes }} minutos y es confidencial.">
+<x-mail::message :company="$company" :confidential="true" preheader="Toma unos {{ $minutes }} minutos y es confidencial.">
 <x-slot:reason>Le escribimos porque su evaluación sigue pendiente. Si ya la contestó, ignore este mensaje.</x-slot:reason>
 <h1>{{ $title }}</h1>
 <p>Hola, {{ $name }}:</p>
