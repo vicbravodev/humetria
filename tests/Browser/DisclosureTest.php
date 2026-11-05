@@ -73,24 +73,29 @@ function publishedPolicyForBrowser(): string
     return resolve(PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $user->id)->id;
 }
 
-it('shows the board with the center that has no policy yet', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-Difusion): the six things of 5.7 × the centers, in place of the board of requirements and its tabs.
+it('shows what the people must know, by center, with the next step', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create(['name' => 'Planta Querétaro']);
 
     visitPage('disclosure/index', "{$url}/disclosure", $dark, $mobile)
-        ->assertSee('Política y difusión')
+        ->assertSee('Lo que tus personas deben conocer')
+        ->assertSee('1 de 6 listas')
+        ->assertSee('Escribe tu política de prevención')
         ->assertSee('Planta Querétaro')
-        ->assertSee('Aún no hay una política publicada para este centro.')
-        ->assertSee('Falta');
+        ->assertSee('Medidas contra la violencia laboral')
+        ->assertSee('Escribir · 5 min')
+        ->assertSee('Página de las personas')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
-it('shows the board with the center the policy reached', function (bool $dark, bool $mobile): void {
+it('marks the policy published in the center it reached', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     publishedPolicyForBrowser();
 
     visitPage('disclosure/index', "{$url}/disclosure", $dark, $mobile)
-        ->assertSee('Cumple')
-        ->assertSee('Versión 1, publicada el');
+        ->assertSee('Publicada, versión 1 del')
+        ->assertSee('Sin difundir');
 })->with($looks);
 
 it('shows the version in force and its history', function (bool $dark, bool $mobile): void {

@@ -66,11 +66,33 @@ export type BoardRequirement = {
     detail: string | null;
 };
 
+/** Where one of the six things of 5.7 stands in a center (board V4-Difusion). */
+export type MatrixCell =
+    | 'done'
+    | 'missing'
+    | 'undelivered'
+    | 'ready'
+    | 'waiting'
+    | 'not_applicable';
+
 export type BoardCenter = {
     id: string;
     name: string;
     state: Choice<'met' | 'notice' | 'missing'>;
     requirements: BoardRequirement[];
+    /** By thing of 5.7: a, b, c, d, e and f. */
+    cells: Record<string, MatrixCell>;
+};
+
+/** A row of the matrix: one of the six things the people must know, with its way in for whoever manages. */
+export type MatrixItem = {
+    key: string;
+    numeral: string;
+    label: string;
+    caption: string;
+    /** Its writing started and was left. */
+    draft: boolean;
+    action: { label: string; href: string; primary: boolean } | null;
 };
 
 /** How many work centers are in each overall state. */
@@ -78,7 +100,18 @@ export type BoardSummary = { met: number; notice: number; missing: number };
 
 export type DisclosureIndexProps = {
     summary: BoardSummary;
+    /** The columns of the matrix, a page at a time. */
     centers: Paginated<BoardCenter>;
+    /** The six rows, a fixed catalog. */
+    items: MatrixItem[];
+    progress: { ready: number; total: number; minutes: number };
+    next: {
+        item: string;
+        title: string;
+        text: string;
+        action: { label: string; href: string };
+    } | null;
+    reach: { page: boolean; confirmed: number; people: number };
     can: { manage: boolean };
 };
 

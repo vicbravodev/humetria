@@ -1,15 +1,19 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
-import DisclosureTabs from '@/components/disclosure/disclosure-tabs';
 import ResultsTable from '@/components/disclosure/results-table';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import type { ResultsProps } from '@/types';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { disclosureCrumbs } from '@/lib/nom035/crumbs';
 
 export default function Results({ evaluations }: ResultsProps) {
+    const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [{ title: 'NOM-035' }, { title: 'Política y difusión' }],
+        breadcrumbs: disclosureCrumbs(tenantSlug, {
+            title: 'Resultados para las personas',
+        }),
     });
 
     return (
@@ -21,7 +25,6 @@ export default function Results({ evaluations }: ResultsProps) {
                     title="Resultados para las personas"
                     description="Las personas tienen derecho a consultar el resultado de la evaluación (numeral 7.8). Tú decides cuándo se publica cada una: solo se muestran cifras del centro completo y de grupos grandes, nunca de áreas pequeñas."
                 />
-                <DisclosureTabs active="results" />
                 {evaluations.total === 0 ? (
                     <EmptyState
                         icon={ClipboardList}
