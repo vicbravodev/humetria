@@ -1,5 +1,10 @@
 import { BookOpenText, MessageSquareWarning } from 'lucide-react';
-import { index as complaintCases, procedure } from '@/routes/tenant/complaints';
+import {
+    index as complaintCases,
+    evidence,
+    poster,
+    procedure,
+} from '@/routes/tenant/complaints';
 import { show as channel } from '@/routes/tenant/complaints/channel';
 import { index as complaintHandlers } from '@/routes/tenant/complaints/handlers';
 import type { NavItem, NavTenant } from '@/types';
@@ -20,7 +25,11 @@ export const complaints = (tenant: NavTenant): NavItem => ({
             : []),
         ...(tenant.can.manage_complaint_channel
             ? [
-                  { title: 'Canal', href: channel(tenant.slug) },
+                  {
+                      title: 'Canal',
+                      href: channel(tenant.slug),
+                      also: [poster(tenant.slug), evidence(tenant.slug)],
+                  },
                   {
                       title: 'Quiénes atienden',
                       href: complaintHandlers(tenant.slug),
