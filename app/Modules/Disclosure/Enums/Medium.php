@@ -15,6 +15,8 @@ enum Medium: string
     case Brochure = 'brochure';
     case Meeting = 'meeting';
     case Other = 'other';
+    /** Paper signatures of the policy, for who has no email: how many signed, and the scanned sheet (decisión A11). */
+    case SignedList = 'signed_list';
 
     public function label(): string
     {
@@ -24,6 +26,7 @@ enum Medium: string
             self::Brochure => 'Folleto',
             self::Meeting => 'Reunión',
             self::Other => 'Otro medio',
+            self::SignedList => 'Lista de firmas',
         };
     }
 }

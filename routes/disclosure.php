@@ -37,6 +37,7 @@ Route::post('admin/{tenant:slug}/disclosure/dissemination/{document}/reminders',
 
 // The physical means (poster, bulletin, leaflet, meeting) RH records as evidence of the disclosure (num. 10.2); never changed or deleted.
 Route::post('admin/{tenant:slug}/disclosure/dissemination/records', [DisseminationController::class, 'storeRecord'])->where('tenant', $notReserved)->name('tenant.disclosure.dissemination.records.store');
+Route::get('admin/{tenant:slug}/disclosure/dissemination/records/{record}/evidence', [DisseminationController::class, 'evidence'])->where('tenant', $notReserved)->whereUuid('record')->name('tenant.disclosure.dissemination.records.evidence');
 
 // The permanent link to the page of the workers: a credential, so only whoever manages sees it. Nothing here deletes it.
 Route::get('admin/{tenant:slug}/disclosure/page', [PageLinkController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.page');

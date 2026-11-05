@@ -57,6 +57,13 @@ return [
 
     'intervention_files' => env('INTERVENTION_FILES_DISK', 'local'),
 
+    /*
+    | The disk of the NOM-035 evidence of the disclosure (the scanned sheet of paper signatures, the photo of a poster).
+    | Private: never a public URL; files are served only through the app, after checking who may see them.
+    */
+
+    'disclosure_files' => env('DISCLOSURE_FILES_DISK', 'local'),
+
     'disks' => [
 
         'local' => [

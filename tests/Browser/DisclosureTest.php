@@ -189,16 +189,44 @@ function askedForBrowser(int $people = 3): void
     App\Modules\Disclosure\Models\Acknowledgment::query()->where('document_id', $policy->id)->where('employee_id', $staff[0]->id)->update(['channel' => 'portal', 'acknowledged_at' => now()]);
 }
 
-it('follows who confirmed the policy', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (board V4-Difusion-Registro): the evidence of the disclosure, with who confirmed by center on top.
+it('follows who confirmed the policy, by center', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
     askedForBrowser();
 
     visitPage('disclosure/dissemination', "{$url}/disclosure/dissemination", $dark, $mobile)
-        ->assertSee('Difusión de la política')
-        ->assertSee('1 de 3 personas confirmaron')
+        ->assertSee('Cómo pruebas que lo difundiste')
+        ->assertSee('Quién confirmó que leyó la política')
+        ->assertSee('1 de 3 personas')
+        ->assertSee('Planta Querétaro')
+        ->assertSee('Recordar a 2 personas')
+        ->assertSee('Resultados para las personas')
         ->assertSee('Pendientes')
-        ->assertSee('Recordar a los pendientes');
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
+
+it('says why a view of the confirmations is empty, and «Nadie coincide» only for a search', function (): void {
+    $url = signInToPanel();
+    askedForBrowser(1);
+
+    visit("{$url}/disclosure/dissemination?status=pending")
+        ->assertSee('Nadie tiene pendiente confirmar')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+    visit("{$url}/disclosure/dissemination?q=zzzz")
+        ->assertSee('Nadie coincide');
+});
+
+it('registers paper signatures with how many signed and the scanned sheet', function (): void {
+    $url = signInToPanel();
+    askedForBrowser(1);
+
+    visit("{$url}/disclosure/dissemination")
+        ->press('Registrar firmas en papel')
+        ->assertSee('Cuántas personas firmaron')
+        ->assertSee('Arrastra la hoja escaneada aquí o elígela')
+        ->assertNoJavaScriptErrors();
+});
 
 it('records paper acknowledgments of the people ticked', function (): void {
     $url = signInToPanel();
@@ -217,9 +245,10 @@ it('opens the form to record a means of disclosure', function (): void {
     askedForBrowser(1);
 
     visit("{$url}/disclosure/dissemination")
-        ->assertSee('Aún no registras ningún medio')
-        ->press('Registrar un medio')
+        ->assertSee('Aún no registras ninguno')
+        ->click('section[aria-labelledby="media"] button:has-text("Cartel")')
         ->assertSee('Cómo se dio a conocer')
+        ->assertSee('Arrastra la foto o el PDF aquí o elígelo')
         ->assertSee('Qué cubrió (numeral 5.7)')
         ->press('Cancelar')
         ->assertDontSee('Cómo se dio a conocer');
@@ -233,7 +262,7 @@ it('shows the physical means recorded', function (bool $dark, bool $mobile): voi
     visitPage('disclosure/dissemination', "{$url}/disclosure/dissemination", $dark, $mobile)
         ->assertSee('Medios físicos')
         ->assertSee('Cartel')
-        ->assertSee('Registrar un medio');
+        ->assertSee('Registrar otro');
 })->with($looks);
 
 it('offers to create the link of the page of the workers', function (bool $dark, bool $mobile): void {

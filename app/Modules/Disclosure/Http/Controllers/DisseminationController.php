@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Http\Controllers;
 
+use App\Actions\RecordAudit;
 use App\Http\Controllers\Controller;
 use App\Modules\Disclosure\Actions\RecordDissemination;
 use App\Modules\Disclosure\Actions\RecordManualAcknowledgments;
@@ -12,8 +13,10 @@ use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Http\Requests\DisseminationRecordRequest;
 use App\Modules\Disclosure\Http\Requests\ManualAcknowledgmentsRequest;
+use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Support\AckProgress;
+use App\Modules\Disclosure\Support\DisclosureFiles;
 use App\Modules\Disclosure\Support\DisseminationPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +25,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The follow-up of the disclosure (criterio C-53): who confirmed the policy and who did not, the paper acknowledgments RH
@@ -73,9 +77,26 @@ final class DisseminationController extends Controller
 
     public function storeRecord(DisseminationRecordRequest $request, mixed $tenant, RecordDissemination $record): RedirectResponse
     {
-        $record->handle($request->string('work_center_id')->toString(), $request->string('medium')->toString(), $request->items(), $request->string('done_on')->toString(), $request->string('note')->toString(), $request->userId());
+        $record->handle($request->string('work_center_id')->toString(), $request->string('medium')->toString(), $request->items(), $request->string('done_on')->toString(), $request->string('note')->toString(), $request->userId(), $request->evidenceFile(), $request->signatures());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Medio registrado.']);
 
         return redirect()->route('tenant.disclosure.dissemination', $tenant);
+    }
+
+    /**
+     * The photo or PDF of a means, for whoever manages the disclosure: a sheet of signatures carries names, so seeing it is
+     * audited. One of another company, or with no file, is a 404.
+     */
+    public function evidence(mixed $tenant, string $record, DisclosureFiles $files, RecordAudit $audit): StreamedResponse
+    {
+        Gate::authorize('manage-disclosure');
+        $found = DisseminationRecord::query()->findOrFail($record);
+        abort_if($found->evidence_path === null, 404);
+
+        $audit->handle('disclosure.evidence_viewed', $found, ['record_id' => $found->id, 'medium' => $found->medium->value]);
+        $response = $files->stream($found->evidence_path);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 }

@@ -1,9 +1,8 @@
-import { Users } from 'lucide-react';
 import { useState } from 'react';
 import AckRow from '@/components/disclosure/ack-row';
 import AckToolbar from '@/components/disclosure/ack-toolbar';
 import PaperDialog from '@/components/disclosure/paper-dialog';
-import EmptyState from '@/components/humetria/empty-state';
+import AckEmpty from '@/components/disclosure/ack-empty';
 import Pagination from '@/components/humetria/pagination';
 import SearchField from '@/components/humetria/search-field';
 import { useQueryFilters } from '@/hooks/use-query-filters';
@@ -64,9 +63,7 @@ export default function AckList({
                 onRecord={() => setRecording(true)}
             />
             {people.data.length === 0 ? (
-                <EmptyState icon={Users} title="Nadie coincide">
-                    Prueba con otro nombre o cambia de vista.
-                </EmptyState>
+                <AckEmpty filters={filters} />
             ) : (
                 <ul className="flex flex-col divide-y rounded-lg border bg-card">
                     {people.data.map((person) => (

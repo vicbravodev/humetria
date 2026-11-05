@@ -69,7 +69,7 @@ final readonly class Matrix
         $cells = [];
 
         foreach (self::ORDER as $item) {
-            $cells[$item] = $item === 'e' ? self::results($facts->results) : self::written($facts, $item);
+            $cells[$item] = $item === 'e' ? self::resultsState($facts->results) : self::written($facts, $item);
         }
 
         return $cells;
@@ -139,7 +139,8 @@ final readonly class Matrix
         };
     }
 
-    private static function results(?ResultsFact $fact): string
+    /** Where the results for the people of a center stand: ready to publish, published, waiting for a closed evaluation or not applicable. */
+    public static function resultsState(?ResultsFact $fact): string
     {
         return match (true) {
             $fact !== null && ! $fact->applies => 'not_applicable',

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import CoveredItemsField from '@/components/disclosure/covered-items-field';
+import EvidenceField from '@/components/disclosure/evidence-field';
 import Combobox from '@/components/humetria/combobox';
 import ChoiceField from '@/components/humetria/choice-field';
 import DatePicker from '@/components/humetria/date-picker';
@@ -7,7 +9,7 @@ import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { ITEMS_57, MEDIA } from '@/lib/disclosure';
+import { MEDIA } from '@/lib/disclosure';
 import { serverSource } from '@/lib/server-options';
 import { options } from '@/routes/tenant/work-centers';
 import { store } from '@/routes/tenant/disclosure/dissemination/records';
@@ -20,20 +22,23 @@ export default function RecordDialog({
     open,
     onOpenChange,
     today,
+    initialMedium = 'poster',
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     today: string;
+    /** The one chosen from «Registrar otro» (board V4-Difusion-Registro). */
+    initialMedium?: string;
 }) {
     const tenantSlug = useTenantSlug();
-    const [medium, setMedium] = useState('poster');
+    const [medium, setMedium] = useState(initialMedium);
 
     return (
         <FormDialog
             open={open}
             onOpenChange={onOpenChange}
             title="Registrar un medio"
-            description="Un cartel, un boletín, un folleto o una reunión cuentan como evidencia de que las personas conocen la información (numeral 10.2). Una vez registrado no se puede cambiar."
+            description="Un cartel, un boletín, un folleto o una reunión cuentan como evidencia de que las personas conocen la información (numeral 10.2). Eliges uno, subes una foto o un PDF y marcas lo que cubrió. Una vez registrado no se puede cambiar."
             form={store.form(tenantSlug)}
             submit="Registrar"
         >
@@ -59,37 +64,11 @@ export default function RecordDialog({
                         columns={2}
                         error={errors['medium']}
                     />
-                    <fieldset className="grid gap-2">
-                        <legend className="mb-1 text-sm font-medium">
-                            Qué cubrió (numeral 5.7)
-                        </legend>
-                        {ITEMS_57.map(({ value, label }) => (
-                            <label
-                                key={value}
-                                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-4 py-2.5 hover:bg-muted has-checked:border-primary has-checked:bg-accent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
-                            >
-                                <input
-                                    type="checkbox"
-                                    name="covered_items[]"
-                                    value={value}
-                                    defaultChecked={value === 'a'}
-                                    className="size-5 shrink-0 accent-primary"
-                                />
-                                <span>
-                                    <span className="mr-1 font-medium">
-                                        {value})
-                                    </span>
-                                    {label}
-                                </span>
-                            </label>
-                        ))}
-                        <InputError
-                            message={
-                                errors['covered_items'] ??
-                                errors['covered_items.0']
-                            }
-                        />
-                    </fieldset>
+                    <CoveredItemsField
+                        error={
+                            errors['covered_items'] ?? errors['covered_items.0']
+                        }
+                    />
                     <div className="grid gap-2">
                         <Label htmlFor="record-day">Día</Label>
                         <DatePicker
@@ -101,6 +80,13 @@ export default function RecordDialog({
                         />
                         <InputError message={errors['done_on']} />
                     </div>
+                    <EvidenceField
+                        id="record-evidence"
+                        label="Foto o PDF (opcional)"
+                        title="Arrastra la foto o el PDF aquí o elígelo"
+                        hint="PDF, JPG o PNG"
+                        error={errors['evidence']}
+                    />
                     <div className="grid gap-2">
                         <Label htmlFor="record-note">Nota (opcional)</Label>
                         <Textarea

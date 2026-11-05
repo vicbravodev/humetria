@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 /** The queries of each screen, which do not depend on how many centers or people there are. */
 const BOARD_QUERIES = 30;
 const WORKERS_QUERIES = 25;
-const FOLLOW_UP_QUERIES = 28;
+const FOLLOW_UP_QUERIES = 38;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

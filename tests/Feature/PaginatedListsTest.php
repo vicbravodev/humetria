@@ -203,7 +203,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         $policy = App\Modules\Disclosure\Models\Document::factory()->published()->policy()->create(['tenant_id' => $tenant->id]);
 
         return route('tenant.disclosure.dissemination', $tenant);
-    }, ['people']],
+    }, ['people', 'records', 'centers']],
     'the public page of the workers' => ['disclosure-public/centers', function () {
         [$tenant] = listsCompany();
         WorkCenter::factory()->for($tenant)->create();
