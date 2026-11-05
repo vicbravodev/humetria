@@ -6,7 +6,7 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Str;
 
-it('closes expired evaluations hourly, sends the Monday digests, refreshes the city database and runs the queue housekeeping, and reviews NOM-037 at 07:00 and digests it at 08:00 display time', function (): void {
+it('closes expired evaluations hourly, sends the Monday digests, refreshes the city database and runs the queue housekeeping, and reviews NOM-037 at 07:00 and digests it and reminds of unanswered accidents at 08:00 display time', function (): void {
     $events = collect(app(Schedule::class)->events())
         ->mapWithKeys(fn (Event $event): array => [Str::after($event->command ?? '', "'artisan' ") => $event->expression])
         ->all();
@@ -18,6 +18,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'disclosure:send-digests' => '45 9 * * 1',
         'telework:schedule-reviews' => '0 7 * * *',
         'telework:send-digests' => '0 8 * * *',
+        'telework:remind-accidents' => '0 8 * * *',
         'seating:schedule-checks' => '30 7 * * *',
         'seating:send-digests' => '30 8 * * *',
         'complaints:send-digests' => '0 * * * *',
@@ -29,7 +30,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
     ]);
 
     $telework = collect(app(Schedule::class)->events())->filter(fn (Event $event): bool => str_contains($event->command ?? '', 'telework:'));
-    expect($telework)->toHaveCount(2)
+    expect($telework)->toHaveCount(3)
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
 });
 

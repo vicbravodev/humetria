@@ -9,6 +9,7 @@ use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Events\TraumaticEventReported;
+use App\Modules\Telework\Jobs\SendAccidentAlert;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Support\OpenedPortal;
@@ -25,6 +26,8 @@ use Illuminate\Validation\ValidationException;
  * An address change brings the new address: it becomes a workplace with the checklist the person owes there (Sección II
  * for someone in the roster, Sección I for an aspirant; criterio C-14). The old workplaces are not touched here: they
  * are retired when the new one is validated (`ReviewWorkplace`), unless the change is temporary.
+ *
+ * An accident (6.9) is emailed to RH at once (rediseño v2, docs/02, «Aviso de accidente»), without its description.
  *
  * The description is personal data: never logged.
  */
@@ -60,6 +63,10 @@ final readonly class SubmitNotice
 
             // Never whether it reports a traumatic event: next to the person's id, that is health data.
             Log::info('telework.notice_submitted', ['notice_id' => $notice->id, 'teleworker_id' => $teleworkerId, 'kind' => $kind->value, 'temporary' => $temporary]);
+
+            if ($kind === NoticeKind::WorkRisk) {
+                SendAccidentAlert::dispatch($portal->tenantId, $notice->id);
+            }
 
             if ($traumaticEvent) {
                 $teleworker = Teleworker::query()->findOrFail($teleworkerId, ['id', 'work_center_id']);
