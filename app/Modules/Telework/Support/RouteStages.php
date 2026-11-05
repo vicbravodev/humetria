@@ -34,6 +34,22 @@ final class RouteStages
     ];
 
     /**
+     * Where a row of table 10.3 falls in the route: its stage, then its place in that stage (the dossier rows last).
+     */
+    public static function rank(string $numeral): int
+    {
+        foreach (self::STAGES as $stage => $numerals) {
+            $at = array_search($numeral, $numerals, true);
+
+            if ($at !== false) {
+                return $stage * 100 + $at;
+            }
+        }
+
+        return count(self::STAGES) * 100;
+    }
+
+    /**
      * @param  list<ComplianceRow>  $rows
      * @param  bool|null  $hasTeleworkers  what the center declared, null when it has not
      * @param  string|null  $declaredOn  the day of the declaration, as the design system writes it

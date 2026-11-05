@@ -35,6 +35,27 @@ final readonly class TeleworkPages
 
     private const int PEOPLE_PER_PAGE = 15;
 
+    /** The rows of table 10.3 in plain words, as an inspector would ask for them (board V3-Inspeccion). */
+    private const array PLAIN = [
+        '5.1' => 'Lista de personas en teletrabajo',
+        '5.1.1' => 'Conexión y condiciones de cada lugar',
+        '5.1.2' => 'Cada persona con un lugar fijo y convenido',
+        '5.2' => 'Política de Teletrabajo completa y leída',
+        '5.3' => 'Los riesgos de trabajar desde casa, explicados',
+        '5.4 y 7' => 'Lista de verificación con todos los temas',
+        '5.5' => 'Cada lugar revisado y validado por la Comisión',
+        '5.5.1' => 'La revisión periódica de cada lugar',
+        '5.6' => 'Cómo se empieza a teletrabajar',
+        '5.7' => 'Equipo entregado a cada persona',
+        '5.8' => 'Mantenimiento del equipo',
+        '5.9 y 8' => 'Capacitación del último año',
+        '5.10' => 'Regreso a la oficina',
+        '5.11' => 'Accidentes avisados, con seguimiento',
+        '5.12' => 'Comisión con acceso al expediente',
+        '5.13' => 'Apoyo si vive violencia en casa',
+        '5.14' => 'Participación en comisiones',
+    ];
+
     public function __construct(
         private VisibleCenters $visible,
         private ComplianceRows $rows,
@@ -99,6 +120,38 @@ final readonly class TeleworkPages
             'nextStep' => $this->nextStep($tenant, $center, $reach),
             'tabs' => $this->tabs($tenant, $center, $active, $reach),
             'people' => $manage || $member ? $this->people($tenant, $center, $manage) : null,
+        ];
+    }
+
+    /**
+     * «Si hoy llegara una inspección» (board V3-Inspeccion): the rows of table 10.3 that apply, split into what the center
+     * can show and what is missing (the accidents first, then in the order of the route), each in plain words with its
+     * way to fix it for who may; and the dossier for who may read it.
+     *
+     * @return array<string, mixed>
+     */
+    public function inspection(mixed $tenant, WorkCenterSummary $center, int $userId): array
+    {
+        $manage = Gate::allows('manage-telework');
+        $member = $this->gate->isMember($userId, $center->id);
+        $reach = ['manage' => $manage, 'member' => $member];
+        $applicable = array_values(array_filter($this->rows->for($center->id), fn (ComplianceRow $row): bool => $row->state !== RowState::NotApplicable));
+        $item = fn (ComplianceRow $row): array => [
+            'numeral' => $row->numeral,
+            'title' => self::PLAIN[$row->numeral] ?? $row->label,
+            'detail' => $row->detail,
+            'state' => $row->state->value,
+            ...$this->fix($tenant, $center, $row->numeral, $reach, $row->state === RowState::Done),
+        ];
+        $missing = array_values(array_filter($applicable, fn (ComplianceRow $row): bool => $row->state !== RowState::Done));
+        usort($missing, fn (ComplianceRow $a, ComplianceRow $b): int => ($a->numeral === '5.11' ? -1 : RouteStages::rank($a->numeral)) <=> ($b->numeral === '5.11' ? -1 : RouteStages::rank($b->numeral)));
+
+        return [
+            'workCenter' => ['id' => $center->id, 'name' => $center->name],
+            'applicable' => count($applicable),
+            'ready' => array_map($item, array_values(array_filter($applicable, fn (ComplianceRow $row): bool => $row->state === RowState::Done))),
+            'missing' => array_map($item, $missing),
+            'dossierHref' => $manage || $member ? route('tenant.telework.dossier', [$tenant, $center->id]) : null,
         ];
     }
 
@@ -218,12 +271,12 @@ final readonly class TeleworkPages
     }
 
     /**
-     * Where to fix a row, when the person may open it: nothing for the viewer.
+     * Where to fix a row, when the person may open it: nothing for the viewer. A row already done opens where its evidence is.
      *
      * @param  array{manage: bool, member: bool}  $reach
      * @return array{href: string|null, action: string|null}
      */
-    private function fix(mixed $tenant, WorkCenterSummary $center, string $numeral, array $reach): array
+    private function fix(mixed $tenant, WorkCenterSummary $center, string $numeral, array $reach, bool $done = false): array
     {
         $none = ['href' => null, 'action' => null];
 
@@ -234,7 +287,11 @@ final readonly class TeleworkPages
         $documents = ['href' => route('tenant.telework.documents.index', [$tenant, 'center' => $center->id]), 'action' => 'Ver documentos'];
 
         return match ($numeral) {
-            '5.1' => $reach['manage'] ? ['href' => route('tenant.telework.teleworkers.create', [$tenant, $center->id]), 'action' => 'Registrar persona'] : $none,
+            '5.1' => match (true) {
+                $done => ['href' => route('tenant.telework.center', [$tenant, $center->id]), 'action' => 'Ver personas'],
+                $reach['manage'] => ['href' => route('tenant.telework.teleworkers.create', [$tenant, $center->id]), 'action' => 'Registrar persona'],
+                default => $none,
+            },
             '5.1.1', '5.1.2', '5.5' => $reach['member'] ? ['href' => route('tenant.telework.reviews.index', [$tenant, $center->id]), 'action' => 'Ver las listas por revisar'] : $none,
             '5.4 y 7', '5.5.1' => ['href' => route('tenant.telework.checklist.show', [$tenant, $center->id]), 'action' => 'Ver la lista'],
             '5.7' => $reach['manage'] ? ['href' => route('tenant.telework.center', [$tenant, $center->id]).'#padron', 'action' => 'Ver el padrón'] : $none,

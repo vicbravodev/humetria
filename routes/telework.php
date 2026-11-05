@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.index');
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}', [TeleworkController::class, 'center'])->where('tenant', $notReserved)->name('tenant.telework.center');
 // The printable dossier of the center for an inspection (criterio C-30); every view is audited.
+// What an inspector would ask for today in a center, and its dossier (board V3-Inspeccion).
+Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/inspection', [TeleworkController::class, 'inspection'])->where('tenant', $notReserved)->name('tenant.telework.inspection');
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.dossier');
 
 // «¿Te aplica?» (board V2-Aplica): whether someone of the center works away from it more than 40 % of their time.

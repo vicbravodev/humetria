@@ -6,6 +6,7 @@ namespace App\Modules\Telework\Support;
 
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Telework\Enums\NoticeKind;
+use App\Modules\Telework\Enums\RowState;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Enums\TrainingStanding;
 use App\Modules\Telework\Models\Checklist;
@@ -59,7 +60,7 @@ final readonly class Dossier
     /**
      * @return array<string, mixed>
      */
-    public function build(mixed $tenant, WorkCenterProfile $profile, string $generatedBy, bool $personal): array
+    public function build(mixed $tenant, WorkCenterProfile $profile, string $generatedBy, bool $personal, bool $readyOnly = false): array
     {
         $now = CarbonImmutable::now();
         $people = Teleworker::query()->where('work_center_id', $profile->id)->where('status', TeleworkerStatus::Active)->orderBy('created_at')->orderBy('id')->get();
@@ -86,7 +87,7 @@ final readonly class Dossier
                 'state' => $row->state->value,
                 'stateLabel' => $row->state->label(),
                 'detail' => $row->detail,
-            ], $this->rows->for($profile->id)),
+            ], array_values(array_filter($this->rows->for($profile->id), fn (ComplianceRow $row): bool => ! $readyOnly || $row->state === RowState::Done))),
             'roster' => $this->roster($people, $names, $personal),
             'workplaces' => $this->workplaces($people, $nameOf),
             'checklist' => $this->checklist($profile->id),

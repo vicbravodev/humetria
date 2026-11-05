@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Telework\Support\TeleworkPages;
 use App\Modules\Telework\Support\VisibleCenters;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -31,12 +32,28 @@ final class TeleworkController extends Controller
     {
         Gate::authorize('view-telework');
         $userId = $this->userId($request);
+
+        return Inertia::render('telework/center', $pages->center($tenant, $this->visibleCenter($workCenter, $userId, $workCenters, $visible), $userId));
+    }
+
+    /** «Si hoy llegara una inspección» of one center (board V3-Inspeccion). */
+    public function inspection(Request $request, mixed $tenant, string $workCenter, WorkCenters $workCenters, VisibleCenters $visible, TeleworkPages $pages): Response
+    {
+        Gate::authorize('view-telework');
+        $userId = $this->userId($request);
+
+        return Inertia::render('telework/inspection', $pages->inspection($tenant, $this->visibleCenter($workCenter, $userId, $workCenters, $visible), $userId));
+    }
+
+    /** The center in the address, or a 404 when it is not an active one of this company the user may see. */
+    private function visibleCenter(string $workCenter, int $userId, WorkCenters $workCenters, VisibleCenters $visible): WorkCenterSummary
+    {
         $center = Str::isUuid($workCenter) ? $workCenters->findActive($workCenter) : null;
         abort_if($center === null, 404);
         $limit = $visible->limitedTo($userId);
         abort_unless($limit === null || in_array($center->id, $limit, true), 404);
 
-        return Inertia::render('telework/center', $pages->center($tenant, $center, $userId));
+        return $center;
     }
 
     private function userId(Request $request): int
