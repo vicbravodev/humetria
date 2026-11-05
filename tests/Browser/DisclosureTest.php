@@ -488,6 +488,15 @@ it('writes a block of 5.7 with questions, with how the people will read it on th
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
+it('puts how the people will read a block under its questions below 1240 px, so the questions keep their width', function (): void {
+    $url = signInToPanel();
+
+    $page = visit("{$url}/disclosure/write/violence_measures")->assertSee('¿Qué consideran violencia laboral?');
+
+    resizeTo($page, 1100)
+        ->assertScript('() => document.querySelector("fieldset").getBoundingClientRect().width > 500', true);
+});
+
 it('reviews the draft of the health effects and publishes it to the centers', function (): void {
     $url = signInToPanel();
     WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();

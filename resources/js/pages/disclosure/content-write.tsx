@@ -39,7 +39,7 @@ export default function DisclosureContentWrite(props: DisclosureWritingProps) {
                             : 'Es un borrador de Humetría. Revísalo con una persona con criterio médico antes de publicarlo; puedes reescribir cada parte.'
                     }
                 />
-                <div className="grid items-start gap-8 min-[1100px]:grid-cols-[minmax(0,1fr)_400px]">
+                <div className="grid items-start gap-8 min-[1240px]:grid-cols-[minmax(0,1fr)_400px]">
                     <section
                         aria-label="Preguntas"
                         className="flex flex-col gap-6 card p-5 md:p-7"
