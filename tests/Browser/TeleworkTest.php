@@ -963,6 +963,9 @@ it('lists the centers with where each stands in its route on the NOM-037 page', 
     visitPage('telework/index', "{$url}/telework", $dark, $mobile)
         ->assertSee('Teletrabajo en tus centros')
         ->assertSee('Para toda la empresa')
+        // With a single center, the company row speaks of that one center.
+        ->assertSee('Se hace una vez y cubre a tu centro.')
+        ->assertSee('Vigente en 0 de 1 centro · numeral 5.2')
         ->assertSee('Planta Querétaro')
         ->assertSee('de 6 etapas')
         ->assertSee('Abrir ruta')
