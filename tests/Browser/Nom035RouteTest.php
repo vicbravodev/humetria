@@ -84,3 +84,15 @@ it('goes from the centers of NOM-035 to the route of one', function (): void {
         ->assertSee('Tu ruta para cumplir con la NOM-035')
         ->assertNoJavaScriptErrors();
 });
+
+// Board V2-N035-Compartir: what each person will read, beside how it reaches them.
+it('shows the summary each person will read before sharing the results, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $office = evaluatedOffice();
+    $closed = Campaign::query()->withoutGlobalScopes()->where('work_center_id', $office->id)->sole();
+
+    visitPage('disclosure/share-results', "/admin/acme/disclosure/results/{$closed->id}/share", $dark, $mobile)
+        ->assertSee('Comparte los resultados con tu equipo')
+        ->assertSeeIn('[aria-labelledby="share-preview"]', 'Resultados de la evaluación de riesgo psicosocial')
+        ->assertSee('Publicar para Oficina')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);

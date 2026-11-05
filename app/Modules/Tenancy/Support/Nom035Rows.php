@@ -35,7 +35,7 @@ final readonly class Nom035Rows
             $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', route('tenant.disclosure.policy', $tenantSlug), 'Escribir la política'),
             $this->evaluation($tenantSlug, $facts, $evaluation),
             $this->after($evaluation, $this->channeling($tenantSlug, $facts, $evaluation, $channelAt)),
-            $this->chapterSeven($facts, $evaluation, $this->row(4, '7.8', 'Resultados a disposición de las personas', $facts->shared ? null : 'Aún no compartes los resultados de la última evaluación', 'manage-disclosure', route('tenant.disclosure.results', $tenantSlug), 'Preparar el resumen')),
+            $this->chapterSeven($facts, $evaluation, $this->row(4, '7.8', 'Resultados a disposición de las personas', $facts->shared ? null : 'Aún no compartes los resultados de la última evaluación', 'manage-disclosure', $evaluation === null ? null : route('tenant.disclosure.results.share', [$tenantSlug, $evaluation]), 'Preparar el resumen')),
             $this->chapterSeven($facts, $evaluation, $this->program($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->row(6, '7.7', 'Informe de resultados', $facts->reported ? null : 'Le faltan conclusiones, recomendaciones y responsable', 'manage-campaigns', $evaluation === null ? null : route('tenant.campaigns.report', [$tenantSlug, $evaluation]), 'Completar el informe')),
         ];

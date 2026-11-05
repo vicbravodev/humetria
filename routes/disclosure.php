@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Http\Controllers\PageLinkController;
 use App\Modules\Disclosure\Http\Controllers\PolicyController;
 use App\Modules\Disclosure\Http\Controllers\PosterController;
 use App\Modules\Disclosure\Http\Controllers\ResultsController;
+use App\Modules\Disclosure\Http\Controllers\ShareResultsController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}. The panel of the policy
@@ -48,6 +49,7 @@ Route::post('admin/{tenant:slug}/disclosure/contents/{kind}/draft/{document}/pub
 
 // The results of the closed evaluations that RH publishes to the people (num. 7.8): publish and withdraw, never delete.
 Route::get('admin/{tenant:slug}/disclosure/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->name('tenant.disclosure.results');
+Route::get('admin/{tenant:slug}/disclosure/results/{campaign}/share', [ShareResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.disclosure.results.share');
 Route::post('admin/{tenant:slug}/disclosure/results/{campaign}', [ResultsController::class, 'publish'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.disclosure.results.publish');
 Route::post('admin/{tenant:slug}/disclosure/results/{campaign}/withdrawal', [ResultsController::class, 'withdraw'])->where('tenant', $notReserved)->whereUuid('campaign')->name('tenant.disclosure.results.withdraw');
 

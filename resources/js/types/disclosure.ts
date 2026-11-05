@@ -200,3 +200,23 @@ export type ResultsRow = {
 };
 
 export type ResultsProps = { evaluations: Paginated<ResultsRow> };
+
+/** «Comparte los resultados con tu equipo» (board V2-N035-Compartir): what each person of the center will read. */
+export type ShareResultsProps = {
+    campaign: { id: string; closedOn: string | null };
+    workCenter: { id: string; name: string };
+    company: string;
+    /** Null below the minimum: the page says «menos de N», never the count. */
+    answered: number | null;
+    minimum: number;
+    themes: string[];
+    measures: { title: string; dueOn: string }[];
+    /** The complaints channel, when it is open. */
+    channel: { anonymous: boolean } | null;
+    /** Whether the center has a policy in force. */
+    policy: boolean;
+    /** The day it was published, while it is. */
+    published: string | null;
+    showMeasures: boolean;
+    canPublish: boolean;
+};

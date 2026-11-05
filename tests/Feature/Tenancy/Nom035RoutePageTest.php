@@ -66,7 +66,7 @@ it('shows the six stages of the center, each with what it asks in plain words an
         ])
         ->where('rows.3.state', 'missing')
         ->where('rows.3.detail', 'Aún no compartes los resultados de la última evaluación')
-        ->where('rows.3.href', route('tenant.disclosure.results', $this->tenant))
+        ->where('rows.3.href', route('tenant.disclosure.results.share', [$this->tenant, $this->closed->id]))
         ->where('rows.3.action', 'Preparar el resumen')
         // Closed with nothing in Medio or more: no Programa is needed (num. 8.3).
         ->where('rows.4.state', 'not_applicable')

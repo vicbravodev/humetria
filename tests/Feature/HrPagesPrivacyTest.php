@@ -92,6 +92,7 @@ it('gives HR no individual response on any page about campaigns, results or peop
     'Contenidos para las personas' => fn (): string => route('tenant.disclosure.contents', $this->tenant),
     'Página de las personas' => fn (): string => route('tenant.disclosure.page', $this->tenant),
     'Expediente de difusión' => fn (): string => route('tenant.disclosure.dossier', [$this->tenant, $this->plant->id]),
+    'Compartir los resultados' => fn (): string => route('tenant.disclosure.results.share', [$this->tenant, $this->evaluation->id]),
     'Ruta de NOM-035' => fn (): string => route('tenant.nom035.route', [$this->tenant, $this->plant->id]),
     'Inspección de NOM-035' => fn (): string => route('tenant.nom035.inspection', [$this->tenant, $this->plant->id]),
     'Resumen de política y difusión' => fn (): string => route('tenant.disclosure.index', $this->tenant),
