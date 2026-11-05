@@ -6,6 +6,7 @@ import HumiDock from '@/components/assistant/humi-dock';
 import { CommandPalette } from '@/components/command-palette';
 import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
+import { MobileTabBar } from '@/components/mobile-tab-bar';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
@@ -25,11 +26,12 @@ export default function AppSidebarLayout({
                 {/* The page's width: it fills the frame up to 1440 px and is centered beyond that (design-system.md, Layout). */}
                 <div
                     data-slot="page-body"
-                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col [view-transition-name:page]"
+                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-16 [view-transition-name:page] md:pb-0"
                 >
                     {children}
                 </div>
             </AppContent>
+            <MobileTabBar />
             <HumiDock />
             <CommandPalette />
             <ImpersonatedBlockNotice />

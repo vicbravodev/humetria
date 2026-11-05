@@ -154,3 +154,21 @@ it('fills the width up to 1440 px and centers the page beyond it', function (boo
     resizeTo($page, 1280)->assertScript($width, 'full centered');
     resizeTo($page, 2400)->assertScript($width, '1440 centered');
 })->with(['light' => false, 'dark' => true]);
+
+// Board 40 (V4-Menu-Roles): on a phone the menu becomes a bar at the bottom with Panel, Cumplimiento, Quejas and Más.
+it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', function (): void {
+    $page = visit(panelCompany())->on()->mobile();
+
+    $page->assertSeeIn('nav[aria-label="Menú principal"]', 'Panel')
+        ->assertSeeIn('nav[aria-label="Menú principal"]', 'Quejas')
+        ->click('Cumplimiento')
+        ->click('[role="menu"] a[href$="/seating"]')
+        ->assertPathIs('/admin/acme/seating')
+        ->click('Más')
+        ->assertSeeIn('[data-mobile="true"]', 'Centros de trabajo')
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the bottom bar off a wide screen', function (): void {
+    visit(panelCompany())->assertScript('() => getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).display', 'none');
+});
