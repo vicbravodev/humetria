@@ -19,13 +19,14 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\DashboardPage;
 use App\Modules\Tenancy\Support\Nom035Route;
+use App\Modules\Tenancy\Support\PanelUrgencies;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Database\Factories\Telework\WorkerNoticeFactory;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(TenantDashboardController::class, DashboardPage::class, Nom035Route::class);
+mutates(TenantDashboardController::class, DashboardPage::class, Nom035Route::class, PanelUrgencies::class);
 
 // Rediseño v2 (board V2-Panel): the panel became «Atiende primero», «Dónde vas» by standard and center, the next step and
 // «Esta semana». The evaluation in course, its steps, the two-year cycle and the closed evaluations it showed before now live

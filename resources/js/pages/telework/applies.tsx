@@ -9,8 +9,9 @@ import { useTeleworkApplies } from '@/hooks/use-telework-applies';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { QUESTIONS } from '@/lib/telework/applies';
 import { dashboard } from '@/routes/tenant';
-import { center, certificate } from '@/routes/tenant/telework';
+import { certificate } from '@/routes/tenant/telework';
 import { update } from '@/routes/tenant/telework/applies';
+import { route as centerRoute } from '@/routes/tenant/work-centers';
 
 type Props = {
     workCenter: { id: string; name: string };
@@ -70,7 +71,11 @@ export default function TeleworkApplies({ workCenter, declaration }: Props) {
                 {wizard.step === 'result' &&
                     declaration?.hasTeleworkers === true && (
                         <AppliesYes
-                            routeHref={center([tenantSlug, workCenter.id])}
+                            routeHref={centerRoute([
+                                tenantSlug,
+                                workCenter.id,
+                                'nom037',
+                            ])}
                             onRestart={wizard.restart}
                         />
                     )}

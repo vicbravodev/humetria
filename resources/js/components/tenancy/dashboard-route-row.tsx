@@ -13,9 +13,11 @@ export default function DashboardRouteRow({
     route,
     answerHref,
     certificateHref,
+    routeHref,
 }: {
     name: string;
     route: RouteProgress;
+    routeHref: NavItem['href'];
     answerHref: NavItem['href'] | null;
     certificateHref: NavItem['href'] | null;
 }) {
@@ -24,7 +26,12 @@ export default function DashboardRouteRow({
 
     return (
         <li className="grid grid-cols-[minmax(0,1fr)_112px] items-center gap-x-4 gap-y-1 py-1 text-sm @[560px]:grid-cols-[minmax(140px,180px)_112px_minmax(0,1fr)]">
-            <span className="truncate font-medium">{name}</span>
+            <Link
+                href={routeHref}
+                className="touch-hit truncate font-medium hover:underline"
+            >
+                {name}
+            </Link>
             {route.applies ? (
                 <StageBar states={stageStates(route)} />
             ) : (

@@ -22,7 +22,7 @@ export type Norm = {
 };
 
 /** The standards in the order of the menu (board 40). */
-export const NORMS: Norm[] = [
+export const NORMS: [Norm, Norm, Norm] = [
     {
         key: 'nom035',
         title: 'NOM-035',
@@ -52,6 +52,11 @@ export const NORMS: Norm[] = [
             seatingCertificate([tenantSlug, workCenterId]),
     },
 ];
+
+/** A standard by its key. */
+export function normOf(key: NormKey): Norm {
+    return NORMS.find((norm) => norm.key === key) ?? NORMS[0];
+}
 
 export type Stage = { title: string; text: string };
 

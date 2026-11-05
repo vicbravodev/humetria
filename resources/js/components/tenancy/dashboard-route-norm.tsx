@@ -3,6 +3,7 @@ import DashboardRouteRow from '@/components/tenancy/dashboard-route-row';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Norm } from '@/lib/compliance-routes';
+import { route as centerRoute } from '@/routes/tenant/work-centers';
 import type { RouteProgress } from '@/types';
 
 /** One standard in "Dónde vas": its name, the way to its route and each center where it stands. */
@@ -43,6 +44,7 @@ export default function DashboardRouteNorm({
                         name={row.name}
                         route={row.route}
                         answerHref={norm.answer?.(tenantSlug, row.id) ?? null}
+                        routeHref={centerRoute([tenantSlug, row.id, norm.key])}
                         certificateHref={
                             norm.certificate?.(tenantSlug, row.id) ?? null
                         }

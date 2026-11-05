@@ -17,6 +17,7 @@ const ARRAY_PROPS = [
     'tenancy/members:roles' => 'catálogo fijo: los roles que se pueden dar',
     'dashboard:urgencies' => 'resumen corto: lo que no puede esperar, cinco a lo más',
     'dashboard:week' => 'resumen corto: lo que vence en los próximos 7 días, cinco a lo más',
+    'tenancy/route:urgencies' => 'resumen corto: lo que no puede esperar en ese centro, un renglón por tipo',
     'campaigns/survey:instruments' => 'las guías que contesta una persona: tres a lo más',
     'seating/seats:kinds' => 'catálogo fijo: los cuatro tipos de asiento de la Quinta E',
     'seating/seats:uses' => 'catálogo fijo: en el puesto o en un área de descanso',

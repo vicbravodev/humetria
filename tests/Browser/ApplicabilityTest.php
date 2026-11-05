@@ -127,7 +127,7 @@ it('reaches the certificate from the answer, and from the panel', function (): v
 
     visit('/admin/acme')
         ->assertSeeIn('[data-norm="nom037"]', 'No aplica')
-        ->click('[data-norm="nom037"] li a')
+        ->click('[data-norm="nom037"] li a[href$="/certificate"]')
         ->assertSee('Constancia de que la norma no aplica')
         ->assertNoJavaScriptErrors();
 });

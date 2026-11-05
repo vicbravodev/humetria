@@ -7,9 +7,7 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { SeatingDeclaration } from '@/hooks/use-seating-applies';
 import type { Range } from '@/lib/applicability';
 import { dashboard } from '@/routes/tenant';
-import { index as campaigns } from '@/routes/tenant/campaigns';
-import { index as seating } from '@/routes/tenant/seating';
-import { applies } from '@/routes/tenant/work-centers';
+import { applies, route } from '@/routes/tenant/work-centers';
 
 type Props = {
     workCenter: { id: string; name: string };
@@ -65,14 +63,22 @@ export default function TenancyApplies(props: Props) {
                         center={props.workCenter.name}
                         people={props.people}
                         range={props.range}
-                        routeHref={campaigns(tenantSlug)}
+                        routeHref={route([
+                            tenantSlug,
+                            props.workCenter.id,
+                            'nom035',
+                        ])}
                     />
                 ) : (
                     <AppliesSeating
                         tenantSlug={tenantSlug}
                         workCenterId={props.workCenter.id}
                         saved={props.seating}
-                        routeHref={seating(tenantSlug)}
+                        routeHref={route([
+                            tenantSlug,
+                            props.workCenter.id,
+                            'seating',
+                        ])}
                         panelHref={dashboard(tenantSlug)}
                     />
                 )}
