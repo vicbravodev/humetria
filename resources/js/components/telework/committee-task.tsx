@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { taskText } from '@/lib/telework/queue';
+import { taskNorm, taskText } from '@/lib/telework/queue';
 import type { CommitteeTask as Task } from '@/types';
 
 /** One thing that waits for the Comisión (board V2-Comision): its number, the standard, what it asks and its button. */
@@ -24,7 +24,7 @@ export default function CommitteeTask({
             <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     <span className="rounded-md border bg-muted px-2 font-semibold text-foreground">
-                        NOM-037
+                        {taskNorm(task)}
                     </span>
                     {estimate}
                 </p>

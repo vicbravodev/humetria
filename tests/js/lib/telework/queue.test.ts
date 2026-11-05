@@ -4,6 +4,7 @@ import {
     greeting,
     namesLine,
     pendingLine,
+    taskNorm,
     taskText,
 } from '@/lib/telework/queue';
 import type { CommitteeTask } from '@/types';
@@ -64,6 +65,43 @@ describe('taskText', () => {
         expect(taskText({ ...notices, count: 3 }).title).toBe(
             'Revisa 3 avisos · Planta Querétaro',
         );
+    });
+
+    it('asks to sign the Ley Silla assessments and to record them in the minutes', () => {
+        const signatures: CommitteeTask = {
+            kind: 'signatures',
+            workCenter: 'Planta Querétaro',
+            count: 3,
+            people: ['José Antonio', 'Óscar', 'Santiago'],
+            href: '/s',
+        };
+
+        expect(taskText(signatures)).toEqual({
+            title: 'Firma 3 evaluaciones de trabajo de pie · Planta Querétaro',
+            text: 'José Antonio, Óscar y Santiago. Ya tienen los datos: solo confirmas y firmas.',
+            estimate: '≈ 3 min cada una',
+            action: 'Revisar y firmar',
+        });
+        expect(
+            taskText({ ...signatures, count: 1, people: ['Óscar'] }).title,
+        ).toBe('Firma 1 evaluación de trabajo de pie · Planta Querétaro');
+        expect(
+            taskText({ ...signatures, kind: 'minutes', count: 2, people: [] }),
+        ).toEqual({
+            title: 'Asienta 2 evaluaciones en el acta de recorrido · Planta Querétaro',
+            text: 'Las evaluaciones firmadas que aún no están en un acta de la Comisión.',
+            estimate: '≈ 5 min',
+            action: 'Abrir acta',
+        });
+        expect(
+            taskText({ ...signatures, kind: 'minutes', count: 1, people: [] })
+                .title,
+        ).toBe(
+            'Asienta 1 evaluación en el acta de recorrido · Planta Querétaro',
+        );
+        expect(taskNorm(signatures)).toBe('Ley Silla');
+        expect(taskNorm({ ...signatures, kind: 'minutes' })).toBe('Ley Silla');
+        expect(taskNorm(lists)).toBe('NOM-037');
     });
 });
 

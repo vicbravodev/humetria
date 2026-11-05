@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Models\RiskAssessment;
+use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Support\TeleworkPages;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -54,6 +56,27 @@ it('shows a member of the Comisión only what waits for it in its centers, and w
         ->where('centers', [['id' => $this->plant->id, 'name' => 'Planta Querétaro', 'members' => collect([$olga->name, 'Rubén Ortiz'])->sort()->values()->all(), 'href' => route('tenant.telework.route', [$this->tenant, $this->plant->id])]]));
 });
 
+// Rediseño v2 (PR 3): what waits for the Comisión in Ley Silla, read through Seating's contract — the assessments to sign,
+// with whose they are, and the signed ones still out of the minutes of the walk-through.
+it('lists the Ley Silla assessments the Comisión has to sign and to record in its minutes', function (): void {
+    $where = ['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id];
+    $position = StandingPosition::factory()->create($where);
+
+    foreach (['José Antonio', 'Óscar Peña'] as $name) {
+        RiskAssessment::factory()->create($where + ['position_id' => $position->id, 'employee_id' => EmployeeFactory::new()->create($where + ['name' => $name])->id]);
+    }
+
+    RiskAssessment::factory()->signed()->create($where + ['position_id' => $position->id]);
+    RiskAssessment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->elsewhere->id]);
+
+    $this->actingAs($this->ruben)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->component('telework/queue')
+        ->where('tasks', [
+            ['kind' => 'signatures', 'workCenter' => 'Planta Querétaro', 'count' => 2, 'people' => ['José Antonio', 'Óscar Peña'], 'href' => route('tenant.seating.assessments.index', [$this->tenant, $this->plant->id])],
+            ['kind' => 'minutes', 'workCenter' => 'Planta Querétaro', 'count' => 1, 'people' => [], 'href' => route('tenant.seating.assessments.index', [$this->tenant, $this->plant->id])],
+        ]));
+});
+
 it('has nothing to ask of a Comisión with nothing waiting', function (): void {
     $this->actingAs($this->ruben)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
         ->component('telework/queue')->where('tasks', [])->has('centers', 1));
@@ -68,6 +91,7 @@ it('reads the queue in a fixed number of queries', function (): void {
     waitingList($this->plant, 'Manuel Castellano');
     $this->actingAs($this->ruben);
 
-    $this->expectsDatabaseQueryCount(25);
+    // 25 for NOM-037, and 3 for what waits in Ley Silla (rediseño v2, PR 3).
+    $this->expectsDatabaseQueryCount(28);
     $this->get(route('tenant.telework.index', $this->tenant))->assertOk();
 });

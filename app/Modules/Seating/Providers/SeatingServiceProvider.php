@@ -6,6 +6,7 @@ namespace App\Modules\Seating\Providers;
 
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
+use App\Modules\Seating\Contracts\CommitteeWork;
 use App\Modules\Seating\Contracts\SeatingApplicability;
 use App\Modules\Seating\Contracts\SeatingRoute;
 use App\Modules\Seating\Events\PersonInputSubmitted;
@@ -13,6 +14,7 @@ use App\Modules\Seating\Events\RiskAssessmentSigned;
 use App\Modules\Seating\Listeners\EndOnDeactivationOrMove;
 use App\Modules\Seating\Listeners\FlagOnPersonInput;
 use App\Modules\Seating\Listeners\RequestOnSignature;
+use App\Modules\Seating\Support\CompanyCommitteeWork;
 use App\Modules\Seating\Support\CompanySeatingApplicability;
 use App\Modules\Seating\Support\CompanySeatingRoute;
 use Illuminate\Support\Facades\Event;
@@ -28,6 +30,7 @@ final class SeatingServiceProvider extends ServiceProvider
     {
         $this->app->bind(SeatingRoute::class, CompanySeatingRoute::class);
         $this->app->bind(SeatingApplicability::class, CompanySeatingApplicability::class);
+        $this->app->bind(CommitteeWork::class, CompanyCommitteeWork::class);
     }
 
     public function boot(): void
