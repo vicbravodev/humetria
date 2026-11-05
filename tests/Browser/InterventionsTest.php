@@ -117,6 +117,8 @@ it('records a step of an action from its menu and keeps it in the history', func
     visit("{$url}/campaigns/{$campaign}/program?tab=actions")
         ->click('[aria-label="Opciones de Revisar la política"]')
         ->click('Registrar avance')
+        // C4: the evidence is dropped on or chosen from the zone, never the native field.
+        ->assertSee('Arrastra la evidencia aquí o elígela')
         ->fill('note', 'Ya se aprobó el presupuesto.')
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Avance registrado.');
