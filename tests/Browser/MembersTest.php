@@ -41,16 +41,23 @@ it('lists who has access and the pending invitations', function (bool $dark, boo
         ->assertSee('(tú)')
         ->assertSee('Beto Ramírez')
         ->assertSee('Carla Díaz')
-        ->assertSee('Pendiente')
-        ->assertSee('Qué puede hacer cada rol');
+        ->assertSee('Pendiente');
 })->with($looks);
 
-it('passes the checks with the invite dialog and a row menu open', function (bool $dark, bool $mobile): void {
+it('invites from its own page, with what each role can do beside the form (board V3-Roles)', function (bool $dark, bool $mobile): void {
     acmeWithPeople();
 
-    visitPage('tenancy/members', '/admin/acme/members', $dark, $mobile, fn (AwaitableWebpage $page) => $page
-        ->click('Invitar')
-        ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.'));
+    visitPage('tenancy/invite-member', '/admin/acme/members/invitations/create', $dark, $mobile)
+        ->assertSee('Invitar a alguien')
+        ->assertSee('Qué hará en Humetría')
+        ->assertSee('Ayuda con las rutas')
+        ->assertSee('Qué puede hacer cada quien')
+        ->assertSee('Canalización y datos de salud')
+        ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.');
+})->with($looks);
+
+it('passes the checks with a row menu open', function (bool $dark, bool $mobile): void {
+    acmeWithPeople();
 
     visitPage('tenancy/members', '/admin/acme/members', $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('@member-actions')

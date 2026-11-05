@@ -173,3 +173,9 @@ export type MemberInvitationRow = {
 };
 
 export type RoleOption = { value: TenantRole; label: string };
+
+/** «Qué puede hacer cada quien» (board V3-Roles): one column per role, one cell per row and role. */
+export type RoleMatrix = {
+    columns: string[];
+    rows: { label: string; cells: string[] }[];
+};

@@ -2,15 +2,15 @@ import InputError from '@/components/humetria/input-error';
 import type { RoleOption } from '@/types';
 
 const HINTS: Record<string, string> = {
-    hr: 'Opera las evaluaciones del día a día.',
-    viewer: 'Solo consulta, sin cambiar nada.',
+    hr: 'Avanza tareas y documentos. También ve canalización y compensación.',
+    viewer: 'Ve rutas, resultados agregados y el expediente de NOM-037, sin cambiar nada. Para dirección.',
     committee:
-        'Solo ve la NOM-037: revisa y valida los lugares de teletrabajo.',
+        'Valida lugares de teletrabajo y firma evaluaciones de Ley Silla de los centros donde participa.',
     complaints:
-        'Solo ve el canal de quejas: atiende las que le asignen (abogado, persona de confianza).',
+        'Solo el canal de quejas: atiende los casos que le designen. Para un asesor externo de confianza.',
 };
 
-/** The role an invited person gets, as option cards (pantallas: Usuarios-Invitar); RH is chosen to begin with. */
+/** What the invited person will do, as option cards (board V3-Roles); «Ayuda con las rutas» is chosen to begin with. */
 export default function MemberRoleChoice({
     roles,
     error,
@@ -24,12 +24,12 @@ export default function MemberRoleChoice({
                 error === undefined ? undefined : 'member-role-error'
             }
         >
-            <legend className="mb-2 text-sm font-medium">Rol</legend>
-            <div className="flex flex-wrap items-stretch gap-2.5">
+            <legend className="mb-2 font-medium">Qué hará en Humetría</legend>
+            <div className="grid gap-2.5">
                 {roles.map((role) => (
                     <label
                         key={role.value}
-                        className="flex min-h-14 flex-[1_1_200px] cursor-pointer items-start gap-3 rounded-lg border border-input bg-card px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[15px] has-checked:py-[11px] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
+                        className="flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border border-input bg-card px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[15px] has-checked:py-[11px] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
                     >
                         <input
                             type="radio"
