@@ -1,16 +1,12 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import { UserRound } from 'lucide-react';
-import PageHeader from '@/components/humetria/page-header';
 import AssessmentFacts from '@/components/seating/assessment-facts';
-import AssessmentForm from '@/components/seating/assessment-form';
-import AssessmentResult from '@/components/seating/assessment-result';
+import AssessmentHeader from '@/components/seating/assessment-header';
+import AssessmentLead from '@/components/seating/assessment-lead';
 import AssessmentExtras from '@/components/seating/assessment-extras';
-import RequestLinkButton from '@/components/seating/request-link-button';
-import { Badge } from '@/components/ui/badge';
+import AssessmentWorkspace from '@/components/seating/assessment-workspace';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { seatingCrumbs } from '@/lib/seating/crumbs';
 import { index as assessments } from '@/routes/tenant/seating/assessments';
-import { resend } from '@/routes/tenant/seating/acknowledgments';
 import type {
     AssessmentCondition,
     AssessmentFact,
@@ -56,66 +52,56 @@ export default function SeatingAssessment({
     const fact = (numeral: string) =>
         facts.find((item) => item.numeral === numeral)?.value ?? '';
     const person = fact('VII');
-    const signed = assessment.status === 'signed';
-    const tail = [
-        {
-            title: 'Evaluaciones',
-            href: assessments([tenantSlug, workCenter.id]),
-        },
-        { title: person },
-    ];
+    const list = assessments([tenantSlug, workCenter.id]);
     setLayoutProps({
-        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, ...tail),
+        breadcrumbs: seatingCrumbs(
+            tenantSlug,
+            workCenter,
+            { title: 'Evaluaciones', href: list },
+            { title: person },
+        ),
     });
 
     return (
         <>
             <Head title={`Evaluación de ${person}`} />
-            <div className="flex w-full max-w-[880px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <PageHeader
-                    title={person}
-                    status={
-                        <Badge variant={signed ? 'secondary' : 'outline'}>
-                            {assessment.statusLabel}
-                        </Badge>
-                    }
-                    facts={[{ icon: UserRound, text: fact('VIII') }]}
-                >
-                    {canResend && (
-                        <RequestLinkButton
-                            form={resend.form([tenantSlug, assessment.id])}
-                            label="Reenviar enlace a la persona"
-                        />
-                    )}
-                </PageHeader>
-                {signed && (
-                    <AssessmentResult
-                        assessment={assessment}
-                        suggestions={suggestions}
-                    />
-                )}
-                <div className="card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
-                    <AssessmentFacts facts={facts} />
-                </div>
-                <div className="card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
-                    <AssessmentForm
-                        assessment={assessment}
-                        conditions={conditions}
-                        editable={canEdit}
-                    />
-                </div>
-                <AssessmentExtras
-                    assessmentId={assessment.id}
-                    referrals={referrals}
-                    canRefer={canRefer}
-                    canPropose={canPropose}
-                    measureKinds={measureKinds}
-                    suggestions={suggestions}
+            <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+                <AssessmentHeader
+                    person={person}
+                    position={fact('VIII')}
+                    assessment={assessment}
+                    canResend={canResend}
+                />
+                <AssessmentWorkspace
+                    assessment={assessment}
+                    conditions={conditions}
+                    canEdit={canEdit}
                     canSign={canSign}
                     signError={errors['sign']}
-                    workCenterId={assessment.workCenterId}
-                    minutesTitle={minutesTitle}
-                    canRecordMinutes={canRecordMinutes}
+                    before={
+                        <AssessmentLead
+                            assessment={assessment}
+                            suggestions={suggestions}
+                        />
+                    }
+                    after={
+                        <>
+                            <div className="card p-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
+                                <AssessmentFacts facts={facts} />
+                            </div>
+                            <AssessmentExtras
+                                assessmentId={assessment.id}
+                                referrals={referrals}
+                                canRefer={canRefer}
+                                canPropose={canPropose}
+                                measureKinds={measureKinds}
+                                suggestions={suggestions}
+                                workCenterId={assessment.workCenterId}
+                                minutesTitle={minutesTitle}
+                                canRecordMinutes={canRecordMinutes}
+                            />
+                        </>
+                    }
                 />
             </div>
         </>

@@ -239,6 +239,21 @@ it('shows the draft of an assessment with its eleven items and seven conditions'
         ->assertSee('Firmar evaluación');
 })->with($looks);
 
+// Board LS-Evaluacion: beside the conditions, the points chosen so far; the level is computed when it is signed.
+it('adds the points of the draft as the Comisión chooses them, and leaves the level to the signature', function (): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $draft = RiskAssessment::factory()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+
+    visit("{$url}/seating/assessments/{$draft->id}")
+        ->assertSeeIn('[aria-labelledby="score"]', '13')
+        ->assertSee('Del puesto')
+        ->assertSee('Sin respuesta de la persona')
+        ->assertSee('El nivel de riesgo se calcula al firmar, con las tablas vigentes.')
+        ->click('label:has(input[name="scores[footwear]"][value="3"])')
+        ->assertSeeIn('[aria-labelledby="score"]', '16')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows a signed assessment as final, with its result and the suggestion', function (bool $dark, bool $mobile): void {
     [$url, $ana, $position, $center] = assessableCenter();
     $signed = RiskAssessment::factory()->signed()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
