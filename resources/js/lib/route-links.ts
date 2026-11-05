@@ -10,12 +10,11 @@ import {
     dossier as seatingDossier,
 } from '@/routes/tenant/seating';
 import {
-    center as teleworkCenter,
     dossier as teleworkDossier,
     index as telework,
+    route as teleworkRoute,
 } from '@/routes/tenant/telework';
 import { index as teleworkDocuments } from '@/routes/tenant/telework/documents';
-import { index as teleworkNotices } from '@/routes/tenant/telework/notices';
 import { index as teleworkTrainings } from '@/routes/tenant/telework/trainings';
 import type { NormKey } from '@/lib/compliance-routes';
 import type { NavItem } from '@/types';
@@ -42,7 +41,8 @@ export function dossierHref(
 
 /**
  * Where each of the six stages of a route is done today (board V3-Movil), until the pages of each route arrive with its
- * own PR: the policies and documents of the company, the center's page, and the dossier last.
+ * own PR: the policies and documents of the company, the center's page, and the dossier last. NOM-037 already has its
+ * route page (board V2-Ruta-N037), where every stage is done.
  */
 export function stageHrefs(
     norm: NormKey,
@@ -63,11 +63,7 @@ export function stageHrefs(
             ];
         case 'nom037':
             return [
-                teleworkDocuments(tenantSlug),
-                teleworkCenter(center),
-                teleworkCenter(center),
-                teleworkTrainings(tenantSlug),
-                teleworkNotices(tenantSlug),
+                ...Array.from({ length: 5 }, () => teleworkRoute(center)),
                 dossierHref(norm, tenantSlug, workCenterId),
             ];
         default:

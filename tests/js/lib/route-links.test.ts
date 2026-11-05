@@ -7,12 +7,9 @@ const urls = (norm: 'nom035' | 'nom037' | 'seating') =>
 
 describe('stageHrefs', () => {
     it('leads each of the six stages to the page where it is done, the dossier last', () => {
+        // Rediseño v2: NOM-037 has its own route page (board V2-Ruta-N037), where each of its stages is done.
         expect(urls('nom037')).toEqual([
-            '/admin/acme/telework/documents',
-            '/admin/acme/telework/centers/c1',
-            '/admin/acme/telework/centers/c1',
-            '/admin/acme/telework/trainings',
-            '/admin/acme/telework/notices',
+            ...Array(5).fill('/admin/acme/telework/centers/c1/route'),
             '/admin/acme/telework/centers/c1/dossier',
         ]);
         expect(urls('nom035')).toEqual([
