@@ -487,6 +487,18 @@ it('keeps a case for a legal process from its switch, and lets it go again', fun
     expect($case->refresh()->on_hold)->toBeFalse();
 });
 
+it('shows the outside handler how the channel is handled, from its menu', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    ComplaintChannel::factory()->forTenant($tenant->id)->active()->create(['procedure' => 'Recibimos su queja y la atiende una persona designada.']);
+    test()->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Complaints));
+
+    visitPage('complaints/procedure', '/admin/acme/complaints/procedure', $dark, $mobile)
+        ->assertSee('Cómo se atiende')
+        ->assertSee('Recibimos su queja y la atiende una persona designada.')
+        ->assertSee('3 días')
+        ->assertSee('Cómo atiendes un caso');
+})->with($looks);
+
 /** A channel with a complaint whose reference and key the person knows. */
 function followedComplaint(): array
 {

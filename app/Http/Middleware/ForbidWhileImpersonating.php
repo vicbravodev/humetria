@@ -34,7 +34,7 @@ final class ForbidWhileImpersonating
             'two-factor.confirm', 'two-factor.enable', 'two-factor.disable', 'two-factor.qr-code',
             'two-factor.recovery-codes', 'two-factor.regenerate-recovery-codes', 'two-factor.secret-key',
             'passkey.store', 'passkey.registration-options', 'passkey.destroy',
-            'tenant.complaints.index', 'tenant.complaints.cases.*',
+            'tenant.complaints.index', 'tenant.complaints.cases.*', 'tenant.complaints.procedure',
         ];
     }
 

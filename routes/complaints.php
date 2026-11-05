@@ -9,6 +9,7 @@ use App\Modules\Complaints\Http\Controllers\ComplaintController;
 use App\Modules\Complaints\Http\Controllers\EvidenceController;
 use App\Modules\Complaints\Http\Controllers\HandlerController;
 use App\Modules\Complaints\Http\Controllers\PosterController;
+use App\Modules\Complaints\Http\Controllers\ProcedureController;
 use App\Modules\Complaints\Http\Controllers\UnassignedController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,9 @@ Route::delete('admin/{tenant:slug}/complaints/handlers/{handler}', [HandlerContr
 
 // The complaints nobody holds are assigned again by the same rules; whoever asks learns only how many were.
 Route::post('admin/{tenant:slug}/complaints/unassigned/route', [UnassignedController::class, 'route'])->where('tenant', $notReserved)->name('tenant.complaints.unassigned.route');
+
+// How the channel is handled, for whoever handles complaints (board V4-Menu-Roles): the procedure and the deadlines, read-only.
+Route::get('admin/{tenant:slug}/complaints/procedure', ProcedureController::class)->where('tenant', $notReserved)->name('tenant.complaints.procedure');
 
 // The cases a handler works on: found only among those assigned to the person (a 404 otherwise, never a 403).
 Route::get('admin/{tenant:slug}/complaints', [ComplaintController::class, 'index'])->where('tenant', $notReserved)->name('tenant.complaints.index');

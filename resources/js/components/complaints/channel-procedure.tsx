@@ -1,6 +1,7 @@
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import ChannelSettingsForm from '@/components/complaints/channel-settings-form';
+import ProcedureFacts from '@/components/complaints/procedure-facts';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -8,7 +9,6 @@ import {
     DialogDescription,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { countOf } from '@/lib/plural';
 import type { ChannelBounds, ChannelSettings } from '@/types';
 
 /**
@@ -23,17 +23,6 @@ export default function ChannelProcedure({
     bounds: ChannelBounds;
 }) {
     const [editing, setEditing] = useState(false);
-    const facts = [
-        [
-            'Acuse de recibo',
-            countOf(settings.acknowledgeWithinDays, 'día', 'días'),
-        ],
-        ['Respuesta', countOf(settings.resolveWithinDays, 'día', 'días')],
-        [
-            'Se conserva',
-            `${countOf(settings.retentionMonths, 'mes', 'meses')} tras cerrar`,
-        ],
-    ];
 
     return (
         <section
@@ -59,16 +48,11 @@ export default function ChannelProcedure({
                 </Button>
             </div>
             <p className="whitespace-pre-line">{settings.procedure}</p>
-            <dl className="grid gap-4 border-t pt-5 sm:grid-cols-3">
-                {facts.map(([label, value]) => (
-                    <div key={label} className="flex flex-col gap-0.5">
-                        <dt className="text-sm text-muted-foreground">
-                            {label}
-                        </dt>
-                        <dd className="text-lg font-medium">{value}</dd>
-                    </div>
-                ))}
-            </dl>
+            <ProcedureFacts
+                acknowledgeWithinDays={settings.acknowledgeWithinDays}
+                resolveWithinDays={settings.resolveWithinDays}
+                retentionMonths={settings.retentionMonths}
+            />
             <p className="text-caption text-muted-foreground">
                 Estos plazos los fijas tú; la norma no los marca. Al vencer la
                 conservación, se borra el contenido y queda solo un registro sin

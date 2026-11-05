@@ -1,5 +1,5 @@
-import { MessageSquareWarning } from 'lucide-react';
-import { index as complaintCases } from '@/routes/tenant/complaints';
+import { BookOpenText, MessageSquareWarning } from 'lucide-react';
+import { index as complaintCases, procedure } from '@/routes/tenant/complaints';
 import { show as channel } from '@/routes/tenant/complaints/channel';
 import { index as complaintHandlers } from '@/routes/tenant/complaints/handlers';
 import type { NavItem, NavTenant } from '@/types';
@@ -22,7 +22,7 @@ export const complaints = (tenant: NavTenant): NavItem => ({
             ? [
                   { title: 'Canal', href: channel(tenant.slug) },
                   {
-                      title: 'Quién atiende',
+                      title: 'Quiénes atienden',
                       href: complaintHandlers(tenant.slug),
                   },
               ]
@@ -33,7 +33,7 @@ export const complaints = (tenant: NavTenant): NavItem => ({
 export const handlesOrManagesComplaints = (tenant: NavTenant): boolean =>
     tenant.can.handle_complaints || tenant.can.manage_complaint_channel;
 
-/** The outside handler's whole menu (board 40): its cases, or nothing when it may no longer handle them. */
+/** The outside handler's whole menu (board 40): its cases and how they are handled, or nothing when it may no longer handle them. */
 export const complaintCasesItems = (tenant: NavTenant): NavItem[] =>
     tenant.can.handle_complaints
         ? [
@@ -41,6 +41,11 @@ export const complaintCasesItems = (tenant: NavTenant): NavItem[] =>
                   title: 'Casos',
                   href: complaintCases(tenant.slug),
                   icon: MessageSquareWarning,
+              },
+              {
+                  title: 'Cómo se atiende',
+                  href: procedure(tenant.slug),
+                  icon: BookOpenText,
               },
           ]
         : [];
