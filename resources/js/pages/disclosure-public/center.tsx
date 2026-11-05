@@ -1,14 +1,16 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, Info } from 'lucide-react';
-import PersonShell from '@/components/disclosure/person-shell';
-import PolicySections from '@/components/disclosure/policy-sections';
-import PublicTextBlock from '@/components/disclosure/public-text-block';
-import PublicChannelCard from '@/components/disclosure/public-channel';
-import PublicResultsBlock from '@/components/disclosure/public-results';
-import PublicBlock from '@/components/disclosure/public-block';
+import PublicComplaintCard from '@/components/disclosure/public-complaint-card';
+import PublicBlocks from '@/components/disclosure/public-blocks';
+import PublicPolicyCard from '@/components/disclosure/public-policy-card';
+import PublicResultsCard from '@/components/disclosure/public-results-card';
+import WorkersShell from '@/components/disclosure/workers-shell';
 import { show } from '@/routes/workers';
 import type { PublicCenterProps } from '@/types';
 
+/**
+ * The page of the people of a center, on their phone (board V4-Pagina-Personas): the complaint first, the policy, the results in
+ * plain words and the rest of 5.7 folded. In «usted»; it keeps nothing of who opens it (criterio C-55).
+ */
 export default function PublicCenter({
     token,
     company,
@@ -20,85 +22,62 @@ export default function PublicCenter({
     results,
     policy,
 }: PublicCenterProps) {
+    const complaint = blocks['d'] ?? null;
+    const later =
+        policy === null || results === null || results.published === null;
+
     return (
-        <PersonShell
+        <WorkersShell
             company={company}
-            label="Para las personas trabajadoras"
-            icon={Info}
+            aside={
+                others && (
+                    <Link
+                        href={show(token)}
+                        className="touch-hit shrink-0 text-sm font-medium text-primary"
+                    >
+                        Otro centro
+                    </Link>
+                )
+            }
         >
             <Head title={`${center.name} · ${company}`} />
-            <div className="flex w-full max-w-2xl flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    {others && (
-                        <Link
-                            href={show(token)}
-                            className="touch-hit inline-flex w-fit items-center gap-1 text-base font-medium text-primary underline-offset-4 hover:underline"
-                        >
-                            <ChevronLeft aria-hidden className="size-4" />
-                            Otro centro de trabajo
-                        </Link>
-                    )}
+            <div className="flex w-full max-w-xl flex-col gap-4">
+                <div className="flex flex-col gap-1.5 pb-1">
+                    <p className="text-caption font-semibold tracking-[0.06em] text-primary uppercase">
+                        Para las personas trabajadoras
+                    </p>
                     <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                         {center.name}
                     </h1>
                     <p className="text-muted-foreground">
-                        Lo que {company} le informa a quienes trabajan en este
-                        centro: su política de prevención de riesgos
-                        psicosociales y de violencia laboral.
+                        Lo que la empresa le informa sobre su bienestar en el
+                        trabajo.
                     </p>
                 </div>
-                <PublicBlock
-                    id="block-a"
-                    inciso="a"
-                    title="Política de prevención"
-                >
-                    {policy === null ? (
-                        <p className="text-muted-foreground">
-                            Este centro de trabajo todavía no publica su
-                            política de prevención.
-                        </p>
-                    ) : (
-                        <>
-                            <p className="text-base text-muted-foreground">
-                                Versión {policy.version}, publicada el{' '}
-                                {policy.publishedOn}.
-                            </p>
-                            <PolicySections
-                                sections={policy.sections}
-                                tone="person"
-                            />
-                        </>
-                    )}
-                </PublicBlock>
-                <PublicTextBlock
-                    inciso="b"
-                    title="Medidas contra la violencia laboral"
-                    block={blocks['b']}
-                    measures={measures['b'] ?? []}
+                {channel !== null && (
+                    <PublicComplaintCard channel={channel} block={complaint} />
+                )}
+                {policy === null ? (
+                    <section className="card p-5 text-muted-foreground">
+                        Este centro de trabajo todavía no publica su política de
+                        prevención.
+                    </section>
+                ) : (
+                    <PublicPolicyCard policy={policy} />
+                )}
+                {results !== null && <PublicResultsCard results={results} />}
+                <PublicBlocks
+                    blocks={blocks}
+                    measures={measures}
+                    channelOpen={channel !== null}
                 />
-                <PublicTextBlock
-                    inciso="c"
-                    title="Medidas y acciones de prevención y control"
-                    block={blocks['c']}
-                    measures={measures['c'] ?? []}
-                />
-                <PublicTextBlock
-                    inciso="d"
-                    title="Cómo presentar una queja"
-                    block={blocks['d']}
-                    extra={
-                        channel === null ? undefined : (
-                            <PublicChannelCard channel={channel} />
-                        )
-                    }
-                />
-                {results !== null && <PublicResultsBlock results={results} />}
-                <PublicTextBlock
-                    inciso="f"
-                    title="Posibles alteraciones a la salud"
-                    block={blocks['f']}
-                />
+                {later && (
+                    <p className="pt-1 text-sm text-muted-foreground">
+                        La empresa publicará aquí más información: los
+                        resultados de la evaluación y las medidas que toma.
+                    </p>
+                )}
             </div>
-        </PersonShell>
+        </WorkersShell>
     );
 }

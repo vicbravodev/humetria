@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { Building2, Info } from 'lucide-react';
-import PersonShell from '@/components/disclosure/person-shell';
+import { Building2 } from 'lucide-react';
+import WorkersShell from '@/components/disclosure/workers-shell';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import SearchField from '@/components/humetria/search-field';
@@ -19,11 +19,7 @@ export default function PublicCenters({
     );
 
     return (
-        <PersonShell
-            company={company}
-            label="Para las personas trabajadoras"
-            icon={Info}
-        >
+        <WorkersShell company={company}>
             <Head title={company} />
             <div className="flex w-full max-w-2xl flex-col gap-6">
                 <div className="flex flex-col gap-2">
@@ -73,6 +69,6 @@ export default function PublicCenters({
                     pinned={false}
                 />
             </div>
-        </PersonShell>
+        </WorkersShell>
     );
 }

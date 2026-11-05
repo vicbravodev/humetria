@@ -10,8 +10,11 @@ import type { PublicResults } from '@/types';
  */
 export default function PublicResultsBlock({
     results,
+    bare = false,
 }: {
     results: PublicResults;
+    /** Inside the plain card of the page of the people: no card of its own. */
+    bare?: boolean;
 }) {
     const { published } = results;
     const levels =
@@ -20,7 +23,7 @@ export default function PublicResultsBlock({
             : [];
 
     return (
-        <PublicBlock id="block-e" inciso="e" title={results.title}>
+        <PublicBlock id="block-e" inciso="e" title={results.title} bare={bare}>
             {published === null && (
                 <p className="text-muted-foreground">
                     Aún no hay resultados publicados.

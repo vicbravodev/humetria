@@ -334,10 +334,14 @@ it('shows the people the policy of their center', function (bool $dark, bool $mo
 
     visitPage('disclosure-public/center', "{$url}/centers/".WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->firstOrFail()->id, $dark, $mobile)
         ->assertSee('Planta Norte')
-        ->assertSee('Política de prevención')
-        ->assertSee('Acme Manufacturas S.A. de C.V.')
+        ->assertSee('Para las personas trabajadoras')
+        ->assertSee('Nuestra política')
         ->assertSee('Es obligación de supervisores, gerentes y directores')
-        ->assertSee('Otro centro de trabajo');
+        ->assertSee('Para confirmar que la leyó, use el enlace personal que le llegó por correo.')
+        ->assertSee('no guardamos quién visita esta página')
+        ->assertSee('Otro centro')
+        ->click('Leer completa')
+        ->assertSee('Acme Manufacturas S.A. de C.V.');
 })->with($looks);
 
 it('says a center has no policy yet', function (): void {
@@ -407,7 +411,10 @@ it('publishes results and the people read them on their page, of the whole cente
     $link = route('workers.center', [(string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id)->token(), $plant->id], absolute: false);
 
     visitPage('disclosure-public/center', $link, false, true)
-        ->assertSee('Resultados de la identificación y análisis de los factores de riesgo psicosocial')
+        ->assertSee('Resultados de la evaluación')
+        ->assertSee('contestaron 12 personas')
+        ->assertSee('Lo que más atención necesita')
+        ->click('Ver todas las cifras')
         ->assertSee('Calificación final (12 cuestionarios)')
         ->assertSee('no son un promedio');
 });
@@ -428,8 +435,10 @@ it('shows the people the channel for complaints and the measures the company cho
     $url = route('workers.center', [(string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle($hr->id)->token(), $plant->id], absolute: false);
 
     visitPage('disclosure-public/center', $url, $dark, $mobile)
+        ->assertSee('¿Algo no está bien en su trabajo?')
         ->assertSee('Presentar una queja o denuncia')
-        ->assertSee('El canal permite presentar la queja o la denuncia de forma anónima.')
+        ->assertSee('Puede avisar sin dar su nombre.')
+        ->click('Lo que hacemos para prevenir')
         ->assertSee('Del Programa de intervención')
         ->assertSee('Revisar las cargas de trabajo');
 })->with($looks);

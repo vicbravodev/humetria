@@ -239,9 +239,9 @@ it('shows the people each block with the text published for their center, and sa
     resolve(PublishContent::class)->handle(contentDraft(DocumentKind::HealthEffects, 'Salud.')->id, null, $this->hr->id);
 
     $this->get(route('workers.center', [$token, $this->north->id]))->assertInertia(fn (Assert $page) => $page
-        ->where('blocks.b', ['text' => "Primer párrafo.\n\nSegundo párrafo.", 'publishedOn' => '20 nov 2026'])
+        ->where('blocks.b', ['text' => "Primer párrafo.\n\nSegundo párrafo.", 'sections' => [['heading' => null, 'text' => "Primer párrafo.\n\nSegundo párrafo."]], 'publishedOn' => '20 nov 2026'])
         ->where('blocks.c', null)
         ->where('blocks.d', null)
-        ->where('blocks.f', ['text' => 'Salud.', 'publishedOn' => '20 nov 2026']));
+        ->where('blocks.f', ['text' => 'Salud.', 'sections' => [['heading' => null, 'text' => 'Salud.']], 'publishedOn' => '20 nov 2026']));
     $this->get(route('workers.center', [$token, $this->south->id]))->assertInertia(fn (Assert $page) => $page->where('blocks.b', null)->where('blocks.f.text', 'Salud.'));
 });

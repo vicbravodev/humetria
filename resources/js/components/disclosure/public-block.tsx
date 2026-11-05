@@ -8,15 +8,23 @@ export default function PublicBlock({
     id,
     inciso,
     title,
+    bare = false,
     children,
 }: {
     id: string;
     inciso: string;
     title: string;
+    /** Inside another card: no card of its own. */
+    bare?: boolean;
     children: ReactNode;
 }) {
     return (
-        <section aria-labelledby={id} className="flex flex-col gap-4 card p-5">
+        <section
+            aria-labelledby={id}
+            className={
+                bare ? 'flex flex-col gap-4' : 'flex flex-col gap-4 card p-5'
+            }
+        >
             <h2 id={id} className="text-xl leading-7 font-semibold">
                 <span className="mr-2 text-base font-medium text-muted-foreground">
                     {inciso})

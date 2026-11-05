@@ -37,7 +37,12 @@ export type PublicCenterProps = {
 };
 
 /** What the company published for a block of 5.7 in a center: the words and the day. */
-export type PublicBlockText = { text: string; publishedOn: string };
+export type PublicBlockText = {
+    text: string;
+    /** Its parts under their headings; the one part of a text written by hand has no heading. */
+    sections: { heading: string | null; text: string }[];
+    publishedOn: string;
+};
 
 /** A category or a domain in the results of a center: how many questionnaires fall in each level. */
 export type PublicRiskGroup = {
@@ -56,6 +61,8 @@ export type PublicResults = {
               closedOn: string;
               guide: 'ii' | 'iii';
               answered: number;
+              /** What most needs attention, in words: three domains at most. */
+              themes: string[];
               levels: { value: RiskLevelValue; label: string }[];
               final: number[];
               categories: PublicRiskGroup[];

@@ -49,6 +49,19 @@ final readonly class ContentPages
     }
 
     /**
+     * The parts of a block as the page of the people shows them: each with text under its heading; the one section of a block
+     * written by hand has none of its own.
+     *
+     * @return list<array{heading: string|null, text: string}>
+     */
+    public static function sections(Document $document): array
+    {
+        $single = count($document->content) === 1;
+
+        return array_values(array_map(fn (array $section): array => ['heading' => $single ? null : $section['heading'], 'text' => $section['text']], array_filter($document->content, fn (array $section): bool => trim($section['text']) !== '')));
+    }
+
+    /**
      * The words of a block: its one section as it is, or, written with questions, each section with text under its heading
      * (a line of its own, then the text).
      */
