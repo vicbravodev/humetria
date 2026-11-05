@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { Link2 } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
-import LinkUnavailable from '@/components/results/link-unavailable';
+import ReportLinkUnavailable from '@/components/results/report-link-unavailable';
 import PrintButton from '@/components/humetria/print-button';
 import ReportBar from '@/components/results/report-bar';
 import ReportDocument from '@/components/results/report-document';
@@ -27,7 +27,7 @@ export default function SharedReport({
                     <header className="px-4 py-5 md:px-10">
                         <Logo className="h-7" />
                     </header>
-                    <LinkUnavailable />
+                    <ReportLinkUnavailable />
                 </div>
             </>
         );

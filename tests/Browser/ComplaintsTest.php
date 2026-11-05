@@ -177,7 +177,7 @@ it('says the channel is paused and offers the other way, or that the link is gon
     $code = $case === 'paused' ? ComplaintChannel::factory()->forTenant($tenant->id)->paused()->create()->access_code : 'ZZZZZZZZZZZZZZZZ';
 
     visitPage('complaints-public/unavailable', "/c/{$code}")
-        ->assertSee($case === 'paused' ? 'El canal no está disponible por ahora' : 'Este enlace no está disponible')
+        ->assertSee($case === 'paused' ? 'El canal no está disponible por ahora' : 'Este enlace ya no está disponible')
         ->assertSee('Otra vía')
         ->assertSee('Inspección Federal del Trabajo');
 })->with(['paused', 'gone']);

@@ -267,7 +267,7 @@ it('shows the person what the Comisión asked for and lets them authorize a visi
 
 it('tells a link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
     visitPage('telework/portal', '/portal/not-a-link', $dark, $mobile)
-        ->assertSee('Este enlace no es válido');
+        ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
 /** @return array{string, WorkCenter, Tenant} The panel of RH in acme, and a center of it (with a published list unless said otherwise). */
@@ -376,7 +376,7 @@ it('shows the person the checklist with its instructions, the notice and the con
 
 it('tells a checklist link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
     visitPage('telework/portal-checklist', '/portal/not-a-link/checklists/'.Str::uuid(), $dark, $mobile)
-        ->assertSee('Este enlace no es válido');
+        ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
 it('lets the person answer on their phone with a flagged answer, pick a photo and send it once', function (): void {
