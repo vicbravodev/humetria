@@ -86,6 +86,8 @@ final class DocumentController extends Controller
                 'items' => array_map(fn (string $value, string $label): array => ['value' => $value, 'label' => $label], array_keys($kind->items()), array_values($kind->items())), // @pest-mutate-ignore: UnwrapArrayValues
             ], DocumentKind::cases()),
             'canManage' => Gate::allows('manage-telework'),
+            // «Ya lo tengo» of a supporting document (board V2-N037-Docs) opens the upload on its kind.
+            'chosenKind' => DocumentKind::tryFrom($request->string('kind')->toString())?->value,
         ]);
     }
 

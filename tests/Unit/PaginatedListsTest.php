@@ -59,6 +59,7 @@ const ARRAY_PROPS = [
     'telework/write:questions' => 'las preguntas de un documento escrito con preguntas: un instrumento, ocho a lo más',
     'telework/write:sections' => 'catálogo fijo: las secciones de un documento escrito con preguntas, doce a lo más',
     'telework/write:items' => 'catálogo fijo: los incisos que pide el numeral del documento, doce a lo más',
+    'telework/supporting-documents:documents' => 'catálogo fijo: los seis documentos de apoyo de la norma (5.3 a 5.14)',
     'compensation/benefits:kinds' => 'catálogo fijo: los cuatro modos de calcular una prestación (BenefitKind)',
     'compensation/benefits:frequencies' => 'catálogo fijo: diaria, mensual o anual',
     'compensation/benefits:groups' => 'catálogo fijo: sindicalizado o confianza',

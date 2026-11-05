@@ -85,3 +85,19 @@ export type WritingPublication = {
     centers: number;
     version: { number: number; publishedOn: string } | null;
 };
+
+/** One of the six supporting documents (board V2-N037-Docs). */
+export type SupportingDocument = {
+    kind: string;
+    name: string;
+    summary: string;
+    /** "5.3". */
+    numeral: string;
+    minutes: number;
+    /** In force in every center in use, uploaded or written. */
+    ready: boolean;
+    /** Its writing with questions started. */
+    started: boolean;
+    /** Its latest version in force; "12 oct 2026". */
+    version: { id: string; number: number; publishedOn: string } | null;
+};

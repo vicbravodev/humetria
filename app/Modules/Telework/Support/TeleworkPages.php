@@ -41,8 +41,8 @@ final readonly class TeleworkPages
 
     private const int PEOPLE_PER_PAGE = 15;
 
-    /** The six supporting documents of the first stage (5.3, 5.6, 5.8, 5.10, 5.13 and 5.14). */
-    private const array SUPPORT = [
+    /** The six supporting documents of the first stage (5.3, 5.6, 5.8, 5.10, 5.13 and 5.14), in the order of the norm. */
+    public const array SUPPORT = [
         DocumentKind::RiskInformation,
         DocumentKind::ImplementationProcess,
         DocumentKind::MaintenanceProgram,

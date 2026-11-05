@@ -133,7 +133,9 @@ Route::post('admin/{tenant:slug}/telework/notices/{notice}/place-review', [Notic
 // The work centers a NOM-037 field may search (the committee only its own); the company-wide options route is closed to it.
 Route::get('admin/{tenant:slug}/telework/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.telework.work-centers.options');
 
-// Writing a document with questions (boards V2-Politica and V3-Doc-Riesgos; decisión A3): every answer is kept.
+// Writing a document with questions (boards V2-Politica and V3-Doc-Riesgos; decisión A3): every answer is kept. The six
+// supporting documents are listed together (board V2-N037-Docs).
+Route::get('admin/{tenant:slug}/telework/documents/supporting', [WritingController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.supporting.index');
 Route::get('admin/{tenant:slug}/telework/documents/{kind}/write', [WritingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.writing.show');
 Route::put('admin/{tenant:slug}/telework/documents/{kind}/write', [WritingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.telework.writing.update');
 Route::post('admin/{tenant:slug}/telework/documents/{kind}/write/publish', [WritingController::class, 'publish'])->where('tenant', $notReserved)->name('tenant.telework.writing.publish');

@@ -69,6 +69,40 @@ final readonly class WritingPage
     }
 
     /**
+     * The six supporting documents (board V2-N037-Docs): what each is, how long its questions take, whether it is in force
+     * in every center in use (uploaded or written) with its latest version, and whether its writing started.
+     *
+     * @return array{documents: list<array<string, mixed>>, centers: int}
+     */
+    public function supporting(): array
+    {
+        $centers = $this->activeCenters();
+        $inForce = TeleworkDocument::query()->inForce()->whereIn('kind', TeleworkPages::SUPPORT)->whereIn('work_center_id', $centers)
+            ->orderBy('created_at')->get(['id', 'kind', 'work_center_id', 'version', 'created_at'])->groupBy(fn (TeleworkDocument $document): string => $document->kind->value);
+        $started = DocumentDraft::query()->whereIn('kind', TeleworkPages::SUPPORT)->get(['kind'])->map(fn (DocumentDraft $draft): string => $draft->kind->value)->all();
+
+        return [
+            'documents' => array_map(function (DocumentKind $kind) use ($inForce, $started, $centers): array {
+                $template = $this->writer->template($kind);
+                $versions = $inForce->get($kind->value);
+                $latest = $versions?->last();
+
+                return [
+                    'kind' => $kind->value,
+                    'name' => $template?->name() ?? $kind->label(),
+                    'summary' => $template?->summary() ?? '',
+                    'numeral' => $kind->numeral(),
+                    'minutes' => $template?->minutes() ?? 0,
+                    'ready' => $centers !== [] && $versions?->count() === count($centers),
+                    'started' => in_array($kind->value, $started, true),
+                    'version' => $latest === null ? null : ['id' => $latest->id, 'number' => $latest->version, 'publishedOn' => $this->day($latest->created_at)],
+                ];
+            }, TeleworkPages::SUPPORT),
+            'centers' => count($centers),
+        ];
+    }
+
+    /**
      * A written version as people read it: whose it is, its number, its day and its sections.
      *
      * @return array<string, mixed>
@@ -95,7 +129,7 @@ final readonly class WritingPage
      */
     private function publication(DocumentKind $kind): array
     {
-        $centers = array_map(fn (WorkCenterSummary $center): string => $center->id, array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
+        $centers = $this->activeCenters();
         $latest = TeleworkDocument::query()->inForce()->where('kind', $kind)->whereIn('work_center_id', $centers)->orderByDesc('created_at')->first();
 
         return [
@@ -103,6 +137,12 @@ final readonly class WritingPage
             'centers' => count($centers),
             'version' => $latest === null ? null : ['number' => $latest->version, 'publishedOn' => $this->day($latest->created_at)],
         ];
+    }
+
+    /** @return list<string> The ids of the centers in use. */
+    private function activeCenters(): array
+    {
+        return array_map(fn (WorkCenterSummary $center): string => $center->id, array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
     }
 
     /** "12 oct 2026", in the display timezone. */

@@ -181,3 +181,36 @@ it('writes the risks of working from home with questions, as the redesign draws 
         ->assertDontSee('Los 12 temas')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+// Board V2-N037-Docs: the six supporting documents, each written with questions or uploaded.
+it('lists the supporting documents, as the redesign draws them, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $plant = writingCompany();
+    TeleworkDocument::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'kind' => 'committee_participation']);
+
+    visitPage('telework/supporting-documents', '/admin/acme/telework/documents/supporting', $dark, $mobile)
+        ->assertSee('Documentos de apoyo')
+        ->assertSee('Además de la política, la norma pide estos 6.')
+        ->assertSee('1 de 6 listo')
+        ->assertSee('≈ 25 min los demás')
+        ->assertSee('Riesgos de trabajar desde casa')
+        ->assertSee('≈ 7 min · numeral 5.13')
+        ->assertSee('Crear con preguntas')
+        ->assertSee('Ya lo tengo')
+        ->assertSee('Nueva versión')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('goes from the list to write a document with questions, and back', function (): void {
+    writingCompany();
+
+    visit('/admin/acme/telework/documents/supporting')
+        ->click('Crear con preguntas · Mantenimiento del equipo')
+        ->assertSee('NOM-037 · Documentos de apoyo · Mantenimiento del equipo')
+        ->assertSee('Pregunta 1 de 4')
+        ->click('Guardar y volver')
+        ->assertSee('Además de la política, la norma pide estos 6.')
+        ->click('Ya lo tengo · Regreso a la oficina')
+        ->assertSee('Documentos de NOM-037')
+        ->assertRadioSelected('kind', 'reversibility')
+        ->assertNoJavaScriptErrors();
+});

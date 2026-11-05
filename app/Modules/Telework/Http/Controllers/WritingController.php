@@ -28,12 +28,20 @@ final class WritingController extends Controller
 {
     public function __construct(private readonly Writer $writer, private readonly WorkCenters $workCenters) {}
 
+    /** The six supporting documents (board V2-N037-Docs): everyone who reads NOM-037 sees them; whoever manages it writes them. */
+    public function index(WritingPage $page): Response
+    {
+        Gate::authorize('view-telework');
+
+        return Inertia::render('telework/supporting-documents', [...$page->supporting(), 'canManage' => Gate::allows('manage-telework')]);
+    }
+
     public function show(Request $request, mixed $tenant, string $kind, WritingPage $page): Response
     {
         Gate::authorize('manage-telework');
         [$document, $template] = $this->written($kind);
 
-        return Inertia::render('telework/write', $page->props($template, $document, $this->back($request, $tenant)));
+        return Inertia::render('telework/write', $page->props($template, $document, $this->back($request, $tenant, $document)));
     }
 
     public function publish(Request $request, mixed $tenant, string $kind, PublishWriting $publish): RedirectResponse
@@ -45,7 +53,7 @@ final class WritingController extends Controller
         $publish->handle($template, $document, $user->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => "{$template->name()} publicada."]);
 
-        return redirect($this->back($request, $tenant)['href']);
+        return redirect($this->back($request, $tenant, $document)['href']);
     }
 
     public function update(WritingRequest $request, mixed $tenant, string $kind, SaveWriting $save): RedirectResponse
@@ -59,18 +67,21 @@ final class WritingController extends Controller
     }
 
     /**
-     * Where «Guardar y volver» leads: the route of the center it came from, or the centers.
+     * Where «Guardar y volver» leads: the route of the center it came from; else the policy to the centers and a supporting
+     * document to its list.
      *
      * @return array{href: string, label: string, center: string|null}
      */
-    private function back(Request $request, mixed $tenant): array
+    private function back(Request $request, mixed $tenant, DocumentKind $kind): array
     {
         $center = $request->string('center')->toString();
         $from = Str::isUuid($center) ? $this->workCenters->findActive($center) : null;
 
-        return $from === null
-            ? ['href' => route('tenant.telework.index', $tenant), 'label' => 'Guardar y volver', 'center' => null]
-            : ['href' => route('tenant.telework.route', [$tenant, $from->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $from->id];
+        return match (true) {
+            $from !== null => ['href' => route('tenant.telework.route', [$tenant, $from->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $from->id],
+            $kind === DocumentKind::Policy => ['href' => route('tenant.telework.index', $tenant), 'label' => 'Guardar y volver', 'center' => null],
+            default => ['href' => route('tenant.telework.supporting.index', $tenant), 'label' => 'Guardar y volver', 'center' => null],
+        };
     }
 
     /** @return array{DocumentKind, WrittenTemplate} */
