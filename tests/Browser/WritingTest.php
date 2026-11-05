@@ -214,3 +214,27 @@ it('goes from the list to write a document with questions, and back', function (
         ->assertRadioSelected('kind', 'reversibility')
         ->assertNoJavaScriptErrors();
 });
+
+// Rediseño v2 (boards V2-Centros-N037 and V2-Ruta-N037): what is done once for the company leads to its questions.
+it('goes from the company and from the route of a center to write the policy and the supporting documents', function (): void {
+    $plant = writingCompany();
+    TeleworkProfile::factory()->teleworks()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id]);
+
+    visit('/admin/acme/telework')
+        ->click('Continuar · Política de Teletrabajo')
+        ->assertSee('Pregunta 1 de 8')
+        ->click('Guardar y volver')
+        ->click('Ver documentos · 6 documentos de apoyo')
+        ->assertSee('Además de la política, la norma pide estos 6.')
+        ->assertNoJavaScriptErrors();
+
+    visit("/admin/acme/telework/centers/{$plant->id}/route")
+        ->assertSee('Termina tu Política de Teletrabajo')
+        ->click('a[href*="/documents/policy/write"]')
+        ->assertSee('Guardar y volver a la ruta')
+        ->click('Guardar y volver a la ruta')
+        ->assertSee('Ver los 6')
+        ->click('a[href$="/telework/documents/supporting"]')
+        ->assertSee('Además de la política, la norma pide estos 6.')
+        ->assertNoJavaScriptErrors();
+});

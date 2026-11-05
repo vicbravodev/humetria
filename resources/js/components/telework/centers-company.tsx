@@ -4,14 +4,21 @@ import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index as documents } from '@/routes/tenant/telework/documents';
+import { index as supporting } from '@/routes/tenant/telework/supporting';
 import { index as trainings } from '@/routes/tenant/telework/trainings';
+import { show as write } from '@/routes/tenant/telework/writing';
 import type { TeleworkCompany } from '@/types';
 
-/** «Para toda la empresa» (board V2-Centros-N037): the policy, its supporting documents and the yearly training. */
+/**
+ * «Para toda la empresa» (board V2-Centros-N037): the policy, its supporting documents and the yearly training. Whoever
+ * manages NOM-037 goes on writing the policy with questions (decisión A3); the rest see its versions.
+ */
 export default function CentersCompany({
     company,
+    canManage,
 }: {
     company: TeleworkCompany;
+    canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const policyDone =
@@ -21,7 +28,10 @@ export default function CentersCompany({
             icon: FileText,
             title: 'Política de Teletrabajo',
             text: `Vigente en ${company.policyCenters} de ${company.centers} centros · numeral 5.2`,
-            href: documents(tenantSlug),
+            href:
+                canManage && !policyDone
+                    ? write([tenantSlug, 'policy'])
+                    : documents(tenantSlug),
             action: policyDone ? 'Ver' : 'Continuar',
             primary: !policyDone,
         },
@@ -29,7 +39,7 @@ export default function CentersCompany({
             icon: FilePlus2,
             title: '6 documentos de apoyo',
             text: `${company.documentsReady} de 6 vigentes en todos tus centros · 5.3, 5.6, 5.8, 5.10, 5.13 y 5.14`,
-            href: documents(tenantSlug),
+            href: supporting(tenantSlug),
             action: 'Ver documentos',
             primary: false,
         },
@@ -75,7 +85,10 @@ export default function CentersCompany({
                             variant={row.primary ? 'default' : 'outline'}
                             className="col-start-2 justify-self-start @[560px]:col-start-auto"
                         >
-                            <Link href={row.href}>{row.action}</Link>
+                            <Link href={row.href}>
+                                {row.action}
+                                <span className="sr-only"> · {row.title}</span>
+                            </Link>
                         </Button>
                     </li>
                 ))}

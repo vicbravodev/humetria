@@ -461,8 +461,12 @@ final readonly class TeleworkPages
         }
 
         $documents = ['href' => route('tenant.telework.documents.index', [$tenant, 'center' => $center->id]), 'action' => 'Ver documentos'];
+        // Rediseño v2 (decisión A3): whoever manages NOM-037 writes the policy and the supporting documents with questions.
+        $write = ! $done && $reach['manage'];
 
         return match ($numeral) {
+            '5.2' => $write ? ['href' => route('tenant.telework.writing.show', [$tenant, 'policy', 'center' => $center->id]), 'action' => 'Continuar'] : $documents,
+            '5.3', '5.6', '5.8', '5.10', '5.13', '5.14' => $write ? ['href' => route('tenant.telework.supporting.index', $tenant), 'action' => 'Ver los documentos de apoyo'] : $documents,
             '5.1' => match (true) {
                 $done => ['href' => route('tenant.telework.center', [$tenant, $center->id]), 'action' => 'Ver personas'],
                 $reach['manage'] => ['href' => route('tenant.telework.teleworkers.create', [$tenant, $center->id]), 'action' => 'Registrar persona'],

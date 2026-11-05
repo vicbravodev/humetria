@@ -57,7 +57,9 @@ export default function TeleworkIndex({
                         </Button>
                     )}
                 </header>
-                {centers.total > 0 && <CentersCompany company={company} />}
+                {centers.total > 0 && (
+                    <CentersCompany company={company} canManage={canManage} />
+                )}
                 <section aria-labelledby="each" className="flex flex-col gap-3">
                     <div>
                         <h2 id="each" className="text-xl font-semibold">
