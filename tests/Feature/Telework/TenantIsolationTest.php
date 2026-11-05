@@ -20,6 +20,7 @@ use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Telework\Models\TeleworkSettings;
 use App\Modules\Telework\Models\Training;
 use App\Modules\Telework\Models\TrainingAttendee;
@@ -39,6 +40,7 @@ use Database\Factories\Telework\EvidenceRequestFactory;
 use Database\Factories\Telework\SafetyCommitteeFactory;
 use Database\Factories\Telework\TeleworkDocumentFactory;
 use Database\Factories\Telework\TeleworkerFactory;
+use Database\Factories\Telework\TeleworkProfileFactory;
 use Database\Factories\Telework\TrainingFactory;
 use Database\Factories\Telework\VisitAuthorizationFactory;
 use Database\Factories\Telework\WorkerNoticeFactory;
@@ -90,6 +92,7 @@ function isolationWorld(Tenant $tenant): array
         SafetyCommittee::class => SafetyCommitteeFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]),
         TeleworkDocument::class => $document,
         Teleworker::class => $person,
+        TeleworkProfile::class => TeleworkProfileFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]),
         TeleworkSettings::class => TeleworkSettings::query()->create([...$tenantId, 'review_period_months' => 12]),
         Training::class => $training,
         TrainingAttendee::class => TrainingAttendee::query()->create([...$tenantId, 'training_id' => $training->id, 'employee_id' => $person->employee_id]),
@@ -198,6 +201,7 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
             ['POST', $panel('teleworkers.join', $b[Teleworker::class]->id), ['marital_status' => 'single', 'activities' => 'Captura', 'contact_phone' => '4421234567', ...$address]],
             ['POST', $panel('teleworkers.end', $b[Teleworker::class]->id), ['reason' => 'other', 'ended_on' => now(config()->string('app.display_timezone'))->toDateString()]],
         ],
+        TeleworkProfile::class => [['GET', $panel('applies.show', $center)], ['PUT', $panel('applies.update', $center), ['has_teleworkers' => true]]],
         TeleworkSettings::class => [],
         Training::class => [['GET', $panel('trainings.evidence', $b[Training::class]->id)]],
         TrainingAttendee::class => [],

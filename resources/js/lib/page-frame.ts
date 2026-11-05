@@ -10,6 +10,10 @@ const STANDALONE_NAMES = new Set([
     'results/shared-report',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
+    // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.
+    'telework/applies',
+    'tenancy/applies',
+    'tenancy/onboarding',
     // An error page stands alone: the address may not even be a page of the panel.
     'error',
 ]);

@@ -345,6 +345,7 @@ return [
         'name' => 'nombre',
         'neighborhood' => 'colonia',
         'no_standing_positions' => 'sin puestos en bipedestación',
+        'has_teleworkers' => 'alguien teletrabaja',
         'note' => 'nota',
         'notes' => 'notas',
         'objective' => 'objetivo',
