@@ -195,3 +195,10 @@ it('counts the signed assessments that have their minutes, in the right number',
     assessedPerson($this, 'Beto Soto', RiskLevel::Low);
     expect($texts())->toBe('0 de 2 evaluaciones firmadas con su acta');
 });
+
+// Board V3-Inspeccion: «Solo lo que tienes», to hand to the inspector.
+it('keeps only the requirements the center can show when asked for what it has', function (): void {
+    $this->actingAs($this->hr)->get($this->url.'?ready=1')->assertInertia(fn (Assert $page) => $page
+        ->where('rows', fn ($rows): bool => collect($rows)->every(fn (array $row): bool => $row['state'] === 'met') && collect($rows)->pluck('key')->contains('r3')));
+    $this->actingAs($this->hr)->get($this->url)->assertInertia(fn (Assert $page) => $page->has('rows', 13));
+});

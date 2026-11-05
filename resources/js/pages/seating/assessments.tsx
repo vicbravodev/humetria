@@ -6,7 +6,7 @@ import AssessmentsTable from '@/components/seating/assessments-table';
 import RequestLinkButton from '@/components/seating/request-link-button';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import { batch } from '@/routes/tenant/seating/acknowledgments';
 import { index as assessments } from '@/routes/tenant/seating/assessments';
 import type { AssessmentPerson, Paginated } from '@/types';
@@ -26,14 +26,9 @@ export default function SeatingAssessments({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Evaluaciones' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Evaluaciones',
+        }),
     });
     const { text, type } = useQueryFilters(
         assessments.url([tenantSlug, workCenter.id]),
@@ -67,6 +62,7 @@ export default function SeatingAssessments({
                     workCenterId={workCenter.id}
                     people={people}
                     canAssess={canAssess}
+                    search={search}
                 />
             </div>
         </>

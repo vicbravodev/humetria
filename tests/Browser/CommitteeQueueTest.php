@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -30,3 +31,20 @@ it('shows a member of the Comisión their queue, in both themes and on a phone',
         ->assertSee('Qué puedes ver aquí')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+// Rediseño v2 (PR 3): the Ley Silla assessments to sign wait in the same queue, with their standard.
+it('shows the Comisión the Ley Silla assessments it has to sign', function (): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    $ruben = memberOf($tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'user_id' => $ruben->id]);
+    RiskAssessment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Óscar Peña'])->id]);
+    test()->actingAs($ruben);
+
+    visit('/admin/acme')
+        ->assertSee('Firma 1 evaluación de trabajo de pie · Planta Querétaro')
+        ->assertSee('Ley Silla')
+        ->click('Revisar y firmar')
+        ->assertPathIs("/admin/acme/seating/centers/{$plant->id}/assessments")
+        ->assertNoJavaScriptErrors();
+});

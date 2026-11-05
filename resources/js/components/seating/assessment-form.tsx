@@ -1,9 +1,6 @@
 import { Form } from '@inertiajs/react';
-import { SlidersHorizontal } from 'lucide-react';
 import DatePicker from '@/components/humetria/date-picker';
 import InputError from '@/components/humetria/input-error';
-import Notice from '@/components/humetria/notice';
-import SettingRow from '@/components/humetria/setting-row';
 import AssessmentScoreField from '@/components/seating/assessment-score-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,15 +10,21 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { update } from '@/routes/tenant/seating/assessments';
 import type { AssessmentCondition, AssessmentRecord } from '@/types';
 
-/** The seven conditions, the other aspects and the verification date of an assessment: editable while it is a draft. */
+/**
+ * The seven conditions (board LS-Evaluacion: each with where it comes from and its three options as cards), the other
+ * aspects and the verification date of an assessment: editable while it is a draft.
+ */
 export default function AssessmentForm({
     assessment,
     conditions,
     editable,
+    onScore,
 }: {
     assessment: AssessmentRecord;
     conditions: AssessmentCondition[];
     editable: boolean;
+    /** Each point chosen, for the score beside the form. */
+    onScore: (key: string, points: number) => void;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -34,33 +37,24 @@ export default function AssessmentForm({
         >
             {({ processing, errors }) => (
                 <>
-                    <SettingRow
-                        icon={SlidersHorizontal}
-                        title="Las siete condicionantes"
-                        description="Confirma o corrige cada una. El total y el nivel los calcula la plataforma al firmar."
-                    >
-                        {!assessment.personProvidedHealthData && (
-                            <Notice>
-                                <strong>
-                                    La persona no contestó sobre sus molestias.
-                                </strong>{' '}
-                                La condicionante f vale 1 hasta que la Comisión
-                                la corrija, y así queda registrado.
-                            </Notice>
-                        )}
-                        <div className="grid gap-6">
-                            {conditions.map((condition) => (
-                                <AssessmentScoreField
-                                    key={condition.key}
-                                    condition={condition}
-                                    points={assessment.scores[condition.key]}
-                                    disabled={!editable}
-                                    error={errors[`scores.${condition.key}`]}
-                                />
-                            ))}
-                        </div>
-                    </SettingRow>
-                    <div className="grid gap-4 border-t pt-7 sm:grid-cols-2">
+                    <div className="@container -mx-6 -mt-6 overflow-hidden rounded-t-xl border-b">
+                        {conditions.map((condition) => (
+                            <AssessmentScoreField
+                                key={condition.key}
+                                condition={condition}
+                                points={assessment.scores[condition.key]}
+                                personAnswered={
+                                    assessment.personProvidedHealthData
+                                }
+                                disabled={!editable}
+                                error={errors[`scores.${condition.key}`]}
+                                onChoose={(points) =>
+                                    onScore(condition.key, points)
+                                }
+                            />
+                        ))}
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="verified-on">
                                 Fecha de verificación

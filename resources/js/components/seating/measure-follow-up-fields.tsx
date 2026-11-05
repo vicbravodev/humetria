@@ -1,8 +1,8 @@
 import Combobox from '@/components/humetria/combobox';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import SeatChoiceField from '@/components/seating/seat-choice-field';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { MeasureEditing, SeatOption } from '@/types';
 
@@ -54,17 +54,23 @@ export default function MeasureFollowUpFields({
                 </div>
             </div>
             <div className="grid gap-2">
-                <Label htmlFor="measure-evidence">
-                    Evidencia (PDF, JPG o PNG)
+                <p className="font-medium">
+                    Evidencia
                     {editing?.hasEvidence === true && ' · ya tiene una'}
-                </Label>
-                <Input
+                </p>
+                <FileDropZone
                     id="measure-evidence"
                     name="evidence"
-                    type="file"
                     accept="application/pdf,image/jpeg,image/png"
+                    title="Arrastra la evidencia aquí o elígela"
+                    hint="PDF, JPG o PNG"
+                    invalid={errors['evidence'] !== undefined}
+                    describedBy="measure-evidence-error"
                 />
-                <InputError message={errors['evidence']} />
+                <InputError
+                    id="measure-evidence-error"
+                    message={errors['evidence']}
+                />
             </div>
         </>
     );

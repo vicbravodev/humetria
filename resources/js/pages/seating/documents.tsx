@@ -4,7 +4,7 @@ import PageHeader from '@/components/humetria/page-header';
 import DocumentForm from '@/components/seating/document-form';
 import DocumentsTable from '@/components/seating/documents-table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type { SeatingDocumentRow, Paginated, SeatOption } from '@/types';
 
 export default function SeatingDocuments({
@@ -22,14 +22,9 @@ export default function SeatingDocuments({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Documentos' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Documentos',
+        }),
     });
 
     return (

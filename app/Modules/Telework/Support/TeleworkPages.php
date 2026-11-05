@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Support;
 
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Seating\Contracts\CommitteeWork;
+use App\Modules\Seating\Data\CommitteeTask;
 use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Data\UnreviewedAccidents;
 use App\Modules\Telework\Enums\DocumentKind;
@@ -82,6 +84,7 @@ final readonly class TeleworkPages
         private Settings $settings,
         private Members $members,
         private TeleworkRoute $route,
+        private CommitteeWork $seating,
     ) {}
 
     /**
@@ -127,8 +130,9 @@ final readonly class TeleworkPages
 
     /**
      * The queue of a member of the Comisión (board V2-Comision; decisión A5, with its account): in each center it sits on,
-     * the lists of places that wait for its decision, with whose they are, and the notices nobody reviewed; and who sits
-     * with it. Only its centers, nothing of NOM-035 nor health data.
+     * the lists of places that wait for its decision, with whose they are, and the notices nobody reviewed; in Ley Silla, the
+     * assessments to sign and to record in the minutes (through Seating's contract); and who sits with it. Only its centers,
+     * nothing of NOM-035 nor health data.
      *
      * @return array<string, mixed>
      */
@@ -149,6 +153,7 @@ final readonly class TeleworkPages
             $centerOf[$person->id] = $person->work_center_id;
         }
         $reviewers = $this->members->reviewers();
+        $seating = $this->seating->waiting(array_map(fn (WorkCenterSummary $center): string => $center->id, $centers));
         $tasks = [];
         $seats = [];
 
@@ -159,6 +164,11 @@ final readonly class TeleworkPages
                 $people === [] ? null : ['kind' => 'lists', 'workCenter' => $center->name, 'count' => count($people), 'people' => $people, 'href' => route('tenant.telework.reviews.index', [$tenant, $center->id])],
                 $count === 0 ? null : ['kind' => 'notices', 'workCenter' => $center->name, 'count' => $count, 'people' => [], 'href' => route('tenant.telework.notices.index', [$tenant, 'center' => $center->id])],
             ]));
+
+            foreach (array_filter($seating, fn (CommitteeTask $task): bool => $task->workCenterId === $center->id) as $task) {
+                $tasks[] = ['kind' => $task->kind, 'workCenter' => $center->name, 'count' => $task->count, 'people' => $task->people, 'href' => route('tenant.seating.assessments.index', [$tenant, $center->id])];
+            }
+
             $seated = $this->gate->userIdsOf($center->id);
             $members = array_values(array_map(fn (MemberSummary $member): string => $member->name, array_filter($reviewers, fn (MemberSummary $member): bool => in_array($member->userId, $seated, true))));
             $seats[] = ['id' => $center->id, 'name' => $center->name, 'members' => $members, 'href' => route('tenant.telework.route', [$tenant, $center->id])];

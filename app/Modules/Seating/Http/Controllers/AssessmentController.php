@@ -50,7 +50,7 @@ final class AssessmentController extends Controller
         Gate::authorize('assess-seating');
         $found = $this->assessment($request, $assessment, $access);
 
-        return Inertia::render('seating/assessment', $pages->show($found, $access->userId($request)));
+        return Inertia::render('seating/assessment', $pages->show($found, $access->find($request, $found->work_center_id), $access->userId($request)));
     }
 
     public function update(UpdateAssessmentRequest $request, mixed $tenant, string $assessment, CenterAccess $access, AssessmentAccess $assessors, SaveAssessmentDraft $save): RedirectResponse

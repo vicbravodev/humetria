@@ -1,10 +1,11 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import InspectionDossier from '@/components/telework/inspection-dossier';
-import InspectionList from '@/components/telework/inspection-list';
+import InspectionDossier from '@/components/humetria/inspection-dossier';
+import InspectionItem from '@/components/humetria/inspection-item';
+import InspectionList from '@/components/humetria/inspection-list';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dashboard } from '@/routes/tenant';
 import { route } from '@/routes/tenant/telework';
-import type { InspectionItem } from '@/types';
+import type { InspectionItem as Item } from '@/types';
 
 /** Board V3-Inspeccion: what an inspector would ask for today in a center, what is missing first, and its dossier. */
 export default function TeleworkInspection({
@@ -16,8 +17,8 @@ export default function TeleworkInspection({
 }: {
     workCenter: { id: string; name: string };
     applicable: number;
-    missing: InspectionItem[];
-    ready: InspectionItem[];
+    missing: Item[];
+    ready: Item[];
     dossierHref: string | null;
 }) {
     const tenantSlug = useTenantSlug();
@@ -51,17 +52,33 @@ export default function TeleworkInspection({
                         <InspectionList
                             id="missing"
                             title="Te falta"
-                            items={missing}
+                            count={missing.length}
                             applicable={applicable}
                             empty="No te falta nada: puedes mostrar cada renglón."
-                        />
+                        >
+                            {missing.map((item, index) => (
+                                <InspectionItem
+                                    key={item.numeral}
+                                    item={item}
+                                    primary={index === 0}
+                                />
+                            ))}
+                        </InspectionList>
                         <InspectionList
                             id="ready"
                             title="Lo puedes mostrar"
-                            items={ready}
+                            count={ready.length}
                             applicable={applicable}
                             empty="Todavía no tienes nada que mostrar. Empieza por lo que te falta."
-                        />
+                        >
+                            {ready.map((item) => (
+                                <InspectionItem
+                                    key={item.numeral}
+                                    item={item}
+                                    primary={false}
+                                />
+                            ))}
+                        </InspectionList>
                     </div>
                     {dossierHref !== null && (
                         <InspectionDossier href={dossierHref} />

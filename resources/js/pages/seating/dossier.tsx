@@ -4,7 +4,7 @@ import DossierHeaderBlock from '@/components/seating/dossier-header';
 import DossierSection from '@/components/seating/dossier-section';
 import DossierToolbar from '@/components/seating/dossier-toolbar';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type {
     DossierLink,
     SeatingDossierDocument,
@@ -32,11 +32,11 @@ export default function SeatingDossier({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            { title: header.workCenter },
+        breadcrumbs: seatingCrumbs(
+            tenantSlug,
+            { id: workCenterId, name: header.workCenter },
             { title: 'Expediente' },
-        ],
+        ),
     });
 
     return (

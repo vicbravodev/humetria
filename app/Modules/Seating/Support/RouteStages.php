@@ -35,6 +35,34 @@ final class RouteStages
     ];
 
     /**
+     * The route of a center from what it registered: its requirements, its declaration and its positions.
+     *
+     * @param  list<ComplianceRow>  $rows  the requirements of `$facts`
+     */
+    public static function ofFacts(ComplianceFacts $facts, array $rows): RouteProgress
+    {
+        $declaredOn = $facts->profile === null ? null : str_replace('.', '', $facts->profile->declared_on->isoFormat('D MMM YYYY'));
+
+        return self::from($rows, $facts->profile->no_standing_positions ?? false, $facts->positions->isNotEmpty(), $declaredOn);
+    }
+
+    /**
+     * Where a requirement falls in the route: its stage, then its place in that stage.
+     */
+    public static function rank(string $key): int
+    {
+        foreach (self::STAGES as $stage => $keys) {
+            $at = array_search($key, $keys, true);
+
+            if ($at !== false) {
+                return $stage * 100 + $at;
+            }
+        }
+
+        return count(self::STAGES) * 100;
+    }
+
+    /**
      * @param  list<ComplianceRow>  $rows
      * @param  string|null  $declaredOn  the day of the declaration, as the design system writes it; null without one
      */

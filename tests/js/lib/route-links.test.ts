@@ -20,8 +20,9 @@ describe('stageHrefs', () => {
             '/admin/acme/programs',
             '/admin/acme/disclosure/dossier/c1',
         ]);
+        // And so does Ley Silla (board V2-Ruta-Silla).
         expect(urls('seating')).toEqual([
-            ...Array(5).fill('/admin/acme/seating/centers/c1'),
+            ...Array(5).fill('/admin/acme/seating/centers/c1/route'),
             '/admin/acme/seating/centers/c1/dossier',
         ]);
     });

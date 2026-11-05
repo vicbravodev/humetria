@@ -16,4 +16,4 @@ it('chooses files only through the drop zone in the modules that adopted it', fu
     }
 
     expect($native)->toBe([]);
-})->with(['telework']);
+})->with(['telework', 'seating']);

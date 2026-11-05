@@ -30,6 +30,7 @@ export default function PositionPeople({
 
     return (
         <section
+            id="quien-lo-ocupa"
             aria-label="Personas del puesto"
             className="flex flex-col gap-4"
         >

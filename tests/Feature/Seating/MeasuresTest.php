@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Instruments\Data\RiskLevel;
 use App\Modules\Seating\Actions\CancelMeasure;
 use App\Modules\Seating\Actions\ProposeMeasure;
 use App\Modules\Seating\Actions\SaveMeasure;
 use App\Modules\Seating\Http\Controllers\MeasureController;
+use App\Modules\Seating\Models\PauseAgreement;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
@@ -225,4 +227,23 @@ it('refuses in the database a measure with an unknown kind or status, or tied to
         expect(fn () => DB::transaction($attempt))->toThrow(QueryException::class, $constraint);
     }
     expect($measure->fresh()?->kind->value)->not->toBe('magic');
+});
+
+// Board LS-Plan: over the measures, whether each assessment of a medium or high level has one (R7); under the agreements,
+// the positions whose seat goes apart and still have no agreement on pauses (R11).
+it('says on the plan whether every medium or high assessment has its measure, and which positions lack an agreement on pauses', function (): void {
+    $where = ['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id];
+    $beto = EmployeeFactory::new()->create($where + ['name' => 'Beto Soto']);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id, 'position_id' => $this->position->id]);
+    $high = RiskAssessment::factory()->signed()->create($where + ['employee_id' => $beto->id, 'position_id' => $this->position->id, 'level' => RiskLevel::High]);
+    StandingPosition::factory()->nearby()->create($where + ['name' => 'Almacenista']);
+    PauseAgreement::factory()->create($where + ['position_id' => StandingPosition::factory()->withinCenter()->create($where + ['name' => 'Operador'])->id]);
+    $url = route('tenant.seating.plan', [$this->tenant, $this->center->id]);
+
+    $this->actingAs($this->hr)->get($url)->assertInertia(fn (Assert $page) => $page
+        ->where('measuresRule', ['state' => 'missing', 'count' => 1])
+        ->where('withoutAgreement', ['Almacenista']));
+
+    PreventiveMeasure::factory()->create($where + ['assessment_id' => $high->id, 'position_id' => null]);
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('measuresRule', ['state' => 'met', 'count' => 0]));
 });

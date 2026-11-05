@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\Route;
 /** @var string $notReserved */
 Route::get('admin/{tenant:slug}/seating', [SeatingController::class, 'index'])->where('tenant', $notReserved)->name('tenant.seating.index');
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}', [SeatingController::class, 'center'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.center');
+// The route of a center (board V2-Ruta-Silla) and what an inspector would ask for there today (board V3-Inspeccion).
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/route', [SeatingController::class, 'route'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.route');
+Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/inspection', [SeatingController::class, 'inspection'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.inspection');
 Route::put('admin/{tenant:slug}/seating/centers/{workCenter}/profile', [SeatingController::class, 'updateProfile'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.profile.update');
 
 // The positions where people work standing (Figura 1) and who holds them. An assignment is ended, not deleted.
@@ -92,5 +95,6 @@ Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/survey', [SurveyRes
 
 // Where it does not apply, the certificate to print (rediseño v2, decisión D6: a page, never a PDF).
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/certificate', [CertificateController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.certificate');
-// The printable dossier of the center for an inspection; every view is audited.
+// The printable dossier of the center for an inspection; every view is audited. `?ready=1` keeps only what the center can
+// show (board V3-Inspeccion).
 Route::get('admin/{tenant:slug}/seating/centers/{workCenter}/dossier', [DossierController::class, 'show'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.seating.dossier');

@@ -41,15 +41,17 @@ function seatingCenter(): array
     return [$url, WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create(['name' => 'Planta Querétaro', 'main_activity' => 'Manufactura'])];
 }
 
-it('lists the centers of the company with their declared sector', function (bool $dark, bool $mobile): void {
+// Rediseño v2 (the pattern of board V2-Centros-N037): each center with who works standing there, where it stands and its route.
+it('lists the centers of the company with where their route stands', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
     SeatingProfile::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'sector' => 'commerce']);
+    StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
 
     visitPage('seating/index', "{$url}/seating", $dark, $mobile)
-        ->assertSee('Ley Silla')
+        ->assertSee('Trabajo de pie en tus centros')
         ->assertSee('Planta Querétaro')
-        ->assertSee('Comercio')
-        ->assertSee('Abrir centro');
+        ->assertSee('Abrir ruta')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
 it('shows a center with its declaration form', function (bool $dark, bool $mobile): void {
@@ -88,9 +90,27 @@ it('shows the form of a new position with the questions of Figure 1', function (
 
     visitPage('seating/position', "{$url}/seating/centers/{$center->id}/positions/create", $dark, $mobile)
         ->assertSee('Nuevo puesto')
+        ->assertSee('Paso 1 de 5')
         ->assertSee('Figura 1: dónde va el asiento')
-        ->assertSee('Guardar puesto');
+        ->assertSee('Siguiente: Figura 1');
 })->with($looks);
+
+// Board LS-Puesto: Figura 1 gives its result as it is answered; with the first two questions, the third is not needed.
+it('shows the result of Figura 1 as its questions are answered', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->press('@position-next')
+        ->assertSee('Paso 2 de 5')
+        ->click('label:has(input[name="can_work_seated"][value="1"])')
+        ->click('label:has(input[name="has_space_for_seat"][value="1"])')
+        ->assertSeeIn('[aria-current="true"]', 'En su lugar de trabajo')
+        ->assertSee('Con las dos primeras ya hay resultado')
+        ->click('label:has(input[name="has_space_for_seat"][value="0"])')
+        ->click('label:has(input[name="needs_to_be_nearby"][value="1"])')
+        ->assertSeeIn('[aria-current="true"]', 'Cerca de su lugar')
+        ->assertNoJavaScriptErrors();
+});
 
 it('shows a saved position with its result and its people', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
@@ -114,7 +134,15 @@ it('shows what a new position still misses instead of saving it', function (): v
         ->click('Prolongada')
         ->type('continuous_minutes', '240')
         ->type('max_people_at_once', '2')
+        ->press('@position-next')
+        ->assertSee('Paso 2 de 5')
+        ->press('@position-next')
+        ->assertSee('Paso 3 de 5')
+        ->press('@position-next')
+        ->assertSee('Paso 4 de 5')
         ->press('Guardar puesto')
+        // The step of the first field it misses opens again.
+        ->assertSee('Paso 2 de 5')
         ->assertSee('es obligatorio')
         ->assertNoJavaScriptErrors();
 });
@@ -151,29 +179,54 @@ function seatingPortal(): array
     return [route('portal.seating.show', resolve(IssuePortalLink::class)->handle($ana->id), absolute: false), $ana];
 }
 
+// Board LS-Portal: first who sees the answers and that answering is voluntary; then the two questions, one at a time.
 it('shows the person their own Ley Silla page with the voluntary notice', function (bool $dark, bool $mobile): void {
     [$url] = seatingPortal();
 
     visitPage('seating/portal', $url, $dark, $mobile)
+        ->assertSee('Ley Silla · 2 preguntas')
         ->assertSee('Su trabajo de pie, Ana Ruiz')
-        ->assertSee('es voluntario')
-        ->assertSee('Ergonómico, con buen soporte y amortiguación')
-        ->assertSee('Enviar mis respuestas');
+        ->assertSee('Contestar es voluntario')
+        ->assertSee('Quién ve sus respuestas')
+        ->assertSee('Acepto, quiero contestar')
+        ->assertSee('Prefiero no contestar')
+        ->assertDontSee('Pregunta 1 de 2');
 })->with($looks);
+
+it('asks the two questions one at a time, never moving on alone, and sends them', function (bool $dark, bool $mobile): void {
+    [$url] = seatingPortal();
+
+    visitPage('seating/portal', $url, $dark, $mobile)
+        ->click('@portal-accept')
+        ->assertSee('Pregunta 1 de 2')
+        ->assertSee('¿Cómo es el calzado que usa para trabajar?')
+        ->click('input[name="footwear"][value="1"]')
+        ->assertSee('Pregunta 1 de 2')
+        ->press('Siguiente')
+        ->assertSee('Pregunta 2 de 2')
+        ->click('input[name="discomfort"][value="1"]')
+        ->press('Enviar mis respuestas')
+        ->assertSee('Gracias, quedó enviado')
+        ->assertSee('La Comisión lo tomará en cuenta en su evaluación.')
+        ->assertNoJavaScriptErrors();
+})->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
 it('tells the person when they already answered', function (): void {
     [$url, $ana] = seatingPortal();
     PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    visitPage('seating/portal', $url)->assertSee('Nos contestó el');
+    visitPage('seating/portal', $url)->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
 });
 
-it('asks for the acceptance of the notice before saving any health data', function (): void {
+it('lets the person decline without consequence, and change their mind', function (): void {
     [$url] = seatingPortal();
 
     visit($url)
-        ->press('Enviar mis respuestas')
-        ->assertSee('debe ser aceptado')
+        ->click('Prefiero no contestar')
+        ->assertSee('su evaluación se hace sin estos datos')
+        ->assertDontSee('Pregunta 1 de 2')
+        ->click('Contestar ahora')
+        ->assertSee('Quién ve sus respuestas')
         ->assertNoJavaScriptErrors();
 });
 
@@ -211,6 +264,21 @@ it('shows the draft of an assessment with its eleven items and seven conditions'
         ->assertSee('Calzado')
         ->assertSee('Firmar evaluación');
 })->with($looks);
+
+// Board LS-Evaluacion: beside the conditions, the points chosen so far; the level is computed when it is signed.
+it('adds the points of the draft as the Comisión chooses them, and leaves the level to the signature', function (): void {
+    [$url, $ana, $position, $center] = assessableCenter();
+    $draft = RiskAssessment::factory()->create(['tenant_id' => $center->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id, 'work_center_id' => $center->id]);
+
+    visit("{$url}/seating/assessments/{$draft->id}")
+        ->assertSeeIn('[aria-labelledby="score"]', '13')
+        ->assertSee('Del puesto')
+        ->assertSee('Sin respuesta de la persona')
+        ->assertSee('El nivel de riesgo se calcula al firmar, con las tablas vigentes.')
+        ->click('label:has(input[name="scores[footwear]"][value="3"])')
+        ->assertSeeIn('[aria-labelledby="score"]', '16')
+        ->assertNoJavaScriptErrors();
+});
 
 it('shows a signed assessment as final, with its result and the suggestion', function (bool $dark, bool $mobile): void {
     [$url, $ana, $position, $center] = assessableCenter();
@@ -280,9 +348,11 @@ it('shows the action plan with its measures and its pause agreements', function 
     PauseAgreement::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'position_id' => $position->id]);
 
     visitPage('seating/plan', "{$url}/seating/centers/{$center->id}/plan", $dark, $mobile)
-        ->assertSee('Plan de acción')
+        ->assertSee('Plan de medidas y pausas')
+        ->assertSee('Planeada')
         ->assertSee('Alternar tareas para cambiar de postura')
         ->assertSee('3 por turno de 10 min')
+        ->assertSee('Arrastra la evidencia aquí o elígela')
         ->assertSee('Registrar un acuerdo de pausas');
 })->with($looks);
 
@@ -304,6 +374,8 @@ it('lists the documents of a center with their incisos and the form to add one',
         ->assertSee('Acta de febrero')
         ->assertSee('Acta de la Comisión')
         ->assertSee('B, C')
+        // C4: the file is dropped on or chosen from the zone, never the native field.
+        ->assertSee('Arrastra el PDF aquí o elígelo')
         ->assertSee('Guardar documento');
 })->with($looks);
 
@@ -459,4 +531,20 @@ it('closes the survey from its page after asking', function (): void {
         ->assertNoJavaScriptErrors();
 
     expect($survey->refresh()->status->value)->toBe('closed');
+});
+
+// Rediseño v2 (C7): the list of assessments with nobody to assess says why, and a search that found nobody says so instead.
+it('tells a center with nobody to assess apart from a search that found nobody', function (): void {
+    [$url, , , $center] = assessableCenter();
+    $empty = WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create();
+
+    visit("{$url}/seating/centers/{$empty->id}/assessments")
+        ->assertSee('Sin personas que evaluar')
+        ->assertDontSee('Nadie coincide')
+        ->assertNoJavaScriptErrors();
+
+    visit("{$url}/seating/centers/{$center->id}/assessments?q=Zeta")
+        ->assertSee('Nadie coincide')
+        ->assertDontSee('Sin personas que evaluar')
+        ->assertNoJavaScriptErrors();
 });

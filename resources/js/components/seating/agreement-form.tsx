@@ -2,9 +2,9 @@ import { Form } from '@inertiajs/react';
 import Combobox from '@/components/humetria/combobox';
 import AgreementNumbersFields from '@/components/seating/agreement-numbers-fields';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,16 +67,20 @@ export default function AgreementForm({
                         <InputError message={errors['how_agreed']} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="agreement-evidence">
-                            Evidencia (PDF, JPG o PNG)
-                        </Label>
-                        <Input
+                        <p className="font-medium">Evidencia</p>
+                        <FileDropZone
                             id="agreement-evidence"
                             name="evidence"
-                            type="file"
                             accept="application/pdf,image/jpeg,image/png"
+                            title="Arrastra la evidencia aquí o elígela"
+                            hint="PDF, JPG o PNG"
+                            invalid={errors['evidence'] !== undefined}
+                            describedBy="agreement-evidence-error"
                         />
-                        <InputError message={errors['evidence']} />
+                        <InputError
+                            id="agreement-evidence-error"
+                            message={errors['evidence']}
+                        />
                     </div>
                     <Button className="w-fit" disabled={processing}>
                         {processing && <Spinner />}

@@ -8,7 +8,8 @@ import SectorForm from '@/components/seating/sector-form';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
-import { dossier, index } from '@/routes/tenant/seating';
+import { dossier } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type {
     CenterRequirement,
     Paginated,
@@ -42,10 +43,9 @@ export default function SeatingCenter({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            { title: workCenter.name },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Puestos',
+        }),
     });
 
     return (

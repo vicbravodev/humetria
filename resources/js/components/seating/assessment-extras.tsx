@@ -1,10 +1,9 @@
 import AssessmentMinutes from '@/components/seating/assessment-minutes';
-import AssessmentSign from '@/components/seating/assessment-sign';
 import ProposeMeasureForm from '@/components/seating/propose-measure-form';
 import ReferralsSection from '@/components/seating/referrals-section';
 import type { MeasureSuggestions, Referral, SeatOption } from '@/types';
 
-/** What goes under the assessment: the referrals, the measures the Comisión proposes and the signature. */
+/** What goes under the assessment: the referrals, its minutes and the measures the Comisión proposes. */
 export default function AssessmentExtras({
     assessmentId,
     referrals,
@@ -12,8 +11,6 @@ export default function AssessmentExtras({
     canPropose,
     measureKinds,
     suggestions,
-    canSign,
-    signError,
     workCenterId,
     minutesTitle,
     canRecordMinutes,
@@ -24,8 +21,6 @@ export default function AssessmentExtras({
     canPropose: boolean;
     measureKinds: SeatOption[];
     suggestions: MeasureSuggestions | null;
-    canSign: boolean;
-    signError: string | undefined;
     workCenterId: string;
     minutesTitle: string | null;
     canRecordMinutes: boolean;
@@ -60,9 +55,6 @@ export default function AssessmentExtras({
                         suggestions={suggestions}
                     />
                 </div>
-            )}
-            {canSign && (
-                <AssessmentSign assessmentId={assessmentId} error={signError} />
             )}
         </>
     );

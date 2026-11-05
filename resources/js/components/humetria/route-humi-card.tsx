@@ -2,8 +2,13 @@ import { usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { openHumi } from '@/lib/assistant/open-humi';
 
-/** «¿Una etapa no te queda clara?» (board V2-Ruta-N037): the way to Humi, for whoever may use it. */
-export default function RouteHumiCard() {
+/** «¿Una etapa no te queda clara?» (boards V2-Ruta-N037 and V2-Ruta-Silla): the way to Humi, for whoever may use it. */
+export default function RouteHumiCard({
+    example,
+}: {
+    /** What to ask, in the words of the standard: «qué es la reversibilidad o qué multa hay». */
+    example: string;
+}) {
     const { props } = usePage();
 
     if (
@@ -24,8 +29,7 @@ export default function RouteHumiCard() {
             </h2>
             <p className="text-sm">
                 Humi te explica qué pide la norma con tus datos, sin jerga.
-                Pregúntale, por ejemplo, qué es la reversibilidad o qué multa
-                hay.
+                Pregúntale, por ejemplo, {example}.
             </p>
             <Button
                 type="button"

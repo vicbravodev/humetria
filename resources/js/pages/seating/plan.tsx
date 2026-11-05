@@ -1,12 +1,15 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Factory } from 'lucide-react';
+import { Factory, Plus } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import AgreementForm from '@/components/seating/agreement-form';
 import AgreementsTable from '@/components/seating/agreements-table';
 import MeasureForm from '@/components/seating/measure-form';
-import MeasuresTable from '@/components/seating/measures-table';
+import MeasuresBoard from '@/components/seating/measures-board';
+import MeasuresRuleLine from '@/components/seating/measures-rule-line';
+import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
+import type { MeasuresRule } from '@/lib/seating/plan';
 import type {
     AgreementRow,
     MeasureEditing,
@@ -18,7 +21,9 @@ import type {
 export default function SeatingPlan({
     workCenter,
     measures,
+    measuresRule,
     agreements,
+    withoutAgreement,
     editing,
     canManage,
     kinds,
@@ -27,7 +32,9 @@ export default function SeatingPlan({
 }: {
     workCenter: { id: string; name: string };
     measures: Paginated<MeasureRow>;
+    measuresRule: MeasuresRule;
     agreements: Paginated<AgreementRow>;
+    withoutAgreement: string[];
     editing: MeasureEditing | null;
     canManage: boolean;
     kinds: SeatOption[];
@@ -36,32 +43,40 @@ export default function SeatingPlan({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Plan de acción' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Plan',
+        }),
     });
 
     return (
         <>
-            <Head title={`Plan de acción · ${workCenter.name}`} />
+            <Head title={`Plan de medidas y pausas · ${workCenter.name}`} />
             <div className="flex w-full flex-col gap-10 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    title="Plan de acción"
-                    description="Las medidas para cuidar a quienes trabajan de pie y las pausas que se acordaron. Nada se borra: una medida se cancela."
+                    title="Plan de medidas y pausas"
+                    description="Lo que haces por quien trabaja de pie. Nada se borra: una medida se cancela y queda en el historial."
                     facts={[{ icon: Factory, text: workCenter.name }]}
-                />
-                <MeasuresTable
+                >
+                    {canManage && (
+                        <Button asChild>
+                            <a href="#registrar-medida">
+                                <Plus aria-hidden />
+                                Registrar medida
+                            </a>
+                        </Button>
+                    )}
+                </PageHeader>
+                <MeasuresRuleLine rule={measuresRule} />
+                <MeasuresBoard
                     workCenterId={workCenter.id}
                     measures={measures}
                     canManage={canManage}
                 />
                 {canManage && (
-                    <div className="max-w-[880px] card p-6">
+                    <div
+                        id="registrar-medida"
+                        className="max-w-[880px] scroll-mt-6 card p-6"
+                    >
                         <MeasureForm
                             workCenterId={workCenter.id}
                             editing={editing}
@@ -71,9 +86,16 @@ export default function SeatingPlan({
                         />
                     </div>
                 )}
-                <AgreementsTable agreements={agreements} />
+                <AgreementsTable
+                    agreements={agreements}
+                    missing={withoutAgreement}
+                    action={canManage ? '#registrar-acuerdo' : null}
+                />
                 {canManage && (
-                    <div className="max-w-[880px] card p-6">
+                    <div
+                        id="registrar-acuerdo"
+                        className="max-w-[880px] scroll-mt-6 card p-6"
+                    >
                         <AgreementForm workCenterId={workCenter.id} />
                     </div>
                 )}

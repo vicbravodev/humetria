@@ -1,0 +1,69 @@
+/** The five steps of a standing position (board LS-Puesto); the fifth, who holds it, once it is saved. */
+export const POSITION_STEPS = [
+    { number: 1, title: 'El puesto', next: 'Siguiente: Figura 1' },
+    {
+        number: 2,
+        title: 'Figura 1: dónde va el asiento',
+        next: 'Siguiente: condiciones del área',
+    },
+    {
+        number: 3,
+        title: 'Condiciones del área',
+        next: 'Siguiente: condiciones de las personas',
+    },
+    { number: 4, title: 'Condiciones de las personas', next: '' },
+    { number: 5, title: 'Quién lo ocupa', next: '' },
+] as const;
+
+const FIGURE_ONE = [
+    'can_work_seated',
+    'has_space_for_seat',
+    'needs_to_be_nearby',
+];
+const AREA = ['area_conditions', 'tools', 'physical_load', 'attention_level'];
+
+function stepOf(field: string): number {
+    if (FIGURE_ONE.includes(field)) {
+        return 2;
+    }
+
+    if (AREA.some((prefix) => field.startsWith(prefix))) {
+        return 3;
+    }
+
+    return field.startsWith('default_') ? 4 : 1;
+}
+
+/** The first step with a field the server rejected, so the form opens where the error is; null without errors. */
+export function stepWithError(errors: Record<string, string>): number | null {
+    const steps = Object.keys(errors).map(stepOf);
+
+    return steps.length === 0 ? null : Math.min(...steps);
+}
+
+/**
+ * The result of Figura 1 as the questions are answered (A, B or C), to show it live. The server computes it again when
+ * the position is saved (Instruments' SeatingAssessment::placement): A when the person can work seated and there is space;
+ * otherwise B when they need to be near their workstation and C when not.
+ */
+export function figureOne(answers: {
+    canWorkSeated: boolean | null;
+    hasSpaceForSeat: boolean | null;
+    needsToBeNearby: boolean | null;
+}): { result: 'A' | 'B' | 'C' | null; thirdNeeded: boolean } {
+    const { canWorkSeated, hasSpaceForSeat, needsToBeNearby } = answers;
+
+    if (canWorkSeated === true && hasSpaceForSeat === true) {
+        return { result: 'A', thirdNeeded: false };
+    }
+
+    if (canWorkSeated === null || (canWorkSeated && hasSpaceForSeat === null)) {
+        return { result: null, thirdNeeded: false };
+    }
+
+    if (needsToBeNearby === null) {
+        return { result: null, thirdNeeded: true };
+    }
+
+    return { result: needsToBeNearby ? 'B' : 'C', thirdNeeded: true };
+}

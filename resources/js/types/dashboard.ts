@@ -11,6 +11,9 @@ export type RouteProgress = {
     answered: boolean;
 };
 
+/** Where a stage of a route stands on its line: done, the one the center is in, or ahead. */
+export type RouteStageState = 'done' | 'current' | 'pending';
+
 /** A work center of the panel with its place in each route. */
 export type CenterRoutes = {
     id: string;

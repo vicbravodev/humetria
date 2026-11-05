@@ -1,9 +1,8 @@
 import { Camera } from 'lucide-react';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import SettingRow from '@/components/humetria/setting-row';
 import SeatChoiceField from '@/components/seating/seat-choice-field';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { CHOICE_CLASS } from '@/lib/seating/choice-class';
 import type { SeatEditing, SeatOption } from '@/types';
 
@@ -45,17 +44,23 @@ export default function SeatStatusFields({
                     El área está señalizada
                 </label>
                 <div className="grid gap-2">
-                    <Label htmlFor="seat-photo">
-                        Foto (JPG o PNG)
+                    <p className="font-medium">
+                        Foto
                         {seat?.hasPhoto === true && ' · ya tiene una'}
-                    </Label>
-                    <Input
+                    </p>
+                    <FileDropZone
                         id="seat-photo"
                         name="photo"
-                        type="file"
                         accept="image/jpeg,image/png"
+                        title="Arrastra la foto aquí o elígela"
+                        hint="JPG o PNG"
+                        invalid={errors['photo'] !== undefined}
+                        describedBy="seat-photo-error"
                     />
-                    <InputError message={errors['photo']} />
+                    <InputError
+                        id="seat-photo-error"
+                        message={errors['photo']}
+                    />
                 </div>
             </div>
         </SettingRow>

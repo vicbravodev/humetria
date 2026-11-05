@@ -13,12 +13,15 @@ use App\Modules\Seating\Enums\Sector;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Telework\Contracts\Committee;
+use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\Tenancy\Data\RouteProgress;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * What the Ley Silla pages send to the browser: the list of centers with their declared sector, the page of one center
+ * What the Ley Silla pages send to the browser: the list of centers with their route, the page of one center
  * with its positions, and the page of one position. Nothing here names a person except the people of a position, which only
  * who may assess sees (the viewer gets counts).
  */
@@ -40,9 +43,20 @@ final readonly class SeatingPages
     /** The conditions a position answers for its people; the footwear and the discomfort are each person's own. */
     private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses'];
 
-    public function __construct(private VisibleCenters $visible, private Roster $roster, private SeatingAssessment $assessment, private CenterBoard $board) {}
+    public function __construct(
+        private VisibleCenters $visible,
+        private Roster $roster,
+        private SeatingAssessment $assessment,
+        private CenterBoard $board,
+        private ComplianceRows $rows,
+        private Committee $committee,
+        private WorkCenters $workCenters,
+    ) {}
 
     /**
+     * The centers the person sees (the pattern of board V2-Centros-N037): each with the people who work standing there and
+     * where it stands in its route, read once for the whole page; and how many people work standing in how many of them.
+     *
      * @return array<string, mixed>
      */
     public function index(int $userId): array
@@ -50,19 +64,37 @@ final readonly class SeatingPages
         $page = $this->visible->page($userId, self::CENTERS_PER_PAGE);
         // The items of a page are already a list.
         $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, $page->items())); // @pest-mutate-ignore: UnwrapArrayValues
-        $profiles = SeatingProfile::query()->whereIn('work_center_id', $ids)->get(['work_center_id', 'sector'])->keyBy('work_center_id');
+        $facts = ComplianceFacts::ofMany($ids, $this->committee);
 
-        return ['centers' => $page->through(function (WorkCenterSummary $center) use ($profiles): array {
-            $sector = $profiles->get($center->id)?->sector;
-
-            return [
+        return [
+            'centers' => $page->through(fn (WorkCenterSummary $center): array => [
                 'id' => $center->id,
                 'name' => $center->name,
                 'activity' => $center->mainActivity,
-                'sector' => $sector?->value,
-                'sectorLabel' => $sector?->label(),
-            ];
-        })];
+                'people' => $facts[$center->id]->assignments->unique('employee_id')->count(),
+                'route' => (fn (RouteProgress $route): array => ['applies' => $route->applies, 'done' => $route->done, 'status' => $route->status, 'answered' => $route->answered])(RouteStages::ofFacts($facts[$center->id], $this->rows->fromFacts($facts[$center->id]))),
+            ]),
+            'summary' => $this->standing($userId),
+            'canManage' => Gate::allows('manage-seating'),
+        ];
+    }
+
+    /**
+     * How many people work standing in the centers the person sees, and in how many of those centers.
+     *
+     * @return array{people: int, centers: int}
+     */
+    private function standing(int $userId): array
+    {
+        $limit = $this->visible->limitedTo($userId);
+        $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && ($limit === null || in_array($center->id, $limit, true)))));
+        $positions = StandingPosition::query()->whereIn('work_center_id', $ids)->pluck('work_center_id', 'id');
+        $held = PositionAssignment::query()->whereIn('position_id', $positions->keys()->all())->whereNull('ends_on')->get(['employee_id', 'position_id']);
+
+        return [
+            'people' => $held->unique('employee_id')->count(),
+            'centers' => $held->map(fn (PositionAssignment $assignment): mixed => $positions->get($assignment->position_id))->unique()->count(),
+        ];
     }
 
     /**

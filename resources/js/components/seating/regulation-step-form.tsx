@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import DatePicker from '@/components/humetria/date-picker';
+import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,16 +49,22 @@ export default function RegulationStepForm({
                                 <InputError message={errors['signed_on']} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="signed-file">
-                                    Reglamento firmado (PDF)
-                                </Label>
-                                <Input
+                                <p className="font-medium">
+                                    Reglamento firmado
+                                </p>
+                                <FileDropZone
                                     id="signed-file"
                                     name="file"
-                                    type="file"
                                     accept="application/pdf"
+                                    title="Arrastra el reglamento firmado aquí o elígelo"
+                                    hint="En PDF"
+                                    invalid={errors['file'] !== undefined}
+                                    describedBy="signed-file-error"
                                 />
-                                <InputError message={errors['file']} />
+                                <InputError
+                                    id="signed-file-error"
+                                    message={errors['file']}
+                                />
                             </div>
                         </>
                     )}

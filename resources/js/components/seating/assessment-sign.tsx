@@ -15,9 +15,9 @@ export default function AssessmentSign({
     const tenantSlug = useTenantSlug();
 
     return (
-        <section aria-label="Firma" className="flex flex-col items-end gap-2">
+        <section aria-label="Firma" className="flex flex-col gap-2">
             <ConfirmDialog
-                trigger={<Button>Firmar evaluación</Button>}
+                trigger={<Button className="w-full">Firmar evaluación</Button>}
                 form={sign.form([tenantSlug, assessmentId])}
                 title="¿Firmar esta evaluación?"
                 description="Al firmar, la plataforma calcula el total y el nivel de riesgo, y la evaluación queda fija: no se edita. Si algo cambia después, se evalúa de nuevo y esta queda en el historial."

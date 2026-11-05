@@ -1,11 +1,20 @@
 import { Head } from '@inertiajs/react';
-import { CircleCheck } from 'lucide-react';
-import PortalAcknowledgment from '@/components/seating/portal-acknowledgment';
-import PortalInputForm from '@/components/seating/portal-input-form';
+import { useState } from 'react';
+import PortalConfirmation from '@/components/seating/portal-confirmation';
+import PortalDeclined from '@/components/seating/portal-declined';
+import PortalIntro from '@/components/seating/portal-intro';
+import PortalQuestions from '@/components/seating/portal-questions';
 import PortalSeatReport from '@/components/seating/portal-seat-report';
+import PortalSent from '@/components/seating/portal-sent';
 import PortalShell from '@/components/seating/portal-shell';
 import type { PortalAcknowledgment as Pending, PortalCondition } from '@/types';
 
+type Screen = 'intro' | 'questions' | 'declined' | 'sent';
+
+/**
+ * Board LS-Portal: the person's own Ley Silla page, in usted. The confirmation of their assessment when one waits; the two
+ * questions on footwear and discomfort, voluntary, one at a time and only after the notice; and a damaged seat to report.
+ */
 export default function SeatingPortal({
     token,
     company,
@@ -30,48 +39,46 @@ export default function SeatingPortal({
     /** When the person confirmed their current assessment, if they did. */
     acknowledgedOn: string | null;
 }) {
+    const [shown, setScreen] = useState<Screen>(
+        sentOn === null ? 'intro' : 'sent',
+    );
+
     return (
         <PortalShell company={company}>
             <Head title="Su trabajo de pie" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                        Su trabajo de pie, {name}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Cuéntenos cómo es su calzado y cómo se siente al
-                        trabajar de pie. Con esto la Comisión de Seguridad e
-                        Higiene decide qué asiento y qué descansos le
-                        corresponden.
-                    </p>
-                </div>
-                {acknowledgment !== null && (
-                    <PortalAcknowledgment
-                        token={token}
-                        pending={acknowledgment}
+                <PortalConfirmation
+                    token={token}
+                    acknowledgment={acknowledgment}
+                    acknowledgedOn={acknowledgedOn}
+                />
+                {shown === 'intro' && (
+                    <PortalIntro
+                        name={name}
+                        notice={notice}
+                        onAccept={() => setScreen('questions')}
+                        onDecline={() => setScreen('declined')}
                     />
                 )}
-                {acknowledgedOn !== null && (
-                    <p className="flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-base text-accent-foreground">
-                        <CircleCheck aria-hidden className="size-5 shrink-0" />
-                        Usted confirmó el {acknowledgedOn} que le informaron del
-                        resultado de su evaluación.
-                    </p>
+                {shown === 'questions' && (
+                    <PortalQuestions
+                        key={sentOn}
+                        token={token}
+                        footwear={footwear}
+                        discomfort={discomfort}
+                        onSent={() => setScreen('sent')}
+                    />
                 )}
-                {sentOn !== null && (
-                    <p className="flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-base text-accent-foreground">
-                        <CircleCheck aria-hidden className="size-5 shrink-0" />
-                        Nos contestó el {sentOn}. Si algo cambió, puede volver a
-                        contestar.
-                    </p>
+                {shown === 'declined' && (
+                    <PortalDeclined onAnswer={() => setScreen('intro')} />
                 )}
-                <PortalInputForm
-                    token={token}
-                    notice={notice}
-                    footwear={footwear}
-                    discomfort={discomfort}
-                />
-                <PortalSeatReport token={token} />
+                {shown === 'sent' && sentOn !== null && (
+                    <PortalSent
+                        sentOn={sentOn}
+                        onAgain={() => setScreen('questions')}
+                    />
+                )}
+                {shown !== 'questions' && <PortalSeatReport token={token} />}
             </div>
         </PortalShell>
     );
