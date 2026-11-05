@@ -159,13 +159,19 @@ it('emails the portal link and stores only its hash', function (): void {
     $link = PortalLink::query()->sole();
     $sent = [];
     Notification::assertSentOnDemand(PortalInvitation::class, function (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$sent): bool {
-        $sent = ['url' => $notification->toMail($notifiable)->actionUrl, 'to' => $notifiable->routes['mail'], 'channels' => $channels];
+        $mail = $notification->toMail($notifiable);
+        $sent = ['url' => $mail->actionUrl, 'to' => $notifiable->routes['mail'], 'channels' => $channels, 'subject' => $mail->subject, 'action' => $mail->actionText, 'lines' => [...$mail->introLines, ...$mail->outroLines]];
 
         return true;
     });
     $token = basename($sent['url']);
 
     expect($sent['to'])->toBe('ana@acme.test')
+        // Board V3-Correos: the list of 10 minutes, what it asks and who sees it.
+        ->and($sent['subject'])->toBe('Su espacio de trabajo en casa: una lista de 10 minutos')
+        ->and($sent['action'])->toBe('Contestar la lista')
+        ->and($sent['lines'])->toContain('Para que pueda trabajar desde casa, necesitamos saber cómo es su espacio: luz, silla, instalación eléctrica. Son unas preguntas y, si usted quiere, unas fotos.')
+        ->toContain('Solo lo ven Recursos Humanos y la Comisión de Seguridad e Higiene. Puede contestar desde su celular.')
         ->and($sent['channels'])->toBe(['mail'])
         ->and($sent['url'])->toBe(route('portal.show', $token))
         ->and($link->token_hash)->toBe(hash('sha256', $token))

@@ -64,9 +64,11 @@ it('mails the person their personal link to the policy waiting for them, as «us
         return $notifiable->routes['mail'] === 'ana@acme.test'
             && $channels === ['mail']
             && $mail->actionUrl === route('portal.policy.show', $token)
-            && str_contains($mail->subject ?? '', 'política de prevención')
+            // Board V4-Correos-2: what it is, that it takes 3 minutes, one button.
+            && $mail->subject === 'La política de su centro de trabajo'
             && $mail->greeting === 'Hola, Ana Ruiz'
-            && str_contains(implode(' ', $mail->introLines), 'Acme');
+            && $mail->introLines[0] === 'Acme publicó su política para prevenir riesgos psicosociales y la violencia laboral. Léala y confirme que la leyó; toma 3 minutos.'
+            && $mail->actionText === 'Leer y confirmar';
     });
 });
 

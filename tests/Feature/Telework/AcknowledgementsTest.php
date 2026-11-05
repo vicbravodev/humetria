@@ -164,7 +164,8 @@ it('mails the employee their portal link, derived as the job runs: the same one 
         $mail = $notification->toMail($notifiable);
         $url = $mail->actionUrl;
 
-        return $mail->subject === 'Tiene pendientes en su portal' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
+        // Board V3-Correos: a document to confirm is «Tiene algo por confirmar».
+        return $mail->subject === 'Tiene algo por confirmar' && $mail->actionText === 'Ver y confirmar' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
     });
     expect(basename($url))->toBe($old)
         ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $old))
@@ -469,7 +470,7 @@ it('writes the Comisión email in the panel voice and the person email in the po
     expect($member->subject)->toBe('Tienes documentos por confirmar')
         ->and(implode(' ', $member->introLines))->toContain('debes leer y confirmar en el panel')
         ->and($member->outroLines)->toBe([])
-        ->and($person->subject)->toBe('Tiene pendientes en su portal')
+        ->and($person->subject)->toBe('Tiene algo por confirmar')
         ->and(implode(' ', $person->outroLines))->toContain('no lo comparta');
 });
 
@@ -535,4 +536,13 @@ it('adds up the Comisión members asked across documents', function (): void {
     $ids = array_map(fn (WorkCenter $center): string => TeleworkDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::RiskInformation])->id, [$this->center, $this->other]);
 
     expect(resolve(RequestAcknowledgements::class)->handle($ids))->toBe(2);
+});
+
+it('keeps «Tiene pendientes en su portal» when the portal asks for more than confirming', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false);
+    $pending = new PortalPendingData([new App\Modules\Telework\Data\PendingChecklist('w', 'Casa', 1, 'Sección I')], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')]);
+    $mail = (new PortalReminder('https://x.test/portal/t', 'Ana', $company, $pending))->toMail(new AnonymousNotifiable);
+
+    expect($mail->subject)->toBe('Tiene pendientes en su portal')
+        ->and($mail->actionText)->toBe('Abrir mi portal');
 });
