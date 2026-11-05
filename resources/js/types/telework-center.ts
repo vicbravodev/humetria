@@ -1,3 +1,4 @@
+import type { RouteProgress } from './dashboard';
 import type { TeleworkerStatus, WorkplaceStatusValue } from './telework';
 
 export type RowStateValue = 'done' | 'missing' | 'partial' | 'not_applicable';
@@ -24,6 +25,21 @@ export type CenterCard = CenterProgress & {
     teleworkers: number;
     aspirants: number;
     pendingReviews: number;
+    /** Where the center stands in its route (board V2-Centros-N037). */
+    route: RouteProgress;
+    /** Who reported an accident nobody answered ("Hugo Saiz", "3 personas"); null without one, or for whoever does not review them. */
+    accident: string | null;
+};
+
+/** «Para toda la empresa» (board V2-Centros-N037): the people, and what is done once for every center. */
+export type TeleworkSummary = { teleworkers: number; centers: number };
+
+export type TeleworkCompany = {
+    /** Centers with their Política de Teletrabajo in force. */
+    policyCenters: number;
+    /** Supporting documents in force in every center, of six. */
+    documentsReady: number;
+    centers: number;
 };
 
 export type CenterNextStepData = {

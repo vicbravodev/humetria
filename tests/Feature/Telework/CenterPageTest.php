@@ -26,9 +26,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 const QUERIES_CENTER = 49;
 
-const QUERIES_INDEX = 39;
+const QUERIES_INDEX = 47;
 
-const QUERIES_INDEX_NOTHING_TO_REVIEW = 30;
+const QUERIES_INDEX_NOTHING_TO_REVIEW = 35;
 
 mutates(TeleworkController::class, TeleworkPages::class, VisibleCenters::class);
 
@@ -425,8 +425,8 @@ it('counts in the list two people, two aspirants and two lists to review in a ce
     }
 
     $this->actingAs($this->owner)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
-        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 6, 'applicable' => 16])
-        ->where('centers.data.1', ['id' => $this->other->id, 'name' => 'Planta Sur', 'activity' => $this->other->main_activity, 'teleworkers' => 0, 'aspirants' => 0, 'pendingReviews' => 0, 'done' => 0, 'applicable' => 10]));
+        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 6, 'applicable' => 16, 'route' => ['applies' => true, 'done' => [false, true, false, true, true, false], 'status' => 'define las reglas', 'answered' => true], 'accident' => null])
+        ->where('centers.data.1', ['id' => $this->other->id, 'name' => 'Planta Sur', 'activity' => $this->other->main_activity, 'teleworkers' => 0, 'aspirants' => 0, 'pendingReviews' => 0, 'done' => 0, 'applicable' => 10, 'route' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false], 'accident' => null]));
 });
 
 it('does not look for whose lists wait for review when none does', function (): void {

@@ -7,6 +7,7 @@ namespace App\Modules\Telework\Support;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Data\UnreviewedAccidents;
+use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\RowState;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Checklist;
@@ -15,6 +16,7 @@ use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Telework\Models\Training;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
@@ -38,6 +40,16 @@ final readonly class TeleworkPages
     private const int CENTERS_PER_PAGE = 12;
 
     private const int PEOPLE_PER_PAGE = 15;
+
+    /** The six supporting documents of the first stage (5.3, 5.6, 5.8, 5.10, 5.13 and 5.14). */
+    private const array SUPPORT = [
+        DocumentKind::RiskInformation,
+        DocumentKind::ImplementationProcess,
+        DocumentKind::MaintenanceProgram,
+        DocumentKind::Reversibility,
+        DocumentKind::FamilyViolence,
+        DocumentKind::CommitteeParticipation,
+    ];
 
     /** The rows of table 10.3 in plain words, as an inspector would ask for them (board V3-Inspeccion). */
     private const array PLAIN = [
@@ -84,16 +96,64 @@ final readonly class TeleworkPages
         $rows = $this->rows->forMany($ids);
         $people = $this->headcounts($ids);
         $pending = $this->pendingReviews($ids);
+        $profiles = TeleworkProfile::query()->whereIn('work_center_id', $ids)->get(['work_center_id', 'has_teleworkers', 'declared_on'])->keyBy('work_center_id');
+        $accidents = [];
 
-        return ['centers' => $page->through(fn (WorkCenterSummary $center): array => [
-            'id' => $center->id,
-            'name' => $center->name,
-            'activity' => $center->mainActivity,
-            'teleworkers' => $people[$center->id]['active'],
-            'aspirants' => $people[$center->id]['aspirants'],
-            'pendingReviews' => $pending[$center->id] ?? 0,
-            ...$this->progress($rows[$center->id] ?? []),
-        ])];
+        foreach (Gate::allows('review-workplaces') ? $this->route->accidents() : [] as $waiting) {
+            $accidents[$waiting->workCenterId] = $waiting->personName ?? "{$waiting->count} personas";
+        }
+
+        return [
+            'centers' => $page->through(function (WorkCenterSummary $center) use ($rows, $people, $pending, $profiles, $accidents): array {
+                $profile = $profiles->get($center->id);
+                $route = RouteStages::from($rows[$center->id] ?? [], $profile?->has_teleworkers, $profile === null ? null : str_replace('.', '', $profile->declared_on->isoFormat('D MMM YYYY')));
+
+                return [
+                    'id' => $center->id,
+                    'name' => $center->name,
+                    'activity' => $center->mainActivity,
+                    'teleworkers' => $people[$center->id]['active'],
+                    'aspirants' => $people[$center->id]['aspirants'],
+                    'pendingReviews' => $pending[$center->id] ?? 0,
+                    ...$this->progress($rows[$center->id] ?? []),
+                    'route' => ['applies' => $route->applies, 'done' => $route->done, 'status' => $route->status, 'answered' => $route->answered],
+                    'accident' => $accidents[$center->id] ?? null,
+                ];
+            }),
+            ...$this->companyWide($userId),
+            'canManage' => Gate::allows('manage-telework'),
+        ];
+    }
+
+    /**
+     * «Para toda la empresa» (board V2-Centros-N037): how many people telework in how many of the centers the user sees,
+     * how many of those centers have their policy in force, and how many of the six supporting documents are in force in
+     * all of them.
+     *
+     * @return array{summary: array{teleworkers: int, centers: int}, company: array{policyCenters: int, documentsReady: int, centers: int}}
+     */
+    private function companyWide(int $userId): array
+    {
+        $limit = $this->visible->limitedTo($userId);
+        $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived && ($limit === null || in_array($center->id, $limit, true))));
+        $ids = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
+        $active = Teleworker::query()->whereIn('work_center_id', $ids)->where('status', TeleworkerStatus::Active)->get(['work_center_id']);
+        $kinds = [];
+
+        foreach (TeleworkDocument::query()->inForce()->whereIn('work_center_id', $ids)->get(['work_center_id', 'kind']) as $document) {
+            $kinds[$document->kind->value][$document->work_center_id] = true;
+        }
+
+        $everywhere = fn (DocumentKind $kind): bool => $ids !== [] && count($kinds[$kind->value] ?? []) === count($ids);
+
+        return [
+            'summary' => ['teleworkers' => $active->count(), 'centers' => $active->unique('work_center_id')->count()],
+            'company' => [
+                'policyCenters' => count($kinds[DocumentKind::Policy->value] ?? []),
+                'documentsReady' => count(array_filter(self::SUPPORT, $everywhere)),
+                'centers' => count($ids),
+            ],
+        ];
     }
 
     /**

@@ -951,18 +951,20 @@ it('lets RH review a notice with a note and goes on to Guía I with the person t
         ->assertSee('Presencié un asalto camino a casa.');
 });
 
-it('lists the centers with their progress on the NOM-037 page', function (bool $dark, bool $mobile): void {
+it('lists the centers with where each stands in its route on the NOM-037 page', function (bool $dark, bool $mobile): void {
     [$url, $center, $tenant] = teleworkerCenter();
     $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
     $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id]);
     WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $person->id])->id]);
 
+    // Rediseño v2 (board V2-Centros-N037): what is done once for the company, and the route of each center.
     visitPage('telework/index', "{$url}/telework", $dark, $mobile)
-        ->assertSee('NOM-037')
+        ->assertSee('Teletrabajo en tus centros')
+        ->assertSee('Para toda la empresa')
         ->assertSee('Planta Querétaro')
-        ->assertSee('1 persona')
-        ->assertSee('renglones')
-        ->assertSee('Ver tablero');
+        ->assertSee('de 6 etapas')
+        ->assertSee('Abrir ruta')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
 it('shows the dashboard of a center with the rows of table 10.3 and its roster', function (bool $dark, bool $mobile): void {
