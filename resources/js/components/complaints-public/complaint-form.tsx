@@ -1,20 +1,21 @@
-import AnonymityLimits from '@/components/complaints-public/anonymity-limits';
 import ComplaintStep from '@/components/complaints-public/complaint-step';
-import HowItWorks from '@/components/complaints-public/how-it-works';
+import FormIntro from '@/components/complaints-public/form-intro';
 import ReceiptCard from '@/components/complaints-public/receipt-card';
 import StepNav from '@/components/complaints-public/step-nav';
-import { Button } from '@/components/ui/button';
-import { show } from '@/routes/complaints/follow-up';
+import StepProgress from '@/components/complaints-public/step-progress';
 import { useComplaintForm } from '@/hooks/use-complaint-form';
-import type { PublicFormProps } from '@/types';
+import { describeDate } from '@/lib/calendar-date';
+import { addDays } from '@/lib/evaluation';
+import type { ExternalAlternative, PublicFormProps } from '@/types';
 
 type Words = {
     procedure: string;
     acknowledgeWithinDays: number;
     resolveWithinDays: number;
+    alternative: ExternalAlternative;
 };
 
-/** The public form, one step at a time: it reads, asks, shows what will be sent and, once the person decides, sends. */
+/** The public form (board V4-Quejas-Form), one step at a time: it reads, asks four things and, once the person decides, sends. */
 export default function ComplaintForm({
     form,
     words,
@@ -29,40 +30,35 @@ export default function ComplaintForm({
     );
 
     if (state.receipt !== undefined) {
-        return <ReceiptCard receipt={state.receipt} code={form.code} />;
-    }
+        const due = addDays(form.today, words.acknowledgeWithinDays);
 
-    if (state.step === 'intro') {
         return (
-            <>
-                <HowItWorks {...words} />
-                <AnonymityLimits />
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                    <Button onClick={state.next}>
-                        Quiero presentar una queja
-                    </Button>
-                    <a
-                        href={show.url({ code: form.code })}
-                        className="touch-hit rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >
-                        Ya presenté una queja: ver cómo va
-                    </a>
-                </div>
-            </>
+            <ReceiptCard
+                receipt={state.receipt}
+                code={form.code}
+                acknowledgeBy={describeDate(due) ?? due}
+            />
         );
     }
 
+    if (state.step === 'intro') {
+        return <FormIntro code={form.code} {...words} onStart={state.next} />;
+    }
+
     return (
-        <>
+        <div className="flex flex-1 flex-col gap-5">
+            <StepProgress step={state.step} onBack={state.back} />
             <ComplaintStep form={form} state={state} />
             <StepNav
-                step={state.step}
+                last={state.step === 'identity'}
                 problem={state.problem}
+                refused={Object.values(state.errors).filter(
+                    (text): text is string => text !== undefined,
+                )}
                 processing={state.processing}
-                onBack={state.back}
                 onNext={state.next}
                 onSend={state.send}
             />
-        </>
+        </div>
     );
 }

@@ -1,104 +1,88 @@
-import { Head, Link } from '@inertiajs/react';
-import { FileText, QrCode } from 'lucide-react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { ArrowRight } from 'lucide-react';
+import ChannelActivate from '@/components/complaints/channel-activate';
+import ChannelOpen from '@/components/complaints/channel-open';
+import ComplaintsHeader from '@/components/complaints/complaints-header';
+import OverdueNotice from '@/components/complaints/overdue-notice';
+import UnassignedNotice from '@/components/complaints/unassigned-notice';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { evidence, poster } from '@/routes/tenant/complaints';
-import ChannelChecklist from '@/components/complaints/channel-checklist';
-import ChannelSummary from '@/components/complaints/channel-summary';
-import OverdueNotice from '@/components/complaints/overdue-notice';
-import UnassignedNotice from '@/components/complaints/unassigned-notice';
-import ChannelTabs from '@/components/complaints/channel-tabs';
-import ChannelActions from '@/components/complaints/channel-actions';
-import ChannelLinkCard from '@/components/complaints/channel-link-card';
-import ChannelSettingsForm from '@/components/complaints/channel-settings-form';
-import PageHeader from '@/components/humetria/page-header';
-import { channelBadge, channelSummary } from '@/lib/complaints/channel';
+import { channelBadge, channelSince } from '@/lib/complaints/channel';
+import { index } from '@/routes/tenant/complaints';
 import type {
     ChannelBounds,
     ChannelSettings,
     ChannelState,
-    ChannelSummary as ChannelSummaryProps,
-    ChecklistItem,
+    ChannelSummary,
+    CoverageByKind,
+    HandlerCandidate,
 } from '@/types';
 
-export default function Channel({
-    channel,
-    settings,
-    bounds,
-    unassigned,
-    checklist,
-    overdueAcknowledgements,
-    summary,
-}: {
-    channel: ChannelState;
+type Props = {
+    channel: ChannelState & { qr: string | null };
     settings: ChannelSettings;
     bounds: ChannelBounds;
     /** How many open complaints nobody holds. */
     unassigned: number;
-    checklist: ChecklistItem[];
     /** New cases past the acknowledgement the company set itself: a count, never which. */
     overdueAcknowledgements: number;
-    summary: ChannelSummaryProps;
-}) {
+    summary: ChannelSummary;
+    coverage: CoverageByKind[];
+    handlersCount: number;
+    candidates: HandlerCandidate[];
+};
+
+/** «El canal y a quién llega cada queja» (board V4-Quejas-Canal). */
+export default function Channel({
+    channel,
+    unassigned,
+    overdueAcknowledgements,
+    ...rest
+}: Props) {
     const tenantSlug = useTenantSlug();
-    const badge = channelBadge(channel.status);
+    const handles = usePage().props.tenant?.can.handle_complaints ?? false;
+    const { url, qr } = channel;
+    setLayoutProps({
+        breadcrumbs: handles
+            ? [{ title: 'Quejas', href: index(tenantSlug) }, { title: 'Canal' }]
+            : [{ title: 'Quejas' }, { title: 'Canal' }],
+    });
 
     return (
         <>
             <Head title="Canal de quejas y denuncias" />
-            <div className="flex w-full max-w-[880px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <PageHeader
-                    caption="NOM-035 · Numeral 8.1 b"
-                    title="Quejas y denuncias"
+            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+                <ComplaintsHeader
+                    eyebrow="NOM-035 · numeral 8.1 b"
+                    title="Canal de quejas y denuncias"
                     status={
-                        <Badge variant={badge.variant}>{badge.label}</Badge>
+                        <Badge variant={channelBadge(channel.status).variant}>
+                            {channelSince(channel.status, channel.publishedOn)}
+                        </Badge>
                     }
-                    description={channelSummary(channel.status)}
+                    lead="Por aquí tus personas avisan, de forma anónima o confidencial, de un mal ambiente de trabajo, de violencia laboral o de un acontecimiento traumático severo."
                 >
-                    {channel.status !== 'inactive' && (
+                    {handles && (
                         <Button variant="outline" asChild>
-                            <Link href={poster.url(tenantSlug)}>
-                                <QrCode aria-hidden />
-                                Cartel
+                            <Link href={index(tenantSlug)}>
+                                Ver los casos
+                                <ArrowRight aria-hidden />
                             </Link>
                         </Button>
                     )}
-                    <Button variant="outline" asChild>
-                        <Link href={evidence.url(tenantSlug)}>
-                            <FileText aria-hidden />
-                            Evidencia
-                        </Link>
-                    </Button>
-                    {channel.status !== 'inactive' && (
-                        <ChannelActions status={channel.status} />
-                    )}
-                </PageHeader>
-                <ChannelTabs active="channel" />
+                </ComplaintsHeader>
                 <UnassignedNotice count={unassigned} />
                 <OverdueNotice count={overdueAcknowledgements} />
-                <ChannelChecklist items={checklist} />
-                {channel.url !== null && (
-                    <ChannelLinkCard
-                        url={channel.url}
-                        publishedOn={channel.publishedOn}
+                {url === null || qr === null ? (
+                    <ChannelActivate
+                        settings={rest.settings}
+                        bounds={rest.bounds}
                     />
+                ) : (
+                    <ChannelOpen channel={{ ...channel, url, qr }} {...rest} />
                 )}
-                {channel.status !== 'inactive' && (
-                    <ChannelSummary summary={summary} />
-                )}
-                <div className="card p-6 [&>form>section:first-child]:border-t-0 [&>form>section:first-child]:pt-0">
-                    <ChannelSettingsForm
-                        settings={settings}
-                        bounds={bounds}
-                        activating={channel.status === 'inactive'}
-                    />
-                </div>
             </div>
         </>
     );
 }
-
-Channel.layout = {
-    breadcrumbs: [{ title: 'NOM-035' }, { title: 'Quejas y denuncias' }],
-};

@@ -19,7 +19,10 @@ export default function ChannelActions({ status }: { status: ChannelStatus }) {
                     confirmLabel="Reanudar el canal"
                     form={resume.form(tenantSlug)}
                     trigger={
-                        <Button variant="outline">
+                        <Button
+                            variant="ghost"
+                            className="justify-start text-primary"
+                        >
                             <Play aria-hidden />
                             Reanudar
                         </Button>
@@ -32,7 +35,10 @@ export default function ChannelActions({ status }: { status: ChannelStatus }) {
                     confirmLabel="Pausar el canal"
                     form={pause.form(tenantSlug)}
                     trigger={
-                        <Button variant="outline">
+                        <Button
+                            variant="ghost"
+                            className="justify-start text-primary"
+                        >
                             <Pause aria-hidden />
                             Pausar
                         </Button>
@@ -45,7 +51,10 @@ export default function ChannelActions({ status }: { status: ChannelStatus }) {
                 confirmLabel="Cambiar el enlace"
                 form={rotate.form(tenantSlug)}
                 trigger={
-                    <Button variant="outline">
+                    <Button
+                        variant="ghost"
+                        className="justify-start text-primary"
+                    >
                         <RefreshCw aria-hidden />
                         Cambiar enlace
                     </Button>

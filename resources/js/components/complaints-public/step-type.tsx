@@ -1,7 +1,7 @@
 import ChoiceCard from '@/components/complaints-public/choice-card';
 import type { ComplaintTypeOption } from '@/types';
 
-/** Step 1: what the person wants to report. */
+/** Step 1 of 4: what the person wants to report. */
 export default function StepType({
     types,
     value,
@@ -13,8 +13,8 @@ export default function StepType({
 }) {
     return (
         <fieldset className="flex flex-col gap-3">
-            <legend className="mb-1 text-xl font-semibold">
-                ¿Qué quiere informar?
+            <legend className="mb-1 text-[22px] leading-7 font-semibold">
+                ¿Qué quiere reportar?
             </legend>
             {types.map((type) => (
                 <ChoiceCard

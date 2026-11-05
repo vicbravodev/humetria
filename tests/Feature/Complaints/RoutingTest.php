@@ -219,6 +219,16 @@ it('does not assign a complaint against HR to a manager who is HR, even by hand'
     expect(assignedTo($complaint))->toBe([]);
 });
 
+it('never gives a case back to a handler who stepped aside from it, when the ones nobody holds are assigned again', function (): void {
+    handlersAre($this, $this->owner, $this->outsider);
+    $complaint = unheld($this, RespondentKind::Coworker);
+    ComplaintAssignment::factory()->ended()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $this->owner->id]);
+
+    $this->actingAs($this->hr)->post(route('tenant.complaints.unassigned.route', $this->tenant))->assertRedirect();
+
+    expect(assignedTo($complaint))->toBe([$this->outsider->id]);
+});
+
 it('leaves alone the complaints somebody holds and the ones already closed', function (): void {
     handlersAre($this, $this->owner);
     $held = receive($this, RespondentKind::Coworker);

@@ -1,58 +1,49 @@
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import type { StepId } from '@/lib/complaints/form';
-import { STEPS } from '@/lib/complaints/form';
 
-/** Back and forward, and where the person is: «Paso 2 de 4». The last step sends; none advances on its own. */
+/**
+ * The way forward of a step (board V4-Quejas-Form): what is missing to leave it, what the server refused, and one wide
+ * button. The last step sends; none advances on its own.
+ */
 export default function StepNav({
-    step,
+    last,
     problem,
+    refused,
     processing,
-    onBack,
     onNext,
     onSend,
 }: {
-    step: StepId;
+    last: boolean;
     problem: string | undefined;
+    /** What the server refused when it was sent, in its words. */
+    refused: string[];
     processing: boolean;
-    onBack: () => void;
     onNext: () => void;
     onSend: () => void;
 }) {
-    const last = step === 'review';
-    const position = STEPS.indexOf(step);
+    const said = problem === undefined ? refused : [problem, ...refused];
 
     return (
-        <div className="flex flex-col gap-3">
-            {problem !== undefined && (
-                <p role="alert" className="text-sm text-destructive">
-                    {problem}
-                </p>
+        <div className="mt-auto flex flex-col gap-3 pt-2">
+            {said.length > 0 && (
+                <ul
+                    role="alert"
+                    className="flex flex-col gap-1 text-sm text-destructive"
+                >
+                    {said.map((text) => (
+                        <li key={text}>{text}</li>
+                    ))}
+                </ul>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-base text-muted-foreground">
-                    Paso {position} de {STEPS.length - 1}
-                </p>
-                <div className="flex gap-2">
-                    {step !== 'type' && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={onBack}
-                        >
-                            Atrás
-                        </Button>
-                    )}
-                    <Button
-                        type="button"
-                        disabled={processing}
-                        onClick={last ? onSend : onNext}
-                    >
-                        {processing && <Spinner />}
-                        {last ? 'Enviar mi queja' : 'Continuar'}
-                    </Button>
-                </div>
-            </div>
+            <Button
+                type="button"
+                className="w-full"
+                disabled={processing}
+                onClick={last ? onSend : onNext}
+            >
+                {processing && <Spinner />}
+                {last ? 'Enviar queja' : 'Continuar'}
+            </Button>
         </div>
     );
 }

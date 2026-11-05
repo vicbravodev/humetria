@@ -8,6 +8,7 @@ use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
+use App\Modules\Complaints\Notifications\ComplaintReceived;
 use App\Modules\Complaints\Notifications\NewsOnYourCase;
 use App\Modules\Complaints\Support\ReporterNotifier;
 use App\Modules\Complaints\Support\TicketSigner;
@@ -103,6 +104,40 @@ it('tells the person there is news, when a handler writes to them, with a link t
             && $mail->subject === 'Hay novedades en su caso'
             && ! str_contains((string) $text, 'ABCD2345') && ! str_contains((string) $text, 'Revisamos') && ! str_contains((string) $text, 'grita');
     });
+});
+
+it('confirms to the address the person left that the complaint came (decisión A10), without the reference, the company or a word of it', function (): void {
+    Notification::fake();
+    $this->channel->forceFill(['acknowledge_within_days' => 2, 'resolve_within_days' => 20])->save();
+
+    withEmail($this)->assertCreated();
+
+    $reference = Complaint::query()->sole()->reference;
+    Notification::assertSentOnDemandTimes(ComplaintReceived::class, 1);
+    Notification::assertSentOnDemand(ComplaintReceived::class, function (ComplaintReceived $notification, array $channels, object $notifiable) use ($reference): bool {
+        $mail = $notification->toMail($notifiable);
+        $text = (string) json_encode([$mail->subject, $mail->introLines, $mail->outroLines, $mail->greeting, $mail->actionUrl, $mail->actionText], JSON_UNESCAPED_UNICODE);
+
+        return $notifiable->routes['mail'] === WRITE_ONLY
+            && $mail->subject === 'Recibimos su queja'
+            && $mail->actionUrl === route('complaints.follow-up.show', $this->channel->access_code)
+            && str_contains($text, 'en 2 días') && str_contains($text, 'en 20 días')
+            && ! str_contains($text, $reference) && ! str_contains($text, 'grita') && ! str_contains($text, 'Acme');
+    });
+    Notification::assertSentOnDemandTimes(NewsOnYourCase::class, 0);
+});
+
+it('confirms nothing to a complaint without an address, nor to one the form refused', function (): void {
+    Notification::fake();
+
+    withEmail($this, ['notify_email' => ''])->assertCreated();
+    withEmail($this, ['description' => 'corto'])->assertUnprocessable();
+
+    Notification::assertNothingSent();
+});
+
+it('does not queue the confirmation either', function (): void {
+    expect(ComplaintReceived::class)->not->toImplement(Illuminate\Contracts\Queue\ShouldQueue::class);
 });
 
 it('does not queue the notice: the address would sit in the queue', function (): void {

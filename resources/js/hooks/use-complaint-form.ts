@@ -43,6 +43,14 @@ export function useComplaintForm(code: string, ticket: string, limits: Limits) {
         }
     };
     const send = () => {
+        const missing = problemWith(step, draft, limits);
+
+        if (missing !== undefined) {
+            setProblem(missing);
+
+            return;
+        }
+
         http.transform(() => payload(draft, ticket));
         http.post(store.url({ code }), {
             onSuccess: (response) => setReceipt(parseReceipt(response)),

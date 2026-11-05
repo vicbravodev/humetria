@@ -68,6 +68,39 @@ it('acknowledges a case: the day it was, an entry and a note to the person, with
     Log::shouldHaveReceived('info')->with('complaints.acknowledged', ['complaint_id' => $this->complaint->id])->once();
 });
 
+it('acknowledges with the words the handler adjusted, and with its own when they send none', function (?string $body, string $expected): void {
+    $this->actingAs($this->owner)->post(caseUrl($this, 'acknowledge'), ['body' => $body])->assertSessionHasNoErrors();
+
+    expect(ComplaintEntry::query()->where('kind', 'handler_message')->sole()->body)->toBe($expected);
+})->with([
+    'adjusted' => ['  Recibimos su denuncia y la estamos leyendo.  ', 'Recibimos su denuncia y la estamos leyendo.'],
+    'none' => [null, AcknowledgeComplaint::TEXT],
+    'blank' => ['   ', AcknowledgeComplaint::TEXT],
+]);
+
+it('checks the length of the acknowledgement at its exact limit', function (int $length, bool $valid): void {
+    $response = $this->actingAs($this->owner)->post(caseUrl($this, 'acknowledge'), ['body' => str_repeat('a', $length)]);
+
+    $valid ? $response->assertSessionHasNoErrors() : $response->assertSessionHasErrors('body');
+    expect($this->complaint->refresh()->acknowledged_at === null)->toBe(! $valid);
+})->with([[5000, true], [5001, false]]);
+
+it('closes a case with the answer the handler writes to the person, before it is closed', function (): void {
+    $this->actingAs($this->owner)->post(caseUrl($this, 'close'), ['resolution' => 'measures_taken', 'body' => ' '.REPLY.' '])->assertSessionHasNoErrors();
+
+    expect(entryKinds($this))->toBe(['handler_message', 'status_change'])
+        ->and(ComplaintEntry::query()->where('kind', 'handler_message')->sole()->body)->toBe(REPLY)
+        ->and($this->complaint->refresh()->status->value)->toBe('closed');
+});
+
+it('closes a case without an answer when none is written, and refuses one that is too long', function (): void {
+    $this->actingAs($this->owner)->post(caseUrl($this, 'close'), ['resolution' => 'measures_taken', 'body' => str_repeat('a', 5001)])->assertSessionHasErrors('body');
+    expect($this->complaint->refresh()->status->value)->toBe('new');
+
+    $this->actingAs($this->owner)->post(caseUrl($this, 'close'), ['resolution' => 'measures_taken', 'body' => ''])->assertSessionHasNoErrors();
+    expect(entryKinds($this))->toBe(['status_change']);
+});
+
 it('acknowledges only once', function (): void {
     $this->actingAs($this->owner)->post(caseUrl($this, 'acknowledge'));
     $this->actingAs($this->owner)->post(caseUrl($this, 'acknowledge'));
@@ -172,6 +205,18 @@ it('shares a case with another handler the conflict leaves, who then opens it', 
     Log::shouldHaveReceived('info')->with('complaints.assignment_changed', ['complaint_id' => $this->complaint->id, 'reason' => 'shared'])->once();
 });
 
+it('never shares a case with a handler who excused themselves from it, nor offers them', function (): void {
+    ComplaintAssignment::factory()->ended()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $this->complaint->id, 'user_id' => $this->hr->id]);
+
+    $this->actingAs($this->owner)->get(caseUrl($this, 'show'))
+        ->assertInertia(fn (Assert $page) => $page->where('candidates', [['value' => (string) $this->outsider->id, 'label' => $this->outsider->name]]));
+
+    $this->actingAs($this->owner)->post(caseUrl($this, 'share'), ['user_id' => $this->hr->id])->assertSessionHasErrors('user_id');
+
+    expect(ComplaintAssignment::query()->where('complaint_id', $this->complaint->id)->where('user_id', $this->hr->id)->whereNull('ended_on')->exists())->toBeFalse();
+    $this->actingAs($this->hr)->get(caseUrl($this, 'show'))->assertNotFound();
+});
+
 it('does not share a case with someone the conflict leaves out, who is not a handler, or already has it', function (string $who, string $kind): void {
     $viewer = memberOf($this->tenant, TenantRole::Viewer);
     $this->complaint->forceFill(['respondent_kind' => $kind])->save();
@@ -252,32 +297,67 @@ it('answers 404 to every action on a case to someone who does not have it, and 4
     'export' => ['export', []],
 ]);
 
-it('shows the thread, the actions and the people who could be given the case', function (): void {
+// Rediseño v2 (board V4-Quejas-Caso): the thread is split in three — the conversation with the person, the internal notes
+// («la persona no las ve») and the log of the case — each paged in the server, instead of one thread.
+it('shows the conversation, the notes and the log apart, the actions and the people who could be given the case', function (): void {
     ComplaintEntry::factory()->fromReporter('2026-11-19')->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $this->complaint->id, 'position' => 1, 'body' => 'Sigue pasando']);
     $this->actingAs($this->owner)->post(caseUrl($this, 'messages.store'), ['body' => REPLY]);
     $this->actingAs($this->owner)->post(caseUrl($this, 'notes.store'), ['body' => NOTE]);
+    $this->actingAs($this->owner)->post(caseUrl($this, 'review'));
 
     $this->actingAs($this->owner)->get(caseUrl($this, 'show'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('entries.data', 3)
-            ->where('entries.data.0.kind', 'internal_note')
-            ->where('entries.data.0.author', $this->owner->name)
-            ->where('entries.data.0.text', NOTE)
-            ->where('entries.data.1.kind', 'handler_message')
-            ->where('entries.data.2.kind', 'reporter_message')
-            ->where('entries.data.2.author', 'La persona')
-            ->where('entries.data.2.when', '2026-11-19')
-            ->where('can', ['acknowledge' => true, 'review' => true, 'write' => true, 'close' => true, 'reopen' => false])
+            ->has('conversation.data', 3)
+            ->where('conversation.data.0.kind', 'handler_message')
+            ->where('conversation.data.0.text', AcknowledgeComplaint::TEXT)
+            ->where('conversation.data.1.kind', 'handler_message')
+            ->where('conversation.data.1.text', REPLY)
+            ->where('conversation.data.2.kind', 'reporter_message')
+            ->where('conversation.data.2.author', 'La persona')
+            ->where('conversation.data.2.when', '2026-11-19')
+            ->where('conversation.data.2.time', null)
+            ->has('notes.data', 1)
+            ->where('notes.data.0.author', $this->owner->name)
+            ->where('notes.data.0.text', NOTE)
+            ->where('notes.data.0.time', '12:00')
+            ->has('log.data', 2)
+            ->where('log.data.0.text', 'pasó el caso a revisión.')
+            ->where('log.data.1.text', 'acusó recibo.')
+            ->where('can', ['acknowledge' => false, 'review' => false, 'write' => true, 'close' => true, 'reopen' => false])
             ->where('candidates', collect([$this->hr, $this->outsider])->map(fn ($user): array => ['value' => (string) $user->id, 'label' => $user->name])->sortBy('label')->values()->all()));
 });
 
-it('pages the thread in the server, the newest entry first', function (): void {
+it('pages each part of the thread in the server, the newest entry first', function (): void {
     foreach (range(1, 21) as $n) {
         ComplaintEntry::factory()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $this->complaint->id, 'position' => $n, 'kind' => 'internal_note', 'body' => "Nota {$n}", 'author_id' => $this->owner->id]);
     }
 
     $this->actingAs($this->owner)->get(caseUrl($this, 'show'))
-        ->assertInertia(fn (Assert $page) => $page->has('entries.data', 20)->where('entries.total', 21)->where('entries.data.0.text', 'Nota 21'));
+        ->assertInertia(fn (Assert $page) => $page->has('notes.data', 20)->where('notes.total', 21)->where('notes.data.0.text', 'Nota 21')
+            ->where('conversation.total', 0)->where('log.total', 0));
+});
+
+it('drafts the acknowledgement with the noun of the case and the day the answer is due, and gives the deadlines the company set', function (string $type, string $draft): void {
+    $this->complaint->forceFill(['type' => $type, 'occurred_on' => '2026-11-17', 'identity_mode' => 'confidential', 'reporter_name' => 'Ana'])->save();
+
+    $this->actingAs($this->owner)->get(caseUrl($this, 'show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('acknowledgement', $draft)
+            ->where('today', '2026-11-20')
+            ->where('deadlines', ['acknowledgeBy' => '2026-11-21', 'respondBy' => '2026-12-18', 'acknowledgedOn' => null, 'closedOn' => null]));
+})->with([
+    'practice' => ['unfavorable_practice', 'Recibimos su queja. La atiende una persona designada que no está involucrada. Le responderemos aquí a más tardar el 18 de diciembre. Puede escribirnos si quiere agregar algo.'],
+    'violence' => ['workplace_violence', 'Recibimos su denuncia. La atiende una persona designada que no está involucrada. Le responderemos aquí a más tardar el 18 de diciembre. Puede escribirnos si quiere agregar algo.'],
+    'notice' => ['traumatic_event_notice', 'Recibimos su aviso. Lo atiende una persona designada que no está involucrada. Le responderemos aquí a más tardar el 18 de diciembre. Puede escribirnos si quiere agregar algo.'],
+]);
+
+it('gives the day the case was acknowledged and closed, in the display time zone', function (): void {
+    $this->complaint->forceFill(['status' => 'closed', 'resolution' => 'measures_taken', 'acknowledged_at' => '2026-11-19 03:00:00', 'closed_at' => now(), 'closed_on' => '2026-11-20'])->save();
+
+    $this->actingAs($this->owner)->get(caseUrl($this, 'show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('deadlines.acknowledgedOn', '2026-11-18')
+            ->where('deadlines.closedOn', '2026-11-20'));
 });
 
 it('keeps a company\'s entries out of another\'s', function (): void {

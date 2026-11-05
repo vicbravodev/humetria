@@ -11,6 +11,7 @@ use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
 use App\Modules\Complaints\Notifications\HandlersChanged;
+use App\Modules\Complaints\Notifications\YouWereDesignated;
 use App\Modules\Complaints\Support\HandlerCoverage;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -64,6 +65,52 @@ it('designates a handler for the whole company, with its audit entry, its log li
     Log::shouldHaveReceived('info')->with('complaints.handler_designated', ['handler_id' => $handler->id])->once();
     Notification::assertSentOnDemandTimes(HandlersChanged::class, 1);
     Notification::assertSentOnDemand(HandlersChanged::class, fn (HandlersChanged $note, array $channels, $notifiable): bool => $notifiable->routes['mail'] === $this->owner->email);
+});
+
+it('goes back to the channel when the person was designated from it (board V4-Quejas-Designar)', function (): void {
+    Notification::fake();
+
+    $this->actingAs($this->owner)
+        ->from(route('tenant.complaints.channel.show', $this->tenant))
+        ->post(route('tenant.complaints.handlers.store', $this->tenant), ['user_id' => $this->hr->id, 'work_center_id' => ''])
+        ->assertRedirect(route('tenant.complaints.channel.show', $this->tenant));
+});
+
+it('tells the person designated that they were, for what, and where their cases are, without a word of any case', function (?string $center, string $scope): void {
+    Notification::fake();
+
+    $this->actingAs($this->owner)->post(route('tenant.complaints.handlers.store', $this->tenant), ['user_id' => $this->hr->id, 'work_center_id' => $center === null ? '' : $this->plant->id]);
+
+    Notification::assertSentOnDemand(YouWereDesignated::class, function (YouWereDesignated $note, array $channels, $notifiable) use ($scope): bool {
+        $mail = $note->toMail($notifiable);
+        $text = implode(' ', [$mail->subject, $mail->greeting, ...$mail->introLines, ...$mail->outroLines]);
+
+        return $notifiable->routes['mail'] === $this->hr->email
+            && $mail->subject === 'Te designaron para atender quejas'
+            && str_contains($text, "Acme te designó para atender las quejas y denuncias {$scope}.")
+            && $mail->actionUrl === route('tenant.complaints.index', $this->tenant);
+    });
+})->with([
+    'the whole company' => [null, 'de toda la empresa'],
+    'one center' => ['plant', 'del centro Planta Querétaro'],
+]);
+
+it('does not tell whoever designates themselves, as the one who activates the channel', function (): void {
+    Notification::fake();
+
+    $this->actingAs($this->owner)->post(route('tenant.complaints.handlers.store', $this->tenant), ['user_id' => $this->owner->id, 'work_center_id' => '']);
+
+    expect(ComplaintHandler::query()->where('user_id', $this->owner->id)->exists())->toBeTrue();
+    Notification::assertSentOnDemandTimes(YouWereDesignated::class, 0);
+});
+
+it('does not tell the person again when they were already designated for that scope', function (): void {
+    Notification::fake();
+    ComplaintHandler::factory()->company($this->tenant->id)->create(['user_id' => $this->hr->id]);
+
+    $this->actingAs($this->owner)->post(route('tenant.complaints.handlers.store', $this->tenant), ['user_id' => $this->hr->id, 'work_center_id' => '']);
+
+    Notification::assertSentOnDemandTimes(YouWereDesignated::class, 0);
 });
 
 it('designates a handler for one work center', function (): void {
@@ -222,7 +269,9 @@ it('routes by the center: a handler of another center does not cover this one', 
         ->and($coverage->handlerIds(RespondentKind::Coworker, null))->toBe([]);
 });
 
-it('shows the handlers page with who handles, the people who could and the coverage, and nothing from the cases', function (): void {
+// Rediseño v2: who receives each kind of complaint moved to the channel's page (board V4-Quejas-Canal); this page lists who
+// handles and who could, with the role the designation dialog leaves out by kind.
+it('shows the handlers page with who handles and the people who could, and nothing from the cases', function (): void {
     ComplaintHandler::factory()->company($this->tenant->id)->create(['user_id' => $this->owner->id]);
     ComplaintHandler::factory()->forCenter($this->tenant->id, $this->plant->id)->create(['user_id' => $this->hr->id]);
 
@@ -235,7 +284,8 @@ it('shows the handlers page with who handles, the people who could and the cover
             ->where('handlers.0.scope', 'Toda la empresa')
             ->where('handlers.1.scope', 'Planta Querétaro')
             ->has('candidates', 2)
-            ->where('coverage.3', ['kind' => 'management', 'label' => 'La dirección o el dueño', 'count' => 0])
+            ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $this->hr->id, 'label' => $this->hr->name, 'role' => 'hr', 'roleLabel' => 'RH']))
+            ->missing('coverage')
             ->where('channelStatus', 'inactive'));
 });
 

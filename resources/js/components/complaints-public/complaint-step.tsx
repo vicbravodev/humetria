@@ -1,6 +1,4 @@
-import EmailStep from '@/components/complaints-public/step-email';
 import IdentityStep from '@/components/complaints-public/step-identity';
-import ReviewStep from '@/components/complaints-public/step-review';
 import StoryStep from '@/components/complaints-public/step-story';
 import StepType from '@/components/complaints-public/step-type';
 import WhomStep from '@/components/complaints-public/step-whom';
@@ -50,17 +48,6 @@ export default function ComplaintStep({
             );
         case 'identity':
             return <IdentityStep draft={draft} onChange={change} />;
-        case 'email':
-            return <EmailStep draft={draft} onChange={change} />;
-        case 'review':
-            return (
-                <ReviewStep
-                    draft={draft}
-                    types={form.types}
-                    kinds={form.kinds}
-                    errors={state.errors}
-                />
-            );
         default:
             return null;
     }

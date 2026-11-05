@@ -84,24 +84,59 @@ function readFlags(value: unknown): Flags | undefined {
     return undefined;
 }
 
+type Days = Pick<FollowUp, 'receivedOn' | 'acknowledgedOn' | 'respondBy'>;
+
+function readDays(value: unknown): Days | undefined {
+    if (
+        has(value, 'receivedOn') &&
+        has(value, 'acknowledgedOn') &&
+        has(value, 'respondBy') &&
+        typeof value.receivedOn === 'string' &&
+        (value.acknowledgedOn === null ||
+            typeof value.acknowledgedOn === 'string') &&
+        typeof value.respondBy === 'string'
+    ) {
+        return {
+            receivedOn: value.receivedOn,
+            acknowledgedOn: value.acknowledgedOn,
+            respondBy: value.respondBy,
+        };
+    }
+
+    return undefined;
+}
+
 /** What the server answers to a follow-up, checked; undefined when it is anything else. */
 export function parseFollowUp(value: unknown): FollowUp | undefined {
     const summary = readSummary(value);
     const flags = readFlags(value);
+    const days = readDays(value);
 
     if (
         summary === undefined ||
         flags === undefined ||
+        days === undefined ||
         !has(value, 'entries') ||
         !isPage(value.entries)
     ) {
         return undefined;
     }
 
-    return { ...summary, ...flags, entries: value.entries };
+    return { ...summary, ...flags, ...days, entries: value.entries };
 }
 
 /** Who wrote an entry, as the person reads it: never a name. */
 export function senderLabel(from: FollowUpEntry['from']): string {
     return from === 'reporter' ? 'Usted' : 'Persona encargada';
+}
+
+const TITLES: Record<FollowUp['status'], string> = {
+    received: 'Recibimos su queja',
+    in_review: 'Su queja está en revisión',
+    closed: 'Su queja se cerró',
+};
+
+/** Where the complaint stands, as the title of its page. */
+export function followUpTitle(status: FollowUp['status']): string {
+    return TITLES[status];
 }

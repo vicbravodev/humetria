@@ -42,7 +42,7 @@ describe('the complaints in the navigation', () => {
         ).toEqual([
             ['Casos', '/admin/acme/complaints'],
             ['Canal', '/admin/acme/complaints/channel'],
-            ['Quién atiende', '/admin/acme/complaints/handlers'],
+            ['Quiénes atienden', '/admin/acme/complaints/handlers'],
         ]);
     });
 
@@ -56,7 +56,7 @@ describe('the complaints in the navigation', () => {
         );
         expect(quejas?.children?.map((child) => child.title)).toEqual([
             'Canal',
-            'Quién atiende',
+            'Quiénes atienden',
         ]);
     });
 
@@ -79,7 +79,8 @@ describe('the complaints in the navigation', () => {
     });
 
     // Board 40 (V4-Menu-Roles): the outside handler's menu is its cases, with no section of the company around them.
-    it('leaves the outside handler with its cases and nothing else of the company', () => {
+    // Rediseño v2 (board V4-Menu-Roles): the outside handler also reads «Cómo se atiende».
+    it('leaves the outside handler with its cases, how they are handled and nothing else of the company', () => {
         const handler = tenant('complaints', true, false);
 
         expect(
@@ -87,7 +88,10 @@ describe('the complaints in the navigation', () => {
                 item.title,
                 toUrl(item.href),
             ]),
-        ).toEqual([['Casos', '/admin/acme/complaints']]);
+        ).toEqual([
+            ['Casos', '/admin/acme/complaints'],
+            ['Cómo se atiende', '/admin/acme/complaints/procedure'],
+        ]);
         expect(complianceNavItems(handler)).toEqual([]);
     });
 

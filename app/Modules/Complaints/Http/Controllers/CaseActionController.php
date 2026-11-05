@@ -16,6 +16,7 @@ use App\Modules\Complaints\Actions\SetLegalHold;
 use App\Modules\Complaints\Actions\ShareCase;
 use App\Modules\Complaints\Actions\StartReview;
 use App\Modules\Complaints\Actions\WriteToReporter;
+use App\Modules\Complaints\Http\Requests\AcknowledgeRequest;
 use App\Modules\Complaints\Http\Requests\CaseMessageRequest;
 use App\Modules\Complaints\Http\Requests\CloseCaseRequest;
 use App\Modules\Complaints\Http\Requests\ShareCaseRequest;
@@ -34,9 +35,9 @@ final class CaseActionController extends Controller
 {
     public function __construct(private readonly HeldCase $held) {}
 
-    public function acknowledge(Request $request, mixed $tenant, string $complaint, AcknowledgeComplaint $acknowledge, #[CurrentUser] User $user): RedirectResponse
+    public function acknowledge(AcknowledgeRequest $request, mixed $tenant, string $complaint, AcknowledgeComplaint $acknowledge, #[CurrentUser] User $user): RedirectResponse
     {
-        $acknowledge->handle($this->held->of($request, $complaint), $user->id);
+        $acknowledge->handle($request->case(), $user->id, $request->text());
 
         return $this->done($tenant, $complaint, 'Acuse enviado.');
     }
@@ -87,7 +88,7 @@ final class CaseActionController extends Controller
 
     public function close(CloseCaseRequest $request, mixed $tenant, string $complaint, CloseCase $close, #[CurrentUser] User $user): RedirectResponse
     {
-        $close->handle($request->case(), $request->resolution(), $user->id);
+        $close->handle($request->case(), $request->resolution(), $user->id, $request->answer());
 
         return $this->done($tenant, $complaint, 'Caso cerrado.');
     }

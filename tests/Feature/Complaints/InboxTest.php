@@ -22,7 +22,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 mutates(InboxPages::class, CasePages::class, ComplaintController::class, ViewCase::class);
 
 // How many queries the inbox makes: measured, then fixed so that a new N+1 breaks the test.
-const QUERIES_OF_THE_INBOX = 17;
+// Rediseño v2: one more, the count of the cases waiting for their acknowledgement (board V4-Quejas-Bandeja).
+const QUERIES_OF_THE_INBOX = 18;
 
 const STORY = 'El jefe de turno me humilla frente a todos cada semana';
 const NAME = 'Rosa Aguilar Quintero';
@@ -55,9 +56,13 @@ function heldBy(object $test, array $people, array $attributes = []): Complaint
     return $complaint;
 }
 
-it('lists to a handler only the complaints assigned to them, the newest day first', function (): void {
+// Rediseño v2 (board V4-Quejas-Bandeja): the open cases come in the order they are attended — the ones waiting for their
+// acknowledgement first, then the rest, each the oldest first, whose deadline comes first — instead of the newest day first.
+it('lists to a handler only the complaints assigned to them, the ones waiting for their acknowledgement first and the oldest first', function (): void {
     $old = heldBy($this, [$this->owner], ['reference' => 'OLD00000', 'received_on' => '2026-11-10']);
     $new = heldBy($this, [$this->owner], ['reference' => 'NEW00000', 'received_on' => '2026-11-19']);
+    heldBy($this, [$this->owner], ['reference' => 'REV00000', 'received_on' => '2026-11-01', 'status' => 'in_review', 'acknowledged_at' => now()]);
+    heldBy($this, [$this->owner], ['reference' => 'ACK00000', 'received_on' => '2026-11-18', 'acknowledged_at' => now()]);
     heldBy($this, [$this->hr], ['reference' => 'HRS00000']);
     heldBy($this, [], ['reference' => 'NOBODY00']);
 
@@ -65,23 +70,42 @@ it('lists to a handler only the complaints assigned to them, the newest day firs
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('complaints/index')
-            ->has('cases.data', 2)
-            ->where('cases.data.0.reference', 'NEW00000')
-            ->where('cases.data.1.reference', 'OLD00000')
-            ->where('cases.total', 2));
+            ->has('cases.data', 4)
+            ->where('cases.data.0.reference', 'OLD00000')
+            ->where('cases.data.0.acknowledged', false)
+            ->where('cases.data.0.dueOn', '2026-11-13')
+            ->where('cases.data.1.reference', 'NEW00000')
+            ->where('cases.data.1.dueOn', '2026-11-22')
+            ->where('cases.data.2.reference', 'REV00000')
+            ->where('cases.data.2.acknowledged', true)
+            ->where('cases.data.2.dueOn', '2026-12-01')
+            ->where('cases.data.3.reference', 'ACK00000')
+            ->where('cases.total', 4)
+            ->where('today', '2026-11-20')
+            ->where('acknowledgeWithinDays', 3));
 
     expect([$new->id, $old->id])->toHaveCount(2);
 });
 
-it('shows the open complaints by default and the closed ones apart, with their counts', function (): void {
+it('lists the closed complaints the newest day first', function (): void {
+    foreach (['CLO00001' => '2026-11-02', 'CLO00002' => '2026-11-12'] as $reference => $day) {
+        heldBy($this, [$this->owner], ['reference' => $reference, 'received_on' => $day, 'status' => 'closed', 'resolution' => ComplaintResolution::MeasuresTaken, 'acknowledged_at' => now(), 'closed_at' => now(), 'closed_on' => '2026-11-19']);
+    }
+
+    $this->actingAs($this->owner)->get(route('tenant.complaints.index', [$this->tenant, 'status' => 'closed']))
+        ->assertInertia(fn (Assert $page) => $page->where('cases.data.0.reference', 'CLO00002')->where('cases.data.1.reference', 'CLO00001'));
+});
+
+it('shows the open complaints by default and the closed ones apart, with their counts and how many wait for their acknowledgement', function (): void {
     heldBy($this, [$this->owner], ['reference' => 'NEW00000']);
     heldBy($this, [$this->owner], ['reference' => 'REV00000', 'status' => 'in_review', 'acknowledged_at' => now()]);
     heldBy($this, [$this->owner], ['reference' => 'CLO00000', 'status' => 'closed', 'resolution' => ComplaintResolution::MeasuresTaken, 'acknowledged_at' => now(), 'closed_at' => now(), 'closed_on' => '2026-11-19']);
+    heldBy($this, [$this->hr], ['reference' => 'HRS00000']);
 
     $this->actingAs($this->owner)->get(route('tenant.complaints.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->where('status', 'open')
-            ->where('counts', ['open' => 2, 'closed' => 1])
+            ->where('counts', ['open' => 2, 'closed' => 1, 'awaiting' => 1])
             ->has('cases.data', 2));
     $this->actingAs($this->owner)->get(route('tenant.complaints.index', [$this->tenant, 'status' => 'closed']))
         ->assertInertia(fn (Assert $page) => $page

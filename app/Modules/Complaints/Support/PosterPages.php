@@ -7,13 +7,10 @@ namespace App\Modules\Complaints\Support;
 use App\Modules\Complaints\Enums\ChannelStatus;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Tenancy\Contracts\Companies;
-use Illuminate\Support\Str;
 
-/** The poster the company prints and hangs: its name, the QR and the address of the channel, and a paragraph of its procedure. */
+/** The poster the company prints and hangs (board V4-Carteles): its name, the QR and the address of the channel, and the days to the answer. */
 final readonly class PosterPages
 {
-    private const int PROCEDURE_CHARACTERS = 400;
-
     public function __construct(private Companies $companies, private QrCodeImage $qr) {}
 
     /**
@@ -34,7 +31,7 @@ final readonly class PosterPages
             'url' => $url,
             'shortUrl' => (string) preg_replace('#^https?://#', '', $url),
             'qr' => $this->qr->dataUri($url),
-            'procedure' => Str::limit(trim($channel->procedure), self::PROCEDURE_CHARACTERS, '…', true),
+            'resolveWithinDays' => $channel->resolve_within_days,
             'paused' => $channel->status() === ChannelStatus::Paused,
         ];
     }

@@ -29,4 +29,14 @@ enum ComplaintType: string
             self::TraumaticEventNotice => 'Un aviso por escrito de que usted vivió o presenció un acontecimiento traumático severo en el trabajo. Para este aviso la norma exige su nombre: no puede ser anónimo.',
         };
     }
+
+    /** The first words of the acknowledgement the handler sends: how the case is called, and its pronoun. */
+    public function acknowledgementOpening(): string
+    {
+        return match ($this) {
+            self::UnfavorablePractice => 'Recibimos su queja. La atiende',
+            self::WorkplaceViolence => 'Recibimos su denuncia. La atiende',
+            self::TraumaticEventNotice => 'Recibimos su aviso. Lo atiende',
+        };
+    }
 }

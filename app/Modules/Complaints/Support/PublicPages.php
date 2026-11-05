@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Support;
 
+use App\Modules\Complaints\Enums\ChannelStatus;
 use App\Modules\Complaints\Enums\ComplaintCategory;
 use App\Modules\Complaints\Enums\ComplaintType;
 use App\Modules\Complaints\Enums\RespondentKind;
@@ -42,6 +43,22 @@ final readonly class PublicPages
     public function paused(OpenedChannel $opened): array
     {
         return ['reason' => 'paused', 'company' => $opened->company, 'alternative' => $this->alternative()];
+    }
+
+    /**
+     * The page where the person follows their complaint up: open also while the channel is paused, which it says, with the
+     * other way (board V4-Quejas-Seguimiento).
+     *
+     * @return array<string, mixed>
+     */
+    public function followUp(OpenedChannel $opened): array
+    {
+        return [
+            'code' => $opened->channel->access_code,
+            'company' => $opened->company,
+            'paused' => $opened->channel->status() === ChannelStatus::Paused,
+            'alternative' => $this->alternative(),
+        ];
     }
 
     /**

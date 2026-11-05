@@ -14,6 +14,7 @@ use App\Modules\Complaints\Support\Dates;
 use App\Modules\Complaints\Support\RandomCode;
 use App\Modules\Complaints\Support\Receipt;
 use App\Modules\Complaints\Support\ReferenceSource;
+use App\Modules\Complaints\Support\ReporterNotifier;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Members;
@@ -38,6 +39,7 @@ final readonly class SubmitComplaint
         private Members $members,
         private Companies $companies,
         private AssignComplaint $assign,
+        private ReporterNotifier $notifier,
     ) {}
 
     /**
@@ -52,6 +54,7 @@ final readonly class SubmitComplaint
         $reference = $this->store($channel, $input, $key, $today->toDateString());
 
         Log::info('complaints.submitted', ['channel_id' => $channel->id, 'type' => $input->type->value, 'identity_mode' => $input->identityMode->value]);
+        $this->notifier->received($channel, $input->notifyEmail);
 
         return new Receipt($reference, $key);
     }

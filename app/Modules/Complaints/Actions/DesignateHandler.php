@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Designates a person to handle the company's complaints, for the whole company or one work center, and tells the other
- * handlers. Designating again someone who already holds that scope changes nothing.
+ * handlers and, apart, the person designated. Designating again someone who already holds that scope changes nothing.
  */
 final readonly class DesignateHandler
 {
@@ -42,6 +42,10 @@ final readonly class DesignateHandler
 
         Log::info('complaints.handler_designated', ['handler_id' => $handler->id]);
         $this->notices->send($userId, designated: true);
+
+        if ($userId !== $designatedBy) {
+            $this->notices->welcome($userId, $workCenterId);
+        }
 
         return $handler;
     }

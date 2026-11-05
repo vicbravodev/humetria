@@ -6,7 +6,7 @@ import type { Draft } from '@/lib/complaints/form';
 import { NOTICE } from '@/lib/complaints/form';
 import type { ComplaintCategoryOption } from '@/types';
 
-/** Step 2: what happened, when (about) and, if known, what kind of thing it is. */
+/** Step 3 of 4: what happened, when (about) and, if known, what kind of thing it is. */
 export default function StoryStep({
     draft,
     categories,
@@ -22,7 +22,9 @@ export default function StoryStep({
 }) {
     return (
         <div className="flex flex-col gap-5">
-            <h2 className="text-xl font-semibold">¿Qué pasó?</h2>
+            <h2 className="text-[22px] leading-7 font-semibold">
+                Cuéntenos qué pasó
+            </h2>
             <div className="grid gap-2">
                 <Label htmlFor="complaint-description">
                     Cuéntelo con sus palabras

@@ -52,5 +52,10 @@ export function useFollowUp(code: string) {
         reply: (body: string, onDone: () => void) =>
             send(messageUrl.url({ code }), { body }, onDone),
         withdraw: () => send(withdraw.url({ code }), {}),
+        reference: secret.reference,
+        leave: () => {
+            setView(undefined);
+            setSecret({ reference: '', key: '' });
+        },
     };
 }

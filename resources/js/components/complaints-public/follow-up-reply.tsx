@@ -29,7 +29,7 @@ export default function FollowUpReply({
                 htmlFor="follow-up-reply"
                 className="text-base font-semibold"
             >
-                Escribir a quien atiende su caso
+                Agregar algo
             </Label>
             <Textarea
                 id="follow-up-reply"
@@ -39,8 +39,7 @@ export default function FollowUpReply({
             />
             <InputError message={error} />
             <Button
-                variant="outline"
-                className="self-start"
+                className="self-end"
                 disabled={processing || text.trim() === ''}
             >
                 {processing && <Spinner />}

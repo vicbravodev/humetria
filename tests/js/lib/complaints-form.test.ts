@@ -4,8 +4,10 @@ import {
     emptyDraft,
     payload,
     problemWith,
+    STEP_COUNT,
     stepAfter,
     stepBefore,
+    stepNumber,
 } from '@/lib/complaints/form';
 
 const limits = { min: 20, max: 5000 };
@@ -14,17 +16,27 @@ const written = (length: number) => ({
     description: 'a'.repeat(length),
 });
 
+// Rediseño v2 (board V4-Quejas-Form): four steps — what, who is involved, what happened, how to follow it up — and the
+// last one sends; the address for the notices goes in the last step and there is no step to review.
 describe('stepAfter and stepBefore', () => {
     it('move one step and stop at both ends', () => {
         expect(stepAfter('intro')).toBe('type');
-        expect(stepAfter('whom')).toBe('identity');
-        expect(stepAfter('identity')).toBe('email');
-        expect(stepAfter('email')).toBe('review');
-        expect(stepAfter('review')).toBe('review');
-        expect(stepBefore('review')).toBe('email');
-        expect(stepBefore('email')).toBe('identity');
-        expect(stepBefore('identity')).toBe('whom');
+        expect(stepAfter('type')).toBe('whom');
+        expect(stepAfter('whom')).toBe('story');
+        expect(stepAfter('story')).toBe('identity');
+        expect(stepAfter('identity')).toBe('identity');
+        expect(stepBefore('identity')).toBe('story');
+        expect(stepBefore('story')).toBe('whom');
+        expect(stepBefore('type')).toBe('intro');
         expect(stepBefore('intro')).toBe('intro');
+    });
+});
+
+describe('stepNumber', () => {
+    it('counts the four steps after the introduction', () => {
+        expect(stepNumber('type')).toBe(1);
+        expect(stepNumber('identity')).toBe(4);
+        expect(STEP_COUNT).toBe(4);
     });
 });
 
@@ -142,34 +154,35 @@ describe('problemWith, the later steps', () => {
         ).toContain('necesita su nombre');
     });
 
-    it('lets the notice address stay empty, and asks for a real one when it is given', () => {
+    it('lets the notice address stay empty on the last step, and asks for a real one when it is given', () => {
         const withEmail = (notifyEmail: string) => ({
             ...emptyDraft,
             notifyEmail,
         });
 
-        expect(problemWith('email', withEmail(''), limits)).toBeUndefined();
-        expect(problemWith('email', withEmail('   '), limits)).toBeUndefined();
+        expect(problemWith('identity', withEmail(''), limits)).toBeUndefined();
         expect(
-            problemWith('email', withEmail('rosa@ejemplo.mx'), limits),
+            problemWith('identity', withEmail('   '), limits),
         ).toBeUndefined();
         expect(
-            problemWith('email', withEmail(' rosa@ejemplo.mx '), limits),
+            problemWith('identity', withEmail('rosa@ejemplo.mx'), limits),
         ).toBeUndefined();
-        expect(problemWith('email', withEmail('rosa'), limits)).toBe(
+        expect(
+            problemWith('identity', withEmail(' rosa@ejemplo.mx '), limits),
+        ).toBeUndefined();
+        expect(problemWith('identity', withEmail('rosa'), limits)).toBe(
             'Escriba un correo válido o déjelo vacío.',
         );
-        expect(problemWith('email', withEmail('rosa@ejemplo'), limits)).toBe(
+        expect(problemWith('identity', withEmail('rosa@ejemplo'), limits)).toBe(
             'Escriba un correo válido o déjelo vacío.',
         );
         expect(
-            problemWith('email', withEmail('ro sa@ejemplo.mx'), limits),
+            problemWith('identity', withEmail('ro sa@ejemplo.mx'), limits),
         ).toBe('Escriba un correo válido o déjelo vacío.');
     });
 
-    it('asks nothing on the steps that only read or review', () => {
+    it('asks nothing on the introduction, which only reads', () => {
         expect(problemWith('intro', emptyDraft, limits)).toBeUndefined();
-        expect(problemWith('review', emptyDraft, limits)).toBeUndefined();
     });
 });
 

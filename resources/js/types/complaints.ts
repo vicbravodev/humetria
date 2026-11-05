@@ -32,6 +32,23 @@ export type HandlerRow = {
     designatedOn: string;
 };
 
+/** Who receives a complaint against this kind of person when no center is named, by name (board V4-Quejas-Canal). */
+export type CoverageByKind = {
+    kind: string;
+    label: string;
+    /** The role that may not receive it: «hr», «owner» or none. */
+    excludedRole: string | null;
+    handlers: Array<{ name: string; roleLabel: string }>;
+};
+
+/** A person who may be designated to handle complaints, with their role. */
+export type HandlerCandidate = {
+    value: string;
+    label: string;
+    role: string;
+    roleLabel: string;
+};
+
 /** How many people would receive a complaint against this kind of person. */
 export type CoverageRow = { kind: string; label: string; count: number };
 
@@ -87,6 +104,9 @@ export type CaseRow = {
     identity: 'anonymous' | 'confidential';
     /** The acknowledgement the company set itself is late. */
     overdue: boolean;
+    acknowledged: boolean;
+    /** The day the deadline that counts now falls: the acknowledgement until it is sent, then the answer. */
+    dueOn: string;
 };
 
 export type CaseFilters = {
@@ -96,7 +116,8 @@ export type CaseFilters = {
     status: 'open' | 'closed';
 };
 
-export type CaseCounts = { open: number; closed: number };
+/** How many cases each tab holds, and how many of the open ones wait for their acknowledgement. */
+export type CaseCounts = { open: number; closed: number; awaiting: number };
 
 /** One case as its handler reads it: the only place where a complaint's words reach a screen. */
 export type CaseDetail = {
@@ -140,6 +161,14 @@ export type CaseEntryRow = {
     text: string | null;
 };
 
+/** The deadlines the company set itself for a case (criterio C-49), and the days its steps were taken: days, never hours. */
+export type CaseDeadlines = {
+    acknowledgeBy: string;
+    respondBy: string;
+    acknowledgedOn: string | null;
+    closedOn: string | null;
+};
+
 /** What the handler may do with the case as it stands. */
 export type CaseCan = {
     acknowledge: boolean;
@@ -169,6 +198,10 @@ export type FollowUp = {
     handlers: number;
     canReply: boolean;
     canWithdraw: boolean;
+    /** Days, never hours: when it came, when someone read it and by when it is answered. */
+    receivedOn: string;
+    acknowledgedOn: string | null;
+    respondBy: string;
     entries: {
         data: FollowUpEntry[];
         current_page: number;

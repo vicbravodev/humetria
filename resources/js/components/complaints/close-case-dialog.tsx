@@ -10,7 +10,9 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { close } from '@/routes/tenant/complaints/cases';
 import type { CaseResolutionOption } from '@/types';
@@ -29,9 +31,9 @@ export default function CloseCaseDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
+                <Button className="self-end">
                     <CircleCheck aria-hidden />
-                    Cerrar el caso
+                    Cerrar con una respuesta
                 </Button>
             </DialogTrigger>
             <DialogContent>
@@ -69,9 +71,30 @@ export default function CloseCaseDialog({
                                 ))}
                             </fieldset>
                             <InputError message={errors['resolution']} />
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="case-answer">
+                                    Lo que le decimos a la persona
+                                </Label>
+                                <Textarea
+                                    id="case-answer"
+                                    name="body"
+                                    rows={4}
+                                    placeholder="Revisamos lo que nos contó y…"
+                                    aria-describedby="case-answer-hint"
+                                />
+                                <p
+                                    id="case-answer-hint"
+                                    className="text-sm text-muted-foreground"
+                                >
+                                    Lo lee con su referencia y su clave antes de
+                                    ver que se cerró. Si lo dejas vacío, solo ve
+                                    la resolución.
+                                </p>
+                                <InputError message={errors['body']} />
+                            </div>
                             <Button disabled={processing} className="self-end">
                                 {processing && <Spinner />}
-                                Cerrar el caso
+                                Cerrar y responder
                             </Button>
                         </>
                     )}
