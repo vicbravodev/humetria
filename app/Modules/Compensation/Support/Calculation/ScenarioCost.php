@@ -18,6 +18,7 @@ use App\Modules\Compensation\Data\UnitCost;
 use App\Modules\Compensation\Enums\BaseBenefit;
 use App\Modules\Compensation\Enums\CostConcept;
 use App\Modules\Compensation\Enums\PayGroup;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 
 /**
@@ -49,6 +50,8 @@ final class ScenarioCost
         $results = [];
         $uncosted = [];
         $cache = ['before' => [], 'after' => []];
+        // The first day of each of the 12 months, once for every unit and both sides.
+        $days = array_map(fn (int $month): CarbonImmutable => $in->effectiveOn->addMonthsNoOverflow($month), range(0, self::MONTHS - 1));
 
         foreach (self::units($in) as $unit) {
             $salary = $unit->dailySalaryCents;
@@ -61,8 +64,8 @@ final class ScenarioCost
 
             $results[] = new UnitCost(
                 $unit,
-                self::side($unit, $salary, $in->benefits, $in, $cache['before']),
-                self::side($unit, self::raised($salary, $unit->group, $in), $afterBenefits, $in, $cache['after']),
+                self::side($unit, $salary, $in->benefits, $in, $days, $cache['before']),
+                self::side($unit, self::raised($salary, $unit->group, $in), $afterBenefits, $in, $days, $cache['after']),
             );
         }
 
@@ -180,15 +183,15 @@ final class ScenarioCost
 
     /**
      * @param  list<BenefitSpec>  $benefits
+     * @param  list<CarbonImmutable>  $days  the first day of each month
      * @param  array<string, array{lines: array<string, int>, uncalculated: list<string>}>  $cache  the persons already costed on this side
      */
-    private static function side(CostUnit $unit, int $salary, array $benefits, ScenarioInput $in, array &$cache): SideCost
+    private static function side(CostUnit $unit, int $salary, array $benefits, ScenarioInput $in, array $days, array &$cache): SideCost
     {
         $annualised = [];
         $uncalculated = [];
 
-        for ($month = 0; $month < self::MONTHS; $month++) {
-            $on = $in->effectiveOn->addMonthsNoOverflow($month);
+        foreach ($days as $on) {
             $subject = new CostSubject($salary, $unit->group, $unit->jobGradeId, TenureYears::at($unit->hiredOn, $on), TenureYears::monthsAt($unit->hiredOn, $on));
             $state = $unit->state ?? $in->defaultState;
             // Two people cost the same when they share the salary, the group, the state, the years of service and which
