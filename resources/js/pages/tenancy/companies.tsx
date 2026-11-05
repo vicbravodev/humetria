@@ -1,10 +1,11 @@
 import { Head } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import PageHeader from '@/components/humetria/page-header';
-import CompanyCard from '@/components/tenancy/company-card';
+import CompanyRow from '@/components/tenancy/company-row';
 import NoCompanies from '@/components/tenancy/no-companies';
 import type { CompanyLink, Paginated } from '@/types';
 
+/** The company chooser (C2 of the rediseño v2): with none or several companies, /admin asks which one to open. */
 export default function Companies({
     companies,
 }: {
@@ -15,7 +16,7 @@ export default function Companies({
     return (
         <>
             <Head title={title} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-9 px-4 py-6 md:px-12 md:py-10">
                 <PageHeader
                     title={title}
                     description={
@@ -27,13 +28,27 @@ export default function Companies({
                 {companies.total === 0 ? (
                     <NoCompanies />
                 ) : (
-                    <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-3">
-                        {companies.data.map((company) => (
-                            <li key={company.slug}>
-                                <CompanyCard company={company} />
-                            </li>
-                        ))}
-                    </ul>
+                    <section
+                        aria-labelledby="companies"
+                        className="flex flex-col gap-3"
+                    >
+                        <h2
+                            id="companies"
+                            className="text-xl leading-7 font-semibold"
+                        >
+                            {companies.total === 1
+                                ? 'Tu empresa'
+                                : `Tus ${companies.total} empresas`}
+                        </h2>
+                        <ul className="@container overflow-hidden card">
+                            {companies.data.map((company) => (
+                                <CompanyRow
+                                    key={company.slug}
+                                    company={company}
+                                />
+                            ))}
+                        </ul>
+                    </section>
                 )}
                 <Pagination page={companies} label="Páginas de empresas" />
             </div>
