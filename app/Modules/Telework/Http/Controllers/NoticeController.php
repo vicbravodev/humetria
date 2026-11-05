@@ -9,8 +9,11 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Telework\Actions\CloseNotice;
 use App\Modules\Telework\Actions\RequestPlaceReview;
 use App\Modules\Telework\Actions\ReviewNotice;
+use App\Modules\Telework\Enums\NoticeAction;
+use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Http\Requests\NoticeCloseRequest;
 use App\Modules\Telework\Http\Requests\NoticeReviewRequest;
+use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
@@ -20,6 +23,7 @@ use App\Modules\Telework\Support\NoticeEvidence;
 use App\Modules\Telework\Support\VisibleCenters;
 use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -111,6 +115,48 @@ final class NoticeController extends Controller
                 ];
             }),
             'filters' => ['center' => $selected === null ? null : ['value' => $selected->id, 'label' => $selected->name]],
+        ]);
+    }
+
+    /** The page of one accident (board V3-Aviso): what the person wrote, the three steps to follow it up and the place. */
+    public function show(Request $request, mixed $tenant, string $notice): Response
+    {
+        Gate::authorize('review-workplaces');
+        $user = $request->user();
+        // Every route of this controller sits behind the auth middleware: the check only narrows the type.
+        abort_if($user === null, 403); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
+
+        $found = $this->access->reviewable($user->id, $notice);
+        abort_unless($found->kind === NoticeKind::WorkRisk, 404);
+        $teleworker = Teleworker::query()->findOrFail($found->teleworker_id, ['id', 'employee_id', 'work_center_id', 'telework_percentage']);
+        // The foreign keys guarantee the employee of every period and the center of every employee.
+        $person = $this->roster->find($teleworker->employee_id) ?? throw new LogicException("Period [{$teleworker->id}] has no employee.");
+        $center = $this->workCenters->findActive($teleworker->work_center_id);
+        $zone = config()->string('app.display_timezone');
+        $day = fn (?CarbonImmutable $moment): ?string => $moment?->setTimezone($zone)->toDateString();
+        $hasPlace = Workplace::query()->where('teleworker_id', $teleworker->id)->whereNull('retired_at')->exists();
+
+        return Inertia::render('telework/notice', [
+            'notice' => [
+                'id' => $found->id,
+                'person' => $person->name,
+                'jobTitle' => $person->jobTitle,
+                'percentage' => $teleworker->telework_percentage,
+                'personHref' => Gate::allows('manage-telework') ? route('tenant.telework.teleworkers.show', [$tenant, $teleworker->id]) : null,
+                'workCenter' => ['id' => $teleworker->work_center_id, 'name' => $center === null ? '' : $center->name],
+                'description' => $found->description,
+                'writtenOn' => $found->written_on->toDateString(),
+                'occurredOn' => $found->occurred_on->toDateString(),
+                'waiting' => $found->submitted_at->diffForHumans(),
+                'reviewedOn' => $day($found->reviewed_at),
+                'actions' => $found->review_actions ?? [],
+                'note' => $found->review_note,
+                'closedOn' => $day($found->closed_at),
+                'evidenceHref' => $found->evidence_path === null ? null : route('tenant.telework.notices.evidence', [$tenant, $found->id]),
+                'placeReviewOn' => $day($found->place_review_requested_at),
+                'canAskPlaceReview' => $found->place_review_requested_at === null && $hasPlace && Checklist::latestPublished($teleworker->work_center_id) !== null,
+            ],
+            'choices' => array_map(fn (NoticeAction $action): array => ['value' => $action->value, 'label' => $action->label()], NoticeAction::cases()),
         ]);
     }
 

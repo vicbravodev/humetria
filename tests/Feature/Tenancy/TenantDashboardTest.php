@@ -129,14 +129,14 @@ it('puts first what is urgent, for whoever may act on it, and never what a compl
     $person = memberOf($this->tenant, $role);
     $employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'name' => 'Hugo Saiz']);
     $teleworker = TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id]);
-    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id, 'submitted_at' => '2026-02-27 18:00:00']);
+    $notice = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id, 'submitted_at' => '2026-02-27 18:00:00']);
     $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id, 'closed_at' => '2026-10-29 18:00:00']);
     TraumaScreening::factory()->count(9)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
     $channel = ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create(['acknowledge_within_days' => 1]);
     $complaint = Complaint::factory()->create(['tenant_id' => $this->tenant->id, 'channel_id' => $channel->id, 'received_on' => '2026-10-30']);
     ComplaintAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $person->id]);
     $urgent = [
-        'NOM-037' => ['norm' => 'NOM-037', 'title' => 'Hugo Saiz avisó un accidente de trabajo', 'detail' => 'Planta Querétaro · espera desde el 27 feb 2026', 'action' => 'Revisar aviso', 'href' => route('tenant.telework.notices.index', ['tenant' => $this->tenant, 'center' => $plant->id], false)],
+        'NOM-037' => ['norm' => 'NOM-037', 'title' => 'Hugo Saiz avisó un accidente de trabajo', 'detail' => 'Planta Querétaro · espera desde el 27 feb 2026', 'action' => 'Revisar aviso', 'href' => route('tenant.telework.notices.show', [$this->tenant, $notice->id], false)],
         'NOM-035' => ['norm' => 'NOM-035', 'title' => '9 personas esperan valoración clínica', 'detail' => 'Planta Querétaro · Guía I · canalízalas a atención', 'action' => 'Canalizar', 'href' => route('tenant.campaigns.screenings', [$this->tenant, $closed->id], false)],
         'Quejas' => ['norm' => 'Quejas', 'title' => 'Una denuncia espera acuse de recibo', 'detail' => 'Vence mañana · la ves porque te designaron · sin contenido aquí', 'action' => 'Acusar recibo', 'href' => route('tenant.complaints.cases.show', [$this->tenant, $complaint->id], false)],
     ];

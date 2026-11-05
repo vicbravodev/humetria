@@ -277,3 +277,82 @@ describe('asking the Comisión to review the place', function (): void {
         expect(fn () => resolve(RequestPlaceReview::class)->handle($other))->toThrow(ValidationException::class);
     });
 });
+
+describe('the page of an accident', function (): void {
+    function accidentPage(?WorkerNotice $notice = null): Illuminate\Testing\TestResponse
+    {
+        return test()->get(route('tenant.telework.notices.show', [test()->tenant, ($notice ?? test()->notice)->id]));
+    }
+
+    it('shows an accident nobody answered, with the person, the steps to follow and the place to review', function (): void {
+        $this->travelTo('2026-10-30 12:00:00');
+        ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id]);
+        $this->actingAs($this->hr);
+
+        accidentPage()->assertInertia(fn (Assert $page) => $page->component('telework/notice')
+            ->where('notice', [
+                'id' => $this->notice->id,
+                'person' => 'Hugo Saiz',
+                'jobTitle' => $this->employee->job_title,
+                'percentage' => 50,
+                'personHref' => route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]),
+                'workCenter' => ['id' => $this->center->id, 'name' => 'Planta Querétaro'],
+                'description' => 'Me lastimé la espalda al levantar una caja.',
+                'writtenOn' => '2026-02-27',
+                'occurredOn' => '2026-02-25',
+                'waiting' => 'hace 8 meses',
+                'reviewedOn' => null,
+                'actions' => [],
+                'note' => null,
+                'closedOn' => null,
+                'evidenceHref' => null,
+                'placeReviewOn' => null,
+                'canAskPlaceReview' => true,
+            ])
+            ->where('choices', array_map(fn (App\Modules\Telework\Enums\NoticeAction $action): array => ['value' => $action->value, 'label' => $action->label()], App\Modules\Telework\Enums\NoticeAction::cases())));
+    });
+
+    it('shows what was done and how it closed, and the Comisión sees it without the way to the person\'s page', function (): void {
+        Queue::fake();
+        Storage::fake('telework_files');
+        config()->set('filesystems.telework_files', 'telework_files');
+        $this->actingAs($this->hr);
+        answerAccident(['actions' => ['leave'], 'note' => 'Tres días.']);
+        $this->post(route('tenant.telework.notices.close', [$this->tenant, $this->notice->id]), ['evidence' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')]);
+        $cora = memberOf($this->tenant, TenantRole::Committee);
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $cora->id]);
+
+        $this->actingAs($cora);
+        accidentPage()->assertInertia(fn (Assert $page) => $page
+            ->where('notice.reviewedOn', '2026-03-01')
+            ->where('notice.actions', ['leave'])
+            ->where('notice.note', 'Tres días.')
+            ->where('notice.closedOn', '2026-03-01')
+            ->where('notice.evidenceHref', route('tenant.telework.notices.evidence', [$this->tenant, $this->notice->id]))
+            ->where('notice.personHref', null)
+            ->where('notice.canAskPlaceReview', false));
+    });
+
+    it('opens only an accident, and only for who may review it', function (): void {
+        $this->actingAs($this->hr);
+        accidentPage(WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'kind' => NoticeKind::ConditionChange]))->assertNotFound();
+        $this->get(route('tenant.telework.notices.show', [$this->tenant, 'not-a-uuid']))->assertNotFound();
+
+        $elsewhere = memberOf($this->tenant, TenantRole::Committee);
+        CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id, 'user_id' => $elsewhere->id]);
+        foreach ([$elsewhere, memberOf(Tenant::factory()->create(), TenantRole::Hr)] as $outsider) {
+            $this->actingAs($outsider);
+            accidentPage()->assertNotFound();
+        }
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+        accidentPage()->assertForbidden();
+    });
+
+    it('reads the page in a fixed number of queries', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->expectsDatabaseQueryCount(18);
+        accidentPage()->assertOk();
+    });
+});

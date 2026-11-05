@@ -66,9 +66,9 @@ it('follows the padrón over a declaration that nobody teleworks', function (): 
     expect(app(TeleworkRoute::class)->progress([$this->plant->id])[$this->plant->id]->applies)->toBeTrue();
 });
 
-it('gathers by center the accident notices nobody reviewed yet, naming the person when there is one', function (): void {
+it('gathers by center the accident notices nobody reviewed yet, naming the person and the notice when there is one', function (): void {
     $hugo = teleworkerAt($this->plant);
-    WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $hugo, 'submitted_at' => '2026-02-27 18:00:00']);
+    $lone = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $hugo, 'submitted_at' => '2026-02-27 18:00:00']);
     // Reviewed, or another kind of notice: neither waits.
     WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $hugo, 'reviewed_at' => now(), 'reviewed_by' => ownerOf($this->tenant)->id, 'review_note' => 'Se ajustó la silla.']);
     WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $hugo, 'kind' => NoticeKind::ConditionChange]);
@@ -79,7 +79,7 @@ it('gathers by center the accident notices nobody reviewed yet, naming the perso
 
     expect(app(TeleworkRoute::class)->accidents())->toEqual([
         new UnreviewedAccidents($this->offices->id, 2, null, '2026-02-20'),
-        new UnreviewedAccidents($this->plant->id, 1, 'Hugo Saiz', '2026-02-27'),
+        new UnreviewedAccidents($this->plant->id, 1, 'Hugo Saiz', '2026-02-27', $lone->id),
     ]);
 });
 

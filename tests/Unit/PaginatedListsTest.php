@@ -49,6 +49,7 @@ const ARRAY_PROPS = [
     'telework/trainings:topics' => 'catálogo fijo: los ocho temas del numeral 8.1',
     'telework/trainings:modalities' => 'catálogo fijo: remota, presencial o mixta',
     'telework/center:rows' => 'catálogo fijo: los renglones de la tabla 10.3 (17)',
+    'telework/notice:choices' => 'catálogo fijo: lo que se hizo por un accidente (NoticeAction, cinco)',
     'compensation/benefits:kinds' => 'catálogo fijo: los cuatro modos de calcular una prestación (BenefitKind)',
     'compensation/benefits:frequencies' => 'catálogo fijo: diaria, mensual o anual',
     'compensation/benefits:groups' => 'catálogo fijo: sindicalizado o confianza',

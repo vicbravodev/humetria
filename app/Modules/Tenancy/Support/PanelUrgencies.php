@@ -25,7 +25,10 @@ final readonly class PanelUrgencies
             'title' => $accidents->personName === null ? "{$accidents->count} personas avisaron un accidente de trabajo" : "{$accidents->personName} avisó un accidente de trabajo",
             'detail' => ($names[$accidents->workCenterId] ?? '').' · espera desde el '.self::day($accidents->since),
             'action' => 'Revisar aviso',
-            'href' => route('tenant.telework.notices.index', ['tenant' => $tenantSlug, 'center' => $accidents->workCenterId], false),
+            // A lone notice opens on its own page (board V3-Aviso); several, on the center's list.
+            'href' => $accidents->noticeId === null
+                ? route('tenant.telework.notices.index', ['tenant' => $tenantSlug, 'center' => $accidents->workCenterId], false)
+                : route('tenant.telework.notices.show', ['tenant' => $tenantSlug, 'notice' => $accidents->noticeId], false),
         ];
     }
 

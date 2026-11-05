@@ -62,3 +62,27 @@ export type TeleworkerNotice = {
     status: 'Recibido' | 'Revisado';
     reviewedOn: string | null;
 };
+
+/** An accident notice (6.9) on its own page (board V3-Aviso), with its follow-up. Days as Y-m-d. */
+export type AccidentNotice = {
+    id: string;
+    person: string;
+    jobTitle: string;
+    percentage: number;
+    /** The person's page, for RH only. */
+    personHref: string | null;
+    workCenter: { id: string; name: string };
+    description: string;
+    writtenOn: string;
+    occurredOn: string;
+    /** Since when it waits, in words: "hace 8 meses". */
+    waiting: string;
+    reviewedOn: string | null;
+    /** What was done, as `NoticeAction` values. */
+    actions: string[];
+    note: string | null;
+    closedOn: string | null;
+    evidenceHref: string | null;
+    placeReviewOn: string | null;
+    canAskPlaceReview: boolean;
+};

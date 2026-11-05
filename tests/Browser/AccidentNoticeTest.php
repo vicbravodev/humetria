@@ -38,3 +38,56 @@ it('shows the person in their portal what was done about their accident', functi
 
     expect($tenant->slug)->toBe('acme');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+// Board V3-Aviso: an accident nobody answered, with its three steps.
+it('shows an accident to follow up as the redesign draws it, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    [$tenant, $notice] = accidentCompany();
+    test()->actingAs(memberOf($tenant, TenantRole::Hr));
+
+    visitPage('telework/notice', "/admin/acme/telework/notices/{$notice->id}", $dark, $mobile)
+        ->assertSee('Hugo Saiz avisó un accidente de trabajo')
+        ->assertSee('«Me lastimé la espalda al levantar una caja.»')
+        ->assertSee('Registra qué se hizo')
+        ->assertSee('Guardar y avisar a Hugo Saiz')
+        ->assertSee('Línea de tiempo')
+        ->assertSee('¿Hay que revisar su lugar?')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
+
+it('records what was done, tells the person and closes the accident with its evidence', function (): void {
+    Illuminate\Support\Facades\Storage::fake('telework_files');
+    config()->set('filesystems.telework_files', 'telework_files');
+    [$tenant, $notice] = accidentCompany();
+    test()->actingAs(memberOf($tenant, TenantRole::Hr));
+
+    visit("/admin/acme/telework/notices/{$notice->id}")
+        ->assertButtonDisabled('Guardar y avisar a Hugo Saiz')
+        ->click('Se ajustó su lugar o equipo')
+        ->fill('#accident-note', 'Se le entregó una silla nueva.')
+        ->press('Guardar y avisar a Hugo Saiz')
+        ->assertSee('Enviado a su portal')
+        ->assertSee('En seguimiento')
+        ->attach('evidence', __DIR__.'/../Fixtures/policy.pdf')
+        ->press('Cerrar aviso')
+        ->assertSee('Ver la evidencia')
+        ->assertSee('Cerrado')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect($notice->refresh()->closed_at)->not->toBeNull()->and($notice->review_actions)->toBe(['place_adjusted']);
+});
+
+it('opens an accident from the list of notices and from the panel', function (): void {
+    [$tenant] = accidentCompany();
+    test()->actingAs(memberOf($tenant, TenantRole::Hr));
+
+    visit('/admin/acme/telework/notices')
+        ->click('Revisar aviso')
+        ->assertSee('Registra qué se hizo')
+        ->assertNoJavaScriptErrors();
+
+    visit('/admin/acme')
+        ->click('[aria-labelledby="urgent"] a')
+        ->assertSee('Registra qué se hizo')
+        ->assertNoJavaScriptErrors();
+});
