@@ -55,7 +55,7 @@ function inventory(): array
         'survey invitation' => [fn () => new SurveyInvitation(SurveyEmail::Invitation, 'tok', 'Ana', $company, null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15), true],
         'progress digest' => [fn () => new ProgressDigest($company, 'Planta', 3, 10, 5, [], ['name' => 'Ventas', 'pending' => 7], 7, $url), true],
         'complaint received' => [fn () => new ComplaintReceived($url, 3, 30), false],
-        'complaints digest' => [fn () => new ComplaintsDigest($company, 'Olga', ['1 caso espera acuse.'], $url), true],
+        'complaints digest' => [fn () => new ComplaintsDigest($company, 'Olga', 1, ['Tienes 1 caso nuevo.'], $url), true],
         'daily cap' => [fn () => new DailyCapReached($company, 20, $url), true],
         'handlers changed' => [fn () => new HandlersChanged($company, 'Rita', true, $url), true],
         'news on your case' => [fn () => new NewsOnYourCase($url), false],
