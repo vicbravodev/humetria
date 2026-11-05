@@ -21,7 +21,7 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
 {
     private const int RECENT_DAYS = 30;
 
-    private const int CYCLE_YEARS = 2;
+    public const int CYCLE_YEARS = 2;
 
     public function __construct(private InstrumentTally $tally) {}
 

@@ -14,6 +14,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
     expect($events)->toBe([
         'campaigns:close-expired' => '0 * * * *',
         'campaigns:send-digests' => '0 9 * * 1',
+        'campaigns:remind-next-evaluations' => '15 8 * * *',
         'interventions:send-digests' => '30 9 * * 1',
         'disclosure:send-digests' => '45 9 * * 1',
         'telework:schedule-reviews' => '0 7 * * *',
@@ -76,4 +77,12 @@ it('runs the NOM-037 commands in the display time zone, whatever it is set to', 
 
     expect($telework)->toHaveCount(2)
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Tijuana'))->toBeTrue();
+});
+
+it('reminds of the next NOM-035 evaluation every day at 08:15 display time, once and without overlapping', function (): void {
+    $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'campaigns:remind-next-evaluations'));
+
+    expect($event->timezone)->toBe('America/Mexico_City')
+        ->and($event->onOneServer)->toBeTrue()
+        ->and($event->withoutOverlapping)->toBeTrue();
 });

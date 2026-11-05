@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
+use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
@@ -25,6 +26,10 @@ Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $clo
 Artisan::command('campaigns:send-digests', function (SendProgressDigests $sendDigests): void {
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
 })->purpose('Email each owner how far its open evaluations got');
+
+Artisan::command('campaigns:remind-next-evaluations', function (RemindNextEvaluations $remind): void {
+    $this->info('Avisos de la próxima evaluación: '.$remind->handle());
+})->purpose('Tell each owner of the centers whose NOM-035 evaluation turns two years old in 60 days');
 
 Artisan::command('interventions:send-digests', function (SendProgramDigests $sendDigests): void {
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
@@ -72,6 +77,7 @@ Artisan::command('seating:remind-questions', function (RemindStandingQuestions $
 
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
+Schedule::command('campaigns:remind-next-evaluations')->dailyAt('08:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('interventions:send-digests')->weeklyOn(1, '9:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('disclosure:send-digests')->weeklyOn(1, '9:45')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('telework:schedule-reviews')->dailyAt('07:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
