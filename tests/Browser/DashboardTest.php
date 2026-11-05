@@ -10,6 +10,7 @@ use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Responses\Models\TraumaScreening;
+use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -44,6 +45,8 @@ function panelCompany(): string
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $closed->id, 'requires_clinical_assessment' => true]);
     // Its policy reached Oficinas Monterrey, so the route there is at the evaluation.
     DocumentCenter::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $offices->id]);
+    // Planta Querétaro said that someone works standing; Oficinas Monterrey has not answered «¿Te aplica?» yet.
+    SeatingProfile::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
     $hugo = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Hugo Saiz']);
     WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $hugo->id])->id]);
 
@@ -64,8 +67,10 @@ it('shows the panel as the redesign draws it, in both themes and on a phone', fu
         ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom035"]', 'Oficinas Monterrey')
         ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom035"]', 'Etapa 2 de 6 · 3 de 6 contestaron, cierra en 11 días')
         ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom037"]', 'Etapa 1 de 6 · define las reglas')
-        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom037"]', 'Nadie teletrabaja en este centro')
-        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:first-child', 'Etapa 1 de 6 · identifica los puestos de pie')
+        // Rediseño v2 (decisión A2): where nobody teleworks or works standing yet, the center answers «¿Te aplica?» first.
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="nom037"]', 'Contesta si te aplica')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:first-child', 'Falta contestar')
+        ->assertSeeIn('[aria-labelledby="routes"] [data-norm="seating"] li:last-child', 'Etapa 1 de 6 · identifica los puestos de pie')
         ->assertSeeIn('[aria-labelledby="next-step"]', 'Define tu política de prevención')
         ->assertSeeIn('[aria-labelledby="next-step"]', 'NOM-035 · etapa 1 de 6 · 1 centro')
         ->assertSeeIn('[aria-labelledby="week"]', 'Nada vence en los próximos 7 días.')

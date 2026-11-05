@@ -188,11 +188,11 @@ final readonly class DashboardPage
     }
 
     /**
-     * @return array{applies: bool, done: list<bool>, status: string}
+     * @return array{applies: bool, done: list<bool>, status: string, answered: bool}
      */
     private static function route(RouteProgress $route): array
     {
-        return ['applies' => $route->applies, 'done' => $route->done, 'status' => $route->status];
+        return ['applies' => $route->applies, 'done' => $route->done, 'status' => $route->status, 'answered' => $route->answered];
     }
 
     /** A Y-m-d day as the design system writes it: "27 feb 2026". */

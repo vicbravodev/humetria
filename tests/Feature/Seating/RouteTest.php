@@ -47,7 +47,7 @@ it('tells each center where it stands in its route, and that it does not apply w
     expect(app(SeatingRoute::class)->progress([$plant->id, $offices->id, WorkCenter::factory()->create()->id]))->toEqual([
         // Its position is held and the Comisión sits; it lacks seats, the assessment, the regulation and the diagnosis.
         $plant->id => new RouteProgress(true, [true, false, false, true, false, false], 'pon asientos donde hacen falta'),
-        $offices->id => RouteProgress::notApplicable('Nadie trabaja de pie · declarado el 3 oct 2026'),
+        $offices->id => RouteProgress::notApplicable('Nadie trabaja de pie · constancia del 3 oct 2026'),
     ]);
 });
 

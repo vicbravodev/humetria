@@ -42,6 +42,7 @@ export default function DashboardRouteNorm({
                         key={row.id}
                         name={row.name}
                         route={row.route}
+                        answerHref={norm.answer?.(tenantSlug, row.id) ?? null}
                     />
                 ))}
             </ul>

@@ -10,8 +10,8 @@ use App\Modules\Tenancy\Data\RouteProgress;
 /**
  * The six stages of the Ley Silla route (board V2-Ruta-Silla) from the thirteen requirements of a center: a stage is done
  * when each of its requirements is met (a warning, like a reassessment due, is not), and seats, assessments and pauses wait for
- * a position to be registered. The route
- * does not apply where the center declared that nobody works standing and has no position registered.
+ * a position to be registered. The route does not apply where the center declared that nobody works standing and has no
+ * position registered; a center that never declared and has none still has to answer «¿Te aplica?» (decisión A2).
  */
 final class RouteStages
 {
@@ -36,12 +36,16 @@ final class RouteStages
 
     /**
      * @param  list<ComplianceRow>  $rows
-     * @param  string|null  $declaredOn  the day of the declaration, as the design system writes it
+     * @param  string|null  $declaredOn  the day of the declaration, as the design system writes it; null without one
      */
     public static function from(array $rows, bool $nobodyStanding, bool $hasPositions, ?string $declaredOn): RouteProgress
     {
+        if (! $hasPositions && $declaredOn === null) {
+            return RouteProgress::unanswered();
+        }
+
         if ($nobodyStanding && ! $hasPositions) {
-            return RouteProgress::notApplicable("Nadie trabaja de pie · declarado el {$declaredOn}");
+            return RouteProgress::notApplicable("Nadie trabaja de pie · constancia del {$declaredOn}");
         }
 
         $met = [];

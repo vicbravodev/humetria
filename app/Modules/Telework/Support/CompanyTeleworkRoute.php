@@ -9,6 +9,7 @@ use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Data\UnreviewedAccidents;
 use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 
@@ -18,9 +19,16 @@ final readonly class CompanyTeleworkRoute implements TeleworkRoute
 
     public function progress(array $workCenterIds): array
     {
-        $own = array_column($this->workCenters->all(), 'id');
+        $own = array_values(array_intersect($workCenterIds, array_column($this->workCenters->all(), 'id')));
+        $profiles = TeleworkProfile::query()->whereIn('work_center_id', $own)->get(['work_center_id', 'has_teleworkers', 'declared_on'])->keyBy('work_center_id');
+        $progress = [];
 
-        return array_map(RouteStages::from(...), $this->rows->forMany(array_values(array_intersect($workCenterIds, $own))));
+        foreach ($this->rows->forMany($own) as $id => $rows) {
+            $profile = $profiles->get($id);
+            $progress[$id] = RouteStages::from($rows, $profile?->has_teleworkers, $profile === null ? null : str_replace('.', '', $profile->declared_on->isoFormat('D MMM YYYY')));
+        }
+
+        return $progress;
     }
 
     public function accidents(): array

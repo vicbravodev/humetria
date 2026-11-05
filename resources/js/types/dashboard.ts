@@ -1,12 +1,14 @@
 /**
  * Where a work center stands in the six-stage route of a standard (rediseño v2, boards V2-Ruta-*): the stages done, in
  * order, and a short line about the earliest one left. When the standard does not apply, `done` is empty and the line
- * says why ("Nadie teletrabaja en este centro").
+ * says why ("Nadie trabaja de pie · constancia del 3 oct 2026"); when the center has not answered «¿Te aplica?» yet, it
+ * is not `answered` (decisión A2).
  */
 export type RouteProgress = {
     applies: boolean;
     done: boolean[];
     status: string;
+    answered: boolean;
 };
 
 /** A work center of the panel with its place in each route. */

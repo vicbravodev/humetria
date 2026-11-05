@@ -69,13 +69,18 @@ export function stageLine(route: RouteProgress): string {
     return `Etapa ${current + 1} de ${route.done.length} · ${route.status}`;
 }
 
-/** The standards that apply to some center of the page, each with every center of it (those it does not apply to say so). */
+/**
+ * The standards that apply to some center of the page, or that some center still has to answer «¿Te aplica?» for, each
+ * with every center of it (those it does not apply to say so).
+ */
 export function normsInUse(centers: CenterRoutes[]): {
     norm: Norm;
     rows: { id: string; name: string; route: RouteProgress }[];
 }[] {
     return NORMS.filter((norm) =>
-        centers.some((center) => center[norm.key].applies),
+        centers.some(
+            (center) => center[norm.key].applies || !center[norm.key].answered,
+        ),
     ).map((norm) => ({
         norm,
         rows: centers.map((center) => ({

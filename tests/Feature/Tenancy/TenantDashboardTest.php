@@ -12,6 +12,7 @@ use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Responses\Models\TraumaScreening;
+use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Models\Tenant;
@@ -66,6 +67,8 @@ it('dates the greeting and counts the standards that apply in how many centers',
     WorkCenter::factory()->for($this->tenant)->create();
     $employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);
     TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id]);
+    // Someone works standing there: Ley Silla applies once the center says so (A2).
+    SeatingProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);
 
     $this->actingAs(ownerOf($this->tenant))
         ->get(route('tenant.dashboard', $this->tenant))
@@ -89,9 +92,10 @@ it('pages each work center in use with where it stands in each route', function 
                 'id' => $plant->id,
                 'name' => 'Planta Querétaro',
                 // Evaluated, nobody to channel and no Programa needed; no policy, results not shared, report not filled in.
-                'nom035' => ['applies' => true, 'done' => [false, true, true, false, true, false], 'status' => 'define tu política de prevención'],
-                'nom037' => ['applies' => false, 'done' => [], 'status' => 'Nadie teletrabaja en este centro'],
-                'seating' => ['applies' => true, 'done' => [false, false, false, false, false, false], 'status' => 'identifica los puestos de pie'],
+                'nom035' => ['applies' => true, 'done' => [false, true, true, false, true, false], 'status' => 'define tu política de prevención', 'answered' => true],
+                // Rediseño v2 (decisión A2): nobody teleworks nor works standing there, and it has not answered «¿Te aplica?».
+                'nom037' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false],
+                'seating' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false],
             ]));
 });
 
@@ -208,5 +212,5 @@ it('reads the panel in the same number of queries however much the company holds
     $this->get(route('tenant.dashboard', $this->tenant))->assertOk();
 })->with([1, 3]);
 
-// Measured, then fixed so that a query per center or per evaluation breaks the test.
-const QUERIES_OF_THE_PANEL = 56;
+// Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2).
+const QUERIES_OF_THE_PANEL = 57;

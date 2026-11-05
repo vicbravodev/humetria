@@ -20,12 +20,19 @@ function seatingRows(array $states = []): array
     return array_map(fn (int $number): ComplianceRow => new ComplianceRow("r{$number}", $states["r{$number}"][0] ?? RowState::Met, $states["r{$number}"][1] ?? 0), range(1, 13));
 }
 
+// Rediseño v2 (board V2-Panel, decisión A2): the «no aplica» names the day of its certificate, and a center that never
+// answered «¿Te aplica?» and has no position waits for its answer instead of starting the route.
 it('does not apply where the center declared that nobody works standing and has no position', function (): void {
     expect(RouteStages::from(seatingRows(), true, false, '3 oct 2026'))
-        ->toEqual(RouteProgress::notApplicable('Nadie trabaja de pie · declarado el 3 oct 2026'))
+        ->toEqual(RouteProgress::notApplicable('Nadie trabaja de pie · constancia del 3 oct 2026'))
         // Positions registered after the declaration take it back.
         ->and(RouteStages::from(seatingRows(), true, true, '3 oct 2026')->applies)->toBeTrue()
-        ->and(RouteStages::from(seatingRows(), false, false, null)->applies)->toBeTrue();
+        ->and(RouteStages::from(seatingRows(), false, false, '3 oct 2026')->applies)->toBeTrue();
+});
+
+it('waits for the answer of a center that never declared and has no position', function (): void {
+    expect(RouteStages::from(seatingRows(), false, false, null))->toEqual(RouteProgress::unanswered())
+        ->and(RouteStages::from(seatingRows(), false, true, null)->applies)->toBeTrue();
 });
 
 it('takes each stage from its requirements, in the order of the route', function (string $key, int $stage, string $status): void {
@@ -50,7 +57,7 @@ it('takes each stage from its requirements, in the order of the route', function
 ]);
 
 it('leaves seats, assessments and pauses ahead while the center has no position registered', function (): void {
-    expect(RouteStages::from(seatingRows(['r1' => [RowState::Missing, 1]]), false, false, null))
+    expect(RouteStages::from(seatingRows(['r1' => [RowState::Missing, 1]]), false, false, '3 oct 2026'))
         ->toEqual(new RouteProgress(true, [false, false, false, false, true, true], 'identifica los puestos de pie'));
 });
 

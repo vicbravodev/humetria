@@ -1,6 +1,7 @@
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as seating } from '@/routes/tenant/seating';
 import { index as telework } from '@/routes/tenant/telework';
+import { show as teleworkApplies } from '@/routes/tenant/telework/applies';
 import type { CenterRoutes, NavItem } from '@/types';
 
 export type NormKey = keyof Omit<CenterRoutes, 'id' | 'name'>;
@@ -11,6 +12,8 @@ export type Norm = {
     title: string;
     subtitle: string;
     href: (tenantSlug: string) => NavItem['href'];
+    /** Where a center answers «¿Te aplica?» for it (decisión A2); NOM-035 applies to every center and asks nothing. */
+    answer?: (tenantSlug: string, workCenterId: string) => NavItem['href'];
 };
 
 /** The standards in the order of the menu (board 40). */
@@ -26,6 +29,8 @@ export const NORMS: Norm[] = [
         title: 'NOM-037',
         subtitle: 'Teletrabajo',
         href: telework,
+        answer: (tenantSlug, workCenterId) =>
+            teleworkApplies([tenantSlug, workCenterId]),
     },
     {
         key: 'seating',

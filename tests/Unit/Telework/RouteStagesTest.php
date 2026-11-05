@@ -22,8 +22,23 @@ function tableRows(array $states = []): array
     return array_map(fn (string $numeral): ComplianceRow => new ComplianceRow($numeral, $numeral, $states[$numeral] ?? RowState::Done, null), TABLE_10_3);
 }
 
-it('does not apply where nobody teleworks nor is about to', function (): void {
-    expect(RouteStages::from(tableRows(['5.1' => RowState::NotApplicable])))->toEqual(RouteProgress::notApplicable('Nadie teletrabaja en este centro'));
+// Rediseño v2 (decisión A2): with nobody in the padrón, the center's answer to «¿Te aplica?» decides.
+it('waits for the answer of a center where nobody teleworks nor is about to', function (): void {
+    expect(RouteStages::from(tableRows(['5.1' => RowState::NotApplicable])))->toEqual(RouteProgress::unanswered());
+});
+
+it('does not apply where the center declared that nobody works away more than 40 % of the time', function (): void {
+    expect(RouteStages::from(tableRows(['5.1' => RowState::NotApplicable]), false, '3 feb 2026'))
+        ->toEqual(RouteProgress::notApplicable('Nadie teletrabaja más del 40 % · constancia del 3 feb 2026'));
+});
+
+it('keeps the people stages ahead where the center declared that someone teleworks and nobody is registered yet', function (): void {
+    expect(RouteStages::from(tableRows(['5.1' => RowState::NotApplicable]), true, '3 feb 2026'))
+        ->toEqual(new RouteProgress(true, [true, false, false, false, true, false], 'registra a quién teletrabaja y dónde'));
+});
+
+it('follows the padrón over the declaration once someone is in it', function (): void {
+    expect(RouteStages::from(tableRows(), false, '3 feb 2026'))->toEqual(new RouteProgress(true, [true, true, true, true, true, true], 'todo al día'));
 });
 
 it('starts with the rules: the policy first, then the documents that support it', function (): void {

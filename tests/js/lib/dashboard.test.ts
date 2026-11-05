@@ -13,16 +13,25 @@ const at = (stage: number, status = 'define las reglas'): RouteProgress => ({
     applies: true,
     done: [1, 2, 3, 4, 5, 6].map((number) => number !== stage),
     status,
+    answered: true,
 });
 const notApplicable: RouteProgress = {
     applies: false,
     done: [],
-    status: 'Nadie teletrabaja en este centro',
+    status: 'Nadie teletrabaja más del 40 % · constancia del 3 oct 2026',
+    answered: true,
+};
+const unanswered: RouteProgress = {
+    applies: false,
+    done: [],
+    status: 'Falta contestar',
+    answered: false,
 };
 const allDone: RouteProgress = {
     applies: true,
     done: [true, true, true, true, true, true],
     status: 'al día hasta el 29 oct 2028',
+    answered: true,
 };
 const center = (
     name: string,
@@ -73,6 +82,7 @@ describe('stageStates', () => {
                 applies: true,
                 done: [false, true, false, true, false, false],
                 status: '',
+                answered: true,
             }),
         ).toEqual(['current', 'done', 'pending', 'done', 'pending', 'pending']);
         expect(stageStates(allDone)).toEqual(Array(6).fill('done'));
@@ -86,7 +96,7 @@ describe('stageLine', () => {
         );
         expect(stageLine(allDone)).toBe('Al día hasta el 29 oct 2028');
         expect(stageLine(notApplicable)).toBe(
-            'Nadie teletrabaja en este centro',
+            'Nadie teletrabaja más del 40 % · constancia del 3 oct 2026',
         );
     });
 });
@@ -106,6 +116,14 @@ describe('normsInUse', () => {
             ['nom037', ['Planta', 'Oficinas']],
         ]);
         expect(normsInUse([])).toEqual([]);
+    });
+
+    it('lists a standard some center still has to answer «¿Te aplica?» for', () => {
+        expect(
+            normsInUse([center('Planta', { seating: unanswered })]).map(
+                ({ norm }) => norm.key,
+            ),
+        ).toEqual(['nom035', 'seating']);
     });
 });
 
