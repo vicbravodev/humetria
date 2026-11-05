@@ -1,5 +1,5 @@
-import GradeCurrentSalary from '@/components/compensation/grade-current-salary';
 import GradeRowAction from '@/components/compensation/grade-row-action';
+import GradeSalaryInline from '@/components/compensation/grade-salary-inline';
 import {
     Table,
     TableBody,
@@ -9,52 +9,77 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { countOf } from '@/lib/plural';
+import { describeDate } from '@/lib/calendar-date';
 import type { TabulatorRow } from '@/types';
 
-/** The tabulator: each category and level with the daily salary in force today and how many vigencias it has had. */
-export default function TabulatorTable({ grades }: { grades: TabulatorRow[] }) {
+/** The tabulator (board V4-Comp-Datos): each category and level with its daily salary today, since when, its people and its history. */
+export default function TabulatorTable({
+    grades,
+    today,
+}: {
+    grades: TabulatorRow[];
+    today: string;
+}) {
     return (
-        <Table>
-            <TableCaption className="sr-only">
-                Categorías y niveles con su salario diario vigente hoy
-            </TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Nivel</TableHead>
-                    <TableHead>Salario diario hoy</TableHead>
-                    <TableHead>Vigencias</TableHead>
-                    <TableHead>
-                        <span className="sr-only">Acciones</span>
-                    </TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {grades.map((grade) => (
-                    <TableRow key={grade.id}>
-                        <TableCell className="font-medium whitespace-normal">
-                            {grade.category}
-                        </TableCell>
-                        <TableCell>{grade.level}</TableCell>
-                        <TableCell>
-                            <GradeCurrentSalary current={grade.current} />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                            {grade.salaries.length === 0
-                                ? '—'
-                                : countOf(
-                                      grade.salaries.length,
-                                      'vigencia',
-                                      'vigencias',
-                                  )}
-                        </TableCell>
-                        <TableCell className="w-px text-right">
-                            <GradeRowAction grade={grade} />
-                        </TableCell>
+        <div className="overflow-hidden card">
+            <Table>
+                <TableCaption className="sr-only">
+                    Categorías y niveles con su salario diario vigente hoy
+                </TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="pl-4">Categoría</TableHead>
+                        <TableHead>Nivel</TableHead>
+                        <TableHead>Salario diario hoy</TableHead>
+                        <TableHead>Desde</TableHead>
+                        <TableHead className="text-right">Personas</TableHead>
+                        <TableHead>
+                            <span className="sr-only">Acciones</span>
+                        </TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {grades.map((grade) => (
+                        <TableRow key={grade.id}>
+                            <TableCell className="pl-4 font-medium whitespace-normal">
+                                {grade.category}
+                            </TableCell>
+                            <TableCell>{grade.level}</TableCell>
+                            <TableCell>
+                                {grade.current === null ? (
+                                    <GradeSalaryInline
+                                        grade={grade}
+                                        today={today}
+                                    />
+                                ) : (
+                                    <span className="font-medium tabular-nums">
+                                        {grade.current.daily_salary_text}
+                                    </span>
+                                )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                                {grade.current === null
+                                    ? '—'
+                                    : describeDate(
+                                          grade.current.effective_from,
+                                      )}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
+                                {grade.people === 0 ? (
+                                    <span className="text-muted-foreground">
+                                        nadie todavía
+                                    </span>
+                                ) : (
+                                    grade.people
+                                )}
+                            </TableCell>
+                            <TableCell className="w-px pr-4 text-right">
+                                <GradeRowAction grade={grade} />
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
     );
 }

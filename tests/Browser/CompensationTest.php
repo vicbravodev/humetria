@@ -85,11 +85,30 @@ it('shows the tabulator with the salary of each category and level', function (b
     JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Técnico', 'level' => 'B']);
 
     visitPage('compensation/tabulator', "{$url}/compensation/tabulator", $dark, $mobile)
+        ->assertSee('Los datos de tu contrato')
         ->assertSee('Tabulador')
+        ->assertSee('1 categoría sin salario')
         ->assertSee('Operador')
         ->assertSee('$524.65')
-        ->assertSee('Sin salario');
+        ->assertSee('nadie todavía')
+        ->assertSee('Arrastra aquí tu CSV o elige un archivo')
+        ->assertSee('Descargar plantilla');
 })->with($looks);
+
+it('captures the salary of a category that has none in its own row (board V4-Comp-Datos)', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Coordinador', 'level' => 'A']);
+
+    visit("{$url}/compensation/tabulator")
+        ->type('[aria-label^="Salario diario de Coordinador"]', '615')
+        ->keys('[aria-label^="Salario diario de Coordinador"]', 'Enter')
+        ->assertSee('Salario guardado.')
+        ->assertSee('$615.00')
+        ->assertNoJavaScriptErrors();
+
+    expect(GradeSalary::query()->withoutGlobalScopes()->sole()->daily_salary_cents)->toBe(61500);
+});
 
 it('imports a tabulator file from its page and lists the new categories', function (): void {
     $url = signInToPanel();
@@ -114,7 +133,7 @@ it('deletes a salary of the tabulator that was typed by mistake, after confirmin
     GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 99000, 'effective_from' => '2031-06-01']);
 
     visit("{$url}/compensation/tabulator")
-        ->click('Salarios')
+        ->click('Historial')
         ->click('[aria-label^="Eliminar el salario desde el 1 de junio de 2031"]')
         ->assertSee('¿Eliminar este salario?')
         ->press('Eliminar salario')

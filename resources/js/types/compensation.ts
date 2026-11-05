@@ -95,6 +95,8 @@ export type TabulatorRow = {
     level: string;
     current: SalaryEntry | null;
     salaries: (SalaryEntry & { id: string })[];
+    /** The people costed in it today. */
+    people: number;
 };
 
 /** The problems that kept a salaries CSV from being imported, each row numbered as the spreadsheet numbers it. */

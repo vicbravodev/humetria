@@ -19,6 +19,7 @@ use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\WorkRiskPremium;
 use App\Modules\Compensation\Support\BaseCatalog;
 use App\Modules\Compensation\Support\BenefitRows;
+use App\Modules\Compensation\Support\ContractStatus;
 use App\Modules\Compensation\Support\PremiumRate;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,7 @@ use Inertia\Response;
  */
 final class BenefitController extends Controller
 {
-    public function index(Request $request, BaseCatalog $catalog, ListBenefits $list, CountBenefits $count, BenefitRows $rows): Response
+    public function index(Request $request, BaseCatalog $catalog, ListBenefits $list, CountBenefits $count, BenefitRows $rows, ContractStatus $status): Response
     {
         Gate::authorize('view-compensation');
 
@@ -51,6 +52,7 @@ final class BenefitController extends Controller
             'groups' => array_map(fn (PayGroup $group): array => ['value' => $group->value, 'label' => $group->label()], PayGroup::cases()),
             'sbc_integrations' => array_map(fn (SbcIntegration $integration): array => ['value' => $integration->value, 'label' => $integration->label()], SbcIntegration::cases()),
             'risk_premium' => $this->riskPremium($today),
+            'status' => $status->handle($today),
         ]);
     }
 

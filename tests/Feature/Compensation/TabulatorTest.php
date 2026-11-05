@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Compensation\Actions\ListTabulator;
 use App\Modules\Compensation\Actions\SaveGradeSalary;
 use App\Modules\Compensation\Models\GradeSalary;
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -212,3 +213,24 @@ it('keeps two accounts\' tabulators apart', function (): void {
     $this->get(route('tenant.compensation.tabulator.index', $other))->assertNotFound();
     $this->post(route('tenant.compensation.tabulator.store', $other), tabulatorForm())->assertNotFound();
 });
+
+it('says how many people each category has and where the data of the contract stand (board V4-Comp-Datos)', function (): void {
+    $operator = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    $coordinator = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Coordinador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 31_504, 'effective_from' => '2026-01-01']);
+    Employee::factory()->count(3)->sequence(fn ($sequence) => ['employee_number' => 'E-'.$sequence->index])->create([
+        'tenant_id' => $this->tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2025-01-01', 'staff_group' => 'unionized',
+    ]);
+
+    $this->get(route('tenant.compensation.tabulator.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('grades.data.0.category', 'Coordinador')->where('grades.data.0.people', 0)
+            ->where('grades.data.1.category', 'Operador')->where('grades.data.1.people', 3)
+            ->where('status.tabulator', ['grades' => 2, 'without_salary' => 1])
+            ->where('today', '2026-11-03'));
+});
+
+it('shows where the data of the contract stand on the benefits and the individual salaries too', function (string $route): void {
+    $this->get(route($route, $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('status.roster', ['people' => 0, 'missing' => 0])->has('status.accuracy'));
+})->with(['tenant.compensation.benefits.index', 'tenant.compensation.overrides.index']);

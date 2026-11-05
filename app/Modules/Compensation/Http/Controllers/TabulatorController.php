@@ -10,6 +10,7 @@ use App\Modules\Compensation\Actions\ListTabulator;
 use App\Modules\Compensation\Actions\SaveGradeSalary;
 use App\Modules\Compensation\Http\Requests\GradeSalaryRequest;
 use App\Modules\Compensation\Models\GradeSalary;
+use App\Modules\Compensation\Support\ContractStatus;
 use App\Modules\Compensation\Support\CsvFile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,7 @@ use Inertia\Response;
  */
 final class TabulatorController extends Controller
 {
-    public function index(Request $request, ListTabulator $list): Response
+    public function index(Request $request, ListTabulator $list, ContractStatus $status): Response
     {
         Gate::authorize('view-compensation');
 
@@ -35,6 +36,9 @@ final class TabulatorController extends Controller
             'grades' => $list->handle($search, $today),
             'filters' => ['q' => $search],
             'max_rows' => CsvFile::MAX_ROWS,
+            'status' => $status->handle($today),
+            // A category without a salary is captured in its row, from today.
+            'today' => $today->toDateString(),
         ]);
     }
 

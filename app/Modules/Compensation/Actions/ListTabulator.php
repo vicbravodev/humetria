@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Actions;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Support\BenefitValue;
 use App\Modules\Compensation\Support\Calculation\Money;
+use App\Modules\Organization\Contracts\CompensationRoster;
 use App\Modules\Organization\Contracts\JobGrades;
 use App\Modules\Organization\Data\JobGradeData;
 use Carbon\CarbonImmutable;
@@ -16,11 +17,11 @@ final readonly class ListTabulator
 {
     public const int PER_PAGE = 15;
 
-    public function __construct(private JobGrades $jobGrades) {}
+    public function __construct(private JobGrades $jobGrades, private CompensationRoster $roster) {}
 
     /**
      * A page of the company's categories and levels (the ones that match what was typed, ignoring case and accents), each
-     * with its salaries from the latest vigencia to the oldest and the one in force on `$today`. A grade without a salary
+     * with its salaries from the latest vigencia to the oldest, the one in force on `$today` and the people in it that day. A grade without a salary
      * is there too: it is what the tabulator still lacks.
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
@@ -34,14 +35,21 @@ final readonly class ListTabulator
             $byGrade[$salary->job_grade_id][] = $salary;
         }
 
-        return $page->through(fn (JobGradeData $grade): array => $this->row($grade, $byGrade[$grade->id] ?? [], $today->toDateString()));
+        // The people costed in each category and level today, counted by the roster's cells in one query.
+        $people = [];
+
+        foreach ($this->roster->cells($today, []) as $cell) {
+            $people[$cell->jobGradeId] = ($people[$cell->jobGradeId] ?? 0) + $cell->count;
+        }
+
+        return $page->through(fn (JobGradeData $grade): array => $this->row($grade, $byGrade[$grade->id] ?? [], $today->toDateString(), $people[$grade->id] ?? 0));
     }
 
     /**
      * @param  list<GradeSalary>  $salaries  the latest vigencia first
      * @return array<string, mixed>
      */
-    private function row(JobGradeData $grade, array $salaries, string $today): array
+    private function row(JobGradeData $grade, array $salaries, string $today, int $people): array
     {
         $current = array_find($salaries, fn (GradeSalary $salary): bool => $salary->effective_from->toDateString() <= $today);
 
@@ -51,6 +59,7 @@ final readonly class ListTabulator
             'level' => $grade->level,
             'current' => $current === null ? null : self::salary($current),
             'salaries' => array_map(fn (GradeSalary $salary): array => ['id' => $salary->id, ...self::salary($salary)], $salaries),
+            'people' => $people,
         ];
     }
 
