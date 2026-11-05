@@ -7,6 +7,8 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Results\Actions\RecordScreeningReferral;
+use App\Modules\Results\Enums\Destination;
+use App\Modules\Results\Enums\HowTold;
 use App\Modules\Results\Enums\ReferralStatus;
 use App\Modules\Results\Http\Controllers\ScreeningReferralController;
 use App\Modules\Results\Http\Requests\ScreeningReferralRequest;
@@ -19,7 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ScreeningReferralController::class, ScreeningReferralRequest::class, RecordScreeningReferral::class, ReferralStatus::class);
+mutates(ScreeningReferralController::class, ScreeningReferralRequest::class, RecordScreeningReferral::class, ReferralStatus::class, Destination::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');
@@ -41,10 +43,13 @@ function screeningReferralUrl(string $campaignId, string $employeeId): string
  */
 function screeningReferralForm(array $overrides = []): array
 {
-    return ['status' => 'referred', 'referred_on' => '2026-11-18', 'institution' => 'IMSS, Unidad de Medicina Familiar 7', ...$overrides];
+    return ['destination' => 'imss', 'told' => 'in_person', 'referred_on' => '2026-11-18', 'note' => 'Cita en la UMF 12 el lunes', 'remind' => '1', ...$overrides];
 }
 
-it('records that the person was referred, with the day and the institution', function (TenantRole $role): void {
+// Rediseño v2 (board V4-N035-Canalizacion, decisión A7): the record says where the person was channeled (or that they did
+// not want care), how they were told and a note without clinical detail, with a reminder at 30 days; never an answer or a
+// diagnosis. It replaces the status and the free-text institution of the first version.
+it('records where the person was channeled, how they were told, the day and a note, with a reminder at 30 days', function (TenantRole $role): void {
     $user = memberOf($this->tenant, $role);
 
     $this->actingAs($user)
@@ -57,28 +62,49 @@ it('records that the person was referred, with the day and the institution', fun
         ->campaign_id->toBe($this->campaign->id)
         ->employee_id->toBe($this->screening->employee_id)
         ->status->toBe(ReferralStatus::Referred)
+        ->destination->toBe(Destination::Imss)
+        ->told->toBe(HowTold::InPerson)
         ->referred_on->toBe('2026-11-18')
-        ->institution->toBe('IMSS, Unidad de Medicina Familiar 7')
+        ->note->toBe('Cita en la UMF 12 el lunes')
+        ->remind_on->toBe('2026-12-18')
+        ->reminded_at->toBeNull()
+        ->institution->toBeNull()
         ->updated_by->toBe($user->id);
 })->with([TenantRole::Owner, TenantRole::Hr]);
 
-it('moves the same record on to attended instead of adding another', function (): void {
+it('counts a person who did not want care as channeled, and keeps no reminder when none is asked for', function (): void {
+    $this->actingAs($this->hr)
+        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['destination' => 'declined', 'told' => 'portal', 'note' => '', 'remind' => '0']))
+        ->assertSessionHasNoErrors();
+
+    expect(ScreeningReferral::query()->sole())
+        ->status->toBe(ReferralStatus::Referred)
+        ->destination->toBe(Destination::Declined)
+        ->told->toBe(HowTold::Portal)
+        ->note->toBeNull()
+        ->remind_on->toBeNull();
+});
+
+it('moves the same record on to attended instead of adding another, and a new reminder starts over', function (): void {
     $url = screeningReferralUrl($this->campaign->id, $this->screening->employee_id);
     $this->actingAs($this->hr)->put($url, screeningReferralForm())->assertSessionHasNoErrors();
+    ScreeningReferral::query()->update(['reminded_at' => now()]);
 
-    $this->put($url, screeningReferralForm(['status' => 'attended', 'institution' => 'Clínica 12']))->assertSessionHasNoErrors();
+    $this->put($url, screeningReferralForm(['attended' => '1', 'destination' => 'external_psychological', 'referred_on' => '2026-11-19']))->assertSessionHasNoErrors();
 
     expect(ScreeningReferral::query()->sole())
         ->status->toBe(ReferralStatus::Attended)
-        ->institution->toBe('Clínica 12');
+        ->destination->toBe(Destination::ExternalPsychological)
+        ->remind_on->toBe('2026-12-19')
+        ->reminded_at->toBeNull();
 });
 
-it('trims the institution and accepts today as the day', function (): void {
+it('trims the note and accepts today as the day', function (): void {
     $this->actingAs($this->hr)
-        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['institution' => "  Clínica 12 \n", 'referred_on' => '2026-11-20']))
+        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['note' => "  Cita el lunes \n", 'referred_on' => '2026-11-20']))
         ->assertSessionHasNoErrors();
 
-    expect(ScreeningReferral::query()->sole())->institution->toBe('Clínica 12')->referred_on->toBe('2026-11-20');
+    expect(ScreeningReferral::query()->sole())->note->toBe('Cita el lunes')->referred_on->toBe('2026-11-20');
 });
 
 it('records in the audit trail who changed the status, without the institution or the name', function (): void {
@@ -91,7 +117,7 @@ it('records in the audit trail who changed the status, without the institution o
         ->metadata->toEqual(['campaign_id' => $this->campaign->id, 'status' => 'referred']);
 });
 
-it('writes to the log only that a record was saved, never the person, the status or the institution', function (): void {
+it('writes to the log only that a record was saved, never the person, the status, the destination or the note', function (): void {
     Log::spy();
 
     $this->actingAs($this->hr)->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm());
@@ -109,24 +135,26 @@ it('refuses what the record cannot hold', function (array $overrides, string $fi
 
     expect(ScreeningReferral::query()->exists())->toBeFalse();
 })->with([
-    'no status' => [['status' => ''], 'status'],
-    'pending is not a record' => [['status' => 'pending'], 'status'],
+    'no destination' => [['destination' => ''], 'destination'],
+    'a destination it does not know' => [['destination' => 'hospital'], 'destination'],
+    'not saying how they were told' => [['told' => ''], 'told'],
+    'a way of telling it does not know' => [['told' => 'email'], 'told'],
     'no day' => [['referred_on' => ''], 'referred_on'],
     'a day written wrong' => [['referred_on' => '18/11/2026'], 'referred_on'],
     'a day that has not come' => [['referred_on' => '2026-11-21'], 'referred_on'],
-    'no institution' => [['institution' => '  '], 'institution'],
-    'a very long institution' => [['institution' => str_repeat('a', 151)], 'institution'],
+    'a very long note' => [['note' => str_repeat('a', 201)], 'note'],
+    'a reminder that is not yes or no' => [['remind' => 'tal vez'], 'remind'],
 ]);
 
-it('names the missing institution in Spanish', function (): void {
+it('names the missing destination in Spanish', function (): void {
     $this->actingAs($this->hr)
-        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['institution' => '']))
-        ->assertSessionHasErrors(['institution' => 'El campo institución es obligatorio.']);
+        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['destination' => '']))
+        ->assertSessionHasErrors(['destination' => 'El campo a dónde se canaliza es obligatorio.']);
 });
 
-it('accepts an institution of exactly 150 characters', function (): void {
+it('accepts a note of exactly 200 characters', function (): void {
     $this->actingAs($this->hr)
-        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['institution' => str_repeat('a', 150)]))
+        ->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm(['note' => str_repeat('a', 200)]))
         ->assertSessionHasNoErrors();
 
     expect(ScreeningReferral::query()->count())->toBe(1);
@@ -202,4 +230,6 @@ it('lets the database refuse a record with no Guía I behind it, an unknown stat
     expect(fn () => ScreeningReferral::factory()->create($attributes))->toThrow(QueryException::class);
     expect(fn () => ScreeningReferral::factory()->create([...$attributes, 'employee_id' => $withoutGuide]))->toThrow(QueryException::class);
     expect(fn () => ScreeningReferral::query()->withoutGlobalScopes()->where('campaign_id', $this->campaign->id)->toBase()->update(['status' => 'pending']))->toThrow(QueryException::class);
+    expect(fn () => ScreeningReferral::query()->withoutGlobalScopes()->where('campaign_id', $this->campaign->id)->toBase()->update(['destination' => 'hospital']))->toThrow(QueryException::class);
+    expect(fn () => ScreeningReferral::query()->withoutGlobalScopes()->where('campaign_id', $this->campaign->id)->toBase()->update(['told' => 'email']))->toThrow(QueryException::class);
 });

@@ -1,17 +1,20 @@
 import CenterFollowUp from '@/components/campaigns/center-follow-up';
+import { Link } from '@inertiajs/react';
 import CenterProgress from '@/components/campaigns/center-progress';
 import { Badge } from '@/components/ui/badge';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import {
     centerSize,
     centerStatus,
     numeralsText,
 } from '@/lib/evaluation-centers';
 import { staffText } from '@/lib/work-centers';
+import { route } from '@/routes/tenant/nom035';
 import type { WorkCenterEvaluation } from '@/types';
 
 /**
- * A work center to evaluate (pantalla NOM035): where it stands, its people and the guides they call for, then its
- * running evaluation or its last one.
+ * A work center to evaluate (pantalla NOM035): where it stands, its people and the guides they call for, the way to its
+ * route (board V2-Ruta-N035), then its running evaluation or its last one.
  */
 export default function WorkCenterCard({
     center,
@@ -22,6 +25,7 @@ export default function WorkCenterCard({
     canManage: boolean;
     minGroup: number;
 }) {
+    const tenantSlug = useTenantSlug();
     const status = centerStatus(center);
     const facts = [
         ['Personal', staffText(center.workers)],
@@ -39,6 +43,13 @@ export default function WorkCenterCard({
                     <p className="text-sm text-muted-foreground">
                         {center.activity}
                     </p>
+                    <Link
+                        href={route([tenantSlug, center.id])}
+                        className="touch-hit self-start text-sm font-medium text-primary hover:underline"
+                    >
+                        Ver ruta
+                        <span className="sr-only"> de {center.name}</span>
+                    </Link>
                 </div>
                 <Badge variant={status.variant}>{status.label}</Badge>
             </div>

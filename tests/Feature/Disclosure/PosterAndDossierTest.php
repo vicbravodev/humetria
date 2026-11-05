@@ -138,3 +138,15 @@ it('does not find the dossier of a center of another company, an archived one or
     }
     expect(AuditEntry::query()->where('event', 'disclosure.dossier_viewed')->count())->toBe(0);
 });
+
+// Board V3-Inspeccion: «Solo lo que tienes», to hand to the inspector.
+it('keeps only the requirements the center meets when asked for what it has', function (): void {
+    $policy = Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id, 'published_by' => $this->hr->id, 'covers' => ['a', 'b', 'c']]);
+    DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'work_center_id' => $this->plant->id]);
+    $url = route('tenant.disclosure.dossier', [$this->tenant, $this->plant->id]);
+
+    $this->actingAs($this->hr)->get($url.'?ready=1')->assertInertia(fn (Assert $page) => $page
+        ->where('requirements', fn ($rows): bool => collect($rows)->pluck('code')->all() === ['D1', 'D2']));
+    $this->actingAs($this->hr)->get($url)->assertInertia(fn (Assert $page) => $page
+        ->where('requirements', fn ($rows): bool => count($rows) > 2));
+});

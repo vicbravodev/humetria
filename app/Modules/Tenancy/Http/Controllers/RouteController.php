@@ -14,25 +14,35 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The route of one standard in one work center (boards V3-Movil and V3-AlDia). An archived center, a made-up one and
- * another company's are a 404, as is a standard it does not know (the route only takes the three). NOM-037 and Ley Silla
- * are sent to their own pages.
+ * The route of one standard in one work center sends each standard to its own page. The NOM-035 one is put together here
+ * (board V2-Ruta-N035, and V3-AlDia once its six stages are done), with «Si hoy llegara una inspección» (V3-Inspeccion):
+ * NOM-035 spans Campaigns, Responses, Results, Disclosure and Interventions, read through their contracts. An archived
+ * center, a made-up one and another company's are a 404, as is a standard it does not know.
  */
 final class RouteController extends Controller
 {
-    public function show(Request $request, Tenant $tenant, string $workCenter, string $norm, WorkCenters $workCenters, RoutePage $page): Response|RedirectResponse
+    public function show(Tenant $tenant, string $workCenter, string $norm, WorkCenters $workCenters): RedirectResponse
     {
-        $user = $request->user();
-        abort_if($user === null, 403);
-        $center = $workCenters->findActive($workCenter);
-        abort_if($center === null, 404);
+        $center = $workCenters->findActive($workCenter) ?? abort(404);
 
-        // NOM-037 and Ley Silla have their own route pages (boards V2-Ruta-N037 and V2-Ruta-Silla): one page per route, wide
-        // or on a phone.
-        if ($norm !== 'nom035') {
-            return to_route($norm === 'nom037' ? 'tenant.telework.route' : 'tenant.seating.route', [$tenant->slug, $center->id]);
-        }
+        return to_route(match ($norm) {
+            'nom035' => 'tenant.nom035.route',
+            'nom037' => 'tenant.telework.route',
+            default => 'tenant.seating.route',
+        }, [$tenant->slug, $center->id]);
+    }
 
-        return Inertia::render('tenancy/route', $page->props($tenant->slug, $center, seesScreenings: $user->can('view-trauma-screenings')));
+    public function nom035(Request $request, Tenant $tenant, string $workCenter, WorkCenters $workCenters, RoutePage $page): Response
+    {
+        $center = $workCenters->findActive($workCenter) ?? abort(404);
+
+        return Inertia::render('tenancy/nom035-route', $page->props($tenant->slug, $center, seesScreenings: $request->user()?->can('view-trauma-screenings') ?? false));
+    }
+
+    public function inspection(Request $request, Tenant $tenant, string $workCenter, WorkCenters $workCenters, RoutePage $page): Response
+    {
+        $center = $workCenters->findActive($workCenter) ?? abort(404);
+
+        return Inertia::render('tenancy/nom035-inspection', $page->inspection($tenant->slug, $center, seesScreenings: $request->user()?->can('view-trauma-screenings') ?? false));
     }
 }
