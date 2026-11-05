@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Providers;
 
+use App\Modules\Disclosure\Contracts\DisclosureStanding;
 use App\Modules\Disclosure\Events\PolicyPublished;
 use App\Modules\Disclosure\Listeners\RequestOnPublication;
 use App\Modules\Disclosure\Listeners\RequestPolicyFromNewStaff;
+use App\Modules\Disclosure\Support\CompanyDisclosureStanding;
 use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
@@ -23,6 +25,11 @@ use Illuminate\Support\ServiceProvider;
  */
 final class DisclosureServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(DisclosureStanding::class, CompanyDisclosureStanding::class);
+    }
+
     public function boot(): void
     {
         // One link is opened by a whole plant that scans the same poster: the limit per link is generous (against scraping),
