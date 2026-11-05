@@ -35,7 +35,7 @@ export default function CaseAcknowledge({
                     <Textarea
                         id="case-acknowledgement"
                         name="body"
-                        rows={4}
+                        rows={5}
                         defaultValue={draft}
                         className="bg-card"
                         aria-invalid={

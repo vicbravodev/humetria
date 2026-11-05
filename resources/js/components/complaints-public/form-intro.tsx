@@ -1,4 +1,5 @@
 import { Clock, ShieldCheck } from 'lucide-react';
+import IntroDetails from '@/components/complaints-public/intro-details';
 import { Button } from '@/components/ui/button';
 import { countOf } from '@/lib/plural';
 import { show } from '@/routes/complaints/follow-up';
@@ -62,30 +63,7 @@ export default function FormIntro({
                     lee solo quien la empresa designó, nunca la persona de la
                     que se queja.
                 </p>
-                <details className="group">
-                    <summary className="flex min-h-11 cursor-pointer items-center font-medium text-primary">
-                        Qué puede identificarle aunque no dé su nombre
-                    </summary>
-                    <ul className="mt-1 list-disc space-y-1 pl-5 text-muted-foreground">
-                        <li>
-                            Detalles que solo usted conoce o su forma de
-                            escribir.
-                        </li>
-                        <li>Si el centro o el grupo es pequeño.</li>
-                        <li>
-                            La red de la empresa. Si le preocupa, use los datos
-                            de su celular.
-                        </li>
-                    </ul>
-                </details>
-                <details className="group">
-                    <summary className="flex min-h-11 cursor-pointer items-center font-medium text-primary">
-                        Cómo se atiende su queja
-                    </summary>
-                    <p className="mt-1 whitespace-pre-line text-muted-foreground">
-                        {procedure}
-                    </p>
-                </details>
+                <IntroDetails procedure={procedure} />
             </section>
             <div className="mt-auto flex flex-col gap-2 pt-2">
                 <Button className="w-full" onClick={onStart}>
