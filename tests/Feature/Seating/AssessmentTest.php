@@ -258,3 +258,11 @@ it('lists the people of the center with their assessment state, paginated and se
     $this->get(route('tenant.seating.assessments.index', [$this->tenant, $this->center->id, 'q' => 'Ana Ruiz']))
         ->assertInertia(fn (Assert $page) => $page->where('people.total', 1)->where('people.data.0.name', 'Ana Ruiz')->where('people.data.0.state', 'signed'));
 });
+
+// Rediseño v2: the assessment is entered from the route of its center, so it names the center for its breadcrumbs.
+it('names the center of the assessment', function (): void {
+    $draft = RiskAssessment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id]);
+
+    $this->actingAs($this->cora)->get(route('tenant.seating.assessments.show', [$this->tenant, $draft->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Norte']));
+});

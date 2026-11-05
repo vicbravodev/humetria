@@ -61,13 +61,14 @@ final readonly class AssessmentPages
     /**
      * @return array<string, mixed>
      */
-    public function show(RiskAssessment $assessment, int $userId): array
+    public function show(RiskAssessment $assessment, WorkCenterSummary $center, int $userId): array
     {
         $signed = $assessment->status === AssessmentStatus::Signed;
         $facts = $signed && $assessment->snapshot !== null ? $assessment->snapshot : $this->snapshot->capture($assessment, null);
         $level = $assessment->level;
 
         return [
+            'workCenter' => ['id' => $center->id, 'name' => $center->name],
             'assessment' => [
                 'id' => $assessment->id,
                 'status' => $assessment->status->value,

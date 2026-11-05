@@ -4,7 +4,7 @@ import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
 import ReportsTable from '@/components/seating/reports-table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import { index as reportsIndex } from '@/routes/tenant/seating/reports';
 import type { Paginated, SeatReportRow } from '@/types';
 
@@ -26,11 +26,9 @@ export default function SeatingReports({
     const tenantSlug = useTenantSlug();
     const route = { tenant: tenantSlug, workCenter: workCenter.id };
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            { title: workCenter.name, href: center(route) },
-            { title: 'Reportes de asientos' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Reportes de asientos',
+        }),
     });
 
     return (

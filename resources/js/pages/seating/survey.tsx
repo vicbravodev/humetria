@@ -5,7 +5,8 @@ import SurveyLaunchForm from '@/components/seating/survey-launch-form';
 import SurveyProgress from '@/components/seating/survey-progress';
 import SurveyResults from '@/components/seating/survey-results';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index, survey as surveyRoute } from '@/routes/tenant/seating';
+import { survey as surveyRoute } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type { SurveyRecord, SurveyResults as Results } from '@/types';
 
 export default function SeatingSurvey({
@@ -23,14 +24,9 @@ export default function SeatingSurvey({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Encuesta' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Encuesta',
+        }),
     });
 
     return (

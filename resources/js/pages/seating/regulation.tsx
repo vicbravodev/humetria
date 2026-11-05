@@ -7,7 +7,7 @@ import RegulationNotice from '@/components/seating/regulation-notice';
 import { Button } from '@/components/ui/button';
 import { useLightPrint } from '@/hooks/use-light-print';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type { RegulationRecord } from '@/types';
 
 export default function SeatingRegulation({
@@ -24,14 +24,9 @@ export default function SeatingRegulation({
     const tenantSlug = useTenantSlug();
     useLightPrint();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Reglamento interior' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Reglamento interior',
+        }),
     });
 
     return (

@@ -5,7 +5,7 @@ import PageHeader from '@/components/humetria/page-header';
 import SeatForm from '@/components/seating/seat-form';
 import SeatsTable from '@/components/seating/seats-table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type {
     Paginated,
     SeatEditing,
@@ -40,14 +40,9 @@ export default function SeatingSeats({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Asientos' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Asientos',
+        }),
     });
 
     return (

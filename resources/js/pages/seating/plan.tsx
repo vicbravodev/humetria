@@ -6,7 +6,7 @@ import AgreementsTable from '@/components/seating/agreements-table';
 import MeasureForm from '@/components/seating/measure-form';
 import MeasuresTable from '@/components/seating/measures-table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type {
     AgreementRow,
     MeasureEditing,
@@ -36,14 +36,9 @@ export default function SeatingPlan({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title: 'Plan de acción' },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
+            title: 'Plan de acción',
+        }),
     });
 
     return (

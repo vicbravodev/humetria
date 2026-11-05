@@ -5,7 +5,7 @@ import PlacementResult from '@/components/seating/placement-result';
 import PositionForm from '@/components/seating/position-form';
 import PositionPeople from '@/components/seating/position-people';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { center, index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type {
     ConditionOption,
     Paginated,
@@ -35,14 +35,7 @@ export default function SeatingPosition({
     const tenantSlug = useTenantSlug();
     const title = position?.name ?? 'Nuevo puesto';
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: workCenter.name,
-                href: center([tenantSlug, workCenter.id]),
-            },
-            { title },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, { title }),
     });
 
     return (

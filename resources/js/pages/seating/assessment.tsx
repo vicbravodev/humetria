@@ -8,7 +8,7 @@ import AssessmentExtras from '@/components/seating/assessment-extras';
 import RequestLinkButton from '@/components/seating/request-link-button';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/seating';
+import { seatingCrumbs } from '@/lib/seating/crumbs';
 import { index as assessments } from '@/routes/tenant/seating/assessments';
 import { resend } from '@/routes/tenant/seating/acknowledgments';
 import type {
@@ -21,6 +21,7 @@ import type {
 } from '@/types';
 
 export default function SeatingAssessment({
+    workCenter,
     assessment,
     facts,
     conditions,
@@ -35,6 +36,7 @@ export default function SeatingAssessment({
     minutesTitle,
     canRecordMinutes,
 }: {
+    workCenter: { id: string; name: string };
     assessment: AssessmentRecord;
     facts: AssessmentFact[];
     conditions: AssessmentCondition[];
@@ -55,15 +57,15 @@ export default function SeatingAssessment({
         facts.find((item) => item.numeral === numeral)?.value ?? '';
     const person = fact('VII');
     const signed = assessment.status === 'signed';
+    const tail = [
+        {
+            title: 'Evaluaciones',
+            href: assessments([tenantSlug, workCenter.id]),
+        },
+        { title: person },
+    ];
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Ley Silla', href: index(tenantSlug) },
-            {
-                title: 'Evaluaciones',
-                href: assessments([tenantSlug, assessment.workCenterId]),
-            },
-            { title: person },
-        ],
+        breadcrumbs: seatingCrumbs(tenantSlug, workCenter, ...tail),
     });
 
     return (
