@@ -88,7 +88,7 @@ final readonly class SendComplaintDigests
             return 0;
         }
 
-        Notification::route('mail', $member->email)->notify(new ComplaintsDigest($company->tradeName, $member->name, $lines, route('tenant.complaints.index', $company->slug)));
+        Notification::route('mail', $member->email)->notify(new ComplaintsDigest($company, $member->name, $lines, route('tenant.complaints.index', $company->slug)));
 
         return 1;
     }

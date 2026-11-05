@@ -77,6 +77,7 @@ final readonly class SendProgressDigests
         $areas = $this->areas($campaign);
 
         Notification::route('mail', $owner)->notify(new ProgressDigest(
+            company: $company,
             workCenter: $this->workCenters->profile($campaign->work_center_id)->name ?? '',
             completed: $progress['completed'],
             target: $progress['target'],

@@ -1,5 +1,5 @@
 {{-- The owner's email when an evaluation closes: participation, how many questionnaires sit at each risk level, and what follows. --}}
-<x-mail::message :preheader="$preheader">
+<x-mail::message :company="$company" :preheader="$preheader">
 <x-slot:reason>Recibes este aviso porque eres el dueño de {{ $tradeName }}.</x-slot:reason>
 <h1>{{ $workCenter }} cerró con {{ $answered }} de {{ $invited }} respuestas</h1>
 <table class="chart" cellpadding="0" cellspacing="0" role="presentation">

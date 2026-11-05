@@ -19,6 +19,7 @@ use App\Modules\Telework\Support\TrainingDue;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Context;
@@ -59,7 +60,7 @@ final readonly class SendTeleworkDigests
                     $company = $this->companies->enter($tenantId);
 
                     if (! $company->blocked) {
-                        $counts = $this->digest($company->tradeName, $company->slug);
+                        $counts = $this->digest($company);
                         $sent['owner'] += $counts['owner'];
                         $sent['committee'] += $counts['committee'];
                     }
@@ -78,8 +79,9 @@ final readonly class SendTeleworkDigests
     /**
      * @return array{owner: int, committee: int}
      */
-    private function digest(string $company, string $slug): array
+    private function digest(CompanySummary $company): array
     {
+        $slug = $company->slug;
         $sent = ['owner' => 0, 'committee' => 0];
         $owner = $this->companies->contact();
 
@@ -103,7 +105,7 @@ final readonly class SendTeleworkDigests
      * @param  list<string>|null  $centers  null: every center of the company.
      * @return int 1 when the digest went, 0 when there was nothing to say or it already went today.
      */
-    private function deliver(string $recipient, string $email, string $company, ?string $name, array $sections, ?array $centers, string $slug): int
+    private function deliver(string $recipient, string $email, CompanySummary $company, ?string $name, array $sections, ?array $centers, string $slug): int
     {
         $now = CarbonImmutable::now();
         $today = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay();

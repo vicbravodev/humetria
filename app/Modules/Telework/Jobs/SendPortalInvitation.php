@@ -32,6 +32,6 @@ final class SendPortalInvitation implements ShouldQueue, ShouldQueueAfterCommit
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new PortalInvitation($issue->handle($person->id), $person->name, $company->tradeName));
+        Notification::route('mail', $person->email)->notify(new PortalInvitation($issue->handle($person->id), $person->name, $company));
     }
 }

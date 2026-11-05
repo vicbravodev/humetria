@@ -51,6 +51,6 @@ final class SendRisksToConfirm implements ShouldBeUniqueUntilProcessing, ShouldQ
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new RisksToConfirm(route('portal.seating.show', $access->token($person->id)), $person->name, $company->tradeName));
+        Notification::route('mail', $person->email)->notify(new RisksToConfirm(route('portal.seating.show', $access->token($person->id)), $person->name, $company));
     }
 }

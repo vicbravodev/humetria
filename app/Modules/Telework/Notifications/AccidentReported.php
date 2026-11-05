@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -19,6 +20,7 @@ final class AccidentReported extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
+        private readonly CompanySummary $company,
         private readonly string $person,
         private readonly string $workCenter,
         private readonly string $occurredOn,
@@ -39,9 +41,9 @@ final class AccidentReported extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $mail = $this->reminder
-            ? (new MailMessage)->subject("Sigue sin respuesta el aviso de {$this->person}")->greeting('Un aviso de accidente espera')
+            ? (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("Sigue sin respuesta el aviso de {$this->person}")->greeting('Un aviso de accidente espera')
                 ->line('Pasaron 3 días y nadie ha registrado qué se hizo.')
-            : (new MailMessage)->subject("{$this->person} avisó un accidente de trabajo")->greeting('Llegó un aviso de accidente');
+            : (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("{$this->person} avisó un accidente de trabajo")->greeting('Llegó un aviso de accidente');
 
         $mail->line("{$this->person} · {$this->workCenter} · ocurrió el {$this->occurredOn}");
 

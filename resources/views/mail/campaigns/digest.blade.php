@@ -1,5 +1,5 @@
 {{-- The owner's Monday digest of an open evaluation: the arc of answered against the target and the areas that lack the most. --}}
-<x-mail::message :preheader="$behind ? $behind['name'].' es el área que más falta. Un recordatorio suele subir la participación.' : null">
+<x-mail::message :company="$company" :preheader="$behind ? $behind['name'].' es el área que más falta. Un recordatorio suele subir la participación.' : null">
 <x-slot:reason>Te mandamos este resumen cada lunes mientras haya una evaluación en curso.</x-slot:reason>
 <h1>{{ $headline }}</h1>
 <p>{{ $summary }}</p>

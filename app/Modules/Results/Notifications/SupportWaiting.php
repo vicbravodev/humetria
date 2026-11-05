@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -18,7 +19,7 @@ final class SupportWaiting extends Notification
     public function __construct(
         private readonly string $url,
         private readonly string $name,
-        private readonly string $company,
+        private readonly CompanySummary $company,
     ) {}
 
     /**
@@ -31,8 +32,8 @@ final class SupportWaiting extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->subject("Tiene un mensaje de {$this->company}")->greeting("Hola, {$this->name}")
-            ->line("{$this->company} le dejó un mensaje confidencial en su página personal. Solo usted puede leerlo.")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("Tiene un mensaje de {$this->company->tradeName}")->greeting("Hola, {$this->name}")
+            ->line("{$this->company->tradeName} le dejó un mensaje confidencial en su página personal. Solo usted puede leerlo.")
             ->action('Leer el mensaje', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
     }

@@ -10,6 +10,7 @@ use App\Modules\Seating\Support\SeatingAlerts;
 use App\Modules\Telework\Contracts\Committee;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,7 @@ final readonly class SendSeatingDigests
                     $company = $this->companies->enter($tenantId);
 
                     if (! $company->blocked) {
-                        $counts = $this->digest($company->tradeName, $company->slug);
+                        $counts = $this->digest($company);
                         $sent['owner'] += $counts['owner'];
                         $sent['committee'] += $counts['committee'];
                     }
@@ -66,8 +67,9 @@ final readonly class SendSeatingDigests
     /**
      * @return array{owner: int, committee: int}
      */
-    private function digest(string $company, string $slug): array
+    private function digest(CompanySummary $company): array
     {
+        $slug = $company->slug;
         $sent = ['owner' => 0, 'committee' => 0];
         $centers = array_values(StandingPosition::query()->distinct()->get(['work_center_id'])->map(fn (StandingPosition $position): string => $position->work_center_id)->all());
         $owner = $this->companies->contact();
@@ -92,7 +94,7 @@ final readonly class SendSeatingDigests
      * @param  list<string>  $centers
      * @return int 1 when the digest went, 0 when there was nothing to say or it already went today.
      */
-    private function deliver(string $recipient, string $email, string $company, ?string $name, array $sections, array $centers, string $slug): int
+    private function deliver(string $recipient, string $email, CompanySummary $company, ?string $name, array $sections, array $centers, string $slug): int
     {
         $lines = $this->lines($sections, $centers);
 

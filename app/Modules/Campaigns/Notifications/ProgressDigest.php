@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -22,6 +23,7 @@ final class ProgressDigest extends Notification implements ShouldQueue
      * @param  array{name: string, pending: int}|null  $behind  the area with the most people still to answer.
      */
     public function __construct(
+        private readonly CompanySummary $company,
         private readonly string $workCenter,
         private readonly int $completed,
         private readonly int $target,
@@ -49,6 +51,7 @@ final class ProgressDigest extends Notification implements ShouldQueue
             ->subject($headline.' · '.($lastDay ? 'hoy es el último día' : "faltan {$this->daysLeft} días"))
             ->action($this->toRemind > 0 ? 'Recordar a '.trans_choice('{1} :count persona|[2,*] :count personas', $this->toRemind) : 'Ver avance', $this->url)
             ->markdown('mail.campaigns.digest', [
+                'company' => $this->company,
                 'headline' => $headline,
                 'summary' => ($lastDay ? 'Hoy es el último día.' : "Quedan {$this->daysLeft} días.").' '.($this->behind === null
                     ? 'Ya contestaron todas las personas.'

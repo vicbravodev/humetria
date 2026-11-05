@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -21,7 +22,7 @@ final class ComplaintsDigest extends Notification implements ShouldQueue
      * @param  list<string>  $lines
      */
     public function __construct(
-        private readonly string $company,
+        private readonly CompanySummary $company,
         private readonly ?string $name,
         private readonly array $lines,
         private readonly string $url,
@@ -39,10 +40,10 @@ final class ComplaintsDigest extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
             ->subject('Novedades en el canal de quejas')
             ->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
-            ->line("Esto espera tu atención en el canal de quejas de {$this->company}:");
+            ->line("Esto espera tu atención en el canal de quejas de {$this->company->tradeName}:");
 
         foreach ($this->lines as $line) {
             $mail->line($line);

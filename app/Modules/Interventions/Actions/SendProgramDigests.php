@@ -83,7 +83,7 @@ final readonly class SendProgramDigests
         ];
 
         if ($owner !== null) {
-            $sent['owner'] = $this->deliver($owner, $company->tradeName, null, $all, $index);
+            $sent['owner'] = $this->deliver($owner, $company, null, $all, $index);
         }
 
         foreach ($open->whereNotNull('responsible_user_id')->groupBy('responsible_user_id') as $userId => $mine) {
@@ -99,7 +99,7 @@ final readonly class SendProgramDigests
             ];
             $campaigns = array_values(array_unique($mine->map(fn (ProgramAction $action): string => $programs->firstWhere('id', $action->program_id)->campaign_id ?? '')->all()));
             $url = count($campaigns) === 1 ? route('tenant.campaigns.program', [$company->slug, $campaigns[0]]) : $index;
-            $sent['responsible'] += $this->deliver($member->email, $company->tradeName, $member->name, $own, $url);
+            $sent['responsible'] += $this->deliver($member->email, $company, $member->name, $own, $url);
         }
 
         return $sent;
@@ -109,7 +109,7 @@ final readonly class SendProgramDigests
      * @param  array<string, int>  $counts
      * @return int 1 when the email went, 0 when there was nothing to say.
      */
-    private function deliver(string $email, string $company, ?string $name, array $counts, string $url): int
+    private function deliver(string $email, CompanySummary $company, ?string $name, array $counts, string $url): int
     {
         $lines = [];
         $texts = [

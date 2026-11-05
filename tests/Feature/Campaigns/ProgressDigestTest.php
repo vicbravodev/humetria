@@ -94,7 +94,8 @@ it('tells the owner each Monday how far each open evaluation got, area by area',
         ->toMatch('#Dirección</td>\s*<td[^>]*>\s*<strong[^>]*>4</strong> <span[^>]*>de 8</span>#')
         ->toMatch('#Ventas</td>\s*<td[^>]*>\s*<strong[^>]*>8</strong> <span[^>]*>de 38</span>#')
         ->toContain('Te mandamos este resumen cada lunes mientras haya una evaluación en curso.')
-        ->toContain('alt="Humetría"');
+        // The company's email (decision A15): its initials and name, not Humetría's logo.
+        ->toContain('Autopartes Demo</span>')->not->toContain('alt="Humetría"');
     Log::shouldHaveReceived('info')->with('campaign.digest_sent', ['campaign_id' => $campaign->id]);
 });
 

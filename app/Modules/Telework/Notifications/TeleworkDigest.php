@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -22,7 +23,7 @@ final class TeleworkDigest extends Notification implements ShouldQueue
      * @param  list<string>  $lines
      */
     public function __construct(
-        private readonly string $company,
+        private readonly CompanySummary $company,
         private readonly ?string $name,
         private readonly array $lines,
         private readonly string $url,
@@ -42,8 +43,8 @@ final class TeleworkDigest extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $subject = $this->pending === null ? 'Resumen de teletrabajo' : "Tienes {$this->pending} pendientes como integrante de la Comisión";
-        $mail = (new MailMessage)->subject($subject)->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
-            ->line("Esto espera tu atención en {$this->company}:");
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject($subject)->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
+            ->line("Esto espera tu atención en {$this->company->tradeName}:");
 
         foreach ($this->lines as $line) {
             $mail->line($line);

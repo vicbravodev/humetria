@@ -10,6 +10,7 @@ use App\Modules\Telework\Data\PendingEquipment;
 use App\Modules\Telework\Data\PendingPhotoRequest;
 use App\Modules\Telework\Data\PendingVisit;
 use App\Modules\Telework\Data\PortalPendingData;
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -22,7 +23,7 @@ final class PortalReminder extends Notification
     public function __construct(
         private readonly string $url,
         private readonly string $name,
-        private readonly string $company,
+        private readonly CompanySummary $company,
         private readonly PortalPendingData $pending,
     ) {}
 
@@ -36,8 +37,8 @@ final class PortalReminder extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->subject('Tiene pendientes en su portal')->greeting("Hola, {$this->name}")
-            ->line("{$this->company} le dejó pendientes en su portal de teletrabajo:");
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Tiene pendientes en su portal')->greeting("Hola, {$this->name}")
+            ->line("{$this->company->tradeName} le dejó pendientes en su portal de teletrabajo:");
 
         $this->list($mail, 'Listas por contestar', array_map(fn (PendingChecklist $item): string => $item->workplace.' · Sección '.($item->section === 1 ? 'I' : 'II'), $this->pending->checklists));
         $this->list($mail, 'Documentos por confirmar', array_map(fn (PendingDocument $item): string => $item->title, $this->pending->documents));

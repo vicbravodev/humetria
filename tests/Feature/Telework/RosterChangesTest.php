@@ -90,7 +90,7 @@ it('ends the period with transfer when the employee moves to another work center
 });
 
 it('queues the move notice, which carries no secret', function (): void {
-    expect(new TeleworkMoved('Ana', 'A', 'B', 'https://x.test'))->toBeInstanceOf(ShouldQueue::class);
+    expect(new TeleworkMoved(new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), 'Ana', 'A', 'B', 'https://x.test'))->toBeInstanceOf(ShouldQueue::class);
 });
 
 it('does nothing when the person has no open period, whether never in telework or already ended', function (): void {

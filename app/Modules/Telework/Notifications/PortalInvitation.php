@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  */
 final class PortalInvitation extends Notification
 {
-    public function __construct(private readonly string $token, private readonly string $name, private readonly string $company) {}
+    public function __construct(private readonly string $token, private readonly string $name, private readonly CompanySummary $company) {}
 
     /**
      * @return list<string>
@@ -25,10 +26,10 @@ final class PortalInvitation extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject("{$this->company} le abrió su portal de teletrabajo")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
+            ->subject("{$this->company->tradeName} le abrió su portal de teletrabajo")
             ->greeting("Hola, {$this->name}")
-            ->line("{$this->company} le registró para teletrabajar. En su portal verá lo que le piden, como contestar la lista de verificación de su lugar de trabajo.")
+            ->line("{$this->company->tradeName} le registró para teletrabajar. En su portal verá lo que le piden, como contestar la lista de verificación de su lugar de trabajo.")
             ->action('Abrir mi portal', route('portal.show', $this->token))
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
     }

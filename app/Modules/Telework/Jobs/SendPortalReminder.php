@@ -67,7 +67,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
                 $pending = $portal->for(new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name));
 
                 if ($pending->checklists !== [] || $pending->documents !== [] || $pending->equipment !== [] || $pending->photos !== [] || $pending->visits !== []) {
-                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id)), $person->name, $company->tradeName, $pending));
+                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id)), $person->name, $company, $pending));
                 }
             }
 
@@ -78,7 +78,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
         $member = $this->userId === null || $titles === [] ? null : $members->find($this->userId);
 
         if ($member !== null) {
-            Notification::route('mail', $member->email)->notify(new DocumentsToConfirm(route('tenant.telework.documents.index', $company->slug), $member->name, $company->tradeName, $titles));
+            Notification::route('mail', $member->email)->notify(new DocumentsToConfirm(route('tenant.telework.documents.index', $company->slug), $member->name, $company, $titles));
         }
     }
 

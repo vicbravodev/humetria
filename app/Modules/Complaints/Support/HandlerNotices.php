@@ -30,7 +30,7 @@ final readonly class HandlerNotices
         }
 
         foreach (array_keys($emails) as $email) {
-            Notification::route('mail', $email)->notify(new HandlersChanged($company->tradeName, $person, $designated, route('tenant.complaints.handlers.index', $company->slug)));
+            Notification::route('mail', $email)->notify(new HandlersChanged($company, $person, $designated, route('tenant.complaints.handlers.index', $company->slug)));
         }
     }
 
@@ -47,6 +47,6 @@ final readonly class HandlerNotices
         $center = $workCenterId === null ? null : $this->workCenters->profile($workCenterId)?->name;
         $scope = $center === null ? 'de toda la empresa' : "del centro {$center}";
 
-        Notification::route('mail', $person->email)->notify(new YouWereDesignated($company->tradeName, $person->name, $scope, route('tenant.complaints.index', $company->slug)));
+        Notification::route('mail', $person->email)->notify(new YouWereDesignated($company, $person->name, $scope, route('tenant.complaints.index', $company->slug)));
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -29,7 +30,7 @@ final class ClosingSummary extends Notification implements ShouldQueue
      * @param  string|null  $programUrl  where the Programa de intervención is, when the results ask for one.
      */
     public function __construct(
-        private readonly string $tradeName,
+        private readonly CompanySummary $company,
         private readonly string $workCenter,
         private readonly int $answered,
         private readonly int $invited,
@@ -63,7 +64,8 @@ final class ClosingSummary extends Notification implements ShouldQueue
             ->markdown('mail.results.closed', [
                 'preheader' => "Participación de {$participation} %.".($this->domain === null ? '' : " {$this->domain['label']} es el dominio que más pesa."),
                 'workCenter' => $this->workCenter,
-                'tradeName' => $this->tradeName,
+                'company' => $this->company,
+                'tradeName' => $this->company->tradeName,
                 'answered' => $this->answered,
                 'invited' => $this->invited,
                 'participation' => $participation,

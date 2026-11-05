@@ -93,7 +93,7 @@ final readonly class SendDisclosureDigests
             return 0;
         }
 
-        Notification::route('mail', $owner)->notify(new DisclosureDigest($company->tradeName, $lines, route('tenant.disclosure.index', $company->slug)));
+        Notification::route('mail', $owner)->notify(new DisclosureDigest($company, $lines, route('tenant.disclosure.index', $company->slug)));
 
         return 1;
     }

@@ -463,8 +463,8 @@ it('waits two minutes and keeps one waiting email per person, listing everything
 });
 
 it('writes the Comisión email in the panel voice and the person email in the portal voice', function (): void {
-    $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', 'Acme', ['Información sobre riesgos del Teletrabajo · versión 1']))->toMail(new AnonymousNotifiable);
-    $person = (new PortalReminder('https://x.test/portal/t', 'Ana', 'Acme', new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
+    $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), ['Información sobre riesgos del Teletrabajo · versión 1']))->toMail(new AnonymousNotifiable);
+    $person = (new PortalReminder('https://x.test/portal/t', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
 
     expect($member->subject)->toBe('Tienes documentos por confirmar')
         ->and(implode(' ', $member->introLines))->toContain('debes leer y confirmar en el panel')

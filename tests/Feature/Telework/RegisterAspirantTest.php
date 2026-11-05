@@ -210,7 +210,7 @@ it('queues only ids: the plain token never reaches the queue, and the job makes 
 
     expect(serialize($job))->not->toContain($token)
         ->and($job)->toBeInstanceOf(ShouldQueue::class)
-        ->and(new PortalInvitation($token, 'Ana', 'Acme'))->not->toBeInstanceOf(ShouldQueue::class)
+        ->and(new PortalInvitation($token, 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false)))->not->toBeInstanceOf(ShouldQueue::class)
         ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
     auth()->logout();
     $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));

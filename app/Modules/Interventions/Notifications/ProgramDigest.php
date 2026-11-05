@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Notifications;
 
+use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -22,7 +23,7 @@ final class ProgramDigest extends Notification implements ShouldQueue
      * @param  list<string>  $lines
      */
     public function __construct(
-        private readonly string $company,
+        private readonly CompanySummary $company,
         private readonly ?string $name,
         private readonly array $lines,
         private readonly string $url,
@@ -40,8 +41,8 @@ final class ProgramDigest extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->subject('Resumen de tus Programas de intervención')->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
-            ->line("Esto espera tu atención en los Programas de intervención de {$this->company}:");
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Resumen de tus Programas de intervención')->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
+            ->line("Esto espera tu atención en los Programas de intervención de {$this->company->tradeName}:");
 
         foreach ($this->lines as $line) {
             $mail->line($line);
