@@ -21,6 +21,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'results:remind-referrals' => '0 8 * * *',
         'telework:remind-accidents' => '0 8 * * *',
         'seating:schedule-checks' => '30 7 * * *',
+        'seating:remind-questions' => '0 9 * * *',
         'seating:send-digests' => '30 8 * * *',
         'complaints:send-digests' => '0 * * * *',
         'complaints:purge' => '15 3 * * *',
@@ -39,10 +40,10 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
 });
 
-it('runs the Ley Silla checks at 07:30 and digests them at 08:30 display time, once and without overlapping', function (): void {
+it('runs the Ley Silla checks at 07:30, digests them at 08:30 and reminds the 2 questions at 09:00 display time, once and without overlapping', function (): void {
     $seating = collect(app(Schedule::class)->events())->filter(fn (Event $event): bool => str_contains($event->command ?? '', 'seating:'));
 
-    expect($seating)->toHaveCount(2)
+    expect($seating)->toHaveCount(3)
         ->and($seating->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
 });
 

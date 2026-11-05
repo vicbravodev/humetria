@@ -67,6 +67,7 @@ function inventory(): array
         'referral follow-up' => [fn () => new ReferralFollowUp($company, $url), true],
         'support waiting' => [fn () => new SupportWaiting($url, 'Ana', $company), true],
         'risks to confirm' => [fn () => new RisksToConfirm($url, 'Ana', $company), true],
+        'standing questions' => [fn () => new App\Modules\Seating\Notifications\StandingQuestions($company, 'Aitor', $url), true],
         'seating digest' => [fn () => new SeatingDigest($company, 'Olga', ['1 puesto sin evaluar.'], $url), true],
         'accident reported' => [fn () => new AccidentReported($company, 'Hugo', 'Planta', '25 feb', $url), true],
         'documents to confirm' => [fn () => new DocumentsToConfirm($url, 'Cora', $company, ['Política · versión 1']), true],
