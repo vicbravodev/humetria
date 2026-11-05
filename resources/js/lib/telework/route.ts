@@ -1,8 +1,11 @@
 import { STAGES } from '@/lib/compliance-routes';
-import type { RouteAccidents, RouteProgress, RouteRow } from '@/types';
+import type {
+    RouteAccidents,
+    RouteProgress,
+    RouteRow,
+    RouteStageState,
+} from '@/types';
 import { shortDay } from '@/lib/telework/accident';
-
-export type RouteStageState = 'done' | 'current' | 'pending';
 
 export type RouteStage = {
     number: number;
@@ -94,6 +97,19 @@ export function accidentsLine(accidents: RouteAccidents): string {
 /** Where a stage is done, opened from its line: the first of its rows the person may open. */
 export function stageHref(stage: RouteStage): string | null {
     return stage.rows.find((row) => row.href !== null)?.href ?? null;
+}
+
+/** A done stage folded into one line: what was done, and where to see it. */
+export function stageDone(stage: RouteStage): {
+    summary: string;
+    href: string | null;
+    action: string;
+} {
+    return {
+        summary: stage.summary,
+        href: stageHref(stage),
+        action: stage.rows.find((row) => row.href !== null)?.action ?? 'Ver',
+    };
 }
 
 /** The line under the title: who teleworks in the center, the six stages, and how many are done. */

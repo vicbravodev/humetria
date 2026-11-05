@@ -5,6 +5,7 @@ import {
     inspectionReach,
     routeIntro,
     routeStages,
+    stageDone,
     stageHref,
     stageOneTasks,
 } from '@/lib/telework/route';
@@ -77,6 +78,14 @@ describe('routeStages', () => {
         expect(
             stages[3] === undefined ? null : stageHref(stages[3]),
         ).toBeNull();
+    });
+
+    it('folds a done stage into its summary and the first link of its rows', () => {
+        expect(stages[1] === undefined ? null : stageDone(stages[1])).toEqual({
+            summary: 'Hecho: cada persona con su lugar convenido',
+            href: '/personas',
+            action: 'Ver',
+        });
     });
 });
 

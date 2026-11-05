@@ -1,19 +1,24 @@
 import { Link } from '@inertiajs/react';
-import ProgressBar from '@/components/humetria/progress-bar';
+import type { ReactNode } from 'react';
 
-/** «Si hoy llegara una inspección» (board V2-Ruta-N037): what the center could show, and where it gets by ending its stage. */
+/**
+ * «Si hoy llegara una inspección» (boards V2-Ruta-N037 and V2-Ruta-Silla): what the center could show, and where it gets by
+ * ending its stage. The page puts its progress bar inside.
+ */
 export default function RouteInspectionCard({
     ready,
     applicable,
     afterStage,
     stage,
     href,
+    children,
 }: {
     ready: number;
     applicable: number;
     afterStage: number;
     stage: number | null;
     href: string;
+    children: ReactNode;
 }) {
     return (
         <section
@@ -30,11 +35,7 @@ export default function RouteInspectionCard({
                 </b>{' '}
                 cosas que revisa el inspector.
             </p>
-            <ProgressBar
-                value={ready}
-                max={applicable}
-                label={`${ready} de ${applicable} cosas que podrías mostrar`}
-            />
+            {children}
             {stage !== null && afterStage > ready && (
                 <p className="text-sm text-muted-foreground">
                     Al terminar la etapa {stage} subes a {afterStage} de{' '}

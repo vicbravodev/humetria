@@ -1,12 +1,18 @@
 import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import RouteBefore from '@/components/telework/route-before';
-import RouteHumiCard from '@/components/telework/route-humi-card';
-import RouteInspectionCard from '@/components/telework/route-inspection-card';
-import RouteStage from '@/components/telework/route-stage';
+import ProgressBar from '@/components/humetria/progress-bar';
+import RouteHumiCard from '@/components/humetria/route-humi-card';
+import RouteInspectionCard from '@/components/humetria/route-inspection-card';
+import RouteStage from '@/components/humetria/route-stage';
 import RouteTasks from '@/components/telework/route-tasks';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { inspectionReach, routeIntro, routeStages } from '@/lib/telework/route';
+import {
+    inspectionReach,
+    routeIntro,
+    routeStages,
+    stageDone,
+} from '@/lib/telework/route';
 import { index } from '@/routes/tenant/telework';
 import type { RouteAccidents, RouteProgress, RouteRow } from '@/types';
 
@@ -64,6 +70,7 @@ export default function TeleworkRoute({
                             <RouteStage
                                 key={stage.number}
                                 stage={stage}
+                                done={stageDone(stage)}
                                 badge={
                                     stage.number === 5 && waiting > 0 ? (
                                         <Badge variant="destructive">
@@ -94,8 +101,14 @@ export default function TeleworkRoute({
                             {...reach}
                             stage={current?.number ?? null}
                             href={inspectionHref}
-                        />
-                        <RouteHumiCard />
+                        >
+                            <ProgressBar
+                                value={reach.ready}
+                                max={reach.applicable}
+                                label={`${reach.ready} de ${reach.applicable} cosas que podrías mostrar`}
+                            />
+                        </RouteInspectionCard>
+                        <RouteHumiCard example="qué es la reversibilidad o qué multa hay" />
                     </aside>
                 </div>
             </div>

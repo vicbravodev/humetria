@@ -1,19 +1,20 @@
-import InspectionItem from '@/components/telework/inspection-item';
-import type { InspectionItem as Item } from '@/types';
+import type { ReactNode } from 'react';
 
-/** «Te falta» or «Lo puedes mostrar» (board V3-Inspeccion): a card with how many of the rows, and each row. */
+/** «Te falta» or «Lo puedes mostrar» (board V3-Inspeccion): a card with how many of the rows, and each row inside. */
 export default function InspectionList({
     id,
     title,
-    items,
+    count,
     applicable,
     empty,
+    children,
 }: {
     id: string;
     title: string;
-    items: Item[];
+    count: number;
     applicable: number;
     empty: string;
+    children: ReactNode;
 }) {
     return (
         <section
@@ -25,23 +26,15 @@ export default function InspectionList({
                     {title}
                 </h2>
                 <span className="text-sm text-muted-foreground">
-                    {items.length} de {applicable} renglones
+                    {count} de {applicable} renglones
                 </span>
             </div>
-            {items.length === 0 ? (
+            {count === 0 ? (
                 <p className="border-t px-5 py-4 text-muted-foreground">
                     {empty}
                 </p>
             ) : (
-                <ul>
-                    {items.map((item, index) => (
-                        <InspectionItem
-                            key={item.numeral}
-                            item={item}
-                            primary={index === 0}
-                        />
-                    ))}
-                </ul>
+                <ul>{children}</ul>
             )}
         </section>
     );

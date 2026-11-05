@@ -1,4 +1,4 @@
-import RouteTask from '@/components/telework/route-task';
+import RouteTask from '@/components/humetria/route-task';
 import { stageOneTasks } from '@/lib/telework/route';
 import type { RouteStage } from '@/lib/telework/route';
 
