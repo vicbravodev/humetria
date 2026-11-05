@@ -200,7 +200,7 @@ it('sends the person\'s notices page in full, ten notices at a time, and confirm
         ->where('today', '2026-03-01')
         ->where('notices.total', 11)
         ->where('notices.per_page', 10)
-        ->where('notices.data.0', ['id' => $newest->id, 'kind' => NoticeKind::WorkRisk->label(), 'writtenOn' => $newest->written_on, 'status' => 'Recibido']));
+        ->where('notices.data.0', ['id' => $newest->id, 'kind' => NoticeKind::WorkRisk->label(), 'writtenOn' => $newest->written_on, 'status' => 'Recibido', 'answer' => null]));
 
     $this->post(route('portal.notices.store', $token), noticeForm())
         ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Su aviso fue enviado. La empresa lo recibió.']]);

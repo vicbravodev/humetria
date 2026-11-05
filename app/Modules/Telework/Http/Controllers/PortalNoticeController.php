@@ -7,6 +7,7 @@ namespace App\Modules\Telework\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\SubmitNotice;
+use App\Modules\Telework\Enums\NoticeAction;
 use App\Modules\Telework\Exceptions\PortalUnavailable;
 use App\Modules\Telework\Http\Requests\NoticeRequest;
 use App\Modules\Telework\Models\WorkerNotice;
@@ -19,7 +20,8 @@ use Inertia\Response;
 
 /**
  * The person's three written notices from their portal (numerals 6.3, 6.7, 6.9): the forms and the list of what they
- * sent, which says only "Recibido" or "Revisado" (never what the Comisión wrote). Only a person with an open period.
+ * sent, which says "Recibido" or "Revisado" and, for an accident, what was done about it (rediseño v2, board V3-Aviso);
+ * never a note written for RH only. Only a person with an open period.
  */
 final class PortalNoticeController extends Controller
 {
@@ -40,6 +42,12 @@ final class PortalNoticeController extends Controller
                     'kind' => $notice->kind->label(),
                     'writtenOn' => $notice->written_on->toDateString(),
                     'status' => $notice->reviewed_at === null ? 'Recibido' : 'Revisado',
+                    // An accident answered with what was done (board V3-Aviso); a note written before that was for RH only.
+                    'answer' => $notice->review_actions === null || $notice->reviewed_at === null ? null : [
+                        'actions' => array_map(fn (string $action): string => NoticeAction::from($action)->label(), $notice->review_actions),
+                        'note' => $notice->review_note,
+                        'answeredOn' => $notice->reviewed_at->setTimezone($zone)->toDateString(),
+                    ],
                 ]),
         ]);
     }

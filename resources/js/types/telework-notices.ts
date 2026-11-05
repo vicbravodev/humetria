@@ -11,6 +11,16 @@ export type PortalNotice = {
     /** Y-m-d. */
     writtenOn: string;
     status: 'Recibido' | 'Revisado';
+    /** What was done about an accident, once RH or the Comisión recorded it (board V3-Aviso). */
+    answer: PortalNoticeAnswer | null;
+};
+
+export type PortalNoticeAnswer = {
+    /** What was done, worded. */
+    actions: string[];
+    note: string | null;
+    /** Y-m-d. */
+    answeredOn: string;
 };
 
 /** A notice as RH and the Comisión read it, with the review if there is one. */

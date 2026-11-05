@@ -298,6 +298,8 @@ return [
         'employee_ids.*' => 'persona',
         'act' => 'acta',
         'action_plan' => 'plan de acción',
+        'actions' => 'qué se hizo',
+        'actions.*' => 'qué se hizo',
         'answers' => 'respuestas',
         'active_until' => 'fecha de vigencia',
         'activities' => 'actividades principales',
