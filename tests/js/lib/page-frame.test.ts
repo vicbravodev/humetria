@@ -10,6 +10,7 @@ describe('isStandalone', () => {
         'telework/portal-checklist',
         'results/shared-report',
         'attendance/kiosk',
+        'attendance/enroll',
         'compensation/shared-report',
         'error',
         'complaints-public/form',

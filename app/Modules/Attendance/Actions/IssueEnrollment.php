@@ -57,7 +57,7 @@ final readonly class IssueEnrollment
         Log::info('attendance.enrollment_issued', ['link_id' => $link->id, 'employee_id' => $employeeId]);
 
         $company = $this->companies->current();
-        $url = url("a/{$company->slug}/enroll/{$token}");
+        $url = route('attendance.device.enroll.show', [$company->slug, $token]);
 
         if ($person->email === null) {
             Log::info('attendance.enrollment_not_emailed', ['link_id' => $link->id, 'employee_id' => $employeeId]);
