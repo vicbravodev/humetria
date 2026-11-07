@@ -1,12 +1,19 @@
+import { weekRequests } from '@/lib/attendance/correction';
+import type { WeekRequest } from '@/lib/attendance/correction';
 import { sendSigned } from '@/lib/attendance/signed-request';
 import type { SignDeps, SignedRequest } from '@/lib/attendance/signed-request';
 
-/** A mark as «Mi semana» shows it: its type, its local time, whether it fell on the next day and whether RH corrected it. */
+/**
+ * A mark as «Mi semana» shows it: its type, its local time, whether it fell on the next day, whether RH corrected it and
+ * why (criterio 8.1).
+ */
 export type WeekMark = {
+    id: string;
     type: string;
     time: string;
     nextDay: boolean;
     corrected: boolean;
+    reason: string | null;
 };
 
 export type WeekDay = {
@@ -39,6 +46,7 @@ export type WeekView = {
     /** Why it cannot be confirmed yet (`day_open`, `no_marks`); null when it can. */
     blocked: string | null;
     days: WeekDay[];
+    requests: WeekRequest[];
     summary: WeekSummary;
     confirmUrl: string | null;
     disputeUrl: string | null;
@@ -62,14 +70,17 @@ function text(value: unknown): string | null {
 
 function mark(json: unknown): WeekMark[] {
     return isJson(json) &&
+        typeof json['id'] === 'string' &&
         typeof json['type'] === 'string' &&
         typeof json['time'] === 'string'
         ? [
               {
+                  id: json['id'],
                   type: json['type'],
                   time: json['time'],
                   nextDay: json['nextDay'] === true,
                   corrected: json['corrected'] === true,
+                  reason: text(json['reason']),
               },
           ]
         : [];
@@ -160,6 +171,7 @@ export function weekView(json: unknown): WeekView | null {
               digest,
               blocked: text(json['blocked']),
               days: json['days'].flatMap(day),
+              requests: weekRequests(json['requests']),
               summary: hours,
               confirmUrl: text(json['confirmUrl']),
               disputeUrl: text(json['disputeUrl']),
@@ -239,6 +251,16 @@ const MESSAGES: Record<string, string> = {
         'Escriba qué no está bien en su semana, con al menos 10 caracteres.',
     unsupported:
         'Este navegador no puede usar llaves de acceso. Abra la página en el navegador de su teléfono.',
+    future_time: 'La hora que propone aún no llega. Revise la hora y el día.',
+    too_old:
+        'Solo se pueden corregir marcas de los últimos 35 días. Hable con Recursos Humanos.',
+    type_mismatch: 'Esa marca es de otro tipo. Intente de nuevo.',
+    already_requested:
+        'Ya pidió corregir esta marca. Recursos Humanos la está revisando.',
+    too_many_pending:
+        'Tiene 10 solicitudes esperando a Recursos Humanos. Espere a que las revisen antes de pedir otra.',
+    invalid_request:
+        'Escriba por qué pide la corrección, con al menos 10 caracteres, y la hora.',
 };
 
 /** What to tell the person when the week could not be read or answered. */

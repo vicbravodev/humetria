@@ -6,8 +6,10 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekPeriod;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -124,4 +126,66 @@ it('shows Ana her week again when RH corrected it after she opened it, and lets 
 
     $page->press('Confirmar mi semana')->waitForText('La confirmó el');
     expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Confirmed);
+});
+
+it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves, her week shows it and asks her again', function (): void {
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    $page = anaSeesHerWeek();
+    $page->press('Confirmar mi semana')->waitForText('La confirmó el');
+
+    $page->click('[aria-label="Pedir corrección de salida de las 21:00"]')
+        ->waitForText('¿A qué hora fue?')
+        ->assertNoAccessibilityIssues(1)
+        ->fill('time', '20:00')
+        ->fill('reason', 'El martes salí a las 20:00, el QR no cargaba.')
+        ->press('Enviar solicitud')
+        ->waitForText('Su solicitud llegó a Recursos Humanos')
+        ->assertSee('Sus solicitudes de corrección')
+        ->assertSee('En revisión')
+        ->assertDontSee('[aria-label="Pedir corrección de salida de las 21:00"]')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '');
+
+    $page->navigate('/admin/acme/attendance/corrections')
+        ->waitForText('El martes salí a las 20:00, el QR no cargaba.')
+        ->click('[aria-label="Aprobar la solicitud de Ana López"]')
+        ->waitForText('Aprobar la corrección')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Solicitud aprobada');
+
+    $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->toDateString();
+    $page->navigate("/a/acme/week/{$monday}")
+        ->press('Ver mi semana')
+        ->waitForText('Su respuesta')
+        ->assertSee('Sin confirmar')
+        ->assertSee('corregida por RH')
+        ->assertSee('Motivo de la corrección: El martes salí a las 20:00, el QR no cargaba.')
+        ->assertSee('Aprobada')
+        ->assertSee('Confirmar mi semana')
+        ->assertNoJavaScriptErrors();
+
+    expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Pending);
+});
+
+it('lets a person whose mark was refused ask RH from Marcar to add it', function (): void {
+    $enroll = (string) parse_url(enrollmentUrl($this->ana->id), PHP_URL_PATH);
+    $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+
+    // On site, with no code of the center's screen: the mark is refused.
+    $page->navigate('/a/acme')
+        ->press('Marcar entrada')
+        ->waitForText('Pedir corrección a Recursos Humanos')
+        ->press('Pedir corrección a Recursos Humanos')
+        ->waitForText('¿Qué marca le faltó?')
+        ->assertNoAccessibilityIssues(1)
+        ->select('mark_type', 'start')
+        ->fill('reason', 'Llegué a tiempo pero el teléfono no marcó.')
+        ->press('Enviar solicitud')
+        ->waitForText('Su solicitud llegó a Recursos Humanos')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(CorrectionRequest::query()->sole())->type->toBe(MarkType::Start)->mark_id->toBeNull();
 });

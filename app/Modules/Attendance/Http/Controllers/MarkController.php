@@ -75,6 +75,8 @@ final readonly class MarkController
             'weekUrl' => route('attendance.device.week.show', $tenant),
             'correctionOptionsUrl' => route('attendance.device.correction.options', $tenant),
             'correctionUrl' => route('attendance.device.correction.store', $tenant),
+            // A mark refused is asked of RH at the time of the company's clock, whatever the phone's zone.
+            'timezone' => config()->string('app.display_timezone'),
         ]);
 
         $response = $page->toResponse($request);

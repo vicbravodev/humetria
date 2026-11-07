@@ -1,8 +1,25 @@
 import WeekDay from '@/components/attendance/week-day';
+import type { CorrectionDraft, WeekRequest } from '@/lib/attendance/correction';
 import type { WeekDay as Day } from '@/lib/attendance/week';
 
-/** The seven days of the week, each with its marks. */
-export default function WeekDays({ days }: { days: Day[] }) {
+/** The seven days of the week, each with its marks and the way to ask for a correction. */
+export default function WeekDays({
+    days,
+    requests,
+    working,
+    onCorrect,
+}: {
+    days: Day[];
+    requests: WeekRequest[];
+    working: boolean;
+    onCorrect: (draft: CorrectionDraft) => Promise<boolean>;
+}) {
+    const pending = requests.flatMap((request) =>
+        request.status === 'pending' && request.markId !== null
+            ? [request.markId]
+            : [],
+    );
+
     return (
         <section
             aria-labelledby="week-days-title"
@@ -14,9 +31,19 @@ export default function WeekDays({ days }: { days: Day[] }) {
             >
                 Sus marcas
             </h2>
+            <p className="text-base text-muted-foreground">
+                Si una marca está mal, tóquela para pedir a Recursos Humanos que
+                la corrija.
+            </p>
             <ol className="flex flex-col divide-y">
                 {days.map((day) => (
-                    <WeekDay key={day.date} day={day} />
+                    <WeekDay
+                        key={day.date}
+                        day={day}
+                        pending={pending}
+                        working={working}
+                        onCorrect={onCorrect}
+                    />
                 ))}
             </ol>
         </section>

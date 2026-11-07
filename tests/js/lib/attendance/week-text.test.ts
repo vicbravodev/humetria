@@ -3,6 +3,7 @@ import {
     dayTitle,
     duration,
     statusText,
+    weekFeedback,
     weekNotices,
     weekTitle,
 } from '@/lib/attendance/week-text';
@@ -26,6 +27,7 @@ const week: WeekView = {
     digest: 'a'.repeat(64),
     blocked: null,
     days: [day],
+    requests: [],
     summary: {
         ordinaryMinutes: 480,
         overtimeMinutes: 0,
@@ -144,5 +146,19 @@ describe('weekNotices', () => {
             'Tuvo horas extra en más de 4 días de la semana.',
             'Las horas extra al triple pasaron de 4 en la semana.',
         ]);
+    });
+});
+
+describe('weekFeedback', () => {
+    it('says why the last action failed, or what it did', () => {
+        expect(weekFeedback('No se pudo.', 'Llegó.')).toEqual({
+            kind: 'error',
+            text: 'No se pudo.',
+        });
+        expect(weekFeedback(null, 'Llegó.')).toEqual({
+            kind: 'done',
+            text: 'Llegó.',
+        });
+        expect(weekFeedback(null, null)).toBeNull();
     });
 });

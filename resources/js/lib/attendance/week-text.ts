@@ -1,3 +1,4 @@
+import type { PunchFeedback } from '@/lib/attendance/punch-state';
 import type { WeekView } from '@/lib/attendance/week';
 
 const MONTHS = [
@@ -154,4 +155,16 @@ export function weekNotices(
     });
 
     return [...missing, ...triple, ...flags];
+}
+
+/** What the last action of «Mi semana» says: why it failed, or what it did. */
+export function weekFeedback(
+    error: string | null,
+    notice: string | null,
+): PunchFeedback | null {
+    if (error !== null) {
+        return { kind: 'error', text: error };
+    }
+
+    return notice === null ? null : { kind: 'done', text: notice };
 }

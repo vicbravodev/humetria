@@ -6,6 +6,7 @@ import LocationNote from '@/components/attendance/location-note';
 import NotYou from '@/components/attendance/not-you';
 import PersonFrame from '@/components/attendance/person-frame';
 import PunchButton from '@/components/attendance/punch-button';
+import PunchCorrection from '@/components/attendance/punch-correction';
 import PunchFeedback from '@/components/attendance/punch-feedback';
 import { Button } from '@/components/ui/button';
 import { usePunch } from '@/hooks/use-punch';
@@ -14,7 +15,8 @@ import type { Signer } from '@/lib/attendance/punch';
 
 /**
  * A person marks their working day from their linked device (no account): the big button of the next step, why the
- * position is asked for, and their day once they mark. When nobody is known in this browser, every step is offered.
+ * position is asked for, and their day once they mark. When nobody is known in this browser, every step is offered. A
+ * mark refused can be asked of RH from here.
  */
 export default function Punch({
     company,
@@ -24,6 +26,9 @@ export default function Punch({
     punchUrl,
     forgetUrl,
     weekUrl,
+    correctionOptionsUrl,
+    correctionUrl,
+    timezone,
 }: {
     company: string;
     qr: string | null;
@@ -32,6 +37,9 @@ export default function Punch({
     punchUrl: string;
     forgetUrl: string;
     weekUrl: string;
+    correctionOptionsUrl: string;
+    correctionUrl: string;
+    timezone: string;
 }) {
     const { person, marks, feedback, working, mark, forget } = usePunch({
         optionsUrl,
@@ -64,6 +72,13 @@ export default function Punch({
                     onMark={(type) => void mark(type)}
                 />
                 <PunchFeedback feedback={feedback} />
+                {feedback?.kind === 'error' && (
+                    <PunchCorrection
+                        optionsUrl={correctionOptionsUrl}
+                        url={correctionUrl}
+                        timezone={timezone}
+                    />
+                )}
                 <LocationNote />
                 {marks !== null && <DayMarks marks={marks} />}
                 {person === null && <LinkDeviceNote />}

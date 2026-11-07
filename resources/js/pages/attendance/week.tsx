@@ -7,13 +7,15 @@ import WeekDays from '@/components/attendance/week-days';
 import WeekGate from '@/components/attendance/week-gate';
 import WeekHours from '@/components/attendance/week-hours';
 import WeekNav from '@/components/attendance/week-nav';
+import WeekRequests from '@/components/attendance/week-requests';
 import { Button } from '@/components/ui/button';
 import { useWeek } from '@/hooks/use-week';
-import { weekTitle } from '@/lib/attendance/week-text';
+import { weekFeedback, weekTitle } from '@/lib/attendance/week-text';
 
 /**
- * «Mi semana» (criterios 5.2 and 8.1): after their device verifies them, a person sees their marks and hours of one week
- * and confirms it or says what is not right.
+ * «Mi semana» (criterios 5.2, 5.4 and 8.1): after their device verifies them, a person sees their marks and hours of one
+ * week, why RH corrected a mark, and confirms it or says what is not right; they ask RH to correct a mark or to add one
+ * they forgot, and see where each request stands.
  */
 export default function Week({
     company,
@@ -21,18 +23,25 @@ export default function Week({
     optionsUrl,
     weekUrl,
     punchUrl,
+    correctionOptionsUrl,
+    correctionUrl,
 }: {
     company: string;
     start: string | null;
     optionsUrl: string;
     weekUrl: string;
     punchUrl: string;
+    correctionOptionsUrl: string;
+    correctionUrl: string;
 }) {
-    const { week, error, working, read, confirm, dispute } = useWeek({
-        optionsUrl,
-        weekUrl,
-        start,
-    });
+    const { week, error, notice, working, read, confirm, dispute, correct } =
+        useWeek({
+            optionsUrl,
+            weekUrl,
+            start,
+            correctionOptionsUrl,
+            correctionUrl,
+        });
 
     return (
         <PersonFrame company={company}>
@@ -63,18 +72,20 @@ export default function Week({
                             onDispute={dispute}
                         />
                         <WeekHours week={week} />
-                        <WeekDays days={week.days} />
+                        <WeekDays
+                            days={week.days}
+                            requests={week.requests}
+                            working={working !== null}
+                            onCorrect={correct}
+                        />
+                        <WeekRequests requests={week.requests} />
                         <WeekNav
                             previousUrl={week.previousUrl}
                             nextUrl={week.nextUrl}
                         />
                     </>
                 )}
-                <PunchFeedback
-                    feedback={
-                        error === null ? null : { kind: 'error', text: error }
-                    }
-                />
+                <PunchFeedback feedback={weekFeedback(error, notice)} />
                 <Button
                     asChild
                     variant="outline"

@@ -27,16 +27,29 @@ const week: WeekView = {
             date: '2026-11-02',
             marks: [
                 {
+                    id: 'm1',
                     type: 'start',
                     time: '09:00',
                     nextDay: false,
                     corrected: true,
+                    reason: 'El QR no cargaba.',
                 },
             ],
             workedMinutes: 540,
             scheduledMinutes: 480,
             restDay: false,
             missingEnd: false,
+        },
+    ],
+    requests: [
+        {
+            id: 'r1',
+            markId: 'm1',
+            type: 'start',
+            date: '2026-11-02',
+            time: '08:55',
+            status: 'rejected',
+            note: 'Llegaste a las 9:00.',
         },
     ],
     summary: {
@@ -109,6 +122,22 @@ describe('weekView', () => {
             days: [{ date: '2026-11-02' }, { marks: [{ type: 'start' }] }],
         });
         expect(read?.days).toHaveLength(2);
+    });
+
+    it('leaves out the requests it cannot read, and reads none when there are none', () => {
+        const read = weekView({
+            ...week,
+            requests: [
+                3,
+                { id: 'r2', type: 'end', date: '2026-11-03', time: '18:00' },
+                ...week.requests,
+            ],
+        });
+
+        expect(read?.requests).toEqual(week.requests);
+        expect(weekView({ ...week, requests: undefined })?.requests).toEqual(
+            [],
+        );
     });
 });
 
