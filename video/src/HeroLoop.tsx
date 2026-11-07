@@ -1,4 +1,4 @@
-import { loadFont } from '@remotion/fonts';
+import './fonts';
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from 'remotion';
 import { easeInOut, enter, exit, tween } from './ease';
 import { Confidential } from './scenes/Confidential';
@@ -7,14 +7,6 @@ import { Invite } from './scenes/Invite';
 import { LoadPeople } from './scenes/LoadPeople';
 import { Results } from './scenes/Results';
 import { T, c } from './theme';
-
-for (const weight of ['400', '500', '600']) {
-    void loadFont({
-        family: 'Figtree',
-        url: staticFile(`fonts/figtree-latin-${weight}-normal.woff2`),
-        weight,
-    });
-}
 
 const SCENES = [
     { n: 1, label: 'Carga a tu gente', from: T.s1, to: T.s2 },

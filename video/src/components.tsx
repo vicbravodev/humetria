@@ -34,6 +34,18 @@ const icons = {
         </>
     ),
     check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+    arrowUp: (
+        <>
+            <path d="M12 19V5" />
+            <path d="m5 12 7-7 7 7" />
+        </>
+    ),
+    arrowRight: (
+        <>
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+        </>
+    ),
     listCheck: (
         <>
             <path d="M11 6h10" />
