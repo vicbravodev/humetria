@@ -13,7 +13,9 @@ enum MarkType: string
     case End = 'end';
 
     /**
-     * What may follow the person's last mark (null: none yet): a start only with no day open, X     * the day open, the end of a break only during one. RecordMark enforces it and the screen of Marcar offers it.
+     * What may follow the person's last mark (null: none yet): a start only with no day open, a break only with the day
+     * open and not on one, the end of a break only during one, the end with the day open (even during a break). RecordMark
+     * enforces it and the screen of Marcar offers it.
      *
      * @return list<self>
      */
