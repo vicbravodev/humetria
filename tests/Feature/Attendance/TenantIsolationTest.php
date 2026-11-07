@@ -13,6 +13,7 @@ use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
@@ -100,4 +101,16 @@ it('does not read the linked devices of another company with a query', function 
 
     workIn($b);
     expect(AttendanceDevice::query()->count())->toBe(1);
+});
+
+it('does not read the weekly confirmations of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $weekOfB = WeeklyConfirmation::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(WeeklyConfirmation::query()->find($weekOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(WeeklyConfirmation::query()->count())->toBe(1);
 });

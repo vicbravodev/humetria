@@ -17,6 +17,18 @@ final readonly class WeekPeriod
         return new self(self::local($instant)->startOfWeek(CarbonInterface::MONDAY));
     }
 
+    /** The week of a local calendar date, whatever time zone its Carbon carries. */
+    public static function ofDate(CarbonImmutable $date): self
+    {
+        return self::containing(CarbonImmutable::parse($date->toDateString(), config()->string('app.display_timezone')));
+    }
+
+    /** Whether its Sunday ended: only then can the person answer for it. */
+    public function isOver(): bool
+    {
+        return CarbonImmutable::now()->greaterThanOrEqualTo($this->nextStartUtc());
+    }
+
     public function start(): CarbonImmutable
     {
         return $this->start;

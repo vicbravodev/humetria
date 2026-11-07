@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Models\AttendanceMark;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +49,8 @@ final readonly class CorrectMark
             ]);
 
             $this->audit->handle('attendance.mark_corrected', $correction, ['corrects_mark_id' => $original->id, 'employee_id' => $original->employee_id]);
+            // In the same transaction: a confirmed week it touches reopens with it, or neither happens.
+            event(new MarkCorrected($correction->id, $original->id, $original->employee_id));
 
             return $correction;
         });

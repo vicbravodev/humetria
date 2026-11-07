@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Providers;
 
+use App\Modules\Attendance\Events\MarkCorrected;
+use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +23,8 @@ final class AttendanceServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Event::listen(MarkCorrected::class, ReopenOnCorrection::class);
+
         // A screen asks for a code about twice a minute: per address, so a center with several screens behind one router fits,
         // and guessing a token is slowed down before any is read.
         RateLimiter::for('attendance-device', fn (Request $request): Limit => Limit::perMinute(120)->by('attendance-device:'.$request->ip()));

@@ -6,6 +6,9 @@ namespace App\Modules\Attendance\Actions;
 
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\EffectiveMarks;
+use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
@@ -15,8 +18,10 @@ use Throwable;
 
 /**
  * The nightly close, for every company: shortly after local midnight it closes yesterday (CloseDay) for each active person
- * with a mark that day or a working day by their schedule. Once a night is enough: CloseDay stores nothing, so a run
- * again gives the same days.
+ * with a mark that day or a working day by their schedule, and leaves pending the week that last ended of each active
+ * person with marks in it (silence is not conformity: nobody confirms it for them). Once a night is enough: CloseDay
+ * stores nothing and a week is opened once, so a run again changes nothing; and every night opens the last week again if
+ * needed, so a Monday that failed is made up the next night.
  */
 final readonly class CloseDays
 {
@@ -72,6 +77,27 @@ final readonly class CloseDays
             }
         }
 
+        $this->openWeek($tenantId, WeekPeriod::containing(CarbonImmutable::now()->subWeek()));
+
         return $closed;
+    }
+
+    private function openWeek(string $tenantId, WeekPeriod $week): void
+    {
+        // Whoever marked in the week; their own effective marks decide (a night that ends on Monday belongs to Sunday).
+        $marked = AttendanceMark::query()->where('marked_at', '>=', $week->startUtc())->where('marked_at', '<', $week->nextStartUtc())->distinct()->get(['employee_id'])
+            ->map(fn (AttendanceMark $mark): string => $mark->employee_id);
+
+        foreach ($this->roster->findMany(array_values($marked->all())) as $person) {
+            if (! $person->active || EffectiveMarks::forWeek($person->id, $week) === []) {
+                continue;
+            }
+
+            $confirmation = WeeklyConfirmation::query()->createOrFirst(['employee_id' => $person->id, 'week_start' => $week->start()->toDateString()], ['tenant_id' => $tenantId]);
+
+            if ($confirmation->wasRecentlyCreated) {
+                Log::info('attendance.week_opened', ['confirmation_id' => $confirmation->id, 'employee_id' => $person->id, 'week_start' => $week->start()->toDateString()]);
+            }
+        }
     }
 }
