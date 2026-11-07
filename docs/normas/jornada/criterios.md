@@ -93,6 +93,12 @@ redondear:
 - Lo programado es ordinario aunque un día pase del máximo diario del art. 61, porque el horario se distribuye por
   acuerdo (2.6). Pero si la suma de lo ordinario de la semana rebasa el **máximo semanal del año** (2.1), el exceso pasa
   a tiempo extra, del día en que se cruza el máximo en adelante.
+- Consecuencia para los turnos **nocturno y mixto** (*pendiente de revisión del usuario*): el tipo de turno no cambia el
+  cálculo. Una persona de turno nocturno programada 6 × 8 h en 2026 (48 h) no tiene tiempo extra; la lectura estricta del
+  art. 61 (7 h la nocturna) le daría 1 h extra cada día, 6 h a la semana. Si se adopta esa lectura, se cambia aquí y en
+  la calculadora.
+- Lo trabajado en día de descanso no cuenta para el tope semanal de tiempo extra ni para el aviso de más de 4 días con
+  extra.
 - El extra de la semana se paga **doble hasta el tope semanal del año** (2.3) y **triple lo que lo rebase** (2.4, 2.8).
   Si el triple pasa de 4 h a la semana, se avisa: esos minutos siguen contando como triple, porque trabajados se pagan.
 - Se avisa también cuando un día pasa de 12 h trabajadas (incluso en descanso), cuando un día tiene más de 4 h extra y
