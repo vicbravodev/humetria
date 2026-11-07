@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Http\Requests;
 
+use App\Modules\Attendance\Support\DeviceLabel;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -25,7 +26,7 @@ final class EnrollRequest extends FormRequest
         return [
             'agreement_accepted' => ['accepted'],
             'agreement_version' => ['required', 'integer', 'min:1'],
-            'device_label' => ['required', 'string', 'max:60'],
+            'device_label' => ['required', 'string', 'max:60', 'regex:'.DeviceLabel::PATTERN],
             'credential' => ['required', 'array'],
         ];
     }

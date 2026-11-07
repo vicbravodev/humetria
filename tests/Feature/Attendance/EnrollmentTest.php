@@ -11,15 +11,20 @@ use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Notifications\DeviceLinked;
+use App\Modules\Attendance\Notifications\EnrollmentInvitation;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
+use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\ChannelManager;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -299,4 +304,40 @@ it('sends no such email to a person without one, nor when nothing was linked', f
     enrollWith(new SoftAuthenticator, $this->token, userVerified: false)->assertUnprocessable();
 
     Notification::assertSentOnDemandTimes(DeviceLinked::class, 0);
+});
+
+it('queues the email about a linked device, so a mail server that fails does not fail the linking', function (): void {
+    // The real notifications (the link was already read from the fake), onto a queue that keeps the jobs.
+    Notification::swap(new ChannelManager(app()));
+    Queue::fake();
+
+    enrollWith($this->phone, $this->token)->assertOk()->assertExactJson(['enrolled' => true]);
+
+    expect(AttendanceDevice::query()->count())->toBe(1);
+    Queue::assertPushed(SendQueuedNotifications::class, fn (SendQueuedNotifications $job): bool => $job->notification instanceof DeviceLinked
+        && ! str_contains(serialize($job), $this->token)
+        && ! str_contains(serialize($job), AttendanceDevice::query()->sole()->credential_id));
+    Queue::assertNotPushed(SendQueuedNotifications::class, fn (SendQueuedNotifications $job): bool => $job->notification instanceof EnrollmentInvitation);
+});
+
+it('takes as the name of a device only letters, digits, spaces and . - _ ( )', function (string $label, bool $valid): void {
+    $response = $this->postJson(enrollRoute('register', $this->token), ['agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => $label, 'credential' => ['id' => 'x']]);
+
+    $valid ? $response->assertJsonMissingValidationErrors('device_label') : $response->assertJsonValidationErrors('device_label');
+})->with([
+    'plain' => ['iPhone de Ana (trabajo)', true],
+    'with safe punctuation' => ['Galaxy S23_v.2-b', true],
+    'accented' => ['Teléfono de Begoña', true],
+    'a markdown link' => ['[clic](https://evil.test)', false],
+    'an address' => ['https://evil.test', false],
+    'html' => ['<b>iPhone</b>', false],
+    'emphasis' => ['*iPhone*', false],
+    'a new line' => ["iPhone\nclic", false],
+]);
+
+it('never turns the name of a device into a link in the email', function (): void {
+    $html = (string) (new DeviceLinked('[clic](https://evil.test) <a href="https://evil.test">x</a>', CarbonImmutable::now(), 'Ana', new CompanySummary('t', 'Acme', 'acme', false)))
+        ->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->not->toContain('href="https://evil.test')->not->toContain('[clic]')->not->toContain('<a href="https://evil')->toContain('clic');
 });
