@@ -7,6 +7,7 @@ use App\Modules\Attendance\Actions\AcceptAgreement;
 use App\Modules\Attendance\Actions\IssueEnrollment;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
+use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -15,7 +16,6 @@ use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Str;
 
 /*
  * Company A reads none of company B's attendance data. By URL it is pinned when the panel pages exist.
@@ -65,7 +65,7 @@ it('does not read the agreement or the acceptances of another company with a que
     $b = Tenant::factory()->create();
     workIn($b);
     $ana = EmployeeFactory::new()->create(['tenant_id' => $b->id]);
-    resolve(AcceptAgreement::class)->handle($ana->id, (string) Str::uuid(), 1);
+    resolve(AcceptAgreement::class)->handle($ana->id, AttendanceDevice::factory()->create(['tenant_id' => $b->id, 'employee_id' => $ana->id])->id, 1);
 
     workIn($a);
     expect(AttendanceAgreement::query()->count())->toBe(0)
@@ -88,4 +88,16 @@ it('does not read the enrollment links of another company with a query', functio
 
     workIn($b);
     expect(EnrollmentLink::query()->count())->toBe(1);
+});
+
+it('does not read the linked devices of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $deviceOfB = AttendanceDevice::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(AttendanceDevice::query()->find($deviceOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(AttendanceDevice::query()->count())->toBe(1);
 });
