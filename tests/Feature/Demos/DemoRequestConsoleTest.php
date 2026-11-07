@@ -73,6 +73,7 @@ it('labels every profile and headcount range', function (DemoProfile|Workforce|T
 })->with([
     [DemoProfile::Company, 'Empresa'],
     [DemoProfile::Consultant, 'Consultor'],
+    [DemoProfile::Union, 'Sindicato'],
     [Workforce::UpTo15, '1–15'],
     [Workforce::From16To50, '16–50'],
     [Workforce::From51To100, '51–100'],
@@ -81,6 +82,8 @@ it('labels every profile and headcount range', function (DemoProfile|Workforce|T
     [Tool::Nom035, 'NOM-035'],
     [Tool::Nom037, 'NOM-037'],
     [Tool::LeySilla, 'Ley Silla'],
+    [Tool::Complaints, 'Buzón de quejas'],
+    [Tool::Compensation, 'Compensación'],
 ]);
 
 it('shows the newest requests first', function (): void {

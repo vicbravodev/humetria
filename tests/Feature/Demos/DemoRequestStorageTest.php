@@ -62,3 +62,14 @@ it('keeps the tools a request asked about, in order', function (): void {
 
     expect($demoRequest->tools->all())->toBe([Tool::LeySilla, Tool::Nom035]);
 });
+
+it('accepts a union and every tool inserted directly', function (): void {
+    DB::table('demo_requests')->insert([
+        ...DemoRequest::factory()->raw(),
+        'id' => (string) Str::uuid(),
+        'profile' => 'union',
+        'tools' => '["nom_035","nom_037","ley_silla","complaints","compensation"]',
+    ]);
+
+    expect(DemoRequest::query()->count())->toBe(1);
+});
