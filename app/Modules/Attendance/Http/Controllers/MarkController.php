@@ -72,6 +72,7 @@ final readonly class MarkController
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
+            'weekUrl' => route('attendance.device.week.show', $tenant),
         ]);
 
         $response = $page->toResponse($request);

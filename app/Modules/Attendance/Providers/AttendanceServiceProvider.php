@@ -47,5 +47,16 @@ final class AttendanceServiceProvider extends ServiceProvider
                 ...(is_string($key) ? [Limit::perMinute(12)->by('attendance-punch-key:'.hash('sha256', $key))] : []),
             ];
         });
+
+        // Reading the week and answering it take two requests each (the options, the signature). Per address 300 a minute, as
+        // for marking (a shift behind one router); per key 30 a minute: a person reads a few weeks and answers one.
+        RateLimiter::for('attendance-week', function (Request $request): array {
+            $key = $request->input('credential.id');
+
+            return [
+                Limit::perMinute(300)->by('attendance-week-ip:'.$request->ip()),
+                ...(is_string($key) ? [Limit::perMinute(30)->by('attendance-week-key:'.hash('sha256', $key))] : []),
+            ];
+        });
     }
 }

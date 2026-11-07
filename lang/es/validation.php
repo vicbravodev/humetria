@@ -286,6 +286,7 @@ return [
         'accuracy' => 'precisión',
         'q' => 'código QR',
         'mark_type' => 'tipo de marca',
+        'start' => 'semana',
         'footwear' => 'calzado',
         'discomfort' => 'molestias',
         'tasks' => 'tareas',

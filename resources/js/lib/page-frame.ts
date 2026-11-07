@@ -16,6 +16,8 @@ const STANDALONE_NAMES = new Set([
     'attendance/enroll',
     // A person marks from their linked device: no account, their own frame.
     'attendance/punch',
+    // A person sees and answers their week from their linked device: no account, the same frame.
+    'attendance/week',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.

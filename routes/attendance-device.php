@@ -8,6 +8,7 @@ declare(strict_types=1);
 use App\Modules\Attendance\Http\Controllers\EnrollmentController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\MarkController;
+use App\Modules\Attendance\Http\Controllers\WeekController;
 use App\Modules\Attendance\Http\Middleware\ResolveDeviceTenant;
 use Illuminate\Support\Facades\Route;
 
@@ -38,4 +39,14 @@ Route::middleware(['throttle:attendance-punch', ResolveDeviceTenant::class])->gr
     Route::post('a/{tenant:slug}/punch/options', [MarkController::class, 'options'])->name('attendance.device.punch.options');
     Route::post('a/{tenant:slug}/punch', [MarkController::class, 'store'])->name('attendance.device.punch.store');
     Route::post('a/{tenant:slug}/punch/forget', [MarkController::class, 'forget'])->name('attendance.device.punch.forget');
+});
+
+// «Mi semana»: a person sees one of their weeks and confirms or disputes it (no account). Each read and each answer takes a
+// signature of its own; the key alone names the person. Its own limiter, generous per address and per key.
+Route::middleware(['throttle:attendance-week', ResolveDeviceTenant::class])->group(function (): void {
+    Route::get('a/{tenant:slug}/week/{start?}', [WeekController::class, 'show'])->where('start', '\d{4}-\d{2}-\d{2}')->name('attendance.device.week.show');
+    Route::post('a/{tenant:slug}/week/options', [WeekController::class, 'options'])->name('attendance.device.week.options');
+    Route::post('a/{tenant:slug}/week', [WeekController::class, 'read'])->name('attendance.device.week.read');
+    Route::post('a/{tenant:slug}/week/{start}/confirm', [WeekController::class, 'confirm'])->where('start', '\d{4}-\d{2}-\d{2}')->name('attendance.device.week.confirm');
+    Route::post('a/{tenant:slug}/week/{start}/dispute', [WeekController::class, 'dispute'])->where('start', '\d{4}-\d{2}-\d{2}')->name('attendance.device.week.dispute');
 });
