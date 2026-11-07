@@ -53,7 +53,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 
 ---
 
-### Task 1: Esqueleto del módulo, dependencia y permisos
+### Task 1 ✅: Esqueleto del módulo, dependencia y permisos
 
 **Files:** Create `app/Modules/Attendance/Providers/AttendanceServiceProvider.php`, `routes/attendance.php`, `routes/attendance-device.php`, migración `…_add_attendance_permissions.php` (patrón de `2026_11_21_100000_add_seating_permissions.php`). Modify `bootstrap/providers.php`, `routes/web.php`, `routes/company.php`, `tests/Unit/ArchitectureTest.php`, `composer.json`.
 
