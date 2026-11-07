@@ -11,7 +11,11 @@ const facts = [
 
 export default function HumiSection() {
     return (
-        <section aria-labelledby="humi" className="border-y bg-sidebar">
+        <section
+            id="seccion-humi"
+            aria-labelledby="humi"
+            className="border-y bg-sidebar"
+        >
             <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20 lg:py-28">
                 <Reveal className="flex flex-col gap-6">
                     <LandingHumi />

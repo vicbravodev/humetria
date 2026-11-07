@@ -23,6 +23,7 @@ const steps = [
 export default function HowItWorksSection() {
     return (
         <section
+            id="seccion-como-funciona"
             aria-labelledby="como-funciona"
             className="border-y bg-sidebar"
         >

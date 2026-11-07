@@ -171,14 +171,16 @@ it('keeps the hero film still when the visitor asks for reduced motion', functio
 
 it('takes the header tools link to the tools section', function (): void {
     // The link shows from the md breakpoint up: on a phone the header only fits the logo and the two calls to action.
-    // The section lands right under the 64 px sticky header (`scroll-mt-16`); the jump is instant, there is no smooth scroll.
+    // The page glides until the section lands right under the 64 px sticky header (`scroll-mt-16`).
     $sectionTop = '() => Math.abs(document.getElementById("herramientas").getBoundingClientRect().top - 64) < 2';
+    $landed = '() => new Promise((resolve) => { const settled = () => Math.abs(document.getElementById("herramientas").getBoundingClientRect().top - 64) < 2 ? resolve(true) : requestAnimationFrame(settled); settled(); })';
 
     visitPage('landing', '/')
         ->assertScript($sectionTop, false)
         ->click('@header-tools')
         ->assertScript('() => window.location.hash', '#herramientas')
-        ->assertScript($sectionTop);
+        ->assertScript('() => getComputedStyle(document.documentElement).scrollBehavior', 'smooth')
+        ->assertScript($landed);
 });
 
 it('takes the header section links to how it works, confidentiality and Humi', function (string $link, string $hash): void {
@@ -217,7 +219,8 @@ it('jumps from the tools index to each tool and marks the one being read', funct
     visitPage('landing', '/')
         ->click('@tool-link-compensation')
         ->assertScript('() => window.location.hash', '#herramienta-compensation')
-        ->assertAttribute('@tool-link-compensation', 'aria-current', 'true');
+        // The mark follows the glide: wait for it.
+        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=tool-link-compensation]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })');
 });
 
 it('lists what an inspector would ask for, one line per tool', function (): void {
@@ -319,4 +322,18 @@ it('tells the visitor what happens after asking for a demo', function (): void {
     foreach (['Te escribimos para agendar la llamada', 'Te mostramos Humetría con un caso como el tuyo', 'arrancas la prueba con tu gente'] as $step) {
         $page->assertSeeIn('[data-test=demo-next-steps]', $step);
     }
+});
+
+it('jumps at once when the visitor asks for reduced motion', function (): void {
+    visit('/', ['reducedMotion' => 'reduce'])
+        ->assertScript('() => getComputedStyle(document.documentElement).scrollBehavior', 'auto');
+});
+
+it('marks in the header the section being read, and none over the hero', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("header nav [aria-current]").length', 0)
+        ->click('@header-humi')
+        // The mark follows the scroll a frame later: wait for it.
+        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=header-humi]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })')
+        ->assertAttributeMissing('@header-tools', 'aria-current');
 });

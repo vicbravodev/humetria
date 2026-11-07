@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { domAnimation, LazyMotion, MotionConfig } from 'motion/react';
+import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import AudienceSection from '@/components/landing/audience-section';
 import ComplianceSection from '@/components/landing/compliance-section';
 import DemoSection from '@/components/landing/demo-section';
@@ -14,7 +14,7 @@ import { cspNonce } from '@/lib/csp-nonce';
 
 export default function Landing() {
     return (
-        <LazyMotion features={domAnimation} strict>
+        <LazyMotion features={domMax} strict>
             <MotionConfig
                 reducedMotion="user"
                 {...(cspNonce === undefined ? {} : { nonce: cspNonce })}
@@ -26,7 +26,7 @@ export default function Landing() {
                     />
                 </Head>
                 <LandingHeader />
-                <main>
+                <main data-smooth-scroll>
                     <LandingHero />
                     <HowItWorksSection />
                     <ToolsSection />

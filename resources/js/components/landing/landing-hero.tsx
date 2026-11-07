@@ -15,6 +15,7 @@ const after = (delay: number) => ({
 export default function LandingHero() {
     return (
         <section
+            id="inicio"
             aria-labelledby="hero-title"
             className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 lg:pt-20 lg:pb-28"
         >

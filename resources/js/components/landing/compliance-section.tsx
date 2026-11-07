@@ -4,7 +4,10 @@ import Reveal from '@/components/landing/reveal';
 /** Who sees what, said plainly and shown: never more anonymity than each tool gives. */
 export default function ComplianceSection() {
     return (
-        <section aria-labelledby="confidencialidad">
+        <section
+            id="seccion-confidencialidad"
+            aria-labelledby="confidencialidad"
+        >
             <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:py-28">
                 <Reveal className="flex flex-col gap-5">
                     <div
