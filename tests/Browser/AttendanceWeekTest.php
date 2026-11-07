@@ -62,7 +62,8 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
         ->click('Mi semana')
         ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
-        ->waitForText('Sus marcas');
+        // Only the week read shows «Su respuesta» (the gate before it speaks of «sus marcas» too).
+        ->waitForText('Su respuesta');
 }
 
 it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {
