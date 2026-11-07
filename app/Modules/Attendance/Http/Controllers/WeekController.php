@@ -50,6 +50,8 @@ final readonly class WeekController
             'optionsUrl' => route('attendance.device.week.options', $tenant),
             'weekUrl' => route('attendance.device.week.read', $tenant),
             'punchUrl' => route('attendance.device.punch.home', $tenant),
+            'correctionOptionsUrl' => route('attendance.device.correction.options', $tenant),
+            'correctionUrl' => route('attendance.device.correction.store', $tenant),
         ]);
     }
 

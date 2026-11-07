@@ -11,6 +11,7 @@ use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
@@ -113,4 +114,16 @@ it('does not read the weekly confirmations of another company with a query', fun
 
     workIn($b);
     expect(WeeklyConfirmation::query()->count())->toBe(1);
+});
+
+it('does not read the correction requests of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $requestOfB = CorrectionRequest::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(CorrectionRequest::query()->find($requestOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(CorrectionRequest::query()->count())->toBe(1);
 });

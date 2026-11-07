@@ -288,6 +288,8 @@ return [
         'mark_type' => 'tipo de marca',
         'start' => 'semana',
         'digest' => 'versión de la semana',
+        'mark_id' => 'marca',
+        'proposed_at' => 'hora propuesta',
         'footwear' => 'calzado',
         'discomfort' => 'molestias',
         'tasks' => 'tareas',

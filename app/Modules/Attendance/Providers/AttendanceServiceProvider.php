@@ -58,5 +58,16 @@ final class AttendanceServiceProvider extends ServiceProvider
                 ...(is_string($key) ? [Limit::perMinute(30)->by('attendance-week-key:'.hash('sha256', $key))] : []),
             ];
         });
+
+        // Asking for a correction takes two requests (the options, the signature), as reading the week: per address 300 a
+        // minute (a shift behind one router), per key 30 (a person fixes a few marks at once).
+        RateLimiter::for('attendance-correction', function (Request $request): array {
+            $key = $request->input('credential.id');
+
+            return [
+                Limit::perMinute(300)->by('attendance-correction-ip:'.$request->ip()),
+                ...(is_string($key) ? [Limit::perMinute(30)->by('attendance-correction-key:'.hash('sha256', $key))] : []),
+            ];
+        });
     }
 }

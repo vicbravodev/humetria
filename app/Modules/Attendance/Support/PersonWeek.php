@@ -10,8 +10,10 @@ use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use LogicException;
 
 /**
@@ -69,6 +71,7 @@ final class PersonWeek
             'digest' => WeekDigest::ofMarks($marks),
             'blocked' => $blocked,
             'days' => $days,
+            'requests' => self::requests($employeeId, $week, $marks, $timezone),
             'summary' => [
                 'ordinaryMinutes' => $summary->ordinaryMinutes,
                 'overtimeMinutes' => $summary->overtimeMinutes,
@@ -85,17 +88,46 @@ final class PersonWeek
     }
 
     /**
-     * @return array{type: string, time: string, nextDay: bool, corrected: bool}
+     * @return array{id: string, type: string, time: string, nextDay: bool, corrected: bool, reason: string|null}
      */
     private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone): array
     {
         $at = ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($timezone);
+        $corrected = $mark->method === MarkMethod::Correction;
 
         return [
+            'id' => $mark->id,
             'type' => $mark->type->value,
             'time' => $at->format('H:i'),
             'nextDay' => ! $at->isSameDay($date),
-            'corrected' => $mark->method === MarkMethod::Correction,
+            'corrected' => $corrected,
+            // Why it was corrected (criterio 8.1): the person sees the reason of every correction of their record.
+            'reason' => $corrected ? $mark->reason : null,
         ];
+    }
+
+    /**
+     * The person's requests to correct the week: of a time in it, or of one of its marks. RH's note with the resolved ones.
+     *
+     * @param  list<AttendanceMark>  $marks
+     * @return list<array{id: string, markId: string|null, type: string, date: string, time: string, status: string, note: string|null}>
+     */
+    private static function requests(string $employeeId, WeekPeriod $week, array $marks, string $timezone): array
+    {
+        $ids = array_map(fn (AttendanceMark $mark): string => $mark->id, $marks);
+
+        return array_values(CorrectionRequest::query()->where('employee_id', $employeeId)
+            ->where(fn (Builder $query) => $query->whereBetween('proposed_at', [$week->startUtc(), $week->nextStartUtc()->subMicrosecond()])->orWhereIn('mark_id', $ids))
+            ->orderBy('created_at')->orderBy('id')
+            ->get(['id', 'mark_id', 'type', 'proposed_at', 'status', 'note'])
+            ->map(fn (CorrectionRequest $request): array => [
+                'id' => $request->id,
+                'markId' => $request->mark_id,
+                'type' => $request->type->value,
+                'date' => $request->proposed_at->setTimezone($timezone)->toDateString(),
+                'time' => $request->proposed_at->setTimezone($timezone)->format('H:i'),
+                'status' => $request->status->value,
+                'note' => $request->note,
+            ])->all());
     }
 }

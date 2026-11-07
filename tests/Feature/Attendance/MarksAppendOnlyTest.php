@@ -28,7 +28,7 @@ it('rejects a delete of a mark made with SQL', function (): void {
 it('rejects emptying the marks table', function (): void {
     AttendanceMark::factory()->create();
 
-    expect(fn () => DB::statement('truncate attendance_marks'))
+    expect(fn () => DB::statement('truncate attendance_marks cascade'))
         ->toThrow(QueryException::class, 'attendance_marks is append-only');
 });
 

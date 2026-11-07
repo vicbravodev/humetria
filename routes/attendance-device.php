@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Required from routes/web.php: the routes of the time-clock devices, outside the company group.
 // Every name starts with attendance.device.
 
+use App\Modules\Attendance\Http\Controllers\CorrectionRequestController;
 use App\Modules\Attendance\Http\Controllers\EnrollmentController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\MarkController;
@@ -49,4 +50,11 @@ Route::middleware(['throttle:attendance-week', ResolveDeviceTenant::class])->gro
     Route::post('a/{tenant:slug}/week', [WeekController::class, 'read'])->name('attendance.device.week.read');
     Route::post('a/{tenant:slug}/week/{start}/confirm', [WeekController::class, 'confirm'])->where('start', '\d{4}-\d{2}-\d{2}')->name('attendance.device.week.confirm');
     Route::post('a/{tenant:slug}/week/{start}/dispute', [WeekController::class, 'dispute'])->where('start', '\d{4}-\d{2}-\d{2}')->name('attendance.device.week.dispute');
+});
+
+// A person asks RH to correct their record (a mark that is wrong, one they forgot), from «Mi semana» or from Marcar. Each
+// request takes a signature of its own; the key alone names the person. Its own limiter, generous per address and per key.
+Route::middleware(['throttle:attendance-correction', ResolveDeviceTenant::class])->group(function (): void {
+    Route::post('a/{tenant:slug}/correction/options', [CorrectionRequestController::class, 'options'])->name('attendance.device.correction.options');
+    Route::post('a/{tenant:slug}/correction', [CorrectionRequestController::class, 'store'])->name('attendance.device.correction.store');
 });
