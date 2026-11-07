@@ -157,7 +157,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 1: Write failing tests:** confirmar fija `Confirmed` con el momento y el dispositivo; objetar exige motivo y deja `Disputed`; el silencio deja `Pending` (el reporte dice «sin confirmar»); una corrección posterior a la confirmación reabre la semana a `Pending`; el job cierra el día local anterior y es idempotente; un día sin `End` queda señalado, no cerrado; una persona dada de baja no genera semanas nuevas.
 - [ ] **Step 2–4:** FAIL, implementar, PASS. Commit.
 
-### Task 9: Solicitud de corrección y cola de RH
+### Task 9 ✅: Solicitud de corrección y cola de RH
 
 **Files:** Create migración y modelo `CorrectionRequest`, `Actions/RequestCorrection.php`, `Actions/ResolveCorrection.php`, `Enums/CorrectionStatus.php`, `Http/Controllers/CorrectionController.php`, `pages/attendance/corrections.tsx`. Tests Feature.
 
