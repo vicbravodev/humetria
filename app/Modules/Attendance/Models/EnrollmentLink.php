@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Attendance\Models;
+
+use App\Concerns\BelongsToCurrentTenant;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * The link a person opens on their phone to link it (enrollment): good once and for 48 hours, and only the last one RH
+ * issued for them. Only the hash of its token is kept.
+ *
+ * @property string $id
+ * @property string $tenant_id
+ * @property string $employee_id
+ * @property string $token_hash
+ * @property int $issued_by
+ * @property CarbonImmutable $expires_at
+ * @property CarbonImmutable|null $used_at
+ * @property CarbonImmutable|null $revoked_at
+ * @property CarbonImmutable $created_at
+ * @property CarbonImmutable $updated_at
+ */
+#[Fillable(['tenant_id', 'employee_id', 'token_hash', 'issued_by', 'expires_at', 'used_at', 'revoked_at'])]
+#[Table('attendance_enrollment_links')]
+final class EnrollmentLink extends Model
+{
+    use BelongsToCurrentTenant, HasVersion4Uuids;
+
+    public static function hashToken(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    /** The current company's link of `$token` while it may still be opened: not used, not replaced and within its 48 hours. */
+    public static function findPending(string $token): ?self
+    {
+        return self::query()->where('token_hash', self::hashToken($token))->whereNull('used_at')->whereNull('revoked_at')
+            ->where('expires_at', '>', CarbonImmutable::now())->first();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['issued_by' => 'integer', 'expires_at' => 'immutable_datetime', 'used_at' => 'immutable_datetime', 'revoked_at' => 'immutable_datetime'];
+    }
+}
