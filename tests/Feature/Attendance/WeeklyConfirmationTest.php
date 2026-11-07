@@ -289,6 +289,36 @@ describe('a correction', function (): void {
             ->and($locks->first())->not->toContain('"status"');
     });
 
+    it('takes the person\'s lock on their marks before the row of the week, to confirm and to dispute', function (string $answer): void {
+        DB::enableQueryLog();
+
+        $answer === 'confirm' ? confirmWeek($this) : disputeWeek($this);
+
+        $queries = collect(DB::getQueryLog());
+        $marksLock = $queries->search(fn (array $query): bool => str_contains($query['query'], 'pg_advisory_xact_lock') && $query['bindings'] === ["attendance_marks:{$this->ana->id}"]);
+        $weekRow = $queries->search(fn (array $query): bool => str_contains($query['query'], '"attendance_weekly_confirmations"'));
+        // After the row would deadlock against a correction, which takes the marks' lock and then the row.
+        expect($marksLock)->toBeInt()->and($weekRow)->toBeInt()->and($marksLock)->toBeLessThan($weekRow);
+    })->with(['confirm', 'dispute']);
+
+    it('refuses an answer when a correction lands while it waits for the person\'s lock: the week it reads is the new one', function (string $answer): void {
+        // The first answer of a week has no row to lock: what holds it back is the lock of the person's marks. A correction
+        // that commits while the answer waits on it is simulated by adding a mark the moment the lock is granted.
+        $seen = seenDigest($this);
+        $landed = false;
+        DB::listen(function ($query) use (&$landed): void {
+            if (! $landed && str_contains($query->sql, 'pg_advisory_xact_lock') && $query->bindings === ["attendance_marks:{$this->ana->id}"]) {
+                $landed = true;
+                workedOn($this, '2026-11-06');
+            }
+        });
+
+        expect(fn () => $answer === 'confirm' ? confirmWeek($this, digest: $seen) : disputeWeek($this, digest: $seen))
+            ->toThrow(fn (WeekRejected $e) => expect($e->reason)->toBe('week_changed'))
+            ->and($landed)->toBeTrue()
+            ->and(WeeklyConfirmation::query()->where('status', '!=', WeekStatus::Pending)->count())->toBe(0);
+    })->with(['confirm', 'dispute']);
+
     it('reopens the week a correction moves a mark into', function (): void {
         workedOn($this, '2026-10-27');
         $week = confirmWeek($this, '2026-10-26');

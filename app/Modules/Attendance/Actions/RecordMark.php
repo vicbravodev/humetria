@@ -9,6 +9,7 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Support\EffectiveMarks;
+use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,7 @@ final readonly class RecordMark
 
         $mark = DB::transaction(function () use ($person, $type, $context): AttendanceMark {
             // Two taps at once must not both pass the check.
-            DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_marks:{$person->id}"]);
+            MarkLock::of($person->id);
             $this->ensureFollows($person->id, $type);
 
             return AttendanceMark::query()->create([

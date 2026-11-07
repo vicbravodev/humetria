@@ -13,6 +13,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Support\CorrectedSequence;
 use App\Modules\Attendance\Support\EffectiveMarks;
+use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Members;
 use Carbon\CarbonImmutable;
@@ -82,7 +83,7 @@ final readonly class ResolveCorrection
     private function apply(CorrectionRequest $request, string $userId): string
     {
         // The person's marks hold still while the day is checked and changed.
-        DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_marks:{$request->employee_id}"]);
+        MarkLock::of($request->employee_id);
         $original = $request->mark_id === null ? null
             : EffectiveMarks::of($request->employee_id)->whereKey($request->mark_id)->first() ?? throw new CorrectionRejected('mark_changed');
 

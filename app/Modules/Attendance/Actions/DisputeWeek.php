@@ -9,6 +9,7 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -48,6 +49,9 @@ final readonly class DisputeWeek
         }
 
         return DB::transaction(function () use ($employeeId, $week, $reason, $deviceId, $digest): WeeklyConfirmation {
+            // Before the row (a correction takes this lock, then the row): a correction in flight commits first, and the
+            // marks read below are the ones after it.
+            MarkLock::of($employeeId);
             $confirmation = WeeklyConfirmation::lockedFor($this->tenant->id(), $employeeId, $week);
 
             if ($confirmation->status === WeekStatus::Disputed) {

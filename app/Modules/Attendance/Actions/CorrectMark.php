@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Support\MarkLock;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +31,7 @@ final readonly class CorrectMark
 
         $correction = DB::transaction(function () use ($markId, $newMarkedAt, $reason, $userId): AttendanceMark {
             $original = AttendanceMark::query()->findOrFail($markId);
-            DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_marks:{$original->employee_id}"]);
+            MarkLock::of($original->employee_id);
 
             if (AttendanceMark::query()->where('corrects_mark_id', $original->id)->exists()) {
                 throw new InvalidArgumentException('The mark was already corrected; correct its correction.');
