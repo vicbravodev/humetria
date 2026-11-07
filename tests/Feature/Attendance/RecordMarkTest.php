@@ -111,6 +111,13 @@ it('does not let a deactivated person or one of another company mark', function 
         ->and(AttendanceMark::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
+it('does not let an active person with no work center mark, with a clear error', function (): void {
+    $member = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => null]);
+
+    expect(fn () => markAll($member->id, [MarkType::Start]))->toThrow(InvalidArgumentException::class)
+        ->and(AttendanceMark::query()->count())->toBe(0);
+});
+
 it('logs the mark with ids and never the coordinates', function (): void {
     Log::spy();
 
