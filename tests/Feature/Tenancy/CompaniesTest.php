@@ -34,6 +34,15 @@ it('rejects an id that is no company', function (string $id): void {
     resolve(Companies::class)->enter($id);
 })->with(['0b6c3d3e-9a51-4f8a-9a0f-2f1d6e3b8c11', 'not-a-uuid'])->throws(InvalidArgumentException::class);
 
+it('enters a company by its slug, and gives nothing for a slug that is no company', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+
+    expect(resolve(Companies::class)->enterBySlug('no-existe'))->toBeNull()
+        ->and(fn () => resolve(CurrentTenant::class)->id())->toThrow(App\Modules\Tenancy\Exceptions\NoCurrentTenant::class)
+        ->and(resolve(Companies::class)->enterBySlug($tenant->slug))->toEqual(new CompanySummary($tenant->id, 'Acme', $tenant->slug, blocked: false))
+        ->and(resolve(CurrentTenant::class)->id())->toBe($tenant->id);
+});
+
 it('describes the company the code works in now', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     workIn($tenant);
