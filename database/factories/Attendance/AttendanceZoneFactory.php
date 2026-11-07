@@ -25,7 +25,7 @@ final class AttendanceZoneFactory extends Factory
     {
         return [
             'tenant_id' => TenantFactory::new(),
-            'work_center_id' => fn (array $attributes) => WorkCenterFactory::new()->create(['tenant_id' => $attributes['tenant_id']])->id,
+            'work_center_id' => fn (array $attributes) => WorkCenterFactory::new()->createOne(['tenant_id' => $attributes['tenant_id']])->id,
             'name' => fake()->words(2, true),
             'latitude' => 19.4326,
             'longitude' => -99.1332,
