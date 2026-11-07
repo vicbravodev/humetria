@@ -26,6 +26,7 @@ use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -85,6 +86,8 @@ final readonly class MarkController
         try {
             $signed = $ceremony->verifyAssertion($request->session()->getId(), $request->credential());
         } catch (InvalidCredential) {
+            // Ids only: never the credential, the address or the body.
+            Log::warning('attendance.mark_unverified', ['tenant_id' => $this->tenant->id(), 'request_id' => Context::get('request_id')]);
             abort(404);
         }
 

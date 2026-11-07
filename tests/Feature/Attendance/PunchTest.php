@@ -369,6 +369,18 @@ describe('who marks', function (): void {
         expect(AttendanceMark::query()->count())->toBe(0);
     });
 
+    it('logs a signature that did not verify with the company and the request only', function (): void {
+        Log::spy();
+        resolve(RevokeDevice::class)->handle($this->device->id);
+
+        anaPunches()->assertNotFound();
+
+        Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $event, array $context): bool => $event === 'attendance.mark_unverified'
+            && array_keys($context) === ['tenant_id', 'request_id']
+            && $context['tenant_id'] === $this->tenant->id
+            && is_string($context['request_id']) && $context['request_id'] !== '');
+    });
+
     it('answers 404 to a key of another company', function (): void {
         $globex = Tenant::factory()->create(['slug' => 'globex']);
         $center = WorkCenter::factory()->for($globex)->create();
