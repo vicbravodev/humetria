@@ -17,10 +17,11 @@ use App\Modules\Attendance\Enums\ShiftType;
 final class HoursCalculator
 {
     /**
-     * The shift does not change the split: a schedule may put more than the daily maximum of art. 61 on a day by
-     * agreement (criterio 2.6) and only the weekly maximum turns ordinary minutes into overtime.
+     * A schedule may put more than the daily maximum of art. 61 on a day by agreement (criterio 2.6): only the weekly
+     * maximum turns ordinary minutes into overtime.
      *
      * @param  list<DayHours>  $days  one week, in any order
+     * @param  ShiftType  $shift  accepted for forward compatibility; it does not change the result today (criterio 2.9)
      */
     public static function week(array $days, ShiftType $shift, int $year): WeekSummary
     {
@@ -47,7 +48,8 @@ final class HoursCalculator
             $overtime = $day->workedMinutes - $dayOrdinary + $pastWeeklyMax;
 
             if ($overtime > 0) {
-                $overtimeByDay[$day->date->toDateString()] = $overtime;
+                $date = $day->date->toDateString();
+                $overtimeByDay[$date] = ($overtimeByDay[$date] ?? 0) + $overtime;
             }
         }
 

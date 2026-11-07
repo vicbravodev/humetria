@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Data\DayHours;
+use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Support\HoursCalculator;
@@ -17,7 +18,7 @@ mutates(LegalLimits::class, HoursCalculator::class);
  * @param  list<array{int, int}>  $days
  * @return list<DayHours>
  */
-function week(array $days, string $monday = '2027-03-01'): array
+function attendanceWeek(array $days, string $monday = '2027-03-01'): array
 {
     $start = CarbonImmutable::parse($monday);
 
@@ -29,7 +30,7 @@ function week(array $days, string $monday = '2027-03-01'): array
 }
 
 it('counts no overtime in five scheduled days of 8 h worked as scheduled', function (): void {
-    $summary = HoursCalculator::week(week(array_fill(0, 5, [480, 480])), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek(array_fill(0, 5, [480, 480])), ShiftType::Day, 2027);
 
     expect($summary->ordinaryMinutes)->toBe(2400)
         ->and($summary->overtimeMinutes)->toBe(0)
@@ -41,7 +42,7 @@ it('counts no overtime in five scheduled days of 8 h worked as scheduled', funct
 });
 
 it('pays double the hour worked over the 8 scheduled that day', function (): void {
-    $summary = HoursCalculator::week(week([[480, 480], [540, 480], [480, 480]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([[480, 480], [540, 480], [480, 480]]), ShiftType::Day, 2027);
 
     expect($summary->ordinaryMinutes)->toBe(1440)
         ->and($summary->overtimeMinutes)->toBe(60)
@@ -51,14 +52,14 @@ it('pays double the hour worked over the 8 scheduled that day', function (): voi
 });
 
 it('does not offset a short day with another day\'s overtime', function (): void {
-    $summary = HoursCalculator::week(week([[420, 480], [540, 480]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([[420, 480], [540, 480]]), ShiftType::Day, 2027);
 
     expect($summary->ordinaryMinutes)->toBe(900)
         ->and($summary->overtimeMinutes)->toBe(60);
 });
 
 it('pays double up to the year\'s cap and triple the first minute above it', function (int $lastDay, int $double, int $triple): void {
-    $summary = HoursCalculator::week(week([[660, 480], [660, 480], [480 + $lastDay, 480]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([[660, 480], [660, 480], [480 + $lastDay, 480]]), ShiftType::Day, 2027);
 
     expect($summary->overtimeMinutes)->toBe(360 + $lastDay)
         ->and($summary->doubleMinutes)->toBe($double)
@@ -70,14 +71,14 @@ it('pays double up to the year\'s cap and triple the first minute above it', fun
 ]);
 
 it('uses the cap of the year it is given', function (): void {
-    $summary = HoursCalculator::week(week([[720, 480], [720, 480], [600, 480]]), ShiftType::Day, 2028);
+    $summary = HoursCalculator::week(attendanceWeek([[720, 480], [720, 480], [600, 480]]), ShiftType::Day, 2028);
 
     expect($summary->doubleMinutes)->toBe(600)
         ->and($summary->tripleMinutes)->toBe(0);
 });
 
 it('flags a day above 12 hours', function (int $worked, array $flags): void {
-    $summary = HoursCalculator::week(week([[$worked, 540]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([[$worked, 540]]), ShiftType::Day, 2027);
 
     expect($summary->flags)->toBe($flags);
 })->with([
@@ -90,7 +91,7 @@ it('flags a day above 12 hours worked on a rest day', function (): void {
 });
 
 it('flags more than 4 overtime hours in a day', function (int $overtime, array $flags): void {
-    $summary = HoursCalculator::week(week([[420 + $overtime, 420]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([[420 + $overtime, 420]]), ShiftType::Day, 2027);
 
     expect($summary->flags)->toBe($flags);
 })->with([
@@ -102,14 +103,14 @@ it('flags more than 4 overtime hours in a day', function (int $overtime, array $
 it('flags overtime on more than 4 days of the week', function (int $days, array $flags): void {
     $worked = array_merge(array_fill(0, $days, [510, 480]), array_fill(0, 5 - $days, [480, 480]));
 
-    expect(HoursCalculator::week(week($worked), ShiftType::Day, 2027)->flags)->toBe($flags);
+    expect(HoursCalculator::week(attendanceWeek($worked), ShiftType::Day, 2027)->flags)->toBe($flags);
 })->with([
     '4 days' => [4, []],
     '5 days' => [5, [OverLimit::OvertimeDaysOver4]],
 ]);
 
 it('flags triple time above 4 hours a week', function (int $lastDay, array $flags): void {
-    $summary = HoursCalculator::week(week([[720, 480], [720, 480], [720, 480], [480 + $lastDay, 480]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([[720, 480], [720, 480], [720, 480], [480 + $lastDay, 480]]), ShiftType::Day, 2027);
 
     expect($summary->tripleMinutes)->toBe(180 + $lastDay)
         ->and($summary->doubleMinutes)->toBe(540)
@@ -120,7 +121,7 @@ it('flags triple time above 4 hours a week', function (int $lastDay, array $flag
 ]);
 
 it('counts a worked rest day apart, not as overtime', function (): void {
-    $days = [...week(array_fill(0, 5, [480, 480])), new DayHours(CarbonImmutable::parse('2027-03-06'), 240, 0, true)];
+    $days = [...attendanceWeek(array_fill(0, 5, [480, 480])), new DayHours(CarbonImmutable::parse('2027-03-06'), 240, 0, true)];
 
     $summary = HoursCalculator::week($days, ShiftType::Day, 2027);
 
@@ -132,7 +133,7 @@ it('counts a worked rest day apart, not as overtime', function (): void {
 
 it('moves to overtime the scheduled minutes above the year\'s weekly ordinary maximum, on the days that cross it', function (): void {
     // 2030: 40 h. Six scheduled days of 8 h, given out of order: Saturday's 8 h are overtime.
-    $days = array_reverse(week(array_fill(0, 6, [480, 480]), '2030-03-04'));
+    $days = array_reverse(attendanceWeek(array_fill(0, 6, [480, 480]), '2030-03-04'));
 
     $summary = HoursCalculator::week($days, ShiftType::Day, 2030);
 
@@ -145,7 +146,7 @@ it('moves to overtime the scheduled minutes above the year\'s weekly ordinary ma
 
 it('splits the day that crosses the weekly maximum and adds it to that day\'s own overtime', function (): void {
     // 2027: 46 h = 2760. Six days of 8 h = 2880: 120 min of Saturday are past the maximum, plus 30 worked over schedule.
-    $summary = HoursCalculator::week(week([...array_fill(0, 5, [480, 480]), [510, 480]]), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek([...array_fill(0, 5, [480, 480]), [510, 480]]), ShiftType::Day, 2027);
 
     expect($summary->ordinaryMinutes)->toBe(2760)
         ->and($summary->overtimeMinutes)->toBe(150)
@@ -154,7 +155,7 @@ it('splits the day that crosses the weekly maximum and adds it to that day\'s ow
 
 it('keeps scheduled minutes above the daily maximum as ordinary when the week stays within its maximum', function (): void {
     // Criterio 2.6: 5 × 9 h 12 min = 46 h, a schedule distributed by agreement.
-    $summary = HoursCalculator::week(week(array_fill(0, 5, [552, 552])), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek(array_fill(0, 5, [552, 552])), ShiftType::Day, 2027);
 
     expect($summary->ordinaryMinutes)->toBe(2760)
         ->and($summary->overtimeMinutes)->toBe(0);
@@ -169,7 +170,7 @@ it('summarizes an empty week as nothing', function (): void {
 });
 
 it('lists every flag a week breaks, once each', function (): void {
-    $summary = HoursCalculator::week(week(array_fill(0, 5, [780, 480])), ShiftType::Day, 2027);
+    $summary = HoursCalculator::week(attendanceWeek(array_fill(0, 5, [780, 480])), ShiftType::Day, 2027);
 
     expect($summary->flags)->toBe([
         OverLimit::DayOver12Hours,
@@ -178,3 +179,21 @@ it('lists every flag a week breaks, once each', function (): void {
         OverLimit::TripleCapExceeded,
     ]);
 });
+
+it('adds up the overtime of two entries for the same date', function (): void {
+    $date = CarbonImmutable::parse('2027-03-01');
+
+    $summary = HoursCalculator::week([new DayHours($date, 300, 240, false), new DayHours($date, 270, 240, false)], ShiftType::Day, 2027);
+
+    expect($summary->ordinaryMinutes)->toBe(480)
+        ->and($summary->overtimeMinutes)->toBe(90)
+        ->and($summary->overtimeByDay)->toBe(['2027-03-01' => 90]);
+});
+
+// Criterio 2.9: the schedule is distributed by agreement (art. 58), so the shift's daily maximum of art. 61 does not
+// turn scheduled minutes into overtime; a night worker scheduled 6 × 8 h in 2026 has no overtime.
+it('gives the same split for every shift', function (ShiftType $shift): void {
+    $summary = HoursCalculator::week(attendanceWeek(array_fill(0, 6, [480, 480]), '2026-03-02'), $shift, 2026);
+
+    expect($summary)->toEqual(new WeekSummary(2880, 0, 0, 0, 0, [], []));
+})->with([ShiftType::Day, ShiftType::Night, ShiftType::Mixed]);
