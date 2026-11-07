@@ -109,7 +109,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 1: Write failing tests:** dos puntos a 100 m (cálculo conocido) dan 100 ± 1 m; punto a 49.9 m de una zona de 50 m → `inside`; a 50.1 → fuera; elige «Edificio A» sobre «Almacén» según cercanía; precisión 101 con máximo 100 → `accuracyOk false`; `lat = 91` lanza; empresa A no ve zonas de B.
 - [ ] **Step 2–4:** FAIL, implementar, PASS. Commit.
 
-### Task 5: Token QR rotativo y pantalla del centro
+### Task 5 ✅: Token QR rotativo y pantalla del centro
 
 **Files:** Create `Support/QrToken.php`, migración y modelo `KioskDevice`, `Actions/IssueKioskDevice.php`, `Actions/RevokeKioskDevice.php`, controlador `KioskController`. Tests `tests/Unit/Attendance/QrTokenTest.php` (`mutates(QrToken::class)`), `tests/Feature/Attendance/KioskTest.php`.
 
