@@ -65,7 +65,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 4:** Implementa provider (vacío, `register()/boot()`), migración de permisos, registro en `bootstrap/providers.php`, y los dos archivos de rutas (vacíos con el comentario de patrón) incluidos desde `routes/company.php` y `routes/web.php`.
 - [ ] **Step 5:** Run → PASS; `composer check:fast`. Commit `feat(attendance): module skeleton, permissions and webauthn dependency`.
 
-### Task 2: Límites legales y calculadora de horas (lógica pura)
+### Task 2 ✅: Límites legales y calculadora de horas (lógica pura)
 
 **Files:** Create `Support/LegalLimits.php`, `Support/HoursCalculator.php`, `Data/DayHours.php`, `Data/WeekSummary.php`, `Enums/ShiftType.php`, `Enums/OverLimit.php`; `docs/normas/jornada/criterios.md` (criterio 2.9). Test `tests/Unit/Attendance/LegalLimitsTest.php`, `HoursCalculatorTest.php` con `mutates(LegalLimits::class, HoursCalculator::class)`.
 
