@@ -1,22 +1,33 @@
 import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { Button } from '@/components/ui/button';
+import { useScrolled } from '@/hooks/use-scrolled';
+import { cn } from '@/lib/utils';
 import { dashboard, home } from '@/routes';
 
 const sections = [
-    { href: '#herramientas', label: 'Herramientas', test: 'header-tools' },
     { href: '#como-funciona', label: 'Cómo funciona', test: 'header-how' },
+    { href: '#herramientas', label: 'Herramientas', test: 'header-tools' },
     {
         href: '#confidencialidad',
         label: 'Confidencialidad',
         test: 'header-privacy',
     },
+    { href: '#humi', label: 'Humi', test: 'header-humi' },
 ] as const;
 
 export default function LandingHeader() {
+    const scrolled = useScrolled();
+
+    // The line under the header only shows once the page moves under it.
     return (
-        <header className="sticky top-0 z-10 border-b bg-background">
-            <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-1 px-4 sm:px-6">
+        <header
+            className={cn(
+                'sticky top-0 z-10 border-b bg-background transition-[border-color] duration-200 ease-out',
+                scrolled ? 'border-border' : 'border-transparent',
+            )}
+        >
+            <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-1 px-4 sm:px-6">
                 <Link
                     href={home()}
                     className="mr-auto flex min-h-11 items-center rounded-md"

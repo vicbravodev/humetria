@@ -11,7 +11,7 @@ export default function SectionHeading({ id, title, children }: Props) {
         <div className="flex max-w-[640px] flex-col gap-2.5">
             <h2
                 id={id}
-                className="scroll-mt-24 text-[28px] leading-9 font-semibold tracking-[-0.015em] sm:text-4xl sm:leading-[44px]"
+                className="scroll-mt-24 text-[32px] leading-[1.1] font-semibold tracking-[-0.025em] sm:text-5xl"
             >
                 {title}
             </h2>

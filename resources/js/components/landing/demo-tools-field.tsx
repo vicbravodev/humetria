@@ -18,7 +18,7 @@ export default function DemoToolsField({ error }: Props) {
             <legend className="mb-2 text-sm font-medium">
                 ¿Qué herramientas te interesan? (elige al menos una)
             </legend>
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {TOOLS.map((tool) => (
                     <label
                         key={tool.key}

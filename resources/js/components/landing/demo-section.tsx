@@ -7,11 +7,11 @@ export default function DemoSection() {
             aria-labelledby="agenda-una-demo-title"
             className="scroll-mt-16 border-t bg-sidebar"
         >
-            <div className="mx-auto flex max-w-[1200px] flex-wrap items-start gap-14 px-4 py-16 sm:px-6 lg:py-[88px]">
+            <div className="mx-auto flex max-w-[1240px] flex-wrap items-start gap-14 px-4 py-20 sm:px-6 lg:py-28">
                 <div className="flex flex-[1_1_320px] flex-col gap-3.5">
                     <h2
                         id="agenda-una-demo-title"
-                        className="text-[28px] leading-9 font-semibold tracking-[-0.015em] sm:text-4xl sm:leading-[44px]"
+                        className="text-[32px] leading-[1.1] font-semibold tracking-[-0.025em] sm:text-[44px]"
                     >
                         Agenda una demo
                     </h2>
