@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use LogicException;
@@ -46,10 +47,13 @@ final class EffectiveMarks
      */
     public static function byDay(string $employeeId, WeekPeriod $week): array
     {
-        // ponytail: a day is looked for up to 24 h beyond the week's edges; a longer day would be cut there.
+        // From the last start before the week (its marks in the week are that day's, not the week's) to the first start
+        // after it (whatever comes before is the end of the week's last day, however late).
+        $before = self::of($employeeId)->where('type', MarkType::Start)->where('marked_at', '<', $week->startUtc())->latest('marked_at')->first(['marked_at'])?->marked_at;
+        $after = self::of($employeeId)->where('type', MarkType::Start)->where('marked_at', '>=', $week->nextStartUtc())->oldest('marked_at')->first(['marked_at'])?->marked_at;
         $marks = self::of($employeeId)
-            ->where('marked_at', '>=', $week->startUtc()->subDay())
-            ->where('marked_at', '<', $week->nextStartUtc()->addDay())
+            ->where('marked_at', '>=', $before?->utc() ?? $week->startUtc())
+            ->when($after, fn (Builder $query, CarbonImmutable $at) => $query->where('marked_at', '<', $at->utc()))
             ->orderBy('marked_at')
             ->get();
 

@@ -73,6 +73,32 @@ it('keeps the end of a Sunday night day that closes 20 hours later, reading the 
     expect(markIds(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-08'))))->toBe([$start->id, $end->id]);
 });
 
+it('keeps a night that starts on Sunday 22:00 and ends on Monday 06:00 whole in the week of its start', function (): void {
+    $start = anaMarks($this, MarkType::Start, '2026-11-08 22:00');
+    $end = anaMarks($this, MarkType::End, '2026-11-09 06:00');
+
+    expect(markIds(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-08'))))->toBe([$start->id, $end->id])
+        ->and(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-09')))->toBe([]);
+});
+
+it('keeps the end of a day that started in the week however long after the week it comes', function (): void {
+    $start = anaMarks($this, MarkType::Start, '2026-11-08 22:00');
+    $break = anaMarks($this, MarkType::BreakStart, '2026-11-10 01:00');
+    $end = anaMarks($this, MarkType::End, '2026-11-10 02:00');
+    anaMarks($this, MarkType::Start, '2026-11-10 09:00');
+
+    expect(markIds(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-08'))))->toBe([$start->id, $break->id, $end->id]);
+});
+
+it('leaves out of the week the end of a day that started more than a day before it', function (): void {
+    $start = anaMarks($this, MarkType::Start, '2026-10-31 20:00');
+    $end = anaMarks($this, MarkType::End, '2026-11-02 01:00');
+    $next = anaMarks($this, MarkType::Start, '2026-11-02 09:00');
+
+    expect(markIds(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-02'))))->toBe([$next->id])
+        ->and(markIds(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-10-31'))))->toBe([$start->id, $end->id]);
+});
+
 it('starts the week with the first day that opens in it', function (): void {
     anaMarks($this, MarkType::Start, '2026-11-01 22:00');
     anaMarks($this, MarkType::End, '2026-11-02 06:00');
