@@ -302,3 +302,11 @@ it('lets a phone pick the theme in the footer, where the header has no room', fu
         ->click('footer [aria-label="Claro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")', false);
 });
+
+it('tells the visitor what happens after asking for a demo', function (): void {
+    $page = visitPage('landing', '/');
+
+    foreach (['Te escribimos para agendar la llamada', 'Te mostramos Humetría con un caso como el tuyo', 'arrancas la prueba con tu gente'] as $step) {
+        $page->assertSeeIn('[data-test=demo-next-steps]', $step);
+    }
+});
