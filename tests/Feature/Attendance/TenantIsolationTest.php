@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Models\Tenant;
 
 /*
@@ -36,4 +37,16 @@ it('does not read the schedules or the policy of another company with a query', 
     workIn($b);
     expect(AttendanceSchedule::query()->count())->toBe(1)
         ->and(AttendancePolicy::query()->count())->toBe(1);
+});
+
+it('does not read the QR screens of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $kioskOfB = KioskDevice::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(KioskDevice::query()->find($kioskOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(KioskDevice::query()->count())->toBe(1);
 });
