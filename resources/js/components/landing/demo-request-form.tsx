@@ -15,6 +15,7 @@ import { store } from '@/routes/demo-requests';
 const PROFILES: readonly DemoChoice[] = [
     { value: 'company', label: 'Para mi empresa o grupo de empresas' },
     { value: 'consultant', label: 'Soy consultor y atiendo a varias empresas' },
+    { value: 'union', label: 'Represento a un sindicato' },
 ];
 
 const WORKFORCE: readonly DemoChoice[] = [
@@ -95,7 +96,6 @@ export default function DemoRequestForm() {
                         legend="¿Para quién es Humetría?"
                         options={PROFILES}
                         error={errors['profile']}
-                        className="sm:grid-cols-2"
                     />
                     <DemoToolsField error={errors['tools']} />
                     <DemoChoiceField

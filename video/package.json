@@ -1,0 +1,24 @@
+{
+  "name": "humetria-hero-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "types:check": "tsc --noEmit",
+    "render": "remotion render HeroLoop ../public/video/humetria-hero.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render HeroLoop ../public/video/humetria-hero.webm --codec=vp9 --crf=32",
+    "poster": "remotion still HeroLoop ../public/video/humetria-hero.jpg --frame=880 --image-format=jpeg --jpeg-quality=85",
+    "render:humi": "remotion render HumiChat ../public/video/humi-chat.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render HumiChat ../public/video/humi-chat.webm --codec=vp9 --crf=32",
+    "poster:humi": "remotion still HumiChat ../public/video/humi-chat.jpg --frame=280 --image-format=jpeg --jpeg-quality=85"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.538",
+    "@remotion/fonts": "4.0.538",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.538"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}

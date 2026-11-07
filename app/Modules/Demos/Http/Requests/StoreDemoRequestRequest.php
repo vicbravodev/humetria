@@ -41,7 +41,7 @@ final class StoreDemoRequestRequest extends FormRequest
             'company' => ['required', self::SINGLE_LINE, 'max:160'],
             'profile' => ['required', Rule::enum(DemoProfile::class)],
             'workforce' => ['required', Rule::enum(Workforce::class)],
-            'tools' => ['required', 'array', 'min:1', 'max:3'],
+            'tools' => ['required', 'array', 'min:1', 'max:'.count(Tool::cases())],
             'tools.*' => ['required', 'distinct', Rule::enum(Tool::class)],
             'message' => ['nullable', self::MULTI_LINE, 'max:2000'],
         ];

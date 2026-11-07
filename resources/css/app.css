@@ -276,6 +276,11 @@
     }
 }
 
+/* The landing glides to the part a link names instead of jumping; with reduced motion it jumps (rule below). */
+html:has([data-smooth-scroll]) {
+    scroll-behavior: smooth;
+}
+
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-new(page) {
         animation-name: page-out;

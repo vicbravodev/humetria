@@ -1,49 +1,60 @@
-import { ShieldCheck } from 'lucide-react';
+import { m } from 'motion/react';
+import HeroHeadline from '@/components/landing/hero-headline';
+import { ENTER } from '@/components/landing/landing-motion';
+import { TOOLS } from '@/components/landing/landing-tools';
+import LoopVideo from '@/components/landing/loop-video';
 import { Button } from '@/components/ui/button';
-import HeroPreview from '@/components/landing/hero-preview';
+
+/** Fades the parts under the headline in once it has landed. */
+const after = (delay: number) => ({
+    initial: { opacity: 0, transform: 'translateY(12px)' },
+    animate: { opacity: 1, transform: 'translateY(0px)' },
+    transition: { ...ENTER, delay },
+});
 
 export default function LandingHero() {
     return (
         <section
+            id="inicio"
             aria-labelledby="hero-title"
-            className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-14 px-4 pt-14 pb-16 sm:px-6 lg:pt-[88px] lg:pb-24"
+            className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 lg:pt-20 lg:pb-28"
         >
-            <div className="flex flex-[1_1_480px] flex-col gap-6">
-                <h1
-                    id="hero-title"
-                    className="max-w-[620px] text-4xl leading-[44px] font-semibold tracking-[-0.025em] lg:text-[56px] lg:leading-[62px]"
+            <div className="flex flex-col gap-7">
+                <HeroHeadline />
+                <m.p
+                    {...after(0.55)}
+                    className="max-w-[46ch] text-lg leading-7 text-pretty text-muted-foreground lg:text-xl lg:leading-8"
                 >
-                    Cumple con la STPS y cuida a tu gente, sin complicarte
-                </h1>
-                <p className="max-w-[540px] text-lg leading-7 text-pretty text-muted-foreground lg:text-[19px] lg:leading-[30px]">
                     Humetría invita a tu gente, recolecta sus respuestas con la
                     confidencialidad que requiere cada herramienta y te entrega
                     lo que pide la autoridad: el diagnóstico, el plan y la
                     evidencia.
-                </p>
-                <div className="flex flex-wrap gap-3">
+                </m.p>
+                <m.div {...after(0.65)} className="flex flex-wrap gap-3">
                     <Button asChild size="lg">
                         <a href="#agenda-una-demo" data-test="hero-demo">
                             Agenda una demo
                         </a>
                     </Button>
-                    <Button asChild size="lg" variant="ghost">
+                    <Button asChild size="lg" variant="outline">
                         <a href="#como-funciona">Ver cómo funciona</a>
                     </Button>
-                </div>
-                <p
+                </m.div>
+                <m.p
+                    {...after(0.75)}
                     data-test="hero-tools"
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                    className="text-sm text-muted-foreground"
                 >
-                    <ShieldCheck aria-hidden className="size-4 shrink-0" />
-                    <span>
-                        NOM-035-STPS-2018 · NOM-037-STPS-2023 · Ley Silla
-                    </span>
-                </p>
+                    {TOOLS.map((tool) => tool.name).join(' · ')}
+                </m.p>
             </div>
-            <div className="flex flex-[1_1_380px] justify-center">
-                <HeroPreview />
-            </div>
+            <LoopVideo
+                name="humetria-hero"
+                test="hero-video"
+                caption="Así funciona, en 40 segundos"
+                description="cargas a tu gente, cada persona contesta desde su celular, los resultados se agrupan sin nombres y el expediente queda listo para la STPS."
+                className="aspect-[4/3]"
+            />
         </section>
     );
 }

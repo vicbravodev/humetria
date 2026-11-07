@@ -245,7 +245,17 @@ it('stores each profile and workforce range', function (string $profile, string 
     ['consultant', '16_50'],
     ['company', '101_500'],
     ['consultant', '501_plus'],
+    ['union', '101_500'],
 ]);
+
+it('stores a request for every tool Humetría offers', function (): void {
+    $tools = ['nom_035', 'nom_037', 'ley_silla', 'complaints', 'compensation'];
+
+    $this->post(route('demo-requests.store'), demoRequest(['tools' => $tools]))
+        ->assertSessionHasNoErrors();
+
+    expect(DemoRequest::query()->sole()->tools->map->value->all())->toBe($tools);
+});
 
 it('logs the submission without any personal data', function (): void {
     $this->post(route('demo-requests.store'), demoRequest([
