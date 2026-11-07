@@ -19,9 +19,9 @@ function qrAt(int $seconds): CarbonImmutable
     return CarbonImmutable::parse('2026-11-07 12:00:00', 'UTC')->addSeconds($seconds);
 }
 
-it('is the HMAC-SHA256 with the app key of the company, the center and the 30 s window', function (): void {
+it('is the HMAC-SHA256 with the app key of its own domain, the company, the center and the 30 s window', function (): void {
     $window = intdiv(qrAt(0)->getTimestamp(), 30);
-    $expected = hash_hmac('sha256', QR_TENANT.'|'.QR_CENTER.'|'.$window, config()->string('app.key'));
+    $expected = hash_hmac('sha256', 'attendance-qr|'.QR_TENANT.'|'.QR_CENTER.'|'.$window, config()->string('app.key'));
 
     expect(QrToken::issue(QR_TENANT, QR_CENTER, qrAt(0)))->toBe($expected)
         ->and(QrToken::issue(QR_TENANT, QR_CENTER, qrAt(29)))->toBe($expected)

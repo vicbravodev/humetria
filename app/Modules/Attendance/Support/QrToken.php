@@ -7,7 +7,8 @@ namespace App\Modules\Attendance\Support;
 use Carbon\CarbonImmutable;
 
 /**
- * The code a work center's screen shows: HMAC-SHA256 with the app key over the company, the center and the 30 s window.
+ * The code a work center's screen shows: HMAC-SHA256 with the app key over its own domain (attendance-qr, so it never
+ * collides with another HMAC of the app key), the company, the center and the 30 s window.
  * The server accepts the current window and the one before, so a photo of the code sent around dies within a minute.
  * Rotating APP_KEY only voids the codes on screen for a few seconds: the screens fetch a new one.
  */
@@ -41,6 +42,6 @@ final class QrToken
 
     private static function sign(string $tenantId, string $workCenterId, int $window): string
     {
-        return hash_hmac('sha256', "{$tenantId}|{$workCenterId}|{$window}", config()->string('app.key'));
+        return hash_hmac('sha256', "attendance-qr|{$tenantId}|{$workCenterId}|{$window}", config()->string('app.key'));
     }
 }
