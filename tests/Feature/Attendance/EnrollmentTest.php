@@ -6,19 +6,23 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Attendance\Actions\EnrollDevice;
 use App\Modules\Attendance\Actions\IssueEnrollment;
+use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 use Tests\Support\SoftAuthenticator;
@@ -241,4 +245,26 @@ it('stops a link after 10 requests in a minute', function (): void {
 
     $this->get(enrollRoute('show', $this->token))->assertTooManyRequests();
     $this->get(enrollRoute('show', enrollToken(EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id)))->assertOk();
+});
+
+it('never writes the key of a device to a log line or the audit trail, from linking it to revoking it', function (): void {
+    // The log as it is written, after the redaction, to a file of this test.
+    $path = storage_path('logs/enrollment-'.Str::random(12).'.log');
+    config(['logging.default' => 'single', 'logging.channels.single.path' => $path]);
+    Log::forgetChannel('single');
+
+    enrollWith($this->phone, $this->token)->assertOk();
+    $device = AttendanceDevice::query()->sole();
+    $ceremony = resolve(WebAuthnCeremony::class);
+    $ceremony->verifyAssertion('s', $this->phone->get($ceremony->assertionOptions('s'), $this->ana->id));
+    resolve(RevokeDevice::class)->handle($device->id);
+    // Even an event that carried them by mistake.
+    Log::info('attendance.probe', ['credential_id' => $device->credential_id, 'public_key' => $device->public_key]);
+
+    $log = File::get($path);
+    File::delete($path);
+    $written = $log.AuditEntry::query()->get()->toJson();
+    expect($log)->toContain('attendance.device_enrolled')->toContain('attendance.device_revoked')->toContain('attendance.probe')
+        ->and(AuditEntry::query()->pluck('event')->all())->toContain('attendance.device_enrolled', 'attendance.device_revoked')
+        ->and($written)->not->toContain($device->credential_id)->not->toContain($device->public_key)->not->toContain($this->token);
 });
