@@ -76,13 +76,15 @@ describe('the screen', function (): void {
     it('keeps its token in an httpOnly cookie of the company\'s device paths and leaves it out of the address', function (): void {
         $token = kioskToken();
 
-        $response = $this->get(route('attendance.device.kiosk.activate', [$this->tenant->slug, $token]));
+        // Tapped in an email or a chat: a navigation from another site.
+        $response = $this->withHeaders(['Sec-Fetch-Site' => 'cross-site', 'Referer' => 'https://mail.example.com/'])
+            ->get(route('attendance.device.kiosk.activate', [$this->tenant->slug, $token]));
 
         $response->assertRedirect(route('attendance.device.kiosk.show', $this->tenant->slug));
         $cookie = collect($response->headers->getCookies())->firstOrFail(fn ($cookie): bool => $cookie->getName() === 'attendance_kiosk');
         expect($cookie->isHttpOnly())->toBeTrue()
             ->and($cookie->getPath())->toBe("/a/{$this->tenant->slug}")
-            ->and($cookie->getSameSite())->toBe('strict')
+            ->and($cookie->getSameSite())->toBe('lax')
             ->and($cookie->getExpiresTime())->toBeGreaterThan(now()->addYears(4)->getTimestamp());
     });
 

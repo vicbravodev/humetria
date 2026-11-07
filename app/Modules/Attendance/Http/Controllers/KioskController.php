@@ -62,8 +62,10 @@ final class KioskController
     {
         $this->screen($token);
 
+        // Lax, not Strict: the link is tapped in an email or a chat, a cross-site navigation whose redirect would go without a
+        // Strict cookie. The cookie only lets the screen read its code.
         return redirect()->route('attendance.device.kiosk.show', $tenant)
-            ->withCookie(cookie(self::COOKIE, $token, self::COOKIE_MINUTES, "/a/{$tenant}", httpOnly: true, sameSite: 'strict'));
+            ->withCookie(cookie(self::COOKIE, $token, self::COOKIE_MINUTES, "/a/{$tenant}", httpOnly: true, sameSite: 'lax'));
     }
 
     public function show(Request $request, string $tenant): Response

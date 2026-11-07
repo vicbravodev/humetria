@@ -55,3 +55,15 @@ it('keeps turning after an answer that is not JSON, as from a captive portal, an
         ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
         ->assertNoJavaScriptErrors();
 });
+
+it('opens from a link tapped on another site, as in an email or a chat', function (): void {
+    $link = kioskLink();
+    $page = visit('/');
+    // 127.0.0.1 and localhost are different sites: the browser treats the tap as a cross-site navigation.
+    $other = str_replace('127.0.0.1', 'localhost', rtrim($page->url(), '/'));
+    $page->script("() => { window.location.href = '{$other}{$link}'; }");
+
+    $page->waitForText('Conectado')
+        ->assertSee('Planta Norte')
+        ->assertNoJavaScriptErrors();
+});
