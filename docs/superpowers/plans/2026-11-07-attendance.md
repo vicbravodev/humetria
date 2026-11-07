@@ -136,7 +136,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 2–4:** FAIL, implementar (primero `WebAuthnCeremony` contra vectores, luego controlador), PASS. Browser: `tests/Browser/Attendance/EnrollTest.php` con autenticador virtual de Playwright (CDP `WebAuthn.addVirtualAuthenticator`, `isUserVerified`), `visitPage('attendance/enroll')`.
 - [ ] **Step 5:** Commits: (a) acuerdo y enlace, (b) ceremonia, (c) revocación.
 
-### Task 7: Marcar (teléfono con QR y geocerca; navegador de confianza)
+### Task 7 ✅: Marcar (teléfono con QR y geocerca; navegador de confianza)
 
 **Files:** Create `Http/Controllers/MarkController.php`, `Http/Requests/MarkRequest.php`, `Support/MarkPolicyCheck.php`, `pages/attendance/punch.tsx`, `components/attendance/punch-button.tsx`, `lib/attendance/geolocation.ts` y `lib/attendance/next-step.ts` (Vitest). Tests `tests/Feature/Attendance/PunchTest.php`, Browser `PunchTest.php`.
 
