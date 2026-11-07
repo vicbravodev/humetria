@@ -8,6 +8,7 @@ use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\DB;
@@ -58,7 +59,7 @@ final readonly class RecordMark
 
     private function ensureFollows(string $employeeId, MarkType $type): void
     {
-        $last = AttendanceMark::query()->where('employee_id', $employeeId)->latest('marked_at')->value('type');
+        $last = EffectiveMarks::of($employeeId)->latest('marked_at')->value('type');
         $open = $last !== null && $last !== MarkType::End;
         $onBreak = $last === MarkType::BreakStart;
 
