@@ -33,3 +33,10 @@ it('gives the local date of an instant', function (): void {
 
     expect($week->localDate(CarbonImmutable::parse('2026-11-09 05:59:00', 'UTC'))->format('Y-m-d H:i e'))->toBe('2026-11-08 00:00 America/Mexico_City');
 });
+
+it('gives its bounds as UTC instants for queries', function (): void {
+    $week = WeekPeriod::containing(CarbonImmutable::parse('2026-11-04 12:00', 'UTC'));
+
+    expect($week->startUtc()->format('Y-m-d H:i:s e'))->toBe('2026-11-02 06:00:00 UTC')
+        ->and($week->nextStartUtc()->format('Y-m-d H:i:s e'))->toBe('2026-11-09 06:00:00 UTC');
+});

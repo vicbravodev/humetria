@@ -8,6 +8,7 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use LogicException;
 
 /**
  * The marks that count (criterio 5.4 and the design's Correcciones): a correction replaces its original, and one with no
@@ -47,14 +48,16 @@ final class EffectiveMarks
     {
         // ponytail: a day is looked for up to 24 h beyond the week's edges; a longer day would be cut there.
         $marks = self::of($employeeId)
-            ->whereBetween('marked_at', [$week->start()->subDay(), $week->end()->addDay()])
+            ->where('marked_at', '>=', $week->startUtc()->subDay())
+            ->where('marked_at', '<', $week->nextStartUtc()->addDay())
             ->orderBy('marked_at')
             ->get();
 
         $days = [];
         $openDay = null;
         foreach ($marks as $mark) {
-            $at = $mark->marked_at ?? $week->start();
+            // of() leaves the voids out; one here is a query that forgot it.
+            $at = $mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time.");
             $day = $mark->type === MarkType::Start || $openDay === null ? $week->localDate($at) : $openDay;
             $openDay = $mark->type === MarkType::End ? null : $day;
 

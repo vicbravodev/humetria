@@ -66,6 +66,13 @@ it('puts a day that ends after midnight on the local date of its start', functio
         ->and(array_map(markIds(...), EffectiveMarks::byDay($this->ana->id, weekOf('2026-11-08'))))->toBe(['2026-11-08' => [$start->id, $end->id]]);
 });
 
+it('keeps the end of a Sunday night day that closes 20 hours later, reading the window in UTC', function (): void {
+    $start = anaMarks($this, MarkType::Start, '2026-11-08 22:00');
+    $end = anaMarks($this, MarkType::End, '2026-11-09 18:00');
+
+    expect(markIds(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-08'))))->toBe([$start->id, $end->id]);
+});
+
 it('starts the week with the first day that opens in it', function (): void {
     anaMarks($this, MarkType::Start, '2026-11-01 22:00');
     anaMarks($this, MarkType::End, '2026-11-02 06:00');

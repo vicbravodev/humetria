@@ -27,6 +27,21 @@ final readonly class WeekPeriod
         return $this->start->endOfWeek(CarbonInterface::SUNDAY);
     }
 
+    /**
+     * The first instant of the week in UTC. Queries bind these, never the local bounds: a Carbon binding loses its offset
+     * and the database session is UTC.
+     */
+    public function startUtc(): CarbonImmutable
+    {
+        return $this->start->utc();
+    }
+
+    /** The first instant of the next week in UTC: an exclusive upper bound, so no microsecond is lost at the edge. */
+    public function nextStartUtc(): CarbonImmutable
+    {
+        return $this->start->addWeek()->utc();
+    }
+
     /** The local day an instant falls on, at its midnight. */
     public function localDate(CarbonImmutable $instant): CarbonImmutable
     {
