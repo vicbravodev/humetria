@@ -121,7 +121,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 1: Write failing tests:** el token de ahora y el de hace 29 s verifican; el de hace 61 s no; token de otro centro o de otra empresa no; manipular un carácter falla; un kiosko revocado recibe 404 sin decir por qué; el token en claro nunca aparece en la tabla.
 - [ ] **Step 2–4:** FAIL, implementar, PASS. Commit.
 
-### Task 6: Acuerdo, enlace de alta y dispositivo vinculado (WebAuthn)
+### Task 6 ✅: Acuerdo, enlace de alta y dispositivo vinculado (WebAuthn)
 
 **Files:** Create migraciones y modelos `AttendanceAgreement`, `AgreementAcceptance`, `EnrollmentLink`, `AttendanceDevice`; `Support/WebAuthnCeremony.php`, `Actions/IssueEnrollment.php`, `Actions/AcceptAgreement.php`, `Actions/EnrollDevice.php`, `Actions/RevokeDevice.php`; `Http/Controllers/EnrollmentController.php`, `routes/attendance-device.php`; páginas `pages/attendance/enroll.tsx` y `lib/attendance/webauthn.ts` (codificación base64url; Vitest). Tests Feature + Unit del ceremony con vectores del paquete.
 
