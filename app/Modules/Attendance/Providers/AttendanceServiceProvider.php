@@ -30,5 +30,17 @@ final class AttendanceServiceProvider extends ServiceProvider
             Limit::perMinute(30)->by('attendance-enroll-ip:'.$request->ip()),
             Limit::perMinute(10)->by('attendance-enroll-link:'.hash('sha256', $request->route('token') ?? '')),
         ]);
+
+        // Marking takes three requests (the page, the options, the signature). Per address 300 a minute: a shift of a hundred
+        // people behind one router marking in the same minute fits. Per key 12 a minute: a person marks a few times a day,
+        // so a key hammering the endpoint is stopped whatever the address. Only the key id's hash names its counter.
+        RateLimiter::for('attendance-punch', function (Request $request): array {
+            $key = $request->input('credential.id');
+
+            return [
+                Limit::perMinute(300)->by('attendance-punch-ip:'.$request->ip()),
+                ...(is_string($key) ? [Limit::perMinute(12)->by('attendance-punch-key:'.hash('sha256', $key))] : []),
+            ];
+        });
     }
 }

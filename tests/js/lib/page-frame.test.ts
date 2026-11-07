@@ -11,6 +11,7 @@ describe('isStandalone', () => {
         'results/shared-report',
         'attendance/kiosk',
         'attendance/enroll',
+        'attendance/punch',
         'compensation/shared-report',
         'error',
         'complaints-public/form',

@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Http\Controllers\EnrollmentController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
+use App\Modules\Attendance\Http\Controllers\MarkController;
 use App\Modules\Attendance\Http\Middleware\ResolveDeviceTenant;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +27,14 @@ Route::middleware(['throttle:attendance-enroll', ResolveDeviceTenant::class])->g
     Route::get('a/{tenant:slug}/enroll/{token}', [EnrollmentController::class, 'show'])->name('attendance.device.enroll.show');
     Route::post('a/{tenant:slug}/enroll/{token}/options', [EnrollmentController::class, 'options'])->name('attendance.device.enroll.options');
     Route::post('a/{tenant:slug}/enroll/{token}/register', [EnrollmentController::class, 'register'])->name('attendance.device.enroll.register');
+});
+
+// A person marks from their linked device (no account): the key it signs with names the person, inside the company of the
+// slug. The page opens from the address RH gave (`a/{slug}`) or from the QR of the center's screen (`a/{slug}/punch?q=`).
+// Its own limiter: generous per address (a whole shift behind one router) and strict per key.
+Route::middleware(['throttle:attendance-punch', ResolveDeviceTenant::class])->group(function (): void {
+    Route::get('a/{tenant:slug}', [MarkController::class, 'show'])->name('attendance.device.punch.home');
+    Route::get('a/{tenant:slug}/punch', [MarkController::class, 'show'])->name('attendance.device.punch.show');
+    Route::post('a/{tenant:slug}/punch/options', [MarkController::class, 'options'])->name('attendance.device.punch.options');
+    Route::post('a/{tenant:slug}/punch', [MarkController::class, 'store'])->name('attendance.device.punch.store');
 });

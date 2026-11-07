@@ -59,19 +59,19 @@ final readonly class RecordMark
 
     private function ensureFollows(string $employeeId, MarkType $type): void
     {
-        $last = EffectiveMarks::of($employeeId)->latest('marked_at')->value('type');
-        $open = $last !== null && $last !== MarkType::End;
-        $onBreak = $last === MarkType::BreakStart;
+        $last = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['type'])?->type;
+        if (in_array($type, MarkType::allowedAfter($last), true)) {
+            return;
+        }
 
+        // Only why it does not follow is left to tell.
         $reason = match ($type) {
-            MarkType::Start => $open ? 'day_already_open' : null,
-            MarkType::BreakStart => $open ? ($onBreak ? 'already_on_break' : null) : 'day_not_open',
-            MarkType::BreakEnd => $onBreak ? null : 'not_on_break',
-            MarkType::End => $open ? null : 'day_not_open',
+            MarkType::Start => 'day_already_open',
+            MarkType::BreakStart => $last === MarkType::BreakStart ? 'already_on_break' : 'day_not_open',
+            MarkType::BreakEnd => 'not_on_break',
+            MarkType::End => 'day_not_open',
         };
 
-        if ($reason !== null) {
-            throw new InvalidMarkSequence($reason);
-        }
+        throw new InvalidMarkSequence($reason);
     }
 }

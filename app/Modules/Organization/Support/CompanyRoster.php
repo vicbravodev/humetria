@@ -7,6 +7,7 @@ namespace App\Modules\Organization\Support;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -121,6 +122,7 @@ final class CompanyRoster implements Roster
             $employee->work_center_id,
             $employee->deactivated_at === null,
             $employee->job_title,
+            $employee->staff_group === StaffGroup::Trusted,
         );
     }
 }
