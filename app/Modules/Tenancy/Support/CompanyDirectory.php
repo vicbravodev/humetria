@@ -33,7 +33,7 @@ final readonly class CompanyDirectory implements Companies
     {
         $tenant = Tenant::query()->where('slug', $slug)->first();
 
-        if ($tenant === null) {
+        if ($tenant === null || $tenant->status()->isBlocked()) {
             return null;
         }
 

@@ -43,6 +43,13 @@ it('enters a company by its slug, and gives nothing for a slug that is no compan
         ->and(resolve(CurrentTenant::class)->id())->toBe($tenant->id);
 });
 
+it('enters no company by the slug of one that may not be used', function (): void {
+    $tenant = Tenant::factory()->deactivated()->create();
+
+    expect(resolve(Companies::class)->enterBySlug($tenant->slug))->toBeNull()
+        ->and(fn () => resolve(CurrentTenant::class)->id())->toThrow(App\Modules\Tenancy\Exceptions\NoCurrentTenant::class);
+});
+
 it('describes the company the code works in now', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     workIn($tenant);
