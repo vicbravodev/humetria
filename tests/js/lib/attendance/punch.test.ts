@@ -1,10 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-    doneMessage,
-    punch,
-    punchDay,
-    punchMessage,
-} from '@/lib/attendance/punch';
+import { punch, punchDay } from '@/lib/attendance/punch';
 import type { PunchRequest } from '@/lib/attendance/punch';
 import type { SignedKey } from '@/lib/attendance/webauthn';
 
@@ -22,6 +17,7 @@ const key: SignedKey = {
 };
 
 const day = {
+    name: 'Ana López',
     marks: [{ type: 'start', time: '09:00' }],
     next: ['break_start', 'end'],
     flag: null,
@@ -119,12 +115,20 @@ describe('punch, when the mark is not taken', () => {
             punch(request, {
                 fetcher: serverAnswering({
                     markStatus: 422,
-                    markBody: { reason: 'outside_zone' },
+                    markBody: {
+                        reason: 'outside_zone',
+                        name: 'Ana López',
+                        next: ['start'],
+                    },
                 }),
                 getKey: signs,
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'outside_zone' });
+        ).resolves.toEqual({
+            kind: 'failed',
+            reason: 'outside_zone',
+            person: { name: 'Ana López', next: ['start'] },
+        });
     });
 
     it.each([
@@ -143,7 +147,7 @@ describe('punch, when the mark is not taken', () => {
                 getKey: signs,
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason });
+        ).resolves.toEqual({ kind: 'failed', reason, person: null });
     });
 
     it('fails when the options do not come', async () => {
@@ -153,14 +157,18 @@ describe('punch, when the mark is not taken', () => {
                 getKey: signs,
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'throttled' });
+        ).resolves.toEqual({
+            kind: 'failed',
+            reason: 'throttled',
+            person: null,
+        });
         await expect(
             punch(request, {
                 fetcher: serverAnswering({ optionsBody: { nope: 1 } }),
                 getKey: signs,
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'failed' });
+        ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
     });
 
     it('is cancelled when the person closes the prompt or does not verify', async () => {
@@ -173,7 +181,11 @@ describe('punch, when the mark is not taken', () => {
                 getKey,
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'cancelled' });
+        ).resolves.toEqual({
+            kind: 'failed',
+            reason: 'cancelled',
+            person: null,
+        });
     });
 
     it('fails when the device gives no signature or another error', async () => {
@@ -183,14 +195,14 @@ describe('punch, when the mark is not taken', () => {
                 getKey: () => Promise.resolve(null),
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'failed' });
+        ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
         await expect(
             punch(request, {
                 fetcher: serverAnswering(),
                 getKey: () => Promise.reject(new Error('x')),
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'failed' });
+        ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
     });
 
     it('fails when the network does', async () => {
@@ -200,7 +212,7 @@ describe('punch, when the mark is not taken', () => {
                 getKey: signs,
                 xsrf: null,
             }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'failed' });
+        ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
     });
 });
 
@@ -219,78 +231,28 @@ describe('punchDay', () => {
                 marks: [{ type: 'start' }, 3],
                 next: [1, 'end'],
             }),
-        ).toEqual({ marks: [], next: ['end'], flag: null });
-        expect(punchDay({ marks: [], next: 'end' })).toBeNull();
+        ).toEqual({ name: 'Ana López', marks: [], next: ['end'], flag: null });
+        expect(punchDay({ name: 'Ana', marks: [], next: 'end' })).toBeNull();
+        expect(punchDay({ marks: [], next: [] })).toBeNull();
         expect(punchDay(null)).toBeNull();
     });
 });
 
-describe('punchMessage', () => {
-    it.each([
-        'outside_zone',
-        'accuracy_too_low',
-        'no_location',
-        'qr_required',
-        'qr_invalid',
-    ])('says what to do about %s, and to ask RH for a correction', (reason) => {
-        expect(punchMessage(reason)).toContain('Recursos Humanos');
-    });
-
-    it.each([
-        ['day_already_open', 'Ya marcó su entrada'],
-        ['day_not_open', 'Primero marque su entrada'],
-        ['already_on_break', 'Ya marcó su salida a comer'],
-        ['not_on_break', 'Aún no marca su salida a comer'],
-        ['not_verified', 'pida a Recursos Humanos'],
-        ['cancelled', 'huella'],
-        ['throttled', 'Espere un minuto'],
-        ['unsupported', 'navegador'],
-        ['failed', 'Intente de nuevo'],
-        ['anything', 'Intente de nuevo'],
-    ])('words %s', (reason, text) => {
-        expect(punchMessage(reason)).toContain(text);
-    });
-});
-
-describe('doneMessage', () => {
-    it('confirms the mark with its time', () => {
-        expect(doneMessage(day)).toBe(
-            'Listo: se registró su entrada a las 09:00.',
-        );
-    });
-
-    it('tells the person a mark out of zone is flagged for RH', () => {
-        expect(doneMessage({ ...day, flag: 'outside_zone' })).toBe(
-            'Listo: se registró su entrada a las 09:00. Quedó fuera de zona y Recursos Humanos la verá señalada.',
-        );
-    });
-
-    it('tells the person a mark with no location is flagged for RH', () => {
-        expect(doneMessage({ ...day, flag: 'no_location' })).toBe(
-            'Listo: se registró su entrada a las 09:00. Quedó sin ubicación y Recursos Humanos la verá señalada.',
-        );
-    });
-
-    it('says nothing of a flag only the panel reads, nor of a day with no marks', () => {
-        expect(doneMessage({ ...day, flag: 'center_without_zones' })).toBe(
-            'Listo: se registró su entrada a las 09:00.',
-        );
-        expect(doneMessage({ marks: [], next: [], flag: null })).toBe('Listo.');
-    });
-});
-
-describe('doneMessage of each mark', () => {
-    it.each([
-        ['break_start', 'Listo: se registró su salida a comer a las 13:00.'],
-        ['break_end', 'Listo: se registró su regreso de comer a las 13:00.'],
-        ['end', 'Listo: se registró su salida a las 13:00.'],
-    ])('names %s', (type, text) => {
-        expect(
-            doneMessage({
-                marks: [{ type, time: '13:00' }],
-                next: [],
-                flag: null,
+describe('punch, telling who signed', () => {
+    it('tells nobody when the server named nobody readable', async () => {
+        await expect(
+            punch(request, {
+                fetcher: serverAnswering({
+                    markStatus: 422,
+                    markBody: { reason: 'day_not_open', name: 3, next: [] },
+                }),
+                getKey: signs,
+                xsrf: null,
             }),
-        ).toBe(text);
+        ).resolves.toEqual({
+            kind: 'failed',
+            reason: 'day_not_open',
+            person: null,
+        });
     });
 });

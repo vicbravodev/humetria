@@ -107,7 +107,6 @@ const ARRAY_PROPS = [
     'campaigns/show:standings' => 'conteos por situación: cinco',
     'campaigns/show:areas' => 'resumen por área del centro: un conteo por área, no personas',
     'campaigns/show:replacementPool' => 'conteos por género: tres a lo más',
-    'attendance/punch:next' => 'catálogo fijo: los pasos que siguen a la última marca, dos a lo más',
     'results/show:items' => 'catálogo fijo: las preguntas de la guía, contadas (72 a lo más)',
     'results/report:durations' => 'catálogo fijo: las seis duraciones de un enlace',
     'results/report:levels' => 'catálogo fijo: los cinco niveles de riesgo',

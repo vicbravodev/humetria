@@ -37,4 +37,5 @@ Route::middleware(['throttle:attendance-punch', ResolveDeviceTenant::class])->gr
     Route::get('a/{tenant:slug}/punch', [MarkController::class, 'show'])->name('attendance.device.punch.show');
     Route::post('a/{tenant:slug}/punch/options', [MarkController::class, 'options'])->name('attendance.device.punch.options');
     Route::post('a/{tenant:slug}/punch', [MarkController::class, 'store'])->name('attendance.device.punch.store');
+    Route::post('a/{tenant:slug}/punch/forget', [MarkController::class, 'forget'])->name('attendance.device.punch.forget');
 });

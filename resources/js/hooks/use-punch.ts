@@ -1,12 +1,13 @@
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { currentPosition } from '@/lib/attendance/geolocation';
 import type { MarkType } from '@/lib/attendance/next-step';
-import { doneMessage, punch, punchMessage } from '@/lib/attendance/punch';
-import type { PunchDay } from '@/lib/attendance/punch';
+import { punch, punchMessage } from '@/lib/attendance/punch';
+import type { Signer } from '@/lib/attendance/punch';
+import { stateAfter } from '@/lib/attendance/punch-state';
+import type { PunchState } from '@/lib/attendance/punch-state';
 import type { SignedKey } from '@/lib/attendance/webauthn';
-
-export type PunchFeedback = { kind: 'done' | 'error'; text: string };
 
 /** `navigator.credentials.get()` for a signature; null when the browser gave something else. */
 async function getKey(
@@ -24,50 +25,54 @@ async function getKey(
         : null;
 }
 
+const NOBODY: PunchState = { person: null, marks: null, feedback: null };
+
 /**
- * Marks from this device: the position only when the page says it may be needed, asked at that moment and kept nowhere;
- * then the signature and the mark. The day the server answers replaces the one shown.
+ * Marks from this device. The position is asked at every tap (whoever taps may not be who the screen shows) and kept
+ * nowhere; the server drops it when the person does not need it. After each mark the screen shows only what the server
+ * said of the person it verified. «¿No es usted?» makes the browser forget the person.
  */
 export function usePunch({
     optionsUrl,
     punchUrl,
+    forgetUrl,
     qr,
-    askLocation,
     initial,
 }: {
     optionsUrl: string;
     punchUrl: string;
+    forgetUrl: string;
     qr: string | null;
-    askLocation: boolean;
-    initial: PunchDay | null;
+    initial: Signer | null;
 }) {
-    const [day, setDay] = useState(initial);
+    const [state, setState] = useState<PunchState>({
+        ...NOBODY,
+        person: initial,
+    });
     const [working, setWorking] = useState(false);
-    const [feedback, setFeedback] = useState<PunchFeedback | null>(null);
 
     const mark = async (type: MarkType) => {
         if (!('PublicKeyCredential' in window)) {
-            setFeedback({ kind: 'error', text: punchMessage('unsupported') });
+            setState({
+                ...state,
+                feedback: { kind: 'error', text: punchMessage('unsupported') },
+            });
 
             return;
         }
 
         setWorking(true);
-        setFeedback(null);
-        const located = askLocation
-            ? await currentPosition(
-                  'geolocation' in navigator
-                      ? navigator.geolocation
-                      : undefined,
-              )
-            : null;
+        setState({ ...state, feedback: null });
+        const located = await currentPosition(
+            'geolocation' in navigator ? navigator.geolocation : undefined,
+        );
         const outcome = await punch(
             {
                 optionsUrl,
                 punchUrl,
                 type,
                 qr,
-                position: located?.ok === true ? located.position : null,
+                position: located.ok ? located.position : null,
             },
             {
                 fetcher: fetch.bind(window),
@@ -76,14 +81,16 @@ export function usePunch({
             },
         );
         setWorking(false);
-
-        if (outcome.kind === 'done') {
-            setDay(outcome.day);
-            setFeedback({ kind: 'done', text: doneMessage(outcome.day) });
-        } else {
-            setFeedback({ kind: 'error', text: punchMessage(outcome.reason) });
-        }
+        setState(stateAfter(outcome));
     };
 
-    return { day, working, feedback, mark };
+    const forget = () => {
+        router.post(
+            forgetUrl,
+            {},
+            { preserveScroll: true, onSuccess: () => setState(NOBODY) },
+        );
+    };
+
+    return { ...state, working, mark, forget };
 }

@@ -93,3 +93,67 @@ it('asks for the location when the person does not allow it', function (): void 
 
     expect(AttendanceMark::query()->count())->toBe(0);
 });
+
+/**
+ * Ana marks her entry on this phone; then the phone is handed to Bob, who links his own key on it and opens Marcar from
+ * the QR. The page still remembers Ana (under 10 minutes).
+ */
+function bobOnAnasPhone(): AwaitableWebpage
+{
+    $bob = EmployeeFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->plant->id, 'name' => 'Bob Ruiz']);
+    $clearKeys = null;
+    $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
+    $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: function (AwaitableWebpage $page) use (&$clearKeys): void {
+        $clearKeys = withFingerprintReader($page);
+    });
+    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    standingAt($page, 19.4327, -99.1332);
+    $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+        ->press('Marcar entrada')
+        ->waitForText('Listo: se registró su entrada')
+        ->assertSee('Hola, Ana López');
+
+    expect($clearKeys)->toBeInstanceOf(Closure::class);
+    $clearKeys();
+    $page->navigate((string) parse_url(enrollmentUrl($bob->id), PHP_URL_PATH))
+        ->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+
+    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+        ->assertSee('Hola, Ana López')
+        ->assertDontSee('Su día');
+}
+
+it('shows Bob his own name and steps when he marks on the phone that remembers Ana, and never her day', function (): void {
+    $page = bobOnAnasPhone();
+
+    // Bob taps the step offered to Ana: rejected, the screen now speaks to him and offers every step.
+    $page->press('Salir a comer')
+        ->waitForText('Primero marque su entrada.')
+        ->assertSee('Hola, Bob Ruiz')
+        ->assertDontSee('Ana López')
+        ->assertSee('Marcar entrada')
+        ->press('Marcar entrada')
+        ->waitForText('Listo: se registró su entrada')
+        ->assertSee('Hola, Bob Ruiz')
+        ->assertDontSee('Ana López')
+        ->assertSee('Salir a comer')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
+
+    // Asked for his position: the on-site mark needs it, and it is inside the zone.
+    expect(AttendanceMark::query()->where('employee_id', '!=', $this->ana->id)->sole()->zone_id)->not->toBeNull();
+});
+
+it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', function (): void {
+    $page = bobOnAnasPhone();
+
+    $page->press('¿No es usted?')
+        ->waitForText('Marcar su jornada')
+        ->assertDontSee('Ana López')
+        ->assertSee('¿Aún no vincula este teléfono?')
+        ->press('Marcar entrada')
+        ->waitForText('Listo: se registró su entrada')
+        ->assertSee('Hola, Bob Ruiz')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});

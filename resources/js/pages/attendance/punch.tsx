@@ -2,48 +2,41 @@ import { Head } from '@inertiajs/react';
 import DayMarks from '@/components/attendance/day-marks';
 import LinkDeviceNote from '@/components/attendance/link-device-note';
 import LocationNote from '@/components/attendance/location-note';
+import NotYou from '@/components/attendance/not-you';
 import PersonFrame from '@/components/attendance/person-frame';
 import PunchButton from '@/components/attendance/punch-button';
 import PunchFeedback from '@/components/attendance/punch-feedback';
 import { usePunch } from '@/hooks/use-punch';
-import { nextSteps, ANY_STEP } from '@/lib/attendance/next-step';
-
-type Person = {
-    name: string;
-    marks: { type: string; time: string }[];
-    next: string[];
-};
+import { ANY_STEP, nextSteps } from '@/lib/attendance/next-step';
+import type { Signer } from '@/lib/attendance/punch';
 
 /**
- * A person marks their working day from their linked device (no account): the big button of the next step, their day,
- * and why the position is asked for. Before a first mark in this browser, nobody is known: every step is offered.
+ * A person marks their working day from their linked device (no account): the big button of the next step, why the
+ * position is asked for, and their day once they mark. When nobody is known in this browser, every step is offered.
  */
 export default function Punch({
     company,
     qr,
-    person,
-    askLocation,
+    person: remembered,
     optionsUrl,
     punchUrl,
+    forgetUrl,
 }: {
     company: string;
     qr: string | null;
-    person: Person | null;
-    askLocation: boolean;
+    person: Signer | null;
     optionsUrl: string;
     punchUrl: string;
+    forgetUrl: string;
 }) {
-    const { day, working, feedback, mark } = usePunch({
+    const { person, marks, feedback, working, mark, forget } = usePunch({
         optionsUrl,
         punchUrl,
+        forgetUrl,
         qr,
-        askLocation,
-        initial:
-            person === null
-                ? null
-                : { marks: person.marks, next: person.next, flag: null },
+        initial: remembered,
     });
-    const { primary, others } = nextSteps(day?.next ?? ANY_STEP);
+    const { primary, others } = nextSteps(person?.next ?? ANY_STEP);
 
     return (
         <PersonFrame company={company}>
@@ -58,6 +51,7 @@ export default function Punch({
                     <p className="text-muted-foreground">
                         Marque con su huella, su rostro o su PIN.
                     </p>
+                    {person !== null && <NotYou onForget={forget} />}
                 </div>
                 <PunchButton
                     primary={primary}
@@ -66,12 +60,9 @@ export default function Punch({
                     onMark={(type) => void mark(type)}
                 />
                 <PunchFeedback feedback={feedback} />
-                {askLocation && <LocationNote />}
-                {day === null ? (
-                    <LinkDeviceNote />
-                ) : (
-                    <DayMarks marks={day.marks} />
-                )}
+                <LocationNote />
+                {marks !== null && <DayMarks marks={marks} />}
+                {person === null && <LinkDeviceNote />}
             </div>
         </PersonFrame>
     );

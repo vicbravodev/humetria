@@ -69,6 +69,7 @@ function publicRouteNames(): array
         'attendance.device.punch.show', // guest: la misma pantalla Marcar abierta desde el QR de la pantalla del centro, con su código (que solo vale 60 s); throttled por IP
         'attendance.device.punch.options', // guest: da las opciones WebAuthn para firmar una marca, sin persona ni llaves listadas; el desafío queda ligado a la sesión del navegador, es de un solo uso y vence en 60 s; throttled por IP
         'attendance.device.punch.store', // guest: registra la marca de la persona cuya llave firmó (firma, origen, verificación de la persona, desafío de esta sesión); la persona sale solo de la firma, la empresa solo del slug y la hora del servidor; una firma inválida, de un dispositivo revocado, de alguien dado de baja o de otra empresa da el mismo 404; throttled por IP y por llave
+        'attendance.device.punch.forget', // guest: «¿No es usted?» en la pantalla Marcar: el navegador olvida al instante a quien marcó en él; no recibe datos, no lee ni devuelve nada de nadie; throttled por IP
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
         'compensation.report.shared', // guest: the report of a contract scenario from a temporary link (7 days at most, revocable); groups under the minimum folded into Otros, no annex, nobody named; the token is the credential; throttled
     ];

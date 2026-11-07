@@ -4,8 +4,15 @@ import type { MarkType } from '@/lib/attendance/next-step';
 import type { SignedKey } from '@/lib/attendance/webauthn';
 import { assertionPayload, requestOptions } from '@/lib/attendance/webauthn';
 
-/** The person's day as the server tells it: their marks (type and local time), what may come next and a flag. */
+/** Who the server verified as signing, and what they may do next. */
+export type Signer = { name: string; next: string[] };
+
+/**
+ * The person's day as the server tells it: who signed, their marks (type and local time), what may come next and a
+ * flag.
+ */
 export type PunchDay = {
+    name: string;
     marks: { type: string; time: string }[];
     next: string[];
     flag: string | null;
@@ -13,7 +20,7 @@ export type PunchDay = {
 
 export type PunchOutcome =
     | { kind: 'done'; day: PunchDay }
-    | { kind: 'failed'; reason: string };
+    | { kind: 'failed'; reason: string; person: Signer | null };
 
 export type PunchRequest = {
     optionsUrl: string;
@@ -64,6 +71,7 @@ async function post(
 export function punchDay(json: unknown): PunchDay | null {
     if (
         !isJson(json) ||
+        typeof json['name'] !== 'string' ||
         !Array.isArray(json['marks']) ||
         !Array.isArray(json['next'])
     ) {
@@ -71,6 +79,7 @@ export function punchDay(json: unknown): PunchDay | null {
     }
 
     return {
+        name: json['name'],
         marks: json['marks'].flatMap((mark: unknown) =>
             isJson(mark) &&
             typeof mark['type'] === 'string' &&
@@ -94,7 +103,21 @@ async function failure(response: Response): Promise<PunchOutcome> {
             ? body['reason']
             : known;
 
-    return { kind: 'failed', reason: reason ?? 'failed' };
+    return { kind: 'failed', reason: reason ?? 'failed', person: signer(body) };
+}
+
+/** Who a rejection names; null when it names nobody readable. */
+function signer(body: unknown): Signer | null {
+    return isJson(body) &&
+        typeof body['name'] === 'string' &&
+        Array.isArray(body['next'])
+        ? {
+              name: body['name'],
+              next: body['next'].filter(
+                  (step: unknown) => typeof step === 'string',
+              ),
+          }
+        : null;
 }
 
 /** The signature of the device, or why there is none. */
@@ -124,7 +147,9 @@ async function signed(
     const options = requestOptions(await response.json());
     const key = options === null ? 'failed' : await sign(options, deps);
 
-    return typeof key === 'string' ? { kind: 'failed', reason: key } : key;
+    return typeof key === 'string'
+        ? { kind: 'failed', reason: key, person: null }
+        : key;
 }
 
 /**
@@ -161,10 +186,10 @@ export async function punch(
         const day = punchDay(await response.json());
 
         return day === null
-            ? { kind: 'failed', reason: 'failed' }
+            ? { kind: 'failed', reason: 'failed', person: null }
             : { kind: 'done', day };
     } catch {
-        return { kind: 'failed', reason: 'failed' };
+        return { kind: 'failed', reason: 'failed', person: null };
     }
 }
 
@@ -202,7 +227,7 @@ const FLAGGED: Record<string, string> = {
 };
 
 /** What to tell the person once the mark was taken: which, at what time, and whether RH will see it flagged. */
-export function doneMessage(day: PunchDay): string {
+export function doneMessage(day: Pick<PunchDay, 'marks' | 'flag'>): string {
     const last = day.marks.at(-1);
 
     if (last === undefined) {

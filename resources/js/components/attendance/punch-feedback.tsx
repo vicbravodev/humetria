@@ -1,5 +1,5 @@
 import { CircleAlert, CircleCheck } from 'lucide-react';
-import type { PunchFeedback as Feedback } from '@/hooks/use-punch';
+import type { PunchFeedback as Feedback } from '@/lib/attendance/punch-state';
 
 /** How the last mark went: taken, or why not and what to do. */
 export default function PunchFeedback({

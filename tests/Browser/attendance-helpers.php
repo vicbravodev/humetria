@@ -28,9 +28,12 @@ function contextGuid(AwaitableWebpage $page): string
 
 /**
  * Makes the page's origin the relying party, and gives the page a platform authenticator with a resident key and
- * user verification that always succeeds (the person touches the reader).
+ * user verification that always succeeds (the person touches the reader). Gives a function that wipes the reader's keys,
+ * as a phone handed to another person who links their own.
+ *
+ * @return Closure(): void
  */
-function withFingerprintReader(AwaitableWebpage $page, bool $verifies = true): void
+function withFingerprintReader(AwaitableWebpage $page, bool $verifies = true): Closure
 {
     $origin = parse_url($page->url(), PHP_URL_SCHEME).'://'.parse_url($page->url(), PHP_URL_HOST).':'.parse_url($page->url(), PHP_URL_PORT);
     config(['fortify.passkeys.relying_party_id' => 'localhost', 'fortify.passkeys.allowed_origins' => [$origin]]);
@@ -46,7 +49,7 @@ function withFingerprintReader(AwaitableWebpage $page, bool $verifies = true): v
     expect($session)->toBeString()->not->toBeEmpty();
     $send = fn (string $method, array $params): array => iterator_to_array(Client::instance()->execute((string) $session, 'send', ['method' => $method, 'params' => $params]));
     $send('WebAuthn.enable', ['enableUI' => false]);
-    $send('WebAuthn.addVirtualAuthenticator', ['options' => [
+    $added = $send('WebAuthn.addVirtualAuthenticator', ['options' => [
         'protocol' => 'ctap2',
         'transport' => 'internal',
         'hasResidentKey' => true,
@@ -54,6 +57,15 @@ function withFingerprintReader(AwaitableWebpage $page, bool $verifies = true): v
         'isUserVerified' => $verifies,
         'automaticPresenceSimulation' => true,
     ]]);
+    $authenticator = null;
+    foreach ($added as $message) {
+        $authenticator = $message['result']['result']['authenticatorId'] ?? $authenticator;
+    }
+    expect($authenticator)->toBeString();
+
+    return function () use ($send, $authenticator): void {
+        $send('WebAuthn.clearCredentials', ['authenticatorId' => $authenticator]);
+    };
 }
 
 /** The phone is at `$latitude`, `$longitude` (with `$accuracy` meters), and the person lets the page read it. */

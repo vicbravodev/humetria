@@ -6,7 +6,6 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Enums\MarkMethod;
-use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
@@ -25,6 +24,7 @@ use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
@@ -40,12 +40,16 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  * revoked device, of a person who left or of another company gets the same 404. Logs carry ids and reasons only: never a
  * position, the code or the key.
  *
- * The browser's session remembers who last marked in it, so the page opens with their day; it forgets them once they
- * have no device in use or left.
+ * The browser's session remembers who last marked in it for 10 minutes, only to offer their next step (never their
+ * marks); «¿No es usted?» forgets them at once, and so does a person with no device in use or who left. Every answer to a
+ * mark names the person the signature verified and their own next steps, so a second person on the same browser is
+ * never shown the first one's.
  */
 final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
+
+    private const int REMEMBER_SECONDS = 600;
 
     public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant) {}
 
@@ -62,18 +66,26 @@ final readonly class MarkController
         $page = Inertia::render('attendance/punch', [
             'company' => $this->companies->current()->tradeName,
             'qr' => $qr,
-            'person' => $person === null ? null : ['name' => $person->name, ...PunchDay::of($person->id)],
-            // The position is asked for only when marking, and only of whoever may need it: not a remote person, nor trusted
-            // staff marking from the browser. Before the first mark here nobody is known, so it is asked.
-            'askLocation' => $person === null || $this->needsLocation($person, $qr),
+            // Who taps next may be someone else: the position is always asked when marking (and dropped by the server when
+            // the verified person does not need it).
+            'person' => $person === null ? null : ['name' => $person->name, 'next' => PunchDay::of($person->id)['next']],
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
+            'forgetUrl' => route('attendance.device.punch.forget', $tenant),
         ]);
 
         $response = $page->toResponse($request);
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
 
         return $response;
+    }
+
+    /** «¿No es usted?»: this browser forgets who marked in it, at once. */
+    public function forget(Request $request): RedirectResponse
+    {
+        $request->session()->forget(self::SESSION_KEY);
+
+        return back();
     }
 
     public function options(Request $request, WebAuthnCeremony $ceremony): JsonResponse
@@ -93,7 +105,7 @@ final readonly class MarkController
 
         $person = $this->roster->find($signed->employeeId);
         abort_if($person === null || ! $person->active, 404);
-        $request->session()->put(self::SESSION_KEY, $person->id);
+        $request->session()->put(self::SESSION_KEY, ['id' => $person->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
 
         $qr = $request->qr();
         $zones = AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all();
@@ -112,12 +124,14 @@ final readonly class MarkController
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
             Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'device_id' => $signed->deviceId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
 
-            return response()->json(['reason' => $rejected->reason], 422);
+            // Who signed and what they may do: never the steps of whoever marked before on this browser.
+            return response()->json(['reason' => $rejected->reason, 'name' => $person->name, 'next' => PunchDay::of($person->id)['next']], 422);
         }
 
         $onsite = in_array($context->method, [MarkMethod::QrAndGeofence, MarkMethod::Qr, MarkMethod::Geofence], true);
 
         return response()->json([
+            'name' => $person->name,
             ...PunchDay::of($person->id),
             // For the screen now and the panel later: a center with no zones, a mark taken with no position, or outside every zone.
             'flag' => match (true) {
@@ -130,10 +144,16 @@ final readonly class MarkController
         ]);
     }
 
-    /** The person who last marked in this browser, while they are active and have a device in use; forgotten otherwise. */
+    /**
+     * The person who marked in this browser in the last 10 minutes, while they are active and have a device in use;
+     * forgotten otherwise.
+     */
     private function remembered(Request $request): ?RosterEntry
     {
-        $id = $request->session()->get(self::SESSION_KEY);
+        $memory = $request->session()->get(self::SESSION_KEY);
+        $id = is_array($memory) && is_int($memory['at'] ?? null) && CarbonImmutable::now()->getTimestamp() - $memory['at'] < self::REMEMBER_SECONDS
+            ? $memory['id'] ?? null
+            : null;
         $person = is_string($id) ? $this->roster->find($id) : null;
 
         if ($person === null || ! $person->active || ! AttendanceDevice::query()->where('employee_id', $person->id)->whereNull('revoked_at')->exists()) {
@@ -143,14 +163,6 @@ final readonly class MarkController
         }
 
         return $person;
-    }
-
-    private function needsLocation(RosterEntry $person, ?string $qr): bool
-    {
-        $remote = $this->schedule($person->id)?->work_mode === WorkMode::Remote;
-        $browser = $person->trusted && CompanyPolicy::current()->trusted_may_use_browser && $qr === null;
-
-        return ! $remote && ! $browser;
     }
 
     private function schedule(string $employeeId): ?AttendanceSchedule
