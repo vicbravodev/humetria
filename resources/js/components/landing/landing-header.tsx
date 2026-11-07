@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
+import { ThemeMenu } from '@/components/theme-menu';
 import { Button } from '@/components/ui/button';
 import { useScrolled } from '@/hooks/use-scrolled';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,10 @@ export default function LandingHeader() {
                         </Button>
                     ))}
                 </nav>
+                {/* On a phone the theme lives in the footer: the header only fits the logo and the two calls to action. */}
+                <span className="hidden sm:block">
+                    <ThemeMenu />
+                </span>
                 <Button
                     asChild
                     variant="ghost"

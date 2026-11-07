@@ -286,3 +286,19 @@ it('states its legal and privacy claims exactly', function (): void {
         ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
         ->assertDontSee('confidencialidad que pide cada norma');
 });
+
+it('follows the system theme until the visitor picks one in the header', function (): void {
+    visitPage('landing', '/', dark: true)
+        ->assertScript('() => document.documentElement.classList.contains("dark")')
+        ->click('@theme-menu')
+        ->click('Claro')
+        ->assertScript('() => document.documentElement.classList.contains("dark")', false)
+        ->assertScript('() => localStorage.getItem("appearance")', 'light');
+});
+
+it('lets a phone pick the theme in the footer, where the header has no room', function (): void {
+    visitPage('landing', '/', dark: true, mobile: true)
+        ->assertMissing('@theme-menu')
+        ->click('footer [aria-label="Claro"]')
+        ->assertScript('() => document.documentElement.classList.contains("dark")', false);
+});

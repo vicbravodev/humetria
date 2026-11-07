@@ -29,6 +29,7 @@ export function ThemeMenu() {
                     variant="outline"
                     size="sm"
                     aria-label="Tema"
+                    data-test="theme-menu"
                     className="touch-hit w-10 px-0 text-muted-foreground hover:text-foreground [&_svg]:size-[18px]"
                 >
                     <Icon />
