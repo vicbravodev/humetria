@@ -97,7 +97,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 3:** Implementa migraciones (check constraints para tipos, trigger `BEFORE UPDATE OR DELETE OR TRUNCATE` como el de `audit_entries`), modelos con `BelongsToCurrentTenant`, acciones con `DB::transaction()` y log `attendance.mark_recorded` (ids, sin coordenadas).
 - [ ] **Step 4:** Run → PASS. Commit por comportamiento: (a) tabla y trigger, (b) secuencia, (c) corrección y marca vigente.
 
-### Task 4: Zonas y geocerca
+### Task 4 ✅: Zonas y geocerca
 
 **Files:** Create migración `create_attendance_zones_table`, `Models/AttendanceZone.php`, `Support/Geofence.php`, `Data/ZoneReading.php`, `Actions/SaveZone.php`, factory. Tests `tests/Unit/Attendance/GeofenceTest.php` (`mutates(Geofence::class)`), `tests/Feature/Attendance/ZoneTest.php`.
 
