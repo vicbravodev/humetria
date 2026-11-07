@@ -69,6 +69,8 @@ export default defineConfig({
             'vendor/**',
             'node_modules/**',
             'public/**',
+            // Remotion project of the hero video: own package.json and tsconfig.
+            'video/**',
             'bootstrap/ssr/**',
             'tailwind.config.js',
             'resources/js/actions/**',
@@ -92,6 +94,7 @@ export default defineConfig({
             '.github/**',
             '.claude/**',
             'docs/**',
+            'video/**',
             'AGENTS.md',
             'CLAUDE.md',
             'composer.json',
