@@ -9,8 +9,8 @@ use App\Modules\Attendance\Models\AttendanceZone;
 use InvalidArgumentException;
 
 /**
- * Pure geometry: how far a position is from the nearest zone (Haversine, in meters, on a 6,371,000 m sphere) and whether
- * it is inside. Criterio 3.4.
+ * Pure geometry: which zone a position falls in (the nearest that contains it, else the nearest overall), how far it is
+ * from that zone's center (Haversine, in meters, on a 6,371,000 m sphere) and whether it is inside. Criterio 3.4.
  */
 final class Geofence
 {
@@ -30,12 +30,19 @@ final class Geofence
         $accuracyOk = $accuracyM <= $maxAccuracyM;
         $nearest = null;
         $nearestDistance = INF;
+        $inside = false;
 
+        // A zone that contains the point wins over a nearer one that does not (a point in a large yard next to a small
+        // booth is in the yard); among equals the nearest wins, and on a tie the first given. Only when no zone contains
+        // the point is the nearest overall returned, outside.
         foreach ($zones as $zone) {
             $distance = self::distance($lat, $lng, $zone->latitude, $zone->longitude);
-            if ($distance < $nearestDistance) {
+            $contains = $distance <= $zone->radius_m;
+
+            if (($contains && ! $inside) || ($contains === $inside && $distance < $nearestDistance)) {
                 $nearest = $zone;
                 $nearestDistance = $distance;
+                $inside = $contains;
             }
         }
 
@@ -43,7 +50,7 @@ final class Geofence
             return new ZoneReading(null, null, false, $accuracyOk);
         }
 
-        return new ZoneReading($nearest->id, $nearestDistance, $nearestDistance <= $nearest->radius_m, $accuracyOk);
+        return new ZoneReading($nearest->id, $nearestDistance, $inside, $accuracyOk);
     }
 
     private static function distance(float $lat1, float $lng1, float $lat2, float $lng2): float

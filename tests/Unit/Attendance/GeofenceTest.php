@@ -77,3 +77,41 @@ it('rejects coordinates that cannot exist', function (float $lat, float $lng): v
 it('accepts the extremes of the ranges', function (float $lat, float $lng): void {
     expect(Geofence::evaluate([], $lat, $lng, 10, 100)->inside)->toBeFalse();
 })->with([[90.0, 180.0], [-90.0, -180.0]]);
+
+it('prefers a zone that contains the point over a nearer one that does not', function (): void {
+    // 500 m from the center of a 1 km zone (inside it), 100 m from the center of a 50 m zone (outside it).
+    $zones = [zone('patio', 19.0 + 500 / METERS_PER_DEGREE, -99.0, 1000), zone('caseta', 19.0 + 100 / METERS_PER_DEGREE, -99.0, 50)];
+
+    foreach ([$zones, array_reverse($zones)] as $order) {
+        $reading = Geofence::evaluate($order, 19.0, -99.0, 10, 100);
+
+        expect($reading->zoneId)->toBe('patio')->and($reading->inside)->toBeTrue()->and($reading->distanceM)->toEqualWithDelta(500.0, 0.01);
+    }
+});
+
+it('picks the nearest of the zones that contain the point', function (): void {
+    $zones = [zone('grande', 19.0 + 300 / METERS_PER_DEGREE, -99.0, 1000), zone('chica', 19.0 + 20 / METERS_PER_DEGREE, -99.0, 50)];
+
+    expect(Geofence::evaluate($zones, 19.0, -99.0, 10, 100)->zoneId)->toBe('chica')
+        ->and(Geofence::evaluate(array_reverse($zones), 19.0, -99.0, 10, 100)->zoneId)->toBe('chica');
+});
+
+it('falls back to the nearest zone, outside, when none contains the point', function (): void {
+    $zones = [zone('lejos', 19.0 + 900 / METERS_PER_DEGREE, -99.0, 100), zone('cerca', 19.0 + 200 / METERS_PER_DEGREE, -99.0, 100)];
+
+    $reading = Geofence::evaluate($zones, 19.0, -99.0, 10, 100);
+
+    expect($reading->zoneId)->toBe('cerca')->and($reading->inside)->toBeFalse()->and($reading->distanceM)->toEqualWithDelta(200.0, 0.01);
+});
+
+it('is inside at a distance exactly equal to the radius', function (): void {
+    // A 0 m zone: the distance (0.0) equals the radius exactly, with no floating point in the way.
+    expect(Geofence::evaluate([zone('punto', 19.0, -99.0, 0)], 19.0, -99.0, 10, 100)->inside)->toBeTrue();
+});
+
+it('keeps the first zone given when two are at the same distance (a tie)', function (): void {
+    $zones = [zone('primera', 19.0, -99.0, 50), zone('segunda', 19.0, -99.0, 80)];
+
+    expect(Geofence::evaluate($zones, 19.0, -99.0, 10, 100)->zoneId)->toBe('primera')
+        ->and(Geofence::evaluate(array_reverse($zones), 19.0, -99.0, 10, 100)->zoneId)->toBe('segunda');
+});
