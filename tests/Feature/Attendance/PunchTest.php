@@ -92,7 +92,7 @@ function punchWith(SoftAuthenticator $phone, string $userHandle, array $body, ?s
     $options = test()->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.options', $slug))->assertOk()->json();
 
     return test()->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.store', $slug), [
-        'type' => 'start',
+        'mark_type' => 'start',
         'credential' => $phone->get($options, $userHandle),
         ...$body,
     ]);
@@ -164,7 +164,7 @@ describe('the page', function (): void {
     it('forgets the person once their device is revoked or they leave', function (string $how): void {
         $session = punchSession();
         anaPunches()->assertOk();
-        punchWith($this->phone, $this->ana->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'type' => 'end'], $session)->assertOk();
+        punchWith($this->phone, $this->ana->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'end'], $session)->assertOk();
 
         if ($how === 'revoked') {
             resolve(RevokeDevice::class)->handle($this->device->id);
@@ -302,18 +302,18 @@ describe('the sequence', function (): void {
     });
 
     it('rejects a mark out of sequence', function (): void {
-        anaPunches(['type' => 'break_end'])->assertUnprocessable()->assertExactJson(['reason' => 'not_on_break']);
+        anaPunches(['mark_type' => 'break_end'])->assertUnprocessable()->assertExactJson(['reason' => 'not_on_break']);
     });
 
     it('goes through the day and offers the next step after each mark', function (): void {
         anaPunches()->assertJsonPath('next', ['break_start', 'end']);
         $this->travel(4)->hours();
-        anaPunches(['type' => 'break_start'])->assertJsonPath('next', ['break_end', 'end']);
+        anaPunches(['mark_type' => 'break_start'])->assertJsonPath('next', ['break_end', 'end']);
         $this->travel(30)->minutes();
-        anaPunches(['type' => 'break_end'])->assertJsonPath('next', ['break_start', 'end']);
+        anaPunches(['mark_type' => 'break_end'])->assertJsonPath('next', ['break_start', 'end']);
         $this->travel(4)->hours();
 
-        anaPunches(['type' => 'end'])->assertOk()->assertExactJson([
+        anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'marks' => [
                 ['type' => 'start', 'time' => '09:00'],
                 ['type' => 'break_start', 'time' => '13:00'],
@@ -330,7 +330,7 @@ describe('the sequence', function (): void {
         anaPunches()->assertOk();
         $this->travelTo(CarbonImmutable::parse('2026-11-10 00:01:00', 'America/Mexico_City'));
 
-        anaPunches(['type' => 'end'])->assertOk()->assertExactJson([
+        anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'marks' => [['type' => 'start', 'time' => '23:59'], ['type' => 'end', 'time' => '00:01']],
             'next' => ['start'],
             'flag' => null,
@@ -385,10 +385,10 @@ describe('who marks', function (): void {
         $cookie = config()->string('session.cookie');
         $session = punchSession();
         $options = $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.options', 'acme'))->json();
-        $body = ['type' => 'start', 'credential' => $this->phone->get($options, $this->ana->id), 'q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE];
+        $body = ['mark_type' => 'start', 'credential' => $this->phone->get($options, $this->ana->id), 'q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE];
 
         $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.store', 'acme'), $body)->assertOk();
-        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.store', 'acme'), [...$body, 'type' => 'end'])->assertNotFound();
+        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.store', 'acme'), [...$body, 'mark_type' => 'end'])->assertNotFound();
 
         expect(AttendanceMark::query()->count())->toBe(1);
     });
@@ -399,7 +399,7 @@ describe('who marks', function (): void {
 
         // Another browser: a session id of its own (withCookie keeps the last cookie for later requests of the test).
         $this->withCredentials()->withCookie($cookie, Str::random(40))->postJson(route('attendance.device.punch.store', 'acme'), [
-            'type' => 'start', 'credential' => $this->phone->get($options, $this->ana->id), 'q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE,
+            'mark_type' => 'start', 'credential' => $this->phone->get($options, $this->ana->id), 'q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE,
         ])->assertNotFound();
     });
 
@@ -427,8 +427,8 @@ describe('validation', function (): void {
         'negative accuracy' => [['accuracy' => -1]],
         'latitude without longitude' => [['lng' => null]],
         'position without accuracy' => [['accuracy' => null]],
-        'unknown type' => [['type' => 'lunch']],
-        'no type' => [['type' => null]],
+        'unknown type' => [['mark_type' => 'lunch']],
+        'no type' => [['mark_type' => null]],
         'no credential' => [['credential' => null]],
         'code too long' => [['q' => str_repeat('a', 129)]],
     ]);
@@ -441,6 +441,7 @@ describe('validation', function (): void {
 
     it('names its fields in Spanish', function (): void {
         anaPunches(['lat' => 91])->assertJsonValidationErrors(['lat' => 'latitud']);
+        anaPunches(['mark_type' => 'lunch'])->assertJsonValidationErrors(['mark_type' => 'tipo de marca']);
     });
 });
 
@@ -478,7 +479,7 @@ it('never writes the position, the code or the key to a log line', function (): 
     $code = punchQr($this->tenant->id, $this->plant->id);
 
     anaPunches(['q' => $code])->assertOk();
-    anaPunches(['q' => $code, ...PUNCH_OUTSIDE, 'type' => 'end'])->assertUnprocessable();
+    anaPunches(['q' => $code, ...PUNCH_OUTSIDE, 'mark_type' => 'end'])->assertUnprocessable();
 
     $log = File::get($path);
     File::delete($path);

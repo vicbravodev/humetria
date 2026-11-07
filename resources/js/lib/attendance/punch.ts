@@ -146,7 +146,7 @@ export async function punch(
         const response = await post(
             request.punchUrl,
             {
-                type: request.type,
+                mark_type: request.type,
                 credential: assertionPayload(key),
                 ...(request.qr === null ? {} : { q: request.qr }),
                 ...request.position,

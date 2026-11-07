@@ -89,7 +89,7 @@ describe('punch', () => {
             'X-XSRF-TOKEN': 'tok',
         });
         expect(sentBody(fetcher)).toEqual({
-            type: 'start',
+            mark_type: 'start',
             q: 'abc',
             lat: 19.4,
             lng: -99.1,

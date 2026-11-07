@@ -285,6 +285,7 @@ return [
         'lng' => 'longitud',
         'accuracy' => 'precisión',
         'q' => 'código QR',
+        'mark_type' => 'tipo de marca',
         'footwear' => 'calzado',
         'discomfort' => 'molestias',
         'tasks' => 'tareas',
