@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Support\WeekPeriod;
 use Carbon\CarbonImmutable;
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\Model;
 final class WeeklyConfirmation extends Model
 {
     /** @use HasFactory<WeeklyConfirmationFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     protected $table = 'attendance_weekly_confirmations';
 

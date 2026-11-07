@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -133,4 +134,34 @@ it('leaves out a mark a correction voided, and the void itself', function (): vo
     AttendanceMark::factory()->correcting($start)->create(['marked_at' => null]);
 
     expect(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-04')))->toBe([]);
+});
+
+it('gives the days of several people at once, each with their own window, in one query', function (): void {
+    // Ana's Saturday night day spills into the week; Bob's last start is weeks before and his marks all count on their own.
+    anaMarks($this, MarkType::Start, '2026-11-07 22:00');
+    anaMarks($this, MarkType::End, '2026-11-09 03:00');
+    $anaStart = anaMarks($this, MarkType::Start, '2026-11-10 09:00');
+    $anaEnd = anaMarks($this, MarkType::End, '2026-11-10 17:00');
+    $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    $bobMark = fn (MarkType $type, string $local): AttendanceMark => AttendanceMark::factory()->create([
+        'tenant_id' => $this->tenant->id, 'employee_id' => $bob->id, 'work_center_id' => $this->center->id,
+        'type' => $type, 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City'),
+    ]);
+    $bobMark(MarkType::Start, '2026-10-01 09:00');
+    $bobMark(MarkType::End, '2026-11-11 18:00');
+    $bobStart = $bobMark(MarkType::Start, '2026-11-12 08:00');
+    $bobMark(MarkType::Start, '2026-11-16 08:00');
+    $nobody = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    DB::enableQueryLog();
+
+    $days = EffectiveMarks::byDayOf([$this->ana->id, $bob->id, $nobody->id], weekOf('2026-11-10'));
+
+    expect(count(DB::getQueryLog()))->toBe(1)
+        ->and(array_map(fn (array $byDay): array => array_map(markIds(...), $byDay), $days))->toBe([
+            $this->ana->id => ['2026-11-10' => [$anaStart->id, $anaEnd->id]],
+            // His end on Wednesday closes his October day, so it is not the week's.
+            $bob->id => ['2026-11-12' => [$bobStart->id]],
+            $nobody->id => [],
+        ])
+        ->and(EffectiveMarks::byDayOf([], weekOf('2026-11-10')))->toBe([]);
 });

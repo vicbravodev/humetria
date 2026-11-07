@@ -6,9 +6,9 @@ namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
-use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Facades\DB;
 use LogicException;
 
 /**
@@ -47,16 +47,61 @@ final class EffectiveMarks
      */
     public static function byDay(string $employeeId, WeekPeriod $week): array
     {
-        // From the last start before the week (its marks in the week are that day's, not the week's) to the first start
-        // after it (whatever comes before is the end of the week's last day, however late).
-        $before = self::of($employeeId)->where('type', MarkType::Start)->where('marked_at', '<', $week->startUtc())->latest('marked_at')->first(['marked_at'])?->marked_at;
-        $after = self::of($employeeId)->where('type', MarkType::Start)->where('marked_at', '>=', $week->nextStartUtc())->oldest('marked_at')->first(['marked_at'])?->marked_at;
-        $marks = self::of($employeeId)
-            ->where('marked_at', '>=', $before?->utc() ?? $week->startUtc())
-            ->when($after, fn (Builder $query, CarbonImmutable $at) => $query->where('marked_at', '<', $at->utc()))
-            ->orderBy('marked_at')
-            ->get();
+        return self::byDayOf([$employeeId], $week)[$employeeId];
+    }
 
+    /**
+     * The days of several people at once, in one query, each person read from their own window: from their last start
+     * before the week (its marks in the week are that day's, not the week's) to their first start after it (whatever comes
+     * before is the end of the week's last day, however late).
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, array<string, list<AttendanceMark>>> by employee id, every one asked for
+     */
+    public static function byDayOf(array $employeeIds, WeekPeriod $week): array
+    {
+        if ($employeeIds === []) {
+            return [];
+        }
+
+        $marks = AttendanceMark::query()
+            ->among('attendance_marks.employee_id', $employeeIds)
+            ->whereNotNull('marked_at')
+            ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'corrections')->whereColumn('corrections.corrects_mark_id', 'attendance_marks.id'))
+            // From the week, or from the person's last start before it, when there is one.
+            ->where(fn (Builder $query) => $query->where('attendance_marks.marked_at', '>=', $week->startUtc())
+                ->orWhere('attendance_marks.marked_at', '>=', self::starts()->selectRaw('max(starts.marked_at)')->where('starts.marked_at', '<', $week->startUtc())))
+            // Up to the person's first start after the week, that one left out.
+            ->whereNotExists(self::starts()->where('starts.marked_at', '>=', $week->nextStartUtc())->whereColumn('starts.marked_at', '<=', 'attendance_marks.marked_at'))
+            ->orderBy('employee_id')
+            ->orderBy('marked_at')
+            ->get()
+            ->groupBy('employee_id');
+
+        $days = [];
+        foreach ($employeeIds as $employeeId) {
+            $days[$employeeId] = self::group(array_values($marks->get($employeeId)?->all() ?? []), $week);
+        }
+
+        return $days;
+    }
+
+    /** The effective starts of the outer query's person. */
+    private static function starts(): QueryBuilder
+    {
+        return DB::table('attendance_marks', 'starts')
+            ->whereColumn('starts.employee_id', 'attendance_marks.employee_id')
+            ->where('starts.type', MarkType::Start->value)
+            ->whereNotNull('starts.marked_at')
+            ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'start_corrections')->whereColumn('start_corrections.corrects_mark_id', 'starts.id'));
+    }
+
+    /**
+     * @param  list<AttendanceMark>  $marks  one person's, in order of time
+     * @return array<string, list<AttendanceMark>>
+     */
+    private static function group(array $marks, WeekPeriod $week): array
+    {
         $days = [];
         $openDay = null;
         foreach ($marks as $mark) {

@@ -5,11 +5,15 @@ declare(strict_types=1);
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/attendance.
 // Every name starts with tenant.attendance.
 
+use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use Illuminate\Support\Facades\Route;
 
 /** @var string $notReserved */
+// RH's overview: one week of the people by state, and the centers.
+Route::get('admin/{tenant:slug}/attendance', [AttendanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.index');
+
 // The QR screens of a center: issued with a link shown once, revoked (the row stays, with when).
 Route::post('admin/{tenant:slug}/attendance/kiosks', [KioskController::class, 'store'])->where('tenant', $notReserved)->name('tenant.attendance.kiosks.store');
 Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('kiosk')->name('tenant.attendance.kiosks.destroy');

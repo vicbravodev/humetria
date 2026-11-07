@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
 use Carbon\CarbonImmutable;
@@ -33,7 +34,7 @@ use Illuminate\Database\Eloquent\Model;
 final class AttendanceSchedule extends Model
 {
     /** @use HasFactory<AttendanceScheduleFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     /**
      * @return array<string, string>

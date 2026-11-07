@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use Carbon\CarbonImmutable;
@@ -43,7 +44,7 @@ use Illuminate\Database\Eloquent\Model;
 final class AttendanceMark extends Model
 {
     /** @use HasFactory<AttendanceMarkFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     public const null UPDATED_AT = null;
 

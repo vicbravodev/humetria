@@ -31,4 +31,28 @@ final class WeeklyConfirmationFactory extends Factory
             'status' => WeekStatus::Pending,
         ];
     }
+
+    /** Confirmed by the person from a device of theirs. */
+    public function confirmed(): self
+    {
+        return $this->answered(['status' => WeekStatus::Confirmed, 'confirmed_at' => now()]);
+    }
+
+    /** Disputed by the person from a device of theirs, with their reason. */
+    public function disputed(): self
+    {
+        return $this->answered(['status' => WeekStatus::Disputed, 'disputed_at' => now(), 'reason' => 'El martes salí a las 18:00, no a las 16:00.']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $answer
+     */
+    private function answered(array $answer): self
+    {
+        return $this->state([
+            ...$answer,
+            'device_id' => fn (array $attributes) => AttendanceDeviceFactory::new()->state(['tenant_id' => $attributes['tenant_id'], 'employee_id' => $attributes['employee_id']]),
+            'digest' => hash('sha256', ''),
+        ]);
+    }
 }
