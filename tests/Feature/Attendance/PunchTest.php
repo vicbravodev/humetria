@@ -133,6 +133,14 @@ describe('the page', function (): void {
         $this->get('/a/acme/punch?q[]=x')->assertInertia(fn (AssertableInertia $page) => $page->where('qr', null));
     });
 
+    it('lets this page alone read the position, from its own origin only (Permissions-Policy)', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
+        $this->get(route('attendance.device.punch.show', ['acme', 'q' => 'abc']))
+            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
+        $this->get(route('login'))->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    });
+
     it('answers 404 for a company that does not exist', function (): void {
         $this->get(route('attendance.device.punch.home', 'nadie'))->assertNotFound();
         $this->postJson(route('attendance.device.punch.options', 'nadie'))->assertNotFound();

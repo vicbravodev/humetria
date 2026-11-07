@@ -29,7 +29,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * A person marks from their linked device, with no account (criterios 3.3, 4.2 to 4.4). The order of the checks:
@@ -49,13 +49,17 @@ final readonly class MarkController
 
     public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant) {}
 
-    public function show(Request $request, string $tenant): Response
+    /**
+     * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
+     * page allows it to its own origin only (SecurityHeaders keeps a header the response already carries).
+     */
+    public function show(Request $request, string $tenant): SymfonyResponse
     {
         $person = $this->remembered($request);
         $q = $request->query('q');
         $qr = is_string($q) && $q !== '' && strlen($q) <= 128 ? $q : null;
 
-        return Inertia::render('attendance/punch', [
+        $page = Inertia::render('attendance/punch', [
             'company' => $this->companies->current()->tradeName,
             'qr' => $qr,
             'person' => $person === null ? null : ['name' => $person->name, ...PunchDay::of($person->id)],
@@ -65,6 +69,11 @@ final readonly class MarkController
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
         ]);
+
+        $response = $page->toResponse($request);
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
+
+        return $response;
     }
 
     public function options(Request $request, WebAuthnCeremony $ceremony): JsonResponse

@@ -8,7 +8,6 @@ use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
 use Pest\Browser\Api\AwaitableWebpage;
-use Pest\Browser\Playwright\Client;
 use Pest\Browser\Playwright\Playwright;
 
 /*
@@ -33,43 +32,6 @@ afterEach(function (): void {
 function enrollPath(): string
 {
     return (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
-}
-
-/** A private property of Pest Browser's objects: the page it drives and the Playwright ids behind it. */
-function pestInternal(object $object, string $property): mixed
-{
-    return (new ReflectionProperty($object, $property))->getValue($object);
-}
-
-/**
- * Makes the page's origin the relying party, and gives the page a platform authenticator with a resident key and
- * user verification that always succeeds (the person touches the reader).
- */
-function withFingerprintReader(AwaitableWebpage $page, bool $verifies = true): void
-{
-    $origin = parse_url($page->url(), PHP_URL_SCHEME).'://'.parse_url($page->url(), PHP_URL_HOST).':'.parse_url($page->url(), PHP_URL_PORT);
-    config(['fortify.passkeys.relying_party_id' => 'localhost', 'fortify.passkeys.allowed_origins' => [$origin]]);
-
-    $playwrightPage = pestInternal($page, 'page');
-    $context = $playwrightPage->context();
-    $session = null;
-
-    foreach (Client::instance()->execute((string) pestInternal($context, 'guid'), 'newCDPSession', ['page' => ['guid' => pestInternal($playwrightPage, 'guid')]]) as $message) {
-        $session = $message['result']['session']['guid'] ?? $session;
-    }
-
-    // Without a session the authenticator would be missing and the test would fail for the wrong reason.
-    expect($session)->toBeString()->not->toBeEmpty();
-    $send = fn (string $method, array $params): array => iterator_to_array(Client::instance()->execute((string) $session, 'send', ['method' => $method, 'params' => $params]));
-    $send('WebAuthn.enable', ['enableUI' => false]);
-    $send('WebAuthn.addVirtualAuthenticator', ['options' => [
-        'protocol' => 'ctap2',
-        'transport' => 'internal',
-        'hasResidentKey' => true,
-        'hasUserVerification' => true,
-        'isUserVerified' => $verifies,
-        'automaticPresenceSimulation' => true,
-    ]]);
 }
 
 it('shows the agreement to read, and the button waits for it to be accepted', function (bool $dark, bool $mobile): void {

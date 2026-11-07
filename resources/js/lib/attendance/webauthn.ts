@@ -14,6 +14,18 @@ export type CreatedKey = {
     };
 };
 
+/** The signature `navigator.credentials.get()` made, as much of it as the server needs. */
+export type SignedKey = {
+    rawId: ArrayBuffer;
+    type: string;
+    response: {
+        clientDataJSON: ArrayBuffer;
+        authenticatorData: ArrayBuffer;
+        signature: ArrayBuffer;
+        userHandle: ArrayBuffer | null;
+    };
+};
+
 type Json = Record<string, unknown>;
 
 const PUBLIC_KEY: PublicKeyCredentialType = 'public-key';
@@ -160,6 +172,55 @@ export function registrationPayload(key: CreatedKey) {
             clientDataJSON: toBase64url(key.response.clientDataJSON),
             attestationObject: toBase64url(key.response.attestationObject),
             transports: key.response.getTransports?.() ?? [],
+        },
+        clientExtensionResults: {},
+    };
+}
+
+/**
+ * The server's options for a signature, as `navigator.credentials.get()` takes them: no key listed (the device offers the
+ * person's own), the person verified. Null when they are not options.
+ */
+export function requestOptions(
+    json: unknown,
+): PublicKeyCredentialRequestOptions | null {
+    if (!isJson(json) || typeof json['challenge'] !== 'string') {
+        return null;
+    }
+
+    const verification = oneOf(json['userVerification'], [
+        'required',
+        'preferred',
+        'discouraged',
+    ]);
+
+    return {
+        challenge: fromBase64url(json['challenge']),
+        ...(typeof json['rpId'] === 'string' ? { rpId: json['rpId'] } : {}),
+        ...(verification === undefined
+            ? {}
+            : { userVerification: verification }),
+        ...(typeof json['timeout'] === 'number'
+            ? { timeout: json['timeout'] }
+            : {}),
+    };
+}
+
+/** The signature as the JSON the server reads (the shape of `PublicKeyCredential.toJSON()`). */
+export function assertionPayload(key: SignedKey) {
+    const id = toBase64url(key.rawId);
+
+    return {
+        id,
+        rawId: id,
+        type: key.type,
+        response: {
+            clientDataJSON: toBase64url(key.response.clientDataJSON),
+            authenticatorData: toBase64url(key.response.authenticatorData),
+            signature: toBase64url(key.response.signature),
+            ...(key.response.userHandle === null
+                ? {}
+                : { userHandle: toBase64url(key.response.userHandle) }),
         },
         clientExtensionResults: {},
     };

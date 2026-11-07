@@ -587,6 +587,11 @@ function surveyAnswers(string $answer = 'yes'): array
 */
 require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
 
+/*
+| The time clock's browser helpers (a phone's fingerprint reader and its position), shared by its browser tests.
+*/
+require_once __DIR__.'/Browser/attendance-helpers.php';
+
 /**
  * Issues an enrollment link of `$employeeId` as RH does, and gives the URL the person got: the one emailed to them (the
  * mail must be faked), or the one RH hands over when they have no email.

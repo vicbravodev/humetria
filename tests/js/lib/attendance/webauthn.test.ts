@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+    assertionPayload,
     creationOptions,
     deviceLabel,
     fromBase64url,
     registrationPayload,
+    requestOptions,
     toBase64url,
 } from '@/lib/attendance/webauthn';
 
@@ -175,5 +177,78 @@ describe('deviceLabel', () => {
         expect(deviceLabel('Mozilla/5.0 (X11; Linux x86_64)')).toBe(
             'Dispositivo',
         );
+    });
+});
+
+describe('requestOptions', () => {
+    it('reads the options of a signature: the challenge as bytes, the relying party, the person verified', () => {
+        expect(
+            requestOptions({
+                challenge: 'AQID',
+                rpId: 'localhost',
+                userVerification: 'required',
+                timeout: 60000,
+                allowCredentials: [],
+            }),
+        ).toEqual({
+            challenge: bytes(1, 2, 3),
+            rpId: 'localhost',
+            userVerification: 'required',
+            timeout: 60000,
+        });
+    });
+
+    it('leaves out what it cannot read', () => {
+        expect(
+            requestOptions({
+                challenge: 'AQID',
+                rpId: 7,
+                userVerification: 'always',
+                timeout: '60',
+            }),
+        ).toEqual({ challenge: bytes(1, 2, 3) });
+    });
+
+    it('is null for anything that is not options', () => {
+        expect(requestOptions(null)).toBeNull();
+        expect(requestOptions([])).toBeNull();
+        expect(requestOptions({ challenge: 3 })).toBeNull();
+    });
+});
+
+describe('assertionPayload', () => {
+    const key = {
+        rawId: bytes(9, 8).buffer,
+        type: 'public-key',
+        response: {
+            clientDataJSON: bytes(1).buffer,
+            authenticatorData: bytes(2).buffer,
+            signature: bytes(3).buffer,
+            userHandle: bytes(4).buffer,
+        },
+    };
+
+    it('writes the signature as the JSON the server reads', () => {
+        expect(assertionPayload(key)).toEqual({
+            id: 'CQg',
+            rawId: 'CQg',
+            type: 'public-key',
+            response: {
+                clientDataJSON: 'AQ',
+                authenticatorData: 'Ag',
+                signature: 'Aw',
+                userHandle: 'BA',
+            },
+            clientExtensionResults: {},
+        });
+    });
+
+    it('sends no user handle when the device gave none', () => {
+        expect(
+            assertionPayload({
+                ...key,
+                response: { ...key.response, userHandle: null },
+            }).response,
+        ).not.toHaveProperty('userHandle');
     });
 });
