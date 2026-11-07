@@ -6,16 +6,15 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Enums\MarkMethod;
-use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
 use App\Modules\Attendance\Models\AttendanceDevice;
-use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Attendance\Support\CompanyPolicy;
 use App\Modules\Attendance\Support\MarkPolicyCheck;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
@@ -99,7 +98,7 @@ final readonly class MarkController
         try {
             $context = MarkPolicyCheck::decide(
                 $this->schedule($person->id),
-                $this->policy(),
+                CompanyPolicy::current(),
                 $person->trusted,
                 $qr === null ? null : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, CarbonImmutable::now()),
                 $zones,
@@ -145,7 +144,7 @@ final readonly class MarkController
     private function needsLocation(RosterEntry $person, ?string $qr): bool
     {
         $remote = $this->schedule($person->id)?->work_mode === WorkMode::Remote;
-        $browser = $person->trusted && $this->policy()->trusted_may_use_browser && $qr === null;
+        $browser = $person->trusted && CompanyPolicy::current()->trusted_may_use_browser && $qr === null;
 
         return ! $remote && ! $browser;
     }
@@ -153,16 +152,5 @@ final readonly class MarkController
     private function schedule(string $employeeId): ?AttendanceSchedule
     {
         return AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
-    }
-
-    /** The company's policy, or the defaults while RH has not saved one (the same as the table's). */
-    private function policy(): AttendancePolicy
-    {
-        return AttendancePolicy::query()->first() ?? new AttendancePolicy([
-            'out_of_zone' => OutOfZoneRule::Block,
-            'max_accuracy_m' => 100,
-            'require_qr_onsite' => true,
-            'trusted_may_use_browser' => true,
-        ]);
     }
 }
