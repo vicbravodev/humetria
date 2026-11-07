@@ -79,6 +79,16 @@ it('does not correct a mark twice: the correction is the one to correct', functi
         ->and(AttendanceMark::query()->count())->toBe(3);
 });
 
+it('does not correct a mark to a time still to come, which would block the person\'s real marks', function (): void {
+    $this->freezeTime();
+
+    expect(fn () => resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable()->addSecond(), 'Adelantada.', (string) $this->hr->id))
+        ->toThrow(InvalidArgumentException::class, 'future')
+        ->and(AttendanceMark::query()->count())->toBe(1);
+
+    expect(resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable(), 'Justo ahora.', (string) $this->hr->id)->method)->toBe(MarkMethod::Correction);
+});
+
 it('does not find a mark of another company', function (): void {
     $other = AttendanceMark::factory()->create();
 

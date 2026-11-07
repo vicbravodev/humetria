@@ -23,6 +23,10 @@ final readonly class CorrectMark
 
     public function handle(string $markId, ?CarbonImmutable $newMarkedAt, string $reason, string $userId): AttendanceMark
     {
+        if ($newMarkedAt?->isFuture() === true) {
+            throw new InvalidArgumentException('A correction cannot set a mark in the future.');
+        }
+
         $correction = DB::transaction(function () use ($markId, $newMarkedAt, $reason, $userId): AttendanceMark {
             $original = AttendanceMark::query()->findOrFail($markId);
             DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_marks:{$original->employee_id}"]);
