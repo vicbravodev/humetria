@@ -33,8 +33,7 @@ final class AskCorrectionRequest extends FormRequest
             'mark_id' => ['nullable', 'uuid'],
             'mark_type' => ['required', Rule::enum(MarkType::class)],
             'proposed_at' => ['required', 'date_format:Y-m-d H:i'],
-            // Plain text: no control characters (line breaks and tabs are fine).
-            'reason' => ['required', 'string', 'min:'.RequestCorrection::MIN_REASON, 'max:500', 'not_regex:/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/'],
+            'reason' => ['required', 'string', 'min:'.RequestCorrection::MIN_REASON, 'max:'.RequestCorrection::MAX_REASON, 'not_regex:'.RequestCorrection::CONTROL_CHARACTERS],
             'start' => ['nullable', 'date_format:Y-m-d'],
         ];
     }

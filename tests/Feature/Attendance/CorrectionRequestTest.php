@@ -182,6 +182,17 @@ describe('asking', function (): void {
         expect(fn () => anaAsks(null, MarkType::Start, '2026-11-10 09:00', '  Olvidé.   '))->toThrow(InvalidArgumentException::class);
     });
 
+    it('refuses a reason over 500 characters or with control characters, whoever calls it', function (string $reason): void {
+        expect(fn () => anaAsks(null, MarkType::Start, '2026-11-10 09:00', $reason))->toThrow(fn (CorrectionRejected $e) => expect($e->reason)->toBe('reason_invalid'))
+            ->and(CorrectionRequest::query()->count())->toBe(0);
+    })->with(['501 characters' => [str_repeat('a', 501)], 'a bell' => ["Llegué a las 9\u{0007} en punto."]]);
+
+    it('takes a reason of exactly 500 characters, with line breaks', function (): void {
+        anaAsks(null, MarkType::Start, '2026-11-10 09:00', "Llegué a las 9.\n".str_repeat('a', 484));
+
+        expect(CorrectionRequest::query()->sole()->reason)->toHaveLength(500);
+    });
+
     it('takes no request of a person who left', function (): void {
         $this->ana->update(['deactivated_at' => now()]);
 

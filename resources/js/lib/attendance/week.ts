@@ -259,6 +259,8 @@ const MESSAGES: Record<string, string> = {
         'Ya pidió corregir esta marca. Recursos Humanos la está revisando.',
     too_many_pending:
         'Tiene 10 solicitudes esperando a Recursos Humanos. Espere a que las revisen antes de pedir otra.',
+    reason_invalid:
+        'Escriba su motivo en texto simple, con 500 caracteres a lo más.',
     invalid_request:
         'Escriba por qué pide la corrección, con al menos 10 caracteres, y la hora.',
 };
