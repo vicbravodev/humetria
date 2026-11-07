@@ -59,9 +59,9 @@ function publicRouteNames(): array
         'complaints.follow-up.open', // guest: la persona abre su caso con la referencia y la clave en el cuerpo; igual respuesta si falla una u otra; throttled por una huella de la dirección
         'complaints.follow-up.messages.store', // guest: la persona escribe en su caso con la referencia y la clave; solo el día, nunca la hora; throttled
         'complaints.follow-up.withdraw', // guest: la persona retira su caso con la referencia y la clave; throttled
-        'attendance.device.kiosk.activate', // guest: the QR screen of a center (a fixed tablet, no account) opens its link once; the screen's token is the credential and goes to an httpOnly cookie; an unknown, revoked or foreign token gives the same 404; throttled
-        'attendance.device.kiosk.show', // guest: the QR screen's page; its token in the httpOnly cookie is the credential; the same 404 by any cause; throttled
-        'attendance.device.kiosk.qr', // guest: the QR screen asks for the center's current code (rotating, 30 s); its token in the httpOnly cookie is the credential; the same 404 by any cause; throttled
+        'attendance.device.kiosk.activate', // guest: la pantalla del QR de un centro (tableta fija, sin cuenta) abre su enlace una sola vez: el token del enlace se cambia por un secreto nuevo que solo guarda una cookie httpOnly y el enlace muere; un enlace ya usado, revocado, ajeno o desconocido da el mismo 404; throttled
+        'attendance.device.kiosk.show', // guest: la página de la pantalla del QR; el secreto de su cookie httpOnly es la credencial; el mismo 404 por cualquier causa; throttled
+        'attendance.device.kiosk.qr', // guest: la pantalla del QR pide el código vigente de su centro (rota cada 30 s); el secreto de su cookie httpOnly es la credencial; el mismo 404 por cualquier causa; throttled
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
         'compensation.report.shared', // guest: the report of a contract scenario from a temporary link (7 days at most, revocable); groups under the minimum folded into Otros, no annex, nobody named; the token is the credential; throttled
     ];

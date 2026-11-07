@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Http\Controllers;
 
+use App\Modules\Attendance\Actions\ActivateKioskDevice;
 use App\Modules\Attendance\Actions\IssueKioskDevice;
 use App\Modules\Attendance\Actions\RevokeKioskDevice;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
@@ -24,7 +25,8 @@ use Inertia\Response;
 
 /**
  * The QR screen of a work center: RH issues and revokes it in the panel; the screen (a fixed tablet, no account) shows the
- * center's rotating code. Its token lives in an httpOnly cookie, never in the page or in the address after the first visit.
+ * center's rotating code. Its link opens once: the cookie (httpOnly) gets a new secret and the link dies; the secret is never in
+ * the page or in an address.
  * A screen without a valid token, revoked, of another company or of an archived center gets the same 404.
  */
 final class KioskController
@@ -58,14 +60,15 @@ final class KioskController
         return back();
     }
 
-    public function activate(string $tenant, string $token): RedirectResponse
+    public function activate(string $tenant, string $token, ActivateKioskDevice $activate): RedirectResponse
     {
-        $this->screen($token);
+        $secret = $activate->handle($token);
+        abort_if($secret === null, 404);
 
         // Lax, not Strict: the link is tapped in an email or a chat, a cross-site navigation whose redirect would go without a
         // Strict cookie. The cookie only lets the screen read its code.
         return redirect()->route('attendance.device.kiosk.show', $tenant)
-            ->withCookie(cookie(self::COOKIE, $token, self::COOKIE_MINUTES, "/a/{$tenant}", httpOnly: true, sameSite: 'lax'));
+            ->withCookie(cookie(self::COOKIE, $secret, self::COOKIE_MINUTES, "/a/{$tenant}", httpOnly: true, sameSite: 'lax'));
     }
 
     public function show(Request $request, string $tenant): Response

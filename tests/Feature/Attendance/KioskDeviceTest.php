@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Actions\ActivateKioskDevice;
 use App\Modules\Attendance\Actions\IssueKioskDevice;
 use App\Modules\Attendance\Actions\RevokeKioskDevice;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-mutates(IssueKioskDevice::class, RevokeKioskDevice::class, KioskDevice::class);
+mutates(IssueKioskDevice::class, ActivateKioskDevice::class, RevokeKioskDevice::class, KioskDevice::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -28,7 +29,7 @@ it('issues a screen for a work center, giving its token once and keeping only it
     $kiosk = KioskDevice::query()->sole();
     $row = json_encode(DB::table('attendance_kiosk_devices')->first(), JSON_THROW_ON_ERROR);
     expect(strlen($token))->toBeGreaterThanOrEqual(40)
-        ->and($kiosk)->work_center_id->toBe($this->center->id)->tenant_id->toBe($this->tenant->id)->revoked_at->toBeNull()->last_seen_at->toBeNull()
+        ->and($kiosk)->work_center_id->toBe($this->center->id)->tenant_id->toBe($this->tenant->id)->revoked_at->toBeNull()->last_seen_at->toBeNull()->activated_at->toBeNull()
         ->and($kiosk->token_hash)->toBe(hash('sha256', $token))
         ->and($row)->not->toContain($token)
         ->and(resolve(IssueKioskDevice::class)->handle($this->center->id))->not->toBe($token);
@@ -44,25 +45,59 @@ it('does not issue a screen for an archived or foreign work center', function ()
         ->and(KioskDevice::query()->count())->toBe(0);
 });
 
-it('finds the screen of a token while it is not revoked', function (): void {
-    $token = resolve(IssueKioskDevice::class)->handle($this->center->id);
+it('activates a screen once, swapping the link\'s token for a secret only its cookie keeps, logging ids only', function (): void {
+    $link = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    $kiosk = KioskDevice::query()->sole();
+    Log::spy();
+
+    $secret = resolve(ActivateKioskDevice::class)->handle($link);
+
+    expect($secret)->toBeString()->not->toBe($link)
+        ->and(strlen((string) $secret))->toBeGreaterThanOrEqual(40)
+        ->and($kiosk->fresh())->token_hash->toBe(hash('sha256', (string) $secret))->activated_at->not->toBeNull()
+        ->and(resolve(ActivateKioskDevice::class)->handle($link))->toBeNull()
+        ->and(resolve(ActivateKioskDevice::class)->handle((string) $secret))->toBeNull();
+    Log::shouldHaveReceived('info')->once()->with('attendance.kiosk_activated', ['kiosk_id' => $kiosk->id]);
+});
+
+it('does not activate the link of a revoked screen or of an archived center, nor an unknown one', function (): void {
+    $revoked = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    resolve(RevokeKioskDevice::class)->handle(KioskDevice::query()->sole()->id);
+    $archived = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    $this->center->update(['archived_at' => now()]);
+
+    expect(resolve(ActivateKioskDevice::class)->handle($revoked))->toBeNull()
+        ->and(resolve(ActivateKioskDevice::class)->handle($archived))->toBeNull()
+        ->and(resolve(ActivateKioskDevice::class)->handle(''))->toBeNull()
+        ->and(KioskDevice::query()->whereNotNull('activated_at')->count())->toBe(0);
+});
+
+it('finds an activated screen by its secret while it is not revoked, never by its link', function (): void {
+    $link = resolve(IssueKioskDevice::class)->handle($this->center->id);
     $kiosk = KioskDevice::query()->sole();
 
-    expect(KioskDevice::findActive($token)?->id)->toBe($kiosk->id)
-        ->and(KioskDevice::findActive($token.'x'))->toBeNull()
+    expect(KioskDevice::findActive($link))->toBeNull();
+
+    $secret = (string) resolve(ActivateKioskDevice::class)->handle($link);
+
+    expect(KioskDevice::findActive($secret)?->id)->toBe($kiosk->id)
+        ->and(KioskDevice::findActive($secret.'x'))->toBeNull()
         ->and(KioskDevice::findActive(''))->toBeNull();
 
     resolve(RevokeKioskDevice::class)->handle($kiosk->id);
 
-    expect(KioskDevice::findActive($token))->toBeNull();
+    expect(KioskDevice::findActive($secret))->toBeNull();
 });
 
-it('does not find a screen of another company', function (): void {
-    $token = resolve(IssueKioskDevice::class)->handle($this->center->id);
+it('does not find or activate a screen of another company', function (): void {
+    $link = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    $other = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    $token = (string) resolve(ActivateKioskDevice::class)->handle($link);
 
     workIn(Tenant::factory()->create());
 
     expect(KioskDevice::findActive($token))->toBeNull()
+        ->and(resolve(ActivateKioskDevice::class)->handle($other))->toBeNull()
         ->and(KioskDevice::query()->count())->toBe(0);
 });
 

@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Route;
 // No account: the device's own credential authorizes it, inside the company of the slug (ResolveDeviceTenant), which an
 // unknown or suspended company answers with a 404. Throttled per address before anything is read.
 Route::middleware(['throttle:attendance-device', ResolveDeviceTenant::class])->group(function (): void {
-    // The QR screen of a center: its link (shown once to RH) leaves the token in an httpOnly cookie and out of the address.
+    // The QR screen of a center: its link (shown once to RH) opens once, swapping its token for a secret kept only in an
+    // httpOnly cookie; the link dies.
     Route::get('a/{tenant:slug}/kiosk/{token}', [KioskController::class, 'activate'])->name('attendance.device.kiosk.activate');
     Route::get('a/{tenant:slug}/kiosk', [KioskController::class, 'show'])->name('attendance.device.kiosk.show');
     Route::get('a/{tenant:slug}/qr', [KioskController::class, 'qr'])->name('attendance.device.kiosk.qr');

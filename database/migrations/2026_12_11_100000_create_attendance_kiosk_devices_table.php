@@ -7,8 +7,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Registro de jornada: the QR screens of a work center (a fixed tablet). Only the hash of a screen's token is kept; RH
- * revokes a screen and its row stays, with when.
+ * Registro de jornada: the QR screens of a work center (a fixed tablet). Only the hash of a screen's token is kept: first
+ * the one of its link, then, once the link is opened, the one of the secret only the screen's cookie holds. RH revokes a
+ * screen and its row stays, with when.
  */
 return new class extends Migration
 {
@@ -19,6 +20,7 @@ return new class extends Migration
             $table->foreignUuid('tenant_id')->constrained()->restrictOnDelete();
             $table->uuid('work_center_id');
             $table->char('token_hash', 64)->unique();
+            $table->timestampTz('activated_at')->nullable();
             $table->timestampTz('last_seen_at')->nullable();
             $table->timestampTz('revoked_at')->nullable();
             $table->timestampsTz();

@@ -22,12 +22,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $tenant_id
  * @property string $work_center_id
  * @property string $token_hash
+ * @property CarbonImmutable|null $activated_at
  * @property CarbonImmutable|null $last_seen_at
  * @property CarbonImmutable|null $revoked_at
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'token_hash', 'last_seen_at', 'revoked_at'])]
+#[Fillable(['tenant_id', 'work_center_id', 'token_hash', 'activated_at', 'last_seen_at', 'revoked_at'])]
 #[Table('attendance_kiosk_devices')]
 #[UseFactory(KioskDeviceFactory::class)]
 final class KioskDevice extends Model
@@ -40,10 +41,10 @@ final class KioskDevice extends Model
         return hash('sha256', $token);
     }
 
-    /** The current company's screen of `$token`, while RH has not revoked it. */
-    public static function findActive(string $token): ?self
+    /** The current company's activated screen whose cookie holds `$secret`, while RH has not revoked it. Never by its link. */
+    public static function findActive(string $secret): ?self
     {
-        return self::query()->where('token_hash', self::hashToken($token))->whereNull('revoked_at')->first();
+        return self::query()->where('token_hash', self::hashToken($secret))->whereNotNull('activated_at')->whereNull('revoked_at')->first();
     }
 
     /**
@@ -51,6 +52,6 @@ final class KioskDevice extends Model
      */
     protected function casts(): array
     {
-        return ['last_seen_at' => 'immutable_datetime', 'revoked_at' => 'immutable_datetime'];
+        return ['activated_at' => 'immutable_datetime', 'last_seen_at' => 'immutable_datetime', 'revoked_at' => 'immutable_datetime'];
     }
 }

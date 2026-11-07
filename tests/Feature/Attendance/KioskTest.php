@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Actions\ActivateKioskDevice;
 use App\Modules\Attendance\Actions\IssueKioskDevice;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Support\QrToken;
@@ -19,9 +20,16 @@ beforeEach(function (): void {
     workIn($this->tenant);
 });
 
-function kioskToken(): string
+/** The token of the link RH hands to a new screen: good for one activation. */
+function kioskLinkToken(): string
 {
     return resolve(IssueKioskDevice::class)->handle(test()->center->id);
+}
+
+/** The secret an activated screen keeps in its cookie. */
+function kioskToken(): string
+{
+    return resolve(ActivateKioskDevice::class)->handle(kioskLinkToken()) ?? throw new LogicException('Not activated.');
 }
 
 describe('the panel', function (): void {
@@ -34,7 +42,7 @@ describe('the panel', function (): void {
         $link = session('inertia.flash_data.kioskLink');
         $token = str($link)->afterLast('/')->toString();
         expect($link)->toBe(route('attendance.device.kiosk.activate', [$this->tenant->slug, $token]))
-            ->and(KioskDevice::findActive($token))->work_center_id->toBe($this->center->id);
+            ->and(KioskDevice::query()->sole())->work_center_id->toBe($this->center->id)->token_hash->toBe(hash('sha256', $token));
     });
 
     it('answers 404 for an archived center and asks for a center', function (): void {
@@ -74,7 +82,7 @@ describe('the panel', function (): void {
 
 describe('the screen', function (): void {
     it('keeps its token in an httpOnly cookie of the company\'s device paths and leaves it out of the address', function (): void {
-        $token = kioskToken();
+        $token = kioskLinkToken();
 
         // Tapped in an email or a chat: a navigation from another site.
         $response = $this->withHeaders(['Sec-Fetch-Site' => 'cross-site', 'Referer' => 'https://mail.example.com/'])
@@ -86,6 +94,29 @@ describe('the screen', function (): void {
             ->and($cookie->getPath())->toBe("/a/{$this->tenant->slug}")
             ->and($cookie->getSameSite())->toBe('lax')
             ->and($cookie->getExpiresTime())->toBeGreaterThan(now()->addYears(4)->getTimestamp());
+    });
+
+    it('opens its link once: the cookie gets a new secret and the link dies', function (): void {
+        $link = route('attendance.device.kiosk.activate', [$this->tenant->slug, kioskLinkToken()]);
+
+        $secret = $this->get($link)->assertRedirect()->getCookie('attendance_kiosk')?->getValue();
+
+        expect($secret)->toBeString()
+            ->and(KioskDevice::query()->sole()->token_hash)->toBe(hash('sha256', (string) $secret));
+        $this->get($link)->assertNotFound()->assertCookieMissing('attendance_kiosk');
+        $this->withCookie('attendance_kiosk', (string) $secret)->get(route('attendance.device.kiosk.show', $this->tenant->slug))->assertOk();
+        $this->withCookie('attendance_kiosk', str($link)->afterLast('/')->toString())->get(route('attendance.device.kiosk.show', $this->tenant->slug))->assertNotFound();
+    });
+
+    it('does not open the link of a revoked screen or of an archived center', function (): void {
+        $revoked = kioskLinkToken();
+        KioskDevice::query()->update(['revoked_at' => now()]);
+        $archived = kioskLinkToken();
+        $this->center->update(['archived_at' => now()]);
+
+        $this->get(route('attendance.device.kiosk.activate', [$this->tenant->slug, $revoked]))->assertNotFound();
+        $this->get(route('attendance.device.kiosk.activate', [$this->tenant->slug, $archived]))->assertNotFound();
+        expect(KioskDevice::query()->whereNotNull('activated_at')->count())->toBe(0);
     });
 
     it('shows the page of the QR to a screen with its token', function (): void {
@@ -154,7 +185,7 @@ describe('the screen', function (): void {
         'of another company' => [function (): string {
             $other = Tenant::factory()->create();
             workIn($other);
-            $token = resolve(IssueKioskDevice::class)->handle(WorkCenterFactory::new()->createOne(['tenant_id' => $other->id])->id);
+            $token = resolve(ActivateKioskDevice::class)->handle(resolve(IssueKioskDevice::class)->handle(WorkCenterFactory::new()->createOne(['tenant_id' => $other->id])->id));
             workIn(test()->tenant);
 
             return $token;
