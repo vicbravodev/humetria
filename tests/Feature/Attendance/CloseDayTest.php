@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\Log;
 mutates(CloseDay::class, CloseDays::class, WorkedDay::class);
 
 beforeEach(function (): void {
-    // Tuesday 10 November 2026, 00:15 in Mexico City: Monday the 9th just ended.
-    $this->travelTo(CarbonImmutable::parse('2026-11-10 06:15:00', 'UTC'));
+    // Wednesday 11 November 2026, 00:15 in Mexico City: Monday the 9th ended a whole day ago.
+    $this->travelTo(CarbonImmutable::parse('2026-11-11 06:15:00', 'UTC'));
     $this->tenant = Tenant::factory()->create();
     workIn($this->tenant);
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
@@ -142,7 +142,7 @@ describe('a day', function (): void {
 });
 
 describe('every night', function (): void {
-    it('closes yesterday for each active person with a mark that day or a working day by their schedule, in every company', function (): void {
+    it('closes the day before yesterday for each active person with a mark that day or a working day by their schedule, in every company', function (): void {
         Event::fake([DayClosed::class]);
         Log::spy();
         $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
@@ -173,15 +173,28 @@ describe('every night', function (): void {
         Event::assertNotDispatched(DayClosed::class);
     });
 
-    it('closes only yesterday: not a mark of the day before, nor of today', function (): void {
+    it('closes only the day before yesterday: not a mark of the day before it, nor of yesterday or today', function (): void {
         Event::fake([DayClosed::class]);
         $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         closeMark($bob, MarkType::Start, '2026-11-08 09:00');
         closeMark($bob, MarkType::End, '2026-11-08 17:00');
-        closeMark($bob, MarkType::Start, '2026-11-10 00:05');
+        closeMark($bob, MarkType::Start, '2026-11-10 09:00');
+        closeMark($bob, MarkType::End, '2026-11-10 17:00');
+        closeMark($bob, MarkType::Start, '2026-11-11 00:05');
 
         expect(resolve(CloseDays::class)->handle())->toBe(1);
         Event::assertDispatched(DayClosed::class, fn (DayClosed $event): bool => $event->employeeId === $this->ana->id);
+    });
+
+    it('closes a night that started that day only once it ended: its end is not missing', function (): void {
+        Event::fake([DayClosed::class]);
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        closeMark($bob, MarkType::Start, '2026-11-09 22:00');
+        closeMark($bob, MarkType::End, '2026-11-10 06:00');
+
+        resolve(CloseDays::class)->handle();
+
+        Event::assertDispatched(DayClosed::class, fn (DayClosed $event): bool => $event->employeeId === $bob->id && $event->date === '2026-11-09' && ! $event->missingEnd);
     });
 
     it('runs from the console', function (): void {

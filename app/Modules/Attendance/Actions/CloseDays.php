@@ -17,8 +17,9 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * The nightly close, for every company: shortly after local midnight it closes yesterday (CloseDay) for each active person
- * with a mark that day or a working day by their schedule, and leaves pending the week that last ended of each active
+ * The nightly close, for every company: shortly after local midnight it closes the day before yesterday (CloseDay) for
+ * each active person with a mark that day or a working day by their schedule — a whole day after it ended, so a night
+ * shift that started on it has had time to mark its end and is not flagged as missing one — and leaves pending the week that last ended of each active
  * person with marks in it (silence is not conformity: nobody confirms it for them). Once a night is enough: CloseDay
  * stores nothing and a week is opened once, so a run again changes nothing; and every night opens the last week again if
  * needed, so a Monday that failed is made up the next night.
@@ -32,7 +33,7 @@ final readonly class CloseDays
      */
     public function handle(): int
     {
-        $yesterday = CarbonImmutable::now(config()->string('app.display_timezone'))->subDay()->startOfDay();
+        $day = CarbonImmutable::now(config()->string('app.display_timezone'))->subDays(2)->startOfDay();
         $tenantIds = array_unique([
             ...AttendanceMark::query()->withoutGlobalScopes()->distinct()->get(['tenant_id'])->map(fn (AttendanceMark $mark): string => $mark->tenant_id),
             ...AttendanceSchedule::query()->withoutGlobalScopes()->distinct()->get(['tenant_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->tenant_id),
@@ -42,8 +43,8 @@ final readonly class CloseDays
         foreach ($tenantIds as $tenantId) {
             try {
                 // Each in its own company, as the system.
-                Context::scope(function () use ($tenantId, $yesterday, &$closed): void {
-                    $closed += $this->close($tenantId, $yesterday);
+                Context::scope(function () use ($tenantId, $day, &$closed): void {
+                    $closed += $this->close($tenantId, $day);
                 }, ['user_id' => null]);
             } catch (Throwable $failure) {
                 // One company's failure never keeps the others from being closed.

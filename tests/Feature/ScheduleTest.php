@@ -42,7 +42,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
 });
 
-it('closes yesterday\'s working days at 00:15 display time, once and without overlapping', function (): void {
+it('closes the working days of the day before yesterday at 00:15 display time, once and without overlapping', function (): void {
     $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'attendance:close-days'));
 
     expect($event->timezone)->toBe('America/Mexico_City')
