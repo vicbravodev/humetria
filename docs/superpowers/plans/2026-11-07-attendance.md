@@ -80,7 +80,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 3:** Implementa las clases (tabla por año como arreglo constante; la calculadora sin dependencias).
 - [ ] **Step 4:** Run → PASS. Commit `feat(attendance): legal limits and hours calculator`.
 
-### Task 3: Marcas de solo inserción, secuencia y marca vigente
+### Task 3 ✅: Marcas de solo inserción, secuencia y marca vigente
 
 **Files:** Create migraciones `create_attendance_marks_table` (con el trigger), `create_attendance_schedules_table`, `create_attendance_policies_table`; modelos `AttendanceMark`, `AttendanceSchedule`, `AttendancePolicy`; enums `MarkType`, `MarkMethod`, `EvidenceLevel`, `WorkMode`, `OutOfZoneRule`; `Support/EffectiveMarks.php`, `Support/WeekPeriod.php`; factories; `Actions/RecordMark.php`, `Actions/CorrectMark.php`, `Actions/SaveSchedule.php`, `Actions/SavePolicy.php`. Tests: `tests/Feature/Attendance/MarksAppendOnlyTest.php`, `RecordMarkTest.php`, `CorrectMarkTest.php`, `tests/Unit/Attendance/EffectiveMarksTest.php`, `WeekPeriodTest.php`, aislamiento de tenant.
 
