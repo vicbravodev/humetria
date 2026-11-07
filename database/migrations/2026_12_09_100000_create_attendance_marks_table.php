@@ -22,7 +22,7 @@ return new class extends Migration
             $table->uuid('employee_id');
             $table->uuid('work_center_id');
             $table->string('type', 11);
-            $table->timestampTz('marked_at')->nullable();
+            $table->timestampTz('marked_at', 6)->nullable();
             $table->string('method', 15);
             $table->uuid('zone_id')->nullable();
             $table->decimal('latitude', 9, 6)->nullable();

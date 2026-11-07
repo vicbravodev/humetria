@@ -47,6 +47,9 @@ final class AttendanceMark extends Model
 
     public const null UPDATED_AT = null;
 
+    /** To the microsecond: two marks of the same second still keep their order. */
+    protected $dateFormat = 'Y-m-d H:i:s.uP';
+
     /**
      * @return array<string, string>
      */
