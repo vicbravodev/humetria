@@ -26,3 +26,4 @@ export type * from './telework-notices';
 export type * from './telework-inspection';
 export type * from './telework-training';
 export type * from './complaints';
+export type * from './attendance';
