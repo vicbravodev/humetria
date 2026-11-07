@@ -60,6 +60,8 @@ final readonly class EnrollDevice
                     'credential_id' => $key->credentialId,
                     'public_key' => $key->publicKey,
                     'sign_count' => $key->signCount,
+                    'backup_eligible' => $key->backupEligible,
+                    'backup_state' => $key->backupState,
                     'label' => $label,
                     'enrolled_at' => $now,
                 ]);

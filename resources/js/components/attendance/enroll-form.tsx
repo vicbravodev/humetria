@@ -38,8 +38,8 @@ export default function EnrollForm({
             </div>
             <p className="text-base text-muted-foreground">
                 Su teléfono le pedirá su huella, su rostro o su PIN para crear
-                una llave de acceso. La llave se queda en su teléfono: nadie más
-                la tiene.
+                una llave de acceso. La llave es solo suya y se abre con su
+                huella, su rostro o su PIN cada vez que marque.
             </p>
             {error !== null && (
                 <p role="alert" className="text-base text-destructive">

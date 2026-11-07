@@ -268,3 +268,12 @@ it('never writes the key of a device to a log line or the audit trail, from link
         ->and(AuditEntry::query()->pluck('event')->all())->toContain('attendance.device_enrolled', 'attendance.device_revoked')
         ->and($written)->not->toContain($device->credential_id)->not->toContain($device->public_key)->not->toContain($this->token);
 });
+
+it('keeps whether the linked key is a synced passkey, for RH to see', function (): void {
+    $this->phone->backupEligible = true;
+    $this->phone->backedUp = true;
+
+    enrollWith($this->phone, $this->token)->assertOk();
+
+    expect(AttendanceDevice::query()->sole())->backup_eligible->toBeTrue()->backup_state->toBeTrue();
+});

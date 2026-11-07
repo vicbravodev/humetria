@@ -25,11 +25,20 @@ final class SoftAuthenticator
 
     private const int FLAG_USER_VERIFIED = 0x04;
 
+    private const int FLAG_BACKUP_ELIGIBLE = 0x08;
+
+    private const int FLAG_BACKED_UP = 0x10;
+
     private const int FLAG_ATTESTED_DATA = 0x40;
 
     public string $credentialId;
 
     public int $counter = 0;
+
+    /** A synced passkey (iCloud Keychain, Google Password Manager) is backup eligible, and backed up once synced. */
+    public bool $backupEligible = false;
+
+    public bool $backedUp = false;
 
     private OpenSSLAsymmetricKey $key;
 
@@ -120,7 +129,8 @@ final class SoftAuthenticator
 
     private function authData(?string $rpId, bool $userVerified, int $flags): string
     {
-        $flags |= self::FLAG_USER_PRESENT | ($userVerified ? self::FLAG_USER_VERIFIED : 0);
+        $flags |= self::FLAG_USER_PRESENT | ($userVerified ? self::FLAG_USER_VERIFIED : 0)
+            | ($this->backupEligible ? self::FLAG_BACKUP_ELIGIBLE : 0) | ($this->backedUp ? self::FLAG_BACKED_UP : 0);
 
         return hash('sha256', $rpId ?? $this->rpId, true).chr($flags).pack('N', $this->counter);
     }

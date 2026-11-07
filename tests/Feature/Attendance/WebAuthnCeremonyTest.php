@@ -38,6 +38,8 @@ function enrolledDevice(SoftAuthenticator $phone, string $employeeId): Attendanc
         'credential_id' => $credential->credentialId,
         'public_key' => $credential->publicKey,
         'sign_count' => $credential->signCount,
+        'backup_eligible' => $credential->backupEligible,
+        'backup_state' => $credential->backupState,
     ]);
 }
 
@@ -69,6 +71,19 @@ describe('registration', function (): void {
             ->signCount->toBe(0)
             ->and(strlen(Base64UrlSafe::decodeNoPadding($credential->publicKey)))->toBeGreaterThan(64);
     });
+
+    it('tells whether the key is a synced passkey: backup eligible and backed up', function (bool $eligible, bool $backedUp): void {
+        $this->phone->backupEligible = $eligible;
+        $this->phone->backedUp = $backedUp;
+
+        $credential = $this->ceremony->verifyRegistration($this->ana->id, $this->phone->create($this->ceremony->registrationOptions($this->ana->id, 'Ana')));
+
+        expect($credential)->backupEligible->toBe($eligible)->backupState->toBe($backedUp);
+    })->with([
+        'device-bound' => [false, false],
+        'synced, not yet backed up' => [true, false],
+        'synced and backed up' => [true, true],
+    ]);
 
     it('refuses a key made without verifying the person', function (): void {
         $options = $this->ceremony->registrationOptions($this->ana->id, 'Ana');
@@ -152,6 +167,35 @@ describe('assertion', function (): void {
             expect($this->ceremony->verifyAssertion('s', $phone->get($this->ceremony->assertionOptions('s'), $this->ana->id))->deviceId)->toBe($device->id);
         }
         expect($device->fresh()->sign_count)->toBe(0);
+    });
+
+    it('refuses a counter that falls back to zero after counting', function (): void {
+        $device = enrolledDevice($this->phone, $this->ana->id);
+        $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id));
+        $this->phone->countsSignatures = false;
+        $this->phone->counter = 0;
+
+        expectRefused(fn () => $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id)));
+        expect($device->fresh()->sign_count)->toBe(1);
+    });
+
+    it('refuses a key that changes whether it is backup eligible after it was linked', function (bool $eligible): void {
+        $this->phone->backupEligible = $eligible;
+        enrolledDevice($this->phone, $this->ana->id);
+        $this->phone->backupEligible = ! $eligible;
+        $this->phone->backedUp = false;
+
+        expectRefused(fn () => $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id)));
+    })->with(['device-bound turns synced' => [false], 'synced turns device-bound' => [true]]);
+
+    it('follows whether a synced passkey is backed up', function (): void {
+        $this->phone->backupEligible = true;
+        $device = enrolledDevice($this->phone, $this->ana->id);
+        $this->phone->backedUp = true;
+
+        $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id));
+
+        expect($device->fresh())->backup_eligible->toBeTrue()->backup_state->toBeTrue();
     });
 
     it('refuses a signature that was altered', function (): void {

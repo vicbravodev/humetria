@@ -54,7 +54,8 @@ Leave         → DESPUÉS. Attendance le preguntará por un contrato (Absences)
 ### Modelos (todos con `tenant_id` y `BelongsToCurrentTenant`)
 
 - `AttendanceDevice`: dispositivo vinculado de una persona. Credencial WebAuthn (id público y llave pública), etiqueta,
-  `enrolled_at`, `last_used_at`, `revoked_at`. Una persona puede tener varios; RH puede revocar.
+  banderas de respaldo (`backup_eligible`, `backup_state`: si es una llave sincronizada), `enrolled_at`, `last_used_at`,
+  `revoked_at`. Una persona puede tener varios; RH puede revocar.
 - `AttendanceAgreement` / `AgreementAcceptance`: texto versionado del acuerdo y la aceptación de cada persona
   (versión, momento, dispositivo). Es la evidencia del criterio 1.3 y 5.1.
 - `AttendanceZone`: zona de un centro de trabajo (nombre, centro y radio en metros). Un centro tiene una o varias
@@ -70,11 +71,13 @@ Leave         → DESPUÉS. Attendance le preguntará por un contrato (Absences)
 
 ## Seguridad del enlace personal con dispositivo vinculado
 
-Objetivo: que la persona marque **sin correo ni contraseña**, con un factor que **no se pueda copiar ni reenviar**.
-Estándar: **WebAuthn / passkeys** (W3C, el mismo que ya usamos para la cuenta de RH) con la llave guardada en el
-dispositivo y verificación de usuario (huella, rostro o PIN del teléfono) en cada marca. Eso corresponde a un
-autenticador de un solo dispositivo con verificación (el nivel AAL2 de NIST SP 800-63B). Un enlace por sí solo no es un
-factor seguro: si se reenvía, lo usa otro.
+Objetivo: que la persona marque **sin correo ni contraseña**, con un factor que **no se pueda reenviar** como un enlace.
+Estándar: **WebAuthn / passkeys** (W3C, el mismo que ya usamos para la cuenta de RH): una llave de acceso de la persona,
+que se desbloquea con verificación de usuario (huella, rostro o PIN del teléfono) en cada marca. La llave queda ligada a
+la **cuenta de llaves de acceso de la persona** (iCloud, Google o el propio dispositivo), **no se puede demostrar que a un
+solo dispositivo físico**: las llaves sincronizadas (lo normal en iPhone y Android, con contador siempre en 0) se
+aceptan. Se guardan sus banderas de respaldo (BE/BS) para que RH las vea, y una llave no puede cambiar después si es
+sincronizable. Un enlace por sí solo no es un factor seguro: si se reenvía, lo usa otro.
 
 1. **Alta.** RH invita a la persona. Recibe un **enlace de un solo uso y de corta vigencia** (por el canal de correo ya
    existente). Lo abre **en su teléfono**, acepta el acuerdo (5.1) y **crea una llave de acceso** en el dispositivo.
@@ -90,8 +93,13 @@ factor seguro: si se reenvía, lo usa otro.
    código). No tienen `User`.
 
 **Límites honestos:** ningún método impide que alguien con el dispositivo desbloqueado de otra persona marque por ella.
-El sistema lo hace *difícil y detectable*, no imposible: QR con ventana de 30 s + geocerca, marcas sospechosas
-señaladas (misma ubicación y hora para varias personas, saltos imposibles), y el nivel de evidencia a la vista.
+Una llave sincronizada vive en todos los dispositivos de la cuenta de la persona, y sin contador no se detecta su copia:
+la llave prueba la cuenta de la persona y su huella, rostro o PIN, no un teléfono concreto. El alta exige un enlace de un
+solo uso que solo llega al correo de la persona (RH lo ve solo si la persona no tiene correo, y queda en la bitácora), y
+la persona recibe un aviso por correo de cada dispositivo vinculado. El sistema lo hace *difícil y detectable*, no
+imposible: QR con ventana de 30 s + geocerca (el nivel de evidencia de cada marca), marcas sospechosas señaladas (misma
+ubicación y hora para varias personas, saltos imposibles), las banderas de respaldo de cada dispositivo a la vista de
+RH, y el nivel de evidencia a la vista.
 
 ## QR rotativo y geocerca
 

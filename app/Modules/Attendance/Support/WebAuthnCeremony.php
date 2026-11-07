@@ -40,12 +40,17 @@ use Webauthn\TrustPath\EmptyTrustPath;
 
 /**
  * The WebAuthn ceremonies of a person's linked device, on web-auth/webauthn-lib (spec «Seguridad del enlace personal»).
- * A person has no account: their key is discoverable (it carries their id as its user handle) and is created on the
- * device itself (platform), with the person verified (fingerprint, face or PIN), so it cannot be copied or forwarded.
+ * A person has no account: their key is discoverable (it carries their id as its user handle), asked of the device's own
+ * authenticator (platform), and unlocked with the person verified (fingerprint, face or PIN). The key is bound to the
+ * person's passkey provider account, not provably to one physical device: synced passkeys (iCloud Keychain, Google
+ * Password Manager; backup eligible, counter always 0) are accepted. Their backup flags are kept for RH to see, and a key
+ * may not change whether it is backup eligible after it was linked. The mitigation is the evidence level of each mark
+ * (QR and geofence) and RH's view of the devices, not the key alone.
  *
  * Each challenge is random, kept server-side for 60 seconds under its company and its context (the person who
  * enrolls, or the session that marks), and accepted once. A signature is checked for the origin, the relying party, the
- * person verified, the signature itself and a counter that only grows (when the authenticator keeps one), and its
+ * person verified, the signature itself, a counter that only grows (when the authenticator keeps one) and the backup
+ * eligibility it was linked with, and its
  * device must not be revoked nor its person gone. Every failure gives the same InvalidCredential, and nothing here logs:
  * no credential id, public key or challenge reaches a log.
  */
@@ -91,7 +96,7 @@ final readonly class WebAuthnCeremony
         $record = self::verified(fn (): CredentialRecord => AuthenticatorAttestationResponseValidator::create($this->steps()->creationCeremony())
             ->check($attestation, $this->creationOptions($employeeId, $employeeId, $challenge), $this->rpId()));
 
-        return new CredentialData(self::encode($record->publicKeyCredentialId), self::encode($record->credentialPublicKey), $record->counter);
+        return new CredentialData(self::encode($record->publicKeyCredentialId), self::encode($record->credentialPublicKey), $record->counter, $record->backupEligible === true, $record->backupStatus === true);
     }
 
     /**
@@ -140,7 +145,7 @@ final readonly class WebAuthnCeremony
             $record = self::verified(fn (): CredentialRecord => AuthenticatorAssertionResponseValidator::create($this->steps()->requestCeremony())
                 ->check($this->record($device), $assertion, $this->requestOptions($challenge), $this->rpId(), null));
 
-            $device->update(['sign_count' => $record->counter, 'last_used_at' => CarbonImmutable::now()]);
+            $device->update(['sign_count' => $record->counter, 'backup_state' => $record->backupStatus === true, 'last_used_at' => CarbonImmutable::now()]);
 
             return new VerifiedAssertion($device->id, $device->employee_id);
         });
@@ -192,6 +197,9 @@ final readonly class WebAuthnCeremony
             credentialPublicKey: self::decode($device->public_key),
             userHandle: $device->employee_id,
             counter: $device->sign_count,
+            // Known, so the library's CheckBackupEligibilityIsUnchanged refuses a key that claims another value.
+            backupEligible: $device->backup_eligible,
+            backupStatus: $device->backup_state,
         );
     }
 

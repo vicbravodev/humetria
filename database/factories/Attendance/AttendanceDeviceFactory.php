@@ -29,6 +29,8 @@ final class AttendanceDeviceFactory extends Factory
             'credential_id' => rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '='),
             'public_key' => rtrim(strtr(base64_encode(random_bytes(77)), '+/', '-_'), '='),
             'sign_count' => 0,
+            'backup_eligible' => false,
+            'backup_state' => false,
             'label' => 'iPhone',
             'enrolled_at' => now(),
         ];

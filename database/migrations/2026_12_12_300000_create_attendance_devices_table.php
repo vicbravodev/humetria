@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Registro de jornada: a person's linked device, a WebAuthn key (passkey) kept on it. Only its id, its public key and the
- * last signature counter are stored. RH revokes a device and its row stays, with when. The acceptances and the marks
+ * Registro de jornada: a person's linked device, a WebAuthn key (passkey) of the person, unlocked with their fingerprint,
+ * face or PIN. Only its id, its public key, the last signature counter and its backup flags are stored. RH revokes a device and its row stays, with when. The acceptances and the marks
  * made with a device keep it alive.
  */
 return new class extends Migration
@@ -23,6 +23,10 @@ return new class extends Migration
             $table->text('credential_id')->unique();
             $table->text('public_key');
             $table->unsignedBigInteger('sign_count')->default(0);
+            // The key's backup flags (WebAuthn BE and BS): a synced passkey (iCloud Keychain, Google Password Manager) is
+            // backup eligible and lives in the person's passkey account, not on one device. RH sees them.
+            $table->boolean('backup_eligible')->default(false);
+            $table->boolean('backup_state')->default(false);
             $table->string('label', 60);
             $table->timestampTz('enrolled_at');
             $table->timestampTz('last_used_at')->nullable();
