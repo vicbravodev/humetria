@@ -8,8 +8,8 @@ export type CorrectionRow = {
     type: string;
     /** The time asked, local («Y-m-d H:i»). */
     requestedAt: string;
-    /** The mark's time now, local; null for a mark the person forgot. */
-    currentAt: string | null;
+    /** The mark's time before the correction, local; null for a mark the person forgot. */
+    previousAt: string | null;
     reason: string;
     /** Days the request waits since it was asked. */
     ageDays: number;

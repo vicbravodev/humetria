@@ -69,7 +69,7 @@ describe('the queue', function (): void {
                 'person' => ['name' => 'Ana López', 'jobTitle' => 'Operadora'],
                 'type' => 'start',
                 'requestedAt' => '2026-11-10 09:00',
-                'currentAt' => '2026-11-10 09:20',
+                'previousAt' => '2026-11-10 09:20',
                 'reason' => 'Llegué a las 9, el QR no cargaba.',
                 'ageDays' => 1,
                 'status' => 'pending',
@@ -77,7 +77,7 @@ describe('the queue', function (): void {
             ])
             // 23:50 local is 05:50 of the next day in UTC: shown on its local day.
             ->where('requests.data.1.requestedAt', '2026-11-10 23:50')
-            ->where('requests.data.1.currentAt', null));
+            ->where('requests.data.1.previousAt', null));
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id');
     });
@@ -94,6 +94,17 @@ describe('the queue', function (): void {
             ->where('requests.total', 1)
             ->where('requests.data.0.note', 'Llegaste a las 9:20.'));
         $this->get(queueUrl(['status' => 'everything']))->assertInertia(fn (AssertableInertia $page) => $page->where('status', 'pending')->where('requests.total', 1));
+    });
+
+    it('keeps the time the mark had before for an approved request, named as such, next to the time approved', function (): void {
+        $request = queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
+        $this->actingAs($this->hr)->from(queueUrl())->post(route('tenant.attendance.corrections.approve', ['acme', $request->id]));
+
+        $this->get(queueUrl(['status' => 'approved']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('requests.data.0.status', 'approved')
+            ->where('requests.data.0.previousAt', '2026-11-10 09:20')
+            ->where('requests.data.0.requestedAt', '2026-11-10 09:00')
+            ->missing('requests.data.0.currentAt'));
     });
 
     it('pages the queue 25 at a time', function (): void {

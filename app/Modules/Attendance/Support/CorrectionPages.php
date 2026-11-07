@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * What the queue of correction requests sends to the browser: the requests of one state, oldest first, 25 at a time,
  * searched by the person's name, with how many there are of each state. Each row: who (name and job title, from the
- * Roster), the time asked and the mark's current one in local time, the type, the reason, how many days it waits, and RH's
+ * Roster), the time asked and the mark's time before it (local), the type, the reason, how many days it waits, and RH's
  * note once resolved. Never a position or a device.
  */
 final readonly class CorrectionPages
@@ -47,7 +47,7 @@ final readonly class CorrectionPages
     }
 
     /**
-     * @return LengthAwarePaginator<int, array{id: string, person: array{name: string, jobTitle: string}, type: string, requestedAt: string, currentAt: string|null, reason: string, ageDays: int, status: string, note: string|null}>
+     * @return LengthAwarePaginator<int, array{id: string, person: array{name: string, jobTitle: string}, type: string, requestedAt: string, previousAt: string|null, reason: string, ageDays: int, status: string, note: string|null}>
      */
     private function requests(CorrectionStatus $state, string $search): LengthAwarePaginator
     {
@@ -66,7 +66,8 @@ final readonly class CorrectionPages
             'person' => ['name' => $people[$request->employee_id]->name ?? '—', 'jobTitle' => $people[$request->employee_id]->jobTitle ?? ''],
             'type' => $request->type->value,
             'requestedAt' => $request->proposed_at->setTimezone($zone)->format('Y-m-d H:i'),
-            'currentAt' => $request->mark_id === null ? null : $marks->get($request->mark_id)?->marked_at?->setTimezone($zone)->format('Y-m-d H:i'),
+            // The mark's time when it was asked: after an approval, the time before the correction.
+            'previousAt' => $request->mark_id === null ? null : $marks->get($request->mark_id)?->marked_at?->setTimezone($zone)->format('Y-m-d H:i'),
             'reason' => $request->reason,
             'ageDays' => (int) $request->created_at->setTimezone($zone)->startOfDay()->diffInDays($today),
             'status' => $request->status->value,

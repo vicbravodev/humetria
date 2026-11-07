@@ -39,9 +39,9 @@ export default function CorrectionRow({
                     {shortMoment(correction.requestedAt)}
                 </span>
                 <span className="block text-caption text-muted-foreground">
-                    {correction.currentAt === null
+                    {correction.previousAt === null
                         ? 'Olvidó marcarla'
-                        : `Marcó ${shortMoment(correction.currentAt)}`}
+                        : `Hora anterior: ${shortMoment(correction.previousAt)}`}
                 </span>
             </TableCell>
             <TableCell className="max-w-sm min-w-56 whitespace-normal">
