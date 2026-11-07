@@ -226,6 +226,14 @@ describe('on site', function (): void {
         expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Qr)->zone_id->toBeNull()->latitude->toBe('19.433600');
     });
 
+    it('records the QR alone, flagged as without a location, when the policy allows out of zone and there is no position', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag]);
+
+        anaPunches(['lat' => null, 'lng' => null, 'accuracy' => null])->assertOk()->assertJsonPath('flag', 'no_location');
+
+        expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Qr)->zone_id->toBeNull()->latitude->toBeNull();
+    });
+
     it('rejects a reading less accurate than the policy allows', function (): void {
         anaPunches(['accuracy' => 101])->assertUnprocessable()->assertExactJson(['reason' => 'accuracy_too_low']);
         anaPunches(['accuracy' => 100])->assertOk();

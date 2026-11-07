@@ -119,10 +119,11 @@ final readonly class MarkController
 
         return response()->json([
             ...PunchDay::of($person->id),
-            // For the screen now and the panel later: a center with no zones, or a mark taken outside every zone.
+            // For the screen now and the panel later: a center with no zones, a mark taken with no position, or outside every zone.
             'flag' => match (true) {
                 ! $onsite => null,
                 $zones === [] => 'center_without_zones',
+                $context->latitude === null => 'no_location',
                 $context->zoneId === null => 'outside_zone',
                 default => null,
             },

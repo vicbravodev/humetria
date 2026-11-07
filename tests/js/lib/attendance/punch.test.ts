@@ -265,6 +265,12 @@ describe('doneMessage', () => {
         );
     });
 
+    it('tells the person a mark with no location is flagged for RH', () => {
+        expect(doneMessage({ ...day, flag: 'no_location' })).toBe(
+            'Listo: se registró su entrada a las 09:00. Quedó sin ubicación y Recursos Humanos la verá señalada.',
+        );
+    });
+
     it('says nothing of a flag only the panel reads, nor of a day with no marks', () => {
         expect(doneMessage({ ...day, flag: 'center_without_zones' })).toBe(
             'Listo: se registró su entrada a las 09:00.',

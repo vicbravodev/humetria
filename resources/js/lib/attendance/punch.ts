@@ -195,6 +195,12 @@ export function punchMessage(reason: string): string {
     return MESSAGES[reason] ?? 'No se pudo marcar. Intente de nuevo.';
 }
 
+/** The flags the person is told about; the others only the panel reads. */
+const FLAGGED: Record<string, string> = {
+    outside_zone: 'Quedó fuera de zona',
+    no_location: 'Quedó sin ubicación',
+};
+
 /** What to tell the person once the mark was taken: which, at what time, and whether RH will see it flagged. */
 export function doneMessage(day: PunchDay): string {
     const last = day.marks.at(-1);
@@ -205,7 +211,9 @@ export function doneMessage(day: PunchDay): string {
 
     const done = `Listo: se registró su ${markName(last.type).toLowerCase()} a las ${last.time}.`;
 
-    return day.flag === 'outside_zone'
-        ? `${done} Quedó fuera de zona y Recursos Humanos la verá señalada.`
-        : done;
+    const flagged = FLAGGED[day.flag ?? ''];
+
+    return flagged === undefined
+        ? done
+        : `${done} ${flagged} y Recursos Humanos la verá señalada.`;
 }
