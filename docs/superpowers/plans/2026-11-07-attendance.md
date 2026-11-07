@@ -148,7 +148,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 2–4:** FAIL, implementar, PASS. Browser: marcar con autenticador virtual, geolocalización simulada de Playwright (`context.setGeolocation`) dentro y fuera, axe, sin violaciones de CSP.
 - [ ] **Step 5:** Commits: (a) decisión de política, (b) endpoint, (c) pantalla móvil.
 
-### Task 8: Cierre del día, semana y conformidad
+### Task 8 ✅: Cierre del día, semana y conformidad
 
 **Files:** Create migración `create_weekly_confirmations_table`, `Models/WeeklyConfirmation.php`, `Actions/CloseDay.php`, `Actions/ConfirmWeek.php`, `Actions/DisputeWeek.php`, `Jobs/CloseDays.php`, eventos `DayClosed`, `WeekConfirmed`, `WeekDisputed`; `ScheduleAttendance` en `routes/console.php` (patrón de `ScheduleSeatingChecks`); `pages/attendance/week.tsx`. Tests Feature + `tests/Feature/ScheduleTest.php`.
 
