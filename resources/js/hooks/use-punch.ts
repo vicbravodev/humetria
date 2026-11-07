@@ -10,7 +10,7 @@ import type { PunchState } from '@/lib/attendance/punch-state';
 import type { SignedKey } from '@/lib/attendance/webauthn';
 
 /** `navigator.credentials.get()` for a signature; null when the browser gave something else. */
-async function getKey(
+export async function getKey(
     options: PublicKeyCredentialRequestOptions,
 ): Promise<SignedKey | null> {
     const credential = await navigator.credentials.get({ publicKey: options });

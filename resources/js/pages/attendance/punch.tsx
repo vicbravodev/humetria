@@ -1,4 +1,5 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { CalendarDays } from 'lucide-react';
 import DayMarks from '@/components/attendance/day-marks';
 import LinkDeviceNote from '@/components/attendance/link-device-note';
 import LocationNote from '@/components/attendance/location-note';
@@ -6,6 +7,7 @@ import NotYou from '@/components/attendance/not-you';
 import PersonFrame from '@/components/attendance/person-frame';
 import PunchButton from '@/components/attendance/punch-button';
 import PunchFeedback from '@/components/attendance/punch-feedback';
+import { Button } from '@/components/ui/button';
 import { usePunch } from '@/hooks/use-punch';
 import { ANY_STEP, nextSteps } from '@/lib/attendance/next-step';
 import type { Signer } from '@/lib/attendance/punch';
@@ -21,6 +23,7 @@ export default function Punch({
     optionsUrl,
     punchUrl,
     forgetUrl,
+    weekUrl,
 }: {
     company: string;
     qr: string | null;
@@ -28,6 +31,7 @@ export default function Punch({
     optionsUrl: string;
     punchUrl: string;
     forgetUrl: string;
+    weekUrl: string;
 }) {
     const { person, marks, feedback, working, mark, forget } = usePunch({
         optionsUrl,
@@ -63,6 +67,17 @@ export default function Punch({
                 <LocationNote />
                 {marks !== null && <DayMarks marks={marks} />}
                 {person === null && <LinkDeviceNote />}
+                <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="text-base"
+                >
+                    <Link href={weekUrl}>
+                        <CalendarDays aria-hidden className="size-5" />
+                        Mi semana
+                    </Link>
+                </Button>
             </div>
         </PersonFrame>
     );

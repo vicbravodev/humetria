@@ -2,21 +2,108 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Enums\MarkType;
+use App\Modules\Attendance\Enums\WeekStatus;
+use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
+use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Notification;
+use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Playwright\Playwright;
 
 beforeEach(function (): void {
     Playwright::setHost('localhost');
+    Notification::fake();
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
+    workIn($this->tenant);
+    $this->plant = WorkCenter::factory()->for($this->tenant)->create();
+    $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López']);
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    // Last week: Monday 9:00 to 19:00 with an hour's break (an hour over), Tuesday 7:00 to 21:00 (14 hours).
+    $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start();
+    foreach ([[MarkType::Start, 0, '09:00'], [MarkType::BreakStart, 0, '14:00'], [MarkType::BreakEnd, 0, '15:00'], [MarkType::End, 0, '19:00'], [MarkType::Start, 1, '07:00'], [MarkType::End, 1, '21:00']] as [$type, $day, $time]) {
+        AttendanceMark::factory()->create([
+            'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id,
+            'type' => $type, 'marked_at' => $monday->addDays($day)->setTimeFromTimeString($time)->utc(),
+        ]);
+    }
 });
 
 afterEach(function (): void {
     Playwright::setHost(null);
 });
 
-it('opens «Mi semana» showing nothing of anybody', function (bool $dark, bool $mobile): void {
-    visitPage('attendance/week', '/a/acme/week', $dark, $mobile)->assertSee('Mi semana');
+it('opens «Mi semana» showing nothing of anybody until the device signs', function (bool $dark, bool $mobile): void {
+    visitPage('attendance/week', '/a/acme/week', $dark, $mobile)
+        ->assertSee('Mi semana')
+        ->assertSee('Ver mi semana')
+        ->assertDontSee('Ana López')
+        ->assertDontSee('Su respuesta');
 })->with([
     'light, desktop' => [false, false],
+    'dark, desktop' => [true, false],
+    'light, phone' => [false, true],
     'dark, phone' => [true, true],
 ]);
+
+/** Ana's phone, linked from the link RH sent her, then on Marcar, from where she opens her week and signs to see it. */
+function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
+{
+    $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
+    $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+
+    return $page->navigate('/a/acme')
+        ->click('Mi semana')
+        ->waitForText('Ver mi semana')
+        ->press('Ver mi semana')
+        ->waitForText('Sus marcas');
+}
+
+it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {
+    $page = anaSeesHerWeek($dark);
+
+    $page->assertSee('Ana López')
+        ->assertSee('Sin confirmar')
+        ->assertSee('Salida a comer')
+        ->assertSee('19:00')
+        ->assertSee('Horas extra dobles')
+        ->assertSee('Un día pasó de 12 horas de trabajo.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->press('Confirmar mi semana')
+        ->waitForText('La confirmó el')
+        ->assertSee('Confirmada')
+        ->assertDontSee('Confirmar mi semana')
+        ->assertSee('No estoy de acuerdo')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
+
+    expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Confirmed);
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('lets Ana say what is not right, with her reason', function (): void {
+    $page = anaSeesHerWeek();
+
+    $page->press('No estoy de acuerdo')
+        ->waitForText('¿Qué no está bien en su semana?')
+        ->assertNoAccessibilityIssues(1)
+        ->fill('reason', 'El martes salí a las 20:00, no a las 21:00.')
+        ->press('Enviar mi objeción')
+        ->waitForText('La objetó el')
+        ->assertSee('Objetada')
+        ->assertSee('El martes salí a las 20:00, no a las 21:00.')
+        ->assertDontSee('Confirmar mi semana')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Disputed)->reason->toBe('El martes salí a las 20:00, no a las 21:00.');
+});

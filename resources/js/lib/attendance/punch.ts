@@ -1,8 +1,8 @@
 import type { Reading } from '@/lib/attendance/geolocation';
 import { markName } from '@/lib/attendance/next-step';
 import type { MarkType } from '@/lib/attendance/next-step';
-import type { SignedKey } from '@/lib/attendance/webauthn';
-import { assertionPayload, requestOptions } from '@/lib/attendance/webauthn';
+import { sendSigned } from '@/lib/attendance/signed-request';
+import type { SignDeps } from '@/lib/attendance/signed-request';
 
 /** Who the server verified as signing, and what they may do next. */
 export type Signer = { name: string; next: string[] };
@@ -30,14 +30,7 @@ export type PunchRequest = {
     position: Reading | null;
 };
 
-export type PunchDeps = {
-    fetcher: typeof fetch;
-    /** `navigator.credentials.get()`, narrowed to a signature or null. */
-    getKey: (
-        options: PublicKeyCredentialRequestOptions,
-    ) => Promise<SignedKey | null>;
-    xsrf: string | null;
-};
+export type PunchDeps = SignDeps;
 
 type Json = Record<string, unknown>;
 
@@ -49,23 +42,6 @@ const BY_STATUS: Partial<Record<number, string>> = {
     404: 'not_verified',
     429: 'throttled',
 };
-
-async function post(
-    url: string,
-    body: unknown,
-    { fetcher, xsrf }: PunchDeps,
-): Promise<Response> {
-    return fetcher(url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            ...(xsrf === null ? {} : { 'X-XSRF-TOKEN': xsrf }),
-        },
-        body: JSON.stringify(body),
-    });
-}
 
 /** The day in a server's answer; marks or steps it cannot read are left out. Null when it is not a day. */
 export function punchDay(json: unknown): PunchDay | null {
@@ -120,38 +96,6 @@ function signer(body: unknown): Signer | null {
         : null;
 }
 
-/** The signature of the device, or why there is none. */
-async function sign(
-    options: PublicKeyCredentialRequestOptions,
-    deps: PunchDeps,
-): Promise<SignedKey | string> {
-    try {
-        return (await deps.getKey(options)) ?? 'failed';
-    } catch (error) {
-        return error instanceof DOMException && error.name === 'NotAllowedError'
-            ? 'cancelled'
-            : 'failed';
-    }
-}
-
-async function signed(
-    request: PunchRequest,
-    deps: PunchDeps,
-): Promise<SignedKey | PunchOutcome> {
-    const response = await post(request.optionsUrl, {}, deps);
-
-    if (!response.ok) {
-        return failure(response);
-    }
-
-    const options = requestOptions(await response.json());
-    const key = options === null ? 'failed' : await sign(options, deps);
-
-    return typeof key === 'string'
-        ? { kind: 'failed', reason: key, person: null }
-        : key;
-}
-
 /**
  * Marks: asks the server for a challenge for this browser's session, has the device sign it (the person verifies with
  * their fingerprint, face or PIN) and sends the mark with the center's code and the position, when there are. Never
@@ -162,22 +106,22 @@ export async function punch(
     deps: PunchDeps,
 ): Promise<PunchOutcome> {
     try {
-        const key = await signed(request, deps);
-
-        if ('kind' in key) {
-            return key;
-        }
-
-        const response = await post(
-            request.punchUrl,
+        const response = await sendSigned(
             {
-                mark_type: request.type,
-                credential: assertionPayload(key),
-                ...(request.qr === null ? {} : { q: request.qr }),
-                ...request.position,
+                optionsUrl: request.optionsUrl,
+                url: request.punchUrl,
+                body: {
+                    mark_type: request.type,
+                    ...(request.qr === null ? {} : { q: request.qr }),
+                    ...request.position,
+                },
             },
             deps,
         );
+
+        if (typeof response === 'string') {
+            return { kind: 'failed', reason: response, person: null };
+        }
 
         if (!response.ok) {
             return failure(response);
