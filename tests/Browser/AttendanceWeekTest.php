@@ -107,3 +107,20 @@ it('lets Ana say what is not right, with her reason', function (): void {
 
     expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Disputed)->reason->toBe('El martes salí a las 20:00, no a las 21:00.');
 });
+
+it('shows Ana her week again when RH corrected it after she opened it, and lets her confirm the new one', function (): void {
+    $page = anaSeesHerWeek();
+    $tuesdayEnd = AttendanceMark::query()->where('type', MarkType::End)->orderByDesc('marked_at')->firstOrFail();
+    AttendanceMark::factory()->correcting($tuesdayEnd)->create(['marked_at' => $tuesdayEnd->marked_at?->subHour()]);
+
+    $page->press('Confirmar mi semana')
+        ->waitForText('Su semana cambió desde que la abrió')
+        ->assertSee('corregida por RH')
+        ->assertSee('Sin confirmar')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
+    expect(WeeklyConfirmation::query()->count())->toBe(0);
+
+    $page->press('Confirmar mi semana')->waitForText('La confirmó el');
+    expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Confirmed);
+});

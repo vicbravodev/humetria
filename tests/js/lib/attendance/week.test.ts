@@ -20,6 +20,8 @@ const week: WeekView = {
     status: 'pending',
     answeredAt: null,
     disputeReason: null,
+    digest: 'a'.repeat(64),
+    blocked: null,
     days: [
         {
             date: '2026-11-02',
@@ -77,6 +79,7 @@ describe('weekView', () => {
         expect(weekView({ ...week, week: null })).toBeNull();
         expect(weekView({ ...week, summary: { flags: [] } })).toBeNull();
         expect(weekView({ ...week, previousUrl: null })).toBeNull();
+        expect(weekView({ ...week, digest: null })).toBeNull();
     });
 
     it('leaves out the days, marks and flags it cannot read, and reads a missing text as none', () => {
@@ -85,6 +88,7 @@ describe('weekView', () => {
             answeredAt: 5,
             disputeReason: undefined,
             confirmUrl: 1,
+            blocked: 2,
             days: [
                 ...week.days,
                 { date: '2026-11-03' },
@@ -96,12 +100,15 @@ describe('weekView', () => {
             summary: { ...week.summary, flags: ['ok', 3] },
         });
 
+        expect(read).toMatchObject({
+            answeredAt: null,
+            disputeReason: null,
+            confirmUrl: null,
+            blocked: null,
+            summary: { flags: ['ok'] },
+            days: [{ date: '2026-11-02' }, { marks: [{ type: 'start' }] }],
+        });
         expect(read?.days).toHaveLength(2);
-        expect(read?.days[1]?.marks).toHaveLength(1);
-        expect(read?.summary.flags).toEqual(['ok']);
-        expect(read?.answeredAt).toBeNull();
-        expect(read?.disputeReason).toBeNull();
-        expect(read?.confirmUrl).toBeNull();
     });
 });
 
@@ -151,6 +158,25 @@ describe('sendWeek', () => {
                 },
             ),
         ).resolves.toEqual({ kind: 'failed', reason });
+    });
+
+    it('gives the week as it is now when it changed since it was read', async () => {
+        const now = { ...week, digest: 'b'.repeat(64) };
+
+        await expect(
+            sendWeek(
+                { optionsUrl: '/options', url: '/week', body: {} },
+                {
+                    fetcher: server(422, { reason: 'week_changed', week: now }),
+                    getKey: signs,
+                    xsrf: null,
+                },
+            ),
+        ).resolves.toEqual({
+            kind: 'failed',
+            reason: 'week_changed',
+            week: now,
+        });
     });
 
     it('tells when the options failed or the person did not verify', async () => {
@@ -203,6 +229,9 @@ describe('weekMessage', () => {
         ['week_disputed', 'Recursos Humanos la revisará'],
         ['already_disputed', 'Ya objetó esta semana'],
         ['invalid', 'al menos 10 caracteres'],
+        ['week_changed', 'Su semana cambió'],
+        ['day_open', 'cuando marque su salida'],
+        ['no_marks', 'No estoy de acuerdo'],
         ['unsupported', 'llaves de acceso'],
         ['anything', 'Intente de nuevo'],
     ])('words %s', (reason, text) => {

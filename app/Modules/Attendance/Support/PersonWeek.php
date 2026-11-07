@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
@@ -16,8 +17,9 @@ use LogicException;
 /**
  * What «Mi semana» shows a person of one of their weeks (criterio 8.1): their marks day by day (type, local time, whether
  * it falls on the next day and whether RH corrected it), the minutes of each day and of the week as criterio 2.9 splits
- * them, the limits broken, a day left with no end (unless it is the one still open now), and their answer. Never where a
- * mark was taken, nor the device. Counted from the marks every time.
+ * them, the limits broken, a day left with no end (unless it is the one still open now), their answer, the version of the
+ * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, or its
+ * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time.
  */
 final class PersonWeek
 {
@@ -55,6 +57,8 @@ final class PersonWeek
         $answer = WeeklyConfirmation::query()->where('employee_id', $employeeId)->where('week_start', $week->start()->toDateString())->first();
         $status = $answer?->status->value ?? ($week->isOver() ? 'pending' : 'open');
         $start = $week->start()->toDateString();
+        $marks = array_merge([], ...array_values($byDay));
+        $blocked = $status === 'pending' ? ConfirmWeek::blocker($marks) : null;
 
         return [
             'name' => $name,
@@ -62,6 +66,8 @@ final class PersonWeek
             'status' => $status,
             'answeredAt' => $answer === null ? null : ($answer->confirmed_at ?? $answer->disputed_at)?->setTimezone($timezone)->format('Y-m-d H:i'),
             'disputeReason' => $answer?->reason,
+            'digest' => WeekDigest::ofMarks($marks),
+            'blocked' => $blocked,
             'days' => $days,
             'summary' => [
                 'ordinaryMinutes' => $summary->ordinaryMinutes,
@@ -71,7 +77,7 @@ final class PersonWeek
                 'restDayMinutes' => $summary->restDayMinutes,
                 'flags' => array_map(fn (OverLimit $flag): string => $flag->value, $summary->flags),
             ],
-            'confirmUrl' => $status === 'pending' ? route('attendance.device.week.confirm', [$slug, $start]) : null,
+            'confirmUrl' => $status === 'pending' && $blocked === null ? route('attendance.device.week.confirm', [$slug, $start]) : null,
             'disputeUrl' => in_array($status, ['pending', 'confirmed'], true) ? route('attendance.device.week.dispute', [$slug, $start]) : null,
             'previousUrl' => route('attendance.device.week.show', [$slug, $week->start()->subWeek()->toDateString()]),
             'nextUrl' => $week->isOver() ? route('attendance.device.week.show', [$slug, $week->start()->addWeek()->toDateString()]) : null,

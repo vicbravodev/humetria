@@ -23,6 +23,8 @@ const week: WeekView = {
     status: 'pending',
     answeredAt: null,
     disputeReason: null,
+    digest: 'a'.repeat(64),
+    blocked: null,
     days: [day],
     summary: {
         ordinaryMinutes: 480,
@@ -100,6 +102,15 @@ describe('statusText', () => {
 
         expect(text.label).toBe(label);
         expect(text.detail).toContain(detail);
+    });
+});
+
+describe('statusText of a week that cannot be confirmed yet', () => {
+    it.each([
+        ['day_open', 'cuando marque su salida'],
+        ['no_marks', 'no tiene marcas suyas'],
+    ])('says why for %s', (blocked, detail) => {
+        expect(statusText({ ...week, blocked }).detail).toContain(detail);
     });
 });
 

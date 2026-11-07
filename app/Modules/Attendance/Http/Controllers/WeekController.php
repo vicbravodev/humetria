@@ -9,6 +9,7 @@ use App\Modules\Attendance\Actions\DisputeWeek;
 use App\Modules\Attendance\Data\VerifiedAssertion;
 use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Exceptions\WeekRejected;
+use App\Modules\Attendance\Http\Requests\ConfirmRequest;
 use App\Modules\Attendance\Http\Requests\DisputeRequest;
 use App\Modules\Attendance\Http\Requests\WeekRequest;
 use App\Modules\Attendance\Support\PersonWeek;
@@ -31,6 +32,7 @@ use Inertia\Response;
  * signature of its own (a fresh challenge of this browser's session, good once, for the week only: a challenge given to
  * mark does not serve here). The signature alone names the person; nothing of them is kept in the browser. A signature
  * that does not verify, of a revoked device, of a person who left or of another company gets the same 404, as in Marcar.
+ * An answer carries the digest of the week read; when the week changed since, it is refused with the week as it is now.
  */
 final readonly class WeekController
 {
@@ -65,15 +67,15 @@ final readonly class WeekController
         return $this->week($signed, $start === null ? WeekPeriod::containing(CarbonImmutable::now()->subWeek()) : WeekPeriod::ofDate($start), $tenant);
     }
 
-    public function confirm(WeekRequest $request, WebAuthnCeremony $ceremony, ConfirmWeek $confirm, string $tenant, string $start): JsonResponse
+    public function confirm(ConfirmRequest $request, WebAuthnCeremony $ceremony, ConfirmWeek $confirm, string $tenant, string $start): JsonResponse
     {
         $week = self::period($start);
         $signed = $this->verified($request, $ceremony, $request->credential());
 
         try {
-            $confirm->handle($signed->employeeId, $week->start(), $signed->deviceId);
+            $confirm->handle($signed->employeeId, $week->start(), $signed->deviceId, $request->digest());
         } catch (WeekRejected $rejected) {
-            return response()->json(['reason' => $rejected->reason], 422);
+            return $this->rejected($rejected, $signed, $week, $tenant);
         }
 
         return $this->week($signed, $week, $tenant);
@@ -85,9 +87,9 @@ final readonly class WeekController
         $signed = $this->verified($request, $ceremony, $request->credential());
 
         try {
-            $dispute->handle($signed->employeeId, $week->start(), $request->reason(), $signed->deviceId);
+            $dispute->handle($signed->employeeId, $week->start(), $request->reason(), $signed->deviceId, $request->digest());
         } catch (WeekRejected $rejected) {
-            return response()->json(['reason' => $rejected->reason], 422);
+            return $this->rejected($rejected, $signed, $week, $tenant);
         }
 
         return $this->week($signed, $week, $tenant);
@@ -109,9 +111,25 @@ final readonly class WeekController
 
     private function week(VerifiedAssertion $signed, WeekPeriod $week, string $tenant): JsonResponse
     {
+        return response()->json($this->view($signed, $week, $tenant))->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Why the answer was refused; a week that changed since it was read goes back as it is now, to be read again. */
+    private function rejected(WeekRejected $rejected, VerifiedAssertion $signed, WeekPeriod $week, string $tenant): JsonResponse
+    {
+        $body = ['reason' => $rejected->reason, ...($rejected->reason === 'week_changed' ? ['week' => $this->view($signed, $week, $tenant)] : [])];
+
+        return response()->json($body, 422)->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function view(VerifiedAssertion $signed, WeekPeriod $week, string $tenant): array
+    {
         $person = $this->roster->find($signed->employeeId) ?? abort(404);
 
-        return response()->json(PersonWeek::of($person->id, $person->name, $week, $tenant))->header('Cache-Control', 'no-store, private');
+        return PersonWeek::of($person->id, $person->name, $week, $tenant);
     }
 
     /** The week's challenges are apart from those to mark. */

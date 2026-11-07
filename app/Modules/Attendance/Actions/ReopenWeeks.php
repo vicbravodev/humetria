@@ -38,7 +38,7 @@ final readonly class ReopenWeeks
             ->whereIn('week_start', array_unique(array_filter($weeks)))->where('status', WeekStatus::Confirmed)->get();
 
         foreach ($confirmed as $week) {
-            $week->update(['status' => WeekStatus::Pending, 'confirmed_at' => null, 'device_id' => null]);
+            $week->update(['status' => WeekStatus::Pending, 'confirmed_at' => null, 'device_id' => null, 'digest' => null]);
             $ids = ['employee_id' => $week->employee_id, 'week_start' => $week->week_start->toDateString()];
             $this->audit->handle('attendance.week_reopened', $week, [...$ids, 'mark_id' => $correction->id]);
             Log::info('attendance.week_reopened', ['confirmation_id' => $week->id, ...$ids]);

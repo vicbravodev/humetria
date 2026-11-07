@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Registro de jornada: the weekly conformity of each person (criterio 5.2), one row per person and week (Monday, local).
  * Only its current state: pending (silence is not conformity), confirmed or disputed with the reason, each with its moment
- * and the device whose verified signature did it. The history is in the audit trail. The hours are never stored: they are
+ * and the device whose verified signature did it, and the version of the week answered (its digest). The history is in the audit trail. The hours are never stored: they are
  * always counted again from the marks.
  */
 return new class extends Migration
@@ -27,6 +27,8 @@ return new class extends Migration
             $table->timestampTz('disputed_at')->nullable();
             $table->text('reason')->nullable();
             $table->uuid('device_id')->nullable();
+            // The version of the week the person answered on (WeekDigest): the sha256 of its effective marks' ids.
+            $table->char('digest', 64)->nullable();
             $table->timestampsTz();
 
             $table->foreign(['employee_id', 'tenant_id'])->references(['id', 'tenant_id'])->on('employees')->restrictOnDelete();
@@ -39,9 +41,9 @@ return new class extends Migration
             ALTER TABLE attendance_weekly_confirmations
                 ADD CONSTRAINT attendance_weekly_confirmations_week_start_monday CHECK (extract(isodow from week_start) = 1),
                 ADD CONSTRAINT attendance_weekly_confirmations_status_consistent CHECK (
-                    (status = 'pending' AND confirmed_at IS NULL AND disputed_at IS NULL AND reason IS NULL AND device_id IS NULL)
-                    OR (status = 'confirmed' AND confirmed_at IS NOT NULL AND disputed_at IS NULL AND reason IS NULL AND device_id IS NOT NULL)
-                    OR (status = 'disputed' AND confirmed_at IS NULL AND disputed_at IS NOT NULL AND btrim(reason) <> '' AND device_id IS NOT NULL)
+                    (status = 'pending' AND confirmed_at IS NULL AND disputed_at IS NULL AND reason IS NULL AND device_id IS NULL AND digest IS NULL)
+                    OR (status = 'confirmed' AND confirmed_at IS NOT NULL AND disputed_at IS NULL AND reason IS NULL AND device_id IS NOT NULL AND digest IS NOT NULL AND digest ~ '^[0-9a-f]{64}$')
+                    OR (status = 'disputed' AND confirmed_at IS NULL AND disputed_at IS NOT NULL AND btrim(reason) <> '' AND device_id IS NOT NULL AND digest IS NOT NULL AND digest ~ '^[0-9a-f]{64}$')
                 );
         SQL);
     }

@@ -47,6 +47,11 @@ export function useWeek({
         setWorking(null);
 
         if (outcome.kind === 'failed') {
+            // A week that changed since it was read comes back as it is now: shown, to be read again before answering.
+            if (outcome.week !== undefined) {
+                setWeek(outcome.week);
+            }
+
             setError(weekMessage(outcome.reason));
 
             return false;
@@ -62,8 +67,9 @@ export function useWeek({
         error,
         working,
         read: () => send('read', weekUrl, start === null ? {} : { start }),
-        confirm: (url: string) => send('confirm', url, {}),
+        confirm: (url: string) =>
+            send('confirm', url, { digest: week?.digest }),
         dispute: (url: string, reason: string) =>
-            send('dispute', url, { reason }),
+            send('dispute', url, { reason, digest: week?.digest }),
     };
 }

@@ -77,7 +77,9 @@ function moment(answeredAt: string | null): string {
 }
 
 /** Where the week stands, in a word and a sentence. Silence is not conformity: a week nobody answered is «Sin confirmar». */
-export function statusText(view: Pick<WeekView, 'status' | 'answeredAt'>): {
+export function statusText(
+    view: Pick<WeekView, 'status' | 'answeredAt' | 'blocked'>,
+): {
     label: string;
     detail: string;
 } {
@@ -98,11 +100,28 @@ export function statusText(view: Pick<WeekView, 'status' | 'answeredAt'>): {
                 detail: 'Podrá confirmarla u objetarla cuando termine el domingo.',
             };
         default:
-            return {
-                label: 'Sin confirmar',
-                detail: 'Revise su semana. Si está bien, confírmela; si no, diga qué no está bien.',
-            };
+            return pendingText(view.blocked);
     }
+}
+
+const BLOCKED: Record<string, string> = {
+    day_open:
+        'Su último turno de esta semana sigue abierto: podrá confirmarla cuando marque su salida.',
+    no_marks:
+        'Esta semana no tiene marcas suyas. Si faltan, use «No estoy de acuerdo» para decirlo.',
+};
+
+/** A week nobody answered: what to do with it, or why it cannot be confirmed yet. */
+function pendingText(blocked: string | null): {
+    label: string;
+    detail: string;
+} {
+    return {
+        label: 'Sin confirmar',
+        detail:
+            BLOCKED[blocked ?? ''] ??
+            'Revise su semana. Si está bien, confírmela; si no, diga qué no está bien.',
+    };
 }
 
 const FLAGS: Record<string, string> = {

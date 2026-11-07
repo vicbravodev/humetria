@@ -12,6 +12,8 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\PersonWeek;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
+use App\Modules\Attendance\Support\WeekDigest;
+use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -95,9 +97,20 @@ function anaReadsWeek(array $body = []): TestResponse
     return weekSigned(test()->phone, test()->ana->id, route('attendance.device.week.read', 'acme'), $body);
 }
 
+/** The digest of Ana's week as the server counts it now: what the page she read carries. */
+function anaDigest(string $start = '2026-11-02'): string
+{
+    return WeekDigest::of(test()->ana->id, WeekPeriod::ofDate(CarbonImmutable::parse($start)));
+}
+
+/**
+ * Ana answers a week with her phone, sending the digest of the week as it is now unless the body says otherwise.
+ *
+ * @param  array<string, mixed>  $body
+ */
 function anaAnswers(string $answer, string $start = '2026-11-02', array $body = []): TestResponse
 {
-    return weekSigned(test()->phone, test()->ana->id, route("attendance.device.week.{$answer}", ['acme', $start]), $body);
+    return weekSigned(test()->phone, test()->ana->id, route("attendance.device.week.{$answer}", ['acme', $start]), [...(array_key_exists('digest', $body) ? [] : ['digest' => anaDigest($start)]), ...$body]);
 }
 
 /** Last week: Monday with a break and an hour over, Tuesday of 14 hours, and a Sunday night on her rest day that ends on Monday. */
@@ -175,6 +188,8 @@ describe('reading the week', function (): void {
                 'ordinaryMinutes' => 960, 'overtimeMinutes' => 420, 'doubleMinutes' => 420, 'tripleMinutes' => 0, 'restDayMinutes' => 480,
                 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'],
             ])
+            ->assertJsonPath('digest', anaDigest())
+            ->assertJsonPath('blocked', null)
             ->assertJsonPath('confirmUrl', route('attendance.device.week.confirm', ['acme', '2026-11-02']))
             ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']))
             ->assertJsonPath('previousUrl', route('attendance.device.week.show', ['acme', '2026-10-26']))
@@ -217,7 +232,7 @@ describe('reading the week', function (): void {
     it('tells the answer already given, with its moment and the person\'s own reason', function (): void {
         WeeklyConfirmation::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02', 'status' => WeekStatus::Disputed,
-            'disputed_at' => CarbonImmutable::parse('2026-11-10 16:30', 'UTC'), 'reason' => 'El martes salí a las 20:00.', 'device_id' => $this->device->id,
+            'disputed_at' => CarbonImmutable::parse('2026-11-10 16:30', 'UTC'), 'reason' => 'El martes salí a las 20:00.', 'device_id' => $this->device->id, 'digest' => anaDigest(),
         ]);
 
         anaReadsWeek(['start' => '2026-11-02'])->assertOk()
@@ -243,7 +258,7 @@ describe('answering', function (): void {
             ->assertJsonPath('confirmUrl', null)
             ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']));
 
-        expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Confirmed)->device_id->toBe($this->device->id);
+        expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Confirmed)->device_id->toBe($this->device->id)->digest->toBe(anaDigest());
     });
 
     it('disputes the week with a reason', function (): void {
@@ -262,6 +277,46 @@ describe('answering', function (): void {
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     })->with(['confirm', 'dispute']);
 
+    it('offers no confirmation, and rejects one, while the last night of the week is still open', function (): void {
+        weekPunch($this->ana, MarkType::Start, '2026-11-08 22:00');
+        $this->travelTo(CarbonImmutable::parse('2026-11-09 00:30', 'America/Mexico_City'));
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()
+            ->assertJsonPath('blocked', 'day_open')
+            ->assertJsonPath('confirmUrl', null)
+            ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']));
+        anaAnswers('confirm')->assertUnprocessable()->assertExactJson(['reason' => 'day_open']);
+
+        weekPunch($this->ana, MarkType::End, '2026-11-09 06:00');
+        $this->travelTo(CarbonImmutable::parse('2026-11-09 06:05', 'America/Mexico_City'));
+        anaAnswers('confirm')->assertOk()->assertJsonPath('status', 'confirmed');
+    });
+
+    it('offers no confirmation of a week with no marks, and rejects one, while letting the person dispute it', function (): void {
+        anaReadsWeek()->assertOk()->assertJsonPath('blocked', 'no_marks')->assertJsonPath('confirmUrl', null);
+        anaAnswers('confirm')->assertUnprocessable()->assertExactJson(['reason' => 'no_marks']);
+        anaAnswers('dispute', body: ['reason' => 'Faltan mis marcas del lunes y del martes.'])->assertOk()->assertJsonPath('status', 'disputed');
+    });
+
+    it('rejects an answer on a version of the week that changed since it was read, giving the week as it is now', function (string $answer): void {
+        anaWorkedLastWeek();
+        $seen = anaDigest();
+        $end = AttendanceMark::query()->where('type', MarkType::End)->orderBy('marked_at')->firstOrFail();
+        AttendanceMark::factory()->correcting($end)->create(['marked_at' => CarbonImmutable::parse('2026-11-02 18:00', 'America/Mexico_City')->utc()]);
+
+        anaAnswers($answer, body: ['digest' => $seen, 'reason' => 'El martes salí a las 20:00.'])->assertUnprocessable()
+            ->assertJsonPath('reason', 'week_changed')
+            ->assertJsonPath('week.digest', anaDigest())
+            ->assertJsonPath('week.days.0.marks.3', ['type' => 'end', 'time' => '18:00', 'nextDay' => false, 'corrected' => true]);
+
+        expect(WeeklyConfirmation::query()->count())->toBe(0);
+    })->with(['confirm', 'dispute']);
+
+    it('asks for the digest of the week read with every answer, in Spanish', function (string $answer): void {
+        anaAnswers($answer, body: ['digest' => null, 'reason' => 'El martes salí a las 20:00.'])->assertJsonValidationErrors(['digest' => 'versión de la semana']);
+        anaAnswers($answer, body: ['digest' => 'abc', 'reason' => 'El martes salí a las 20:00.'])->assertJsonValidationErrors('digest');
+    })->with(['confirm', 'dispute']);
+
     it('rejects confirming over a dispute', function (): void {
         anaAnswers('dispute', body: ['reason' => 'El martes salí a las 20:00.'])->assertOk();
 
@@ -275,7 +330,7 @@ describe('answering', function (): void {
         $credential = $this->phone->get($options, $this->ana->id);
 
         $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.week.read', 'acme'), ['credential' => $credential])->assertOk();
-        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.week.confirm', ['acme', '2026-11-02']), ['credential' => $credential])->assertNotFound();
+        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.week.confirm', ['acme', '2026-11-02']), ['credential' => $credential, 'digest' => anaDigest()])->assertNotFound();
 
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     });
@@ -285,12 +340,12 @@ describe('answering', function (): void {
         $session = weekSession();
         $options = $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.options', 'acme'))->json();
 
-        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.week.confirm', ['acme', '2026-11-02']), ['credential' => $this->phone->get($options, $this->ana->id)])
+        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.week.confirm', ['acme', '2026-11-02']), ['credential' => $this->phone->get($options, $this->ana->id), 'digest' => anaDigest()])
             ->assertNotFound();
     });
 
     it('answers 404 to a week that is not a date', function (): void {
-        anaAnswers('confirm', '2026-13-01')->assertNotFound();
+        anaAnswers('confirm', '2026-13-01', ['digest' => str_repeat('a', 64)])->assertNotFound();
     });
 });
 
@@ -315,8 +370,8 @@ describe('who reads and answers', function (): void {
         workIn($this->tenant);
 
         weekSigned($bobPhone, $bob->id, route('attendance.device.week.read', 'acme'))->assertNotFound();
-        weekSigned($bobPhone, $bob->id, route('attendance.device.week.confirm', ['acme', '2026-11-02']))->assertNotFound();
-        weekSigned($this->phone, $this->ana->id, route('attendance.device.week.confirm', ['globex', '2026-11-02']), slug: 'globex')->assertNotFound();
+        weekSigned($bobPhone, $bob->id, route('attendance.device.week.confirm', ['acme', '2026-11-02']), ['digest' => anaDigest()])->assertNotFound();
+        weekSigned($this->phone, $this->ana->id, route('attendance.device.week.confirm', ['globex', '2026-11-02']), ['digest' => anaDigest()], slug: 'globex')->assertNotFound();
 
         expect(WeeklyConfirmation::query()->withoutGlobalScopes()->count())->toBe(0);
     });

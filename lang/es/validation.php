@@ -287,6 +287,7 @@ return [
         'q' => 'código QR',
         'mark_type' => 'tipo de marca',
         'start' => 'semana',
+        'digest' => 'versión de la semana',
         'footwear' => 'calzado',
         'discomfort' => 'molestias',
         'tasks' => 'tareas',

@@ -34,6 +34,10 @@ export type WeekView = {
     status: string;
     answeredAt: string | null;
     disputeReason: string | null;
+    /** The version of the week read; sent back with the answer, so it is about this week and not a changed one. */
+    digest: string;
+    /** Why it cannot be confirmed yet (`day_open`, `no_marks`); null when it can. */
+    blocked: string | null;
     days: WeekDay[];
     summary: WeekSummary;
     confirmUrl: string | null;
@@ -44,7 +48,7 @@ export type WeekView = {
 
 export type WeekOutcome =
     | { kind: 'done'; week: WeekView }
-    | { kind: 'failed'; reason: string };
+    | { kind: 'failed'; reason: string; week?: WeekView };
 
 type Json = Record<string, unknown>;
 
@@ -136,12 +140,14 @@ export function weekView(json: unknown): WeekView | null {
     const name = text(json['name']);
     const status = text(json['status']);
     const previousUrl = text(json['previousUrl']);
+    const digest = text(json['digest']);
     const dates = period(json['week']);
     const hours = summary(json['summary']);
 
     return name === null ||
         status === null ||
         previousUrl === null ||
+        digest === null ||
         dates === null ||
         hours === null
         ? null
@@ -151,6 +157,8 @@ export function weekView(json: unknown): WeekView | null {
               status,
               answeredAt: text(json['answeredAt']),
               disputeReason: text(json['disputeReason']),
+              digest,
+              blocked: text(json['blocked']),
               days: json['days'].flatMap(day),
               summary: hours,
               confirmUrl: text(json['confirmUrl']),
@@ -171,8 +179,13 @@ async function failure(response: Response): Promise<WeekOutcome> {
     const reason = isJson(body)
         ? (text(body['reason']) ?? 'invalid')
         : BY_STATUS[response.status];
+    const now = isJson(body) ? weekView(body['week']) : null;
 
-    return { kind: 'failed', reason: reason ?? 'failed' };
+    return {
+        kind: 'failed',
+        reason: reason ?? 'failed',
+        ...(now === null ? {} : { week: now }),
+    };
 }
 
 /**
@@ -216,6 +229,12 @@ const MESSAGES: Record<string, string> = {
         'Usted objetó esta semana: Recursos Humanos la revisará antes de que pueda confirmarla.',
     already_disputed:
         'Ya objetó esta semana. Recursos Humanos revisará su motivo.',
+    week_changed:
+        'Su semana cambió desde que la abrió: Recursos Humanos corrigió sus marcas. Revísela de nuevo antes de responder.',
+    day_open:
+        'Su último turno de esta semana sigue abierto. Podrá confirmar su semana cuando marque su salida.',
+    no_marks:
+        'Esta semana no tiene marcas suyas. Si faltan, use «No estoy de acuerdo» para decirlo.',
     invalid:
         'Escriba qué no está bien en su semana, con al menos 10 caracteres.',
     unsupported:

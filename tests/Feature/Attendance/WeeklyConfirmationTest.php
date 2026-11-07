@@ -17,6 +17,8 @@ use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\WeekDigest;
+use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -53,17 +55,32 @@ function localDate(string $date): CarbonImmutable
     return CarbonImmutable::parse($date, 'America/Mexico_City');
 }
 
-function confirmWeek(object $test, string $week = LAST_WEEK): WeeklyConfirmation
+/** The digest of Ana's week as she sees it now. */
+function seenDigest(object $test, string $week = LAST_WEEK): string
 {
-    return resolve(ConfirmWeek::class)->handle($test->ana->id, localDate($week), $test->device->id);
+    return WeekDigest::of($test->ana->id, WeekPeriod::ofDate(localDate($week)));
 }
 
-function disputeWeek(object $test, string $reason = 'El jueves salí a las 20:00, no a las 18:00.', string $week = LAST_WEEK): WeeklyConfirmation
+function confirmWeek(object $test, string $week = LAST_WEEK, ?string $digest = null): WeeklyConfirmation
 {
-    return resolve(DisputeWeek::class)->handle($test->ana->id, localDate($week), $reason, $test->device->id);
+    return resolve(ConfirmWeek::class)->handle($test->ana->id, localDate($week), $test->device->id, $digest ?? seenDigest($test, $week));
+}
+
+function disputeWeek(object $test, string $reason = 'El jueves salí a las 20:00, no a las 18:00.', string $week = LAST_WEEK, ?string $digest = null): WeeklyConfirmation
+{
+    return resolve(DisputeWeek::class)->handle($test->ana->id, localDate($week), $reason, $test->device->id, $digest ?? seenDigest($test, $week));
+}
+
+/** Ana worked a whole day, 9:00 to 17:00, on a local date. */
+function workedOn(object $test, string $date): void
+{
+    weekMark($test->ana, MarkType::Start, "{$date} 09:00");
+    weekMark($test->ana, MarkType::End, "{$date} 17:00");
 }
 
 describe('confirming', function (): void {
+    beforeEach(fn () => workedOn($this, '2026-11-03'));
+
     it('confirms the week with the moment and the verified device, to the log and the audit trail', function (): void {
         Event::fake([WeekConfirmed::class]);
         Log::spy();
@@ -74,6 +91,7 @@ describe('confirming', function (): void {
             ->employee_id->toBe($this->ana->id)
             ->status->toBe(WeekStatus::Confirmed)
             ->device_id->toBe($this->device->id)
+            ->digest->toBe(seenDigest($this))
             ->disputed_at->toBeNull()
             ->reason->toBeNull()
             ->and($week->week_start->toDateString())->toBe(LAST_WEEK)
@@ -81,7 +99,7 @@ describe('confirming', function (): void {
         Event::assertDispatched(WeekConfirmed::class, fn (WeekConfirmed $event): bool => $event->confirmationId === $week->id && $event->employeeId === $this->ana->id && $event->weekStart === LAST_WEEK);
         $entry = AuditEntry::query()->where('event', 'attendance.week_confirmed')->sole();
         expect($entry->subject_id)->toBe($week->id)
-            ->and($entry->metadata)->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id]);
+            ->and($entry->metadata)->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id, 'digest' => seenDigest($this)]);
         Log::shouldHaveReceived('info')->with('attendance.week_confirmed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id]);
     });
 
@@ -102,7 +120,6 @@ describe('confirming', function (): void {
     });
 
     it('confirms a week that the nightly close already left pending', function (): void {
-        weekMark($this->ana, MarkType::Start, '2026-11-03 09:00');
         resolve(CloseDays::class)->handle();
 
         expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed)
@@ -110,6 +127,7 @@ describe('confirming', function (): void {
     });
 
     it('rejects a week that is not over: the current one up to its last second', function (): void {
+        workedOn($this, '2026-11-10');
         expect(fn () => confirmWeek($this, '2026-11-09'))->toThrow(fn (WeekRejected $e) => expect($e->reason)->toBe('week_not_over'));
 
         $this->travelTo(CarbonImmutable::parse('2026-11-15 23:59:59', 'America/Mexico_City'));
@@ -117,6 +135,33 @@ describe('confirming', function (): void {
 
         $this->travelTo(CarbonImmutable::parse('2026-11-16 00:00:00', 'America/Mexico_City'));
         expect(confirmWeek($this, '2026-11-09')->status)->toBe(WeekStatus::Confirmed);
+    });
+
+    it('rejects a week with no marks of the person: there is nothing to agree to', function (): void {
+        expect(fn () => confirmWeek($this, '2026-10-26'))->toThrow(fn (WeekRejected $e) => expect($e->reason)->toBe('no_marks'));
+        expect(WeeklyConfirmation::query()->where('status', WeekStatus::Confirmed)->count())->toBe(0);
+    });
+
+    it('rejects a week whose last day is still open, until its end is marked', function (): void {
+        weekMark($this->ana, MarkType::Start, '2026-11-08 22:00');
+        $this->travelTo(CarbonImmutable::parse('2026-11-09 00:30', 'America/Mexico_City'));
+
+        expect(fn () => confirmWeek($this))->toThrow(fn (WeekRejected $e) => expect($e->reason)->toBe('day_open'));
+        expect(WeeklyConfirmation::query()->where('status', WeekStatus::Confirmed)->count())->toBe(0);
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-09 06:00', 'America/Mexico_City'));
+        weekMark($this->ana, MarkType::End, '2026-11-09 06:00');
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
+    });
+
+    it('rejects a confirmation of a version of the week that changed since the person read it, changing nothing', function (): void {
+        $seen = seenDigest($this);
+        AttendanceMark::factory()->correcting(AttendanceMark::query()->where('type', MarkType::End)->sole())
+            ->create(['marked_at' => CarbonImmutable::parse('2026-11-03 18:00', 'America/Mexico_City')->utc()]);
+
+        expect(fn () => confirmWeek($this, digest: $seen))->toThrow(fn (WeekRejected $e) => expect($e->reason)->toBe('week_changed'));
+        expect(WeeklyConfirmation::query()->where('status', '!=', WeekStatus::Pending)->count())->toBe(0)
+            ->and(AuditEntry::query()->where('event', 'attendance.week_confirmed')->count())->toBe(0);
     });
 
     it('rejects a disputed week: RH resolves it', function (): void {
@@ -138,11 +183,12 @@ describe('disputing', function (): void {
             ->status->toBe(WeekStatus::Disputed)
             ->reason->toBe('El jueves salí a las 20:00, no a las 18:00.')
             ->device_id->toBe($this->device->id)
+            ->digest->toBe(seenDigest($this))
             ->confirmed_at->toBeNull()
             ->and($week->disputed_at?->equalTo(now()))->toBeTrue();
         Event::assertDispatched(WeekDisputed::class, fn (WeekDisputed $event): bool => $event->confirmationId === $week->id && $event->weekStart === LAST_WEEK);
         expect(AuditEntry::query()->where('event', 'attendance.week_disputed')->sole()->metadata)
-            ->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id]);
+            ->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id, 'digest' => seenDigest($this)]);
         Log::shouldHaveReceived('info')->with('attendance.week_disputed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id]);
     });
 
@@ -152,10 +198,23 @@ describe('disputing', function (): void {
     })->with(['empty' => [''], 'blank' => ['          '], 'too short' => ['No es así']]);
 
     it('lets the person dispute a week they had confirmed', function (): void {
+        workedOn($this, '2026-11-03');
         confirmWeek($this);
 
         expect(disputeWeek($this))->status->toBe(WeekStatus::Disputed)->confirmed_at->toBeNull()
             ->and(WeeklyConfirmation::query()->count())->toBe(1);
+    });
+
+    it('lets the person dispute a week with no marks: theirs may be missing', function (): void {
+        expect(disputeWeek($this))->status->toBe(WeekStatus::Disputed);
+    });
+
+    it('rejects a dispute of a version of the week that changed since the person read it', function (): void {
+        $seen = seenDigest($this);
+        workedOn($this, '2026-11-03');
+
+        expect(fn () => disputeWeek($this, digest: $seen))->toThrow(fn (WeekRejected $e) => expect($e->reason)->toBe('week_changed'));
+        expect(WeeklyConfirmation::query()->where('status', WeekStatus::Disputed)->count())->toBe(0);
     });
 
     it('rejects disputing a week twice', function (): void {
@@ -183,7 +242,7 @@ describe('a correction', function (): void {
 
         resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
 
-        expect($week->fresh())->status->toBe(WeekStatus::Pending)->confirmed_at->toBeNull()->device_id->toBeNull();
+        expect($week->fresh())->status->toBe(WeekStatus::Pending)->confirmed_at->toBeNull()->device_id->toBeNull()->digest->toBeNull();
         expect(AuditEntry::query()->where('event', 'attendance.week_reopened')->sole()->subject_id)->toBe($week->id);
         Log::shouldHaveReceived('info')->with('attendance.week_reopened', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK]);
     });
@@ -197,7 +256,8 @@ describe('a correction', function (): void {
     });
 
     it('leaves the confirmation of another week alone', function (): void {
-        $other = resolve(ConfirmWeek::class)->handle($this->ana->id, localDate('2026-10-26'), $this->device->id);
+        workedOn($this, '2026-10-27');
+        $other = confirmWeek($this, '2026-10-26');
         confirmWeek($this);
 
         resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
@@ -216,7 +276,8 @@ describe('a correction', function (): void {
     });
 
     it('reopens the week a correction moves a mark into', function (): void {
-        $week = resolve(ConfirmWeek::class)->handle($this->ana->id, localDate('2026-10-26'), $this->device->id);
+        workedOn($this, '2026-10-27');
+        $week = confirmWeek($this, '2026-10-26');
 
         resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-10-30 09:00'), 'Era del viernes anterior.', (string) $this->hr->id);
 
@@ -296,5 +357,12 @@ describe('the table', function (): void {
         'confirmed without moment' => [['status' => 'confirmed', 'device_id' => null]],
         'disputed without reason' => [['status' => 'disputed', 'disputed_at' => now()]],
         'pending with a moment' => [['status' => 'pending', 'confirmed_at' => now()]],
+        'pending with a digest' => [['status' => 'pending', 'digest' => str_repeat('a', 64)]],
     ]);
+
+    it('keeps the digest of the week an answer was given on', function (?string $digest): void {
+        expect(fn () => WeeklyConfirmation::factory()->create([
+            'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'status' => 'confirmed', 'confirmed_at' => now(), 'device_id' => $this->device->id, 'digest' => $digest,
+        ]))->toThrow(QueryException::class, 'attendance_weekly_confirmations_status_consistent');
+    })->with(['none' => [null], 'not a sha256' => ['abc']]);
 });

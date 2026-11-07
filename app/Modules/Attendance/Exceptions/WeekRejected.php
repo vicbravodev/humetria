@@ -8,7 +8,8 @@ use RuntimeException;
 
 /**
  * A person's answer about a week that cannot be taken: `week_not_over` (only a week whose Sunday ended is answered),
- * `week_disputed` (RH resolves a dispute; the person does not confirm over it) or `already_disputed`.
+ * `week_disputed` (RH resolves a dispute; the person does not confirm over it), `already_disputed`, `no_marks` (nothing to
+ * confirm), `day_open` (its last day has no end yet) or `week_changed` (the week changed since the person read it).
  */
 final class WeekRejected extends RuntimeException
 {
