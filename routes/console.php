@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
@@ -75,6 +76,10 @@ Artisan::command('seating:remind-questions', function (RemindStandingQuestions $
     $this->info('Recordatorios de las 2 preguntas: '.$remind->handle());
 })->purpose('Remind the people whose Ley Silla assessment started a week or two ago of their 2 questions, while it waits');
 
+Artisan::command('attendance:close-days', function (CloseDays $closeDays): void {
+    $this->info('Días cerrados: '.$closeDays->handle());
+})->purpose('Close yesterday for every active person with a mark that day or a working day by their schedule (the registro de jornada)');
+
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
 Schedule::command('campaigns:remind-next-evaluations')->dailyAt('08:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
@@ -89,6 +94,8 @@ Schedule::command('seating:remind-questions')->dailyAt('09:00')->timezone(config
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// Shortly after local midnight, so yesterday is over. Once is enough: closing a day again gives the same day.
+Schedule::command('attendance:close-days')->dailyAt('00:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
