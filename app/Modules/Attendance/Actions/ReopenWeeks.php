@@ -34,10 +34,14 @@ final readonly class ReopenWeeks
             $weeks[] = $start === null ? null : WeekPeriod::containing($start)->start()->toDateString();
         }
 
-        $confirmed = WeeklyConfirmation::query()->where('employee_id', $correction->employee_id)
-            ->whereIn('week_start', array_unique(array_filter($weeks)))->where('status', WeekStatus::Confirmed)->get();
+        // Locked whatever their state: a confirmation holding its row (it checks the digest under that lock) is waited for and
+        // then seen confirmed; one that comes after waits for this correction and counts its mark. A week with no row yet is
+        // not locked: a first confirmation in flight may then keep a digest without this mark (closing it needs ConfirmWeek to
+        // take the person's lock on their marks).
+        $rows = WeeklyConfirmation::query()->where('employee_id', $correction->employee_id)
+            ->whereIn('week_start', array_unique(array_filter($weeks)))->lockForUpdate()->get();
 
-        foreach ($confirmed as $week) {
+        foreach ($rows->where('status', WeekStatus::Confirmed) as $week) {
             $week->update(['status' => WeekStatus::Pending, 'confirmed_at' => null, 'device_id' => null, 'digest' => null]);
             $ids = ['employee_id' => $week->employee_id, 'week_start' => $week->week_start->toDateString()];
             $this->audit->handle('attendance.week_reopened', $week, [...$ids, 'mark_id' => $correction->id]);

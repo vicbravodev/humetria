@@ -25,6 +25,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
@@ -273,6 +274,19 @@ describe('a correction', function (): void {
         resolve(CorrectMark::class)->handle($end->id, localDate('2026-11-09 07:00'), 'Se quedó una hora más.', (string) $this->hr->id);
 
         expect($week->fresh()?->status)->toBe(WeekStatus::Pending);
+    });
+
+    it('locks the rows of the weeks it touches, whatever their state, so an answer in flight waits for it', function (): void {
+        confirmWeek($this);
+        DB::enableQueryLog();
+
+        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
+
+        // A confirmation holds its row locked while it checks the digest: the reopening waits for it and then sees it
+        // confirmed. Locking a pending row too makes a confirmation that comes after wait for the correction and see its mark.
+        $locks = collect(DB::getQueryLog())->pluck('query')->filter(fn (string $sql): bool => str_contains($sql, 'from "attendance_weekly_confirmations"') && str_ends_with($sql, 'for update'));
+        expect($locks)->toHaveCount(1)
+            ->and($locks->first())->not->toContain('"status"');
     });
 
     it('reopens the week a correction moves a mark into', function (): void {
