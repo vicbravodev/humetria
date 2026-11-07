@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Providers\AssistantServiceProvider;
+use App\Modules\Attendance\Providers\AttendanceServiceProvider;
 use App\Modules\Campaigns\Providers\CampaignsServiceProvider;
 use App\Modules\Compensation\Providers\CompensationServiceProvider;
 use App\Modules\Complaints\Providers\ComplaintsServiceProvider;
@@ -34,6 +35,7 @@ return [
     InterventionsServiceProvider::class,
     TeleworkServiceProvider::class,
     SeatingServiceProvider::class,
+    AttendanceServiceProvider::class,
     CompensationServiceProvider::class,
     ComplaintsServiceProvider::class,
     DisclosureServiceProvider::class,
