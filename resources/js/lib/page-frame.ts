@@ -10,6 +10,8 @@ const STANDALONE_NAMES = new Set([
     'results/portal-support',
     // A report opened from a temporary link: nobody signed in.
     'results/shared-report',
+    // The QR screen of a work center: a fixed tablet, no account, the whole screen for the code.
+    'attendance/kiosk',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.
