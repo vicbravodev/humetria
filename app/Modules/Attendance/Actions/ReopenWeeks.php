@@ -25,10 +25,11 @@ final readonly class ReopenWeeks
     public function handle(string $correctionId): void
     {
         $correction = AttendanceMark::query()->findOrFail($correctionId);
-        $original = AttendanceMark::query()->findOrFail($correction->corrects_mark_id);
+        // A mark added has no original: only its own weeks.
+        $original = $correction->corrects_mark_id === null ? null : AttendanceMark::query()->findOrFail($correction->corrects_mark_id);
         $weeks = [];
 
-        foreach (array_filter([$original->marked_at, $correction->marked_at]) as $at) {
+        foreach (array_filter([$original?->marked_at, $correction->marked_at]) as $at) {
             $weeks[] = WeekPeriod::containing($at)->start()->toDateString();
             $start = $this->startBefore($correction->employee_id, $at);
             $weeks[] = $start === null ? null : WeekPeriod::containing($start)->start()->toDateString();
