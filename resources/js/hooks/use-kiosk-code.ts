@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { KioskCode } from '@/lib/attendance/kiosk';
 import {
-    parseKioskCode,
+    fetchKioskCode,
     refreshDelay,
     retryDelay,
 } from '@/lib/attendance/kiosk';
 
 /**
- * The current code of a QR screen, asked for again as each one turns. Without a connection it keeps the last code and
- * retries, waiting longer each time; a screen RH revoked gets a 404 and reloads, to show the page of a link that no longer works.
- * The screen's token travels in its httpOnly cookie, never through this code.
+ * The current code of a QR screen, asked for again as each one turns. Without a usable answer it keeps the last code, says
+ * so and retries, waiting longer each time; a screen RH revoked gets a 404 and reloads, to show the page of a link that no
+ * longer works. The screen's credential travels in its httpOnly cookie, never through this code.
  */
 export function useKioskCode(endpoint: string) {
     const [code, setCode] = useState<KioskCode | null>(null);
@@ -20,45 +20,31 @@ export function useKioskCode(endpoint: string) {
         let failures = 0;
         let active = true;
 
-        const schedule = (delay: number) => {
-            if (active) {
-                timer = window.setTimeout(() => void load(), delay);
-            }
-        };
-
         const load = async () => {
-            const next = await fetch(endpoint, {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-                cache: 'no-store',
-            }).then(
-                async (response) => {
-                    if (response.status === 404) {
-                        window.location.reload();
-                    }
-
-                    return response.ok
-                        ? parseKioskCode(await response.json())
-                        : null;
-                },
-                () => null,
-            );
+            const answer = await fetchKioskCode(endpoint);
 
             if (!active) {
                 return;
             }
 
-            failures = next === null ? failures + 1 : 0;
-            setOnline(next !== null);
+            if (answer === 'gone') {
+                window.location.reload();
 
-            if (next !== null) {
-                setCode(next);
+                return;
             }
 
-            schedule(
-                next === null
+            failures = answer === null ? failures + 1 : 0;
+            setOnline(answer !== null);
+
+            if (answer !== null) {
+                setCode(answer);
+            }
+
+            timer = window.setTimeout(
+                () => void load(),
+                answer === null
                     ? retryDelay(failures)
-                    : refreshDelay(next.expiresIn),
+                    : refreshDelay(answer.expiresIn),
             );
         };
 

@@ -37,3 +37,31 @@ export function parseKioskCode(body: unknown): KioskCode | null {
         ? { url, qr, expiresIn }
         : null;
 }
+
+/** What the server answered: the current code, `gone` when the screen no longer exists (404), or null for anything else. */
+export type KioskAnswer = KioskCode | 'gone' | null;
+
+/**
+ * Asks for the current code. Never throws: a network error, an error status, a page that is not JSON (a captive portal or
+ * a proxy answering 200) or a body cut halfway all give null, so the screen always retries.
+ */
+export async function fetchKioskCode(
+    endpoint: string,
+    fetcher: typeof fetch = fetch,
+): Promise<KioskAnswer> {
+    try {
+        const response = await fetcher(endpoint, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
+
+        if (response.status === 404) {
+            return 'gone';
+        }
+
+        return response.ok ? parseKioskCode(await response.json()) : null;
+    } catch {
+        return null;
+    }
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    fetchKioskCode,
     parseKioskCode,
     refreshDelay,
     retryDelay,
@@ -51,6 +52,69 @@ describe('parseKioskCode', () => {
         expect(parseKioskCode({ ...body, expiresIn: '20' })).toBeNull();
         expect(
             parseKioskCode({ ...body, qr: 'javascript:alert(1)' }),
+        ).toBeNull();
+    });
+});
+
+describe('fetchKioskCode', () => {
+    const code = {
+        url: 'https://humetria.test/a/acme/punch?q=abc',
+        qr: 'data:image/svg+xml;base64,PHN2Zz4=',
+        expiresIn: 20,
+    };
+    const answering = (response: Response | Error) => (): Promise<Response> =>
+        response instanceof Error
+            ? Promise.reject(response)
+            : Promise.resolve(response);
+
+    it('reads the code of a good answer, asking as JSON with the cookie and no cache', async () => {
+        const calls: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
+        const fetcher = (input: RequestInfo | URL, init?: RequestInit) => {
+            calls.push([input, init]);
+
+            return Promise.resolve(Response.json(code));
+        };
+
+        expect(await fetchKioskCode('/a/acme/qr', fetcher)).toEqual(code);
+        expect(calls).toEqual([
+            [
+                '/a/acme/qr',
+                {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                },
+            ],
+        ]);
+    });
+
+    it('says the screen is gone on a 404', async () => {
+        expect(
+            await fetchKioskCode(
+                '/qr',
+                answering(new Response('', { status: 404 })),
+            ),
+        ).toBe('gone');
+    });
+
+    it('gives nothing, never throwing, for a network error, an error status or a page that is not JSON', async () => {
+        expect(
+            await fetchKioskCode('/qr', answering(new TypeError('offline'))),
+        ).toBeNull();
+        expect(
+            await fetchKioskCode(
+                '/qr',
+                answering(Response.json(code, { status: 500 })),
+            ),
+        ).toBeNull();
+        expect(
+            await fetchKioskCode(
+                '/qr',
+                answering(new Response('<html>Wi-Fi</html>', { status: 200 })),
+            ),
+        ).toBeNull();
+        expect(
+            await fetchKioskCode('/qr', answering(Response.json({ url: 1 }))),
         ).toBeNull();
     });
 });

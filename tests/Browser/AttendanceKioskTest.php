@@ -42,3 +42,16 @@ it('says when it lost the connection and keeps retrying', function (): void {
         ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
         ->assertNoJavaScriptErrors();
 });
+
+it('keeps turning after an answer that is not JSON, as from a captive portal, and recovers', function (): void {
+    $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:29', 'UTC'));
+
+    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectado');
+    // The next answer is a 200 page of HTML; the one after, the server's again.
+    $page->script('() => { const real = window.fetch; window.fetch = (...args) => { window.fetch = real; return Promise.resolve(new Response("<html>Wi-Fi</html>", { status: 200 })); }; }');
+
+    $page->waitForText('Sin conexión, reintentando')
+        ->waitForText('Conectado')
+        ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
+        ->assertNoJavaScriptErrors();
+});
