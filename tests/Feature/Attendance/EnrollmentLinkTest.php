@@ -72,9 +72,9 @@ it('writes the issue to the audit trail and the log with ids only, never the tok
 
     $link = EnrollmentLink::query()->sole();
     $entry = AuditEntry::query()->where('event', 'attendance.enrollment_issued')->sole();
-    expect($entry)->subject_id->toBe($link->id)->metadata->toBe(['employee_id' => $this->ana->id, 'delivered_by_rh' => false])
-        ->and(json_encode($entry->toArray(), JSON_THROW_ON_ERROR))->not->toContain($token);
-    Log::shouldHaveReceived('info')->once()->with('attendance.enrollment_issued', ['link_id' => $link->id, 'employee_id' => $this->ana->id]);
+    expect($entry)->subject_id->toBe($link->id)->metadata->toEqual(['employee_id' => $this->ana->id, 'delivered_by_rh' => false, 'sent_to' => 'a***@a***.test'])
+        ->and(json_encode($entry->toArray(), JSON_THROW_ON_ERROR))->not->toContain($token)->not->toContain('ana@acme.test');
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollment_issued', ['link_id' => $link->id, 'employee_id' => $this->ana->id, 'sent_to' => 'a***@a***.test']);
 });
 
 it('gives the link to RH, to hand it over, only when the person has no email, and writes that RH delivered it', function (): void {
@@ -87,7 +87,7 @@ it('gives the link to RH, to hand it over, only when the person has no email, an
     expect($issued->linkId)->toBe($link->id)
         ->and($issued->manualUrl)->toStartWith(config('app.url').'/a/acme/enroll/')
         ->and(EnrollmentLink::findPending(enrollmentToken((string) $issued->manualUrl)))->id->toBe($link->id)
-        ->and(AuditEntry::query()->where('event', 'attendance.enrollment_issued')->sole()->metadata)->toBe(['employee_id' => $pepe->id, 'delivered_by_rh' => true]);
+        ->and(AuditEntry::query()->where('event', 'attendance.enrollment_issued')->sole()->metadata)->toEqual(['employee_id' => $pepe->id, 'delivered_by_rh' => true, 'sent_to' => null]);
     Notification::assertNothingSent();
     Log::shouldHaveReceived('info')->with('attendance.enrollment_not_emailed', ['link_id' => $link->id, 'employee_id' => $pepe->id]);
 });
@@ -162,4 +162,13 @@ it('writes the email in «usted», with the one use and the 48 hours', function 
     expect($mail->subject)->toBe('Vincule su teléfono para registrar su jornada')
         ->and($mail->actionText)->toBe('Vincular mi teléfono')
         ->and(implode(' ', [...$mail->introLines, ...$mail->outroLines]))->toContain('una sola vez')->toContain('48 horas')->toContain('no lo comparta');
+});
+
+it('shows in the audit trail when a link went to another address than the one before', function (): void {
+    enrollmentUrl($this->ana->id);
+    $this->ana->update(['email' => 'rrhh@otra.mx']);
+    enrollmentUrl($this->ana->id);
+
+    expect(AuditEntry::query()->where('event', 'attendance.enrollment_issued')->orderBy('id')->get()->pluck('metadata.sent_to')->all())
+        ->toBe(['a***@a***.test', 'r***@o***.mx']);
 });

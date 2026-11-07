@@ -9,6 +9,7 @@ use App\Modules\Attendance\Data\IssuedEnrollment;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Notifications\EnrollmentInvitation;
+use App\Modules\Attendance\Support\MaskedEmail;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
@@ -42,8 +43,10 @@ final readonly class IssueEnrollment
         $token = Str::random(48);
         $now = CarbonImmutable::now();
         $byRh = $person->email === null;
+        // Masked, so a link sent to another address than before shows in the audit trail without the address itself.
+        $sentTo = $person->email === null ? null : MaskedEmail::of($person->email);
 
-        $link = DB::transaction(function () use ($employeeId, $userId, $token, $now, $byRh): EnrollmentLink {
+        $link = DB::transaction(function () use ($employeeId, $userId, $token, $now, $byRh, $sentTo): EnrollmentLink {
             // One person's issues one at a time: two at once would both find nothing to revoke, and the second would hit the
             // one-pending index.
             DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_enrollment_links:{$employeeId}"]);
@@ -56,12 +59,12 @@ final readonly class IssueEnrollment
                 'issued_by' => $userId,
                 'expires_at' => $now->addHours(self::HOURS),
             ]);
-            $this->audit->handle('attendance.enrollment_issued', $link, ['employee_id' => $employeeId, 'delivered_by_rh' => $byRh]);
+            $this->audit->handle('attendance.enrollment_issued', $link, ['employee_id' => $employeeId, 'delivered_by_rh' => $byRh, 'sent_to' => $sentTo]);
 
             return $link;
         });
 
-        Log::info('attendance.enrollment_issued', ['link_id' => $link->id, 'employee_id' => $employeeId]);
+        Log::info('attendance.enrollment_issued', ['link_id' => $link->id, 'employee_id' => $employeeId, 'sent_to' => $sentTo]);
 
         $company = $this->companies->current();
         $url = rtrim(config()->string('app.url'), '/').route('attendance.device.enroll.show', [$company->slug, $token], absolute: false);
