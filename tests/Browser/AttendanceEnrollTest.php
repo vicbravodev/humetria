@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
-use App\Modules\Attendance\Actions\IssueEnrollment;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Tenancy\Models\Tenant;
@@ -34,9 +32,7 @@ afterEach(function (): void {
 /** The enrollment link of Ana, as a path. */
 function enrollPath(): string
 {
-    $url = resolve(IssueEnrollment::class)->handle(test()->ana->id, (string) User::factory()->create()->id);
-
-    return (string) parse_url($url, PHP_URL_PATH);
+    return (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
 }
 
 /** A private property of Pest Browser's objects: the page it drives and the Playwright ids behind it. */
@@ -62,6 +58,8 @@ function withFingerprintReader(AwaitableWebpage $page, bool $verifies = true): v
         $session = $message['result']['session']['guid'] ?? $session;
     }
 
+    // Without a session the authenticator would be missing and the test would fail for the wrong reason.
+    expect($session)->toBeString()->not->toBeEmpty();
     $send = fn (string $method, array $params): array => iterator_to_array(Client::instance()->execute((string) $session, 'send', ['method' => $method, 'params' => $params]));
     $send('WebAuthn.enable', ['enableUI' => false]);
     $send('WebAuthn.addVirtualAuthenticator', ['options' => [

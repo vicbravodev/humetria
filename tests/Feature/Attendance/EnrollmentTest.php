@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
-use App\Models\User;
 use App\Modules\Attendance\Actions\EnrollDevice;
-use App\Modules\Attendance\Actions\IssueEnrollment;
 use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Notifications\DeviceLinked;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -43,7 +43,7 @@ beforeEach(function (): void {
 /** A new enrollment link of `$employeeId`, as RH issues it. */
 function enrollToken(string $employeeId): string
 {
-    return basename(resolve(IssueEnrollment::class)->handle($employeeId, (string) User::factory()->create()->id));
+    return basename(enrollmentUrl($employeeId));
 }
 
 /** The enrollment route `$name` of the link `$token`. */
@@ -276,4 +276,27 @@ it('keeps whether the linked key is a synced passkey, for RH to see', function (
     enrollWith($this->phone, $this->token)->assertOk();
 
     expect(AttendanceDevice::query()->sole())->backup_eligible->toBeTrue()->backup_state->toBeTrue();
+});
+
+it('tells the person by email that a device was linked, with its name and the local time, so they notice one that was not them', function (): void {
+    enrollWith($this->phone, $this->token)->assertOk();
+
+    $sent = null;
+    Notification::assertSentOnDemand(DeviceLinked::class, function (DeviceLinked $notification, array $channels, AnonymousNotifiable $notifiable) use (&$sent): bool {
+        $mail = $notification->toMail($notifiable);
+        $sent = ['to' => $notifiable->routes['mail'], 'subject' => $mail->subject, 'lines' => implode(' ', [...$mail->introLines, ...$mail->outroLines])];
+
+        return true;
+    });
+    expect($sent['to'])->toBe($this->ana->email)
+        ->and($sent['subject'])->toBe('Se vinculó un dispositivo a su registro de jornada')
+        ->and($sent['lines'])->toContain('Se vinculó un dispositivo «iPhone» el 7 de noviembre de 2026 a las 9:00.')->toContain('Si no fue usted, avise a Recursos Humanos.');
+});
+
+it('sends no such email to a person without one, nor when nothing was linked', function (): void {
+    $pepe = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'email' => null]);
+    enrollWith($this->phone, basename(enrollmentUrl($pepe->id)))->assertOk();
+    enrollWith(new SoftAuthenticator, $this->token, userVerified: false)->assertUnprocessable();
+
+    Notification::assertSentOnDemandTimes(DeviceLinked::class, 0);
 });

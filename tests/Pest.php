@@ -586,3 +586,25 @@ function surveyAnswers(string $answer = 'yes'): array
 | The inputs of the contract calculator's unit tests (scenarioInput, scenarioCell, scenarioFiscal…), shared by several files.
 */
 require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
+
+/**
+ * Issues an enrollment link of `$employeeId` as RH does, and gives the URL the person got: the one emailed to them (the
+ * mail must be faked), or the one RH hands over when they have no email.
+ */
+function enrollmentUrl(string $employeeId, ?string $userId = null): string
+{
+    $issued = resolve(App\Modules\Attendance\Actions\IssueEnrollment::class)->handle($employeeId, $userId ?? (string) User::factory()->create()->id);
+
+    if ($issued->manualUrl !== null) {
+        return $issued->manualUrl;
+    }
+
+    $url = null;
+    Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\Attendance\Notifications\EnrollmentInvitation::class, function (App\Modules\Attendance\Notifications\EnrollmentInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$url): bool {
+        $url = $notification->toMail($notifiable)->actionUrl;
+
+        return true;
+    });
+
+    return is_string($url) ? $url : throw new LogicException('No enrollment email.');
+}

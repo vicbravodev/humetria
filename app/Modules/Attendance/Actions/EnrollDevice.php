@@ -9,12 +9,15 @@ use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Notifications\DeviceLinked;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Links a person's device with their enrollment link: verifies the key the device created, then, at once, uses up the link,
@@ -23,7 +26,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class EnrollDevice
 {
-    public function __construct(private Roster $roster, private WebAuthnCeremony $ceremony, private AcceptAgreement $accept, private RecordAudit $audit) {}
+    public function __construct(private Roster $roster, private Companies $companies, private WebAuthnCeremony $ceremony, private AcceptAgreement $accept, private RecordAudit $audit) {}
 
     /**
      * @param  array<mixed>  $credential  the browser's PublicKeyCredential as JSON
@@ -78,6 +81,11 @@ final readonly class EnrollDevice
 
         if ($device !== null) {
             Log::info('attendance.device_enrolled', ['device_id' => $device->id, 'employee_id' => $person->id]);
+
+            // After the commit: the person learns of every device linked to their record, so they notice one that was not them.
+            if ($person->email !== null) {
+                Notification::route('mail', $person->email)->notify(new DeviceLinked($device->label, $device->enrolled_at, $person->name, $this->companies->current()));
+            }
         }
 
         return $device;

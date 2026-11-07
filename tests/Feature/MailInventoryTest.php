@@ -78,6 +78,7 @@ function inventory(): array
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],
         'attendance enrollment' => [fn () => new App\Modules\Attendance\Notifications\EnrollmentInvitation($url, 'Ana', $company), true],
+        'attendance device linked' => [fn () => new App\Modules\Attendance\Notifications\DeviceLinked('iPhone', CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'), 'Ana', $company), true],
         'invitation' => [fn () => new InvitationEmail('Autopartes Demo', 'ana@x.mx', 'tok', CarbonImmutable::now()->addDays(7), TenantRole::Hr, null, 1, 3), false],
     ];
 }
