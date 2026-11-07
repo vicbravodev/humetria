@@ -27,6 +27,7 @@ const ability = (handle: boolean, manage: boolean): CurrentTenant['can'] => ({
     use_assistant: true,
     manage_complaint_channel: manage,
     handle_complaints: handle,
+    view_attendance: false,
 });
 const tenant = (
     role: CurrentTenant['role'],

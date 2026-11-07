@@ -68,3 +68,17 @@ it('shows a company with no centers what to do first', function (bool $dark): vo
         ->assertSee('Aún no hay centros de trabajo')
         ->assertSee('Ir a centros de trabajo');
 })->with(['light' => [false], 'dark' => [true]]);
+
+it('takes RH from the sidebar to the overview and to the corrections', function (): void {
+    $url = overviewPanel();
+
+    visit($url)
+        ->click('[data-sidebar="sidebar"] >> text=Asistencia')
+        ->click('[data-sidebar="sidebar"] >> text=Resumen')
+        ->waitForText('Persona por persona')
+        ->assertPathIs("{$url}/attendance")
+        ->click('[data-sidebar="sidebar"] >> text=Correcciones')
+        ->waitForText('Nada por resolver')
+        ->assertPathIs("{$url}/attendance/corrections")
+        ->assertNoJavaScriptErrors();
+});

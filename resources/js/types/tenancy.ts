@@ -89,6 +89,7 @@ export type CurrentTenant = TenantSummary &
             manage_telework: boolean;
             review_workplaces: boolean;
             view_seating: boolean;
+            view_attendance: boolean;
             manage_seating: boolean;
             assess_seating: boolean;
             view_compensation: boolean;

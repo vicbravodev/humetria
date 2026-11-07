@@ -21,7 +21,7 @@ it('shares the role and what it allows with every page of the company', function
         ->assertInertia(fn (Assert $page) => $page
             ->where('tenant.role', $role->value)
             ->where('tenant.role_label', $role->label())
-            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns, 'manage_telework' => $campaigns, 'review_workplaces' => $campaigns, 'view_seating' => $viewSeating, 'manage_seating' => $campaigns, 'assess_seating' => $campaigns, 'view_compensation' => $campaigns, 'manage_compensation' => $campaigns, 'view_interventions' => $viewSeating, 'manage_interventions' => $campaigns, 'view_disclosure' => $viewSeating, 'manage_disclosure' => $campaigns, 'use_assistant' => true, 'manage_complaint_channel' => $campaigns, 'handle_complaints' => $campaigns]));
+            ->where('tenant.can', ['manage_organization' => $organization, 'manage_members' => $members, 'manage_campaigns' => $campaigns, 'view_trauma_screenings' => $campaigns, 'manage_telework' => $campaigns, 'review_workplaces' => $campaigns, 'view_seating' => $viewSeating, 'manage_seating' => $campaigns, 'assess_seating' => $campaigns, 'view_compensation' => $campaigns, 'manage_compensation' => $campaigns, 'view_interventions' => $viewSeating, 'manage_interventions' => $campaigns, 'view_disclosure' => $viewSeating, 'manage_disclosure' => $campaigns, 'use_assistant' => true, 'manage_complaint_channel' => $campaigns, 'handle_complaints' => $campaigns, 'view_attendance' => $viewSeating]));
 })->with([
     'owner' => [TenantRole::Owner, true, true, true, true],
     'hr' => [TenantRole::Hr, true, false, true, true],

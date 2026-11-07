@@ -18,4 +18,5 @@ export const can = (manage_organization: boolean, manage_members: boolean) => ({
     use_assistant: true,
     manage_complaint_channel: manage_organization,
     handle_complaints: manage_organization,
+    view_attendance: manage_organization,
 });
