@@ -1,8 +1,8 @@
 import { m } from 'motion/react';
 import HeroHeadline from '@/components/landing/hero-headline';
-import HeroVideo from '@/components/landing/hero-video';
 import { ENTER } from '@/components/landing/landing-motion';
 import { TOOLS } from '@/components/landing/landing-tools';
+import LoopVideo from '@/components/landing/loop-video';
 import { Button } from '@/components/ui/button';
 
 /** Fades the parts under the headline in once it has landed. */
@@ -47,7 +47,13 @@ export default function LandingHero() {
                     {TOOLS.map((tool) => tool.name).join(' · ')}
                 </m.p>
             </div>
-            <HeroVideo />
+            <LoopVideo
+                name="humetria-hero"
+                test="hero-video"
+                caption="Así funciona, en 40 segundos"
+                description="cargas a tu gente, cada persona contesta desde su celular, los resultados se agrupan sin nombres y el expediente queda listo para la STPS."
+                className="aspect-[4/3]"
+            />
         </section>
     );
 }

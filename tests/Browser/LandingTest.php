@@ -241,11 +241,21 @@ it('hides a group with fewer than 5 answers when the visitor filters like HR wou
         ->assertSeeIn('[data-test=privacy-demo]', 'Ambiente de trabajo');
 });
 
-it('shows Humi answering with its sources, as an example', function (): void {
+it('shows Humi at work in a looping film, with its conversation for screen readers', function (): void {
+    $video = 'document.querySelector("[data-test=humi-video] video")';
+
     visitPage('landing', '/')
         ->assertSeeIn('#humi', 'Pregúntale a Humi')
-        ->assertSeeIn('[data-test=humi-chat]', '¿Qué me falta para estar al día en Planta Querétaro?')
-        ->assertSeeIn('[data-test=humi-chat]', 'Conversación de ejemplo.');
+        ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
+        ->assertScript("() => {$video}.poster.endsWith('/video/humi-chat.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humi-chat.webm,humi-chat.mp4')
+        ->assertSeeIn('[data-test=humi-video] figcaption', 'Conversación de ejemplo')
+        ->assertScript('() => document.querySelector("[data-test=humi-video] figcaption").textContent.includes("¿Qué me falta para estar al día en Planta Querétaro?")')
+        // Once it scrolls into view it plays by itself; the button pauses it.
+        ->assertScript("() => new Promise((resolve) => { {$video}.scrollIntoView(); if (! {$video}.paused) { resolve(true); } {$video}.addEventListener('playing', () => resolve(true)); })")
+        ->assertAttribute('@humi-video-toggle', 'aria-label', 'Pausar video')
+        ->click('@humi-video-toggle')
+        ->assertScript("() => {$video}.paused");
 });
 
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {

@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
-import HumiChatDemo from '@/components/landing/humi-chat-demo';
 import LandingHumi from '@/components/landing/landing-humi';
+import LoopVideo from '@/components/landing/loop-video';
 import Reveal from '@/components/landing/reveal';
 
 const facts = [
@@ -39,9 +39,13 @@ export default function HumiSection() {
                         ))}
                     </ul>
                 </Reveal>
-                <Reveal delay={0.1}>
-                    <HumiChatDemo />
-                </Reveal>
+                <LoopVideo
+                    name="humi-chat"
+                    test="humi-video"
+                    caption="Humi en el panel. Conversación de ejemplo"
+                    description="preguntas «¿Qué me falta para estar al día en Planta Querétaro?» y Humi consulta el avance y responde que faltan 31 respuestas de NOM-035 y 3 listas de verificación por validar en NOM-037, con sus fuentes. Luego preguntas cuánto cuesta el escenario de 5.5 % y responde que el punto medio cuesta 5.6 millones el primer año."
+                    className="aspect-square"
+                />
             </div>
         </section>
     );
