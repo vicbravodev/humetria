@@ -81,6 +81,23 @@ en el artículo 66», y el art. 66 se alcanza gradualmente (9 h en 2027). Humetr
 tope de ese año** y marca como triple lo que lo supere, hasta 4 h por semana. Si la STPS o un criterio posterior lo
 leen distinto, se cambia aquí y en la tabla por año.
 
+**2.9 Qué es tiempo extra en una semana** · Interpretación · arts. 58, 59, 66, 68 y 69 · *pendiente de revisión del
+usuario*
+
+La ley fija los topes pero no dice cómo se cuenta el extra de cada día. Humetría lo cuenta así, en minutos y sin
+redondear:
+
+- El tiempo extra de un día es lo trabajado **por encima de lo programado ese día**. Un día corto no se compensa con el
+  extra de otro.
+- Lo trabajado en un **día de descanso** se cuenta aparte (para el pago del art. 73) y no es tiempo extra.
+- Lo programado es ordinario aunque un día pase del máximo diario del art. 61, porque el horario se distribuye por
+  acuerdo (2.6). Pero si la suma de lo ordinario de la semana rebasa el **máximo semanal del año** (2.1), el exceso pasa
+  a tiempo extra, del día en que se cruza el máximo en adelante.
+- El extra de la semana se paga **doble hasta el tope semanal del año** (2.3) y **triple lo que lo rebase** (2.4, 2.8).
+  Si el triple pasa de 4 h a la semana, se avisa: esos minutos siguen contando como triple, porque trabajados se pagan.
+- Se avisa también cuando un día pasa de 12 h trabajadas (incluso en descanso), cuando un día tiene más de 4 h extra y
+  cuando hay extra en más de 4 días de la semana.
+
 ## 3. Qué registra Humetría y qué no
 
 **3.1 Inicio y fin de jornada** · Norma (1.1). **3.2 Pausa de comida y descansos** · Humetría: la ley no los pide, pero sin
@@ -149,3 +166,4 @@ exige, pero sin esto no se puede hablar de «acuerdo».
 - 2026-11-07 · v0.1 · borrador a partir del decreto del DOF 01/05/2026. Decisiones del usuario incorporadas: enlace
   personal con dispositivo vinculado y seguro, sin correo ni contraseña; personal de confianza como `Employee`; se
   guardan las coordenadas y la zona de la geocerca; QR rotativo y geocerca en la primera fase.
+- 2026-11-07 · v0.2 · se agrega 2.9 (qué es tiempo extra en una semana), pendiente de revisión del usuario.
