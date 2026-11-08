@@ -332,6 +332,15 @@ it('marks trusted staff from the browser with no QR', function (): void {
     expect(AttendanceMark::query()->sole()->method)->toBe(MarkMethod::TrustedBrowser);
 });
 
+it('drops the position trusted staff send from the browser, as for remote staff', function (): void {
+    $this->ana->update(['staff_group' => StaffGroup::Trusted]);
+
+    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', null);
+
+    expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::TrustedBrowser)
+        ->latitude->toBeNull()->longitude->toBeNull()->accuracy_m->toBeNull()->distance_m->toBeNull()->zone_id->toBeNull();
+});
+
 describe('the sequence', function (): void {
     it('rejects a second tap of the same mark without recording it twice', function (): void {
         anaPunches()->assertOk();
