@@ -18,8 +18,9 @@ final readonly class PanelScope
     /**
      * @param  array<string, string>  $names  the name of each center in use, by id
      * @param  list<string>  $people  the ids of the people in scope
+     * @param  array<string, list<string>>  $byCenter  the ids of the active people of each center in use, by center id
      */
-    private function __construct(public array $names, public array $people) {}
+    private function __construct(public array $names, public array $people, public array $byCenter) {}
 
     public static function of(WorkCenters $workCenters, Roster $roster, ?WorkCenterSummary $center): self
     {
@@ -32,7 +33,7 @@ final readonly class PanelScope
         $byCenter = $names === [] ? [] : $roster->activeIdsInMany(array_keys($names));
         $scope = $center === null ? array_keys($names) : [$center->id];
 
-        return new self($names, array_merge([], ...array_values(array_intersect_key($byCenter, array_flip($scope)))));
+        return new self($names, array_merge([], ...array_values(array_intersect_key($byCenter, array_flip($scope)))), $byCenter);
     }
 
     /** The center a list is narrowed to: none when not asked; a 404 for one not in use of the company, or not an id. */

@@ -42,11 +42,10 @@ final readonly class AttendancePages
     public function index(?WorkCenterSummary $center, string $week, string $view, string $search): array
     {
         $period = $this->week($week);
-        $centers = array_filter($this->workCenters->all(), fn (WorkCenterSummary $summary): bool => ! $summary->archived);
-        $names = array_column(array_map(fn (WorkCenterSummary $summary): array => [$summary->id, $summary->name], $centers), 1, 0);
-        $byCenter = $names === [] ? [] : $this->roster->activeIdsInMany(array_keys($names));
+        $panel = PanelScope::of($this->workCenters, $this->roster, $center);
+        $names = $panel->names;
+        $people = $panel->people;
         $scope = $center === null ? array_keys($names) : [$center->id];
-        $people = array_merge([], ...array_values(array_intersect_key($byCenter, array_flip($scope))));
         $summaries = TeamWeek::summaries($people, $period);
         $answers = WeeklyConfirmation::query()->among('employee_id', $people)->where('week_start', $period->start()->toDateString())
             ->toBase()->pluck('status', 'employee_id')->all();
@@ -93,7 +92,7 @@ final readonly class AttendancePages
                 'status' => $states[$person->id] ?? WeekStatus::Pending->value,
                 'atRisk' => in_array($person->id, $atRisk, true),
             ]),
-            'centers' => $this->centers($byCenter, $zones),
+            'centers' => $this->centers($panel->byCenter, $zones),
             'canManage' => Gate::allows('manage-attendance'),
         ];
     }
