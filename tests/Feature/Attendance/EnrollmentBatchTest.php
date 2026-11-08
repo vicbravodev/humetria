@@ -190,3 +190,14 @@ it('logs ids only and fails the job when the email cannot be sent after the link
     expect(EnrollmentLink::query()->sole()->employee_id)->toBe($this->ana->id);
     Log::shouldHaveReceived('error')->once()->with('attendance.enrollment_email_failed', ['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 });
+
+it('writes the batch to the audit trail before queueing anything, so a failed audit leaves no job behind', function (): void {
+    Queue::fake();
+    AuditEntry::creating(function (): never {
+        throw new RuntimeException('audit down');
+    });
+
+    expect(fn () => resolve(SendEnrollmentLinks::class)->handle($this->plant->id, (string) $this->hr->id))->toThrow(RuntimeException::class, 'audit down');
+
+    Queue::assertNothingPushed();
+});

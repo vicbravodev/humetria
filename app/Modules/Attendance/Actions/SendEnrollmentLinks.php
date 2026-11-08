@@ -34,8 +34,8 @@ final readonly class SendEnrollmentLinks
         $people = $this->roster->activeIn($center->id);
         $states = DevicePages::states(array_map(fn (RosterEntry $person): string => $person->id, $people));
         $counts = ['sent' => 0, 'without_email' => 0, 'linked' => 0];
+        $recipients = [];
 
-        // ponytail: one job per person, all pushed in this request; fine for centers of a few thousand people.
         foreach ($people as $person) {
             $outcome = match (true) {
                 $states[$person->id] === 'linked' => 'linked',
@@ -45,12 +45,18 @@ final readonly class SendEnrollmentLinks
             $counts[$outcome]++;
 
             if ($outcome === 'sent') {
-                SendEnrollmentLink::dispatch($this->tenant->id(), $person->id, $userId);
+                $recipients[] = $person->id;
             }
         }
 
+        // The trail first: a failed audit insert leaves no job queued.
         $this->audit->handle('attendance.enrollments_sent', null, ['work_center_id' => $center->id, ...$counts]);
         Log::info('attendance.enrollments_sent', ['work_center_id' => $center->id, ...$counts]);
+
+        // ponytail: one job per person, all pushed in this request; fine for centers of a few thousand people.
+        foreach ($recipients as $employeeId) {
+            SendEnrollmentLink::dispatch($this->tenant->id(), $employeeId, $userId);
+        }
 
         return $counts;
     }
