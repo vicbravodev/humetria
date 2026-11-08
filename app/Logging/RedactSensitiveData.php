@@ -112,6 +112,13 @@ final class RedactSensitiveData implements ProcessorInterface
             'latitude',
             'longitude',
             'public_key',
+            // ...and what the Marcar page sends: the signed assertion of the key, the position and the screen's code (a
+            // credential while it lives; `q` is also a search, which may name a person). A stored token's hash too.
+            'credential',
+            'lat',
+            'lng',
+            'q',
+            'token_hash',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',

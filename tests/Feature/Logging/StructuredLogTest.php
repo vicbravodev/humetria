@@ -100,6 +100,8 @@ it('redacts each sensitive key', function (string $key): void {
     'page_url', 'worker_page_link', 'personal_link', 'acknowledgment_note', 'sections', 'policy_text',
     // Registro de jornada: the key of a person's linked device, and where they stood when they marked.
     'credential_id', 'public_key', 'latitude', 'longitude',
+    // ...and what the Marcar page sends: the signed assertion, the position, the screen's code; and a stored token's hash.
+    'credential', 'lat', 'lng', 'q', 'token_hash',
 ]);
 
 it('redacts every salary key at any depth', function (): void {
