@@ -185,7 +185,9 @@ final readonly class BuildAuthorityReport
 
     /**
      * A person's days with the marks voided in them: a voided start on its own local date (its day, even with nothing
-     * left), any other on the day it was part of (the last that began before it, from the day before on), by date.
+     * left), any other on the day it was part of: the last that opened before it, from the day before on. A day opens at
+     * its first effective mark or at a start voided in it, whichever is earlier, so a night whose start and end were both
+     * voided stays one day.
      *
      * @param  array<string, list<AttendanceMark>>  $days
      * @param  list<array{at: CarbonImmutable, type: string, center: string, text: string}>  $voids
@@ -194,6 +196,20 @@ final readonly class BuildAuthorityReport
     private static function withVoids(array $days, array $voids): array
     {
         $timezone = config()->string('app.display_timezone');
+        $opens = [];
+
+        foreach ($days as $day => $marks) {
+            if (($first = $marks[0]->marked_at ?? null) !== null) {
+                $opens[$day] = $first;
+            }
+        }
+        foreach ($voids as $void) {
+            if (CorrectionHistory::beginsDay($void['type'])) {
+                $day = $void['at']->setTimezone($timezone)->toDateString();
+                $opens[$day] = isset($opens[$day]) ? $opens[$day]->min($void['at']) : $void['at'];
+            }
+        }
+        ksort($opens);
         $byDate = [];
 
         foreach ($voids as $void) {
@@ -201,9 +217,8 @@ final readonly class BuildAuthorityReport
             $date = $original->toDateString();
 
             if (! CorrectionHistory::beginsDay($void['type'])) {
-                foreach ($days as $day => $marks) {
-                    $first = $marks[0]->marked_at ?? null;
-                    $date = $first !== null && $first->lessThanOrEqualTo($void['at']) && $day >= $original->subDay()->toDateString() ? $day : $date;
+                foreach ($opens as $day => $opened) {
+                    $date = $opened->lessThanOrEqualTo($void['at']) && $day >= $original->subDay()->toDateString() ? $day : $date;
                 }
             }
 

@@ -193,6 +193,34 @@ describe('what was corrected', function (): void {
             ->localDate->toBe('2027-01-10')->corrections->toBe(['marca anulada (fin 06:00, por RH): Salió a otra hora.']));
     });
 
+    it('keeps a night whose start and end were both voided on one row, the day it started', function (): void {
+        // Saturday 9 January 22:00 to Sunday 06:00, both voided.
+        authorityReportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-09 22:00'), null, 'No trabajó esa noche.');
+        authorityReportCorrection(reportMark($this->ana, MarkType::End, '2027-01-10 06:00'), null, 'Tampoco salió.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->toHaveCount(1)->sequence(fn ($row) => $row
+            ->localDate->toBe('2027-01-09')->start->toBeNull()->workedMinutes->toBe(0)
+            ->corrections->toBe([
+                'marca anulada (inicio 22:00, por RH): No trabajó esa noche.',
+                'marca anulada (fin 06:00, por RH): Tampoco salió.',
+            ]));
+    });
+
+    it('does not hand a voided end of a night to a shift that began later the next day', function (): void {
+        authorityReportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-09 22:00'), null, 'No trabajó esa noche.');
+        authorityReportCorrection(reportMark($this->ana, MarkType::End, '2027-01-10 06:00'), null, 'Tampoco salió.');
+        reportMark($this->ana, MarkType::Start, '2027-01-10 14:00');
+        reportMark($this->ana, MarkType::End, '2027-01-10 22:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->localDate->toBe('2027-01-09')->corrections->toBe([
+                'marca anulada (inicio 22:00, por RH): No trabajó esa noche.',
+                'marca anulada (fin 06:00, por RH): Tampoco salió.',
+            ]),
+            fn ($row) => $row->localDate->toBe('2027-01-10')->start->toBe('14:00')->end->toBe('22:00')->corrections->toBe([]),
+        );
+    });
+
     it('keeps a person whose only start was voided, the day showing the voided start', function (): void {
         authorityReportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-05 08:00'), null, 'No vino ese día.');
 
