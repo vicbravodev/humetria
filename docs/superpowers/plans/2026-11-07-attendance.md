@@ -166,7 +166,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 1: Write failing tests:** la persona solicita, RH aprueba y se inserta una marca `Correction` (la original sigue); rechazar no inserta; `viewer` no resuelve (403); solicitud de otra empresa 404; la lista llega paginada; una solicitud no se puede resolver dos veces.
 - [ ] **Step 2–4:** FAIL, implementar, PASS. Commit.
 
-### Task 10: Panel de RH
+### Task 10 ✅: Panel de RH
 
 **Files:** Create `Http/Controllers/AttendanceController.php`, `DeviceController.php`, `ZoneController.php`, `PolicyController.php`, `Support/AttendancePages.php`; páginas `pages/attendance/{index,center,devices,policy}.tsx`; entrada en el menú lateral; `lib/attendance/format.ts`. Partir de las pantallas del rediseño más parecidas (`docs/design-system/pantallas/`: resumen con tarjetas, tabla con cabecera `muted`, pestañas con conteo, estado vacío con siguiente paso).
 
