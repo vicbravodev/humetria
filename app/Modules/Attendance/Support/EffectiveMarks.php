@@ -102,7 +102,8 @@ final class EffectiveMarks
     /**
      * Each person's window in UTC, by employee id: from their last effective start before the week (or the week's start) to
      * their first effective start after it (or 'infinity'). A start a correction replaced or voided does not count; the
-     * correction does, as any start. People of another company get no row, and so no marks.
+     * correction does, as any start. Only this module's table is read: a person of another company has no start here and
+     * gets the week's start to 'infinity', and the marks' own company bound gives them none.
      *
      * @param  list<string>  $employeeIds
      * @return array<string, array{string, string}>
@@ -122,12 +123,11 @@ final class EffectiveMarks
                     and starts.type = ? and starts.marked_at >= ?
                     and not exists (select 1 from "attendance_marks" as corrections where corrections.tenant_id = ? and corrections.corrects_mark_id = starts.id)
                     order by starts.marked_at limit 1) as until
-            from "employees" as people
-            where people.tenant_id = ? and people.id = any(?::uuid[])',
+            from unnest(?::uuid[]) as people(id)',
             [
                 $tenant, MarkType::Start->value, $start, $tenant,
                 $tenant, MarkType::Start->value, $next, $tenant,
-                $tenant, self::pgArray(array_values(array_filter($employeeIds, Str::isUuid(...)))),
+                self::pgArray(array_values(array_filter($employeeIds, Str::isUuid(...)))),
             ],
         );
 

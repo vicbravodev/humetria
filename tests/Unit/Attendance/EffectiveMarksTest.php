@@ -176,7 +176,7 @@ describe('reading many people at once', function (): void {
         ]);
     }
 
-    it('leaves out months of history before the week, whatever its size, with the same days', function (): void {
+    it('gives the same days with months of history before the week: only the last day before it is read, then left out', function (): void {
         $people = EmployeeFactory::new()->count(3)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         $expected = [];
         foreach ($people as $person) {
@@ -237,6 +237,45 @@ describe('reading many people at once', function (): void {
             // Each read of the table (the marks, the windows, the corrections) comes with its own tenant_id predicate.
             expect(substr_count($sql, 'tenant_id'))->toBeGreaterThanOrEqual(preg_match_all('/(from|join) "attendance_marks"/', $sql), $sql);
         }
+    });
+
+    it('reads no table of another module', function (): void {
+        anaMarks($this, MarkType::Start, '2026-11-10 09:00');
+        $queries = [];
+        DB::listen(function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        EffectiveMarks::byDayOf([$this->ana->id], weekOf('2026-11-10'));
+
+        expect($queries)->not->toBeEmpty();
+        foreach ($queries as $sql) {
+            expect($sql)->not->toContain('employees')->not->toContain('work_centers');
+        }
+    });
+
+    it('takes no bound from a start a correction voided, nor shows it', function (): void {
+        // Ana's Sunday start was voided: her Monday end is a mark with no start, on its own day.
+        $voided = anaMarks($this, MarkType::Start, '2026-11-08 20:00');
+        AttendanceMark::factory()->correcting($voided)->create(['marked_at' => null]);
+        $end = anaMarks($this, MarkType::End, '2026-11-09 04:00');
+
+        expect(array_map(markIds(...), EffectiveMarks::byDayOf([$this->ana->id], weekOf('2026-11-10'))[$this->ana->id]))->toBe(['2026-11-09' => [$end->id]]);
+    });
+
+    it('places a start corrected across the week\'s edge by its corrected time', function (): void {
+        // Monday 09:00 corrected to Sunday 23:00 (the week before): its day and its end leave the week.
+        $monday = anaMarks($this, MarkType::Start, '2026-11-09 09:00');
+        $sunday = AttendanceMark::factory()->correcting($monday)->create(['marked_at' => CarbonImmutable::parse('2026-11-08 23:00', 'America/Mexico_City')]);
+        anaMarks($this, MarkType::End, '2026-11-09 07:00');
+        // Sunday 15 at 23:00 (outside the next week) corrected to Monday 16 at 09:00: out of this week, into the next.
+        $late = anaMarks($this, MarkType::Start, '2026-11-15 23:00');
+        $next = AttendanceMark::factory()->correcting($late)->create(['marked_at' => CarbonImmutable::parse('2026-11-16 09:00', 'America/Mexico_City')]);
+        $tuesday = anaMarks($this, MarkType::Start, '2026-11-10 09:00');
+
+        expect(array_map(markIds(...), EffectiveMarks::byDayOf([$this->ana->id], weekOf('2026-11-10'))[$this->ana->id]))->toBe(['2026-11-10' => [$tuesday->id]])
+            ->and(array_map(markIds(...), EffectiveMarks::byDayOf([$this->ana->id], weekOf('2026-11-16'))[$this->ana->id]))->toBe(['2026-11-16' => [$next->id]])
+            ->and(array_map(markIds(...), EffectiveMarks::byDayOf([$this->ana->id], weekOf('2026-11-08'))[$this->ana->id])['2026-11-08'] ?? [])->toContain($sunday->id);
     });
 
     it('reads in the same number of queries for 1, 5 and 30 people', function (int $count): void {
