@@ -38,6 +38,9 @@ describe('the registro de jornada in the sidebar', () => {
         ).toEqual([
             ['Resumen', '/admin/acme/attendance'],
             ['Correcciones', '/admin/acme/attendance/corrections'],
+            ['Dispositivos', '/admin/acme/attendance/devices'],
+            ['Horarios', '/admin/acme/attendance/schedules'],
+            ['Política', '/admin/acme/attendance/policy'],
         ]);
     });
 
@@ -55,6 +58,25 @@ describe('the registro de jornada in the sidebar', () => {
         expect(
             activeChild(children, '/admin/acme/attendance/corrections')?.title,
         ).toBe('Correcciones');
+    });
+
+    it('lights the devices, the schedules and the policy on their own pages', () => {
+        const tenant = acme(false, false, 'viewer');
+        const children =
+            complianceNavItems({
+                ...tenant,
+                can: { ...tenant.can, view_attendance: true },
+            }).find((item) => item.title === 'Asistencia')?.children ?? [];
+
+        expect(
+            activeChild(children, '/admin/acme/attendance/devices')?.title,
+        ).toBe('Dispositivos');
+        expect(
+            activeChild(children, '/admin/acme/attendance/schedules')?.title,
+        ).toBe('Horarios');
+        expect(
+            activeChild(children, '/admin/acme/attendance/policy')?.title,
+        ).toBe('Política');
     });
 
     it('leaves it out for a role that cannot view it', () => {

@@ -19,6 +19,9 @@ import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as attendanceIndex } from '@/routes/tenant/attendance';
 import { index as attendanceCorrections } from '@/routes/tenant/attendance/corrections';
+import { index as attendanceDevices } from '@/routes/tenant/attendance/devices';
+import { show as attendancePolicy } from '@/routes/tenant/attendance/policy';
+import { index as attendanceSchedules } from '@/routes/tenant/attendance/schedules';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as disclosure } from '@/routes/tenant/disclosure';
 import { index as employees } from '@/routes/tenant/employees';
@@ -128,7 +131,10 @@ const seating = (tenant: NavTenant): NavItem => ({
     icon: Armchair,
 });
 
-/** The registro de jornada's entry: the week's overview (its centers hang from it) and the people's correction requests. */
+/**
+ * The registro de jornada's entry: the week's overview (its centers hang from it), the people's correction requests, their
+ * devices and schedules, and the company's policy.
+ */
 const attendance = (tenant: NavTenant): NavItem => ({
     title: 'Asistencia',
     href: attendanceIndex(tenant.slug),
@@ -136,6 +142,9 @@ const attendance = (tenant: NavTenant): NavItem => ({
     children: [
         { title: 'Resumen', href: attendanceIndex(tenant.slug) },
         { title: 'Correcciones', href: attendanceCorrections(tenant.slug) },
+        { title: 'Dispositivos', href: attendanceDevices(tenant.slug) },
+        { title: 'Horarios', href: attendanceSchedules(tenant.slug) },
+        { title: 'Política', href: attendancePolicy(tenant.slug) },
     ],
 });
 
