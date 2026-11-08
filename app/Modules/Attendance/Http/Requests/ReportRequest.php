@@ -12,14 +12,14 @@ use LogicException;
 
 /**
  * The report for the authority: one work center in use (whether it is one is the controller's to say, a 404) and a period
- * of local dates, both included, of at most 366 days for the CSV and 93 on screen. Owner and hr only: it is evidence
- * handed to an authority.
+ * of local dates, both included, of at most 366 days. The page shows a table for up to 93 of them; for a longer one it
+ * offers only the CSV. Owner and hr only: it is evidence handed to an authority.
  */
 final class ReportRequest extends FormRequest
 {
     public const int MAX_DAYS = 366;
 
-    /** On screen the figures are computed on every visit: a quarter at most. The CSV streams up to MAX_DAYS. */
+    /** On screen the figures are computed on every visit: a quarter at most; a longer period gets only the CSV. */
     public const int MAX_PAGE_DAYS = 93;
 
     public function authorize(): bool
@@ -54,10 +54,8 @@ final class ReportRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
-            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->from()->addDays($this->maxDays())->lessThanOrEqualTo($this->to())) {
-                $validator->errors()->add('to', $this->exporting()
-                    ? 'El periodo puede ser de hasta '.self::MAX_DAYS.' días.'
-                    : 'En pantalla el periodo puede ser de hasta '.self::MAX_PAGE_DAYS.' días; para uno más largo, de hasta '.self::MAX_DAYS.', descarga el CSV.');
+            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->days() > self::MAX_DAYS) {
+                $validator->errors()->add('to', 'El periodo puede ser de hasta '.self::MAX_DAYS.' días.');
             }
         }];
     }
@@ -100,9 +98,16 @@ final class ReportRequest extends FormRequest
         return route('tenant.attendance.report', [$this->tenantSlug(), ...(Str::isUuid($center) ? ['center' => $center] : [])]);
     }
 
-    private function maxDays(): int
+    /** The days of the period asked for, both ends included. */
+    public function days(): int
     {
-        return $this->exporting() ? self::MAX_DAYS : self::MAX_PAGE_DAYS;
+        return (int) round($this->from()->diffInDays($this->to())) + 1;
+    }
+
+    /** Whether the page should offer only the CSV: a period too long to show on screen. */
+    public function onlyDownload(): bool
+    {
+        return $this->hasPeriod() && $this->days() > self::MAX_PAGE_DAYS;
     }
 
     private function exporting(): bool

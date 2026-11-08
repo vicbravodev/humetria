@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Actions\BuildAuthorityReport;
 use App\Modules\Attendance\Data\AuthorityRow;
+use App\Modules\Attendance\Http\Requests\ReportRequest;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
@@ -15,7 +16,8 @@ use Carbon\CarbonImmutable;
 /**
  * What the report's page sends to the browser: the center and the period asked for (the last week that ended by default),
  * its figures over every person-day, and the people with days in it, 25 at a time, searched by name, each with their days.
- * Never a position, a coordinate or a device.
+ * A period too long for the screen gets only the link to its CSV and how long it is. Never a position, a coordinate or a
+ * device.
  */
 final readonly class ReportPages
 {
@@ -36,9 +38,10 @@ final readonly class ReportPages
     }
 
     /**
+     * @param  int|null  $longPeriod  the days of a period too long for the screen; null to show it
      * @return array<string, mixed>
      */
-    public function show(string $slug, ?WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search): array
+    public function show(string $slug, ?WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search, ?int $longPeriod = null): array
     {
         $page = [
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
@@ -48,7 +51,12 @@ final readonly class ReportPages
             'people' => null,
             'generatedAt' => null,
             'exportUrl' => null,
+            'longPeriod' => null,
         ];
+
+        if ($center !== null && $longPeriod !== null) {
+            return [...$page, 'longPeriod' => ['days' => $longPeriod, 'maxOnScreen' => ReportRequest::MAX_PAGE_DAYS], 'exportUrl' => self::exportUrl($slug, $center, $from, $to)];
+        }
 
         return $center === null ? $page : [...$page, ...$this->report($slug, $center, $from, $to, $search)];
     }
@@ -110,10 +118,13 @@ final readonly class ReportPages
                 'utc' => $now->utc()->format('Y-m-d H:i'),
                 'local' => $now->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d H:i'),
             ],
-            'exportUrl' => route('tenant.attendance.report.export', [
-                $slug, 'center' => $center->id, 'from' => $from->toDateString(), 'to' => $to->toDateString(),
-            ]),
+            'exportUrl' => self::exportUrl($slug, $center, $from, $to),
         ];
+    }
+
+    private static function exportUrl(string $slug, WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to): string
+    {
+        return route('tenant.attendance.report.export', [$slug, 'center' => $center->id, 'from' => $from->toDateString(), 'to' => $to->toDateString()]);
     }
 
     /**

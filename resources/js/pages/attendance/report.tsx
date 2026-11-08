@@ -2,6 +2,7 @@ import { Head, setLayoutProps } from '@inertiajs/react';
 import { FileDown } from 'lucide-react';
 import ReportFilters from '@/components/attendance/report-filters';
 import ReportLegend from '@/components/attendance/report-legend';
+import ReportLongPeriod from '@/components/attendance/report-long-period';
 import ReportPeople from '@/components/attendance/report-people';
 import ReportStart from '@/components/attendance/report-start';
 import ReportSummary from '@/components/attendance/report-summary';
@@ -17,7 +18,7 @@ import type { AttendanceReportProps } from '@/types';
  * period's figures, the people page by page): every day of every person in one center and a period, to hand over.
  */
 export default function AttendanceReport(props: AttendanceReportProps) {
-    const { center, period, summary, people, exportUrl } = props;
+    const { center, period, summary, people, exportUrl, longPeriod } = props;
     const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
@@ -49,7 +50,13 @@ export default function AttendanceReport(props: AttendanceReportProps) {
                     )}
                 </PageHeader>
                 <ReportFilters center={center} period={period} />
-                {summary === null || people === null || center === null ? (
+                {longPeriod !== null && exportUrl !== null ? (
+                    <ReportLongPeriod
+                        days={longPeriod.days}
+                        maxOnScreen={longPeriod.maxOnScreen}
+                        exportUrl={exportUrl}
+                    />
+                ) : summary === null || people === null || center === null ? (
                     <ReportStart />
                 ) : (
                     <>

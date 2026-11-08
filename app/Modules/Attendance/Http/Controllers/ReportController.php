@@ -24,15 +24,19 @@ final readonly class ReportController
 {
     public function __construct(private WorkCenters $workCenters) {}
 
-    /** The page; a center's report on its first page goes to the audit trail (AuditReport). */
+    /**
+     * The page; a center's report on its first page goes to the audit trail (AuditReport). A period too long for the screen
+     * offers only the CSV: it reads no marks, so it is no view (the download is audited on its own).
+     */
     public function show(ReportRequest $request, ReportPages $pages, AuditReport $audit): Response
     {
         [$from, $to] = $request->hasPeriod() ? [$request->from(), $request->to()] : ReportPages::lastWeek();
         $center = PanelScope::center($this->workCenters, $request->centerId());
-        $page = $pages->show($request->tenantSlug(), $center, $from, $to, $request->string('q')->trim()->limit(100, '')->toString());
+        $onlyDownload = $request->onlyDownload();
+        $page = $pages->show($request->tenantSlug(), $center, $from, $to, $request->string('q')->trim()->limit(100, '')->toString(), $onlyDownload ? $request->days() : null);
 
         // Its first page with no search: the next pages and each search of the same report are not new views.
-        if ($center !== null && $request->integer('page', 1) <= 1 && ! $request->filled('q')) {
+        if ($center !== null && ! $onlyDownload && $request->integer('page', 1) <= 1 && ! $request->filled('q')) {
             $audit->handle('view', $center->id, $from, $to, $pages->days($page));
         }
 

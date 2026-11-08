@@ -238,4 +238,6 @@ export type AttendanceReportProps = {
     /** When the report was put together, as «Y-m-d H:i» in UTC and in the display time zone. */
     generatedAt: { utc: string; local: string } | null;
     exportUrl: string | null;
+    /** A period too long for the screen: how many days it has and how many the screen shows; only its CSV is offered. */
+    longPeriod: { days: number; maxOnScreen: number } | null;
 };

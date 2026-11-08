@@ -62,6 +62,7 @@ describe('the page', function (): void {
             ->where('filters', ['q' => ''])
             ->where('summary', null)
             ->where('people', null)
+            ->where('longPeriod', null)
             ->where('exportUrl', null));
     });
 
@@ -89,6 +90,7 @@ describe('the page', function (): void {
             ->where('people.data.0.days.1.corrections', ['hora corregida de 08:20 a 08:00 (por RH): El lector falló.'])
             ->where('people.data.1.days.0.flags', ['Sin marca de fin'])
             ->where('generatedAt', ['utc' => '2027-02-01 18:00', 'local' => '2027-02-01 12:00'])
+            ->where('longPeriod', null)
             ->where('exportUrl', route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'])));
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
@@ -163,8 +165,29 @@ describe('the period', function (): void {
         $this->actingAs($this->hr);
 
         $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2026-11-01', 'to' => '2027-02-01']))->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('period', ['from' => '2026-11-01', 'to' => '2027-02-01']));
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('period', ['from' => '2026-11-01', 'to' => '2027-02-01'])
+                ->where('longPeriod', null)->whereNot('summary', null)->whereNot('people', null));
     });
+
+    it('offers only the CSV for a period of 94 to 366 days: no table, no figures, and no view on the trail', function (string $from, string $to, int $days): void {
+        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 18:00');
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => $from, 'to' => $to]))->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('center', ['id' => $this->plant->id, 'name' => 'Planta Norte'])
+                ->where('period', ['from' => $from, 'to' => $to])
+                ->where('longPeriod', ['days' => $days, 'maxOnScreen' => 93])
+                ->where('summary', null)
+                ->where('people', null)
+                ->where('generatedAt', null)
+                ->where('exportUrl', route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => $from, 'to' => $to])));
+
+        expect(App\Models\AuditEntry::query()->where('event', 'attendance.report_exported')->count())->toBe(0);
+    })->with([
+        '94 days' => ['2026-10-31', '2027-02-01', 94],
+        '366 days' => ['2026-02-01', '2027-02-01', 366],
+    ]);
 
     it('sends a wrong period back to the center\'s report with the reason in Spanish', function (array $query, array $errors): void {
         $this->actingAs($this->hr);
@@ -173,7 +196,7 @@ describe('the period', function (): void {
             ->assertRedirect(authorityReportUrl(['center' => $this->plant->id]))
             ->assertSessionHasErrors($errors);
     })->with([
-        '94 days on screen' => [['from' => '2026-10-31', 'to' => '2027-02-01'], ['to' => 'En pantalla el periodo puede ser de hasta 93 días; para uno más largo, de hasta 366, descarga el CSV.']],
+        '367 days' => [['from' => '2026-01-31', 'to' => '2027-02-01'], ['to' => 'El periodo puede ser de hasta 366 días.']],
         'the end before the start' => [['from' => '2027-01-31', 'to' => '2027-01-25'], ['to' => 'La fecha final no puede ser anterior a la inicial.']],
         'only one date' => [['from' => '2027-01-25'], ['to' => 'El campo fecha final es obligatorio cuando fecha inicial esté presente.']],
         'not a date' => [['from' => 'ayer', 'to' => '2027-01-31'], ['from' => 'Escribe una fecha inicial válida.']],

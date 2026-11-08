@@ -55,6 +55,19 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
     'dark, phone' => [true, true],
 ]);
 
+it('offers only the CSV for a period too long for the screen, saying why', function (): void {
+    [$url, $plant] = reportPanel();
+
+    visit("{$url}/attendance/report?center={$plant->id}&from=2026-01-01&to=2026-06-30")
+        ->assertSee('Este periodo se descarga en CSV')
+        ->assertSee('Elegiste 181 días y en pantalla mostramos hasta 93.')
+        ->assertScript('() => document.querySelector("table") === null', true)
+        ->assertDontSee('Ana López')
+        ->assertAttributeContains('section[data-slot="empty-state"] a:has-text("Descargar CSV")', 'href', "/attendance/report/export?center={$plant->id}&from=2026-01-01&to=2026-06-30")
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('asks for a center first', function (): void {
     [$url] = reportPanel();
 
