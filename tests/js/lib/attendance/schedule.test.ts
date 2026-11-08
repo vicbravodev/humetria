@@ -4,11 +4,19 @@ import {
     hoursText,
     minutesOf,
     modeLabel,
+    overDailyLimit,
     overMaximum,
     scheduleDays,
     shiftLabel,
     weekTotal,
 } from '@/lib/attendance/schedule';
+
+const limits = {
+    year: 2026,
+    minutes: 2880,
+    overtimeMinutes: 540,
+    dailyMinutes: { day: 480, night: 420, mixed: 450 },
+};
 
 const week = (...days: number[]) =>
     Object.fromEntries(days.map((minutes, at) => [String(at + 1), minutes]));
@@ -52,10 +60,59 @@ describe('the hours of the week', () => {
     });
 
     it("warns gently above the year's ordinary maximum, never at it", () => {
-        expect(overMaximum(2880, { year: 2026, minutes: 2880 })).toBeNull();
-        expect(overMaximum(3000, { year: 2026, minutes: 2880 })).toBe(
+        expect(overMaximum(2880, limits)).toBeNull();
+        expect(overMaximum(3000, limits)).toBe(
             'Son 2 h más que el máximo ordinario de 48 h a la semana en 2026: lo que pase de ese máximo cuenta como tiempo extra.',
         );
+    });
+
+    it("also says when the extra passes the year's weekly overtime cap, never at it", () => {
+        expect(overMaximum(2880 + 540, limits)).toBe(
+            'Son 9 h más que el máximo ordinario de 48 h a la semana en 2026: lo que pase de ese máximo cuenta como tiempo extra.',
+        );
+        expect(overMaximum(2880 + 541, limits)).toBe(
+            'Son 9 h 1 min más que el máximo ordinario de 48 h a la semana en 2026: lo que pase de ese máximo cuenta como tiempo extra. Además, pasa de las 9 h de tiempo extra que la ley permite a la semana.',
+        );
+    });
+});
+
+describe("a day above its shift's daily limit", () => {
+    it('names the night or mixed days above 7 h or 7 h 30 min, never at it', () => {
+        expect(
+            overDailyLimit(
+                week(420, 420, 420, 420, 420, 0, 0),
+                'night',
+                limits,
+            ),
+        ).toBeNull();
+        expect(
+            overDailyLimit(week(480, 420, 450, 0, 0, 0, 0), 'night', limits),
+        ).toBe(
+            'La jornada nocturna es de hasta 7 h al día: el lunes y el miércoles tienen más.',
+        );
+        expect(
+            overDailyLimit(week(450, 450, 0, 0, 0, 0, 0), 'mixed', limits),
+        ).toBeNull();
+        expect(
+            overDailyLimit(week(0, 0, 0, 0, 0, 0, 480), 'mixed', limits),
+        ).toBe(
+            'La jornada mixta es de hasta 7 h 30 min al día: el domingo tiene más.',
+        );
+        expect(
+            overDailyLimit(
+                week(480, 480, 480, 480, 480, 0, 0),
+                'night',
+                limits,
+            ),
+        ).toBe(
+            'La jornada nocturna es de hasta 7 h al día: el lunes, el martes, el miércoles, el jueves y el viernes tienen más.',
+        );
+    });
+
+    it('says nothing for a day shift: its longer days count by the week (criterio 2.9)', () => {
+        expect(
+            overDailyLimit(week(540, 540, 540, 540, 540, 0, 0), 'day', limits),
+        ).toBeNull();
     });
 });
 
@@ -70,6 +127,15 @@ describe('the hours of a day as RH writes them', () => {
     it('leaves out what is not a number, for the server to say so', () => {
         expect(minutesOf('')).toBeNull();
         expect(minutesOf('ocho')).toBeNull();
+    });
+
+    it('reads only digits: no infinity, exponent or hexadecimal', () => {
+        expect(minutesOf('Infinity')).toBeNull();
+        expect(minutesOf('1e3')).toBeNull();
+        expect(minutesOf('0x10')).toBeNull();
+        expect(minutesOf('-8')).toBeNull();
+        expect(minutesOf('8.5.1')).toBeNull();
+        expect(minutesOf('.5')).toBe(30);
     });
 
     it('writes minutes as hours to edit', () => {

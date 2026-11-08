@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -16,7 +17,8 @@ use Illuminate\Support\Facades\Gate;
 /**
  * What RH's page of schedules sends to the browser: the people active in the centers in use (or in one), how many have an
  * agreed schedule and how many not (they are held to 8 h a day with no rest day until RH sets one), then the people of one
- * tab, 25 at a time, searched by name, each with their schedule; and the year's weekly ordinary maximum to compare with.
+ * tab, 25 at a time, searched by name, each with their schedule; and the year's weekly ordinary maximum, overtime cap and
+ * each shift's daily limit to compare with.
  */
 final readonly class SchedulePages
 {
@@ -53,7 +55,15 @@ final readonly class SchedulePages
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
             'filters' => ['q' => $search, 'status' => $view],
             'counts' => ['all' => count($scope->people), 'scheduled' => count($scope->people) - count($unscheduled), 'unscheduled' => count($unscheduled)],
-            'weeklyMaximum' => ['year' => $year, 'minutes' => LegalLimits::weeklyOrdinaryMinutes($year)],
+            'weeklyMaximum' => [
+                'year' => $year,
+                'minutes' => LegalLimits::weeklyOrdinaryMinutes($year),
+                'overtimeMinutes' => LegalLimits::weeklyOvertimeCapMinutes($year),
+                'dailyMinutes' => array_combine(
+                    array_map(fn (ShiftType $shift): string => $shift->value, ShiftType::cases()),
+                    array_map(LegalLimits::dailyOrdinaryMinutes(...), ShiftType::cases()),
+                ),
+            ],
             'people' => $page->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
                 'name' => $person->name,

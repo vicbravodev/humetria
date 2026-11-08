@@ -64,6 +64,7 @@ export default function ScheduleDialog({
                     />
                     <ScheduleDaysField
                         initial={person.schedule?.minutes ?? null}
+                        shift={shift}
                         weeklyMaximum={weeklyMaximum}
                         errors={errors}
                     />

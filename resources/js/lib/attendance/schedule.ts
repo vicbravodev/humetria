@@ -69,23 +69,64 @@ export function modeLabel(mode: WorkSchedule['workMode']): string {
     return MODES[mode];
 }
 
-/** A gentle note when the week agreed passes the year's ordinary maximum: the rest counts as overtime (criterio 2.9). */
+/**
+ * A gentle note when the week agreed passes the year's ordinary maximum: the rest counts as overtime (criterio 2.9); and
+ * when that rest passes the year's weekly overtime cap too.
+ */
 export function overMaximum(
     total: number,
     maximum: WeeklyMaximum,
 ): string | null {
-    if (total <= maximum.minutes) {
+    const extra = total - maximum.minutes;
+
+    if (extra <= 0) {
         return null;
     }
 
-    return `Son ${duration(total - maximum.minutes)} más que el máximo ordinario de ${duration(maximum.minutes)} a la semana en ${maximum.year}: lo que pase de ese máximo cuenta como tiempo extra.`;
+    const note = `Son ${duration(extra)} más que el máximo ordinario de ${duration(maximum.minutes)} a la semana en ${maximum.year}: lo que pase de ese máximo cuenta como tiempo extra.`;
+
+    return extra > maximum.overtimeMinutes
+        ? `${note} Además, pasa de las ${duration(maximum.overtimeMinutes)} de tiempo extra que la ley permite a la semana.`
+        : note;
 }
 
-/** The hours of a day as RH writes them («7.5», «7,5»), in minutes; null for what is not a number. */
+const SHIFT_NAMES: Record<WorkSchedule['shiftType'], string> = {
+    day: 'diurna',
+    night: 'nocturna',
+    mixed: 'mixta',
+};
+
+/**
+ * A gentle note naming the days of a night or mixed schedule above that shift's daily ordinary limit (art. 61). A day
+ * shift's longer days count by the week (criterio 2.9), so they get no note.
+ */
+export function overDailyLimit(
+    minutes: WeekMinutes,
+    shift: WorkSchedule['shiftType'],
+    maximum: WeeklyMaximum,
+): string | null {
+    const limit = maximum.dailyMinutes[shift];
+    const days = WEEKDAYS.filter(({ day }) => (minutes[day] ?? 0) > limit).map(
+        ({ name }) => `el ${name.toLowerCase()}`,
+    );
+
+    if (shift === 'day' || days.length === 0) {
+        return null;
+    }
+
+    const list =
+        days.length === 1
+            ? days.join('')
+            : `${days.slice(0, -1).join(', ')} y ${days.at(-1) ?? ''}`;
+
+    return `La jornada ${SHIFT_NAMES[shift]} es de hasta ${duration(limit)} al día: ${list} ${days.length === 1 ? 'tiene' : 'tienen'} más.`;
+}
+
+/** The hours of a day as RH writes them («7.5», «7,5», «.5»), in minutes; null for anything but digits and one point. */
 export function minutesOf(hours: string): number | null {
     const text = hours.trim().replace(',', '.');
 
-    if (text === '' || Number.isNaN(Number(text))) {
+    if (!/^(\d+\.?\d*|\.\d+)$/.test(text)) {
         return null;
     }
 

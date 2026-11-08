@@ -170,8 +170,16 @@ export type SchedulePerson = {
     schedule: WorkSchedule | null;
 };
 
-/** The year's weekly ordinary maximum (art. 59 and transitorio segundo), in minutes. */
-export type WeeklyMaximum = { year: number; minutes: number };
+/**
+ * The year's weekly ordinary maximum (art. 59 and transitorio segundo), its weekly overtime cap (transitorio cuarto) and
+ * each shift's daily ordinary limit (art. 61), in minutes: the server's LegalLimits, the one place these numbers live.
+ */
+export type WeeklyMaximum = {
+    year: number;
+    minutes: number;
+    overtimeMinutes: number;
+    dailyMinutes: Record<WorkSchedule['shiftType'], number>;
+};
 
 export type AttendanceSchedulesProps = {
     center: { id: string; name: string } | null;

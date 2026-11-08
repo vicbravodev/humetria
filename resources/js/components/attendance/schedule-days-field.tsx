@@ -8,10 +8,11 @@ import {
     WEEKDAYS,
     hoursText,
     minutesOf,
+    overDailyLimit,
     overMaximum,
     weekTotal,
 } from '@/lib/attendance/schedule';
-import type { WeeklyMaximum, WeekMinutes } from '@/types';
+import type { WeeklyMaximum, WeekMinutes, WorkSchedule } from '@/types';
 
 /** Monday to Friday 8 h: where a new schedule starts. */
 const STARTING: WeekMinutes = {
@@ -24,13 +25,18 @@ const STARTING: WeekMinutes = {
     7: 0,
 };
 
-/** The hours of each day (0 is rest), sent as minutes, with the week's total and a gentle note above the year's maximum. */
+/**
+ * The hours of each day (0 is rest), sent as minutes, with the week's total and gentle notes above the year's maximum,
+ * its overtime cap and the shift's daily limit.
+ */
 export default function ScheduleDaysField({
     initial,
+    shift,
     weeklyMaximum,
     errors,
 }: {
     initial: WeekMinutes | null;
+    shift: WorkSchedule['shiftType'];
     weeklyMaximum: WeeklyMaximum;
     errors: Partial<Record<string, string>>;
 }) {
@@ -46,7 +52,10 @@ export default function ScheduleDaysField({
         WEEKDAYS.map(({ day }) => [day, minutesOf(hours[day] ?? '') ?? 0]),
     );
     const total = weekTotal(minutes);
-    const warning = overMaximum(total, weeklyMaximum);
+    const warnings = [
+        overMaximum(total, weeklyMaximum),
+        overDailyLimit(minutes, shift, weeklyMaximum),
+    ].filter((warning) => warning !== null);
 
     return (
         <fieldset className="grid gap-3">
@@ -98,15 +107,18 @@ export default function ScheduleDaysField({
                 </span>{' '}
                 <span className="text-muted-foreground">a la semana</span>
             </p>
-            {warning !== null && (
-                <p className="flex items-start gap-1.5 rounded-lg bg-warning px-3 py-2 text-sm text-pretty text-warning-foreground">
+            {warnings.map((warning) => (
+                <p
+                    key={warning}
+                    className="flex items-start gap-1.5 rounded-lg bg-warning px-3 py-2 text-sm text-pretty text-warning-foreground"
+                >
                     <TriangleAlert
                         aria-hidden
                         className="mt-0.5 size-4 shrink-0"
                     />
                     {warning}
                 </p>
-            )}
+            ))}
         </fieldset>
     );
 }

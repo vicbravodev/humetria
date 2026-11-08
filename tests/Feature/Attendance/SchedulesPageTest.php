@@ -60,7 +60,7 @@ describe('the list', function (): void {
             ->where('center', null)
             ->where('filters', ['q' => '', 'status' => 'all'])
             ->where('counts', ['all' => 3, 'scheduled' => 2, 'unscheduled' => 1])
-            ->where('weeklyMaximum', ['year' => 2026, 'minutes' => 2880])
+            ->where('weeklyMaximum', ['year' => 2026, 'minutes' => 2880, 'overtimeMinutes' => 540, 'dailyMinutes' => ['day' => 480, 'night' => 420, 'mixed' => 450]])
             ->where('canManage', true)
             ->where('people.total', 3)
             ->where('people.per_page', 25)
