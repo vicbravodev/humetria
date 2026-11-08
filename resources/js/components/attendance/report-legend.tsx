@@ -3,7 +3,8 @@ import type { AttendanceReportProps } from '@/types';
 /** How to read the report: what it holds, how its hours are split and what is left out. */
 export default function ReportLegend({
     generatedAt,
-}: Pick<AttendanceReportProps, 'generatedAt'>) {
+    onlyDownload,
+}: Pick<AttendanceReportProps, 'generatedAt'> & { onlyDownload: boolean }) {
     return (
         <section
             aria-labelledby="como-leer"
@@ -55,12 +56,16 @@ export default function ReportLegend({
                     «Sin confirmar» es una semana que la persona no respondió:
                     el silencio no es conformidad.
                 </li>
-                <li>
-                    Abrir el reporte de un centro queda en la bitácora (su
-                    primera página; pasar a las siguientes no se vuelve a
-                    anotar) y cada descarga también, con el centro, el periodo y
-                    el número de renglones.
-                </li>
+                {onlyDownload ? (
+                    <li>Ofrecer solo el CSV no se anota; cada descarga sí.</li>
+                ) : (
+                    <li>
+                        Abrir el reporte de un centro queda en la bitácora (su
+                        primera página; pasar a las siguientes no se vuelve a
+                        anotar) y cada descarga también, con el centro, el
+                        periodo y el número de renglones.
+                    </li>
+                )}
             </ul>
             {generatedAt !== null && (
                 <p className="text-caption">

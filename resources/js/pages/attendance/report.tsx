@@ -71,7 +71,10 @@ export default function AttendanceReport(props: AttendanceReportProps) {
                         />
                     </>
                 )}
-                <ReportLegend generatedAt={props.generatedAt} />
+                <ReportLegend
+                    generatedAt={props.generatedAt}
+                    onlyDownload={longPeriod !== null}
+                />
             </div>
         </>
     );

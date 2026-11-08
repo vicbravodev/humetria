@@ -46,6 +46,7 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
         ->assertSee('Cómo leer este reporte')
         ->assertSee('los días sin marcas no aparecen')
         ->assertSee('cada descarga también')
+        ->assertDontSee('Ofrecer solo el CSV no se anota')
         ->assertSee('«hora corregida de 08:12 a 08:00»')
         ->assertSee('con el horario vigente de cada persona al generar el reporte');
 })->with([
@@ -63,6 +64,8 @@ it('offers only the CSV for a period too long for the screen, saying why', funct
         ->assertSee('Elegiste 181 días y en pantalla mostramos hasta 93.')
         ->assertScript('() => document.querySelector("table") === null', true)
         ->assertDontSee('Ana López')
+        ->assertSee('Ofrecer solo el CSV no se anota; cada descarga sí.')
+        ->assertDontSee('Abrir el reporte de un centro queda en la bitácora')
         ->assertAttributeContains('section[data-slot="empty-state"] a:has-text("Descargar CSV")', 'href', "/attendance/report/export?center={$plant->id}&from=2026-01-01&to=2026-06-30")
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
