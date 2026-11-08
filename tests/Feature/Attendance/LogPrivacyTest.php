@@ -47,7 +47,7 @@ function privacySigned(SoftAuthenticator $phone, string $userHandle, string $ses
     return test()->withCredentials()->withCookie($cookie, $session)->postJson($url, ['credential' => $phone->get($options, $userHandle), ...$body]);
 }
 
-it('logs no position, credential, screen code, enrollment or kiosk token along a whole marking flow', function (): void {
+it('logs no position, credential, screen code, enrollment or kiosk token along a whole marking flow, rejections included', function (): void {
     // Monday 2 November 2026, 08:00 in Mexico City.
     $this->travelTo(CarbonImmutable::parse('2026-11-02 14:00:00', 'UTC'));
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
@@ -87,6 +87,10 @@ it('logs no position, credential, screen code, enrollment or kiosk token along a
     // She marks her start at the door and her end in the afternoon.
     $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $qr]))->assertOk()->getCookie($cookie)?->getValue() ?? '';
     $position = ['lat' => 19.4327, 'lng' => -99.1332, 'accuracy' => 12];
+    // First she is turned away: outside every zone (about 111 m north), then with a code that is not the screen's.
+    $badQr = str_repeat('f', 64);
+    privacySigned($phone, $ana->id, $session, 'attendance.device.punch.options', route('attendance.device.punch.store', 'acme'), ['mark_type' => 'start', 'q' => $qr, 'lat' => 19.4336, 'lng' => -99.1332, 'accuracy' => 12])->assertUnprocessable();
+    privacySigned($phone, $ana->id, $session, 'attendance.device.punch.options', route('attendance.device.punch.store', 'acme'), ['mark_type' => 'start', 'q' => $badQr, ...$position])->assertUnprocessable();
     privacySigned($phone, $ana->id, $session, 'attendance.device.punch.options', route('attendance.device.punch.store', 'acme'), ['mark_type' => 'start', 'q' => $qr, ...$position])->assertOk();
     $this->travel(9)->hours();
     $qrLater = (string) $this->withCredentials()->withCookie('attendance_kiosk', $kioskSecret)->getJson(route('attendance.device.kiosk.qr', 'acme'))->assertOk()->json('token');
@@ -109,13 +113,14 @@ it('logs no position, credential, screen code, enrollment or kiosk token along a
     $this->get(route('tenant.attendance.report.export', ['acme', 'center' => $plant->id, 'from' => '2026-11-02', 'to' => '2026-11-08']))->assertOk()->streamedContent();
 
     $log = File::get($this->logPath);
+    expect(substr_count($log, '"attendance.mark_rejected"'))->toBe(2);
     foreach (['attendance.kiosk_issued', 'attendance.enrollment_issued', 'attendance.kiosk_activated', 'attendance.device_enrolled', 'attendance.mark_recorded', 'attendance.week_confirmed', 'attendance.correction_requested', 'attendance.correction_resolved', 'attendance.report_exported'] as $event) {
         expect($log)->toContain("\"{$event}\"");
     }
     expect($log)
         ->not->toContain('19.43')->not->toContain('-99.13')
         ->not->toContain($device->credential_id)->not->toContain($device->public_key)
-        ->not->toContain($qr)->not->toContain($qrLater)
+        ->not->toContain($qr)->not->toContain($qrLater)->not->toContain($badQr)
         ->not->toContain($enrollToken)
         ->not->toContain(basename($kioskLink))->not->toContain($kioskSecret);
 });
