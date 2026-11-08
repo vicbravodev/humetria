@@ -10,6 +10,7 @@ use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\DeviceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
+use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Http\Controllers\ScheduleController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
@@ -50,3 +51,6 @@ Route::put('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'u
 // The people's agreed weekly schedules (criterio 2.6). {employee} is a person of the company's roster, by id.
 Route::get('admin/{tenant:slug}/attendance/schedules', [ScheduleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.index');
 Route::put('admin/{tenant:slug}/attendance/schedules/{employee}', [ScheduleController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.attendance.schedules.update');
+
+// The report for the authority (LFT art. 132-XXXIV): one center and a period, as a CSV for the inspector. Owner and hr only.
+Route::get('admin/{tenant:slug}/attendance/report/export', [ReportController::class, 'export'])->where('tenant', $notReserved)->name('tenant.attendance.report.export');

@@ -224,6 +224,7 @@ return [
     ],
 
     'attributes' => [
+        'from' => 'fecha inicial',
         'minutes' => 'horario de la semana',
         'minutes.*' => 'minutos del día',
         'shift_type' => 'tipo de jornada',
