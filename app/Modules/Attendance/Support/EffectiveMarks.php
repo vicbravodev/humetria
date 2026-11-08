@@ -6,9 +6,13 @@ namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use LogicException;
 
 /**
@@ -51,9 +55,10 @@ final class EffectiveMarks
     }
 
     /**
-     * The days of several people at once, in one query, each person read from their own window: from their last start
-     * before the week (its marks in the week are that day's, not the week's) to their first start after it (whatever comes
-     * before is the end of the week's last day, however late).
+     * The days of several people at once, in two queries whatever their number, each person read from their own window:
+     * from their last start before the week (its marks in the week are that day's, not the week's) to their first start
+     * after it (whatever comes before is the end of the week's last day, however late). The windows come first, each bound
+     * found by one step on the (tenant_id, employee_id, marked_at) index; then only the marks inside them are read.
      *
      * @param  list<string>  $employeeIds
      * @return array<string, array<string, list<AttendanceMark>>> by employee id, every one asked for
@@ -64,17 +69,25 @@ final class EffectiveMarks
             return [];
         }
 
+        $windows = self::windows($employeeIds, $week);
         $marks = AttendanceMark::query()
-            ->among('attendance_marks.employee_id', $employeeIds)
-            ->whereNotNull('marked_at')
-            ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'corrections')->whereColumn('corrections.corrects_mark_id', 'attendance_marks.id'))
-            // From the week, or from the person's last start before it, when there is one.
-            ->where(fn (Builder $query) => $query->where('attendance_marks.marked_at', '>=', $week->startUtc())
-                ->orWhere('attendance_marks.marked_at', '>=', self::starts()->selectRaw('max(starts.marked_at)')->where('starts.marked_at', '<', $week->startUtc())))
-            // Up to the person's first start after the week, that one left out.
-            ->whereNotExists(self::starts()->where('starts.marked_at', '>=', $week->nextStartUtc())->whereColumn('starts.marked_at', '<=', 'attendance_marks.marked_at'))
-            ->orderBy('employee_id')
-            ->orderBy('marked_at')
+            ->select('attendance_marks.*')
+            ->joinSub(
+                DB::query()->fromRaw('unnest(?::uuid[], ?::timestamptz[], ?::timestamptz[]) as windows(employee_id, since, until)', [
+                    self::pgArray(array_keys($windows)),
+                    self::pgArray(array_column($windows, 0)),
+                    self::pgArray(array_column($windows, 1)),
+                ]),
+                'windows',
+                fn (JoinClause $join) => $join->on('windows.employee_id', '=', 'attendance_marks.employee_id')
+                    ->on('attendance_marks.marked_at', '>=', 'windows.since')
+                    ->on('attendance_marks.marked_at', '<', 'windows.until'),
+            )
+            ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'corrections')
+                ->whereColumn('corrections.tenant_id', 'attendance_marks.tenant_id')
+                ->whereColumn('corrections.corrects_mark_id', 'attendance_marks.id'))
+            ->orderBy('attendance_marks.employee_id')
+            ->orderBy('attendance_marks.marked_at')
             ->get()
             ->groupBy('employee_id');
 
@@ -86,14 +99,64 @@ final class EffectiveMarks
         return $days;
     }
 
-    /** The effective starts of the outer query's person. */
-    private static function starts(): QueryBuilder
+    /**
+     * Each person's window in UTC, by employee id: from their last effective start before the week (or the week's start) to
+     * their first effective start after it (or 'infinity'). A start a correction replaced or voided does not count; the
+     * correction does, as any start. People of another company get no row, and so no marks.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, array{string, string}>
+     */
+    private static function windows(array $employeeIds, WeekPeriod $week): array
     {
-        return DB::table('attendance_marks', 'starts')
-            ->whereColumn('starts.employee_id', 'attendance_marks.employee_id')
-            ->where('starts.type', MarkType::Start->value)
-            ->whereNotNull('starts.marked_at')
-            ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'start_corrections')->whereColumn('start_corrections.corrects_mark_id', 'starts.id'));
+        $tenant = resolve(CurrentTenant::class)->id();
+        $start = self::utc($week->startUtc());
+        $next = self::utc($week->nextStartUtc());
+        $rows = DB::select(
+            'select people.id,
+                (select starts.marked_at from "attendance_marks" as starts where starts.tenant_id = ? and starts.employee_id = people.id
+                    and starts.type = ? and starts.marked_at < ?
+                    and not exists (select 1 from "attendance_marks" as corrections where corrections.tenant_id = ? and corrections.corrects_mark_id = starts.id)
+                    order by starts.marked_at desc limit 1) as since,
+                (select starts.marked_at from "attendance_marks" as starts where starts.tenant_id = ? and starts.employee_id = people.id
+                    and starts.type = ? and starts.marked_at >= ?
+                    and not exists (select 1 from "attendance_marks" as corrections where corrections.tenant_id = ? and corrections.corrects_mark_id = starts.id)
+                    order by starts.marked_at limit 1) as until
+            from "employees" as people
+            where people.tenant_id = ? and people.id = any(?::uuid[])',
+            [
+                $tenant, MarkType::Start->value, $start, $tenant,
+                $tenant, MarkType::Start->value, $next, $tenant,
+                $tenant, self::pgArray(array_values(array_filter($employeeIds, Str::isUuid(...)))),
+            ],
+        );
+
+        $windows = [];
+        foreach ($rows as $row) {
+            if (is_object($row) && property_exists($row, 'id') && is_string($row->id)) {
+                $windows[$row->id] = [
+                    property_exists($row, 'since') && is_string($row->since) ? $row->since : $start,
+                    property_exists($row, 'until') && is_string($row->until) ? $row->until : 'infinity',
+                ];
+            }
+        }
+
+        return $windows;
+    }
+
+    private static function utc(CarbonImmutable $instant): string
+    {
+        return $instant->utc()->format('Y-m-d H:i:s.uP');
+    }
+
+    /**
+     * A Postgres array literal of `$values`, each quoted.
+     *
+     * @param  array<array-key, string>  $values
+     */
+    private static function pgArray(array $values): string
+    {
+        return '{'.implode(',', array_map(fn (string $value): string => '"'.$value.'"', $values)).'}';
     }
 
     /**

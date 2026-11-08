@@ -27,6 +27,8 @@ final class TeamWeek
             return [];
         }
 
+        // ponytail: hydrates every scoped person's marks of the week (one query, each inside its index-bounded window): fine
+        // for hundreds of people; past a few thousand, aggregate the minutes in SQL or chunk the ids.
         $byPerson = EffectiveMarks::byDayOf($employeeIds, $week);
         $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
         $summaries = [];

@@ -136,7 +136,7 @@ it('leaves out a mark a correction voided, and the void itself', function (): vo
     expect(EffectiveMarks::forWeek($this->ana->id, weekOf('2026-11-04')))->toBe([]);
 });
 
-it('gives the days of several people at once, each with their own window, in one query', function (): void {
+it('gives the days of several people at once, each with their own window, in two queries (their windows, then their marks)', function (): void {
     // Ana's Saturday night day spills into the week; Bob's last start is weeks before and his marks all count on their own.
     anaMarks($this, MarkType::Start, '2026-11-07 22:00');
     anaMarks($this, MarkType::End, '2026-11-09 03:00');
@@ -156,7 +156,7 @@ it('gives the days of several people at once, each with their own window, in one
 
     $days = EffectiveMarks::byDayOf([$this->ana->id, $bob->id, $nobody->id], weekOf('2026-11-10'));
 
-    expect(count(DB::getQueryLog()))->toBe(1)
+    expect(count(DB::getQueryLog()))->toBe(2)
         ->and(array_map(fn (array $byDay): array => array_map(markIds(...), $byDay), $days))->toBe([
             $this->ana->id => ['2026-11-10' => [$anaStart->id, $anaEnd->id]],
             // His end on Wednesday closes his October day, so it is not the week's.
@@ -164,4 +164,92 @@ it('gives the days of several people at once, each with their own window, in one
             $nobody->id => [],
         ])
         ->and(EffectiveMarks::byDayOf([], weekOf('2026-11-10')))->toBe([]);
+});
+
+describe('reading many people at once', function (): void {
+    /** A mark of `$person` at a local time of Mexico City. */
+    function markOf(object $test, string $personId, MarkType $type, string $local): AttendanceMark
+    {
+        return AttendanceMark::factory()->create([
+            'tenant_id' => $test->tenant->id, 'employee_id' => $personId, 'work_center_id' => $test->center->id,
+            'type' => $type, 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City'),
+        ]);
+    }
+
+    it('leaves out months of history before the week, whatever its size, with the same days', function (): void {
+        $people = EmployeeFactory::new()->count(3)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        $expected = [];
+        foreach ($people as $person) {
+            foreach (range(1, 20) as $day) {
+                markOf($this, $person->id, MarkType::Start, CarbonImmutable::parse('2026-06-01')->addDays($day)->format('Y-m-d').' 09:00');
+                markOf($this, $person->id, MarkType::End, CarbonImmutable::parse('2026-06-01')->addDays($day)->format('Y-m-d').' 17:00');
+            }
+            $start = markOf($this, $person->id, MarkType::Start, '2026-11-10 09:00');
+            $end = markOf($this, $person->id, MarkType::End, '2026-11-10 17:00');
+            $expected[$person->id] = ['2026-11-10' => [$start->id, $end->id]];
+        }
+
+        $days = EffectiveMarks::byDayOf($people->pluck('id')->all(), weekOf('2026-11-10'));
+
+        expect(array_map(fn (array $byDay): array => array_map(markIds(...), $byDay), $days))->toBe($expected);
+    });
+
+    it('keeps each person\'s own rules: a start before the week ends there, a Sunday night stays on Sunday', function (): void {
+        [$bob, $carla] = [EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]), EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id])];
+        // Bob starts on Sunday 8 (the week before) and ends on Monday 9: not the week of the 9th.
+        markOf($this, $bob->id, MarkType::Start, '2026-11-08 20:00');
+        markOf($this, $bob->id, MarkType::End, '2026-11-09 04:00');
+        $bobTuesday = markOf($this, $bob->id, MarkType::Start, '2026-11-10 09:00');
+        // Carla's night of Sunday 15 to Monday 16 is the week's last day.
+        $carlaStart = markOf($this, $carla->id, MarkType::Start, '2026-11-15 22:00');
+        $carlaEnd = markOf($this, $carla->id, MarkType::End, '2026-11-16 06:00');
+        markOf($this, $carla->id, MarkType::Start, '2026-11-16 22:00');
+
+        $days = EffectiveMarks::byDayOf([$bob->id, $carla->id], weekOf('2026-11-10'));
+
+        expect(array_map(fn (array $byDay): array => array_map(markIds(...), $byDay), $days))->toBe([
+            $bob->id => ['2026-11-10' => [$bobTuesday->id]],
+            $carla->id => ['2026-11-15' => [$carlaStart->id, $carlaEnd->id]],
+        ]);
+    });
+
+    it('never reads another company\'s people or marks', function (): void {
+        $globex = Tenant::factory()->create();
+        $theirCenter = WorkCenter::factory()->for($globex)->create();
+        $theirs = EmployeeFactory::new()->create(['tenant_id' => $globex->id, 'work_center_id' => $theirCenter->id]);
+        AttendanceMark::factory()->create(['tenant_id' => $globex->id, 'employee_id' => $theirs->id, 'work_center_id' => $theirCenter->id, 'marked_at' => CarbonImmutable::parse('2026-11-10 09:00', 'America/Mexico_City')]);
+        workIn($this->tenant);
+
+        expect(EffectiveMarks::byDayOf([$theirs->id], weekOf('2026-11-10')))->toBe([$theirs->id => []]);
+    });
+
+    it('bounds every read of the marks by the company', function (): void {
+        anaMarks($this, MarkType::Start, '2026-11-10 09:00');
+        $queries = [];
+        DB::listen(function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        EffectiveMarks::byDayOf([$this->ana->id], weekOf('2026-11-10'));
+
+        expect($queries)->not->toBeEmpty();
+        foreach ($queries as $sql) {
+            // Each read of the table (the marks, the windows, the corrections) comes with its own tenant_id predicate.
+            expect(substr_count($sql, 'tenant_id'))->toBeGreaterThanOrEqual(preg_match_all('/(from|join) "attendance_marks"/', $sql), $sql);
+        }
+    });
+
+    it('reads in the same number of queries for 1, 5 and 30 people', function (int $count): void {
+        $people = EmployeeFactory::new()->count($count)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        foreach ($people as $person) {
+            markOf($this, $person->id, MarkType::Start, '2026-10-01 09:00');
+            markOf($this, $person->id, MarkType::Start, '2026-11-10 09:00');
+        }
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        EffectiveMarks::byDayOf($people->pluck('id')->all(), weekOf('2026-11-10'));
+
+        expect(count(DB::getQueryLog()))->toBe(2);
+    })->with([1, 5, 30]);
 });
