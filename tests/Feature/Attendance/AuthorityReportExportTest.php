@@ -31,6 +31,14 @@ beforeEach(function (): void {
     $this->plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Norte']);
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'job_title' => 'Operadora']);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
+    // A download sets these for the whole PHP process: put back after each test.
+    $this->processState = [ignore_user_abort() === 1, (int) ini_get('max_execution_time')];
+});
+
+afterEach(function (): void {
+    [$abort, $timeLimit] = $this->processState;
+    ignore_user_abort($abort);
+    set_time_limit($timeLimit);
 });
 
 /** A mark of `$person` at a local time of Mexico City, taken with a device of theirs at the plant's door. */

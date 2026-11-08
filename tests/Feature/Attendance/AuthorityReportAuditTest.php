@@ -35,6 +35,17 @@ beforeEach(function (): void {
     }
     $this->period = ['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'];
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    // A download sets these for the whole PHP process and may die with its output buffer open: put back after each test.
+    $this->processState = [ignore_user_abort() === 1, (int) ini_get('max_execution_time'), ob_get_level()];
+});
+
+afterEach(function (): void {
+    [$abort, $timeLimit, $buffers] = $this->processState;
+    ignore_user_abort($abort);
+    set_time_limit($timeLimit);
+    while (ob_get_level() > $buffers) {
+        ob_end_clean();
+    }
 });
 
 it('writes every download to the audit trail before its first row, and logs how many rows went out', function (): void {
@@ -62,18 +73,59 @@ it('keeps the audit entry of a download cut off halfway', function (): void {
         ];
     }
     AttendanceMark::query()->insert($marks);
-    $roster = resolve(Roster::class);
-    $this->app->instance(Roster::class, new FailingRoster($roster));
+    // The company's roster, which fails on its second read of people by id: the second chunk of a report.
+    $this->app->instance(Roster::class, new class(resolve(Roster::class)) implements Roster
+    {
+        private int $reads = 0;
 
-    $buffers = ob_get_level();
+        public function __construct(private readonly Roster $roster) {}
+
+        public function activeIn(string $workCenterId): array
+        {
+            return $this->roster->activeIn($workCenterId);
+        }
+
+        public function activeIdsIn(string $workCenterId): array
+        {
+            return $this->roster->activeIdsIn($workCenterId);
+        }
+
+        public function activeIdsInMany(array $workCenterIds): array
+        {
+            return $this->roster->activeIdsInMany($workCenterIds);
+        }
+
+        public function find(string $employeeId): ?RosterEntry
+        {
+            return $this->roster->find($employeeId);
+        }
+
+        public function findMany(array $employeeIds): array
+        {
+            if (++$this->reads > 1) {
+                throw new RuntimeException('The roster went away.');
+            }
+
+            return $this->roster->findMany($employeeIds);
+        }
+
+        public function page(RosterQuery $query, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
+        {
+            return $this->roster->page($query, $perPage, $pageName);
+        }
+
+        public function matchingIds(RosterQuery $query): array
+        {
+            return $this->roster->matchingIds($query);
+        }
+    });
+
+    $outputs = fn (): int => count(array_filter(get_resources('stream'), fn ($stream): bool => (stream_get_meta_data($stream)['uri'] ?? '') === 'php://output'));
 
     expect(fn () => $this->get(route('tenant.attendance.report.export', ['acme', ...$this->period]))->streamedContent())->toThrow(RuntimeException::class, 'The roster went away.');
-    // The stream died with its output buffer open, as a real one would: closed here so the next test starts clean.
-    while (ob_get_level() > $buffers) {
-        ob_end_clean();
-    }
-    expect(AuditEntry::query()->where('event', 'attendance.report_exported')->sole()->metadata)
-        ->toEqual(['action' => 'export', 'work_center_id' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'format' => 'csv']);
+    // No handle on the output is left open behind the dead stream.
+    expect($outputs())->toBe(0)
+        ->and(AuditEntry::query()->where('event', 'attendance.report_exported')->sole()->metadata)->toEqual(['action' => 'export', 'work_center_id' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'format' => 'csv']);
 });
 
 it('writes a view of a center\'s report on its first page with no search, never on the next ones, a search or before a center', function (): void {
@@ -94,50 +146,3 @@ it('writes nothing for a request it refuses', function (): void {
 
     expect(AuditEntry::query()->where('event', 'attendance.report_exported')->count())->toBe(0);
 });
-
-/** The company's roster, which fails on its second read of people by id: the second chunk of a report. */
-final class FailingRoster implements Roster
-{
-    private int $reads = 0;
-
-    public function __construct(private readonly Roster $roster) {}
-
-    public function activeIn(string $workCenterId): array
-    {
-        return $this->roster->activeIn($workCenterId);
-    }
-
-    public function activeIdsIn(string $workCenterId): array
-    {
-        return $this->roster->activeIdsIn($workCenterId);
-    }
-
-    public function activeIdsInMany(array $workCenterIds): array
-    {
-        return $this->roster->activeIdsInMany($workCenterIds);
-    }
-
-    public function find(string $employeeId): ?RosterEntry
-    {
-        return $this->roster->find($employeeId);
-    }
-
-    public function findMany(array $employeeIds): array
-    {
-        if (++$this->reads > 1) {
-            throw new RuntimeException('The roster went away.');
-        }
-
-        return $this->roster->findMany($employeeIds);
-    }
-
-    public function page(RosterQuery $query, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
-    {
-        return $this->roster->page($query, $perPage, $pageName);
-    }
-
-    public function matchingIds(RosterQuery $query): array
-    {
-        return $this->roster->matchingIds($query);
-    }
-}
