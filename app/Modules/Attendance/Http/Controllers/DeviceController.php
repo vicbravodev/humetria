@@ -13,7 +13,6 @@ use App\Modules\Attendance\Http\Requests\EnrollCenterRequest;
 use App\Modules\Attendance\Http\Requests\EnrollPersonRequest;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Attendance\Support\PanelScope;
-use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,17 +40,15 @@ final readonly class DeviceController
         ));
     }
 
-    public function enroll(EnrollPersonRequest $request, IssueEnrollment $issue, Roster $roster): RedirectResponse
+    public function enroll(EnrollPersonRequest $request, IssueEnrollment $issue): RedirectResponse
     {
-        $person = $roster->find($request->employeeId());
-
         try {
             $issued = $issue->handle($request->employeeId(), ($request->user() ?? abort(401))->id);
         } catch (EmployeeNotAvailable) {
             abort(404);
         }
 
-        $name = $person === null ? '' : $person->name;
+        $name = $issued->personName;
 
         if ($issued->manualUrl === null) {
             Inertia::flash('toast', ['type' => 'success', 'message' => "Enviamos el enlace de alta al correo de {$name}."]);

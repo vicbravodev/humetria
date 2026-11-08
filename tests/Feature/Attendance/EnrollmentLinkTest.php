@@ -49,7 +49,7 @@ it('issues a link of one use for 48 hours, keeping only its hash, and only email
     $token = enrollmentToken((string) $sent['url']);
     $link = EnrollmentLink::query()->sole();
 
-    expect($issued)->manualUrl->toBeNull()->linkId->toBe($link->id)
+    expect($issued)->manualUrl->toBeNull()->linkId->toBe($link->id)->personName->toBe('Ana López')
         ->and($sent)->toBe(['to' => 'ana@acme.test', 'channels' => ['mail'], 'url' => config('app.url')."/a/acme/enroll/{$token}", 'greeting' => 'Hola, Ana López'])
         ->and(strlen($token))->toBeGreaterThanOrEqual(40)
         ->and($link)->employee_id->toBe($this->ana->id)->tenant_id->toBe($this->tenant->id)->issued_by->toBe($this->rh->id)->used_at->toBeNull()->revoked_at->toBeNull()
@@ -85,6 +85,7 @@ it('gives the link to RH, to hand it over, only when the person has no email, an
 
     $link = EnrollmentLink::query()->sole();
     expect($issued->linkId)->toBe($link->id)
+        ->and($issued->personName)->toBe($pepe->name)
         ->and($issued->manualUrl)->toStartWith(config('app.url').'/a/acme/enroll/')
         ->and(EnrollmentLink::findPending(enrollmentToken((string) $issued->manualUrl)))->id->toBe($link->id)
         ->and(AuditEntry::query()->where('event', 'attendance.enrollment_issued')->sole()->metadata)->toEqual(['employee_id' => $pepe->id, 'delivered_by_rh' => true, 'sent_to' => null]);

@@ -72,11 +72,11 @@ final readonly class IssueEnrollment
         if ($person->email === null) {
             Log::info('attendance.enrollment_not_emailed', ['link_id' => $link->id, 'employee_id' => $employeeId]);
 
-            return new IssuedEnrollment($link->id, $url);
+            return new IssuedEnrollment($link->id, $url, $person->name);
         }
 
         Notification::route('mail', $person->email)->notify(new EnrollmentInvitation($url, $person->name, $company));
 
-        return new IssuedEnrollment($link->id, null);
+        return new IssuedEnrollment($link->id, null, $person->name);
     }
 }
