@@ -59,6 +59,7 @@ final readonly class DevicePages
                 'devices' => $devices[$person->id] ?? [],
             ]),
             'canManage' => Gate::allows('manage-attendance'),
+            'linkHours' => config()->integer('attendance.enrollment.link_hours'),
         ];
     }
 

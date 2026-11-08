@@ -90,6 +90,8 @@ export type AttendanceCenterProps = {
     zones: Paginated<AttendanceZone>;
     kiosks: Paginated<KioskScreen>;
     canManage: boolean;
+    /** Seconds each code of its screens lasts (config/attendance.php). */
+    qrSeconds: number;
 };
 
 /** A QR screen of a center: issued until it shows the code, active once seen, revoked. Local times; never its token. */
@@ -132,6 +134,8 @@ export type AttendanceDevicesProps = {
     counts: Record<DeviceView, number>;
     people: Paginated<DevicePerson>;
     canManage: boolean;
+    /** Hours an enrollment link lasts (config/attendance.php). */
+    linkHours: number;
 };
 
 /** The company's policy of the registro, as saved or the defaults it starts with. */

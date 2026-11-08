@@ -54,6 +54,14 @@ function devicesUrl(array $query = []): string
 }
 
 describe('the list', function (): void {
+    it('tells RH how long an enrollment link lasts, from config/attendance.php', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('linkHours', 48));
+        config(['attendance.enrollment.link_hours' => 24]);
+        $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('linkHours', 24));
+    });
+
     it('shows RH each person with their devices, active first, and whether the key is synced, never a credential', function (): void {
         $this->actingAs($this->hr);
 

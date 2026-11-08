@@ -36,6 +36,7 @@ export default function AttendanceDevices(props: AttendanceDevicesProps) {
                             waiting={
                                 props.counts.unlinked + props.counts.revoked
                             }
+                            linkHours={props.linkHours}
                         />
                     )}
                 </PageHeader>
@@ -47,7 +48,8 @@ export default function AttendanceDevices(props: AttendanceDevicesProps) {
                     >
                         Entrégaselo en persona o por un medio que solo use esa
                         persona: con él vincula su teléfono. Funciona una sola
-                        vez, vence en 48 h y no se vuelve a mostrar.
+                        vez, vence en {props.linkHours} h y no se vuelve a
+                        mostrar.
                     </OneTimeLink>
                 )}
                 <DevicePeople {...props} />

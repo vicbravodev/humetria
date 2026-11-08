@@ -11,11 +11,13 @@ export default function KioskScreen({
     center,
     code,
     online,
+    qrSeconds,
 }: {
     company: string;
     center: string;
     code: KioskCode | null;
     online: boolean;
+    qrSeconds: number;
 }) {
     return (
         <main className="flex min-h-dvh flex-col items-center justify-between gap-6 bg-background p-6 text-foreground">
@@ -49,7 +51,7 @@ export default function KioskScreen({
                 </p>
             </section>
             <footer className="text-sm text-muted-foreground">
-                El código cambia cada 30 segundos.
+                El código cambia cada {qrSeconds} segundos.
             </footer>
         </main>
     );

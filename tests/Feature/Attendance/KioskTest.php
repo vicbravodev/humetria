@@ -119,6 +119,15 @@ describe('the screen', function (): void {
         expect(KioskDevice::query()->whereNotNull('activated_at')->count())->toBe(0);
     });
 
+    it('tells the screen how often its code changes, from config/attendance.php', function (): void {
+        $token = kioskToken();
+        $show = fn () => $this->withCookie('attendance_kiosk', $token)->get(route('attendance.device.kiosk.show', $this->tenant->slug));
+
+        $show()->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 30));
+        config(['attendance.qr.window_seconds' => 45]);
+        $show()->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 45));
+    });
+
     it('shows the page of the QR to a screen with its token', function (): void {
         $token = kioskToken();
 

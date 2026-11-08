@@ -15,6 +15,7 @@ export default function AttendanceCenter({
     zones,
     kiosks,
     canManage,
+    qrSeconds,
 }: AttendanceCenterProps) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
@@ -65,6 +66,7 @@ export default function AttendanceCenter({
                     kiosks={kiosks}
                     centerId={center.id}
                     canManage={canManage}
+                    qrSeconds={qrSeconds}
                 />
             </div>
         </>

@@ -8,10 +8,12 @@ export default function Kiosk({
     company,
     center,
     qrUrl,
+    qrSeconds,
 }: {
     company: string;
     center: string;
     qrUrl: string;
+    qrSeconds: number;
 }) {
     useWakeLock();
     const { code, online } = useKioskCode(qrUrl);
@@ -24,6 +26,7 @@ export default function Kiosk({
                 center={center}
                 code={code}
                 online={online}
+                qrSeconds={qrSeconds}
             />
         </>
     );

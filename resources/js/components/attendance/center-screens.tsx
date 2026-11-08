@@ -21,10 +21,12 @@ export default function CenterScreens({
     kiosks,
     centerId,
     canManage,
+    qrSeconds,
 }: {
     kiosks: Paginated<KioskScreen>;
     centerId: string;
     canManage: boolean;
+    qrSeconds: number;
 }) {
     const tenantSlug = useTenantSlug();
     const newLink = usePage().flash.kioskLink;
@@ -54,8 +56,7 @@ export default function CenterScreens({
                         Pantallas del QR
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                        Una tableta fija muestra un código que cambia cada 30 s:
-                        quien marca lo escanea con su teléfono.
+                        {`Una tableta fija muestra un código que cambia cada ${qrSeconds} s: quien marca lo escanea con su teléfono.`}
                     </p>
                 </div>
                 {kiosks.total > 0 && issue}

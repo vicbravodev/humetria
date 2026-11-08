@@ -116,6 +116,7 @@ final readonly class AttendancePages
 
         return [
             'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
+            'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
             'people' => count($this->roster->activeIdsIn($center->id)),
             'zones' => AttendanceZone::query()->where('work_center_id', $center->id)->orderBy('name')->orderBy('id')
                 ->paginate(self::PER_PAGE, pageName: 'zones')->withQueryString()

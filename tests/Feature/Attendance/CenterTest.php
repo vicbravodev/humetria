@@ -52,6 +52,14 @@ function zoneInput(array $overrides = []): array
 }
 
 describe('the center', function (): void {
+    it('tells RH how often the screen code changes, from config/attendance.php', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 30));
+        config(['attendance.qr.window_seconds' => 45]);
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 45));
+    });
+
     it('shows RH its zones with where each is, and its active people', function (): void {
         $zone = zoneOf($this->plant);
         $this->actingAs($this->hr);

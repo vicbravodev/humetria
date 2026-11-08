@@ -8,10 +8,12 @@ import { enrollAll } from '@/routes/tenant/attendance/devices';
 export default function EnrollAllButton({
     center,
     waiting,
+    linkHours,
 }: {
     center: { id: string; name: string };
     /** People of the center with no active device. */
     waiting: number;
+    linkHours: number;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -27,7 +29,7 @@ export default function EnrollAllButton({
                 </Button>
             }
             title={`¿Enviar su enlace de alta a ${waiting === 1 ? 'la persona' : `las ${waiting} personas`} de ${center.name} sin dispositivo?`}
-            description="Cada quien lo recibe en su correo y lo abre en su teléfono; funciona una vez y vence en 48 h. A quien no tenga correo no se le envía: crea su enlace desde su renglón."
+            description={`Cada quien lo recibe en su correo y lo abre en su teléfono; funciona una vez y vence en ${linkHours} h. A quien no tenga correo no se le envía: crea su enlace desde su renglón.`}
             confirmLabel="Enviar enlaces"
             form={enrollAll.form(tenantSlug)}
             transform={() => ({ work_center_id: center.id })}

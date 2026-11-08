@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * The link a person opens on their phone to link it (enrollment): good once and for 48 hours, and only the last one RH
- * issued for them. Only the hash of its token is kept.
+ * The link a person opens on their phone to link it (enrollment): good once and for the hours of config/attendance.php
+ * (48 by default), and only the last one RH issued for them. Only the hash of its token is kept.
  *
  * @property string $id
  * @property string $tenant_id
@@ -37,7 +37,7 @@ final class EnrollmentLink extends Model
         return hash('sha256', $token);
     }
 
-    /** The current company's link of `$token` while it may still be opened: not used, not replaced and within its 48 hours. */
+    /** The current company's link of `$token` while it may still be opened: not used, not replaced and within its hours. */
     public static function findPending(string $token): ?self
     {
         return self::query()->where('token_hash', self::hashToken($token))->whereNull('used_at')->whereNull('revoked_at')

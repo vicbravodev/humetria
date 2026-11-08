@@ -95,6 +95,7 @@ final class KioskController
             'company' => $this->companies->current()->tradeName,
             'center' => $center->name,
             'qrUrl' => route('attendance.device.kiosk.qr', $tenant),
+            'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
         ]);
     }
 
