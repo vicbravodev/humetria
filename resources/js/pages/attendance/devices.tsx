@@ -1,5 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import DevicePeople from '@/components/attendance/device-people';
+import EnrollAllButton from '@/components/attendance/enroll-all-button';
 import OneTimeLink from '@/components/attendance/one-time-link';
 import PageHeader from '@/components/humetria/page-header';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -28,7 +29,16 @@ export default function AttendanceDevices(props: AttendanceDevicesProps) {
                     caption={props.center?.name ?? 'Todos tus centros'}
                     title="Dispositivos"
                     description="Cada persona marca con la llave de acceso de su teléfono. Envíale su enlace de alta y revoca el teléfono que pierda o cambie."
-                />
+                >
+                    {props.canManage && props.center !== null && (
+                        <EnrollAllButton
+                            center={props.center}
+                            waiting={
+                                props.counts.unlinked + props.counts.revoked
+                            }
+                        />
+                    )}
+                </PageHeader>
                 {link !== undefined && (
                     <OneTimeLink
                         id="enrollment-link"

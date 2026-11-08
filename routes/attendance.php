@@ -36,4 +36,6 @@ Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/reject', [C
 // one. The keys themselves never reach the panel.
 Route::get('admin/{tenant:slug}/attendance/devices', [DeviceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.devices.index');
 Route::post('admin/{tenant:slug}/attendance/devices/enroll', [DeviceController::class, 'enroll'])->where('tenant', $notReserved)->name('tenant.attendance.devices.enroll');
+// Every person of a center without a device gets their link by email, one queued job each.
+Route::post('admin/{tenant:slug}/attendance/devices/enroll-all', [DeviceController::class, 'enrollAll'])->where('tenant', $notReserved)->name('tenant.attendance.devices.enroll-all');
 Route::post('admin/{tenant:slug}/attendance/devices/{device}/revoke', [DeviceController::class, 'revoke'])->where('tenant', $notReserved)->whereUuid('device')->name('tenant.attendance.devices.revoke');

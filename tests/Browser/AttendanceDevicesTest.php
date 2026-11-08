@@ -64,3 +64,17 @@ it('lets RH revoke a lost phone after asking', function (): void {
         ->assertSee('Revocado')
         ->assertNoJavaScriptErrors();
 });
+
+it('sends their link to everyone of a center without a device, leaving who has no email to RH', function (): void {
+    $url = devicesPanel();
+    $plant = WorkCenter::query()->where('name', 'Planta Norte')->sole();
+    EmployeeFactory::new()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'name' => 'Carla Ruiz', 'email' => 'carla@acme.test']);
+
+    visit("{$url}/attendance/devices?center={$plant->id}")
+        ->click('Enviar enlaces a todos los que no tienen dispositivo')
+        ->assertSee('¿Enviar su enlace de alta a las 2 personas de Planta Norte sin dispositivo?')
+        ->click('Enviar enlaces')
+        ->waitForText('Enviamos 1 enlace de alta. 1 persona no tiene correo')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});

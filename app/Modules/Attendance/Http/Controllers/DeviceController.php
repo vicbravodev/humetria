@@ -6,7 +6,10 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\IssueEnrollment;
 use App\Modules\Attendance\Actions\RevokeDevice;
+use App\Modules\Attendance\Actions\SendEnrollmentLinks;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
+use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
+use App\Modules\Attendance\Http\Requests\EnrollCenterRequest;
 use App\Modules\Attendance\Http\Requests\EnrollPersonRequest;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Attendance\Support\PanelScope;
@@ -60,6 +63,20 @@ final readonly class DeviceController
         return back();
     }
 
+    /** Their link to every person of a center without a device; who has no email is counted, for RH to hand theirs over. */
+    public function enrollAll(EnrollCenterRequest $request, SendEnrollmentLinks $send): RedirectResponse
+    {
+        try {
+            $counts = $send->handle($request->workCenterId(), (string) ($request->user() ?? abort(401))->id);
+        } catch (WorkCenterNotAvailable) {
+            abort(404);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => self::batchMessage($counts['sent'], $counts['without_email'])]);
+
+        return back();
+    }
+
     public function revoke(mixed $tenant, string $device, RevokeDevice $revoke): RedirectResponse
     {
         Gate::authorize('manage-attendance');
@@ -67,5 +84,24 @@ final readonly class DeviceController
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Dispositivo revocado. Ya no puede marcar.']);
 
         return back();
+    }
+
+    private static function batchMessage(int $sent, int $withoutEmail): string
+    {
+        if ($sent === 0 && $withoutEmail === 0) {
+            return 'No había a quién enviar: todas las personas del centro tienen dispositivo o no tienen correo.';
+        }
+
+        $message = match ($sent) {
+            0 => 'No enviamos ningún enlace.',
+            1 => 'Enviamos 1 enlace de alta.',
+            default => "Enviamos {$sent} enlaces de alta.",
+        };
+
+        return match ($withoutEmail) {
+            0 => $message,
+            1 => "{$message} 1 persona no tiene correo: crea su enlace desde su renglón.",
+            default => "{$message} {$withoutEmail} personas no tienen correo: crea su enlace desde su renglón.",
+        };
     }
 }
