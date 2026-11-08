@@ -8,11 +8,18 @@ declare(strict_types=1);
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
+use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 /** @var string $notReserved */
 // RH's overview: one week of the people by state, and the centers.
 Route::get('admin/{tenant:slug}/attendance', [AttendanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.index');
+
+// A center of the registro: its zones (where its people may mark) and its QR screens. Zones are added and changed, never
+// deleted: the marks taken in one point at it.
+Route::get('admin/{tenant:slug}/attendance/centers/{workCenter}', [AttendanceController::class, 'center'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.center');
+Route::post('admin/{tenant:slug}/attendance/centers/{workCenter}/zones', [ZoneController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.zones.store');
+Route::put('admin/{tenant:slug}/attendance/centers/{workCenter}/zones/{zone}', [ZoneController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['workCenter', 'zone'])->name('tenant.attendance.zones.update');
 
 // The QR screens of a center: issued with a link shown once, revoked (the row stays, with when).
 Route::post('admin/{tenant:slug}/attendance/kiosks', [KioskController::class, 'store'])->where('tenant', $notReserved)->name('tenant.attendance.kiosks.store');

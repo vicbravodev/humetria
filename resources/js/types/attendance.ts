@@ -71,3 +71,20 @@ export type AttendanceOverviewProps = {
     centers: Paginated<OverviewCenter>;
     canManage: boolean;
 };
+
+/** A zone of a center: where it is (its center) only for whoever may change it. */
+export type AttendanceZone = {
+    id: string;
+    name: string;
+    radius: number;
+    latitude?: number;
+    longitude?: number;
+};
+
+export type AttendanceCenterProps = {
+    center: { id: string; name: string; mainActivity: string };
+    /** Its active people. */
+    people: number;
+    zones: Paginated<AttendanceZone>;
+    canManage: boolean;
+};

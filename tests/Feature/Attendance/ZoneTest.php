@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\SaveZone;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
 use App\Modules\Attendance\Models\AttendanceZone;
@@ -54,4 +55,23 @@ it('does not save a zone in an archived or foreign work center', function (): vo
     expect(fn () => resolve(SaveZone::class)->handle($archived->id, 'X', 19.4, -99.1, 60))->toThrow(WorkCenterNotAvailable::class)
         ->and(fn () => resolve(SaveZone::class)->handle($foreign->id, 'X', 19.4, -99.1, 60))->toThrow(WorkCenterNotAvailable::class)
         ->and(AttendanceZone::query()->count())->toBe(0);
+});
+
+it('does not move a zone to another center: marks taken in it are of its own', function (): void {
+    $zone = resolve(SaveZone::class)->handle($this->center->id, 'Edificio A', 19.4, -99.1, 60);
+    $other = WorkCenterFactory::new()->createOne(['tenant_id' => $this->tenant->id]);
+
+    expect(fn () => resolve(SaveZone::class)->handle($other->id, 'Edificio B', 19.5, -99.2, 80, $zone->id))->toThrow(WorkCenterNotAvailable::class)
+        ->and($zone->fresh())->work_center_id->toBe($this->center->id)->name->toBe('Edificio A');
+});
+
+it('writes each save to the audit trail with ids only, never where the zone is', function (): void {
+    $zone = resolve(SaveZone::class)->handle($this->center->id, 'Edificio A', 19.4326, -99.1332, 60);
+    resolve(SaveZone::class)->handle($this->center->id, 'Edificio A', 19.5, -99.2, 80, $zone->id);
+
+    $entries = AuditEntry::query()->where('event', 'attendance.zone_saved')->get();
+    expect($entries)->toHaveCount(2)
+        ->and($entries->pluck('subject_id')->unique()->all())->toBe([$zone->id])
+        ->and($entries->pluck('metadata')->all())->toBe([['work_center_id' => $this->center->id], ['work_center_id' => $this->center->id]])
+        ->and($entries->toJson())->not->toContain('19.4326')->not->toContain('latitude');
 });

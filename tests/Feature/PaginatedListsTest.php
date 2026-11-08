@@ -108,6 +108,11 @@ it('sends each list of records as a paginator', function (string $component, Clo
     }, ['measures', 'agreements']],
     'time clock correction requests' => ['attendance/corrections', fn () => route('tenant.attendance.corrections.index', listsCompany()[0]), ['requests']],
     'time clock overview: the people of a week and the centers' => ['attendance/index', fn () => route('tenant.attendance.index', listsCompany()[0]), ['people', 'centers']],
+    'time clock center: its zones' => ['attendance/center', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.attendance.center', [$tenant, $plant->id]);
+    }, ['zones']],
     'Ley Silla seat reports of a center' => ['seating/reports', function () {
         [$tenant, $plant] = listsCompany();
 

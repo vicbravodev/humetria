@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { overviewQuery } from '@/lib/attendance/overview';
-import { index } from '@/routes/tenant/attendance';
+import { center as show, index } from '@/routes/tenant/attendance';
 import type { OverviewCenter } from '@/types';
 
 /** A center in use: its people, its zones (none is flagged: nobody can mark there yet) and its screens. */
@@ -29,7 +29,18 @@ export default function CenterZonesRow({
                 )}
             </TableCell>
             <TableCell className="tabular-nums">{center.screens}</TableCell>
-            <TableCell className="text-right">
+            <TableCell className="text-right whitespace-nowrap">
+                <Button asChild variant="ghost" size="sm">
+                    <Link
+                        href={show({
+                            tenant: tenantSlug,
+                            workCenter: center.id,
+                        })}
+                        aria-label={`Zonas y pantallas de ${center.name}`}
+                    >
+                        Zonas y pantallas
+                    </Link>
+                </Button>
                 <Button asChild variant="ghost" size="sm">
                     <Link
                         href={index(tenantSlug, {

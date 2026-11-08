@@ -99,6 +99,31 @@ final readonly class AttendancePages
     }
 
     /**
+     * A center of the registro: its active people and its zones by name, 25 at a time. Where each zone is (its center) only
+     * for whoever may change it: a viewer reads its name and its radius.
+     *
+     * @return array<string, mixed>
+     */
+    public function center(WorkCenterSummary $center): array
+    {
+        $manage = Gate::allows('manage-attendance');
+
+        return [
+            'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
+            'people' => count($this->roster->activeIdsIn($center->id)),
+            'zones' => AttendanceZone::query()->where('work_center_id', $center->id)->orderBy('name')->orderBy('id')
+                ->paginate(self::PER_PAGE, pageName: 'zones')->withQueryString()
+                ->through(fn (AttendanceZone $zone): array => [
+                    'id' => $zone->id,
+                    'name' => $zone->name,
+                    'radius' => $zone->radius_m,
+                    ...($manage ? ['latitude' => $zone->latitude, 'longitude' => $zone->longitude] : []),
+                ]),
+            'canManage' => $manage,
+        ];
+    }
+
+    /**
      * The centers in use, 25 at a time: their active people, their zones and the screens that show their code.
      *
      * @param  array<string, list<string>>  $byCenter
