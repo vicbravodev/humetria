@@ -21,6 +21,12 @@ function devicesPanel(): string
     return $url;
 }
 
+/** A script that reads the status chip of a person's row, not the tab labels that carry the same words. */
+function deviceChipOf(string $name): string
+{
+    return "() => [...([...document.querySelectorAll('tbody tr')].find((row) => row.textContent.includes('{$name}'))?.querySelectorAll('[data-slot=\"badge\"]') ?? [])].at(-1)?.textContent ?? null";
+}
+
 it('shows RH each person with their devices and the kind of key', function (bool $dark, bool $mobile): void {
     $url = devicesPanel();
 
@@ -30,7 +36,8 @@ it('shows RH each person with their devices and the kind of key', function (bool
         ->assertSee('iPhone de Ana')
         ->assertSee('Llave sincronizada')
         ->assertSee('Bob Díaz')
-        ->assertSee('Sin dispositivo');
+        ->assertScript(deviceChipOf('Bob Díaz'), 'Sin dispositivo')
+        ->assertScript(deviceChipOf('Ana López'), 'Con dispositivo');
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -61,8 +68,10 @@ it('lets RH revoke a lost phone after asking', function (): void {
         ->assertSee('¿Revocar «iPhone de Ana»?')
         ->click('Revocar dispositivo')
         ->waitForText('Dispositivo revocado')
-        ->assertSee('Revocado')
+        ->assertScript(deviceChipOf('Ana López'), 'Revocado')
         ->assertNoJavaScriptErrors();
+
+    expect(AttendanceDevice::query()->withoutGlobalScopes()->sole()->revoked_at)->not->toBeNull();
 });
 
 it('sends their link to everyone of a center without a device, leaving who has no email to RH', function (): void {

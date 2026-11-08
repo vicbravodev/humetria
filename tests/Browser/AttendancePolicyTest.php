@@ -65,6 +65,7 @@ it('takes RH from the sidebar to the devices, the schedules and the policy, ligh
         ->click('[data-sidebar="sidebar"] >> text=Horarios')
         ->waitForText('lo que trabaje de más cuenta como tiempo extra')
         ->assertPathIs("{$url}/attendance/schedules")
+        ->assertAttribute('[data-sidebar="sidebar"] a[href$="/attendance/schedules"]', 'data-active', 'true')
         ->click('[data-sidebar="sidebar"] >> text=Política')
         ->waitForText('Marcas fuera de zona')
         ->assertPathIs("{$url}/attendance/policy")
