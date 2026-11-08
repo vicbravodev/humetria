@@ -221,6 +221,19 @@ describe('what was corrected', function (): void {
         );
     });
 
+    it('calls a correction that gives a time back to a voided mark «marca agregada»', function (): void {
+        $void = authorityReportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-05 08:12'), null, 'Marcó por error.');
+        authorityReportCorrection($void, '2027-01-05 08:00', 'Sí vino, a las 8.');
+        reportMark($this->ana, MarkType::End, '2027-01-05 16:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row
+            // In order of the times they speak of.
+            ->start->toBe('08:00')->corrections->toBe([
+                'marca agregada (inicio 08:00, por RH): Sí vino, a las 8.',
+                'marca anulada (inicio 08:12, por RH): Marcó por error.',
+            ]));
+    });
+
     it('keeps a person whose only start was voided, the day showing the voided start', function (): void {
         authorityReportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-05 08:00'), null, 'No vino ese día.');
 
