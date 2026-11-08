@@ -31,8 +31,9 @@ final readonly class ReportController
         $center = PanelScope::center($this->workCenters, $request->centerId());
         $page = $pages->show($request->tenantSlug(), $center, $from, $to, $request->string('q')->trim()->limit(100, '')->toString());
 
-        if ($center !== null && $request->integer('page', 1) <= 1) {
-            $audit->handle('view', $center->id, $from, $to, $pages->days($page));
+        // Its first page with no search: the next pages and each search of the same report are not new views.
+        if ($center !== null && $request->integer('page', 1) <= 1 && ! $request->filled('q')) {
+            $audit->viewed($center->id, $from, $to, $pages->days($page));
         }
 
         return Inertia::render('attendance/report', $page);
@@ -46,14 +47,18 @@ final readonly class ReportController
         $to = $request->to();
         $slug = Str::slug($center->name) ?: 'centro';
 
-        // Audited once the last row is out, with how many there were.
+        // Audited before the first row, so a download cut off halfway is on the trail; the rows go to the log at the end. A
+        // client that leaves does not stop the stream midway, nor does the time limit.
         return response()->streamDownload(function () use ($report, $audit, $center, $from, $to): void {
+            ignore_user_abort(true);
+            set_time_limit(0);
+            $audit->exporting($center->id, $from, $to);
             $out = fopen('php://output', 'wb');
 
             if ($out !== false) {
                 $rows = AuthorityCsv::write($report->handle($center->id, $from, $to), $out);
                 fclose($out);
-                $audit->handle('export', $center->id, $from, $to, $rows);
+                $audit->completed($center->id, $from, $to, $rows);
             }
         }, "registro-jornada-{$slug}-{$from->toDateString()}-{$to->toDateString()}.csv", [
             'Content-Type' => 'text/csv; charset=UTF-8',
