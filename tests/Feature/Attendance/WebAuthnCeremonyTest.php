@@ -63,6 +63,13 @@ describe('registration', function (): void {
             ->and($this->ceremony->registrationOptions($this->ana->id, 'Ana López')['challenge'])->not->toBe($options['challenge']);
     });
 
+    it('gives the browser the challenge lifetime of config/attendance.php (60 s by default)', function (): void {
+        expect(config('attendance.webauthn.challenge_seconds'))->toBe(60);
+        config(['attendance.webauthn.challenge_seconds' => 120]);
+
+        expect($this->ceremony->registrationOptions($this->ana->id, 'Ana López')['timeout'])->toBe(120000);
+    });
+
     it('verifies a new key and gives its id, public key and counter', function (): void {
         $credential = $this->ceremony->verifyRegistration($this->ana->id, $this->phone->create($this->ceremony->registrationOptions($this->ana->id, 'Ana')));
 

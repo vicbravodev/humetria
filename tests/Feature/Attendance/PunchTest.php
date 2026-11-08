@@ -164,6 +164,17 @@ describe('the page', function (): void {
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
     });
 
+    it('remembers the person for the minutes of config/attendance.php (10 by default)', function (): void {
+        expect(config('attendance.punch.remember_minutes'))->toBe(10);
+        config(['attendance.punch.remember_minutes' => 1]);
+        $session = punchSession();
+        punchWith($this->phone, $this->ana->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)->assertOk();
+        $this->travel(60)->seconds();
+
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
+    });
+
     it('forgets the person at once when they say it is not them («¿No es usted?»)', function (): void {
         $cookie = config()->string('session.cookie');
         $session = punchSession();

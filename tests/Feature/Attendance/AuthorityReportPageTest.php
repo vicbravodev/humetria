@@ -202,3 +202,12 @@ describe('the period', function (): void {
         'not a date' => [['from' => 'ayer', 'to' => '2027-01-31'], ['from' => 'Escribe una fecha inicial válida.']],
     ]);
 });
+
+it('takes how many days it shows on screen from config/attendance.php (93 by default)', function (): void {
+    expect(config('attendance.report.page_max_days'))->toBe(93);
+    config(['attendance.report.page_max_days' => 7]);
+    $this->actingAs($this->hr);
+
+    $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertInertia(fn (AssertableInertia $page) => $page->where('longPeriod', null));
+    $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-24', 'to' => '2027-01-31']))->assertInertia(fn (AssertableInertia $page) => $page->where('longPeriod', ['days' => 8, 'maxOnScreen' => 7]));
+});

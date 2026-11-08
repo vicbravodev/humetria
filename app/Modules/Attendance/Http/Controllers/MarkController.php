@@ -40,7 +40,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  * revoked device, of a person who left or of another company gets the same 404. Logs carry ids and reasons only: never a
  * position, the code or the key.
  *
- * The browser's session remembers who last marked in it for 10 minutes, only to offer their next step (never their
+ * The browser's session remembers who last marked in it for 10 minutes (config/attendance.php), only to offer their next step (never their
  * marks); «¿No es usted?» forgets them at once, and so does a person with no device in use or who left. Every answer to a
  * mark names the person the signature verified and their own next steps, so a second person on the same browser is
  * never shown the first one's.
@@ -48,8 +48,6 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
-
-    private const int REMEMBER_SECONDS = 600;
 
     public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant) {}
 
@@ -156,7 +154,7 @@ final readonly class MarkController
     private function remembered(Request $request): ?RosterEntry
     {
         $memory = $request->session()->get(self::SESSION_KEY);
-        $id = is_array($memory) && is_int($memory['at'] ?? null) && CarbonImmutable::now()->getTimestamp() - $memory['at'] < self::REMEMBER_SECONDS
+        $id = is_array($memory) && is_int($memory['at'] ?? null) && CarbonImmutable::now()->getTimestamp() - $memory['at'] < config()->integer('attendance.punch.remember_minutes') * 60
             ? $memory['id'] ?? null
             : null;
         $person = is_string($id) ? $this->roster->find($id) : null;

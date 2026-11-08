@@ -6,7 +6,6 @@ namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Actions\BuildAuthorityReport;
 use App\Modules\Attendance\Data\AuthorityRow;
-use App\Modules\Attendance\Http\Requests\ReportRequest;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
@@ -55,7 +54,7 @@ final readonly class ReportPages
         ];
 
         if ($center !== null && $longPeriod !== null) {
-            return [...$page, 'longPeriod' => ['days' => $longPeriod, 'maxOnScreen' => ReportRequest::MAX_PAGE_DAYS], 'exportUrl' => self::exportUrl($slug, $center, $from, $to)];
+            return [...$page, 'longPeriod' => ['days' => $longPeriod, 'maxOnScreen' => config()->integer('attendance.report.page_max_days')], 'exportUrl' => self::exportUrl($slug, $center, $from, $to)];
         }
 
         return $center === null ? $page : [...$page, ...$this->report($slug, $center, $from, $to, $search)];

@@ -12,16 +12,11 @@ use LogicException;
 
 /**
  * The report for the authority: one work center in use (whether it is one is the controller's to say, a 404) and a period
- * of local dates, both included, of at most 366 days. The page shows a table for up to 93 of them; for a longer one it
- * offers only the CSV. Owner and hr only: it is evidence handed to an authority.
+ * of local dates, both included, of at most 366 days. The page shows a table for up to 93 of them (on screen the figures
+ * are computed on every visit); for a longer one it offers only the CSV. Both numbers: config/attendance.php. Owner and hr only: it is evidence handed to an authority.
  */
 final class ReportRequest extends FormRequest
 {
-    public const int MAX_DAYS = 366;
-
-    /** On screen the figures are computed on every visit: a quarter at most; a longer period gets only the CSV. */
-    public const int MAX_PAGE_DAYS = 93;
-
     public function authorize(): bool
     {
         return $this->user()?->can('manage-attendance') === true;
@@ -54,8 +49,10 @@ final class ReportRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
-            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->days() > self::MAX_DAYS) {
-                $validator->errors()->add('to', 'El periodo puede ser de hasta '.self::MAX_DAYS.' días.');
+            $max = config()->integer('attendance.report.export_max_days');
+
+            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->days() > $max) {
+                $validator->errors()->add('to', "El periodo puede ser de hasta {$max} días.");
             }
         }];
     }
@@ -107,7 +104,7 @@ final class ReportRequest extends FormRequest
     /** Whether the page should offer only the CSV: a period too long to show on screen. */
     public function onlyDownload(): bool
     {
-        return $this->hasPeriod() && $this->days() > self::MAX_PAGE_DAYS;
+        return $this->hasPeriod() && $this->days() > config()->integer('attendance.report.page_max_days');
     }
 
     private function exporting(): bool

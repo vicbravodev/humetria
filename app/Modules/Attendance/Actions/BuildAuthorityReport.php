@@ -43,10 +43,7 @@ use LogicException;
  */
 final readonly class BuildAuthorityReport
 {
-    /** People per chunk... */
-    private const int CHUNK = 200;
-
-    /** ...and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
+    /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
     private const int PERSON_WEEKS = 1000;
 
     private const array EVIDENCE = [
@@ -113,7 +110,7 @@ final readonly class BuildAuthorityReport
         $weeks = [WeekPeriod::ofDate($from), WeekPeriod::ofDate($to)];
         // A day of slack: a change of clock inside the period never loses a week.
         $count = intdiv($weeks[1]->start()->getTimestamp() - $weeks[0]->start()->getTimestamp() + 86400, 7 * 86400) + 1;
-        $size = max(1, min(self::CHUNK, intdiv(self::PERSON_WEEKS, $count)));
+        $size = max(1, min(config()->integer('attendance.report.chunk_size'), intdiv(self::PERSON_WEEKS, $count)));
 
         return LazyCollection::make(function () use ($employeeIds, $workCenterId, $period, $weeks, $size) {
             foreach (array_chunk($employeeIds, $size) as $chunk) {

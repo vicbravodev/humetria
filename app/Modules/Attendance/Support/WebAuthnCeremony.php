@@ -56,8 +56,6 @@ use Webauthn\TrustPath\EmptyTrustPath;
  */
 final readonly class WebAuthnCeremony
 {
-    private const int TTL_SECONDS = 60;
-
     private const string RP_NAME = 'Humetría';
 
     public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
@@ -170,7 +168,7 @@ final readonly class WebAuthnCeremony
                 residentKey: AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_REQUIRED,
             ),
             attestation: PublicKeyCredentialCreationOptions::ATTESTATION_CONVEYANCE_PREFERENCE_NONE,
-            timeout: self::TTL_SECONDS * 1000,
+            timeout: self::ttl() * 1000,
         );
     }
 
@@ -180,7 +178,7 @@ final readonly class WebAuthnCeremony
             challenge: $challenge,
             rpId: $this->rpId(),
             userVerification: AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
-            timeout: self::TTL_SECONDS * 1000,
+            timeout: self::ttl() * 1000,
         );
     }
 
@@ -205,7 +203,7 @@ final readonly class WebAuthnCeremony
 
     private function remember(string $context, string $challenge): void
     {
-        Cache::put($this->key($context, $challenge), true, self::TTL_SECONDS);
+        Cache::put($this->key($context, $challenge), true, self::ttl());
     }
 
     /**
@@ -218,7 +216,7 @@ final readonly class WebAuthnCeremony
     {
         $key = $this->key($context, $challenge);
 
-        if (! Cache::has($key) || ! Cache::add("{$key}:used", true, self::TTL_SECONDS)) {
+        if (! Cache::has($key) || ! Cache::add("{$key}:used", true, self::ttl())) {
             throw new InvalidCredential;
         }
     }
@@ -297,5 +295,15 @@ final readonly class WebAuthnCeremony
     private static function decode(string $base64url): string
     {
         return base64_decode(strtr($base64url, '-_', '+/'), true) ?: '';
+    }
+
+    /**
+     * Seconds a challenge is good for (config/attendance.php).
+     *
+     * @return int<1, max>
+     */
+    private static function ttl(): int
+    {
+        return max(1, config()->integer('attendance.webauthn.challenge_seconds'));
     }
 }

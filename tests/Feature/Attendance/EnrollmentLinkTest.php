@@ -173,3 +173,13 @@ it('shows in the audit trail when a link went to another address than the one be
     expect(AuditEntry::query()->where('event', 'attendance.enrollment_issued')->orderBy('id')->get()->pluck('metadata.sent_to')->all())
         ->toBe(['a***@a***.test', 'r***@o***.mx']);
 });
+
+it('lasts the hours of config/attendance.php (48 by default), and the email says so', function (): void {
+    expect(config('attendance.enrollment.link_hours'))->toBe(48);
+    config(['attendance.enrollment.link_hours' => 24]);
+
+    resolve(IssueEnrollment::class)->handle($this->ana->id, $this->rh->id);
+
+    expect(EnrollmentLink::query()->sole()->expires_at->toIso8601String())->toBe(now()->addHours(24)->toIso8601String());
+    Notification::assertSentOnDemand(EnrollmentInvitation::class, fn (EnrollmentInvitation $notification, array $channels, AnonymousNotifiable $notifiable): bool => in_array('El enlace sirve una sola vez y vence en 24 horas. Es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.', $notification->toMail($notifiable)->outroLines, true));
+});

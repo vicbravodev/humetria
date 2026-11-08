@@ -337,3 +337,22 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
         // Who has days and their order, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
         ->and(count(DB::getQueryLog()))->toBe(2 + 3 * 7);
 });
+
+it('reads its people in chunks of the size of config/attendance.php (200 by default)', function (): void {
+    expect(config('attendance.report.chunk_size'))->toBe(200);
+    $bob = reportPerson($this->plant, 'Bob Díaz');
+    reportMark($this->ana, MarkType::Start, '2027-01-05 08:00');
+    reportMark($bob, MarkType::Start, '2027-01-05 08:00');
+    $queries = function (): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+
+        return count(DB::getQueryLog());
+    };
+
+    $whole = $queries();
+    config(['attendance.report.chunk_size' => 1]);
+
+    expect($queries())->toBeGreaterThan($whole);
+});

@@ -66,3 +66,16 @@ it('expires at the end of the window after its own', function (): void {
         ->and(QrToken::expiresAt(qrAt(29)))->toEqual(qrAt(30))
         ->and(QrToken::expiresAt(qrAt(30)))->toEqual(qrAt(60));
 });
+
+it('takes its window and how many past windows it accepts from config/attendance.php', function (): void {
+    config(['attendance.qr.window_seconds' => 60, 'attendance.qr.past_windows' => 2]);
+    $token = QrToken::issue(QR_TENANT, QR_CENTER, qrAt(0));
+
+    expect(QrToken::expiresAt(qrAt(0)))->toEqual(qrAt(60))
+        ->and(QrToken::verify($token, QR_TENANT, QR_CENTER, qrAt(179)))->toBeTrue()
+        ->and(QrToken::verify($token, QR_TENANT, QR_CENTER, qrAt(180)))->toBeFalse();
+});
+
+it('defaults to 30 s windows and one past window', function (): void {
+    expect(config('attendance.qr'))->toBe(['window_seconds' => 30, 'past_windows' => 1]);
+});

@@ -180,3 +180,13 @@ describe('the period', function (): void {
         'no center' => [['center' => ''], ['center' => 'Elige un centro de trabajo.']],
     ]);
 });
+
+it('takes the longest period it exports from config/attendance.php (366 days by default)', function (): void {
+    expect(config('attendance.report.export_max_days'))->toBe(366);
+    config(['attendance.report.export_max_days' => 7]);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertOk()->streamedContent();
+    $this->get(route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => '2027-01-24', 'to' => '2027-01-31']))
+        ->assertSessionHasErrors(['to' => 'El periodo puede ser de hasta 7 días.']);
+});

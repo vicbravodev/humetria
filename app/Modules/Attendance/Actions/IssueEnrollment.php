@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 /**
- * A new enrollment link for an active person of the company: good once and for 48 hours, and it revokes the one before.
+ * A new enrollment link for an active person of the company: good once and for 48 hours (config/attendance.php), and it
+ * revokes the one before.
  * Emailed to the person, and then RH never gets it: RH may not link a device as them. Only when the person has no email
  * is the URL returned, for RH to hand over, and the audit trail says RH delivered it. The URL is built on the app's
  * address, never the request's host. The token exists in clear only in the URL: only its hash is kept, and it never
@@ -27,8 +28,6 @@ use Illuminate\Support\Str;
  */
 final readonly class IssueEnrollment
 {
-    private const int HOURS = 48;
-
     public function __construct(private Roster $roster, private Companies $companies, private RecordAudit $audit) {}
 
     /** @throws EmployeeNotAvailable when the person left or is not the company's */
@@ -57,7 +56,7 @@ final readonly class IssueEnrollment
                 'employee_id' => $employeeId,
                 'token_hash' => EnrollmentLink::hashToken($token),
                 'issued_by' => $userId,
-                'expires_at' => $now->addHours(self::HOURS),
+                'expires_at' => $now->addHours(config()->integer('attendance.enrollment.link_hours')),
             ]);
             $this->audit->handle('attendance.enrollment_issued', $link, ['employee_id' => $employeeId, 'delivered_by_rh' => $byRh, 'sent_to' => $sentTo]);
 

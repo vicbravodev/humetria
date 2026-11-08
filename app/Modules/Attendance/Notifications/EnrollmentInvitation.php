@@ -31,6 +31,6 @@ final class EnrollmentInvitation extends Notification
             ->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} registra la jornada de forma electrónica. Abra este enlace en su teléfono: ahí leerá el acuerdo del registro y creará una llave de acceso con su huella, su rostro o su PIN. No necesita contraseña.")
             ->action('Vincular mi teléfono', $this->url)
-            ->line('El enlace sirve una sola vez y vence en 48 horas. Es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+            ->line('El enlace sirve una sola vez y vence en '.config()->integer('attendance.enrollment.link_hours').' horas. Es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
     }
 }
