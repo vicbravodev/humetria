@@ -17,10 +17,12 @@ import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
-import { index as attendanceIndex } from '@/routes/tenant/attendance';
+import {
+    index as attendanceIndex,
+    report as attendanceReport,
+} from '@/routes/tenant/attendance';
 import { index as attendanceCorrections } from '@/routes/tenant/attendance/corrections';
 import { index as attendanceDevices } from '@/routes/tenant/attendance/devices';
-import { report as attendanceReport } from '@/routes/tenant/attendance';
 import { show as attendancePolicy } from '@/routes/tenant/attendance/policy';
 import { index as attendanceSchedules } from '@/routes/tenant/attendance/schedules';
 import { index as campaigns } from '@/routes/tenant/campaigns';
