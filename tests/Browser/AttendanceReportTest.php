@@ -44,7 +44,8 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
         ->assertSee('Sin marca de fin')
         ->assertSee('Confirmada')
         ->assertSee('Cómo leer este reporte')
-        ->assertSee('los días sin marcas no aparecen');
+        ->assertSee('los días sin marcas no aparecen')
+        ->assertSee('cada descarga también');
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],

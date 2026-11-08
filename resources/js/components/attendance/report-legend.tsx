@@ -48,6 +48,12 @@ export default function ReportLegend({
                     «Sin confirmar» es una semana que la persona no respondió:
                     el silencio no es conformidad.
                 </li>
+                <li>
+                    Abrir el reporte de un centro queda en la bitácora (su
+                    primera página; pasar a las siguientes no se vuelve a
+                    anotar) y cada descarga también, con el centro, el periodo y
+                    el número de renglones.
+                </li>
             </ul>
             {generatedAt !== null && (
                 <p className="text-caption">

@@ -54,6 +54,18 @@ final readonly class ReportPages
     }
 
     /**
+     * The person-days a page built by show() counts: 0 before a center is chosen.
+     *
+     * @param  array<string, mixed>  $page
+     */
+    public function days(array $page): int
+    {
+        $summary = $page['summary'] ?? null;
+
+        return is_array($summary) && is_int($summary['days'] ?? null) ? $summary['days'] : 0;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function report(string $slug, WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search): array
