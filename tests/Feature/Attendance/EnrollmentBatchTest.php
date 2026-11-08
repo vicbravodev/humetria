@@ -162,13 +162,15 @@ it('queues one link per person even when RH sends the batch twice before the wor
         ->and(new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing::class);
 });
 
-it('sends nothing to a person who linked a device between the batch and the worker', function (): void {
+it('sends nothing to a person who linked a device between the batch and the worker, and logs why with ids', function (): void {
     AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    Log::spy();
 
     app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));
 
     Notification::assertNothingSent();
     expect(EnrollmentLink::query()->count())->toBe(0);
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollment_skipped', ['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'reason' => 'has_device']);
 });
 
 it('still sends to a person whose only device was revoked by the time it runs', function (): void {

@@ -40,7 +40,13 @@ final class SendEnrollmentLink implements ShouldBeUniqueUntilProcessing, ShouldQ
         $company = $companies->enter($this->tenantId);
         $person = $roster->find($this->employeeId);
 
-        if ($company->blocked || $person === null || ! $person->active || $person->email === null || DevicePages::states([$person->id])[$person->id] === 'linked') {
+        if ($company->blocked || $person === null || ! $person->active || $person->email === null) {
+            return;
+        }
+
+        if (DevicePages::states([$person->id])[$person->id] === 'linked') {
+            Log::info('attendance.enrollment_skipped', ['tenant_id' => $this->tenantId, 'employee_id' => $person->id, 'reason' => 'has_device']);
+
             return;
         }
 
