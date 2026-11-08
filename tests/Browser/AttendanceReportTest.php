@@ -45,7 +45,9 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
         ->assertSee('Confirmada')
         ->assertSee('Cómo leer este reporte')
         ->assertSee('los días sin marcas no aparecen')
-        ->assertSee('cada descarga también');
+        ->assertSee('cada descarga también')
+        ->assertSee('«hora corregida de 08:12 a 08:00»')
+        ->assertSee('con el horario vigente de cada persona al generar el reporte');
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],

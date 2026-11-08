@@ -41,8 +41,15 @@ export default function ReportLegend({
                 </li>
                 <li>
                     Las marcas no se editan ni se borran: este reporte es una
-                    vista de ese registro. Cada corrección aparece con su motivo
-                    y la marca original queda guardada.
+                    vista de ese registro. Cada corrección dice qué cambió
+                    («hora corregida de 08:12 a 08:00», «marca agregada» o
+                    «marca anulada», con la hora en que estaba), su motivo y si
+                    la pidió la persona o la hizo RH; la marca original queda
+                    guardada.
+                </li>
+                <li>
+                    Las horas se reparten con el horario vigente de cada persona
+                    al generar el reporte.
                 </li>
                 <li>
                     «Sin confirmar» es una semana que la persona no respondió:

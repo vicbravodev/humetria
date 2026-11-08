@@ -8,7 +8,6 @@ use App\Modules\Attendance\Data\AuthorityRow;
 use App\Modules\Attendance\Data\DayHours;
 use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\EvidenceLevel;
-use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
@@ -16,6 +15,7 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\CorrectionHistory;
 use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\HoursCalculator;
 use App\Modules\Attendance\Support\LegalLimits;
@@ -38,8 +38,8 @@ use LogicException;
  * week from its Monday even when the period starts later; the week's double-pay cap goes to its earliest overtime, day
  * by day, and the rest is triple.
  *
- * Streamed: the people go in chunks, each read in the same six queries (marks in two, schedules, answers, and the
- * roster's two), so memory holds one chunk.
+ * Streamed: the people go in chunks, each read in the same seven queries (marks in two, what was corrected, schedules,
+ * answers, and the roster's two), so memory holds one chunk.
  */
 final readonly class BuildAuthorityReport
 {
@@ -88,9 +88,11 @@ final readonly class BuildAuthorityReport
             ->where('type', MarkType::Start)
             ->where('marked_at', '>=', CarbonImmutable::parse($from->toDateString(), $timezone)->utc())
             ->where('marked_at', '<', CarbonImmutable::parse($to->toDateString(), $timezone)->addDay()->utc())
+            // A start corrected to another time counts at that time; a voided one still brings its person, with the void.
             ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'corrections')
                 ->whereColumn('corrections.tenant_id', 'attendance_marks.tenant_id')
-                ->whereColumn('corrections.corrects_mark_id', 'attendance_marks.id'))
+                ->whereColumn('corrections.corrects_mark_id', 'attendance_marks.id')
+                ->whereNotNull('corrections.marked_at'))
             ->distinct()
             ->pluck('employee_id')
             ->all();
@@ -131,6 +133,8 @@ final readonly class BuildAuthorityReport
     private function chunk(array $employeeIds, string $workCenterId, array $period, array $weeks): array
     {
         $byPerson = EffectiveMarks::byDayBetween($employeeIds, $weeks[0]->start(), $weeks[1]->end());
+        // A day of slack each side: a night's end, or the end a void points to, may fall past the weeks.
+        $history = CorrectionHistory::of($employeeIds, $weeks[0]->startUtc()->subDay(), $weeks[1]->nextStartUtc()->addDay());
         $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
         $answers = WeeklyConfirmation::query()->among('employee_id', $employeeIds)
             ->whereBetween('week_start', [$weeks[0]->start()->toDateString(), $weeks[1]->start()->toDateString()])
@@ -146,7 +150,9 @@ final readonly class BuildAuthorityReport
                 continue;
             }
 
-            foreach (self::byWeek($byPerson[$id] ?? []) as $monday => $days) {
+            [$days, $voids] = self::withVoids($byPerson[$id] ?? [], $history->voidsOf($id));
+
+            foreach (self::byWeek($days) as $monday => $days) {
                 $schedule = $schedules->get($id);
                 $hours = array_map(
                     fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedule),
@@ -162,15 +168,52 @@ final readonly class BuildAuthorityReport
                     $double = min($overtime, $doubleLeft);
                     $doubleLeft -= $double;
                     $marks = $days[$date] ?? [];
+                    $dayVoids = $voids[$date] ?? [];
+                    $center = $marks === [] ? ($dayVoids[0]['center'] ?? null) : $marks[0]->work_center_id;
 
-                    if ($marks !== [] && $date >= $period[0] && $date <= $period[1] && $marks[0]->work_center_id === $workCenterId) {
-                        $rows[] = self::row($person, $marks, $day, [$overtime, $double], $summary, $answer);
+                    if (($marks !== [] || $dayVoids !== []) && $date >= $period[0] && $date <= $period[1] && $center === $workCenterId) {
+                        $notes = [...$history->notesFor($marks), ...array_map(fn (array $void): array => [$void['at']->getTimestamp(), $void['text']], $dayVoids)];
+                        usort($notes, fn (array $a, array $b): int => $a[0] <=> $b[0]);
+                        $rows[] = self::row($person, $marks, $day, [$overtime, $double], $summary, $answer, array_column($notes, 1));
                     }
                 }
             }
         }
 
         return $rows;
+    }
+
+    /**
+     * A person's days with the marks voided in them: a voided start on its own local date (its day, even with nothing
+     * left), any other on the day it was part of (the last that began before it, from the day before on), by date.
+     *
+     * @param  array<string, list<AttendanceMark>>  $days
+     * @param  list<array{at: CarbonImmutable, type: string, center: string, text: string}>  $voids
+     * @return array{array<string, list<AttendanceMark>>, array<string, list<array{at: CarbonImmutable, type: string, center: string, text: string}>>}
+     */
+    private static function withVoids(array $days, array $voids): array
+    {
+        $timezone = config()->string('app.display_timezone');
+        $byDate = [];
+
+        foreach ($voids as $void) {
+            $original = $void['at']->setTimezone($timezone);
+            $date = $original->toDateString();
+
+            if (! CorrectionHistory::beginsDay($void['type'])) {
+                foreach ($days as $day => $marks) {
+                    $first = $marks[0]->marked_at ?? null;
+                    $date = $first !== null && $first->lessThanOrEqualTo($void['at']) && $day >= $original->subDay()->toDateString() ? $day : $date;
+                }
+            }
+
+            $byDate[$date][] = $void;
+            $days[$date] ??= [];
+        }
+
+        ksort($days);
+
+        return [$days, $byDate];
     }
 
     /**
@@ -190,16 +233,17 @@ final readonly class BuildAuthorityReport
     }
 
     /**
-     * @param  list<AttendanceMark>  $marks  the day's, in order of time; at least one
+     * @param  list<AttendanceMark>  $marks  the day's effective marks, in order of time; none when all were voided
      * @param  array{int, int}  $overtime  the day's overtime minutes and how many of them are paid double
+     * @param  list<string>  $corrections  what was corrected or voided in the day, in order
      */
-    private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer): AuthorityRow
+    private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer, array $corrections): AuthorityRow
     {
         $timezone = config()->string('app.display_timezone');
-        $first = $marks[0];
-        $last = $marks[count($marks) - 1];
+        $first = $marks[0] ?? null;
+        $last = $marks === [] ? null : $marks[count($marks) - 1];
         $local = fn (AttendanceMark $mark): CarbonImmutable => ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($timezone);
-        $ended = $last->type === MarkType::End;
+        $ended = $last?->type === MarkType::End;
         [$minutes, $double] = $overtime;
         $confirmed = $answer?->status === WeekStatus::Confirmed;
 
@@ -208,7 +252,7 @@ final readonly class BuildAuthorityReport
             personName: $person->name,
             jobTitle: $person->jobTitle,
             localDate: $day->date->toDateString(),
-            start: $first->type === MarkType::Start ? $local($first)->format('H:i') : null,
+            start: $first?->type === MarkType::Start ? $local($first)->format('H:i') : null,
             end: $ended ? $local($last)->format('H:i') : null,
             endDate: $ended ? $local($last)->toDateString() : null,
             breakMinutes: WorkedDay::breakMinutes($marks),
@@ -217,8 +261,8 @@ final readonly class BuildAuthorityReport
             doubleMinutes: $double,
             tripleMinutes: $minutes - $double,
             restDayMinutes: $day->restDay ? $day->workedMinutes : 0,
-            evidence: self::evidence($marks),
-            corrections: self::corrections($marks),
+            evidence: self::evidence($marks, $corrections !== []),
+            corrections: $corrections,
             confirmation: match ($answer?->status) {
                 WeekStatus::Confirmed => 'confirmado',
                 WeekStatus::Disputed => 'objetada',
@@ -234,9 +278,9 @@ final readonly class BuildAuthorityReport
      *
      * @param  list<AttendanceMark>  $marks
      */
-    private static function evidence(array $marks): string
+    private static function evidence(array $marks, bool $corrected): string
     {
-        $weakest = EvidenceLevel::Strong;
+        $weakest = $corrected ? EvidenceLevel::Corrected : EvidenceLevel::Strong;
         foreach ($marks as $mark) {
             $level = $mark->method->evidence();
             $weakest = self::RANK[$level->value] > self::RANK[$weakest->value] ? $level : $weakest;
@@ -249,25 +293,20 @@ final readonly class BuildAuthorityReport
      * @param  list<AttendanceMark>  $marks
      * @return list<string>
      */
-    private static function corrections(array $marks): array
-    {
-        $corrections = array_filter($marks, fn (AttendanceMark $mark): bool => $mark->method === MarkMethod::Correction);
-
-        return array_values(array_map(
-            fn (AttendanceMark $mark): string => ($mark->corrects_mark_id === null ? 'marca agregada: ' : 'hora corregida: ').$mark->reason,
-            $corrections,
-        ));
-    }
-
-    /**
-     * @param  list<AttendanceMark>  $marks
-     * @return list<string>
-     */
     private static function flags(array $marks, DayHours $day, int $overtime, int $triple, WeekSummary $week): array
     {
+        if ($marks === []) {
+            return ['Sin marcas vigentes'];
+        }
+
+        // A day that started today is still being worked (as «Mi semana» says): not missing its end yet.
+        $today = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
+        $open = WorkedDay::missingEnd($marks) && $marks[0]->type === MarkType::Start && $day->date->toDateString() === $today;
+
         return array_keys(array_filter([
             'Sin marca de inicio' => $marks[0]->type !== MarkType::Start,
-            'Sin marca de fin' => WorkedDay::missingEnd($marks),
+            'En curso' => $open,
+            'Sin marca de fin' => WorkedDay::missingEnd($marks) && ! $open,
             'Más de 12 h trabajadas en el día (art. 68)' => $day->workedMinutes > LegalLimits::DAY_TOTAL_MAX,
             'Más de 4 h extra en el día (art. 66)' => $overtime > LegalLimits::DAILY_OVERTIME_MAX,
             'Horas extra en más de 4 días de la semana (art. 66)' => $overtime > 0 && in_array(OverLimit::OvertimeDaysOver4, $week->flags, true),

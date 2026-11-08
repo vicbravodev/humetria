@@ -5,10 +5,12 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Attendance\Actions\BuildAuthorityReport;
 use App\Modules\Attendance\Data\AuthorityRow;
+use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
@@ -125,10 +127,91 @@ it('lists each correction of the day with its reason, and the day\'s evidence is
 
     expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
         fn ($row) => $row->start->toBe('08:00')->end->toBe('17:00')->evidence->toBe('Corregida')
-            ->corrections->toBe(['hora corregida: El lector no respondió.', 'marca agregada: Olvidó marcar la salida.']),
+            ->corrections->toBe(['hora corregida de 08:20 a 08:00 (por RH): El lector no respondió.', 'marca agregada (fin 17:00, por RH): Olvidó marcar la salida.']),
         fn ($row) => $row->evidence->toBe('Fuerte')->corrections->toBe([]),
         fn ($row) => $row->evidence->toBe('Básica'),
     );
+});
+
+describe('what was corrected', function (): void {
+    /** A correction of `$original` to a local time (null voids it), with its reason. */
+    function reportCorrection(AttendanceMark $original, ?string $local, string $reason): AttendanceMark
+    {
+        return AttendanceMark::factory()->correcting($original)->create([
+            'marked_at' => $local === null ? null : CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'reason' => $reason,
+        ]);
+    }
+
+    it('says the time a correction replaced, in local times', function (): void {
+        $start = reportMark($this->ana, MarkType::Start, '2027-01-05 08:12');
+        reportCorrection($start, '2027-01-05 08:00', 'Llegó a las 8.');
+        reportMark($this->ana, MarkType::End, '2027-01-05 16:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row
+            ->start->toBe('08:00')->corrections->toBe(['hora corregida de 08:12 a 08:00 (por RH): Llegó a las 8.']));
+    });
+
+    it('lists each step of a chain of corrections, in order', function (): void {
+        $start = reportMark($this->ana, MarkType::Start, '2027-01-05 08:20');
+        $first = reportCorrection($start, '2027-01-05 08:10', 'Primera corrección.');
+        reportCorrection($first, '2027-01-05 08:00', 'Segunda corrección.');
+        reportMark($this->ana, MarkType::End, '2027-01-05 16:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row->corrections->toBe([
+            'hora corregida de 08:20 a 08:10 (por RH): Primera corrección.',
+            'hora corregida de 08:10 a 08:00 (por RH): Segunda corrección.',
+        ]));
+    });
+
+    it('names who asked by their role only: the person, through a request, or RH directly', function (): void {
+        $start = reportMark($this->ana, MarkType::Start, '2027-01-05 08:12');
+        $correction = reportCorrection($start, '2027-01-05 08:00', 'Pedí corregir mi entrada.');
+        CorrectionRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'mark_id' => $start->id,
+            'status' => CorrectionStatus::Approved, 'resolved_by' => $correction->corrected_by, 'resolved_at' => now(), 'resulting_mark_id' => $correction->id]);
+        reportMark($this->ana, MarkType::End, '2027-01-05 16:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row
+            ->corrections->toBe(['hora corregida de 08:12 a 08:00 (a petición de la persona): Pedí corregir mi entrada.']));
+    });
+
+    it('keeps a voided end on its day, with its time and reason', function (): void {
+        reportMark($this->ana, MarkType::Start, '2027-01-05 08:00');
+        reportCorrection(reportMark($this->ana, MarkType::End, '2027-01-05 18:05'), null, 'Marcó la salida por error.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row
+            ->end->toBeNull()->evidence->toBe('Corregida')
+            ->corrections->toBe(['marca anulada (fin 18:05, por RH): Marcó la salida por error.'])
+            ->flags->toBe(['Sin marca de fin']));
+    });
+
+    it('keeps a voided end of a night on the day the night started', function (): void {
+        reportMark($this->ana, MarkType::Start, '2027-01-10 22:00');
+        reportCorrection(reportMark($this->ana, MarkType::End, '2027-01-11 06:00'), null, 'Salió a otra hora.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-11'))->sequence(fn ($row) => $row
+            ->localDate->toBe('2027-01-10')->corrections->toBe(['marca anulada (fin 06:00, por RH): Salió a otra hora.']));
+    });
+
+    it('keeps a person whose only start was voided, the day showing the voided start', function (): void {
+        reportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-05 08:00'), null, 'No vino ese día.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row
+            ->personName->toBe('Ana López')->localDate->toBe('2027-01-05')->start->toBeNull()->workedMinutes->toBe(0)
+            ->evidence->toBe('Corregida')
+            ->corrections->toBe(['marca anulada (inicio 08:00, por RH): No vino ese día.'])
+            ->flags->toBe(['Sin marcas vigentes']));
+    });
+});
+
+it('says a day that started today and has no end yet is in course, not missing its end', function (): void {
+    // Now is Monday 1 February 2027, 12:00 in Mexico City.
+    reportMark($this->ana, MarkType::Start, '2027-02-01 08:00');
+    reportMark($this->ana, MarkType::Start, '2027-01-29 08:00');
+
+    expect(array_map(fn (AuthorityRow $row): array => $row->flags, authorityRows($this->plant, '2027-01-25', '2027-02-01')))->toBe([
+        ['Sin marca de fin'],
+        ['En curso'],
+    ]);
 });
 
 it('gives each day the answer to its week, and the digest only of a confirmed one', function (): void {
@@ -209,6 +292,6 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
     $names = array_map(fn (AuthorityRow $row): string => $row->personName, authorityRows($this->plant, '2027-01-04', '2027-01-10'));
 
     expect($names)->toBe(array_map(fn (int $index): string => sprintf('Persona %03d', $index), range(0, 449)))
-        // Who has days and their order, then six reads for each of the three chunks of 200.
-        ->and(count(DB::getQueryLog()))->toBe(2 + 3 * 6);
+        // Who has days and their order, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
+        ->and(count(DB::getQueryLog()))->toBe(2 + 3 * 7);
 });

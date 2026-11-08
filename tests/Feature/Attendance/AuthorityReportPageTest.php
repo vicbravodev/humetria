@@ -17,8 +17,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(ReportController::class, ReportPages::class);
 
-/** The queries of the report's page with a center, whatever the number of people or days: its view to the audit trail included. */
-const REPORT_PAGE_QUERIES = 24;
+/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included. */
+const REPORT_PAGE_QUERIES = 25;
 
 beforeEach(function (): void {
     // Monday 1 February 2027, 12:00 in Mexico City: the last week that ended is 25 to 31 January.
@@ -86,7 +86,7 @@ describe('the page', function (): void {
                 'ordinaryMinutes' => 480, 'doubleMinutes' => 120, 'tripleMinutes' => 0, 'restDayMinutes' => 0, 'evidence' => 'Fuerte',
                 'corrections' => [], 'confirmation' => 'confirmado', 'flags' => [],
             ])
-            ->where('people.data.0.days.1.corrections', ['hora corregida: El lector falló.'])
+            ->where('people.data.0.days.1.corrections', ['hora corregida de 08:20 a 08:00 (por RH): El lector falló.'])
             ->where('people.data.1.days.0.flags', ['Sin marca de fin'])
             ->where('generatedAt', ['utc' => '2027-02-01 18:00', 'local' => '2027-02-01 12:00'])
             ->where('exportUrl', route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'])));
