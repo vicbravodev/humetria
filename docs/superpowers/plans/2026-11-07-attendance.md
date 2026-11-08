@@ -176,7 +176,7 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 2–4:** FAIL, implementar, PASS; formulario de zona con latitud, longitud, radio y botón «usar mi ubicación actual» (`lib/attendance/geolocation.ts`). Browser: `visitPage()` por página (claro, oscuro y 375 px), revisión visual contra la referencia.
 - [ ] **Step 5:** Commits por pantalla.
 
-### Task 11: Reporte para la autoridad
+### Task 11 ✅: Reporte para la autoridad
 
 **Files:** Create `Actions/BuildAuthorityReport.php`, `Data/AuthorityRow.php`, `Http/Controllers/ReportController.php`, `pages/attendance/report.tsx`; exportación CSV por flujo (`StreamedResponse`). Tests Feature.
 
