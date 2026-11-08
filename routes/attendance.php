@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
+use App\Modules\Attendance\Http\Controllers\DeviceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
@@ -30,3 +31,9 @@ Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController:
 Route::get('admin/{tenant:slug}/attendance/corrections', [CorrectionController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.corrections.index');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/approve', [CorrectionController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.approve');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/reject', [CorrectionController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.reject');
+
+// The people's linked devices: RH sends the link to link one (emailed; shown to RH only for a person without email) and revokes
+// one. The keys themselves never reach the panel.
+Route::get('admin/{tenant:slug}/attendance/devices', [DeviceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.devices.index');
+Route::post('admin/{tenant:slug}/attendance/devices/enroll', [DeviceController::class, 'enroll'])->where('tenant', $notReserved)->name('tenant.attendance.devices.enroll');
+Route::post('admin/{tenant:slug}/attendance/devices/{device}/revoke', [DeviceController::class, 'revoke'])->where('tenant', $notReserved)->whereUuid('device')->name('tenant.attendance.devices.revoke');

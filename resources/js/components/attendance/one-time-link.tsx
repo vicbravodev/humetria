@@ -1,19 +1,30 @@
 import { Check, Copy } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useClipboard } from '@/hooks/use-clipboard';
 
-/** The link of a screen just issued, shown this once: it opens once, on the tablet that will show the code. */
-export default function KioskLinkPanel({ link }: { link: string }) {
+/** A link just issued, shown this once to copy (a QR screen's, or a person's to link their phone), with what to know. */
+export default function OneTimeLink({
+    id,
+    label,
+    link,
+    children,
+}: {
+    id: string;
+    label: string;
+    link: string;
+    children: ReactNode;
+}) {
     const [copied, copy] = useClipboard();
 
     return (
         <div className="grid gap-2 rounded-lg border bg-accent/40 p-4">
-            <Label htmlFor="kiosk-link">Enlace de la pantalla</Label>
+            <Label htmlFor={id}>{label}</Label>
             <div className="flex gap-2">
                 <Input
-                    id="kiosk-link"
+                    id={id}
                     readOnly
                     value={link}
                     onFocus={(event) => event.currentTarget.select()}
@@ -32,9 +43,7 @@ export default function KioskLinkPanel({ link }: { link: string }) {
                 </Button>
             </div>
             <p className="text-sm text-pretty text-muted-foreground">
-                Ábrelo en la tableta que mostrará el código: funciona una sola
-                vez y no se vuelve a mostrar. Si un chat o un correo lo abre
-                antes (al mostrar su vista previa), vuelve a emitirlo.
+                {children}
             </p>
         </div>
     );

@@ -1,7 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { MonitorSmartphone, Plus } from 'lucide-react';
-import KioskLinkPanel from '@/components/attendance/kiosk-link-panel';
 import KioskRow from '@/components/attendance/kiosk-row';
+import OneTimeLink from '@/components/attendance/one-time-link';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
@@ -60,7 +60,17 @@ export default function CenterScreens({
                 </div>
                 {kiosks.total > 0 && issue}
             </div>
-            {newLink !== undefined && <KioskLinkPanel link={newLink} />}
+            {newLink !== undefined && (
+                <OneTimeLink
+                    id="kiosk-link"
+                    label="Enlace de la pantalla"
+                    link={newLink}
+                >
+                    Ábrelo en la tableta que mostrará el código: funciona una
+                    sola vez y no se vuelve a mostrar. Si un chat o un correo lo
+                    abre antes (al mostrar su vista previa), vuelve a emitirlo.
+                </OneTimeLink>
+            )}
             {kiosks.total === 0 ? (
                 <EmptyState
                     icon={MonitorSmartphone}

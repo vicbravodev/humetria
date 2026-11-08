@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use Carbon\CarbonImmutable;
 use Database\Factories\Attendance\AttendanceDeviceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\Model;
 final class AttendanceDevice extends Model
 {
     /** @use HasFactory<AttendanceDeviceFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     /**
      * @return array<string, string>

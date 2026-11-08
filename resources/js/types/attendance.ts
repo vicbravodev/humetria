@@ -98,3 +98,36 @@ export type KioskScreen = {
     lastSeenAt: string | null;
     revokedAt: string | null;
 };
+
+/** The tabs of the devices page: everyone, with an active device, never linked, and with only revoked ones. */
+export type DeviceView = 'all' | 'linked' | 'unlinked' | 'revoked';
+
+/** A person's linked device: its name, when, and whether its key is synced. Never its credential or its key. */
+export type LinkedDevice = {
+    id: string;
+    label: string;
+    synced: boolean;
+    /** Local times («Y-m-d H:i»). */
+    enrolledAt: string;
+    lastUsedAt: string | null;
+    revokedAt: string | null;
+};
+
+/** A person on the devices page: whether they have an email (their link goes there), where they stand, their devices. */
+export type DevicePerson = {
+    id: string;
+    name: string;
+    jobTitle: string;
+    center: string;
+    hasEmail: boolean;
+    status: Exclude<DeviceView, 'all'>;
+    devices: LinkedDevice[];
+};
+
+export type AttendanceDevicesProps = {
+    center: { id: string; name: string } | null;
+    filters: { q: string; status: DeviceView };
+    counts: Record<DeviceView, number>;
+    people: Paginated<DevicePerson>;
+    canManage: boolean;
+};

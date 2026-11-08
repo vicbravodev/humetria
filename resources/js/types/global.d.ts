@@ -44,6 +44,8 @@ declare module '@inertiajs/core' {
             portalLink?: string;
             /** The link of a QR screen just issued, shown once: only its hash is kept, and it opens once. */
             kioskLink?: string;
+            /** A person's link to link their phone, shown once to RH only when the person has no email; it works once, 48 h. */
+            enrollmentLink?: { name: string; url: string };
         };
     }
 }
