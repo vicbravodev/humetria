@@ -41,6 +41,26 @@ final class WorkedDay
     }
 
     /**
+     * The minutes of the day's breaks: from each break's start to the next mark (its end, or the day's end when the person
+     * closed the day during it). What minutes() leaves out between marks.
+     *
+     * @param  list<AttendanceMark>  $marks  the day's marks, in order of time
+     */
+    public static function breakMinutes(array $marks): int
+    {
+        $seconds = 0;
+        $since = null;
+
+        foreach ($marks as $mark) {
+            $at = $mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time.");
+            $seconds += $since === null ? 0 : $at->getTimestamp() - $since->getTimestamp();
+            $since = $mark->type === MarkType::BreakStart ? $at : null;
+        }
+
+        return intdiv($seconds, 60);
+    }
+
+    /**
      * @param  list<AttendanceMark>  $marks
      */
     private static function minutes(array $marks): int

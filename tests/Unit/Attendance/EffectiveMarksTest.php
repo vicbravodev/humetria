@@ -292,3 +292,27 @@ describe('reading many people at once', function (): void {
         expect(count(DB::getQueryLog()))->toBe(2);
     })->with([1, 5, 30]);
 });
+
+describe('reading a period of any length', function (): void {
+    it('gives the days from one local date to another, both included, in the same two queries', function (): void {
+        anaMarks($this, MarkType::Start, '2026-10-31 22:00');
+        $saturdayEnd = anaMarks($this, MarkType::End, '2026-11-01 06:00');
+        $first = anaMarks($this, MarkType::Start, '2026-11-01 22:00');
+        $firstEnd = anaMarks($this, MarkType::End, '2026-11-02 06:00');
+        $last = anaMarks($this, MarkType::Start, '2026-11-20 09:00');
+        anaMarks($this, MarkType::Start, '2026-11-21 09:00');
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $days = EffectiveMarks::byDayBetween([$this->ana->id], CarbonImmutable::parse('2026-11-01'), CarbonImmutable::parse('2026-11-20'));
+
+        expect(count(DB::getQueryLog()))->toBe(2)
+            ->and(array_map(markIds(...), $days[$this->ana->id]))->toBe([
+                // Saturday's night ends on Sunday 1 but is Saturday's: left out with its day.
+                '2026-11-01' => [$first->id, $firstEnd->id],
+                '2026-11-20' => [$last->id],
+            ])
+            ->and($saturdayEnd->id)->not->toBeIn(array_merge([], ...array_values($days[$this->ana->id])))
+            ->and(EffectiveMarks::byDayBetween([], CarbonImmutable::parse('2026-11-01'), CarbonImmutable::parse('2026-11-20')))->toBe([]);
+    });
+});

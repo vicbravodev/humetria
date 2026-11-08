@@ -65,11 +65,26 @@ final class EffectiveMarks
      */
     public static function byDayOf(array $employeeIds, WeekPeriod $week): array
     {
+        return self::byDayBetween($employeeIds, $week->start(), $week->end());
+    }
+
+    /**
+     * The same for any run of local dates, `$first` to `$last` both included (their dates only): a report's period, read
+     * as byDayOf() reads a week, in two queries whatever its length or the number of people.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, array<string, list<AttendanceMark>>> by employee id, every one asked for
+     */
+    public static function byDayBetween(array $employeeIds, CarbonImmutable $first, CarbonImmutable $last): array
+    {
         if ($employeeIds === []) {
             return [];
         }
 
-        $windows = self::windows($employeeIds, $week);
+        $timezone = config()->string('app.display_timezone');
+        $start = CarbonImmutable::parse($first->toDateString(), $timezone);
+        $next = CarbonImmutable::parse($last->toDateString(), $timezone)->addDay();
+        $windows = self::windows($employeeIds, $start, $next);
         $marks = AttendanceMark::query()
             ->select('attendance_marks.*')
             ->joinSub(
@@ -93,26 +108,26 @@ final class EffectiveMarks
 
         $days = [];
         foreach ($employeeIds as $employeeId) {
-            $days[$employeeId] = self::group(array_values($marks->get($employeeId)?->all() ?? []), $week);
+            $days[$employeeId] = self::group(array_values($marks->get($employeeId)?->all() ?? []), $start->toDateString(), $last->toDateString(), $timezone);
         }
 
         return $days;
     }
 
     /**
-     * Each person's window in UTC, by employee id: from their last effective start before the week (or the week's start) to
-     * their first effective start after it (or 'infinity'). A start a correction replaced or voided does not count; the
+     * Each person's window in UTC, by employee id: from their last effective start before the period (or the period's start)
+     * to their first effective start after it (or 'infinity'). A start a correction replaced or voided does not count; the
      * correction does, as any start. Only this module's table is read: a person of another company has no start here and
      * gets the week's start to 'infinity', and the marks' own company bound gives them none.
      *
      * @param  list<string>  $employeeIds
      * @return array<string, array{string, string}>
      */
-    private static function windows(array $employeeIds, WeekPeriod $week): array
+    private static function windows(array $employeeIds, CarbonImmutable $periodStart, CarbonImmutable $nextStart): array
     {
         $tenant = resolve(CurrentTenant::class)->id();
-        $start = self::utc($week->startUtc());
-        $next = self::utc($week->nextStartUtc());
+        $start = self::utc($periodStart);
+        $next = self::utc($nextStart);
         $rows = DB::select(
             'select people.id,
                 (select starts.marked_at from "attendance_marks" as starts where starts.tenant_id = ? and starts.employee_id = people.id
@@ -161,20 +176,22 @@ final class EffectiveMarks
 
     /**
      * @param  list<AttendanceMark>  $marks  one person's, in order of time
+     * @param  string  $first  the period's first local date, Y-m-d
+     * @param  string  $last  its last, Y-m-d
      * @return array<string, list<AttendanceMark>>
      */
-    private static function group(array $marks, WeekPeriod $week): array
+    private static function group(array $marks, string $first, string $last, string $timezone): array
     {
         $days = [];
         $openDay = null;
         foreach ($marks as $mark) {
             // of() leaves the voids out; one here is a query that forgot it.
             $at = $mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time.");
-            $day = $mark->type === MarkType::Start || $openDay === null ? $week->localDate($at) : $openDay;
+            $day = $mark->type === MarkType::Start || $openDay === null ? $at->setTimezone($timezone)->toDateString() : $openDay;
             $openDay = $mark->type === MarkType::End ? null : $day;
 
-            if ($day->between($week->start(), $week->end())) {
-                $days[$day->toDateString()][] = $mark;
+            if ($day >= $first && $day <= $last) {
+                $days[$day][] = $mark;
             }
         }
 
