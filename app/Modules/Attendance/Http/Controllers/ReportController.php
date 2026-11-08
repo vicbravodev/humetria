@@ -7,8 +7,12 @@ namespace App\Modules\Attendance\Http\Controllers;
 use App\Modules\Attendance\Actions\BuildAuthorityReport;
 use App\Modules\Attendance\Http\Requests\ReportRequest;
 use App\Modules\Attendance\Support\AuthorityCsv;
+use App\Modules\Attendance\Support\PanelScope;
+use App\Modules\Attendance\Support\ReportPages;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -19,10 +23,23 @@ final readonly class ReportController
 {
     public function __construct(private WorkCenters $workCenters) {}
 
+    public function show(ReportRequest $request, ReportPages $pages): Response
+    {
+        [$from, $to] = $request->hasPeriod() ? [$request->from(), $request->to()] : ReportPages::lastWeek();
+
+        return Inertia::render('attendance/report', $pages->show(
+            $request->tenantSlug(),
+            PanelScope::center($this->workCenters, $request->centerId()),
+            $from,
+            $to,
+            $request->string('q')->trim()->limit(100, '')->toString(),
+        ));
+    }
+
     /** The CSV, streamed row by row: never held whole in memory, never cached. */
     public function export(ReportRequest $request, BuildAuthorityReport $report): StreamedResponse
     {
-        $center = $this->workCenters->findActive($request->centerId()) ?? abort(404);
+        $center = PanelScope::center($this->workCenters, $request->centerId()) ?? abort(404);
         $from = $request->from();
         $to = $request->to();
         $slug = Str::slug($center->name) ?: 'centro';

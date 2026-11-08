@@ -20,6 +20,7 @@ import { dashboard as tenantDashboard } from '@/routes/tenant';
 import { index as attendanceIndex } from '@/routes/tenant/attendance';
 import { index as attendanceCorrections } from '@/routes/tenant/attendance/corrections';
 import { index as attendanceDevices } from '@/routes/tenant/attendance/devices';
+import { report as attendanceReport } from '@/routes/tenant/attendance';
 import { show as attendancePolicy } from '@/routes/tenant/attendance/policy';
 import { index as attendanceSchedules } from '@/routes/tenant/attendance/schedules';
 import { index as campaigns } from '@/routes/tenant/campaigns';
@@ -133,7 +134,7 @@ const seating = (tenant: NavTenant): NavItem => ({
 
 /**
  * The registro de jornada's entry: the week's overview (its centers hang from it), the people's correction requests, their
- * devices and schedules, and the company's policy.
+ * devices and schedules, the company's policy and, for whoever may manage it, the report for the authority.
  */
 const attendance = (tenant: NavTenant): NavItem => ({
     title: 'Asistencia',
@@ -145,6 +146,14 @@ const attendance = (tenant: NavTenant): NavItem => ({
         { title: 'Dispositivos', href: attendanceDevices(tenant.slug) },
         { title: 'Horarios', href: attendanceSchedules(tenant.slug) },
         { title: 'Política', href: attendancePolicy(tenant.slug) },
+        ...(tenant.can.manage_attendance
+            ? [
+                  {
+                      title: 'Reporte para la autoridad',
+                      href: attendanceReport(tenant.slug),
+                  },
+              ]
+            : []),
     ],
 });
 

@@ -79,6 +79,31 @@ describe('the registro de jornada in the sidebar', () => {
         ).toBe('Política');
     });
 
+    it('offers the report for the authority, lit on its page, only to whoever may manage the registro', () => {
+        const owner = acme(true, true, 'owner');
+        const children =
+            complianceNavItems(owner).find(
+                (item) => item.title === 'Asistencia',
+            )?.children ?? [];
+        const viewer = acme(false, false, 'viewer');
+
+        expect(children.at(-1)?.title).toBe('Reporte para la autoridad');
+        expect(toUrl(children.at(-1)?.href ?? '')).toBe(
+            '/admin/acme/attendance/report',
+        );
+        expect(
+            activeChild(children, '/admin/acme/attendance/report')?.title,
+        ).toBe('Reporte para la autoridad');
+        expect(
+            (
+                complianceNavItems({
+                    ...viewer,
+                    can: { ...viewer.can, view_attendance: true },
+                }).find((item) => item.title === 'Asistencia')?.children ?? []
+            ).map((item) => item.title),
+        ).not.toContain('Reporte para la autoridad');
+    });
+
     it('leaves it out for a role that cannot view it', () => {
         expect(
             complianceNavItems(acme(false, false, 'committee')).map(

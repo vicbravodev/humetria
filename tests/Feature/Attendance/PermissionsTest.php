@@ -32,3 +32,15 @@ it('tells the sidebar who may open the registro', function (TenantRole $role, bo
     'viewer' => [TenantRole::Viewer, true],
     'committee' => [TenantRole::Committee, false],
 ]);
+
+it('tells the sidebar who may open the report for the authority', function (TenantRole $role, bool $manage): void {
+    $tenant = Tenant::factory()->create();
+
+    $this->actingAs(memberOf($tenant, $role))->get(route('tenant.telework.index', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.can.manage_attendance', $manage));
+})->with([
+    'owner' => [TenantRole::Owner, true],
+    'hr' => [TenantRole::Hr, true],
+    'viewer' => [TenantRole::Viewer, false],
+    'committee' => [TenantRole::Committee, false],
+]);

@@ -92,6 +92,7 @@ final class ResolveTenant
                 'manage_complaint_channel' => $user->can('manage-complaint-channel'),
                 'handle_complaints' => $user->can('handle-complaints'),
                 'view_attendance' => $user->can('view-attendance'),
+                'manage_attendance' => $user->can('manage-attendance'),
             ],
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.

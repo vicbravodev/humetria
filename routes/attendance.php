@@ -53,4 +53,5 @@ Route::get('admin/{tenant:slug}/attendance/schedules', [ScheduleController::clas
 Route::put('admin/{tenant:slug}/attendance/schedules/{employee}', [ScheduleController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.attendance.schedules.update');
 
 // The report for the authority (LFT art. 132-XXXIV): one center and a period, as a CSV for the inspector. Owner and hr only.
+Route::get('admin/{tenant:slug}/attendance/report', [ReportController::class, 'show'])->where('tenant', $notReserved)->name('tenant.attendance.report');
 Route::get('admin/{tenant:slug}/attendance/report/export', [ReportController::class, 'export'])->where('tenant', $notReserved)->name('tenant.attendance.report.export');

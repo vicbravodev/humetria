@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Http\Requests;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Validator;
 use LogicException;
 
@@ -27,11 +28,20 @@ final class ReportRequest extends FormRequest
      */
     public function rules(): array
     {
+        // The page opens with no center and the last week that ended; the download needs all three.
+        $export = $this->exporting();
+
         return [
-            'center' => ['required', 'uuid'],
-            'from' => ['required', 'date_format:Y-m-d'],
-            'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'center' => [$export ? 'required' : 'nullable', 'string'],
+            'from' => [$export ? 'required' : 'required_with:to', 'date_format:Y-m-d'],
+            'to' => [$export ? 'required' : 'required_with:from', 'date_format:Y-m-d', 'after_or_equal:from'],
         ];
+    }
+
+    /** Whether the period was asked for: without it the page shows the last week that ended. */
+    public function hasPeriod(): bool
+    {
+        return $this->filled('from');
     }
 
     /**
@@ -40,7 +50,7 @@ final class ReportRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
-            if ($validator->errors()->isEmpty() && $this->from()->addDays(self::MAX_DAYS)->lessThanOrEqualTo($this->to())) {
+            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->from()->addDays(self::MAX_DAYS)->lessThanOrEqualTo($this->to())) {
                 $validator->errors()->add('to', 'El periodo puede ser de hasta '.self::MAX_DAYS.' días.');
             }
         }];
@@ -53,7 +63,6 @@ final class ReportRequest extends FormRequest
     {
         return [
             'center.required' => 'Elige un centro de trabajo.',
-            'center.uuid' => 'Elige un centro de trabajo.',
             'from.date_format' => 'Escribe una fecha inicial válida.',
             'to.date_format' => 'Escribe una fecha final válida.',
             'to.after_or_equal' => 'La fecha final no puede ser anterior a la inicial.',
@@ -68,6 +77,32 @@ final class ReportRequest extends FormRequest
     public function attributes(): array
     {
         return ['to' => 'fecha final'];
+    }
+
+    /**
+     * A wrong period on the page goes back to the center's report (the last week that ended), never to the same address; a
+     * wrong download goes back to the page it came from. Either shows the reason under the fields.
+     */
+    protected function getRedirectUrl(): string
+    {
+        if ($this->exporting()) {
+            return parent::getRedirectUrl();
+        }
+
+        $center = $this->string('center')->toString();
+
+        return route('tenant.attendance.report', [$this->tenantSlug(), ...(Str::isUuid($center) ? ['center' => $center] : [])]);
+    }
+
+    private function exporting(): bool
+    {
+        return $this->routeIs('tenant.attendance.report.export');
+    }
+
+    /** The company's address: /admin/{slug}/attendance/report. */
+    public function tenantSlug(): string
+    {
+        return $this->segment(2) ?? '';
     }
 
     public function centerId(): string

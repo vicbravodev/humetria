@@ -181,3 +181,51 @@ export type AttendanceSchedulesProps = {
     people: Paginated<SchedulePerson>;
     canManage: boolean;
 };
+
+/** One day of a person in the report for the authority: local dates and times, minutes as criterio 2.9 splits them. */
+export type ReportDay = {
+    date: string;
+    start: string | null;
+    end: string | null;
+    endDate: string | null;
+    breakMinutes: number;
+    workedMinutes: number;
+    ordinaryMinutes: number;
+    doubleMinutes: number;
+    tripleMinutes: number;
+    restDayMinutes: number;
+    /** Fuerte, Media, Básica or Corregida: the weakest of the day's marks. */
+    evidence: string;
+    corrections: string[];
+    confirmation: 'confirmado' | 'objetada' | 'sin confirmar';
+    flags: string[];
+};
+
+/** A person with days in the report's period, each of them. */
+export type ReportPerson = {
+    id: string;
+    name: string;
+    jobTitle: string;
+    days: ReportDay[];
+};
+
+/** The report's figures over every person-day of the period. */
+export type ReportSummary = {
+    people: number;
+    days: number;
+    workedMinutes: number;
+    confirmedPercent: number;
+    withCorrections: number;
+    unconfirmed: number;
+};
+
+export type AttendanceReportProps = {
+    center: { id: string; name: string } | null;
+    period: { from: string; to: string };
+    filters: { q: string };
+    summary: ReportSummary | null;
+    people: Paginated<ReportPerson> | null;
+    /** When the report was put together, as «Y-m-d H:i» in UTC and in the display time zone. */
+    generatedAt: { utc: string; local: string } | null;
+    exportUrl: string | null;
+};
