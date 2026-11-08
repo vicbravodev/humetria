@@ -149,3 +149,30 @@ it('cannot be sent by a viewer, and answers 404 for a center archived, of anothe
     enrollAll('')->assertSessionHasErrors(['work_center_id' => 'El campo centro de trabajo es obligatorio.']);
     Queue::assertNothingPushed();
 });
+
+it('queues one link per person even when RH sends the batch twice before the worker runs, and the worker sends one email each', function (): void {
+    Queue::fake();
+    $this->actingAs($this->hr);
+
+    enrollAll($this->plant->id);
+    enrollAll($this->plant->id);
+
+    Queue::assertPushed(SendEnrollmentLink::class, 2);
+    expect((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->uniqueId())->toBe("{$this->tenant->id}:{$this->ana->id}")
+        ->and(new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing::class);
+});
+
+it('sends nothing to a person who linked a device between the batch and the worker', function (): void {
+    AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->handle(...));
+
+    Notification::assertNothingSent();
+    expect(EnrollmentLink::query()->count())->toBe(0);
+});
+
+it('still sends to a person whose only device was revoked by the time it runs', function (): void {
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->carla->id, (string) $this->hr->id))->handle(...));
+
+    Notification::assertSentOnDemandTimes(EnrollmentInvitation::class, 1);
+});
