@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\ActivateKioskDevice;
 use App\Modules\Attendance\Actions\IssueKioskDevice;
+use App\Modules\Attendance\Actions\ReissueKioskDevice;
 use App\Modules\Attendance\Actions\RevokeKioskDevice;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
 use App\Modules\Attendance\Http\Requests\KioskRequest;
@@ -47,6 +48,21 @@ final class KioskController
         }
 
         Inertia::flash('kioskLink', route('attendance.device.kiosk.activate', [$tenant, $token]));
+
+        return back();
+    }
+
+    /** A new link for a screen never seen, shown once: the one before dies (a link preview may have opened it). */
+    public function reissue(mixed $tenant, string $kiosk, ReissueKioskDevice $reissue): RedirectResponse
+    {
+        Gate::authorize('manage-attendance');
+        $token = $reissue->handle($kiosk);
+
+        if ($token === null) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Esa pantalla ya muestra el código o está revocada. Para cambiarla, revócala y emite otra.']);
+        } else {
+            Inertia::flash('kioskLink', route('attendance.device.kiosk.activate', [$tenant, $token]));
+        }
 
         return back();
     }

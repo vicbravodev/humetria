@@ -119,8 +119,36 @@ final readonly class AttendancePages
                     'radius' => $zone->radius_m,
                     ...($manage ? ['latitude' => $zone->latitude, 'longitude' => $zone->longitude] : []),
                 ]),
+            'kiosks' => $this->kiosks($center->id),
             'canManage' => $manage,
         ];
+    }
+
+    /**
+     * A center's QR screens, the ones not revoked first, newest first: «issued» until one shows the code (a screen opened but
+     * never seen may have been opened by a link preview), «active» once seen, «revoked». Local times; never a token.
+     *
+     * @return LengthAwarePaginator<int, array{id: string, state: string, issuedAt: string, lastSeenAt: string|null, revokedAt: string|null}>
+     */
+    private function kiosks(string $centerId): LengthAwarePaginator
+    {
+        $zone = config()->string('app.display_timezone');
+        $local = fn (?CarbonImmutable $at): ?string => $at?->setTimezone($zone)->format('Y-m-d H:i');
+
+        return KioskDevice::query()->where('work_center_id', $centerId)
+            ->orderByRaw('revoked_at is not null')->orderByDesc('created_at')->orderBy('id')
+            ->paginate(self::PER_PAGE, ['id', 'created_at', 'last_seen_at', 'revoked_at'], 'kiosks')->withQueryString()
+            ->through(fn (KioskDevice $kiosk): array => [
+                'id' => $kiosk->id,
+                'state' => match (true) {
+                    $kiosk->revoked_at !== null => 'revoked',
+                    $kiosk->last_seen_at !== null => 'active',
+                    default => 'issued',
+                },
+                'issuedAt' => $kiosk->created_at->setTimezone($zone)->format('Y-m-d H:i'),
+                'lastSeenAt' => $local($kiosk->last_seen_at),
+                'revokedAt' => $local($kiosk->revoked_at),
+            ]);
     }
 
     /**

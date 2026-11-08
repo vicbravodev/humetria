@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\ActivateKioskDevice;
 use App\Modules\Attendance\Actions\IssueKioskDevice;
+use App\Modules\Attendance\Actions\ReissueKioskDevice;
 use App\Modules\Attendance\Actions\RevokeKioskDevice;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -13,7 +15,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-mutates(IssueKioskDevice::class, ActivateKioskDevice::class, RevokeKioskDevice::class, KioskDevice::class);
+mutates(IssueKioskDevice::class, ActivateKioskDevice::class, RevokeKioskDevice::class, ReissueKioskDevice::class, KioskDevice::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -122,4 +124,54 @@ it('does not revoke a screen of another company', function (): void {
 
     expect(fn () => resolve(RevokeKioskDevice::class)->handle($other->id))->toThrow(ModelNotFoundException::class)
         ->and($other->fresh()?->revoked_at)->toBeNull();
+});
+
+it('writes issuing and revoking a screen to the audit trail with ids only, never its token', function (): void {
+    $token = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    $kiosk = KioskDevice::query()->sole();
+    resolve(RevokeKioskDevice::class)->handle($kiosk->id);
+    resolve(RevokeKioskDevice::class)->handle($kiosk->id);
+
+    $entries = AuditEntry::query()->whereIn('event', ['attendance.kiosk_issued', 'attendance.kiosk_revoked'])->orderBy('created_at')->orderBy('event')->get();
+    expect($entries->pluck('event')->all())->toBe(['attendance.kiosk_issued', 'attendance.kiosk_revoked'])
+        ->and($entries->pluck('subject_id')->unique()->all())->toBe([$kiosk->id])
+        ->and($entries->pluck('metadata')->all())->toBe([['work_center_id' => $this->center->id], ['work_center_id' => $this->center->id]])
+        ->and($entries->toJson())->not->toContain($token)->not->toContain($kiosk->token_hash);
+});
+
+describe('issuing a screen\'s link again', function (): void {
+    it('gives a new link, killing the one before, and the cookie of whoever opened it', function (): void {
+        $first = resolve(IssueKioskDevice::class)->handle($this->center->id);
+        $kiosk = KioskDevice::query()->sole();
+        // A chat's link preview opened it before the tablet did.
+        $bot = (string) resolve(ActivateKioskDevice::class)->handle($first);
+        Log::spy();
+
+        $again = resolve(ReissueKioskDevice::class)->handle($kiosk->id);
+        Log::shouldHaveReceived('info')->once()->with('attendance.kiosk_reissued', ['kiosk_id' => $kiosk->id]);
+
+        expect($again)->toBeString()->not->toBe($first)
+            ->and($kiosk->fresh())->activated_at->toBeNull()->token_hash->toBe(hash('sha256', (string) $again))
+            ->and(KioskDevice::findActive($bot))->toBeNull()
+            ->and(resolve(ActivateKioskDevice::class)->handle($first))->toBeNull()
+            ->and(resolve(ActivateKioskDevice::class)->handle((string) $again))->toBeString()
+            ->and(KioskDevice::query()->count())->toBe(1);
+        expect(AuditEntry::query()->where('event', 'attendance.kiosk_reissued')->sole())->subject_id->toBe($kiosk->id)->metadata->toBe(['work_center_id' => $this->center->id]);
+    });
+
+    it('refuses a screen already showing the code, or revoked', function (): void {
+        $seen = KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+        $revoked = KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'revoked_at' => now()]);
+
+        expect(resolve(ReissueKioskDevice::class)->handle($seen->id))->toBeNull()
+            ->and(resolve(ReissueKioskDevice::class)->handle($revoked->id))->toBeNull()
+            ->and($seen->fresh()?->token_hash)->toBe($seen->token_hash)
+            ->and(AuditEntry::query()->where('event', 'attendance.kiosk_reissued')->count())->toBe(0);
+    });
+
+    it('does not touch a screen of another company', function (): void {
+        $other = KioskDevice::factory()->create(['tenant_id' => Tenant::factory()->create()->id]);
+
+        expect(fn () => resolve(ReissueKioskDevice::class)->handle($other->id))->toThrow(ModelNotFoundException::class);
+    });
 });

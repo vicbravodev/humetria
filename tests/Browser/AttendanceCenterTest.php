@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -134,3 +135,42 @@ it('reads where RH stands on a center opened from the overview, whose own docume
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('lets RH issue a screen, showing its link once to copy, and revoke it', function (bool $dark): void {
+    [$url, $plant] = centerPanel();
+
+    $page = visitPage('attendance/center', $url, $dark)
+        ->assertSee('Sin pantallas del QR')
+        ->click('Emitir pantalla')
+        ->waitForText('Enlace de la pantalla')
+        ->assertSee('funciona una sola vez')
+        ->assertSee('Emitida, sin activar')
+        ->assertSee('Aún no muestra el código')
+        ->assertNoAccessibilityIssues(1);
+    expect(KioskDevice::query()->sole()->work_center_id)->toBe($plant->id);
+
+    $page->navigate($url)
+        ->assertDontSee('Enlace de la pantalla')
+        ->click('Volver a emitir')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Enlace de la pantalla')
+        ->navigate($url)
+        ->click('Revocar')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Pantalla revocada')
+        ->assertSee('Revocada el')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+    expect(KioskDevice::query()->sole()->revoked_at)->not->toBeNull();
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('shows the screens of a center in use, with when each was last seen', function (bool $mobile): void {
+    [$url, $plant] = centerPanel();
+    KioskDevice::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+
+    visitPage('attendance/center', $url, mobile: $mobile)
+        ->assertSee('Activa')
+        ->assertSee('Vista el')
+        ->assertSee('Revocar')
+        ->assertDontSee('Volver a emitir');
+})->with(['desktop' => [false], 'phone' => [true]]);

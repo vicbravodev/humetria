@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Briefcase, MapPin, Users } from 'lucide-react';
+import CenterScreens from '@/components/attendance/center-screens';
 import CenterZones from '@/components/attendance/center-zones';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -7,11 +8,12 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/attendance';
 import type { AttendanceCenterProps } from '@/types';
 
-/** A center of the registro (pantalla Eval-Activa: header with its facts, then its parts): its zones. */
+/** A center of the registro (pantalla Eval-Activa: header with its facts, then its parts): its zones and its QR screens. */
 export default function AttendanceCenter({
     center,
     people,
     zones,
+    kiosks,
     canManage,
 }: AttendanceCenterProps) {
     const tenantSlug = useTenantSlug();
@@ -56,6 +58,11 @@ export default function AttendanceCenter({
                 />
                 <CenterZones
                     zones={zones}
+                    centerId={center.id}
+                    canManage={canManage}
+                />
+                <CenterScreens
+                    kiosks={kiosks}
                     centerId={center.id}
                     canManage={canManage}
                 />

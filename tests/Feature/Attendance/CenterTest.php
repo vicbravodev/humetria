@@ -2,20 +2,23 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AuditEntry;
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
+use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use App\Modules\Attendance\Http\Requests\ZoneRequest;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia;
 
-mutates(AttendanceController::class, ZoneController::class, ZoneRequest::class);
+mutates(AttendanceController::class, ZoneController::class, ZoneRequest::class, KioskController::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
@@ -39,7 +42,7 @@ function zoneOf(WorkCenter $center, array $attributes = []): AttendanceZone
 /** The headers of a visit the app makes inside a page already loaded, on the current assets. */
 function inertiaVisit(): array
 {
-    return ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion()];
+    return ['X-Inertia' => 'true', 'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request())];
 }
 
 /** A zone as the form sends it. */
@@ -216,5 +219,91 @@ describe('a zone', function (): void {
 
         expect(AttendanceZone::query()->where('name', 'Patio de carga')->count())->toBe(0)
             ->and($officeZone->fresh()?->work_center_id)->toBe($office->id);
+    });
+});
+
+describe('the screens of the QR', function (): void {
+    beforeEach(function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-11 18:00:00', 'UTC'));
+    });
+
+    function screenOf(WorkCenter $center, array $attributes = []): KioskDevice
+    {
+        return KioskDevice::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, ...$attributes]);
+    }
+
+    it('lists the center\'s screens, the ones in use first, with their state and when they were last seen, never their token', function (): void {
+        $revoked = screenOf($this->plant, ['activated_at' => now()->subDays(9), 'revoked_at' => now()->subDays(2), 'created_at' => now()->subDays(10)]);
+        $active = screenOf($this->plant, ['activated_at' => now()->subDays(5), 'last_seen_at' => now()->subMinutes(3), 'created_at' => now()->subDays(5)]);
+        $issued = screenOf($this->plant, ['created_at' => now()->subHour()]);
+        screenOf(WorkCenter::factory()->for($this->tenant)->create());
+        $this->actingAs($this->hr);
+
+        $response = $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('kiosks.total', 3)
+            ->where('kiosks.per_page', 25)
+            ->where('kiosks.data', [
+                ['id' => $issued->id, 'state' => 'issued', 'issuedAt' => '2026-11-11 11:00', 'lastSeenAt' => null, 'revokedAt' => null],
+                ['id' => $active->id, 'state' => 'active', 'issuedAt' => '2026-11-06 12:00', 'lastSeenAt' => '2026-11-11 11:57', 'revokedAt' => null],
+                ['id' => $revoked->id, 'state' => 'revoked', 'issuedAt' => '2026-11-01 12:00', 'lastSeenAt' => null, 'revokedAt' => '2026-11-09 12:00'],
+            ]));
+
+        expect($response->getContent())->not->toContain($active->token_hash)->not->toContain('token');
+    });
+
+    it('counts a screen opened but never seen as issued: a link preview may have opened it', function (): void {
+        $opened = screenOf($this->plant, ['activated_at' => now()]);
+        $this->actingAs($this->hr);
+
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('kiosks.data.0', ['id' => $opened->id, 'state' => 'issued', 'issuedAt' => '2026-11-11 12:00', 'lastSeenAt' => null, 'revokedAt' => null]));
+    });
+
+    it('shows RH the link of a screen just issued once, gone on the next visit', function (): void {
+        $this->actingAs($this->hr);
+        $within = [...inertiaVisit(), 'Referer' => attendanceCenterUrl($this->plant)];
+
+        $this->from(attendanceCenterUrl($this->plant))->post(route('tenant.attendance.kiosks.store', 'acme'), ['work_center_id' => $this->plant->id])->assertRedirect(attendanceCenterUrl($this->plant));
+        $link = $this->get(attendanceCenterUrl($this->plant), $within)->assertOk()->json('flash.kioskLink');
+
+        expect($link)->toStartWith(url('a/acme/kiosk/'));
+        $this->get(attendanceCenterUrl($this->plant), $within)->assertOk()->assertJsonMissingPath('flash.kioskLink');
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->missingFlash('kioskLink'));
+    });
+
+    it('lets RH issue the link of a screen never seen again, showing the new one once', function (): void {
+        $issued = screenOf($this->plant);
+        $this->actingAs($this->hr);
+
+        $this->from(attendanceCenterUrl($this->plant))->post(route('tenant.attendance.kiosks.reissue', ['acme', $issued->id]))
+            ->assertRedirect(attendanceCenterUrl($this->plant))
+            ->assertSessionHas('inertia.flash_data.kioskLink');
+
+        expect($issued->fresh()?->token_hash)->not->toBe($issued->token_hash)
+            ->and(session('inertia.flash_data.kioskLink'))->toBe(route('attendance.device.kiosk.activate', ['acme', str(session('inertia.flash_data.kioskLink'))->afterLast('/')->toString()]));
+    });
+
+    it('tells RH to revoke a screen in use instead of issuing its link again', function (): void {
+        $active = screenOf($this->plant, ['activated_at' => now(), 'last_seen_at' => now()]);
+        $this->actingAs($this->hr);
+
+        $this->from(attendanceCenterUrl($this->plant))->post(route('tenant.attendance.kiosks.reissue', ['acme', $active->id]))
+            ->assertRedirect(attendanceCenterUrl($this->plant))
+            ->assertSessionMissing('inertia.flash_data.kioskLink')
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esa pantalla ya muestra el código o está revocada. Para cambiarla, revócala y emite otra.']);
+
+        expect($active->fresh()?->token_hash)->toBe($active->token_hash);
+    });
+
+    it('does not let a viewer issue again, and answers 404 for a screen of another company', function (): void {
+        $issued = screenOf($this->plant);
+        $globex = Tenant::factory()->create();
+        $theirs = KioskDevice::factory()->create(['tenant_id' => $globex->id]);
+        workIn($this->tenant);
+
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(route('tenant.attendance.kiosks.reissue', ['acme', $issued->id]))->assertForbidden();
+        $this->actingAs($this->hr)->post(route('tenant.attendance.kiosks.reissue', ['acme', $theirs->id]))->assertNotFound();
+
+        expect($issued->fresh()?->token_hash)->toBe($issued->token_hash)
+            ->and($theirs->fresh()?->token_hash)->toBe($theirs->token_hash);
     });
 });

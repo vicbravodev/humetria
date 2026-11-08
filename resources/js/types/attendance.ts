@@ -86,5 +86,15 @@ export type AttendanceCenterProps = {
     /** Its active people. */
     people: number;
     zones: Paginated<AttendanceZone>;
+    kiosks: Paginated<KioskScreen>;
     canManage: boolean;
+};
+
+/** A QR screen of a center: issued until it shows the code, active once seen, revoked. Local times; never its token. */
+export type KioskScreen = {
+    id: string;
+    state: 'issued' | 'active' | 'revoked';
+    issuedAt: string;
+    lastSeenAt: string | null;
+    revokedAt: string | null;
 };

@@ -42,6 +42,8 @@ declare module '@inertiajs/core' {
             reportLink?: ReportLink;
             /** A person's new portal link, shown once: only its hash is kept and the previous one stops working. */
             portalLink?: string;
+            /** The link of a QR screen just issued, shown once: only its hash is kept, and it opens once. */
+            kioskLink?: string;
         };
     }
 }

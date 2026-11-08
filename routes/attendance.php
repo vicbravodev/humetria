@@ -23,6 +23,7 @@ Route::put('admin/{tenant:slug}/attendance/centers/{workCenter}/zones/{zone}', [
 
 // The QR screens of a center: issued with a link shown once, revoked (the row stays, with when).
 Route::post('admin/{tenant:slug}/attendance/kiosks', [KioskController::class, 'store'])->where('tenant', $notReserved)->name('tenant.attendance.kiosks.store');
+Route::post('admin/{tenant:slug}/attendance/kiosks/{kiosk}/reissue', [KioskController::class, 'reissue'])->where('tenant', $notReserved)->whereUuid('kiosk')->name('tenant.attendance.kiosks.reissue');
 Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('kiosk')->name('tenant.attendance.kiosks.destroy');
 
 // The people's requests to correct their record: owner, hr and viewer read the queue; owner and hr resolve each, once.
