@@ -12,6 +12,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\CorrectionHistory;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -20,7 +21,7 @@ use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-mutates(BuildAuthorityReport::class);
+mutates(BuildAuthorityReport::class, CorrectionHistory::class);
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2027-02-01 18:00:00', 'UTC'));
