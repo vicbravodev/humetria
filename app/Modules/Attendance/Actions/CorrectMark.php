@@ -23,7 +23,7 @@ final readonly class CorrectMark
 {
     public function __construct(private RecordAudit $audit) {}
 
-    public function handle(string $markId, ?CarbonImmutable $newMarkedAt, string $reason, string $userId): AttendanceMark
+    public function handle(string $markId, ?CarbonImmutable $newMarkedAt, string $reason, int $userId): AttendanceMark
     {
         if ($newMarkedAt?->isFuture() === true) {
             throw new InvalidArgumentException('A correction cannot set a mark in the future.');

@@ -37,7 +37,7 @@ function enrollmentToken(string $url): string
 }
 
 it('issues a link of one use for 48 hours, keeping only its hash, and only emails it to the person: RH never gets it', function (): void {
-    $issued = resolve(IssueEnrollment::class)->handle($this->ana->id, (string) $this->rh->id);
+    $issued = resolve(IssueEnrollment::class)->handle($this->ana->id, $this->rh->id);
 
     $sent = null;
     Notification::assertSentOnDemand(EnrollmentInvitation::class, function (EnrollmentInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$sent): bool {
@@ -81,7 +81,7 @@ it('gives the link to RH, to hand it over, only when the person has no email, an
     $pepe = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'email' => null]);
     Log::spy();
 
-    $issued = resolve(IssueEnrollment::class)->handle($pepe->id, (string) $this->rh->id);
+    $issued = resolve(IssueEnrollment::class)->handle($pepe->id, $this->rh->id);
 
     $link = EnrollmentLink::query()->sole();
     expect($issued->linkId)->toBe($link->id)
@@ -115,7 +115,7 @@ it('keeps one pending link per person: a new one revokes the one before', functi
 });
 
 it('lets the database hold only one pending link per person', function (): void {
-    resolve(IssueEnrollment::class)->handle($this->ana->id, (string) $this->rh->id);
+    resolve(IssueEnrollment::class)->handle($this->ana->id, $this->rh->id);
     $link = EnrollmentLink::query()->sole();
 
     expect(fn () => EnrollmentLink::query()->create([...$link->only(['tenant_id', 'employee_id', 'issued_by', 'expires_at']), 'token_hash' => hash('sha256', 'other')]))
@@ -150,8 +150,8 @@ it('does not issue a link for a person who left or of another company', function
     $gone = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id]);
     $foreign = EmployeeFactory::new()->create();
 
-    expect(fn () => resolve(IssueEnrollment::class)->handle($gone->id, (string) $this->rh->id))->toThrow(EmployeeNotAvailable::class)
-        ->and(fn () => resolve(IssueEnrollment::class)->handle($foreign->id, (string) $this->rh->id))->toThrow(EmployeeNotAvailable::class)
+    expect(fn () => resolve(IssueEnrollment::class)->handle($gone->id, $this->rh->id))->toThrow(EmployeeNotAvailable::class)
+        ->and(fn () => resolve(IssueEnrollment::class)->handle($foreign->id, $this->rh->id))->toThrow(EmployeeNotAvailable::class)
         ->and(EnrollmentLink::query()->count())->toBe(0);
     Notification::assertNothingSent();
 });

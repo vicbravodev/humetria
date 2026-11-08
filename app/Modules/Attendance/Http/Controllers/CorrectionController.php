@@ -46,7 +46,7 @@ final readonly class CorrectionController
     private function resolve(ResolveCorrectionRequest $request, string $correction, ResolveCorrection $resolve, bool $approve, string $done): RedirectResponse
     {
         try {
-            $resolve->handle($correction, $approve, (string) ($request->user() ?? abort(401))->id, $request->note());
+            $resolve->handle($correction, $approve, ($request->user() ?? abort(401))->id, $request->note());
             Inertia::flash('toast', ['type' => 'success', 'message' => $done]);
         } catch (CorrectionRejected $refused) {
             Inertia::flash('toast', ['type' => 'error', 'message' => self::REFUSED[$refused->reason] ?? 'No se pudo resolver la solicitud.']);

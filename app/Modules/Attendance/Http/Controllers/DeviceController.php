@@ -46,7 +46,7 @@ final readonly class DeviceController
         $person = $roster->find($request->employeeId());
 
         try {
-            $issued = $issue->handle($request->employeeId(), (string) ($request->user() ?? abort(401))->id);
+            $issued = $issue->handle($request->employeeId(), ($request->user() ?? abort(401))->id);
         } catch (EmployeeNotAvailable) {
             abort(404);
         }
@@ -67,7 +67,7 @@ final readonly class DeviceController
     public function enrollAll(EnrollCenterRequest $request, SendEnrollmentLinks $send): RedirectResponse
     {
         try {
-            $counts = $send->handle($request->workCenterId(), (string) ($request->user() ?? abort(401))->id);
+            $counts = $send->handle($request->workCenterId(), ($request->user() ?? abort(401))->id);
         } catch (WorkCenterNotAvailable) {
             abort(404);
         }

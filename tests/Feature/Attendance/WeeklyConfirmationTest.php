@@ -241,7 +241,7 @@ describe('a correction', function (): void {
         $week = confirmWeek($this);
         Log::spy();
 
-        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
+        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', $this->hr->id);
 
         expect($week->fresh())->status->toBe(WeekStatus::Pending)->confirmed_at->toBeNull()->device_id->toBeNull()->digest->toBeNull();
         expect(AuditEntry::query()->where('event', 'attendance.week_reopened')->sole()->subject_id)->toBe($week->id);
@@ -251,7 +251,7 @@ describe('a correction', function (): void {
     it('leaves a disputed week disputed, for RH to resolve', function (): void {
         disputeWeek($this);
 
-        resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', (string) $this->hr->id);
+        resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
 
         expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Disputed);
     });
@@ -261,7 +261,7 @@ describe('a correction', function (): void {
         $other = confirmWeek($this, '2026-10-26');
         confirmWeek($this);
 
-        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
+        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', $this->hr->id);
 
         expect($other->fresh()?->status)->toBe(WeekStatus::Confirmed);
     });
@@ -271,7 +271,7 @@ describe('a correction', function (): void {
         $end = weekMark($this->ana, MarkType::End, '2026-11-09 06:00');
         $week = confirmWeek($this);
 
-        resolve(CorrectMark::class)->handle($end->id, localDate('2026-11-09 07:00'), 'Se quedó una hora más.', (string) $this->hr->id);
+        resolve(CorrectMark::class)->handle($end->id, localDate('2026-11-09 07:00'), 'Se quedó una hora más.', $this->hr->id);
 
         expect($week->fresh()?->status)->toBe(WeekStatus::Pending);
     });
@@ -280,7 +280,7 @@ describe('a correction', function (): void {
         confirmWeek($this);
         DB::enableQueryLog();
 
-        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
+        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', $this->hr->id);
 
         // A confirmation holds its row locked while it checks the digest: the reopening waits for it and then sees it
         // confirmed. Locking a pending row too makes a confirmation that comes after wait for the correction and see its mark.
@@ -323,7 +323,7 @@ describe('a correction', function (): void {
         workedOn($this, '2026-10-27');
         $week = confirmWeek($this, '2026-10-26');
 
-        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-10-30 09:00'), 'Era del viernes anterior.', (string) $this->hr->id);
+        resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-10-30 09:00'), 'Era del viernes anterior.', $this->hr->id);
 
         expect($week->fresh()?->status)->toBe(WeekStatus::Pending);
     });

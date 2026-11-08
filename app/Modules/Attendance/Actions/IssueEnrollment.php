@@ -32,7 +32,7 @@ final readonly class IssueEnrollment
     public function __construct(private Roster $roster, private Companies $companies, private RecordAudit $audit) {}
 
     /** @throws EmployeeNotAvailable when the person left or is not the company's */
-    public function handle(string $employeeId, string $userId): IssuedEnrollment
+    public function handle(string $employeeId, int $userId): IssuedEnrollment
     {
         $person = $this->roster->find($employeeId);
 

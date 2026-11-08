@@ -63,7 +63,7 @@ function anaRequest(?AttendanceMark $mark, MarkType $type, string $local, string
 
 function resolveAs(CorrectionRequest $request, bool $approve, ?string $note = null, ?User $by = null): CorrectionRequest
 {
-    return resolve(ResolveCorrection::class)->handle($request->id, $approve, (string) ($by ?? test()->hr)->id, $note);
+    return resolve(ResolveCorrection::class)->handle($request->id, $approve, ($by ?? test()->hr)->id, $note);
 }
 
 describe('approving', function (): void {
@@ -231,7 +231,7 @@ describe('once', function (): void {
 
         expect(fn () => resolveAs($request, true, by: User::factory()->create()))->toThrow(InvalidArgumentException::class)
             ->and(fn () => resolveAs($request, true, by: $outsider))->toThrow(InvalidArgumentException::class)
-            ->and(fn () => resolve(ResolveCorrection::class)->handle($request->id, true, 'x', null))->toThrow(InvalidArgumentException::class)
+            ->and(fn () => resolve(ResolveCorrection::class)->handle($request->id, true, 0, null))->toThrow(InvalidArgumentException::class)
             ->and($request->fresh()?->status)->toBe(CorrectionStatus::Pending);
     });
 

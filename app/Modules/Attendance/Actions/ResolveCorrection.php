@@ -37,11 +37,9 @@ final readonly class ResolveCorrection
     /**
      * @throws CorrectionRejected
      */
-    public function handle(string $requestId, bool $approve, string $userId, ?string $note): CorrectionRequest
+    public function handle(string $requestId, bool $approve, int $userId, ?string $note): CorrectionRequest
     {
-        $member = filter_var($userId, FILTER_VALIDATE_INT);
-
-        if ($member === false || $this->members->find($member) === null) {
+        if ($this->members->find($userId) === null) {
             throw new InvalidArgumentException('Only a member of the company resolves a request.');
         }
 
@@ -51,7 +49,7 @@ final readonly class ResolveCorrection
             throw new InvalidArgumentException('A rejection needs a note.');
         }
 
-        $request = DB::transaction(function () use ($requestId, $approve, $userId, $member, $note): CorrectionRequest {
+        $request = DB::transaction(function () use ($requestId, $approve, $userId, $note): CorrectionRequest {
             $request = CorrectionRequest::query()->lockForUpdate()->findOrFail($requestId);
 
             if ($request->status !== CorrectionStatus::Pending) {
@@ -60,7 +58,7 @@ final readonly class ResolveCorrection
 
             $request->update([
                 'status' => $approve ? CorrectionStatus::Approved : CorrectionStatus::Rejected,
-                'resolved_by' => $member,
+                'resolved_by' => $userId,
                 'resolved_at' => CarbonImmutable::now()->utc(),
                 'note' => $note === '' ? null : $note,
                 'resulting_mark_id' => $approve ? $this->apply($request, $userId) : null,
@@ -80,7 +78,7 @@ final readonly class ResolveCorrection
      *
      * @throws CorrectionRejected
      */
-    private function apply(CorrectionRequest $request, string $userId): string
+    private function apply(CorrectionRequest $request, int $userId): string
     {
         // The person's marks hold still while the day is checked and changed.
         MarkLock::of($request->employee_id);

@@ -28,7 +28,7 @@ final readonly class SendEnrollmentLinks
      *
      * @throws WorkCenterNotAvailable when the center is not one in use of the company
      */
-    public function handle(string $workCenterId, string $userId): array
+    public function handle(string $workCenterId, int $userId): array
     {
         $center = $this->workCenters->findActive($workCenterId) ?? throw new WorkCenterNotAvailable;
         $people = $this->roster->activeIn($center->id);

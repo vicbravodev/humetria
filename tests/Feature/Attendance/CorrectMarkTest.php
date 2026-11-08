@@ -35,7 +35,7 @@ it('inserts a new mark with who, why and the original, and leaves the original a
     $before = $this->start->fresh()?->getAttributes();
     $at = CarbonImmutable::parse('2026-11-04 15:00:00', 'UTC');
 
-    $correction = resolve(CorrectMark::class)->handle($this->start->id, $at, 'Llegó a las 9, el QR falló.', (string) $this->hr->id);
+    $correction = resolve(CorrectMark::class)->handle($this->start->id, $at, 'Llegó a las 9, el QR falló.', $this->hr->id);
 
     expect($correction->fresh())
         ->method->toBe(MarkMethod::Correction)
@@ -52,7 +52,7 @@ it('inserts a new mark with who, why and the original, and leaves the original a
 });
 
 it('voids the original when the correction has no time, so the day is no longer open', function (): void {
-    resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', (string) $this->hr->id);
+    resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
 
     expect(fn () => resolve(RecordMark::class)->handle($this->ana->id, MarkType::End, new MarkContext(MarkMethod::Remote, null, null, null, null, null, null)))
         ->toThrow(fn (InvalidMarkSequence $e) => expect($e->reason)->toBe('day_not_open'));
@@ -61,7 +61,7 @@ it('voids the original when the correction has no time, so the day is no longer 
 it('writes the correction to the audit trail and the log, with ids only', function (): void {
     Log::spy();
 
-    $correction = resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', (string) $this->hr->id);
+    $correction = resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
 
     $entry = AuditEntry::query()->where('event', 'attendance.mark_corrected')->sole();
     expect($entry->subject_id)->toBe($correction->id)
@@ -70,11 +70,11 @@ it('writes the correction to the audit trail and the log, with ids only', functi
 });
 
 it('does not correct a mark twice: the correction is the one to correct', function (): void {
-    $first = resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', (string) $this->hr->id);
+    $first = resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
 
-    expect(fn () => resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable(), 'Otra vez.', (string) $this->hr->id))->toThrow(InvalidArgumentException::class);
+    expect(fn () => resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable(), 'Otra vez.', $this->hr->id))->toThrow(InvalidArgumentException::class);
 
-    $second = resolve(CorrectMark::class)->handle($first->id, now()->toImmutable(), 'Sí entró.', (string) $this->hr->id);
+    $second = resolve(CorrectMark::class)->handle($first->id, now()->toImmutable(), 'Sí entró.', $this->hr->id);
     expect($second->corrects_mark_id)->toBe($first->id)
         ->and(AttendanceMark::query()->count())->toBe(3);
 });
@@ -82,15 +82,15 @@ it('does not correct a mark twice: the correction is the one to correct', functi
 it('does not correct a mark to a time still to come, which would block the person\'s real marks', function (): void {
     $this->freezeTime();
 
-    expect(fn () => resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable()->addSecond(), 'Adelantada.', (string) $this->hr->id))
+    expect(fn () => resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable()->addSecond(), 'Adelantada.', $this->hr->id))
         ->toThrow(InvalidArgumentException::class, 'future')
         ->and(AttendanceMark::query()->count())->toBe(1);
 
-    expect(resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable(), 'Justo ahora.', (string) $this->hr->id)->method)->toBe(MarkMethod::Correction);
+    expect(resolve(CorrectMark::class)->handle($this->start->id, now()->toImmutable(), 'Justo ahora.', $this->hr->id)->method)->toBe(MarkMethod::Correction);
 });
 
 it('does not find a mark of another company', function (): void {
     $other = AttendanceMark::factory()->create();
 
-    expect(fn () => resolve(CorrectMark::class)->handle($other->id, null, 'No.', (string) $this->hr->id))->toThrow(ModelNotFoundException::class);
+    expect(fn () => resolve(CorrectMark::class)->handle($other->id, null, 'No.', $this->hr->id))->toThrow(ModelNotFoundException::class);
 });

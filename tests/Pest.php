@@ -596,9 +596,9 @@ require_once __DIR__.'/Browser/attendance-helpers.php';
  * Issues an enrollment link of `$employeeId` as RH does, and gives the URL the person got: the one emailed to them (the
  * mail must be faked), or the one RH hands over when they have no email.
  */
-function enrollmentUrl(string $employeeId, ?string $userId = null): string
+function enrollmentUrl(string $employeeId, ?int $userId = null): string
 {
-    $issued = resolve(App\Modules\Attendance\Actions\IssueEnrollment::class)->handle($employeeId, $userId ?? (string) User::factory()->create()->id);
+    $issued = resolve(App\Modules\Attendance\Actions\IssueEnrollment::class)->handle($employeeId, $userId ?? User::factory()->create()->id);
 
     if ($issued->manualUrl !== null) {
         return $issued->manualUrl;

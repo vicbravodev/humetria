@@ -83,7 +83,7 @@ it('does not read the enrollment links of another company with a query', functio
     $a = Tenant::factory()->create();
     $b = Tenant::factory()->create();
     workIn($b);
-    resolve(IssueEnrollment::class)->handle(EmployeeFactory::new()->create(['tenant_id' => $b->id])->id, (string) User::factory()->create()->id);
+    resolve(IssueEnrollment::class)->handle(EmployeeFactory::new()->create(['tenant_id' => $b->id])->id, User::factory()->create()->id);
 
     workIn($a);
     expect(EnrollmentLink::query()->count())->toBe(0);

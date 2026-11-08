@@ -28,7 +28,7 @@ final class SendEnrollmentLink implements ShouldBeUniqueUntilProcessing, ShouldQ
     /** Seconds a person's waiting link blocks another one. */
     public int $uniqueFor = 3600;
 
-    public function __construct(public readonly string $tenantId, public readonly string $employeeId, public readonly string $userId) {}
+    public function __construct(public readonly string $tenantId, public readonly string $employeeId, public readonly int $userId) {}
 
     public function uniqueId(): string
     {

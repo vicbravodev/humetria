@@ -56,7 +56,7 @@ it('queues one link per person of the center without a device, skipping who has 
     Queue::assertPushed(SendEnrollmentLink::class, function (SendEnrollmentLink $job) use (&$queued): bool {
         $queued[] = $job->employeeId;
 
-        return $job->tenantId === $this->tenant->id && $job->userId === (string) $this->hr->id;
+        return $job->tenantId === $this->tenant->id && $job->userId === $this->hr->id;
     });
     expect($queued)->toEqualCanonicalizing([$this->ana->id, $this->carla->id])
         ->and(EnrollmentLink::query()->count())->toBe(0);
@@ -116,7 +116,7 @@ it('does nothing for a person who left, lost their email or is not the company\'
     $foreign = EmployeeFactory::new()->create(['email' => 'x@otra.test']);
 
     foreach ([$this->ana->id, $this->carla->id, $foreign->id] as $id) {
-        app()->call((new SendEnrollmentLink($this->tenant->id, $id, (string) $this->hr->id))->handle(...));
+        app()->call((new SendEnrollmentLink($this->tenant->id, $id, $this->hr->id))->handle(...));
     }
 
     Notification::assertNothingSent();
@@ -127,7 +127,7 @@ it('does nothing for a person who left, lost their email or is not the company\'
 it('does nothing when the company may not be used by the time it runs', function (): void {
     Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
 
-    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->handle(...));
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));
 
     Notification::assertNothingSent();
     expect(EnrollmentLink::query()->withoutGlobalScopes()->count())->toBe(0);
@@ -158,21 +158,21 @@ it('queues one link per person even when RH sends the batch twice before the wor
     enrollAll($this->plant->id);
 
     Queue::assertPushed(SendEnrollmentLink::class, 2);
-    expect((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->uniqueId())->toBe("{$this->tenant->id}:{$this->ana->id}")
-        ->and(new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing::class);
+    expect((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->uniqueId())->toBe("{$this->tenant->id}:{$this->ana->id}")
+        ->and(new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing::class);
 });
 
 it('sends nothing to a person who linked a device between the batch and the worker', function (): void {
     AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 
-    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->handle(...));
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));
 
     Notification::assertNothingSent();
     expect(EnrollmentLink::query()->count())->toBe(0);
 });
 
 it('still sends to a person whose only device was revoked by the time it runs', function (): void {
-    app()->call((new SendEnrollmentLink($this->tenant->id, $this->carla->id, (string) $this->hr->id))->handle(...));
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->carla->id, $this->hr->id))->handle(...));
 
     Notification::assertSentOnDemandTimes(EnrollmentInvitation::class, 1);
 });
@@ -184,7 +184,7 @@ it('logs ids only and fails the job when the email cannot be sent after the link
     config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1', 'mail.mailers.smtp.port' => 1, 'mail.mailers.smtp.timeout' => 1]);
     Log::spy();
 
-    expect(fn () => app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->handle(...)))
+    expect(fn () => app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...)))
         ->toThrow(Symfony\Component\Mailer\Exception\TransportException::class);
 
     expect(EnrollmentLink::query()->sole()->employee_id)->toBe($this->ana->id);
@@ -197,7 +197,7 @@ it('writes the batch to the audit trail before queueing anything, so a failed au
         throw new RuntimeException('audit down');
     });
 
-    expect(fn () => resolve(SendEnrollmentLinks::class)->handle($this->plant->id, (string) $this->hr->id))->toThrow(RuntimeException::class, 'audit down');
+    expect(fn () => resolve(SendEnrollmentLinks::class)->handle($this->plant->id, $this->hr->id))->toThrow(RuntimeException::class, 'audit down');
 
     Queue::assertNothingPushed();
 });
