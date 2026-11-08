@@ -11,6 +11,7 @@ use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\AttendancePages;
+use App\Modules\Attendance\Support\PanelScope;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -19,7 +20,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia;
 
-mutates(AttendanceController::class, AttendancePages::class);
+mutates(AttendanceController::class, AttendancePages::class, PanelScope::class);
 
 /** The queries of the overview, whatever the number of people, centers or marks (26: the page's schedules, for «Sin horario»). */
 const OVERVIEW_QUERIES = 26;
