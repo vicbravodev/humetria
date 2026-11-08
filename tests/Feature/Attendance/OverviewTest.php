@@ -120,9 +120,11 @@ describe('the summary', function (): void {
         'unknown, all of them' => ['everything', ['Ana López', 'Bob Díaz', 'Carla Ruiz', 'Dan Soto']],
     ]);
 
-    it('counts a screen that shows the code, not one revoked', function (): void {
+    it('counts a screen that shows the code, not one revoked nor one opened but never seen, as the center page does', function (): void {
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now(), 'revoked_at' => now()]);
+        // A chat's link preview opened its link: activated, never seen.
         KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now()]);
-        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'revoked_at' => now()]);
         $this->actingAs($this->hr);
 
         $this->get(overviewUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('centers.data.1.screens', 1));

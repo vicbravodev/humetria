@@ -162,7 +162,7 @@ final readonly class AttendancePages
     {
         $page = $this->workCenters->activePage(self::PER_PAGE, 'centers');
         $ids = array_map(fn (WorkCenterSummary $summary): string => $summary->id, $page->items());
-        $screens = KioskDevice::query()->toBase()->whereIn('work_center_id', $ids)->whereNotNull('activated_at')->whereNull('revoked_at')
+        $screens = KioskDevice::query()->toBase()->whereIn('work_center_id', $ids)->whereNotNull('last_seen_at')->whereNull('revoked_at')
             ->selectRaw('work_center_id, count(*) as total')->groupBy('work_center_id')->pluck('total', 'work_center_id')->all();
 
         return $page->through(fn (WorkCenterSummary $summary): array => [
