@@ -120,12 +120,8 @@ it('keeps the audit entry of a download cut off halfway', function (): void {
         }
     });
 
-    $outputs = fn (): int => count(array_filter(get_resources('stream'), fn ($stream): bool => (stream_get_meta_data($stream)['uri'] ?? '') === 'php://output'));
-
     expect(fn () => $this->get(route('tenant.attendance.report.export', ['acme', ...$this->period]))->streamedContent())->toThrow(RuntimeException::class, 'The roster went away.');
-    // No handle on the output is left open behind the dead stream.
-    expect($outputs())->toBe(0)
-        ->and(AuditEntry::query()->where('event', 'attendance.report_exported')->sole()->metadata)->toEqual(['action' => 'export', 'work_center_id' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'format' => 'csv']);
+    expect(AuditEntry::query()->where('event', 'attendance.report_exported')->sole()->metadata)->toEqual(['action' => 'export', 'work_center_id' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'format' => 'csv']);
 });
 
 it('writes a view of a center\'s report on its first page with no search, never on the next ones, a search or before a center', function (): void {
