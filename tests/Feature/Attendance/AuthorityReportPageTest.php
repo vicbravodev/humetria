@@ -159,11 +159,11 @@ describe('who may see it', function (): void {
 });
 
 describe('the period', function (): void {
-    it('takes up to 366 days', function (): void {
+    it('shows up to 93 days on screen (the CSV takes up to 366)', function (): void {
         $this->actingAs($this->hr);
 
-        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2026-01-01', 'to' => '2027-01-01']))->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('period', ['from' => '2026-01-01', 'to' => '2027-01-01']));
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2026-11-01', 'to' => '2027-02-01']))->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('period', ['from' => '2026-11-01', 'to' => '2027-02-01']));
     });
 
     it('sends a wrong period back to the center\'s report with the reason in Spanish', function (array $query, array $errors): void {
@@ -173,7 +173,7 @@ describe('the period', function (): void {
             ->assertRedirect(authorityReportUrl(['center' => $this->plant->id]))
             ->assertSessionHasErrors($errors);
     })->with([
-        '367 days' => [['from' => '2026-01-01', 'to' => '2027-01-02'], ['to' => 'El periodo puede ser de hasta 366 días.']],
+        '94 days on screen' => [['from' => '2026-10-31', 'to' => '2027-02-01'], ['to' => 'En pantalla el periodo puede ser de hasta 93 días; para uno más largo, de hasta 366, descarga el CSV.']],
         'the end before the start' => [['from' => '2027-01-31', 'to' => '2027-01-25'], ['to' => 'La fecha final no puede ser anterior a la inicial.']],
         'only one date' => [['from' => '2027-01-25'], ['to' => 'El campo fecha final es obligatorio cuando fecha inicial esté presente.']],
         'not a date' => [['from' => 'ayer', 'to' => '2027-01-31'], ['from' => 'Escribe una fecha inicial válida.']],

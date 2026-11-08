@@ -12,11 +12,15 @@ use LogicException;
 
 /**
  * The report for the authority: one work center in use (whether it is one is the controller's to say, a 404) and a period
- * of local dates, both included, of at most 366 days. Owner and hr only: it is evidence handed to an authority.
+ * of local dates, both included, of at most 366 days for the CSV and 93 on screen. Owner and hr only: it is evidence
+ * handed to an authority.
  */
 final class ReportRequest extends FormRequest
 {
     public const int MAX_DAYS = 366;
+
+    /** On screen the figures are computed on every visit: a quarter at most. The CSV streams up to MAX_DAYS. */
+    public const int MAX_PAGE_DAYS = 93;
 
     public function authorize(): bool
     {
@@ -50,8 +54,10 @@ final class ReportRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
-            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->from()->addDays(self::MAX_DAYS)->lessThanOrEqualTo($this->to())) {
-                $validator->errors()->add('to', 'El periodo puede ser de hasta '.self::MAX_DAYS.' días.');
+            if ($validator->errors()->isEmpty() && $this->hasPeriod() && $this->from()->addDays($this->maxDays())->lessThanOrEqualTo($this->to())) {
+                $validator->errors()->add('to', $this->exporting()
+                    ? 'El periodo puede ser de hasta '.self::MAX_DAYS.' días.'
+                    : 'En pantalla el periodo puede ser de hasta '.self::MAX_PAGE_DAYS.' días; para uno más largo, de hasta '.self::MAX_DAYS.', descarga el CSV.');
             }
         }];
     }
@@ -92,6 +98,11 @@ final class ReportRequest extends FormRequest
         $center = $this->string('center')->toString();
 
         return route('tenant.attendance.report', [$this->tenantSlug(), ...(Str::isUuid($center) ? ['center' => $center] : [])]);
+    }
+
+    private function maxDays(): int
+    {
+        return $this->exporting() ? self::MAX_DAYS : self::MAX_PAGE_DAYS;
     }
 
     private function exporting(): bool
