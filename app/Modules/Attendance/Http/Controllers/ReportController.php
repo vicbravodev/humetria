@@ -33,7 +33,7 @@ final readonly class ReportController
 
         // Its first page with no search: the next pages and each search of the same report are not new views.
         if ($center !== null && $request->integer('page', 1) <= 1 && ! $request->filled('q')) {
-            $audit->viewed($center->id, $from, $to, $pages->days($page));
+            $audit->handle('view', $center->id, $from, $to, $pages->days($page));
         }
 
         return Inertia::render('attendance/report', $page);
@@ -52,7 +52,7 @@ final readonly class ReportController
         return response()->streamDownload(function () use ($report, $audit, $center, $from, $to): void {
             ignore_user_abort(true);
             set_time_limit(0);
-            $audit->exporting($center->id, $from, $to);
+            $audit->handle('export', $center->id, $from, $to);
             $out = fopen('php://output', 'wb');
 
             if ($out !== false) {

@@ -19,19 +19,18 @@ final readonly class AuditReport
 {
     public function __construct(private RecordAudit $audit) {}
 
-    /** A view of the page, with the person-days it counts. */
-    public function viewed(string $workCenterId, CarbonImmutable $from, CarbonImmutable $to, int $rows): void
-    {
-        $this->record([...self::ids('view', $workCenterId, $from, $to), 'rows' => $rows, 'format' => 'page']);
-    }
-
     /**
-     * A download, written before its first row: a download cut off halfway is still on the trail. How many rows went out
-     * is only known at its end, so it goes to the log then (completed()), not to a second audit entry.
+     * A view of the page, with the person-days it counts; or a download, written before its first row (`$rows` null) so a
+     * download cut off halfway is still on the trail. How many rows went out is only known at its end, so it goes to the
+     * log then (completed()), not to a second audit entry.
+     *
+     * @param  'view'|'export'  $action
      */
-    public function exporting(string $workCenterId, CarbonImmutable $from, CarbonImmutable $to): void
+    public function handle(string $action, string $workCenterId, CarbonImmutable $from, CarbonImmutable $to, ?int $rows = null): void
     {
-        $this->record([...self::ids('export', $workCenterId, $from, $to), 'format' => 'csv']);
+        $this->record($action === 'view'
+            ? [...self::ids('view', $workCenterId, $from, $to), 'rows' => $rows ?? 0, 'format' => 'page']
+            : [...self::ids('export', $workCenterId, $from, $to), 'format' => 'csv']);
     }
 
     /** The download's end: the same ids with the rows that went out. */
