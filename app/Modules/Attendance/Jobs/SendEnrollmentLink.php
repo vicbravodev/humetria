@@ -12,6 +12,8 @@ use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Sends one person of a batch their link to link a phone. Only ids travel in the job: the link is made here, in the worker,
@@ -42,6 +44,13 @@ final class SendEnrollmentLink implements ShouldBeUniqueUntilProcessing, ShouldQ
             return;
         }
 
-        $issue->handle($person->id, $this->userId);
+        try {
+            $issue->handle($person->id, $this->userId);
+        } catch (Throwable $failure) {
+            // RH was told the batch went out: the log says whose email did not. Ids only; the job still fails.
+            Log::error('attendance.enrollment_email_failed', ['tenant_id' => $this->tenantId, 'employee_id' => $person->id]);
+
+            throw $failure;
+        }
     }
 }

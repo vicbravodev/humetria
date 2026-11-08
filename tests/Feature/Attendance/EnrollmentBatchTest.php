@@ -176,3 +176,17 @@ it('still sends to a person whose only device was revoked by the time it runs', 
 
     Notification::assertSentOnDemandTimes(EnrollmentInvitation::class, 1);
 });
+
+it('logs ids only and fails the job when the email cannot be sent after the link was made', function (): void {
+    // The real mail channel, against a server that is not there.
+    app()->forgetInstance(Illuminate\Notifications\ChannelManager::class);
+    Notification::clearResolvedInstance(Illuminate\Notifications\ChannelManager::class);
+    config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1', 'mail.mailers.smtp.port' => 1, 'mail.mailers.smtp.timeout' => 1]);
+    Log::spy();
+
+    expect(fn () => app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, (string) $this->hr->id))->handle(...)))
+        ->toThrow(Symfony\Component\Mailer\Exception\TransportException::class);
+
+    expect(EnrollmentLink::query()->sole()->employee_id)->toBe($this->ana->id);
+    Log::shouldHaveReceived('error')->once()->with('attendance.enrollment_email_failed', ['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+});
