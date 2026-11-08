@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Support;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\WeekStatus;
+use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -56,6 +57,15 @@ final readonly class AttendancePages
         $atRisk = array_keys(array_filter($summaries, fn ($summary): bool => TeamWeek::atRisk($summary, $period->start()->year)));
         $zones = AttendanceZone::query()->toBase()->selectRaw('work_center_id, count(*) as total')->groupBy('work_center_id')->pluck('total', 'work_center_id')->all();
         $view = in_array($view, self::VIEWS, true) ? $view : 'all';
+        $page = $this->roster->page(new RosterQuery(employeeIds: match ($view) {
+            'all' => $people,
+            'at_risk' => $atRisk,
+            default => array_keys($states, $view, true),
+        }, search: $search), self::PER_PAGE);
+        // Who of the page has an agreed schedule: without one they are held to 8 h a day with no rest day. One query.
+        $scheduled = array_flip(AttendanceSchedule::query()
+            ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
+            ->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
 
         return [
             'week' => [
@@ -77,11 +87,7 @@ final readonly class AttendancePages
             ],
             'pendingCorrections' => CorrectionRequest::query()->where('status', CorrectionStatus::Pending)->count(),
             'centersWithoutZones' => count(array_diff($scope, array_keys($zones))),
-            'people' => $this->roster->page(new RosterQuery(employeeIds: match ($view) {
-                'all' => $people,
-                'at_risk' => $atRisk,
-                default => array_keys($states, $view, true),
-            }, search: $search), self::PER_PAGE)->through(fn (RosterEntry $person): array => [
+            'people' => $page->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
                 'name' => $person->name,
                 'jobTitle' => $person->jobTitle,
@@ -91,6 +97,7 @@ final readonly class AttendancePages
                 'flags' => array_map(fn (OverLimit $flag): string => $flag->value, $summaries[$person->id]->flags ?? []),
                 'status' => $states[$person->id] ?? WeekStatus::Pending->value,
                 'atRisk' => in_array($person->id, $atRisk, true),
+                'hasSchedule' => isset($scheduled[$person->id]),
             ]),
             'centers' => $this->centers($panel->byCenter, $zones),
             'canManage' => Gate::allows('manage-attendance'),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -20,8 +21,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(AttendanceController::class, AttendancePages::class);
 
-/** The queries of the overview, whatever the number of people, centers or marks. */
-const OVERVIEW_QUERIES = 25;
+/** The queries of the overview, whatever the number of people, centers or marks (26: the page's schedules, for «Sin horario»). */
+const OVERVIEW_QUERIES = 26;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City: the last week that ended is 2 to 8 November.
@@ -45,6 +46,8 @@ beforeEach(function (): void {
     overviewDay($this->carla, '2026-11-03 07:00', '2026-11-03 20:00');
     WeeklyConfirmation::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->dan->id, 'week_start' => '2026-11-02']);
     CorrectionRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->dan->id]);
+    // Only Dan has an agreed schedule.
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->dan->id]);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
 });
 
@@ -86,17 +89,17 @@ describe('the summary', function (): void {
             ->where('people.per_page', 25)
             ->where('people.data.0', [
                 'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte',
-                'ordinaryMinutes' => 480, 'overtimeMinutes' => 120, 'flags' => [], 'status' => 'confirmed', 'atRisk' => false,
+                'ordinaryMinutes' => 480, 'overtimeMinutes' => 120, 'flags' => [], 'status' => 'confirmed', 'atRisk' => false, 'hasSchedule' => false,
             ])
             ->where('people.data.1.status', 'disputed')
             ->where('people.data.2', [
                 'id' => $this->carla->id, 'name' => 'Carla Ruiz', 'jobTitle' => 'Analista', 'center' => 'Oficinas',
-                'ordinaryMinutes' => 480, 'overtimeMinutes' => 300, 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'], 'status' => 'pending', 'atRisk' => true,
+                'ordinaryMinutes' => 480, 'overtimeMinutes' => 300, 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'], 'status' => 'pending', 'atRisk' => true, 'hasSchedule' => false,
             ])
             // Dan has no marks and a week still pending.
             ->where('people.data.3', [
                 'id' => $this->dan->id, 'name' => 'Dan Soto', 'jobTitle' => 'Contador', 'center' => 'Oficinas',
-                'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'flags' => [], 'status' => 'pending', 'atRisk' => false,
+                'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'flags' => [], 'status' => 'pending', 'atRisk' => false, 'hasSchedule' => true,
             ])
             ->where('centers.total', 2)
             ->where('centers.data.0', ['id' => $this->office->id, 'name' => 'Oficinas', 'people' => 2, 'zones' => 0, 'screens' => 0])

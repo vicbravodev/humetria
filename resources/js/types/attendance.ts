@@ -49,6 +49,8 @@ export type OverviewPerson = {
     flags: string[];
     status: 'pending' | 'confirmed' | 'disputed';
     atRisk: boolean;
+    /** Without an agreed schedule they are held to 8 h a day with no rest day, until RH sets one. */
+    hasSchedule: boolean;
 };
 
 /** A center in use with its active people, its zones and the screens that show its code. */

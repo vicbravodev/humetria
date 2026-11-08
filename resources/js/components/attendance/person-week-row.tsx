@@ -1,11 +1,17 @@
+import { Link } from '@inertiajs/react';
 import { TriangleAlert } from 'lucide-react';
 import Initials from '@/components/humetria/initials';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { hoursText, weekBadge, weekNotes } from '@/lib/attendance/overview';
+import { index as schedules } from '@/routes/tenant/attendance/schedules';
 import type { OverviewPerson } from '@/types';
 
-/** One person's week: who, where, the hours split as the law pays them, the limits broken and their answer. */
+/**
+ * One person's week: who (and «Sin horario», to the schedules page, when they have no agreed schedule), where, the hours
+ * split as the law pays them, the limits broken and their answer.
+ */
 export default function PersonWeekRow({
     person,
     over,
@@ -13,6 +19,7 @@ export default function PersonWeekRow({
     person: OverviewPerson;
     over: boolean;
 }) {
+    const tenantSlug = useTenantSlug();
     const badge = weekBadge(person.status, over);
     const notes = weekNotes(person);
 
@@ -22,7 +29,24 @@ export default function PersonWeekRow({
                 <div className="flex items-center gap-3">
                     <Initials name={person.name} />
                     <div className="flex min-w-0 flex-col">
-                        <span className="font-medium">{person.name}</span>
+                        <span className="flex flex-wrap items-center gap-2 font-medium">
+                            {person.name}
+                            {!person.hasSchedule && (
+                                <Badge asChild variant="warning">
+                                    <Link
+                                        href={schedules(tenantSlug, {
+                                            query: {
+                                                status: 'unscheduled',
+                                                q: person.name,
+                                            },
+                                        })}
+                                        title="Sin horario acordado se cuenta con 8 h al día y sin día de descanso: fija el suyo."
+                                    >
+                                        Sin horario
+                                    </Link>
+                                </Badge>
+                            )}
+                        </span>
                         <span className="text-caption text-muted-foreground">
                             {person.jobTitle}
                         </span>
