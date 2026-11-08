@@ -12,6 +12,7 @@ use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Notifications\DeviceLinked;
 use App\Modules\Attendance\Notifications\EnrollmentInvitation;
+use App\Modules\Attendance\Support\DeviceLabel;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
@@ -32,7 +33,7 @@ use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 use Tests\Support\SoftAuthenticator;
 
-mutates(EnrollDevice::class);
+mutates(EnrollDevice::class, DeviceLabel::class);
 
 beforeEach(function (): void {
     config(['fortify.passkeys.relying_party_id' => 'localhost', 'fortify.passkeys.allowed_origins' => ['http://localhost']]);
