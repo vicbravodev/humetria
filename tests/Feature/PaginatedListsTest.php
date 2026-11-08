@@ -114,6 +114,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         return route('tenant.attendance.center', [$tenant, $plant->id]);
     }, ['zones', 'kiosks']],
     'time clock devices: the people with their linked devices' => ['attendance/devices', fn () => route('tenant.attendance.devices.index', listsCompany()[0]), ['people']],
+    'time clock schedules: the people with their agreed schedules' => ['attendance/schedules', fn () => route('tenant.attendance.schedules.index', listsCompany()[0]), ['people']],
     'Ley Silla seat reports of a center' => ['seating/reports', function () {
         [$tenant, $plant] = listsCompany();
 

@@ -1,17 +1,17 @@
 import { shortMoment } from '@/lib/attendance/corrections';
 import type { DevicePerson, LinkedDevice } from '@/types';
 
-export type DevicesFilters = {
+export type PanelListFilters = {
     q: string;
     status: string;
     /** The center the list narrows to; empty for every center. */
     center: string;
 };
 
-/** The devices page's address as the server reads it: only what differs from the default view. */
-export function devicesQuery(
-    filters: DevicesFilters,
-): Partial<Record<keyof DevicesFilters, string>> {
+/** The address of a list of the registro (devices, schedules) as the server reads it: only what differs from the default view. */
+export function panelListQuery(
+    filters: PanelListFilters,
+): Partial<Record<keyof PanelListFilters, string>> {
     const q = filters.q.trim();
 
     return {

@@ -174,6 +174,20 @@ return [
             'in' => 'Elige una opción de la lista.',
             'required' => 'Elige una opción de la lista.',
         ],
+        'minutes' => [
+            'array' => 'Escribe las horas de los siete días; 0 es descanso.',
+            'required' => 'Escribe las horas de los siete días; 0 es descanso.',
+            'required_array_keys' => 'Escribe las horas de los siete días; 0 es descanso.',
+        ],
+        'minutes.*' => [
+            'between' => 'Un día puede tener de 0 a 12 horas.',
+        ],
+        'shift_type' => [
+            'in' => 'Elige diurna, nocturna o mixta.',
+        ],
+        'work_mode' => [
+            'in' => 'Elige presencial o remoto.',
+        ],
         'out_of_zone' => [
             'in' => 'Elige «Bloquear» o «Permitir y señalar».',
         ],
@@ -210,6 +224,10 @@ return [
     ],
 
     'attributes' => [
+        'minutes' => 'horario de la semana',
+        'minutes.*' => 'minutos del día',
+        'shift_type' => 'tipo de jornada',
+        'work_mode' => 'modalidad',
         'max_accuracy_m' => 'precisión máxima',
         'out_of_zone' => 'fuera de zona',
         'require_qr_onsite' => 'QR en el centro',

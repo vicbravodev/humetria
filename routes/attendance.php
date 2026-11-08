@@ -10,6 +10,7 @@ use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\DeviceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
+use App\Modules\Attendance\Http\Controllers\ScheduleController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,3 +46,7 @@ Route::post('admin/{tenant:slug}/attendance/devices/{device}/revoke', [DeviceCon
 // and how long the records are kept.
 Route::get('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'show'])->where('tenant', $notReserved)->name('tenant.attendance.policy.show');
 Route::put('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'update'])->where('tenant', $notReserved)->name('tenant.attendance.policy.update');
+
+// The people's agreed weekly schedules (criterio 2.6). {employee} is a person of the company's roster, by id.
+Route::get('admin/{tenant:slug}/attendance/schedules', [ScheduleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.index');
+Route::put('admin/{tenant:slug}/attendance/schedules/{employee}', [ScheduleController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.attendance.schedules.update');

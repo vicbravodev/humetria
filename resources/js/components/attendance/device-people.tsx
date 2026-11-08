@@ -1,10 +1,6 @@
-import CenterFilter from '@/components/attendance/center-filter';
 import DevicesTable from '@/components/attendance/devices-table';
-import CountTabs from '@/components/humetria/count-tabs';
-import SearchField from '@/components/humetria/search-field';
-import { useDevicesFilters } from '@/hooks/use-devices-filters';
+import ListToolbar from '@/components/attendance/list-toolbar';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { devicesQuery } from '@/lib/attendance/devices';
 import { index } from '@/routes/tenant/attendance/devices';
 import type { AttendanceDevicesProps, DeviceView } from '@/types';
 
@@ -24,43 +20,23 @@ export default function DevicePeople({
     canManage,
 }: AttendanceDevicesProps) {
     const tenantSlug = useTenantSlug();
-    const current = { ...filters, center: center?.id ?? '' };
-    const { text, type, filter } = useDevicesFilters(tenantSlug, current);
 
     return (
         <section aria-labelledby="personas" className="flex flex-col gap-4">
             <h2 id="personas" className="sr-only">
                 Personas y sus dispositivos
             </h2>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-                    <SearchField
-                        label="Buscar por nombre"
-                        value={text}
-                        onChange={type}
-                        className="w-full sm:max-w-[320px]"
-                    />
-                    <CenterFilter
-                        id="devices-center"
-                        center={center}
-                        onChange={(id) => filter({ center: id })}
-                    />
-                </div>
-                <CountTabs
-                    label="Estado de los dispositivos"
-                    tabs={TABS.map((tab) => ({
-                        label: tab.label,
-                        count: counts[tab.status],
-                        href: index(tenantSlug, {
-                            query: devicesQuery({
-                                ...current,
-                                status: tab.status,
-                            }),
-                        }),
-                        active: filters.status === tab.status,
-                    }))}
-                />
-            </div>
+            <ListToolbar
+                page={{
+                    url: index.url(tenantSlug),
+                    href: (options) => index(tenantSlug, options),
+                }}
+                label="Estado de los dispositivos"
+                tabs={TABS}
+                center={center}
+                filters={filters}
+                counts={counts}
+            />
             <p className="text-sm text-pretty text-muted-foreground">
                 <strong className="font-medium text-foreground">
                     Llave sincronizada:

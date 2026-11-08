@@ -147,3 +147,37 @@ export type AttendancePolicyProps = {
     saved: boolean;
     canManage: boolean;
 };
+
+/** The tabs of the schedules page: everyone, with an agreed schedule, and without one. */
+export type ScheduleView = 'all' | 'scheduled' | 'unscheduled';
+
+/** Minutes agreed by ISO weekday, «1» Monday to «7» Sunday; 0 is a rest day. */
+export type WeekMinutes = Partial<Record<string, number>>;
+
+/** A person's agreed weekly schedule (criterio 2.6). */
+export type WorkSchedule = {
+    shiftType: 'day' | 'night' | 'mixed';
+    workMode: 'onsite' | 'remote';
+    minutes: WeekMinutes;
+};
+
+/** A person on the schedules page, with their schedule or null: held to 8 h a day with no rest day until RH sets one. */
+export type SchedulePerson = {
+    id: string;
+    name: string;
+    jobTitle: string;
+    center: string;
+    schedule: WorkSchedule | null;
+};
+
+/** The year's weekly ordinary maximum (art. 59 and transitorio segundo), in minutes. */
+export type WeeklyMaximum = { year: number; minutes: number };
+
+export type AttendanceSchedulesProps = {
+    center: { id: string; name: string } | null;
+    filters: { q: string; status: ScheduleView };
+    counts: Record<ScheduleView, number>;
+    weeklyMaximum: WeeklyMaximum;
+    people: Paginated<SchedulePerson>;
+    canManage: boolean;
+};

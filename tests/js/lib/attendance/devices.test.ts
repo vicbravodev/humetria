@@ -4,16 +4,16 @@ import {
     deviceKind,
     deviceStatus,
     deviceUse,
-    devicesQuery,
+    panelListQuery,
 } from '@/lib/attendance/devices';
 
-describe('the address of the devices page', () => {
+describe('the address of a list of the registro', () => {
     it('carries only what differs from the default view', () => {
-        expect(devicesQuery({ q: '  ', status: 'all', center: '' })).toEqual(
+        expect(panelListQuery({ q: '  ', status: 'all', center: '' })).toEqual(
             {},
         );
         expect(
-            devicesQuery({ q: ' Ana ', status: 'unlinked', center: 'c-1' }),
+            panelListQuery({ q: ' Ana ', status: 'unlinked', center: 'c-1' }),
         ).toEqual({ q: 'Ana', status: 'unlinked', center: 'c-1' });
     });
 });
