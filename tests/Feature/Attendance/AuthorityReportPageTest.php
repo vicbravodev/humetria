@@ -106,7 +106,9 @@ describe('the page', function (): void {
     });
 
     it('pages the people 25 at a time and searches them by name, the figures of all of them', function (): void {
-        foreach (EmployeeFactory::new()->count(25)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
+        // Named, not left to Faker: a random «Díaz» would also match the search below.
+        $names = array_map(fn (int $n): string => sprintf('Persona %02d', $n), range(1, 25));
+        foreach (EmployeeFactory::new()->count(25)->sequence(...array_map(fn (string $name): array => ['name' => $name], $names))->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
             pageDay($person, '2027-01-26 08:00', '2027-01-26 16:00');
         }
         pageDay($this->bob, '2027-01-26 08:00', '2027-01-26 16:00');
