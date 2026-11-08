@@ -98,7 +98,10 @@ final class ReportRequest extends FormRequest
     /** The days of the period asked for, both ends included. */
     public function days(): int
     {
-        return (int) round($this->from()->diffInDays($this->to())) + 1;
+        // Counted on UTC midnights of the two dates: whole days, whatever the local offset did in between.
+        $midnight = fn (CarbonImmutable $date): int => CarbonImmutable::parse($date->toDateString(), 'UTC')->getTimestamp();
+
+        return intdiv($midnight($this->to()) - $midnight($this->from()), 86400) + 1;
     }
 
     /** Whether the page should offer only the CSV: a period too long to show on screen. */
