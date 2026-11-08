@@ -174,6 +174,9 @@ return [
             'in' => 'Elige una opción de la lista.',
             'required' => 'Elige una opción de la lista.',
         ],
+        'out_of_zone' => [
+            'in' => 'Elige «Bloquear» o «Permitir y señalar».',
+        ],
         'mobile' => [
             'regex' => 'Escribe un celular de 10 dígitos, por ejemplo 55 1234 5678.',
         ],
@@ -207,6 +210,10 @@ return [
     ],
 
     'attributes' => [
+        'max_accuracy_m' => 'precisión máxima',
+        'out_of_zone' => 'fuera de zona',
+        'require_qr_onsite' => 'QR en el centro',
+        'trusted_may_use_browser' => 'navegador de confianza',
         'raise_unit' => 'tipo de aumento',
         'procedure' => 'procedimiento',
         'acknowledge_within_days' => 'plazo para acusar recibo',

@@ -131,3 +131,19 @@ export type AttendanceDevicesProps = {
     people: Paginated<DevicePerson>;
     canManage: boolean;
 };
+
+/** The company's policy of the registro, as saved or the defaults it starts with. */
+export type AttendancePolicy = {
+    outOfZone: 'block' | 'allow_and_flag';
+    maxAccuracyM: number;
+    requireQrOnsite: boolean;
+    trustedMayUseBrowser: boolean;
+    retentionMonths: number;
+};
+
+export type AttendancePolicyProps = {
+    policy: AttendancePolicy;
+    /** False while RH has not saved one: the page shows the defaults. */
+    saved: boolean;
+    canManage: boolean;
+};

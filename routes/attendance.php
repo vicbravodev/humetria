@@ -9,6 +9,7 @@ use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\DeviceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
+use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,3 +40,8 @@ Route::post('admin/{tenant:slug}/attendance/devices/enroll', [DeviceController::
 // Every person of a center without a device gets their link by email, one queued job each.
 Route::post('admin/{tenant:slug}/attendance/devices/enroll-all', [DeviceController::class, 'enrollAll'])->where('tenant', $notReserved)->name('tenant.attendance.devices.enroll-all');
 Route::post('admin/{tenant:slug}/attendance/devices/{device}/revoke', [DeviceController::class, 'revoke'])->where('tenant', $notReserved)->whereUuid('device')->name('tenant.attendance.devices.revoke');
+
+// The company's policy: what a mark out of zone does, the accuracy asked of a position, the QR on site, the trusted browser
+// and how long the records are kept.
+Route::get('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'show'])->where('tenant', $notReserved)->name('tenant.attendance.policy.show');
+Route::put('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'update'])->where('tenant', $notReserved)->name('tenant.attendance.policy.update');
