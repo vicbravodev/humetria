@@ -172,3 +172,33 @@ Salieron de la revisión del constructor; no las dijo el usuario.
 1. **Dependencia nueva aprobada:** `web-auth/webauthn-lib` como dependencia directa, para WebAuthn con `Employee`.
 2. **Criterios aprobados** tal como están (incluidos 2.8 y 7.1).
 3. **Fuera de toda zona se bloquea por defecto**; la empresa puede permitir y señalar. Siempre queda la corrección.
+
+## Cambios durante la ejecución
+
+Lo que cambió respecto de lo aprobado al construirlo (detalle y estado en el historial de
+`docs/normas/jornada/criterios.md`, v0.3). Los marcados ⚠ esperan la decisión del usuario.
+
+- **Llaves sincronizadas aceptadas** (iOS y Android respaldan la llave en la cuenta de la persona): «Límites honestos»
+  ya no promete que la llave no se pueda copiar; se guardan sus banderas de respaldo (BE/BS) y RH las ve. ⚠
+- **RH no recibe el enlace de alta** de quien tiene correo; solo el de quien no lo tiene, y la bitácora lo dice, con la
+  dirección de envío enmascarada. Queda abierto que RH cambie el correo de alguien antes de enviarle el enlace: se ve en
+  la bitácora, no se impide (cerrarlo exige un aviso al correo anterior, en Organization). ⚠
+- **Aviso al vincular un dispositivo**, en cola (no lleva secretos); el correo con el enlace sale al momento y nunca
+  entra a la cola. El envío a todo un centro encola un trabajo por persona (único por persona mientras espera), que crea
+  el enlace en el trabajador y se salta a quien ya vinculó un teléfono; si el correo falla, se anota
+  `attendance.enrollment_email_failed` con ids.
+- **Conformidad semanal ligada a una huella** de las marcas leídas (`week_changed` si cambiaron) y bloqueada mientras la
+  última jornada siga abierta (`day_open`).
+- **Marcar recuerda a la persona 10 min** en ese navegador, solo para ofrecerle su siguiente paso, con «¿No es usted?»
+  para olvidarla al instante. La página pide la ubicación en cada marca, también a quien trabaja remoto o es de
+  confianza (el servidor la descarta para ellos), para no pedir una segunda huella. ⚠
+- **Cierre del día** con `attendance:close-days` (artisan, programado), cierra el día anterior al de ayer; `DayClosed`
+  puede repetirse si se vuelve a correr: quien lo escuche debe ser idempotente.
+- **Sin horario**: 8 h cada día y sin día de descanso hasta que RH fije uno; el resumen lo señala con «Sin horario». ⚠
+- **Reporte**: hasta 93 días en pantalla, hasta 366 en CSV; entre 94 y 366 la página explica y ofrece solo el CSV. Las
+  horas se reparten con el horario vigente al generar el reporte (no hay historial de horarios).
+- **Conservación**: de 12 a 120 meses, a elección de la empresa; el tope de 120 lo fijó el constructor. ⚠
+- **Configuración** en `config/attendance.php` (ventana del QR y ventanas pasadas aceptadas, vigencia del enlace de alta,
+  del desafío WebAuthn y de la memoria de Marcar, días del reporte en pantalla y en CSV, tamaño de bloque del reporte).
+  Los topes legales siguen en el código (`LegalLimits`): son ley, no configuración. Los textos de la interfaz que citan
+  «30 s» y «48 h» no leen esa configuración: si se cambia, hay que cambiarlos.

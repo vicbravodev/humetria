@@ -173,3 +173,36 @@ exige, pero sin esto no se puede hablar de «acuerdo».
   personal con dispositivo vinculado y seguro, sin correo ni contraseña; personal de confianza como `Employee`; se
   guardan las coordenadas y la zona de la geocerca; QR rotativo y geocerca en la primera fase.
 - 2026-11-07 · v0.2 · se agrega 2.9 (qué es tiempo extra en una semana), pendiente de revisión del usuario.
+- 2026-11-07 · v0.3 · cambios hechos durante la construcción, por decisión del revisor o del constructor. Los marcados
+  **⚠ pendiente del usuario** esperan su decisión; el código sigue lo descrito hasta entonces.
+  - **2.9** (agregado en v0.2) quedó así en el cálculo: lo programado es ordinario aunque pase del máximo diario del
+    art. 61; solo el máximo semanal del año lo vuelve extra. El tipo de turno **no cambia el cálculo**: un turno nocturno
+    o mixto programado por encima de 7 h o 7 h 30 min no genera extra por ese motivo (la lectura estricta del art. 61 sí
+    lo haría). Lo trabajado en día de descanso va aparte y no cuenta para los topes de extra. Desde v0.3 el formulario de
+    horarios avisa, sin bloquear, cuando un día nocturno o mixto pasa de su máximo diario y cuando el extra de la semana
+    pasa del tope semanal del año. **⚠ pendiente del usuario:** confirmar esta lectura de 2.9 y su consecuencia para los
+    turnos nocturno y mixto.
+  - **Sin horario** (2.9): un día con 0 minutos en el horario es día de descanso; una persona **sin horario acordado** se
+    cuenta con 8 h cada día y sin día de descanso hasta que RH fije el suyo. El panel la señala con «Sin horario».
+    **⚠ pendiente del usuario:** confirmar esos valores por defecto.
+  - **Llaves sincronizadas** (5.1, 5.4): se aceptan las llaves de acceso que el teléfono respalda en la cuenta de la
+    persona (iCloud, Google); rechazarlas impediría vincular la mayoría de los teléfonos. Consecuencia: la llave está
+    ligada a la cuenta de llaves de la persona y se desbloquea con su huella, rostro o PIN, **no se puede demostrar que
+    viva en un solo teléfono**. Se guarda si la llave puede respaldarse y RH lo ve por dispositivo.
+  - **RH no ve el enlace de alta** (5.1): si la persona tiene correo, su enlace para vincular el teléfono solo le llega a
+    ella; RH lo recibe para entregarlo en mano solo cuando la persona no tiene correo, y la bitácora dice que RH lo
+    entregó y a qué dirección (enmascarada) se envió cada uno.
+  - **Aviso de dispositivo vinculado** (5.1): cada vez que se vincula un dispositivo, la persona con correo recibe un aviso
+    («si no fue usted, avise a RH»).
+  - **Conformidad ligada a lo que se vio** (5.2): confirmar u objetar una semana lleva la huella (sha-256) de las marcas
+    vigentes que la persona leyó; si cambiaron entre su lectura y su respuesta, se rechaza y vuelve a leer. La huella
+    se guarda con la respuesta y en la bitácora: con las marcas de solo inserción, reconstruye exactamente lo acordado.
+  - **Día abierto** (5.2): no se puede confirmar una semana mientras su última jornada siga sin marca de fin
+    (`day_open`); la persona puede objetarla o pedir una corrección.
+  - **Reporte** (6.1): además de lo listado, cada día dice qué se corrigió (hora reemplazada, marca anulada o agregada,
+    quién la pidió y su motivo) y si la semana se confirmó con su huella; las horas se reparten con el horario vigente al
+    generarlo. En pantalla se muestra un periodo de **hasta 93 días**; uno de 94 a 366 días se ofrece solo en CSV, que
+    acepta **hasta 366 días** (ambos valores en `config/attendance.php`). Ver el reporte en pantalla (su primera página,
+    sin búsqueda) y cada descarga van a la bitácora; ofrecer solo el CSV no lee marcas y no se anota.
+  - **Conservación** (7.1): la empresa elige de 12 a **120 meses** después de terminada la relación. El tope de 120 lo
+    fijó el constructor. **⚠ pendiente del usuario:** confirmar el tope (el criterio dice «ampliable», sin máximo).
