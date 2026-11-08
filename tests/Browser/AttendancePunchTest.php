@@ -44,7 +44,7 @@ it('opens the screen of Marcar for a device not known yet: every step, why the p
         ->assertSee('Marcar su jornada')
         ->assertSee('Marcar entrada')
         ->assertSee('Salir a comer')
-        ->assertSee('Al marcar le pediremos su ubicación una sola vez')
+        ->assertSee('Si usted marca en un centro de trabajo, le pediremos su ubicación en ese momento')
         ->assertSee('¿Aún no vincula este teléfono?');
 })->with([
     'light, desktop' => [false, false],
