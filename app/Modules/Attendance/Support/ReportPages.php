@@ -100,12 +100,12 @@ final readonly class ReportPages
     {
         $ids = $this->report->people($center->id, $from, $to);
         $totals = ['days' => 0, 'workedMinutes' => 0, 'confirmed' => 0, 'withCorrections' => 0, 'unconfirmed' => 0, 'ordinary' => 0, 'overtime' => 0, 'overTwelve' => 0, 'withoutEnd' => 0];
-        $days = array_fill_keys($ids, []);
         $flagged = [];
         $unconfirmed = [];
 
-        // ponytail: every person-day of the period is computed for the figures, a chunk of people at a time; a year of a
-        // center of thousands takes seconds. Keep daily totals if RH opens such reports often.
+        // ponytail: every person-day of the period is computed for the figures, a chunk of people at a time, and only the
+        // figures are kept (never a day); a year of a center of thousands takes seconds. The days of the 25 listed are
+        // computed again below. Keep daily totals if RH opens such reports often.
         foreach ($this->report->rowsOf($ids, $center->id, $from, $to) as $row) {
             $totals['days']++;
             $totals['workedMinutes'] += $row->workedMinutes;
@@ -116,17 +116,22 @@ final readonly class ReportPages
             $totals['unconfirmed'] += $row->confirmation === 'sin confirmar' ? 1 : 0;
             $totals['overTwelve'] += $row->workedMinutes > LegalLimits::DAY_TOTAL_MAX ? 1 : 0;
             $totals['withoutEnd'] += in_array(BuildAuthorityReport::MISSING_END, $row->flags, true) ? 1 : 0;
-            $flagged[$row->employeeId] = ($flagged[$row->employeeId] ?? false) || array_diff($row->flags, [BuildAuthorityReport::IN_PROGRESS]) !== [];
-            $unconfirmed[$row->employeeId] = ($unconfirmed[$row->employeeId] ?? false) || $row->confirmation === 'sin confirmar';
-            $days[$row->employeeId][] = self::day($row);
+
+            if (array_diff($row->flags, [BuildAuthorityReport::IN_PROGRESS]) !== []) {
+                $flagged[$row->employeeId] = true;
+            }
+            if ($row->confirmation === 'sin confirmar') {
+                $unconfirmed[$row->employeeId] = true;
+            }
         }
 
         $listed = match ($show) {
-            'flagged' => array_values(array_filter($ids, fn (string $id): bool => $flagged[$id] ?? false)),
-            'unconfirmed' => array_values(array_filter($ids, fn (string $id): bool => $unconfirmed[$id] ?? false)),
+            'flagged' => array_values(array_filter($ids, fn (string $id): bool => isset($flagged[$id]))),
+            'unconfirmed' => array_values(array_filter($ids, fn (string $id): bool => isset($unconfirmed[$id]))),
             default => $ids,
         };
         $people = $this->roster->page(new RosterQuery(employeeIds: $listed, search: $search), self::PER_PAGE);
+        $days = $this->daysOf(array_values(array_map(fn (RosterEntry $person): string => $person->id, $people->items())), $center->id, $from, $to);
 
         $now = CarbonImmutable::now();
 
@@ -143,8 +148,8 @@ final readonly class ReportPages
                 'overtimeMinutes' => $totals['overtime'],
                 'overTwelveDays' => $totals['overTwelve'],
                 'withoutEndDays' => $totals['withoutEnd'],
-                'flaggedPeople' => count(array_filter($flagged)),
-                'unconfirmedPeople' => count(array_filter($unconfirmed)),
+                'flaggedPeople' => count($flagged),
+                'unconfirmedPeople' => count($unconfirmed),
             ],
             'people' => $people->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
@@ -158,6 +163,23 @@ final readonly class ReportPages
             ],
             'exportUrl' => self::exportUrl($slug, $center, $from, $to),
         ];
+    }
+
+    /**
+     * The days of these people, by person: the second pass, for the page only.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private function daysOf(array $ids, string $centerId, CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $days = [];
+
+        foreach ($ids === [] ? [] : $this->report->rowsOf($ids, $centerId, $from, $to) as $row) {
+            $days[$row->employeeId][] = self::day($row);
+        }
+
+        return $days;
     }
 
     private static function exportUrl(string $slug, WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to): string

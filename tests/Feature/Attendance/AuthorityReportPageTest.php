@@ -7,18 +7,22 @@ use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\ReportPages;
+use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Testing\AssertableInertia;
 
 mutates(ReportController::class, ReportPages::class);
 
-/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included. */
-const REPORT_PAGE_QUERIES = 25;
+/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (seven each: 25 before the second). */
+const REPORT_PAGE_QUERIES = 32;
 
 beforeEach(function (): void {
     // Monday 1 February 2027, 12:00 in Mexico City: the last week that ended is 25 to 31 January.
@@ -49,6 +53,55 @@ function pageDay(Employee $person, string $start, ?string $end): AttendanceMark
 function authorityReportUrl(array $query = [], string $tenant = 'acme'): string
 {
     return route('tenant.attendance.report', [$tenant, ...$query]);
+}
+
+/** The company's roster, counting how many people each read of people by id asks for: the days of the report are built per read. */
+function spyOnRosterReads(): ArrayObject
+{
+    $reads = new ArrayObject;
+    app()->instance(Roster::class, new class(resolve(Roster::class), $reads) implements Roster
+    {
+        public function __construct(private readonly Roster $roster, private readonly ArrayObject $reads) {}
+
+        public function activeIn(string $workCenterId): array
+        {
+            return $this->roster->activeIn($workCenterId);
+        }
+
+        public function activeIdsIn(string $workCenterId): array
+        {
+            return $this->roster->activeIdsIn($workCenterId);
+        }
+
+        public function activeIdsInMany(array $workCenterIds): array
+        {
+            return $this->roster->activeIdsInMany($workCenterIds);
+        }
+
+        public function find(string $employeeId): ?RosterEntry
+        {
+            return $this->roster->find($employeeId);
+        }
+
+        public function findMany(array $employeeIds): array
+        {
+            $this->reads->append(count($employeeIds));
+
+            return $this->roster->findMany($employeeIds);
+        }
+
+        public function page(RosterQuery $query, int $perPage = 25, string $pageName = 'page'): LengthAwarePaginator
+        {
+            return $this->roster->page($query, $perPage, $pageName);
+        }
+
+        public function matchingIds(RosterQuery $query): array
+        {
+            return $this->roster->matchingIds($query);
+        }
+    });
+
+    return $reads;
 }
 
 describe('the page', function (): void {
@@ -146,6 +199,34 @@ describe('the page', function (): void {
             ->where('people.total', 1)
             ->where('people.data.0.name', 'Bob Díaz')
             ->where('summary.people', 26));
+    });
+
+    it('builds the days of only the people of the page, with the figures of all of them', function (): void {
+        $names = array_map(fn (int $n): string => sprintf('Persona %02d', $n), range(1, 30));
+        $people = EmployeeFactory::new()->count(30)->sequence(...array_map(fn (string $name): array => ['name' => $name], $names))->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        foreach ($people as $n => $person) {
+            // The last five have a day with no end: «con avisos».
+            pageDay($person, '2027-01-26 08:00', $n < 25 ? '2027-01-26 16:00' : null);
+            pageDay($person, '2027-01-27 08:00', '2027-01-27 16:00');
+        }
+        $this->actingAs($this->hr);
+        $period = ['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'];
+        $reads = spyOnRosterReads();
+
+        $this->get(authorityReportUrl($period))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('summary.people', 30)->where('summary.days', 60)->where('summary.workedMinutes', 25 * 2 * 480 + 5 * 480)
+            ->where('summary.flaggedPeople', 5)->where('summary.withoutEndDays', 5)
+            ->has('people.data', 25)->where('people.data.24.name', 'Persona 25')->has('people.data.24.days', 2));
+
+        // The first read is the pass over everyone for the figures; the second is the days, of the 25 listed.
+        expect($reads->getArrayCopy())->toBe([30, 25]);
+
+        $this->get(authorityReportUrl([...$period, 'page' => 2]))->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('people.data', 5)->where('people.data.0.name', 'Persona 26')->has('people.data.0.days', 2)->where('people.data.0.days.0.flags', ['Sin marca de fin'])
+            ->where('summary.days', 60));
+        $this->get(authorityReportUrl([...$period, 'show' => 'flagged']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.total', 5)->has('people.data', 5)->where('people.data.0.name', 'Persona 26')->where('people.data.0.days.0.flags', ['Sin marca de fin'])
+            ->where('summary.people', 30)->where('summary.flaggedPeople', 5));
     });
 
     it('reads the report in the same number of queries, however many people and days', function (int $more): void {
