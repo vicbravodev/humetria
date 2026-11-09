@@ -16,7 +16,7 @@ export type ProblemKind =
     | 'generic';
 
 export type ProblemAction = {
-    kind: 'retry' | 'correction' | 'howto' | 'copy-hr' | 'dismiss';
+    kind: 'retry' | 'correction' | 'howto' | 'copy-hr' | 'dismiss' | 'reload';
     label: string;
 };
 

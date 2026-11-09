@@ -34,7 +34,7 @@ function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
 {
     $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
     $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page);
 
     return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()));
 }
@@ -153,7 +153,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: function (AwaitableWebpage $page) use (&$clearKeys): void {
         $clearKeys = withFingerprintReader($page);
     });
-    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page);
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->press('Marcar entrada')
@@ -164,8 +164,7 @@ function bobOnAnasPhone(): AwaitableWebpage
 
     expect($clearKeys)->toBeInstanceOf(Closure::class);
     $clearKeys();
-    $page->navigate((string) parse_url(enrollmentUrl($bob->id), PHP_URL_PATH))
-        ->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page->navigate((string) parse_url(enrollmentUrl($bob->id), PHP_URL_PATH)));
 
     return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true)

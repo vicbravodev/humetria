@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { clockNow } from '@/lib/attendance/correction';
 import type { ProblemAction } from '@/lib/attendance/punch-problem';
 import { hrLinkMessage, LOCATION_HOWTO } from '@/lib/attendance/punch-problem';
+import { useCopyMessage } from '@/hooks/use-copy-message';
 
 /**
  * What the buttons of a problem do: mark again, close it, open the form of a correction (at the time on the company's
@@ -22,7 +23,7 @@ export function useProblemActions({
         null,
     );
     const [howto, setHowto] = useState<string | null>(null);
-    const [copied, setCopied] = useState(false);
+    const { copied, copy } = useCopyMessage();
 
     const run = (kind: ProblemAction['kind']) => {
         switch (kind) {
@@ -39,9 +40,10 @@ export function useProblemActions({
                 setHowto(LOCATION_HOWTO);
                 break;
             case 'copy-hr':
-                void navigator.clipboard
-                    .writeText(hrLinkMessage(company))
-                    .then(() => setCopied(true));
+                copy(hrLinkMessage(company));
+                break;
+            case 'reload':
+                window.location.reload();
                 break;
         }
     };

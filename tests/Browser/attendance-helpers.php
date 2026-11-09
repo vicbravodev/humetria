@@ -74,3 +74,16 @@ function standingAt(AwaitableWebpage $page, float $latitude, float $longitude, f
     iterator_to_array(Client::instance()->execute(contextGuid($page), 'grantPermissions', ['permissions' => ['geolocation']]));
     iterator_to_array(Client::instance()->execute(contextGuid($page), 'setGeolocation', ['geolocation' => ['latitude' => $latitude, 'longitude' => $longitude, 'accuracy' => $accuracy]]));
 }
+
+/*
+ * Pest Browser reads a text with a comma as a CSS selector: «Sí, soy yo» is pressed with an explicit one.
+ */
+
+/** The person's way through the link of their phone, from the agreement to the key, until it says the phone is linked. */
+function linkThePhone(AwaitableWebpage $page): AwaitableWebpage
+{
+    return $page->press('Acepto y continúo')
+        ->press('button:has-text("Sí, soy yo")')
+        ->press('Crear llave')
+        ->waitForText('Listo, su teléfono está vinculado');
+}

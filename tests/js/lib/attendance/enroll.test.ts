@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { CreatedKey } from '@/lib/attendance/webauthn';
 import {
+    AGREEMENT_POINTS,
     agreementSections,
     enrollDevice,
     enrollMessage,
+    enrollProblem,
+    stepProgress,
 } from '@/lib/attendance/enroll';
 
 const options = {
@@ -208,5 +211,78 @@ describe('agreementSections', () => {
             { title: 'Quién lo ve', text: 'Usted.' },
             { title: '', text: 'Sin título' },
         ]);
+    });
+});
+
+describe('stepProgress', () => {
+    it('says which of the four steps the person is on', () => {
+        expect(stepProgress('agreement')).toEqual({
+            label: 'Paso 1 de 4',
+            value: 1,
+            max: 4,
+        });
+        expect(stepProgress('confirm')?.label).toBe('Paso 2 de 4');
+        expect(stepProgress('key')?.label).toBe('Paso 3 de 4');
+        expect(stepProgress('done')).toEqual({
+            label: 'Paso 4 de 4',
+            value: 4,
+            max: 4,
+        });
+    });
+
+    it('shows no steps once the person left the way', () => {
+        expect(stepProgress('not-you')).toBeNull();
+        expect(stepProgress('later')).toBeNull();
+    });
+});
+
+describe('AGREEMENT_POINTS', () => {
+    it('sums up in three lines what is kept and what is not, before the full agreement', () => {
+        expect(AGREEMENT_POINTS).toEqual([
+            'Se guardan la hora y el lugar solo en el momento de marcar.',
+            'No se sigue su ubicación en ningún otro momento.',
+            'Usted puede ver todas sus marcas en «Mi semana».',
+        ]);
+    });
+});
+
+describe('enrollProblem', () => {
+    it('says the key was not created, and to confirm with the fingerprint, face or PIN again', () => {
+        const problem = enrollProblem('cancelled', 48);
+
+        expect(problem).toMatchObject({
+            kind: 'verify',
+            title: 'No se creó la llave',
+        });
+        expect(problem.text).toContain('huella, su rostro o su PIN');
+        expect(problem.actions.map(({ kind }) => kind)).toEqual(['retry']);
+    });
+
+    it("says a link that stopped working is not the person's fault, and how to get another", () => {
+        const problem = enrollProblem('gone', 48);
+
+        expect(problem.title).toBe('Este enlace ya no sirve');
+        expect(problem.text).toContain(
+            'Venció después de 48 horas o ya se usó',
+        );
+        expect(problem.text).toContain('No pasó nada con sus datos');
+        expect(problem.actions.map(({ kind }) => kind)).toEqual(['copy-hr']);
+    });
+
+    it('asks to reload when the agreement changed', () => {
+        const problem = enrollProblem('outdated', 48);
+
+        expect(problem.title).toBe('El acuerdo cambió');
+        expect(problem.actions.map(({ kind }) => kind)).toEqual(['reload']);
+    });
+
+    it.each([
+        ['failed', 'No se pudo vincular su teléfono', ['retry']],
+        ['unsupported', 'Este navegador no puede crear llaves', []],
+    ] as const)('words %s', (outcome, title, actions) => {
+        const problem = enrollProblem(outcome, 48);
+
+        expect(problem.title).toBe(title);
+        expect(problem.actions.map(({ kind }) => kind)).toEqual(actions);
     });
 });

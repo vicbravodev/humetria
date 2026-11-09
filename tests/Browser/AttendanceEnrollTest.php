@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
@@ -34,41 +35,120 @@ function enrollPath(): string
     return (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
 }
 
-it('shows the agreement to read, and the button waits for it to be accepted', function (bool $dark, bool $mobile): void {
+it('opens with the agreement in three lines, the full text behind a button, and the way out', function (bool $dark, bool $mobile): void {
     visitPage('attendance/enroll', enrollPath(), $dark, $mobile)
-        ->assertSee('Vincule su teléfono, Ana López')
+        ->assertSee('Paso 1 de 4')
+        ->assertSee('Acuerdo de uso del teléfono')
+        ->assertSee('Se guardan la hora y el lugar solo en el momento de marcar.')
+        ->assertSee('No se sigue su ubicación en ningún otro momento.')
+        ->assertSee('Usted puede ver todas sus marcas en «Mi semana».')
+        ->assertSee('Registro de jornada')
+        ->assertSee('Acepto y continúo')
+        ->assertSee('Ahora no')
+        // The legal text is one tap away, not hidden: it is what the person accepts.
+        ->assertDontSee('Acuerdo de registro electrónico')
+        ->press('Leer el acuerdo completo')
         ->assertSee('Acuerdo de registro electrónico')
         ->assertSee('Qué se guarda')
         ->assertSee('solo en el momento en que usted marca')
-        ->assertSee('Registro de jornada')
-        ->assertButtonDisabled('Aceptar y vincular este teléfono');
+        ->assertNoAccessibilityIssues(1);
 })->with([
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
     'light mobile' => [false, true],
+    'dark mobile' => [true, true],
 ]);
 
-it('links the phone: the person accepts, the phone creates a verified key, and the server keeps it', function (): void {
-    $page = visitPage('attendance/enroll', enrollPath(), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+it('links the phone in four steps: the agreement, who the person is, the key, and what follows', function (bool $dark): void {
+    $page = visitPage('attendance/enroll', enrollPath(), $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
 
-    $page->click('Leí el acuerdo y lo acepto.')
-        ->press('Aceptar y vincular este teléfono')
-        ->waitForText('Su teléfono quedó vinculado')
+    $page->press('Acepto y continúo')
+        ->waitForText('Confirme que es usted')
+        ->assertSee('Paso 2 de 4')
+        ->assertSee('Ana López')
+        ->assertSee($this->ana->job_title)
+        ->assertSee('Si no es Ana López, cierre esta página.')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1)
+        ->press('button:has-text("Sí, soy yo")')
+        ->waitForText('Cree su llave de acceso')
+        ->assertSee('Paso 3 de 4')
+        ->assertSee('Nadie más puede marcar por usted')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
+
+    expect(AttendanceDevice::query()->count())->toBe(0);
+
+    $page->press('Crear llave')
+        ->waitForText('Listo, su teléfono está vinculado')
+        ->assertSee('Paso 4 de 4')
+        ->assertSee('Tiene la llave en este teléfono, no en el servidor')
+        ->assertSee('Ir a marcar')
         ->assertNoJavaScriptErrors()
-        ->assertScript(cspViolations(), '[]');
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
 
     $device = AttendanceDevice::query()->sole();
     expect($device)->employee_id->toBe($this->ana->id)->label->toBeIn(['iPhone', 'iPad', 'Android', 'Mac', 'Windows', 'Dispositivo'])
         ->and(AgreementAcceptance::query()->sole()->device_id)->toBe($device->id);
+
+    // «Ir a marcar» goes to Marcar of the company.
+    $page->click('Ir a marcar')->waitForText('Marcar su jornada')->assertScript('() => window.location.pathname', "/a/{$this->tenant->slug}");
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('links nothing when the person says it is not them, and says what to do', function (): void {
+    $page = visitPage('attendance/enroll', enrollPath(), mobile: true);
+
+    $page->press('Acepto y continúo')
+        ->press('No soy yo')
+        ->waitForText('No se vinculó nada')
+        ->assertSee('avise a Recursos Humanos')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
+
+    expect(AttendanceDevice::query()->count())->toBe(0);
 });
 
-it('says the key was not created when the person is not verified, and links nothing', function (): void {
+it('lets the person leave with «Ahora no», and tells them the link stays good while it lasts', function (): void {
+    $page = visitPage('attendance/enroll', enrollPath(), mobile: true);
+
+    $page->press('Ahora no')
+        ->waitForText('Puede vincularlo después')
+        ->assertSee('48 horas')
+        ->assertNoAccessibilityIssues(1);
+
+    expect(AttendanceDevice::query()->count())->toBe(0);
+});
+
+it('says the key was not created when the person is not verified, links nothing, and lets them try again', function (): void {
     $page = visitPage('attendance/enroll', enrollPath(), reach: fn (AwaitableWebpage $page) => withFingerprintReader($page, verifies: false));
 
-    $page->click('Leí el acuerdo y lo acepto.')
-        ->press('Aceptar y vincular este teléfono')
-        ->waitForText('No se creó la llave. Vuelva a intentarlo')
-        ->assertNoJavaScriptErrors();
+    $page->press('Acepto y continúo')
+        ->press('button:has-text("Sí, soy yo")')
+        ->press('Crear llave')
+        ->waitForText('No se creó la llave')
+        ->assertSee('confirme con su huella, su rostro o su PIN')
+        ->assertSee('Intentar de nuevo')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
+
+    expect(AttendanceDevice::query()->count())->toBe(0);
+});
+
+it('says the link stopped working, without blame, when it was used or expired meanwhile', function (): void {
+    $page = visitPage('attendance/enroll', enrollPath(), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+    EnrollmentLink::query()->update(['used_at' => now()]);
+
+    $page->press('Acepto y continúo')
+        ->press('button:has-text("Sí, soy yo")')
+        ->press('Crear llave')
+        ->waitForText('Este enlace ya no sirve')
+        ->assertSee('Venció después de 48 horas o ya se usó')
+        ->assertSee('No pasó nada con sus datos')
+        ->assertSee('Copiar mensaje para RH')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
 
     expect(AttendanceDevice::query()->count())->toBe(0);
 });

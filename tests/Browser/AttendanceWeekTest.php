@@ -58,7 +58,7 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
 {
     $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
     $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page);
 
     return $page->navigate('/a/acme')
         ->click('Mi semana')
@@ -171,7 +171,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 it('lets a person whose mark was refused ask RH from Marcar to add it', function (): void {
     $enroll = (string) parse_url(enrollmentUrl($this->ana->id), PHP_URL_PATH);
     $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page);
 
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/a/acme')

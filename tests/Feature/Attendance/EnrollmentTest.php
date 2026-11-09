@@ -82,6 +82,10 @@ it('shows the agreement to read and accept, with the person\'s name, and nothing
         ->assertInertia(fn (AssertableInertia $page) => $page->component('attendance/enroll')
             ->where('company', 'Acme')
             ->where('name', 'Ana López')
+            // So the person confirms the link is theirs by their job, and what to do when it is not good any more.
+            ->where('jobTitle', $this->ana->job_title)
+            ->where('linkHours', 48)
+            ->where('punchUrl', route('attendance.device.punch.home', 'acme'))
             ->where('agreement.version', 1)
             ->where('agreement.body', AttendanceAgreement::query()->sole()->body)
             ->where('optionsUrl', enrollRoute('options', $this->token))
