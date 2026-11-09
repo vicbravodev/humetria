@@ -1,17 +1,11 @@
 import { router, usePage } from '@inertiajs/react';
 import { MonitorSmartphone, Plus } from 'lucide-react';
-import KioskRow from '@/components/attendance/kiosk-row';
+import KiosksTable from '@/components/attendance/kiosks-table';
+import ScreenSteps from '@/components/attendance/screen-steps';
 import OneTimeLink from '@/components/attendance/one-time-link';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/attendance/kiosks';
 import type { KioskScreen, Paginated } from '@/types';
@@ -83,31 +77,10 @@ export default function CenterScreens({
                 </EmptyState>
             ) : (
                 <>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Estado</TableHead>
-                                <TableHead>Emitida</TableHead>
-                                <TableHead>Última señal</TableHead>
-                                {canManage && (
-                                    <TableHead>
-                                        <span className="sr-only">
-                                            Acciones
-                                        </span>
-                                    </TableHead>
-                                )}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {kiosks.data.map((screen) => (
-                                <KioskRow
-                                    key={screen.id}
-                                    screen={screen}
-                                    canManage={canManage}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
+                    {kiosks.data.some(
+                        (screen) => screen.state === 'issued',
+                    ) && <ScreenSteps />}
+                    <KiosksTable kiosks={kiosks.data} canManage={canManage} />
                     <Pagination
                         page={kiosks}
                         label="Páginas de pantallas"

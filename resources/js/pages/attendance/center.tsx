@@ -1,10 +1,11 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Briefcase, MapPin, Users } from 'lucide-react';
+import { Briefcase, MapPin, MonitorSmartphone, Users } from 'lucide-react';
 import CenterScreens from '@/components/attendance/center-screens';
 import CenterZones from '@/components/attendance/center-zones';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { centerState } from '@/lib/attendance/center-state';
 import { index } from '@/routes/tenant/attendance';
 import type { AttendanceCenterProps } from '@/types';
 
@@ -16,8 +17,12 @@ export default function AttendanceCenter({
     kiosks,
     canManage,
     qrSeconds,
+    requiresQr,
+    screens,
+    tolerance,
 }: AttendanceCenterProps) {
     const tenantSlug = useTenantSlug();
+    const state = centerState({ zones: zones.total, screens }, requiresQr);
     setLayoutProps({
         breadcrumbs: [
             { title: 'Asistencia', href: index(tenantSlug) },
@@ -33,11 +38,7 @@ export default function AttendanceCenter({
                     caption="Centro de trabajo"
                     title={center.name}
                     status={
-                        zones.total === 0 ? (
-                            <Badge variant="warning">Sin zonas</Badge>
-                        ) : (
-                            <Badge variant="success">Listo para marcar</Badge>
-                        )
+                        <Badge variant={state.variant}>{state.label}</Badge>
                     }
                     facts={[
                         { icon: Briefcase, text: center.mainActivity },
@@ -55,12 +56,20 @@ export default function AttendanceCenter({
                                     ? '1 zona'
                                     : `${zones.total} zonas`,
                         },
+                        {
+                            icon: MonitorSmartphone,
+                            text:
+                                screens === 1
+                                    ? '1 pantalla activa'
+                                    : `${screens} pantallas activas`,
+                        },
                     ]}
                 />
                 <CenterZones
                     zones={zones}
                     centerId={center.id}
                     canManage={canManage}
+                    tolerance={tolerance}
                 />
                 <CenterScreens
                     kiosks={kiosks}

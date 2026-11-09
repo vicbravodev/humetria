@@ -1,17 +1,12 @@
 import { MapPin, Plus } from 'lucide-react';
 import { useState } from 'react';
 import ZoneDialog from '@/components/attendance/zone-dialog';
-import ZoneRow from '@/components/attendance/zone-row';
+import ZoneMap from '@/components/attendance/zone-map';
+import ZonesTable from '@/components/attendance/zones-table';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { mapZones } from '@/lib/attendance/zone-map';
 import type { AttendanceZone, Paginated } from '@/types';
 
 /** A center's zones, where its people may mark with their location; none yet is the first thing to fix. */
@@ -19,10 +14,12 @@ export default function CenterZones({
     zones,
     centerId,
     canManage,
+    tolerance,
 }: {
     zones: Paginated<AttendanceZone>;
     centerId: string;
     canManage: boolean;
+    tolerance: number;
 }) {
     const [adding, setAdding] = useState(false);
     const add = canManage ? (
@@ -58,36 +55,13 @@ export default function CenterZones({
                 </EmptyState>
             ) : (
                 <>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Zona</TableHead>
-                                <TableHead>Radio</TableHead>
-                                {canManage && (
-                                    <>
-                                        <TableHead>
-                                            Centro del círculo
-                                        </TableHead>
-                                        <TableHead>
-                                            <span className="sr-only">
-                                                Acciones
-                                            </span>
-                                        </TableHead>
-                                    </>
-                                )}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {zones.data.map((zone) => (
-                                <ZoneRow
-                                    key={zone.id}
-                                    zone={zone}
-                                    centerId={centerId}
-                                    canManage={canManage}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
+                    {canManage && <ZoneMap zones={mapZones(zones.data)} />}
+                    <ZonesTable
+                        zones={zones.data}
+                        centerId={centerId}
+                        canManage={canManage}
+                        tolerance={tolerance}
+                    />
                     <Pagination
                         page={zones}
                         label="Páginas de zonas"

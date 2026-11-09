@@ -147,10 +147,14 @@ final readonly class AttendancePages
     public function center(WorkCenterSummary $center): array
     {
         $manage = Gate::allows('manage-attendance');
+        $policy = CompanyPolicy::current();
 
         return [
             'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
+            'requiresQr' => $policy->require_qr_onsite,
+            'tolerance' => $policy->max_accuracy_m,
+            'screens' => KioskDevice::query()->where('work_center_id', $center->id)->whereNotNull('last_seen_at')->whereNull('revoked_at')->count(),
             'people' => count($this->roster->activeIdsIn($center->id)),
             'zones' => AttendanceZone::query()->where('work_center_id', $center->id)->orderBy('name')->orderBy('id')
                 ->paginate(self::PER_PAGE, pageName: 'zones')->withQueryString()

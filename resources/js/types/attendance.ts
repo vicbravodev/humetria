@@ -130,6 +130,11 @@ export type AttendanceCenterProps = {
     canManage: boolean;
     /** Seconds each code of its screens lasts (config/attendance.php). */
     qrSeconds: number;
+    /** Whether the policy asks for the QR on site, and how many of its screens already show the code. */
+    requiresQr: boolean;
+    screens: number;
+    /** The meters of imprecision the policy accepts in a reading: a zone smaller than this is a risk. */
+    tolerance: number;
 };
 
 /** A QR screen of a center: issued until it shows the code, active once seen, revoked. Local times; never its token. */
