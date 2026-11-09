@@ -1,6 +1,9 @@
 import ListToolbar from '@/components/attendance/list-toolbar';
 import SchedulesTable from '@/components/attendance/schedules-table';
+import ScheduleSelectionBar from '@/components/attendance/schedule-selection-bar';
 import Notice from '@/components/humetria/notice';
+import WeekRibbonLegend from '@/components/humetria/week-ribbon-legend';
+import { useScheduleSelection } from '@/hooks/use-schedule-selection';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/attendance/schedules';
 import type { AttendanceSchedulesProps, ScheduleView } from '@/types';
@@ -21,6 +24,7 @@ export default function SchedulePeople({
     canManage,
 }: AttendanceSchedulesProps) {
     const tenantSlug = useTenantSlug();
+    const selection = useScheduleSelection(people.data);
 
     return (
         <section aria-labelledby="personas" className="flex flex-col gap-4">
@@ -35,7 +39,8 @@ export default function SchedulePeople({
                             : `${counts.unscheduled} personas no tienen horario.`}
                     </strong>{' '}
                     Sin horario se cuentan 8 h cada día y ningún día de
-                    descanso: sus horas extra pueden salir de más.
+                    descanso: sus horas extra pueden salir de más. Elígelas y
+                    fíjales uno en un solo paso.
                 </Notice>
             )}
             <ListToolbar
@@ -49,13 +54,22 @@ export default function SchedulePeople({
                 filters={filters}
                 counts={counts}
             />
+            {canManage && selection.chosen.length > 0 && (
+                <ScheduleSelectionBar
+                    chosen={selection.chosen}
+                    weeklyMaximum={weeklyMaximum}
+                    onClear={selection.clear}
+                />
+            )}
             <SchedulesTable
                 people={people}
                 status={filters.status}
                 searching={filters.q !== ''}
                 weeklyMaximum={weeklyMaximum}
                 canManage={canManage}
+                selection={selection}
             />
+            <WeekRibbonLegend />
         </section>
     );
 }

@@ -6,7 +6,13 @@ import {
     modeLabel,
     overDailyLimit,
     overMaximum,
+    chosenText,
+    peopleNames,
+    replacingText,
+    restLabel,
     scheduleDays,
+    scheduleRibbon,
+    scheduleTemplates,
     shiftLabel,
     weekTotal,
 } from '@/lib/attendance/schedule';
@@ -142,5 +148,116 @@ describe('the hours of a day as RH writes them', () => {
         expect(hoursText(480)).toBe('8');
         expect(hoursText(450)).toBe('7.5');
         expect(hoursText(0)).toBe('0');
+    });
+});
+
+describe('a schedule as a ribbon', () => {
+    it('is one bar per day with the minutes agreed and no overtime', () => {
+        expect(scheduleRibbon(week(480, 480, 0, 240, 0, 0, 0))).toEqual([
+            { worked: 480, overtime: 0 },
+            { worked: 480, overtime: 0 },
+            { worked: 0, overtime: 0 },
+            { worked: 240, overtime: 0 },
+            { worked: 0, overtime: 0 },
+            { worked: 0, overtime: 0 },
+            { worked: 0, overtime: 0 },
+        ]);
+    });
+
+    it('leaves a day it does not know as a rest day', () => {
+        expect(scheduleRibbon({ '1': 480 })[6]).toEqual({
+            worked: 0,
+            overtime: 0,
+        });
+    });
+});
+
+describe('the rest days of a schedule', () => {
+    it('names them in short', () => {
+        expect(restLabel(week(480, 480, 480, 480, 480, 0, 0))).toBe(
+            'Sáb y dom de descanso',
+        );
+        expect(restLabel(week(480, 480, 0, 480, 480, 480, 0))).toBe(
+            'Mié y dom de descanso',
+        );
+        expect(restLabel(week(0, 480, 480, 480, 480, 480, 480))).toBe(
+            'Lun de descanso',
+        );
+    });
+
+    it('says when there is none, and when all of them are', () => {
+        expect(restLabel(week(480, 480, 480, 480, 480, 480, 480))).toBe(
+            'Sin día de descanso',
+        );
+        expect(restLabel(week(0, 0, 0, 0, 0, 0, 0))).toBe(
+            'Todos los días de descanso',
+        );
+    });
+});
+
+describe('the templates to start a schedule from', () => {
+    it('are Monday to Friday and Monday to Saturday of 8 h, and the night shift at its daily limit', () => {
+        expect(scheduleTemplates(limits)).toEqual([
+            {
+                id: 'mon_fri',
+                label: 'Lunes a viernes',
+                shift: 'day',
+                minutes: week(480, 480, 480, 480, 480, 0, 0),
+            },
+            {
+                id: 'mon_sat',
+                label: 'Lunes a sábado',
+                shift: 'day',
+                minutes: week(480, 480, 480, 480, 480, 480, 0),
+            },
+            {
+                id: 'night',
+                label: 'Turno nocturno',
+                shift: 'night',
+                minutes: week(420, 420, 420, 420, 420, 0, 0),
+            },
+        ]);
+    });
+
+    it('follow the night shift limit the server sends', () => {
+        const night = scheduleTemplates({
+            ...limits,
+            dailyMinutes: { day: 480, night: 360, mixed: 450 },
+        }).find((template) => template.id === 'night');
+
+        expect(night?.minutes['1']).toBe(360);
+    });
+});
+
+describe('who was chosen', () => {
+    it('says how many', () => {
+        expect(chosenText(1)).toBe('1 persona elegida');
+        expect(chosenText(2)).toBe('2 personas elegidas');
+    });
+
+    it('says how many of them lose their schedule when the same one is set for all', () => {
+        const some = { schedule: { shiftType: 'day' } };
+        const none = { schedule: null };
+
+        expect(replacingText([none, none])).toBeNull();
+        expect(replacingText([some, none])).toBe(
+            '1 de ellas ya tiene horario: se reemplaza.',
+        );
+        expect(replacingText([some, some, none])).toBe(
+            '2 de ellas ya tienen horario: se reemplaza.',
+        );
+        expect(replacingText([some])).toBe('Ya tiene horario: se reemplaza.');
+    });
+});
+
+describe('the names of those chosen', () => {
+    it('are listed as a sentence, the first three in full', () => {
+        expect(peopleNames(['Bob Díaz', 'Carla Ruiz'])).toBe(
+            'Bob Díaz y Carla Ruiz',
+        );
+        expect(peopleNames(['Ana', 'Bob', 'Carla'])).toBe('Ana, Bob y Carla');
+        expect(peopleNames(['Ana', 'Bob', 'Carla', 'Dora', 'Elena'])).toBe(
+            'Ana, Bob, Carla y 2 más',
+        );
     });
 });

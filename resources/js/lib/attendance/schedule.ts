@@ -1,3 +1,4 @@
+import type { RibbonDay } from '@/lib/attendance/week-ribbon';
 import { duration } from '@/lib/attendance/week-text';
 import type { WeeklyMaximum, WeekMinutes, WorkSchedule } from '@/types';
 
@@ -136,4 +137,101 @@ export function minutesOf(hours: string): number | null {
 /** Minutes as hours to edit: 450 → «7.5». */
 export function hoursText(minutes: number): string {
     return String(Math.round((minutes / 60) * 100) / 100);
+}
+
+/** A schedule as `<WeekRibbon>` draws it: a bar per day with the minutes agreed, none of them overtime. */
+export function scheduleRibbon(minutes: WeekMinutes): RibbonDay[] {
+    return WEEKDAYS.map(({ day }) => ({
+        worked: minutes[day] ?? 0,
+        overtime: 0,
+    }));
+}
+
+const SHORT_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+/** The days off in short: «Sáb y dom de descanso». */
+export function restLabel(minutes: WeekMinutes): string {
+    const rest = WEEKDAYS.flatMap(({ day }, index) =>
+        (minutes[day] ?? 0) === 0 ? [SHORT_DAYS[index] ?? ''] : [],
+    ).map((name, index) => (index === 0 ? name : name.toLowerCase()));
+
+    if (rest.length === 0) {
+        return 'Sin día de descanso';
+    }
+
+    if (rest.length === WEEKDAYS.length) {
+        return 'Todos los días de descanso';
+    }
+
+    return rest.length === 1
+        ? `${rest.join('')} de descanso`
+        : `${rest.slice(0, -1).join(', ')} y ${rest.at(-1) ?? ''} de descanso`;
+}
+
+export type ScheduleTemplate = {
+    id: string;
+    label: string;
+    shift: WorkSchedule['shiftType'];
+    minutes: WeekMinutes;
+};
+
+const weekOf = (daily: number, days: number): WeekMinutes =>
+    Object.fromEntries(
+        WEEKDAYS.map(({ day }, index) => [day, index < days ? daily : 0]),
+    );
+
+/** Where a new schedule can start from: the common weeks, the night one at the daily limit the server sends. */
+export function scheduleTemplates(maximum: WeeklyMaximum): ScheduleTemplate[] {
+    return [
+        {
+            id: 'mon_fri',
+            label: 'Lunes a viernes',
+            shift: 'day',
+            minutes: weekOf(480, 5),
+        },
+        {
+            id: 'mon_sat',
+            label: 'Lunes a sábado',
+            shift: 'day',
+            minutes: weekOf(480, 6),
+        },
+        {
+            id: 'night',
+            label: 'Turno nocturno',
+            shift: 'night',
+            minutes: weekOf(maximum.dailyMinutes.night, 5),
+        },
+    ];
+}
+
+export function chosenText(count: number): string {
+    return count === 1 ? '1 persona elegida' : `${count} personas elegidas`;
+}
+
+/** What setting the same schedule for all costs: those who already have one lose it. Null when nobody does. */
+export function replacingText(
+    chosen: readonly { schedule: unknown }[],
+): string | null {
+    const have = chosen.filter((person) => person.schedule !== null).length;
+
+    if (have === 0) {
+        return null;
+    }
+
+    if (chosen.length === 1) {
+        return 'Ya tiene horario: se reemplaza.';
+    }
+
+    return `${have} de ellas ${have === 1 ? 'ya tiene' : 'ya tienen'} horario: se reemplaza.`;
+}
+
+/** «Ana, Bob y Carla»: the first three names, and how many more there are. */
+export function peopleNames(names: readonly string[]): string {
+    const shown = names.slice(0, 3);
+    const more = names.length - shown.length;
+    const last = more > 0 ? `${more} más` : shown.pop();
+
+    return shown.length === 0
+        ? (last ?? '')
+        : `${shown.join(', ')} y ${last ?? ''}`;
 }
