@@ -16,6 +16,7 @@ require __DIR__.'/assistant_console.php';
 require __DIR__.'/survey.php';
 require __DIR__.'/portal.php';
 require __DIR__.'/seating-portal.php';
+require __DIR__.'/attendance-device.php';
 require __DIR__.'/disclosure-portal.php';
 require __DIR__.'/results-portal.php';
 require __DIR__.'/workers.php';

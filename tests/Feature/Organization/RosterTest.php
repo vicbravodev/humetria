@@ -6,6 +6,7 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Organization\Enums\Gender;
+use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\CompanyRoster;
@@ -171,3 +172,14 @@ it('takes any number of ids, past what Postgres binds one by one', function (): 
         ->and(resolve(Roster::class)->matchingIds(new RosterQuery(employeeIds: $ids)))->toBe([$ana->id])
         ->and(array_keys(resolve(Roster::class)->findMany($ids)))->toBe([$ana->id]);
 });
+
+it('tells whether a person is trusted staff, and no one else is', function (?StaffGroup $group, bool $trusted): void {
+    $person = rosterEmployee($this->tenant, $this->plant, $this->production, ['staff_group' => $group]);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->find($person->id)?->trusted)->toBe($trusted);
+})->with([
+    'trusted' => [StaffGroup::Trusted, true],
+    'unionized' => [StaffGroup::Unionized, false],
+    'no group' => [null, false],
+]);

@@ -23,6 +23,12 @@ interface Companies
     public function enter(string $tenantId): CompanySummary;
 
     /**
+     * Like enter(), for a company named by its slug in a URL that carries no account (a time-clock device's); null, entering
+     * nothing, when no company has that slug or it may not be used (blocked), so nothing is logged under its id.
+     */
+    public function enterBySlug(string $slug): ?CompanySummary;
+
+    /**
      * The company the code works in now.
      *
      * @throws NoCurrentTenant outside a company.

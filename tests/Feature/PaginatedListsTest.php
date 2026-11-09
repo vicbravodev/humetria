@@ -106,6 +106,20 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.seating.plan', [$tenant, $plant->id]);
     }, ['measures', 'agreements']],
+    'time clock correction requests' => ['attendance/corrections', fn () => route('tenant.attendance.corrections.index', listsCompany()[0]), ['requests']],
+    'time clock overview: the people of a week and the centers' => ['attendance/index', fn () => route('tenant.attendance.index', listsCompany()[0]), ['people', 'centers']],
+    'time clock center: its zones and its QR screens' => ['attendance/center', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.attendance.center', [$tenant, $plant->id]);
+    }, ['zones', 'kiosks']],
+    'time clock devices: the people with their linked devices' => ['attendance/devices', fn () => route('tenant.attendance.devices.index', listsCompany()[0]), ['people']],
+    'time clock schedules: the people with their agreed schedules' => ['attendance/schedules', fn () => route('tenant.attendance.schedules.index', listsCompany()[0]), ['people']],
+    'time clock report for the authority: the people of a center\'s period with their days' => ['attendance/report', function () {
+        [$tenant, $plant] = listsCompany();
+
+        return route('tenant.attendance.report', [$tenant, 'center' => $plant->id]);
+    }, ['people']],
     'Ley Silla seat reports of a center' => ['seating/reports', function () {
         [$tenant, $plant] = listsCompany();
 

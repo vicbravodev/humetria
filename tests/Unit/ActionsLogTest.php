@@ -21,6 +21,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Tenancy/Actions/ListTenants.php' => 'reads a paginated list',
     'app/Modules/Tenancy/Actions/ListUserTenants.php' => 'reads a list',
     'app/Modules/Tenancy/Actions/ListWorkCenters.php' => 'reads a paginated list',
+    'app/Modules/Attendance/Actions/BuildAuthorityReport.php' => 'reads the report; AuditReport logs every view and download',
     'app/Modules/Campaigns/Actions/OpenSurvey.php' => 'reads the link; SubmitSurvey logs what changes',
     'app/Modules/Telework/Actions/OpenPortal.php' => 'reads the portal link; each portal action logs what changes',
     'app/Modules/Disclosure/Actions/OpenWorkersPage.php' => 'reads the link of the public page; by design nothing is recorded of who opens it (criterio C-55)',

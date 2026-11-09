@@ -106,6 +106,19 @@ final class RedactSensitiveData implements ProcessorInterface
             'policy_text',
             'sections',
             'worker_page_link',
+            // Registro de jornada: the key of a person's linked device identifies it, and where a person stood when they
+            // marked is personal data (criterio 3.4).
+            'credential_id',
+            'latitude',
+            'longitude',
+            'public_key',
+            // ...and what the Marcar page sends: the signed assertion of the key, the position and the screen's code (a
+            // credential while it lives; `q` is also a search, which may name a person). A stored token's hash too.
+            'credential',
+            'lat',
+            'lng',
+            'q',
+            'token_hash',
             // Humi: what a person asks the assistant, and what it answers, is never a log's business.
             'assistant_message',
             'prompt',

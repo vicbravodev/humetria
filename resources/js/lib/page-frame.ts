@@ -10,6 +10,14 @@ const STANDALONE_NAMES = new Set([
     'results/portal-support',
     // A report opened from a temporary link: nobody signed in.
     'results/shared-report',
+    // The QR screen of a work center: a fixed tablet, no account, the whole screen for the code.
+    'attendance/kiosk',
+    // A person links their phone from the link RH sent them: no account, their own frame.
+    'attendance/enroll',
+    // A person marks from their linked device: no account, their own frame.
+    'attendance/punch',
+    // A person sees and answers their week from their linked device: no account, the same frame.
+    'attendance/week',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.

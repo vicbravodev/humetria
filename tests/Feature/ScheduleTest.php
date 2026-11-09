@@ -26,6 +26,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'seating:send-digests' => '30 8 * * *',
         'complaints:send-digests' => '0 * * * *',
         'complaints:purge' => '15 3 * * *',
+        'attendance:close-days' => '15 0 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
@@ -39,6 +40,14 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         ->and($referrals?->withoutOverlapping)->toBeTrue();
     expect($telework)->toHaveCount(3)
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
+});
+
+it('closes the working days of the day before yesterday at 00:15 display time, once and without overlapping', function (): void {
+    $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'attendance:close-days'));
+
+    expect($event->timezone)->toBe('America/Mexico_City')
+        ->and($event->onOneServer)->toBeTrue()
+        ->and($event->withoutOverlapping)->toBeTrue();
 });
 
 it('runs the Ley Silla checks at 07:30, digests them at 08:30 and reminds the 2 questions at 09:00 display time, once and without overlapping', function (): void {

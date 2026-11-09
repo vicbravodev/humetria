@@ -29,6 +29,19 @@ final readonly class CompanyDirectory implements Companies
         return self::summary($tenant);
     }
 
+    public function enterBySlug(string $slug): ?CompanySummary
+    {
+        $tenant = Tenant::query()->where('slug', $slug)->first();
+
+        if ($tenant === null || $tenant->status()->isBlocked()) {
+            return null;
+        }
+
+        $this->tenantContext->set($tenant);
+
+        return self::summary($tenant);
+    }
+
     public function current(): CompanySummary
     {
         return self::summary(Tenant::query()->findOrFail($this->tenantContext->id()));

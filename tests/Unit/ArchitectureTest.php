@@ -28,6 +28,10 @@ function internalNamespacesOf(string $module): array
     ));
 }
 
+it('has the Attendance module registered in the architecture rules', function (): void {
+    expect(modules())->toContain('Attendance');
+});
+
 arch()->preset()->php();
 
 arch()->preset()->security();
