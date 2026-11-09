@@ -1,8 +1,9 @@
 name: mutation
 
 # Every Sunday night, and on demand, mutation testing of the business-logic classes on main (composer mutate:critical:
-# every class a test declares in mutates(), minus controllers, form requests and notifications). It is no part of
-# tests.yml, so it never blocks a pull request: when the score drops below --min the run fails, and GitHub emails it.
+# every class a test declares in mutates(), minus controllers, form requests and notifications), one module at a time
+# (scripts/mutate-critical.sh: a single run overflows the OS argument limit). It is no part of tests.yml, so it never
+# blocks a pull request: when a module's score drops below --min the run fails, and GitHub emails it.
 on:
   schedule:
     - cron: '0 5 * * 1' # Sunday 23:00 in Mexico City

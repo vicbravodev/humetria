@@ -18,7 +18,7 @@
 composer test:fast                                                       # Tia: solo los tests que tu cambio afecta
 composer mutate -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # una clase (o un namespace), 4 procesos
 composer mutate:retry -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # lo que escapó, primero
-composer mutate:critical                                                 # las clases de lógica de negocio, ~6 min; CI le pone --min=95
+composer mutate:critical                                                 # las clases de lógica de negocio, un módulo a la vez; CI le pone --min=95
 composer mutate:full                                                     # las 293 de mutates(), --min=95
 ```
 
@@ -30,7 +30,26 @@ Cada checkout usa su propia base de pruebas (ver CLAUDE.md, "Worktrees en parale
 |---|---|---|
 | Local, a mano | La clase que pasas con `--class` | — |
 | `tests.yml` (PR y `main`) | Nada: la mutación no bloquea el merge | — |
-| `mutation.yml`, domingo 23:00 (CDMX) y a mano | Las clases de `mutates()` sin controladores, FormRequests ni notificaciones (`composer mutate:critical`) | 95% |
+| `mutation.yml`, domingo 23:00 (CDMX) y a mano | Las clases de `mutates()` sin controladores, FormRequests ni notificaciones, un módulo a la vez (`composer mutate:critical`) | 95% por módulo |
+
+### Por qué un módulo a la vez
+
+Pest mide la cobertura con todos los tests que corre y, para probar cada mutante, lanza un proceso con un `--filter` que
+lista **cada test que cubre esa línea**. Una línea que casi toda la suite toca (el scope de tenant, un middleware) produce un
+filtro de más de 128 KB, el límite del sistema para un argumento, y la corrida muere con `Argument list too long`
+(pasó el 9 nov 2026, con 6086 tests, y la mutación no llegó a calcular su score). `--class` no lo arregla: solo limita
+qué mutantes se generan, no qué tests corren.
+
+`scripts/mutate-critical.sh` corre un módulo a la vez (el namespace bajo `App\Modules\`; lo demás es `Kernel`) y
+`scripts/mutation-classes.php tests --plan` le da a cada uno sus clases y un `--filter` con solo los archivos de test que
+declaran `mutates()` de ellas. Eso fija el tamaño del filtro al de un módulo, no al de la suite. Consecuencias:
+
+- Un mutante lo tienen que matar los tests que declaran `mutates()` de su clase, no los de otro módulo que la toquen de paso.
+  Un archivo de test que muta clases de dos módulos corre en los dos.
+- `--min=95` se aplica a cada módulo, no al promedio. Un módulo que baja de 95 deja la corrida en rojo, pero los demás se corren
+  igual y el log trae el score de cada uno (`=== mutation: <módulo>`).
+- Una clase nueva entra sola: basta que su test declare `mutates()`. Un módulo nuevo, también.
+- `mutate:full` (y `mutate` sin `--class`) no se parte así: con un filtro de esa línea compartida puede caer igual. Para medir, usa `mutate:critical`.
 
 Si la corrida semanal falla, el workflow queda en rojo y GitHub avisa al correo de quien editó el cron; no toca ningún PR.
 
