@@ -44,6 +44,9 @@ use LogicException;
 final readonly class BuildAuthorityReport
 {
     /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
+    /** The flag of a day that started and never ended; the page counts them. */
+    public const string MISSING_END = 'Sin marca de fin';
+
     private const int PERSON_WEEKS = 1000;
 
     private const array EVIDENCE = [
@@ -318,7 +321,7 @@ final readonly class BuildAuthorityReport
         return array_keys(array_filter([
             'Sin marca de inicio' => $marks[0]->type !== MarkType::Start,
             'En curso' => $open,
-            'Sin marca de fin' => WorkedDay::missingEnd($marks) && ! $open,
+            self::MISSING_END => WorkedDay::missingEnd($marks) && ! $open,
             'Más de 12 h trabajadas en el día (art. 68)' => $day->workedMinutes > LegalLimits::DAY_TOTAL_MAX,
             'Más de 4 h extra en el día (art. 66)' => $overtime > LegalLimits::DAILY_OVERTIME_MAX,
             'Horas extra en más de 4 días de la semana (art. 66)' => $overtime > 0 && in_array(OverLimit::OvertimeDaysOver4, $week->flags, true),

@@ -59,7 +59,7 @@ describe('the page', function (): void {
             ->component('attendance/report')
             ->where('center', null)
             ->where('period', ['from' => '2027-01-25', 'to' => '2027-01-31'])
-            ->where('filters', ['q' => ''])
+            ->where('filters', ['q' => '', 'show' => 'all'])
             ->where('summary', null)
             ->where('people', null)
             ->where('longPeriod', null)
@@ -77,7 +77,10 @@ describe('the page', function (): void {
         $response = $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->where('center', ['id' => $this->plant->id, 'name' => 'Planta Norte'])
             ->where('period', ['from' => '2027-01-25', 'to' => '2027-01-31'])
-            ->where('summary', ['people' => 2, 'days' => 3, 'workedMinutes' => 1080, 'confirmedPercent' => 67, 'withCorrections' => 1, 'unconfirmed' => 1])
+            ->where('summary', [
+                'people' => 2, 'days' => 3, 'workedMinutes' => 1080, 'confirmedPercent' => 67, 'withCorrections' => 1, 'unconfirmed' => 1,
+                'confirmedDays' => 2, 'ordinaryMinutes' => 960, 'overtimeMinutes' => 120, 'overTwelveDays' => 0, 'withoutEndDays' => 1, 'flaggedPeople' => 1, 'unconfirmedPeople' => 1,
+            ])
             ->where('people.total', 2)
             ->where('people.per_page', 25)
             ->where('people.data.0.name', 'Ana López')
@@ -101,7 +104,10 @@ describe('the page', function (): void {
         $this->actingAs($this->hr);
 
         $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('summary', ['people' => 0, 'days' => 0, 'workedMinutes' => 0, 'confirmedPercent' => 0, 'withCorrections' => 0, 'unconfirmed' => 0])
+            ->where('summary', [
+                'people' => 0, 'days' => 0, 'workedMinutes' => 0, 'confirmedPercent' => 0, 'withCorrections' => 0, 'unconfirmed' => 0,
+                'confirmedDays' => 0, 'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'overTwelveDays' => 0, 'withoutEndDays' => 0, 'flaggedPeople' => 0, 'unconfirmedPeople' => 0,
+            ])
             ->where('people.total', 0));
     });
 
@@ -117,7 +123,7 @@ describe('the page', function (): void {
         $this->get(authorityReportUrl(['center' => $this->plant->id, 'page' => 2]))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('people.total', 26)->has('people.data', 1)->where('people.current_page', 2));
         $this->get(authorityReportUrl(['center' => $this->plant->id, 'q' => 'DIAZ']))->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('filters', ['q' => 'DIAZ'])
+            ->where('filters', ['q' => 'DIAZ', 'show' => 'all'])
             ->where('people.total', 1)
             ->where('people.data.0.name', 'Bob Díaz')
             ->where('summary.people', 26));
@@ -134,6 +140,64 @@ describe('the page', function (): void {
         $this->expectsDatabaseQueryCount(REPORT_PAGE_QUERIES);
         $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk();
     })->with(['3 people' => [2], '40 people' => [39]]);
+});
+
+describe('before showing it to an inspection', function (): void {
+    it('counts what makes the report look weak: days over 12 h, days with no end, and the people they belong to', function (): void {
+        pageDay($this->ana, '2027-01-26 06:00', '2027-01-26 19:00');
+        pageDay($this->ana, '2027-01-27 08:00', '2027-01-27 16:00');
+        pageDay($this->bob, '2027-01-28 09:00', null);
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('summary.overTwelveDays', 1)
+            ->where('summary.withoutEndDays', 1)
+            ->where('summary.flaggedPeople', 2)
+            ->where('summary.unconfirmedPeople', 2)
+            ->where('summary.confirmedDays', 0));
+    });
+
+    it('counts a person once, whatever the days of theirs that are flagged or unconfirmed', function (): void {
+        pageDay($this->ana, '2027-01-26 06:00', '2027-01-26 19:00');
+        pageDay($this->ana, '2027-01-27 06:00', '2027-01-27 19:00');
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('summary.overTwelveDays', 2)->where('summary.flaggedPeople', 1)->where('summary.unconfirmedPeople', 1));
+    });
+
+    it('shows only the people with flags, or only those with a week no one answered, the figures still of all of them', function (): void {
+        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 16:00');
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2027-01-25']);
+        pageDay($this->bob, '2027-01-28 09:00', null);
+        $this->actingAs($this->hr);
+        $period = ['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'];
+
+        foreach (['flagged', 'unconfirmed'] as $show) {
+            $this->get(authorityReportUrl([...$period, 'show' => $show]))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('filters.show', $show)
+                ->where('people.total', 1)
+                ->where('people.data.0.name', 'Bob Díaz')
+                ->where('summary.people', 2));
+        }
+        $this->get(authorityReportUrl([...$period, 'show' => 'all']))->assertInertia(fn (AssertableInertia $page) => $page->where('people.total', 2));
+    });
+
+    it('applies the search after the filter', function (): void {
+        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 16:00');
+        pageDay($this->bob, '2027-01-28 09:00', null);
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'show' => 'flagged', 'q' => 'ana']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.total', 0)->where('summary.people', 2));
+    });
+
+    it('refuses a filter it does not know', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'show' => 'todo']))
+            ->assertRedirect(authorityReportUrl(['center' => $this->plant->id]))->assertSessionHasErrors(['show']);
+    });
 });
 
 describe('who may see it', function (): void {

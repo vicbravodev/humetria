@@ -33,10 +33,10 @@ final readonly class ReportController
         [$from, $to] = $request->hasPeriod() ? [$request->from(), $request->to()] : ReportPages::lastWeek();
         $center = PanelScope::center($this->workCenters, $request->centerId());
         $onlyDownload = $request->onlyDownload();
-        $page = $pages->show($request->tenantSlug(), $center, $from, $to, $request->string('q')->trim()->limit(100, '')->toString(), $onlyDownload ? $request->days() : null);
+        $page = $pages->show($request->tenantSlug(), $center, $from, $to, $request->string('q')->trim()->limit(100, '')->toString(), $onlyDownload ? $request->days() : null, $request->show());
 
-        // Its first page with no search: the next pages and each search of the same report are not new views.
-        if ($center !== null && ! $onlyDownload && $request->integer('page', 1) <= 1 && ! $request->filled('q')) {
+        // Its first page with no search or filter: the next pages and each search or filter of the same report are not new views.
+        if ($center !== null && ! $onlyDownload && $request->integer('page', 1) <= 1 && ! $request->filled('q') && $request->show() === 'all') {
             $audit->handle('view', $center->id, $from, $to, $pages->days($page));
         }
 

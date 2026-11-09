@@ -40,12 +40,12 @@ final readonly class ReportPages
      * @param  int|null  $longPeriod  the days of a period too long for the screen; null to show it
      * @return array<string, mixed>
      */
-    public function show(string $slug, ?WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search, ?int $longPeriod = null): array
+    public function show(string $slug, ?WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search, ?int $longPeriod = null, string $show = 'all'): array
     {
         $page = [
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
-            'filters' => ['q' => $search],
+            'filters' => ['q' => $search, 'show' => $show],
             'summary' => null,
             'people' => null,
             'generatedAt' => null,
@@ -57,7 +57,7 @@ final readonly class ReportPages
             return [...$page, 'longPeriod' => ['days' => $longPeriod, 'maxOnScreen' => config()->integer('attendance.report.page_max_days')], 'exportUrl' => self::exportUrl($slug, $center, $from, $to)];
         }
 
-        return $center === null ? $page : [...$page, ...$this->report($slug, $center, $from, $to, $search)];
+        return $center === null ? $page : [...$page, ...$this->report($slug, $center, $from, $to, $search, $show)];
     }
 
     /**
@@ -75,26 +75,37 @@ final readonly class ReportPages
     /**
      * @return array<string, mixed>
      */
-    private function report(string $slug, WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search): array
+    private function report(string $slug, WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search, string $show): array
     {
         $ids = $this->report->people($center->id, $from, $to);
-        $people = $this->roster->page(new RosterQuery(employeeIds: $ids, search: $search), self::PER_PAGE);
-        $shown = array_fill_keys(array_map(fn (RosterEntry $person): string => $person->id, $people->items()), []);
-        $totals = ['days' => 0, 'workedMinutes' => 0, 'confirmed' => 0, 'withCorrections' => 0, 'unconfirmed' => 0];
+        $totals = ['days' => 0, 'workedMinutes' => 0, 'confirmed' => 0, 'withCorrections' => 0, 'unconfirmed' => 0, 'ordinary' => 0, 'overtime' => 0, 'overTwelve' => 0, 'withoutEnd' => 0];
+        $days = array_fill_keys($ids, []);
+        $flagged = [];
+        $unconfirmed = [];
 
         // ponytail: every person-day of the period is computed for the figures, a chunk of people at a time; a year of a
         // center of thousands takes seconds. Keep daily totals if RH opens such reports often.
         foreach ($this->report->rowsOf($ids, $center->id, $from, $to) as $row) {
             $totals['days']++;
             $totals['workedMinutes'] += $row->workedMinutes;
+            $totals['ordinary'] += $row->ordinaryMinutes;
+            $totals['overtime'] += $row->doubleMinutes + $row->tripleMinutes;
             $totals['confirmed'] += $row->confirmation === 'confirmado' ? 1 : 0;
             $totals['withCorrections'] += $row->corrections === [] ? 0 : 1;
             $totals['unconfirmed'] += $row->confirmation === 'sin confirmar' ? 1 : 0;
-
-            if (array_key_exists($row->employeeId, $shown)) {
-                $shown[$row->employeeId][] = self::day($row);
-            }
+            $totals['overTwelve'] += $row->workedMinutes > LegalLimits::DAY_TOTAL_MAX ? 1 : 0;
+            $totals['withoutEnd'] += in_array(BuildAuthorityReport::MISSING_END, $row->flags, true) ? 1 : 0;
+            $flagged[$row->employeeId] = ($flagged[$row->employeeId] ?? false) || $row->flags !== [];
+            $unconfirmed[$row->employeeId] = ($unconfirmed[$row->employeeId] ?? false) || $row->confirmation === 'sin confirmar';
+            $days[$row->employeeId][] = self::day($row);
         }
+
+        $listed = match ($show) {
+            'flagged' => array_values(array_filter($ids, fn (string $id): bool => $flagged[$id] ?? false)),
+            'unconfirmed' => array_values(array_filter($ids, fn (string $id): bool => $unconfirmed[$id] ?? false)),
+            default => $ids,
+        };
+        $people = $this->roster->page(new RosterQuery(employeeIds: $listed, search: $search), self::PER_PAGE);
 
         $now = CarbonImmutable::now();
 
@@ -106,12 +117,19 @@ final readonly class ReportPages
                 'confirmedPercent' => $totals['days'] === 0 ? 0 : intdiv($totals['confirmed'] * 100 + intdiv($totals['days'], 2), $totals['days']),
                 'withCorrections' => $totals['withCorrections'],
                 'unconfirmed' => $totals['unconfirmed'],
+                'confirmedDays' => $totals['confirmed'],
+                'ordinaryMinutes' => $totals['ordinary'],
+                'overtimeMinutes' => $totals['overtime'],
+                'overTwelveDays' => $totals['overTwelve'],
+                'withoutEndDays' => $totals['withoutEnd'],
+                'flaggedPeople' => count(array_filter($flagged)),
+                'unconfirmedPeople' => count(array_filter($unconfirmed)),
             ],
             'people' => $people->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
                 'name' => $person->name,
                 'jobTitle' => $person->jobTitle,
-                'days' => $shown[$person->id] ?? [],
+                'days' => $days[$person->id] ?? [],
             ]),
             'generatedAt' => [
                 'utc' => $now->utc()->format('Y-m-d H:i'),

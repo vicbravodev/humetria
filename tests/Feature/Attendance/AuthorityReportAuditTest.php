@@ -124,9 +124,10 @@ it('keeps the audit entry of a download cut off halfway', function (): void {
     expect(AuditEntry::query()->where('event', 'attendance.report_exported')->sole()->metadata)->toEqual(['action' => 'export', 'work_center_id' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'format' => 'csv']);
 });
 
-it('writes a view of a center\'s report on its first page with no search, never on the next ones, a search or before a center', function (): void {
+it('writes a view of a center\'s report on its first page with no search, never on the next ones, a search, a filter or before a center', function (): void {
     $this->get(route('tenant.attendance.report', ['acme', ...$this->period]))->assertOk();
     $this->get(route('tenant.attendance.report', ['acme', ...$this->period, 'q' => 'ana']))->assertOk();
+    $this->get(route('tenant.attendance.report', ['acme', ...$this->period, 'show' => 'flagged']))->assertOk();
     $this->get(route('tenant.attendance.report', ['acme', ...$this->period, 'page' => 2]))->assertOk();
     $this->get(route('tenant.attendance.report', ['acme']))->assertOk();
 
