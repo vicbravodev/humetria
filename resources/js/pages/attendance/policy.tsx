@@ -23,7 +23,7 @@ export default function AttendancePolicyPage({
     return (
         <>
             <Head title="Política · Asistencia" />
-            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     caption="Toda la empresa"
                     title="Política"
@@ -38,7 +38,11 @@ export default function AttendancePolicyPage({
                             : 'Cómo marcan las personas de todos los centros y cuánto se conserva su registro. Solo el dueño y RH la cambian.'
                     }
                 />
-                <PolicyForm policy={policy} canManage={canManage} />
+                <PolicyForm
+                    key={JSON.stringify(policy)}
+                    policy={policy}
+                    canManage={canManage}
+                />
             </div>
         </>
     );

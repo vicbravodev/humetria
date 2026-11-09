@@ -1,5 +1,4 @@
 import { MapPinOff } from 'lucide-react';
-import { useState } from 'react';
 import ChoiceField from '@/components/humetria/choice-field';
 import SettingRow from '@/components/humetria/setting-row';
 import type { AttendancePolicy } from '@/types';
@@ -12,13 +11,13 @@ const OPTIONS: { value: AttendancePolicy['outOfZone']; label: string }[] = [
 /** What a mark out of every zone does: blocked by default, or kept and flagged as weak evidence. */
 export default function PolicyOutOfZone({
     value,
+    onChange,
     error,
 }: {
     value: AttendancePolicy['outOfZone'];
+    onChange: (value: AttendancePolicy['outOfZone']) => void;
     error: string | undefined;
 }) {
-    const [chosen, setChosen] = useState(value);
-
     return (
         <SettingRow
             icon={MapPinOff}
@@ -29,8 +28,8 @@ export default function PolicyOutOfZone({
                 name="out_of_zone"
                 legend="Fuera de zona"
                 options={OPTIONS}
-                value={chosen}
-                onChange={setChosen}
+                value={value}
+                onChange={onChange}
                 columns={2}
                 error={error}
             />

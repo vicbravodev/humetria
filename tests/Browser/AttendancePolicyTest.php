@@ -42,6 +42,30 @@ it('lets RH change the policy and keeps it', function (): void {
         ->trusted_may_use_browser->toBeTrue()->retention_months->toBe(24);
 });
 
+it('shows how a mark ends up and what changes, before RH saves', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/attendance/policy")
+        ->assertSee('Así queda una marca')
+        ->assertSee('Sin cambios por guardar')
+        ->assertSee('Con QR, pero fuera de todas las zonas')
+        ->assertSee('No se guarda la marca')
+        ->assertDontSee('Se guarda sin zona, señalada')
+        ->click('Permitir y señalar')
+        ->assertSee('Se guarda sin zona, señalada')
+        ->assertDontSee('No se guarda la marca')
+        ->assertSee('1 cambio sin guardar · quedará en la bitácora')
+        ->fill('#policy-max_accuracy_m', '60')
+        ->assertSee('Con QR, pero con ubicación peor que 60 m')
+        ->assertSee('2 cambios sin guardar · quedarán en la bitácora')
+        ->click('Descartar')
+        ->assertSee('Sin cambios por guardar')
+        ->assertSee('No se guarda la marca')
+        ->assertScript('() => document.querySelector("#policy-max_accuracy_m").value', '100')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('shows a viewer the policy without letting them change it', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();

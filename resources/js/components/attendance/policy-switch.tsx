@@ -7,11 +7,13 @@ export default function PolicySwitch({
     label,
     hint,
     checked,
+    onChange,
 }: {
     name: string;
     label: string;
     hint: string;
     checked: boolean;
+    onChange: (checked: boolean) => void;
 }) {
     return (
         <div className="flex items-start gap-3 rounded-lg border bg-card p-4">
@@ -19,7 +21,8 @@ export default function PolicySwitch({
                 id={`policy-${name}`}
                 name={name}
                 value="1"
-                defaultChecked={checked}
+                checked={checked}
+                onCheckedChange={(next) => onChange(next === true)}
                 className="mt-0.5"
             />
             <div className="grid gap-1">
