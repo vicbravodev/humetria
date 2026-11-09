@@ -16,8 +16,8 @@ export default function ReportConfirmed({
             <span className="text-sm leading-5 text-muted-foreground">
                 Días confirmados
             </span>
-            <div className="flex items-baseline gap-2">
-                <span className="text-3xl leading-[38px] font-semibold tracking-[-0.02em] tabular-nums">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+                <span className="text-3xl leading-[38px] font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums">
                     {percent} %
                 </span>
                 <span className="text-caption text-muted-foreground">
