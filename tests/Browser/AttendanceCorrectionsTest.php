@@ -65,7 +65,8 @@ it('shows an empty queue with what will appear in it', function (bool $dark): vo
 
     visitPage('attendance/corrections', "{$url}/attendance/corrections", $dark)
         ->assertSee('Nada por resolver')
-        ->assertSee('Cuando una persona pida corregir una marca');
+        ->assertSee('Cuando una persona pida corregir una marca')
+        ->assertDontSee('resuelta');
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('lets RH approve a request with its effect in view, adding the mark', function (): void {
@@ -80,6 +81,10 @@ it('lets RH approve a request with its effect in view, adding the mark', functio
         ->waitForText('Solicitud aprobada')
         ->assertSee('Corrección aprobada.')
         ->assertSee('Nada por resolver')
+        ->assertSee('Ver la resuelta')
+        ->click('a:has-text("Ver la resuelta")')
+        ->waitForText('Lo confirmó su jefa.')
+        ->assertDontSee('Nada por resolver')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 
@@ -99,7 +104,7 @@ it('asks RH for a note to reject, and keeps it with the request', function (): v
         ->waitForText('Solicitud rechazada')
         ->assertSee('Corrección rechazada.');
 
-    $page->click('a[href$="status=rejected"]')
+    $page->click('nav[aria-label="Estado de las solicitudes"] a[href$="status=rejected"]')
         ->waitForText('La cámara dice que llegaste a las 9:20.')
         ->assertNoJavaScriptErrors();
     expect($request->fresh()?->status)->toBe(CorrectionStatus::Rejected);

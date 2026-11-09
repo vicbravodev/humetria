@@ -1,8 +1,21 @@
+import { Link } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
 import CorrectionListItem from '@/components/attendance/correction-list-item';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
-import type { CorrectionRow, CorrectionStatus, Paginated } from '@/types';
+import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import {
+    correctionsQuery,
+    resolvedShortcut,
+} from '@/lib/attendance/corrections';
+import { index } from '@/routes/tenant/attendance/corrections';
+import type {
+    CorrectionCounts,
+    CorrectionRow,
+    CorrectionStatus,
+    Paginated,
+} from '@/types';
 
 const EMPTY: Record<CorrectionStatus, { title: string; text: string }> = {
     pending: {
@@ -25,16 +38,37 @@ export default function CorrectionList({
     selectedId,
     status,
     q,
+    counts,
 }: {
     requests: Paginated<CorrectionRow>;
     selectedId: string | null;
     status: CorrectionStatus;
     q: string;
+    counts: CorrectionCounts;
 }) {
+    const tenantSlug = useTenantSlug();
+    const resolved = resolvedShortcut(counts);
+
     if (requests.total === 0) {
         return (
             <EmptyState
                 icon={ClipboardCheck}
+                action={
+                    status === 'pending' && q === '' && resolved !== null ? (
+                        <Button asChild variant="outline">
+                            <Link
+                                href={index(tenantSlug, {
+                                    query: correctionsQuery({
+                                        q: '',
+                                        status: resolved.status,
+                                    }),
+                                })}
+                            >
+                                {resolved.label}
+                            </Link>
+                        </Button>
+                    ) : undefined
+                }
                 title={q !== '' ? 'Nadie con ese nombre' : EMPTY[status].title}
             >
                 {q !== ''

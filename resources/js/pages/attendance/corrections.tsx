@@ -89,6 +89,7 @@ export default function Corrections({
                 </div>
                 <div className="grid items-start gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
                     <CorrectionList
+                        counts={counts}
                         requests={requests}
                         selectedId={selectedId}
                         status={status}

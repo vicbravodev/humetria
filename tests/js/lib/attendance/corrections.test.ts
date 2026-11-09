@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     correctionsQuery,
+    resolvedShortcut,
     shortMoment,
     waitingFor,
 } from '@/lib/attendance/corrections';
@@ -27,5 +28,25 @@ describe('waitingFor', () => {
         expect(waitingFor(0)).toBe('hoy');
         expect(waitingFor(1)).toBe('ayer');
         expect(waitingFor(4)).toBe('hace 4 días');
+    });
+});
+
+describe('resolvedShortcut', () => {
+    it('has none when nothing was ever resolved', () => {
+        expect(
+            resolvedShortcut({ pending: 0, approved: 0, rejected: 0 }),
+        ).toBeNull();
+    });
+
+    it('goes to the approved ones, counting both kinds of resolved', () => {
+        expect(
+            resolvedShortcut({ pending: 0, approved: 9, rejected: 3 }),
+        ).toEqual({ status: 'approved', label: 'Ver las 12 resueltas' });
+    });
+
+    it('goes to the rejected ones when none was approved, in singular for one', () => {
+        expect(
+            resolvedShortcut({ pending: 0, approved: 0, rejected: 1 }),
+        ).toEqual({ status: 'rejected', label: 'Ver la resuelta' });
     });
 });
