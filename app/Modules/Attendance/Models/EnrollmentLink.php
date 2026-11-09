@@ -46,6 +46,19 @@ final class EnrollmentLink extends Model
     }
 
     /**
+     * Of these people, the ones with a link that still opens (the same rule as findPending).
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<int, string>
+     */
+    public static function openAmong(array $employeeIds): array
+    {
+        return self::query()->among('employee_id', $employeeIds)->whereNull('used_at')->whereNull('revoked_at')
+            ->where('expires_at', '>', CarbonImmutable::now())->get(['employee_id'])
+            ->map(fn (self $link): string => $link->employee_id)->all();
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

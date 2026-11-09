@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Jobs;
 
 use App\Modules\Attendance\Actions\IssueEnrollment;
+use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
@@ -18,7 +19,7 @@ use Throwable;
 /**
  * Sends one person of a batch their link to link a phone. Only ids travel in the job: the link is made here, in the worker,
  * and goes straight into the email, so its token never sits in the queue, Horizon or failed_jobs. A person who left, has
- * no email by then, linked a device meanwhile or is not the company's, or a company that may not be used, gets nothing. A
+ * no email by then, linked a device or got a link that still opens meanwhile, or is not the company's, or a company that may not be used, gets nothing. A
  * person has at most one waiting, so a batch sent twice before the worker runs emails them once.
  */
 final class SendEnrollmentLink implements ShouldBeUniqueUntilProcessing, ShouldQueue, ShouldQueueAfterCommit
@@ -46,6 +47,12 @@ final class SendEnrollmentLink implements ShouldBeUniqueUntilProcessing, ShouldQ
 
         if (DevicePages::states([$person->id])[$person->id] === 'linked') {
             Log::info('attendance.enrollment_skipped', ['tenant_id' => $this->tenantId, 'employee_id' => $person->id, 'reason' => 'has_device']);
+
+            return;
+        }
+
+        if (EnrollmentLink::openAmong([$person->id]) !== []) {
+            Log::info('attendance.enrollment_skipped', ['tenant_id' => $this->tenantId, 'employee_id' => $person->id, 'reason' => 'has_link']);
 
             return;
         }

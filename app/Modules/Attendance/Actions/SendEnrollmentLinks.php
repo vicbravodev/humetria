@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
 use App\Modules\Attendance\Jobs\SendEnrollmentLink;
+use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -15,8 +16,9 @@ use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sends their link to link a phone to every active person of a center in use with no active device: one queued job each,
- * which makes the link in the worker (see SendEnrollmentLink). A person with no email is left for RH to hand theirs over
+ * Sends their link to link a phone to every active person of a center in use with no active device and no link that still
+ * opens: one queued job each, which makes the link in the worker (see SendEnrollmentLink). Who already has a link that opens
+ * keeps it (resending is the one-by-one action), and is counted. A person with no email is left for RH to hand theirs over
  * one by one, and counted. The batch goes to the audit trail once, with counts only.
  */
 final readonly class SendEnrollmentLinks
@@ -24,7 +26,7 @@ final readonly class SendEnrollmentLinks
     public function __construct(private WorkCenters $workCenters, private Roster $roster, private CurrentTenant $tenant, private RecordAudit $audit) {}
 
     /**
-     * @return array{sent: int, without_email: int, linked: int}
+     * @return array{sent: int, without_email: int, linked: int, with_link: int}
      *
      * @throws WorkCenterNotAvailable when the center is not one in use of the company
      */
@@ -33,12 +35,14 @@ final readonly class SendEnrollmentLinks
         $center = $this->workCenters->findActive($workCenterId) ?? throw new WorkCenterNotAvailable;
         $people = $this->roster->activeIn($center->id);
         $states = DevicePages::states(array_map(fn (RosterEntry $person): string => $person->id, $people));
-        $counts = ['sent' => 0, 'without_email' => 0, 'linked' => 0];
+        $withLink = array_flip(EnrollmentLink::openAmong(array_keys($states)));
+        $counts = ['sent' => 0, 'without_email' => 0, 'linked' => 0, 'with_link' => 0];
         $recipients = [];
 
         foreach ($people as $person) {
             $outcome = match (true) {
                 $states[$person->id] === 'linked' => 'linked',
+                isset($withLink[$person->id]) => 'with_link',
                 $person->email === null => 'without_email',
                 default => 'sent',
             };
