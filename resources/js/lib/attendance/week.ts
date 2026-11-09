@@ -14,6 +14,8 @@ export type WeekMark = {
     nextDay: boolean;
     corrected: boolean;
     reason: string | null;
+    /** How much the mark proves (`strong`, `medium`, `basic` or `corrected`); null when the server named none. */
+    evidence: string | null;
 };
 
 export type WeekDay = {
@@ -21,6 +23,8 @@ export type WeekDay = {
     marks: WeekMark[];
     workedMinutes: number;
     scheduledMinutes: number;
+    /** Of the minutes worked, those that were overtime: what the bar of the week draws apart. */
+    overtimeMinutes: number;
     restDay: boolean;
     missingEnd: boolean;
 };
@@ -81,6 +85,7 @@ function mark(json: unknown): WeekMark[] {
                   nextDay: json['nextDay'] === true,
                   corrected: json['corrected'] === true,
                   reason: text(json['reason']),
+                  evidence: text(json['evidence']),
               },
           ]
         : [];
@@ -91,13 +96,15 @@ function day(json: unknown): WeekDay[] {
         typeof json['date'] === 'string' &&
         Array.isArray(json['marks']) &&
         typeof json['workedMinutes'] === 'number' &&
-        typeof json['scheduledMinutes'] === 'number'
+        typeof json['scheduledMinutes'] === 'number' &&
+        typeof json['overtimeMinutes'] === 'number'
         ? [
               {
                   date: json['date'],
                   marks: json['marks'].flatMap(mark),
                   workedMinutes: json['workedMinutes'],
                   scheduledMinutes: json['scheduledMinutes'],
+                  overtimeMinutes: json['overtimeMinutes'],
                   restDay: json['restDay'] === true,
                   missingEnd: json['missingEnd'] === true,
               },

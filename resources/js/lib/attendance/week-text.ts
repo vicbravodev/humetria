@@ -1,5 +1,6 @@
 import type { PunchFeedback } from '@/lib/attendance/punch-state';
-import type { WeekView } from '@/lib/attendance/week';
+import type { RibbonDay } from '@/lib/attendance/week-ribbon';
+import type { WeekDay, WeekMark, WeekView } from '@/lib/attendance/week';
 
 const MONTHS = [
     'enero',
@@ -167,4 +168,83 @@ export function weekFeedback(
     }
 
     return notice === null ? null : { kind: 'done', text: notice };
+}
+
+/** What the page says first (board P4): where the week stands as a title, and under it whose week it is. */
+export function weekHeading(
+    view: Pick<WeekView, 'name' | 'week' | 'status' | 'blocked'>,
+): { title: string; text: string } {
+    const titles: Record<string, string> = {
+        confirmed: 'Semana confirmada',
+        disputed: 'Semana objetada',
+        open: 'Su semana en curso',
+    };
+    const pending =
+        view.blocked === null
+            ? 'Su semana está lista'
+            : 'Su semana por revisar';
+
+    return {
+        title: titles[view.status] ?? pending,
+        text: `${view.name} · ${weekTitle(view.week.start, view.week.end)}`,
+    };
+}
+
+/** The hours of the week: the total, and how they are paid, apart only what there is (doubles, triples, the rest day). */
+export function weekTotal(view: Pick<WeekView, 'days' | 'summary'>): {
+    total: string;
+    parts: string;
+} {
+    const { summary } = view;
+    const worked = view.days.reduce((sum, day) => sum + day.workedMinutes, 0);
+    const parts = [
+        [summary.ordinaryMinutes, 'ordinarias', true],
+        [summary.doubleMinutes, 'dobles', false],
+        [summary.tripleMinutes, 'triples', false],
+        [summary.restDayMinutes, 'en descanso', false],
+    ].flatMap(([minutes, label, always]) =>
+        typeof minutes === 'number' && (minutes > 0 || always === true)
+            ? [`${duration(minutes)} ${label}`]
+            : [],
+    );
+
+    return {
+        total: duration(worked),
+        parts: worked === 0 ? 'Sin horas trabajadas' : parts.join(' · '),
+    };
+}
+
+/** The days of the week as the bar draws them: minutes worked and, of them, the overtime. */
+export function ribbonDays(days: readonly WeekDay[]): RibbonDay[] {
+    return days.map((day) => ({
+        worked: day.workedMinutes,
+        overtime: day.overtimeMinutes,
+    }));
+}
+
+const EVIDENCE: Record<string, { dots: number; text: string; rank: number }> = {
+    strong: { dots: 3, text: 'Fuerte', rank: 0 },
+    medium: { dots: 2, text: 'Media', rank: 1 },
+    basic: { dots: 1, text: 'Básica', rank: 2 },
+    corrected: { dots: 1, text: 'Corregida', rank: 3 },
+};
+
+/** How much a day proves, in a word and in dots: as much as its weakest mark (criterio 5.3); null with no marks or an unknown level. */
+export function dayEvidence(
+    marks: readonly WeekMark[],
+): { dots: number; text: string } | null {
+    const levels = marks.map((mark) => EVIDENCE[mark.evidence ?? '']);
+    const weakest = levels.reduce(
+        (found, level) =>
+            level === undefined || found === undefined
+                ? undefined
+                : level.rank > found.rank
+                  ? level
+                  : found,
+        levels[0],
+    );
+
+    return weakest === undefined
+        ? null
+        : { dots: weakest.dots, text: weakest.text };
 }
