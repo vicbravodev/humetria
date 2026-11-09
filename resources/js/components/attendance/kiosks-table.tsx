@@ -1,6 +1,6 @@
 import KioskRow from '@/components/attendance/kiosk-row';
+import StackedTable from '@/components/humetria/stacked-table';
 import {
-    Table,
     TableBody,
     TableHead,
     TableHeader,
@@ -19,7 +19,7 @@ export default function KiosksTable({
     active: number;
 }) {
     return (
-        <Table>
+        <StackedTable>
             <TableHeader>
                 <TableRow>
                     <TableHead>Estado</TableHead>
@@ -42,6 +42,6 @@ export default function KiosksTable({
                     />
                 ))}
             </TableBody>
-        </Table>
+        </StackedTable>
     );
 }

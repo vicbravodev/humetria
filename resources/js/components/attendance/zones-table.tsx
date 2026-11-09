@@ -1,6 +1,6 @@
 import ZoneRow from '@/components/attendance/zone-row';
+import StackedTable from '@/components/humetria/stacked-table';
 import {
-    Table,
     TableBody,
     TableHead,
     TableHeader,
@@ -21,7 +21,7 @@ export default function ZonesTable({
     tolerance: number;
 }) {
     return (
-        <Table>
+        <StackedTable>
             <TableHeader>
                 <TableRow>
                     <TableHead>Zona</TableHead>
@@ -47,6 +47,6 @@ export default function ZonesTable({
                     />
                 ))}
             </TableBody>
-        </Table>
+        </StackedTable>
     );
 }

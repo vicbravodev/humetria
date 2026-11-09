@@ -19,7 +19,7 @@ export default function DevicePersonRow({
 
     return (
         <TableRow>
-            <TableCell>
+            <TableCell className="max-w-64 whitespace-normal max-md:w-full max-md:max-w-none">
                 <div className="flex items-center gap-3">
                     <Initials name={person.name} />
                     <div className="flex min-w-0 flex-col">
@@ -30,10 +30,10 @@ export default function DevicePersonRow({
                     </div>
                 </div>
             </TableCell>
-            <TableCell className="min-w-56">
+            <TableCell className="min-w-56 max-md:w-full">
                 <LinkSteps person={person} />
             </TableCell>
-            <TableCell className="min-w-72 whitespace-normal">
+            <TableCell className="min-w-64 whitespace-normal max-md:w-full">
                 {person.devices.length === 0 ? (
                     <span className="text-sm text-muted-foreground">
                         {nextForPerson(person)}

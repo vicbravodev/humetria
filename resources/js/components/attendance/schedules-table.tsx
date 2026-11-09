@@ -3,8 +3,8 @@ import ChooseBox from '@/components/attendance/choose-box';
 import ScheduleRow from '@/components/attendance/schedule-row';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
+import StackedTable from '@/components/humetria/stacked-table';
 import {
-    Table,
     TableBody,
     TableHead,
     TableHeader,
@@ -64,7 +64,7 @@ export default function SchedulesTable({
 
     return (
         <>
-            <Table>
+            <StackedTable>
                 <TableHeader>
                     <TableRow>
                         {canManage && (
@@ -101,7 +101,7 @@ export default function SchedulesTable({
                         />
                     ))}
                 </TableBody>
-            </Table>
+            </StackedTable>
             <Pagination
                 page={people}
                 label="Páginas de personas"

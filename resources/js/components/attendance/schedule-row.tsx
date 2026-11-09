@@ -41,7 +41,7 @@ export default function ScheduleRow({
                     />
                 </TableCell>
             )}
-            <TableCell>
+            <TableCell className="max-md:flex-1 max-md:basis-40">
                 <div className="flex items-center gap-3">
                     <Initials name={person.name} />
                     <div className="flex min-w-0 flex-col">

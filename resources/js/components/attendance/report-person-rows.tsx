@@ -25,7 +25,7 @@ export default function ReportPersonRows({ person }: { person: ReportPerson }) {
     return (
         <>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableCell colSpan={2}>
+                <TableCell colSpan={2} className="max-md:w-full">
                     <div className="flex items-center gap-3">
                         <Initials name={person.name} />
                         <div className="flex min-w-0 flex-col">
@@ -48,7 +48,10 @@ export default function ReportPersonRows({ person }: { person: ReportPerson }) {
                         </div>
                     </div>
                 </TableCell>
-                <TableCell colSpan={2} className="whitespace-normal">
+                <TableCell
+                    colSpan={2}
+                    className="whitespace-normal max-md:w-full"
+                >
                     <ReportPersonNotices notices={personNotices(person.days)} />
                 </TableCell>
                 <TableCell>

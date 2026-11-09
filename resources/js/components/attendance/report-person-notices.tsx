@@ -14,9 +14,19 @@ export default function ReportPersonNotices({
 
     return (
         <div className="flex flex-wrap gap-1.5">
-            <Badge variant="destructive">{first}</Badge>
+            <Badge
+                variant="destructive"
+                className="max-w-full whitespace-normal"
+            >
+                {first}
+            </Badge>
             {second !== undefined && (
-                <Badge variant="destructive">{second}</Badge>
+                <Badge
+                    variant="destructive"
+                    className="max-w-full whitespace-normal"
+                >
+                    {second}
+                </Badge>
             )}
             {rest.length > 0 && (
                 <Badge variant="secondary" title={rest.join(' · ')}>

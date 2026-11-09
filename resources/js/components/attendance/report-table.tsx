@@ -3,9 +3,9 @@ import { Link } from '@inertiajs/react';
 import ReportPersonRows from '@/components/attendance/report-person-rows';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
+import StackedTable from '@/components/humetria/stacked-table';
 import { Button } from '@/components/ui/button';
 import {
-    Table,
     TableBody,
     TableHead,
     TableHeader,
@@ -44,7 +44,7 @@ export default function ReportTable({
     if (people.total > 0) {
         return (
             <>
-                <Table>
+                <StackedTable>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Día</TableHead>
@@ -61,7 +61,7 @@ export default function ReportTable({
                             <ReportPersonRows key={person.id} person={person} />
                         ))}
                     </TableBody>
-                </Table>
+                </StackedTable>
                 <Pagination
                     page={people}
                     label="Páginas de personas"

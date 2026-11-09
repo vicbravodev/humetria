@@ -31,7 +31,7 @@ export default function PersonWeekRow({
 
     return (
         <TableRow>
-            <TableCell>
+            <TableCell className="max-md:w-full">
                 <div className="flex items-center gap-3">
                     <Initials name={person.name} />
                     <div className="flex min-w-0 flex-col">

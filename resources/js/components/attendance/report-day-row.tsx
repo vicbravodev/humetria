@@ -13,20 +13,21 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
 
     return (
         <TableRow>
-            <TableCell className="pl-8 whitespace-nowrap">
+            <TableCell className="pl-8 font-medium whitespace-nowrap max-md:w-full">
                 {dayTitle(day.date)}
             </TableCell>
             <TableCell className="whitespace-nowrap tabular-nums">
                 {day.start ?? '—'} – {endText(day)}
             </TableCell>
             <TableCell className="tabular-nums">
+                <span className="text-muted-foreground md:hidden">Pausas </span>
                 {day.breakMinutes === 0 ? '—' : duration(day.breakMinutes)}
             </TableCell>
             <TableCell className="tabular-nums">{dayHours(day)}</TableCell>
             <TableCell className="whitespace-nowrap">
                 <ReportEvidence level={day.evidence} />
             </TableCell>
-            <TableCell className="min-w-56 whitespace-normal">
+            <TableCell className="min-w-56 whitespace-normal max-md:w-full">
                 {notes.length === 0 ? (
                     <span className="text-muted-foreground">Sin notas</span>
                 ) : (
