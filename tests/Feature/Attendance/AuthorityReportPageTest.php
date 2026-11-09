@@ -30,8 +30,8 @@ beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
     workIn($this->tenant);
     $this->plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Norte']);
-    $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'job_title' => 'Operadora']);
-    $this->bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Díaz', 'job_title' => 'Almacenista']);
+    $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'operadora@example.test', 'job_title' => 'Operadora']);
+    $this->bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Díaz', 'email' => 'almacenista@example.test', 'job_title' => 'Almacenista']);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
 });
 
@@ -184,9 +184,9 @@ describe('the page', function (): void {
     });
 
     it('pages the people 25 at a time and searches them by name, the figures of all of them', function (): void {
-        // Named, not left to Faker: a random «Díaz» would also match the search below.
+        // Named, with their email too, not left to Faker: the search reads name and email, and a random «diaz» in either would match it.
         $names = array_map(fn (int $n): string => sprintf('Persona %02d', $n), range(1, 25));
-        foreach (EmployeeFactory::new()->count(25)->sequence(...array_map(fn (string $name): array => ['name' => $name], $names))->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
+        foreach (EmployeeFactory::new()->count(25)->sequence(...array_map(fn (string $name): array => ['name' => $name, 'email' => strtolower(str_replace(' ', '-', $name)).'@example.test'], $names))->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
             pageDay($person, '2027-01-26 08:00', '2027-01-26 16:00');
         }
         pageDay($this->bob, '2027-01-26 08:00', '2027-01-26 16:00');
@@ -203,7 +203,7 @@ describe('the page', function (): void {
 
     it('builds the days of only the people of the page, with the figures of all of them', function (): void {
         $names = array_map(fn (int $n): string => sprintf('Persona %02d', $n), range(1, 30));
-        $people = EmployeeFactory::new()->count(30)->sequence(...array_map(fn (string $name): array => ['name' => $name], $names))->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        $people = EmployeeFactory::new()->count(30)->sequence(...array_map(fn (string $name): array => ['name' => $name, 'email' => strtolower(str_replace(' ', '-', $name)).'@example.test'], $names))->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
         foreach ($people as $n => $person) {
             // The last five have a day with no end: «con avisos».
             pageDay($person, '2027-01-26 08:00', $n < 25 ? '2027-01-26 16:00' : null);
