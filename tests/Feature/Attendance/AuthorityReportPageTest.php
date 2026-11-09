@@ -66,6 +66,24 @@ describe('the page', function (): void {
             ->where('exportUrl', null));
     });
 
+    it('offers the usual periods: this week up to today, the last week that ended and the last calendar month', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('presets', [
+            ['key' => 'this-week', 'label' => 'Esta semana', 'from' => '2027-02-01', 'to' => '2027-02-01'],
+            ['key' => 'last-week', 'label' => 'Semana pasada', 'from' => '2027-01-25', 'to' => '2027-01-31'],
+            ['key' => 'last-month', 'label' => 'Último mes', 'from' => '2027-01-01', 'to' => '2027-01-31'],
+        ]));
+    });
+
+    it('starts the last month on the first of the previous month even when today is the 31st', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2027-03-31 18:00:00', 'UTC'));
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('presets.2', ['key' => 'last-month', 'label' => 'Último mes', 'from' => '2027-02-01', 'to' => '2027-02-28']));
+    });
+
     it('shows the center\'s period: its figures, the people page by page with their days, and the link to the CSV', function (): void {
         pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 18:00');
         $corrected = pageDay($this->ana, '2027-01-27 08:20', '2027-01-27 16:00');

@@ -37,6 +37,25 @@ final readonly class ReportPages
     }
 
     /**
+     * The periods RH asks for most, in the display time zone: this week up to today, the last week that ended and the last
+     * calendar month.
+     *
+     * @return list<array{key: string, label: string, from: string, to: string}>
+     */
+    public static function presets(): array
+    {
+        $today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay();
+        [$weekFrom, $weekTo] = self::lastWeek();
+        $month = $today->startOfMonth()->subMonthNoOverflow();
+
+        return [
+            ['key' => 'this-week', 'label' => 'Esta semana', 'from' => WeekPeriod::containing($today)->start()->toDateString(), 'to' => $today->toDateString()],
+            ['key' => 'last-week', 'label' => 'Semana pasada', 'from' => $weekFrom->toDateString(), 'to' => $weekTo->toDateString()],
+            ['key' => 'last-month', 'label' => 'Último mes', 'from' => $month->toDateString(), 'to' => $month->endOfMonth()->toDateString()],
+        ];
+    }
+
+    /**
      * @param  int|null  $longPeriod  the days of a period too long for the screen; null to show it
      * @return array<string, mixed>
      */
@@ -45,6 +64,7 @@ final readonly class ReportPages
         $page = [
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+            'presets' => self::presets(),
             'filters' => ['q' => $search, 'show' => $show],
             'summary' => null,
             'people' => null,
