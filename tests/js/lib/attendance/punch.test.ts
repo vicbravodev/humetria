@@ -21,6 +21,7 @@ const day = {
     marks: [{ type: 'start', time: '09:00' }],
     next: ['break_start', 'end'],
     flag: null,
+    evidence: 'strong',
 };
 
 const request: PunchRequest = {
@@ -217,6 +218,12 @@ describe('punch, when the mark is not taken', () => {
 });
 
 describe('punchDay', () => {
+    it('reads how much the mark proves, and none when the server did not say', () => {
+        expect(punchDay(day)?.evidence).toBe('strong');
+        expect(punchDay({ ...day, evidence: undefined })?.evidence).toBeNull();
+        expect(punchDay({ ...day, evidence: 3 })?.evidence).toBeNull();
+    });
+
     it('reads the day the server sent', () => {
         expect(punchDay({ ...day, flag: 'outside_zone' })).toEqual({
             ...day,
@@ -231,7 +238,13 @@ describe('punchDay', () => {
                 marks: [{ type: 'start' }, 3],
                 next: [1, 'end'],
             }),
-        ).toEqual({ name: 'Ana López', marks: [], next: ['end'], flag: null });
+        ).toEqual({
+            name: 'Ana López',
+            marks: [],
+            next: ['end'],
+            flag: null,
+            evidence: 'strong',
+        });
         expect(punchDay({ name: 'Ana', marks: [], next: 'end' })).toBeNull();
         expect(punchDay({ marks: [], next: [] })).toBeNull();
         expect(punchDay(null)).toBeNull();

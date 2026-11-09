@@ -16,6 +16,8 @@ export type PunchDay = {
     marks: { type: string; time: string }[];
     next: string[];
     flag: string | null;
+    /** How much the mark proves (`strong`, `medium` or `basic`); null when the server named none. */
+    evidence: string | null;
 };
 
 export type PunchOutcome =
@@ -65,6 +67,8 @@ export function punchDay(json: unknown): PunchDay | null {
         ),
         next: json['next'].filter((step: unknown) => typeof step === 'string'),
         flag: typeof json['flag'] === 'string' ? json['flag'] : null,
+        evidence:
+            typeof json['evidence'] === 'string' ? json['evidence'] : null,
     };
 }
 

@@ -144,6 +144,8 @@ final readonly class MarkController
                 $context->zoneId === null => 'outside_zone',
                 default => null,
             },
+            // How much the mark proves, for the person to read in words (never where it was taken).
+            'evidence' => $context->method->evidence()->value,
         ]);
     }
 

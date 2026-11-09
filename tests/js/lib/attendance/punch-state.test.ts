@@ -7,6 +7,7 @@ const day = {
     marks: [{ type: 'start', time: '09:00' }],
     next: ['break_start', 'end'],
     flag: null,
+    evidence: 'strong',
 };
 
 describe('stateAfter', () => {
@@ -17,6 +18,7 @@ describe('stateAfter', () => {
             feedback: {
                 kind: 'done',
                 text: 'Listo: se registró su entrada a las 09:00.',
+                evidence: 'strong',
             },
         });
     });
@@ -33,6 +35,7 @@ describe('stateAfter', () => {
         expect(state.feedback).toEqual({
             kind: 'error',
             text: 'Primero marque su entrada.',
+            reason: 'day_not_open',
         });
     });
 
@@ -72,6 +75,7 @@ describe('stateAfter', () => {
             feedback: {
                 kind: 'error',
                 text: expect.stringContaining('No se pudo verificar'),
+                reason: 'not_verified',
             },
         });
     });

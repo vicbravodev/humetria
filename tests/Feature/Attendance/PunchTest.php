@@ -205,7 +205,7 @@ describe('the page', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'break_start'], $session)
             ->assertUnprocessable()->assertExactJson(['reason' => 'day_not_open', 'name' => 'Bob Ruiz', 'next' => ['start']]);
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)
-            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00']], 'next' => ['break_start', 'end'], 'flag' => null]);
+            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00']], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
 
         $this->withCookie($cookie, $session)->get(route('attendance.device.punch.home', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Bob Ruiz'));
@@ -238,6 +238,7 @@ describe('on site', function (): void {
             'marks' => [['type' => 'start', 'time' => '09:00']],
             'next' => ['break_start', 'end'],
             'flag' => null,
+            'evidence' => 'strong',
         ]);
 
         $mark = AttendanceMark::query()->sole();
@@ -263,7 +264,7 @@ describe('on site', function (): void {
     it('records a mark outside every zone with no zone, flagged, when the policy allows it', function (): void {
         AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag]);
 
-        anaPunches(PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', 'outside_zone');
+        anaPunches(PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', 'outside_zone')->assertJsonPath('evidence', 'medium');
 
         expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Qr)->zone_id->toBeNull()->latitude->toBe('19.433600');
     });
@@ -330,7 +331,7 @@ describe('on site', function (): void {
 it('marks remotely with no geofence, keeping no position', function (): void {
     AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
 
-    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', null);
+    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', null)->assertJsonPath('evidence', 'basic');
 
     expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Remote)->latitude->toBeNull()->accuracy_m->toBeNull()->zone_id->toBeNull();
 });
@@ -338,7 +339,7 @@ it('marks remotely with no geofence, keeping no position', function (): void {
 it('marks trusted staff from the browser with no QR', function (): void {
     $this->ana->update(['staff_group' => StaffGroup::Trusted]);
 
-    punchWith($this->phone, $this->ana->id, [])->assertOk();
+    punchWith($this->phone, $this->ana->id, [])->assertOk()->assertJsonPath('evidence', 'basic');
 
     expect(AttendanceMark::query()->sole()->method)->toBe(MarkMethod::TrustedBrowser);
 });
@@ -346,7 +347,7 @@ it('marks trusted staff from the browser with no QR', function (): void {
 it('drops the position trusted staff send from the browser, as for remote staff', function (): void {
     $this->ana->update(['staff_group' => StaffGroup::Trusted]);
 
-    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', null);
+    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', null)->assertJsonPath('evidence', 'basic');
 
     expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::TrustedBrowser)
         ->latitude->toBeNull()->longitude->toBeNull()->accuracy_m->toBeNull()->distance_m->toBeNull()->zone_id->toBeNull();
@@ -382,6 +383,7 @@ describe('the sequence', function (): void {
             ],
             'next' => ['start'],
             'flag' => null,
+            'evidence' => 'strong',
         ]);
     });
 
@@ -395,6 +397,7 @@ describe('the sequence', function (): void {
             'marks' => [['type' => 'start', 'time' => '23:59'], ['type' => 'end', 'time' => '00:01']],
             'next' => ['start'],
             'flag' => null,
+            'evidence' => 'strong',
         ]);
 
         $this->travelTo(CarbonImmutable::parse('2026-11-11 00:01:00', 'America/Mexico_City'));
