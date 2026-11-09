@@ -44,8 +44,7 @@ export default function PolicyOutOfZone({
                     <strong className="font-medium text-foreground">
                         Permitir y señalar:
                     </strong>{' '}
-                    la marca se guarda, señalada, y queda como evidencia débil
-                    en el reporte.
+                    la marca se guarda sin zona y queda señalada en el reporte.
                 </li>
             </ul>
         </SettingRow>

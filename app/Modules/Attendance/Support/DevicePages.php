@@ -88,7 +88,7 @@ final readonly class DevicePages
             $links[$link->employee_id] = [
                 'state' => $open ? 'sent' : 'expired',
                 'sentAt' => $link->created_at->setTimezone($zone)->format('Y-m-d H:i'),
-                'hoursLeft' => $open ? (int) $now->diffInHours($link->expires_at) : null,
+                'hoursLeft' => $open ? (int) ceil($now->diffInHours($link->expires_at)) : null,
             ];
         }
 

@@ -61,7 +61,7 @@ export default function DevicesTable({
                 <TableHeader>
                     <TableRow>
                         <TableHead>Persona</TableHead>
-                        <TableHead>Centro</TableHead>
+                        <TableHead>Camino al teléfono</TableHead>
                         <TableHead>Dispositivos</TableHead>
                         <TableHead>Estado</TableHead>
                         {canManage && (

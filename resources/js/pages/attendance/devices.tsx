@@ -1,5 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import DevicePeople from '@/components/attendance/device-people';
+import DevicePipeline from '@/components/attendance/device-pipeline';
 import EnrollAllButton from '@/components/attendance/enroll-all-button';
 import OneTimeLink from '@/components/attendance/one-time-link';
 import PageHeader from '@/components/humetria/page-header';
@@ -52,6 +53,7 @@ export default function AttendanceDevices(props: AttendanceDevicesProps) {
                         mostrar.
                     </OneTimeLink>
                 )}
+                <DevicePipeline pipeline={props.pipeline} />
                 <DevicePeople {...props} />
             </div>
         </>

@@ -45,6 +45,28 @@ it('shows RH each person with their devices and the kind of key', function (bool
     'dark, phone' => [true, true],
 ]);
 
+it('shows RH the road to the phone: who has no link, who was sent one and who already has a phone', function (): void {
+    $url = devicesPanel();
+
+    visit("{$url}/attendance/devices")
+        ->assertSee('Avance del alta')
+        ->assertSee('Sin enlace')
+        ->assertSee('Bob')
+        ->assertSee('Con teléfono')
+        ->assertSee('Aún no se le envía el enlace')
+        ->assertSee('Sin correo no podemos enviarle el enlace: crea el suyo y entrégaselo.')
+        ->assertSee('Vinculada el')
+        ->click('Crear enlace de alta')
+        ->click('Crear enlace')
+        ->waitForText('Enlace de alta de Bob Díaz')
+        ->assertSee('Enviado el')
+        ->assertSee('vence en 48 h')
+        ->assertSee('Esperando que abra el enlace.')
+        ->assertScript('() => document.querySelector("section[aria-labelledby=\'device-pipeline\']").textContent.includes("Enlace enviado")', true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('gives RH the link of a person without email once, to hand over', function (): void {
     $url = devicesPanel();
 
