@@ -138,3 +138,16 @@ it('lets RH pick a usual period, and opens the two days only for «Otro»', func
         ->assertMissing('#report-from')
         ->assertNoJavaScriptErrors();
 });
+
+it('offers to shorten a period too long for the screen to what the screen shows', function (): void {
+    [$url, $plant] = reportPanel();
+
+    visit("{$url}/attendance/report?center={$plant->id}&from=2026-01-01&to=2026-06-30")
+        ->assertSee('Acortar a 93 días')
+        ->click('a:has-text("Acortar a 93 días")')
+        ->waitForText('Día por día')
+        ->assertQueryStringHas('from', '2026-01-01')
+        ->assertQueryStringHas('to', '2026-04-03')
+        ->assertDontSee('Este periodo se descarga en CSV')
+        ->assertNoJavaScriptErrors();
+});

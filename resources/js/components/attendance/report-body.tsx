@@ -15,6 +15,8 @@ export default function ReportBody(props: AttendanceReportProps) {
                 days={longPeriod.days}
                 maxOnScreen={longPeriod.maxOnScreen}
                 exportUrl={exportUrl}
+                center={center?.id ?? ''}
+                from={period.from}
             />
         );
     }

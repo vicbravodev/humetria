@@ -75,3 +75,12 @@ const DOTS: Record<string, number> = { Fuerte: 3, Media: 2 };
 export function evidenceDots(level: string): number {
     return DOTS[level] ?? 1;
 }
+
+/** The last day of a period that starts on `from` and has `days` days, as the screen can show it. */
+export function shortenedPeriod(from: string, days: number): string {
+    const end = new Date(
+        Date.parse(`${from}T00:00:00Z`) + (days - 1) * 86_400_000,
+    );
+
+    return end.toISOString().slice(0, 10);
+}

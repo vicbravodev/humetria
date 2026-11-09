@@ -5,6 +5,7 @@ import {
     endText,
     evidenceDots,
     reportQuery,
+    shortenedPeriod,
     summaryHint,
 } from '@/lib/attendance/report';
 import type { ReportDay } from '@/types';
@@ -123,5 +124,13 @@ describe('evidenceDots', () => {
         expect(evidenceDots('Básica')).toBe(1);
         expect(evidenceDots('Corregida')).toBe(1);
         expect(evidenceDots('otra')).toBe(1);
+    });
+});
+
+describe('shortenedPeriod', () => {
+    it('keeps the first day and ends so that the period has the days the screen shows', () => {
+        expect(shortenedPeriod('2026-08-01', 93)).toBe('2026-11-01');
+        expect(shortenedPeriod('2026-08-01', 1)).toBe('2026-08-01');
+        expect(shortenedPeriod('2027-12-20', 14)).toBe('2028-01-02');
     });
 });
