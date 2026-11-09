@@ -7,6 +7,7 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -44,8 +45,13 @@ it('shows RH the queue of corrections with its states and each request', functio
         ->assertSee('Ana López')
         ->assertSee('Operadora')
         ->assertSee('Olvidé marcar mi entrada, el QR no cargaba.')
-        ->assertSee('Olvidó marcarla')
-        ->assertSee('Aprobar')
+        ->assertSee('olvidó marcarla')
+        ->assertSee('Ese día en el registro')
+        ->assertSee('Si la apruebas')
+        ->assertSee('Su semana aún no está confirmada: no se reabre nada.')
+        ->assertSee('Ana no tiene horario')
+        ->assertSee('Si la rechazas')
+        ->assertSee('Aprobar corrección')
         ->assertSee('Rechazar');
 })->with([
     'light, desktop' => [false, false],
@@ -62,19 +68,17 @@ it('shows an empty queue with what will appear in it', function (bool $dark): vo
         ->assertSee('Cuando una persona pida corregir una marca');
 })->with(['light' => [false], 'dark' => [true]]);
 
-it('lets RH approve a request from its dialog, adding the mark', function (): void {
+it('lets RH approve a request with its effect in view, adding the mark', function (): void {
     [$url, $ana, $yesterday] = correctionsPanel();
     $request = forgottenStart($ana, $yesterday);
 
     visit("{$url}/attendance/corrections")
-        ->click('[aria-label="Aprobar la solicitud de Ana López"]')
-        ->assertSee('Aprobar la corrección')
-        // axe judges the dialog once its fade-in ended.
-        ->assertScript('() => Promise.all(document.getAnimations().map((animation) => animation.finished)).then(() => true)')
+        ->assertSee('Se agrega la marca de entrada de las 09:00 con evidencia Corregida')
         ->assertNoAccessibilityIssues(1)
         ->fill('note', 'Lo confirmó su jefa.')
-        ->click('[role="dialog"] button[type="submit"]')
+        ->click('#approve-correction')
         ->waitForText('Solicitud aprobada')
+        ->assertSee('Corrección aprobada.')
         ->assertSee('Nada por resolver')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
@@ -88,16 +92,59 @@ it('asks RH for a note to reject, and keeps it with the request', function (): v
     $request = forgottenStart($ana, $yesterday);
 
     $page = visit("{$url}/attendance/corrections")
-        ->click('[aria-label="Rechazar la solicitud de Ana López"]')
-        ->assertSee('Rechazar la solicitud')
-        ->click('[role="dialog"] button[type="submit"]')
+        ->click('#reject-correction')
         ->waitForText('El campo nota es obligatorio')
         ->fill('note', 'La cámara dice que llegaste a las 9:20.')
-        ->click('[role="dialog"] button[type="submit"]')
-        ->waitForText('Solicitud rechazada');
+        ->click('#reject-correction')
+        ->waitForText('Solicitud rechazada')
+        ->assertSee('Corrección rechazada.');
 
     $page->click('a[href$="status=rejected"]')
         ->waitForText('La cámara dice que llegaste a las 9:20.')
         ->assertNoJavaScriptErrors();
     expect($request->fresh()?->status)->toBe(CorrectionStatus::Rejected);
+});
+
+it('warns before RH approves what the server would refuse, and keeps the approval from being sent', function (): void {
+    [$url, $ana, $yesterday] = correctionsPanel();
+    // Ana\'s end is at 18:00: an end asked for 08:00 would come before any start of the day.
+    CorrectionRequest::factory()->create([
+        'tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'type' => MarkType::End,
+        'proposed_at' => $yesterday->setTime(8, 0)->utc(), 'reason' => 'Salí a las 8, olvidé marcar mi salida.',
+    ]);
+
+    visit("{$url}/attendance/corrections")
+        ->assertSee('no se podrá aprobar')
+        ->assertScript('() => document.querySelector("#approve-correction").disabled', true)
+        ->assertSee('Rechazar')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows each request of the queue in its turn, with its own effect, without leaving the page', function (): void {
+    [$url, $ana, $yesterday] = correctionsPanel();
+    forgottenStart($ana, $yesterday);
+    $bob = EmployeeFactory::new()->create(['tenant_id' => $ana->tenant_id, 'work_center_id' => $ana->work_center_id, 'name' => 'Bob Díaz', 'job_title' => 'Almacenista']);
+    CorrectionRequest::factory()->create([
+        'tenant_id' => $ana->tenant_id, 'employee_id' => $bob->id, 'type' => MarkType::Start,
+        'proposed_at' => $yesterday->setTime(10, 0)->utc(), 'reason' => 'El QR no cargaba.', 'created_at' => now()->addMinute(),
+    ]);
+
+    visit("{$url}/attendance/corrections")
+        ->assertSee('Ana López pide agregar su entrada')
+        ->click('Bob Díaz')
+        ->waitForText('Bob Díaz pide agregar su entrada')
+        ->assertSee('Se agrega la marca de entrada de las 10:00')
+        ->assertSee('El día seguiría sin marca de salida hasta que Bob agregue la suya.')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows a viewer the request and its effect, without the decision', function (): void {
+    [$url, $ana, $yesterday] = correctionsPanel();
+    forgottenStart($ana, $yesterday);
+    $this->actingAs(memberOf(Tenant::query()->where('slug', 'acme')->sole(), TenantRole::Viewer));
+
+    visitPage('attendance/corrections', "{$url}/attendance/corrections")
+        ->assertSee('Si la apruebas')
+        ->assertSee('Solo el dueño y RH resuelven las solicitudes')
+        ->assertDontSee('Aprobar corrección');
 });
