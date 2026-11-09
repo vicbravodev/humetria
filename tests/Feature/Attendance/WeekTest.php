@@ -174,16 +174,19 @@ describe('reading the week', function (): void {
             ->assertJsonPath('days.0', [
                 'date' => '2026-11-02',
                 'marks' => [
-                    ['id' => $ids[0], 'type' => 'start', 'time' => '09:00', 'nextDay' => false, 'corrected' => false, 'reason' => null],
-                    ['id' => $ids[1], 'type' => 'break_start', 'time' => '14:00', 'nextDay' => false, 'corrected' => false, 'reason' => null],
-                    ['id' => $ids[2], 'type' => 'break_end', 'time' => '15:00', 'nextDay' => false, 'corrected' => false, 'reason' => null],
-                    ['id' => $ids[3], 'type' => 'end', 'time' => '19:00', 'nextDay' => false, 'corrected' => false, 'reason' => null],
+                    ['id' => $ids[0], 'type' => 'start', 'time' => '09:00', 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
+                    ['id' => $ids[1], 'type' => 'break_start', 'time' => '14:00', 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
+                    ['id' => $ids[2], 'type' => 'break_end', 'time' => '15:00', 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
+                    ['id' => $ids[3], 'type' => 'end', 'time' => '19:00', 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
                 ],
-                'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false,
+                'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false, 'overtimeMinutes' => 60,
             ])
             ->assertJsonPath('days.1.workedMinutes', 840)
-            ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false])
-            ->assertJsonPath('days.6.marks.1', ['id' => $ids[7], 'type' => 'end', 'time' => '06:00', 'nextDay' => true, 'corrected' => false, 'reason' => null])
+            ->assertJsonPath('days.1.overtimeMinutes', 360)
+            // The day on the person's rest day is all worked, none of it overtime (it is paid apart).
+            ->assertJsonPath('days.6.overtimeMinutes', 0)
+            ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false, 'overtimeMinutes' => 0])
+            ->assertJsonPath('days.6.marks.1', ['id' => $ids[7], 'type' => 'end', 'time' => '06:00', 'nextDay' => true, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'])
             ->assertJsonPath('days.6.restDay', true)
             ->assertJsonPath('summary', [
                 'ordinaryMinutes' => 960, 'overtimeMinutes' => 420, 'doubleMinutes' => 420, 'tripleMinutes' => 0, 'restDayMinutes' => 480,
@@ -225,7 +228,7 @@ describe('reading the week', function (): void {
         weekPunch($this->ana, MarkType::End, '2026-11-05 17:00');
 
         anaReadsWeek(['start' => '2026-11-02'])->assertOk()
-            ->assertJsonPath('days.1.marks', [['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.']])
+            ->assertJsonPath('days.1.marks', [['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.', 'evidence' => 'corrected']])
             ->assertJsonPath('days.1.missingEnd', true)
             ->assertJsonPath('days.3.missingEnd', false);
     });
@@ -308,7 +311,7 @@ describe('answering', function (): void {
         anaAnswers($answer, body: ['digest' => $seen, 'reason' => 'El martes salí a las 20:00.'])->assertUnprocessable()
             ->assertJsonPath('reason', 'week_changed')
             ->assertJsonPath('week.digest', anaDigest())
-            ->assertJsonPath('week.days.0.marks.3', ['id' => $correction->id, 'type' => 'end', 'time' => '18:00', 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.']);
+            ->assertJsonPath('week.days.0.marks.3', ['id' => $correction->id, 'type' => 'end', 'time' => '18:00', 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.', 'evidence' => 'corrected']);
 
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     })->with(['confirm', 'dispute']);

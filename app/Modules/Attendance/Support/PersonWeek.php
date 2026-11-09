@@ -56,6 +56,8 @@ final class PersonWeek
         }
 
         $summary = HoursCalculator::week($hours, $schedule->shift_type ?? ShiftType::Day, $week->start()->year);
+        // Of each day's minutes, how many were overtime (for the bar of the week): the calculator's, never a second count.
+        $days = array_map(fn (array $day): array => [...$day, 'overtimeMinutes' => $summary->overtimeByDay[$day['date']] ?? 0], $days);
         $answer = WeeklyConfirmation::query()->where('employee_id', $employeeId)->where('week_start', $week->start()->toDateString())->first();
         $status = $answer?->status->value ?? ($week->isOver() ? 'pending' : 'open');
         $start = $week->start()->toDateString();
@@ -88,7 +90,7 @@ final class PersonWeek
     }
 
     /**
-     * @return array{id: string, type: string, time: string, nextDay: bool, corrected: bool, reason: string|null}
+     * @return array{id: string, type: string, time: string, nextDay: bool, corrected: bool, reason: string|null, evidence: string}
      */
     private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone): array
     {
@@ -103,6 +105,8 @@ final class PersonWeek
             'corrected' => $corrected,
             // Why it was corrected (criterio 8.1): the person sees the reason of every correction of their record.
             'reason' => $corrected ? $mark->reason : null,
+            // How much the mark proves, to say it in words (criterio 5.3).
+            'evidence' => $mark->method->evidence()->value,
         ];
     }
 
