@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { MapPin, Plus } from 'lucide-react';
 import { useState } from 'react';
 import ZoneDialog from '@/components/attendance/zone-dialog';
@@ -6,7 +7,9 @@ import ZonesTable from '@/components/attendance/zones-table';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { mapZones } from '@/lib/attendance/zone-map';
+import { show as policy } from '@/routes/tenant/attendance/policy';
 import type { AttendanceZone, Paginated } from '@/types';
 
 /** A center's zones, where its people may mark with their location; none yet is the first thing to fix. */
@@ -21,6 +24,7 @@ export default function CenterZones({
     canManage: boolean;
     tolerance: number;
 }) {
+    const tenantSlug = useTenantSlug();
     const [adding, setAdding] = useState(false);
     const add = canManage ? (
         <Button onClick={() => setAdding(true)}>
@@ -47,7 +51,18 @@ export default function CenterZones({
                 <EmptyState
                     icon={MapPin}
                     title="Este centro aún no tiene zonas"
-                    action={add}
+                    action={
+                        canManage ? (
+                            <div className="flex flex-wrap justify-center gap-2.5">
+                                {add}
+                                <Button asChild variant="outline">
+                                    <Link href={policy(tenantSlug)}>
+                                        Cambiar política
+                                    </Link>
+                                </Button>
+                            </div>
+                        ) : undefined
+                    }
                 >
                     {canManage
                         ? 'Sin una zona nadie puede marcar aquí con su ubicación. Agrega la primera desde el lugar con «Usar mi ubicación actual».'

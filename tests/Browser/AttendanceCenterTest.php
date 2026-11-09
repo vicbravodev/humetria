@@ -74,7 +74,9 @@ it('flags a center without zones with the next step', function (bool $dark): voi
     visitPage('attendance/center', $url, $dark)
         ->assertSee('Sin zonas')
         ->assertSee('Este centro aún no tiene zonas')
-        ->assertSee('Agregar zona');
+        ->assertSee('Agregar zona')
+        ->assertSee('Cambiar política')
+        ->assertAttributeContains('a:has-text("Cambiar política")', 'href', '/attendance/policy');
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('shows a viewer the zones without where they are, nor a way to change them', function (): void {
