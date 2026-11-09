@@ -53,6 +53,7 @@ Route::put('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'u
 
 // The people's agreed weekly schedules (criterio 2.6). {employee} is a person of the company's roster, by id.
 Route::get('admin/{tenant:slug}/attendance/schedules', [ScheduleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.index');
+Route::put('admin/{tenant:slug}/attendance/schedules', [ScheduleController::class, 'bulk'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.bulk');
 Route::put('admin/{tenant:slug}/attendance/schedules/{employee}', [ScheduleController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.attendance.schedules.update');
 
 // The report for the authority (LFT art. 132-XXXIV): one center and a period, as a CSV for the inspector. Owner and hr only.
