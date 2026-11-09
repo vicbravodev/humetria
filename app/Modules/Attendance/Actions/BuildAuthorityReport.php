@@ -43,10 +43,10 @@ use LogicException;
  */
 final readonly class BuildAuthorityReport
 {
-    /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
     /** The flag of a day that started and never ended; the page counts them. */
     public const string MISSING_END = 'Sin marca de fin';
 
+    /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
     private const int PERSON_WEEKS = 1000;
 
     private const array EVIDENCE = [
