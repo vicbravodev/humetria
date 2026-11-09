@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 // RH's overview: one week of the people by state, and the centers.
 Route::get('admin/{tenant:slug}/attendance', [AttendanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.index');
 
+// The road to the first mark: what each center, schedule, phone and the policy still need before 1 January 2027.
+Route::get('admin/{tenant:slug}/attendance/setup', [AttendanceController::class, 'setup'])->where('tenant', $notReserved)->name('tenant.attendance.setup');
+
 // A center of the registro: its zones (where its people may mark) and its QR screens. Zones are added and changed, never
 // deleted: the marks taken in one point at it.
 Route::get('admin/{tenant:slug}/attendance/centers/{workCenter}', [AttendanceController::class, 'center'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.center');

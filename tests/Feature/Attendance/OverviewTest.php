@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(AttendanceController::class, AttendancePages::class, PanelScope::class);
 
-/** The queries of the overview, whatever the number of people, centers or marks (26: the page's schedules, for «Sin horario»). */
-const OVERVIEW_QUERIES = 26;
+/** The queries of the overview, whatever the number of people, centers or marks (34: the page's schedules, for «Sin horario», and the road to the first mark). */
+const OVERVIEW_QUERIES = 34;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City: the last week that ended is 2 to 8 November.

@@ -51,6 +51,8 @@ export type OverviewPerson = {
     atRisk: boolean;
     /** Without an agreed schedule they are held to 8 h a day with no rest day, until RH sets one. */
     hasSchedule: boolean;
+    /** Minutes worked each day, Monday to Sunday, and of them the overtime: what the week ribbon draws. */
+    days: { worked: number; overtime: number }[];
 };
 
 /** A center in use with its active people, its zones and the screens that show its code. */
@@ -62,6 +64,39 @@ export type OverviewCenter = {
     screens: number;
 };
 
+/** What a center still needs before its people can mark in it. */
+export type SetupCenterNeed = 'zone' | 'screen';
+
+/** How far the company is from the first mark (SetupProgress): counts and a few names, never a position or a device. */
+export type AttendanceSetup = {
+    /** The day the registro is mandatory (LFT art. 132-XXXIV), Y-m-d, and the days left to it. */
+    deadline: string;
+    daysLeft: number;
+    /** Whether the policy asks for the QR on site, so a center needs a screen that shows the code. */
+    requiresQr: boolean;
+    centers: {
+        done: number;
+        total: number;
+        /** Up to five centers that cannot take a mark yet, with what each lacks. */
+        pending: { id: string; name: string; needs: SetupCenterNeed[] }[];
+    };
+    schedules: { done: number; total: number; pending: string[] };
+    devices: { done: number; total: number };
+    policy: { done: number; total: number };
+    /** Zones smaller than the accuracy the policy accepts, one per center, five at most. */
+    findings: {
+        center: { id: string; name: string };
+        zone: string;
+        radius: number;
+        tolerance: number;
+    }[];
+};
+
+export type AttendanceSetupProps = {
+    setup: AttendanceSetup;
+    canManage: boolean;
+};
+
 export type AttendanceOverviewProps = {
     week: OverviewWeek;
     center: { id: string; name: string } | null;
@@ -69,6 +104,9 @@ export type AttendanceOverviewProps = {
     counts: Record<OverviewView, number>;
     pendingCorrections: number;
     centersWithoutZones: number;
+    setup: AttendanceSetup;
+    /** The hours of everyone in scope, ordinary and overtime, in minutes. */
+    hours: { ordinaryMinutes: number; overtimeMinutes: number };
     people: Paginated<OverviewPerson>;
     centers: Paginated<OverviewCenter>;
     canManage: boolean;

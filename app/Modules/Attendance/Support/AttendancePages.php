@@ -36,7 +36,7 @@ final readonly class AttendancePages
     /** The tabs of the list: every person, each answer, and the weeks at risk. */
     private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk'];
 
-    public function __construct(private Roster $roster, private WorkCenters $workCenters) {}
+    public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup) {}
 
     /**
      * @return array<string, mixed>
@@ -102,12 +102,25 @@ final readonly class AttendancePages
                 'days' => $this->ribbon($worked[$person->id] ?? [], $summaries[$person->id]->overtimeByDay ?? [], $period),
             ]),
             'centers' => $this->centers($panel->byCenter, $zones),
+            'setup' => $this->setup->of($names, $panel->byCenter),
             'hours' => [
                 'ordinaryMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->ordinaryMinutes, $summaries)),
                 'overtimeMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->overtimeMinutes, $summaries)),
             ],
             'canManage' => Gate::allows('manage-attendance'),
         ];
+    }
+
+    /**
+     * The road to the first mark of the whole company, whatever center the overview is narrowed to.
+     *
+     * @return array<string, mixed>
+     */
+    public function setup(): array
+    {
+        $panel = PanelScope::of($this->workCenters, $this->roster, null);
+
+        return ['setup' => $this->setup->of($panel->names, $panel->byCenter), 'canManage' => Gate::allows('manage-attendance')];
     }
 
     /**
