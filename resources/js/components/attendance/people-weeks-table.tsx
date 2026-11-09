@@ -2,6 +2,7 @@ import { Users } from 'lucide-react';
 import PersonWeekRow from '@/components/attendance/person-week-row';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
+import WeekRibbonLegend from '@/components/humetria/week-ribbon-legend';
 import {
     Table,
     TableBody,
@@ -65,10 +66,12 @@ export default function PeopleWeeksTable({
                 <TableHeader>
                     <TableRow>
                         <TableHead>Persona</TableHead>
-                        <TableHead>Centro</TableHead>
-                        <TableHead>Horas de la semana</TableHead>
+                        <TableHead>Su semana</TableHead>
                         <TableHead>Avisos</TableHead>
-                        <TableHead>Semana</TableHead>
+                        <TableHead>Respuesta</TableHead>
+                        <TableHead className="text-right">
+                            Siguiente paso
+                        </TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -81,6 +84,7 @@ export default function PeopleWeeksTable({
                     ))}
                 </TableBody>
             </Table>
+            <WeekRibbonLegend />
             <Pagination
                 page={people}
                 label="Páginas de personas"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     flagLabel,
+    hoursSplit,
     hoursText,
     overviewQuery,
     weekBadge,
@@ -85,5 +86,23 @@ describe('weekNotes', () => {
             'Cerca del tope de horas extra',
         ]);
         expect(weekNotes({ flags: [], atRisk: false })).toEqual([]);
+    });
+});
+
+describe('hoursSplit', () => {
+    it('gives the hours of the week as a total and, apart, the overtime', () => {
+        expect(hoursSplit(2400, 300)).toEqual({
+            total: '45 h',
+            extra: '5 h extra',
+        });
+        expect(hoursSplit(480, 90)).toEqual({
+            total: '9 h 30 min',
+            extra: '1 h 30 min extra',
+        });
+    });
+
+    it('has no extra line without overtime, and says so when nothing was worked', () => {
+        expect(hoursSplit(2400, 0)).toEqual({ total: '40 h', extra: null });
+        expect(hoursSplit(0, 0)).toEqual({ total: 'Sin horas', extra: null });
     });
 });

@@ -1,21 +1,16 @@
-import CenterZonesRow from '@/components/attendance/center-zones-row';
+import CenterCard from '@/components/attendance/center-card';
 import Pagination from '@/components/humetria/pagination';
-import {
-    Table,
-    TableBody,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import type { OverviewCenter, Paginated } from '@/types';
 
-/** The centers in use, a page at a time: where people can mark and with what. */
+/** The centers in use, a page at a time, each with whether its people can mark in it and what it lacks. */
 export default function CentersZones({
     centers,
     week,
+    requiresQr,
 }: {
     centers: Paginated<OverviewCenter>;
     week: string;
+    requiresQr: boolean;
 }) {
     return (
         <section
@@ -35,28 +30,16 @@ export default function CentersZones({
                     código de su pantalla.
                 </p>
             </div>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Centro</TableHead>
-                        <TableHead>Personas</TableHead>
-                        <TableHead>Zonas</TableHead>
-                        <TableHead>Pantallas</TableHead>
-                        <TableHead>
-                            <span className="sr-only">Acciones</span>
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {centers.data.map((center) => (
-                        <CenterZonesRow
-                            key={center.id}
-                            center={center}
-                            week={week}
-                        />
-                    ))}
-                </TableBody>
-            </Table>
+            <div className="grid gap-4 min-[1100px]:grid-cols-2">
+                {centers.data.map((center) => (
+                    <CenterCard
+                        key={center.id}
+                        center={center}
+                        week={week}
+                        requiresQr={requiresQr}
+                    />
+                ))}
+            </div>
             <Pagination
                 page={centers}
                 label="Páginas de centros"

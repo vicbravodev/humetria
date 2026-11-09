@@ -41,7 +41,12 @@ it('shows RH the week by state, its people and the centers', function (bool $dar
         ->assertSee('Confirmada')
         ->assertSee('Carla Ruiz')
         ->assertSee('Un día de más de 12 h')
-        ->assertSee('Centros sin zonas')
+        ->assertSee('Necesita tu atención')
+        ->assertSee('1 centro sin zonas')
+        ->assertSee('1 persona cerca o por encima de un tope legal')
+        ->assertSee('Puesta en marcha')
+        ->assertSee('Cómo van las 2 semanas')
+        ->assertSee('Centros y zonas')
         ->assertSee('Sin zonas')
         ->assertScript(overviewRowHas('Carla Ruiz', 'Sin horario'), true)
         ->assertScript(overviewRowHas('Ana López', 'Sin horario'), false);
@@ -72,12 +77,14 @@ it('takes RH from «Sin horario» to that person on the schedules page', functio
         ->assertScript(cspViolations(), '[]');
 });
 
-it('takes RH to the weeks at risk from their figure, and to the week before', function (): void {
+it('takes RH to the weeks at risk from what asks for their attention, and to the week before', function (): void {
     $url = overviewPanel();
 
+    // The first thing that asks for RH's attention is the weeks at risk; the weeks without an answer follow.
     visit("{$url}/attendance")
-        ->click('Topes en riesgo')
+        ->click('Ver quiénes')
         ->waitForText('Carla Ruiz')
+        ->assertQueryStringHas('status', 'at_risk')
         ->assertDontSee('Ana López')
         ->click('Semana anterior')
         ->waitForText('Ninguna semana en riesgo')

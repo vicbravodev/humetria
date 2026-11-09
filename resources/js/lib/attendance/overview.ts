@@ -46,6 +46,21 @@ export function hoursText(ordinary: number, overtime: number): string {
         : `${duration(ordinary)} · ${duration(overtime)} extra`;
 }
 
+/** «45 h» and «5 h extra» for the two lines of a week in a row: all the hours worked, and apart the overtime. */
+export function hoursSplit(
+    ordinary: number,
+    overtime: number,
+): { total: string; extra: string | null } {
+    if (ordinary === 0 && overtime === 0) {
+        return { total: 'Sin horas', extra: null };
+    }
+
+    return {
+        total: duration(ordinary + overtime),
+        extra: overtime === 0 ? null : `${duration(overtime)} extra`,
+    };
+}
+
 export type WeekBadge = {
     label: string;
     variant: 'success' | 'destructive' | 'warning' | 'secondary';
