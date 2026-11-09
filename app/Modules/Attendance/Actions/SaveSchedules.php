@@ -10,6 +10,7 @@ use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The same agreed weekly schedule for several people of the company at once (SaveSchedule for each): all or none. Someone
@@ -37,6 +38,8 @@ final readonly class SaveSchedules
                 $this->save->handle($person->id, $shiftType, $workMode, $minutesByWeekday);
             }
         });
+
+        Log::info('attendance.schedules_saved', ['people' => count($people)]);
 
         return $people;
     }
