@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Table('attendance_enrollment_links')]
 final class EnrollmentLink extends Model
 {
-    use BelongsToCurrentTenant, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasVersion4Uuids, MatchesManyIds;
 
     public static function hashToken(string $token): string
     {
