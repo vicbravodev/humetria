@@ -116,7 +116,7 @@ final readonly class ReportPages
             $totals['unconfirmed'] += $row->confirmation === 'sin confirmar' ? 1 : 0;
             $totals['overTwelve'] += $row->workedMinutes > LegalLimits::DAY_TOTAL_MAX ? 1 : 0;
             $totals['withoutEnd'] += in_array(BuildAuthorityReport::MISSING_END, $row->flags, true) ? 1 : 0;
-            $flagged[$row->employeeId] = ($flagged[$row->employeeId] ?? false) || $row->flags !== [];
+            $flagged[$row->employeeId] = ($flagged[$row->employeeId] ?? false) || array_diff($row->flags, [BuildAuthorityReport::IN_PROGRESS]) !== [];
             $unconfirmed[$row->employeeId] = ($unconfirmed[$row->employeeId] ?? false) || $row->confirmation === 'sin confirmar';
             $days[$row->employeeId][] = self::day($row);
         }

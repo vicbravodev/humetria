@@ -3,13 +3,20 @@ import { Badge } from '@/components/ui/badge';
 /** What an inspector should notice about a person: the first two flags as chips and «+N» for the rest, in its title. */
 export default function ReportPersonNotices({
     notices,
+    inProgress,
 }: {
     notices: string[];
+    /** A day of theirs is still going: shown apart and neutral, since it is no warning. */
+    inProgress: boolean;
 }) {
     const [first, second, ...rest] = notices;
 
     if (first === undefined) {
-        return <span className="text-muted-foreground">Sin avisos</span>;
+        return inProgress ? (
+            <Badge variant="secondary">En curso</Badge>
+        ) : (
+            <span className="text-muted-foreground">Sin avisos</span>
+        );
     }
 
     return (
@@ -33,6 +40,7 @@ export default function ReportPersonNotices({
                     +{rest.length}
                 </Badge>
             )}
+            {inProgress && <Badge variant="secondary">En curso</Badge>}
         </div>
     );
 }

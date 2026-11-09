@@ -1,8 +1,9 @@
-import { TriangleAlert } from 'lucide-react';
+import { Clock, TriangleAlert } from 'lucide-react';
 import ReportEvidence from '@/components/attendance/report-evidence';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { confirmationBadge, dayHours, endText } from '@/lib/attendance/report';
+import { isWarning } from '@/lib/attendance/report-person';
 import { dayTitle, duration } from '@/lib/attendance/week-text';
 import type { ReportDay } from '@/types';
 
@@ -38,12 +39,19 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
                         {day.flags.map((flag) => (
                             <li
                                 key={flag}
-                                className="flex items-start gap-1.5 text-destructive"
+                                className={`flex items-start gap-1.5 ${isWarning(flag) ? 'text-destructive' : 'text-muted-foreground'}`}
                             >
-                                <TriangleAlert
-                                    aria-hidden
-                                    className="mt-0.5 size-4 shrink-0"
-                                />
+                                {isWarning(flag) ? (
+                                    <TriangleAlert
+                                        aria-hidden
+                                        className="mt-0.5 size-4 shrink-0"
+                                    />
+                                ) : (
+                                    <Clock
+                                        aria-hidden
+                                        className="mt-0.5 size-4 shrink-0"
+                                    />
+                                )}
                                 {flag}
                             </li>
                         ))}

@@ -54,10 +54,19 @@ export function personHours(days: readonly ReportDay[]): {
     return hoursSplit(worked - overtime, overtime);
 }
 
-/** What an inspector should notice about the person: each distinct flag of their days, in the order they appear. */
+const IN_PROGRESS = 'En curso';
+
+/** A flag RH should act on: «En curso» (today's day, not over yet) only informs. */
+export const isWarning = (flag: string): boolean => flag !== IN_PROGRESS;
+
+/** What an inspector should notice about the person: each distinct warning of their days, in the order they appear. */
 export function personNotices(days: readonly ReportDay[]): string[] {
-    return [...new Set(days.flatMap((day) => day.flags))];
+    return [...new Set(days.flatMap((day) => day.flags))].filter(isWarning);
 }
+
+/** Whether one of the person's days is still going. */
+export const hasDayInProgress = (days: readonly ReportDay[]): boolean =>
+    days.some((day) => day.flags.includes(IN_PROGRESS));
 
 const WORST: ReportDay['confirmation'][] = [
     'objetada',

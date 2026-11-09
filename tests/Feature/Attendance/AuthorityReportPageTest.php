@@ -202,6 +202,32 @@ describe('before showing it to an inspection', function (): void {
         $this->get(authorityReportUrl([...$period, 'show' => 'all']))->assertInertia(fn (AssertableInertia $page) => $page->where('people.total', 2));
     });
 
+    it('does not count a day still going as a warning: a person whose only flag is «En curso» is not «con avisos»', function (): void {
+        // Today is Monday 1 February 2027: Ana started at 08:00 and has no end yet; Bob had a clean day.
+        pageDay($this->ana, '2027-02-01 08:00', null);
+        pageDay($this->bob, '2027-01-26 08:00', '2027-01-26 16:00');
+        $this->actingAs($this->hr);
+        $period = ['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-02-01'];
+
+        $this->get(authorityReportUrl($period))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.days.0.flags', ['En curso'])
+            ->where('summary.flaggedPeople', 0)->where('summary.withoutEndDays', 0)->where('summary.people', 2));
+        $this->get(authorityReportUrl([...$period, 'show' => 'flagged']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.total', 0)->where('summary.flaggedPeople', 0));
+    });
+
+    it('still counts a person with «En curso» and a real warning on other days', function (): void {
+        pageDay($this->ana, '2027-02-01 08:00', null);
+        pageDay($this->ana, '2027-01-28 09:00', null);
+        pageDay($this->bob, '2027-02-01 09:00', null);
+        $this->actingAs($this->hr);
+        $period = ['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-02-01'];
+
+        $this->get(authorityReportUrl([...$period, 'show' => 'flagged']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.total', 1)->where('people.data.0.name', 'Ana López')
+            ->where('summary.flaggedPeople', 1)->where('summary.withoutEndDays', 1)->where('summary.people', 2));
+    });
+
     it('applies the search after the filter', function (): void {
         pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 16:00');
         pageDay($this->bob, '2027-01-28 09:00', null);

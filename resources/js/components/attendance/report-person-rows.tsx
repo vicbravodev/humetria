@@ -7,6 +7,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { confirmationBadge } from '@/lib/attendance/report';
 import {
     answerOf,
+    hasDayInProgress,
     personHours,
     personNotices,
     personRibbon,
@@ -52,7 +53,10 @@ export default function ReportPersonRows({ person }: { person: ReportPerson }) {
                     colSpan={2}
                     className="whitespace-normal max-md:w-full"
                 >
-                    <ReportPersonNotices notices={personNotices(person.days)} />
+                    <ReportPersonNotices
+                        notices={personNotices(person.days)}
+                        inProgress={hasDayInProgress(person.days)}
+                    />
                 </TableCell>
                 <TableCell>
                     <Badge variant={answer.variant}>{answer.label}</Badge>

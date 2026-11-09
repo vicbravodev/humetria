@@ -3,6 +3,8 @@ import {
     answerOf,
     matchPreset,
     personHours,
+    hasDayInProgress,
+    isWarning,
     personNotices,
     personRibbon,
 } from '@/lib/attendance/report-person';
@@ -104,6 +106,34 @@ describe('personNotices', () => {
 
     it('has none for a person without flags', () => {
         expect(personNotices([day()])).toEqual([]);
+    });
+
+    it('leaves out «En curso»: a day still going is not a warning, but keeps the real ones beside it', () => {
+        expect(personNotices([day({ flags: ['En curso'] })])).toEqual([]);
+        expect(
+            personNotices([
+                day({ flags: ['En curso'] }),
+                day({ flags: ['Sin marca de fin'] }),
+            ]),
+        ).toEqual(['Sin marca de fin']);
+    });
+});
+
+describe('isWarning', () => {
+    it('is true for every flag but «En curso»', () => {
+        expect(isWarning('Sin marca de fin')).toBe(true);
+        expect(isWarning('En curso')).toBe(false);
+    });
+});
+
+describe('hasDayInProgress', () => {
+    it('is true when any day is still going', () => {
+        expect(hasDayInProgress([day(), day({ flags: ['En curso'] })])).toBe(
+            true,
+        );
+        expect(hasDayInProgress([day({ flags: ['Sin marca de fin'] })])).toBe(
+            false,
+        );
     });
 });
 
