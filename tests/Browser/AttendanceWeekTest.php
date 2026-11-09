@@ -149,9 +149,9 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 
     $page->navigate('/admin/acme/attendance/corrections')
         ->waitForText('El martes salí a las 20:00, el QR no cargaba.')
-        ->click('[aria-label="Aprobar la solicitud de Ana López"]')
-        ->waitForText('Aprobar la corrección')
-        ->click('[role="dialog"] button[type="submit"]')
+        // The panel says first that her confirmed week reopens.
+        ->waitForText('estaba confirmada: se reabre y le pedimos confirmarla otra vez')
+        ->click('#approve-correction')
         ->waitForText('Solicitud aprobada');
 
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->toDateString();
