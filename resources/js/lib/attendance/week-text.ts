@@ -248,3 +248,22 @@ export function dayEvidence(
         ? null
         : { dots: weakest.dots, text: weakest.text };
 }
+
+/** The buttons at the foot of «Mi semana»: read it, then confirm it or say what is not right; none while the person writes. */
+export function weekActions(
+    view: Pick<WeekView, 'confirmUrl' | 'disputeUrl'> | null,
+    disputing: boolean,
+): ('read' | 'confirm' | 'dispute')[] {
+    if (view === null) {
+        return ['read'];
+    }
+
+    if (disputing) {
+        return [];
+    }
+
+    return [
+        ...(view.confirmUrl === null ? [] : (['confirm'] as const)),
+        ...(view.disputeUrl === null ? [] : (['dispute'] as const)),
+    ];
+}

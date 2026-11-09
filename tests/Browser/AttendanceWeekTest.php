@@ -71,7 +71,12 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
 it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {
     $page = anaSeesHerWeek($dark);
 
-    $page->assertSee('Ana López')
+    $page->assertSee('Su semana está lista')
+        ->assertSee('Ana López')
+        ->assertSee('Total de la semana')
+        // The shape of the week first: seven bars, and each day with how much it proves.
+        ->assertPresent('[role="img"][aria-label^="Horas por día"]')
+        ->assertSee('Fuerte')
         ->assertSee('Sin confirmar')
         ->assertSee('Salida a comer')
         ->assertSee('19:00')
@@ -84,6 +89,7 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
 
     $page->press('Confirmar mi semana')
         ->waitForText('La confirmó el')
+        ->assertSee('Semana confirmada')
         ->assertSee('Confirmada')
         ->assertDontSee('Confirmar mi semana')
         ->assertSee('No estoy de acuerdo')

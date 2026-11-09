@@ -1,4 +1,8 @@
-import { ribbonBars, ribbonLabel } from '@/lib/attendance/week-ribbon';
+import {
+    RIBBON_INITIALS,
+    ribbonBars,
+    ribbonLabel,
+} from '@/lib/attendance/week-ribbon';
 import type { RibbonDay } from '@/lib/attendance/week-ribbon';
 import { cn } from '@/lib/utils';
 
@@ -11,10 +15,13 @@ import { cn } from '@/lib/utils';
 export default function WeekRibbon({
     days,
     size = 'sm',
+    labeled = false,
     className,
 }: {
     days: readonly RibbonDay[];
     size?: 'sm' | 'md';
+    /** The initial of each day under its bar (board P2 and P4, where the ribbon is read on its own). */
+    labeled?: boolean;
     className?: string;
 }) {
     return (
@@ -24,24 +31,33 @@ export default function WeekRibbon({
             className={cn('flex items-end gap-1', className)}
         >
             {ribbonBars(days).map((bar, index) => (
-                <div
-                    key={index}
-                    className={cn(
-                        'flex flex-col justify-end overflow-hidden rounded-[4px] bg-track',
-                        size === 'sm' ? 'h-[34px] w-[11px]' : 'h-14 w-4',
-                    )}
-                >
-                    <span
+                <div key={index} className="flex flex-col items-center gap-1">
+                    <div
                         className={cn(
-                            'block w-full',
-                            bar.over ? 'bg-risk-muy-alto' : 'bg-risk-medio',
+                            'flex flex-col justify-end overflow-hidden rounded-[4px] bg-track',
+                            size === 'sm' ? 'h-[34px] w-[11px]' : 'h-14 w-4',
                         )}
-                        style={{ height: `${bar.overtime}%` }}
-                    />
-                    <span
-                        className="block w-full bg-primary"
-                        style={{ height: `${bar.ordinary}%` }}
-                    />
+                    >
+                        <span
+                            className={cn(
+                                'block w-full',
+                                bar.over ? 'bg-risk-muy-alto' : 'bg-risk-medio',
+                            )}
+                            style={{ height: `${bar.overtime}%` }}
+                        />
+                        <span
+                            className="block w-full bg-primary"
+                            style={{ height: `${bar.ordinary}%` }}
+                        />
+                    </div>
+                    {labeled && (
+                        <span
+                            aria-hidden
+                            className="w-4 text-center text-caption text-muted-foreground"
+                        >
+                            {RIBBON_INITIALS[index]}
+                        </span>
+                    )}
                 </div>
             ))}
         </div>

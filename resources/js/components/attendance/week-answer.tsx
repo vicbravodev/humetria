@@ -1,8 +1,5 @@
-import { Fingerprint } from 'lucide-react';
-import { useState } from 'react';
 import DisputeForm from '@/components/attendance/dispute-form';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import type { WeekView } from '@/lib/attendance/week';
 import { statusText } from '@/lib/attendance/week-text';
 
@@ -17,23 +14,24 @@ const BADGES: Record<
 };
 
 /**
- * Where the week stands and the person's answer: confirm it, or say what is not right. Each answer asks for their
- * fingerprint, face or PIN again; nothing is answered for them.
+ * Where the week stands and, when the person says what is not right, the form for it. The buttons that answer are at the foot
+ * of the page (WeekActions); each asks for the person's fingerprint, face or PIN again.
  */
 export default function WeekAnswer({
     week,
+    disputing,
     working,
-    onConfirm,
+    onCloseDispute,
     onDispute,
 }: {
     week: WeekView;
+    disputing: boolean;
     working: boolean;
-    onConfirm: (url: string) => void;
+    onCloseDispute: () => void;
     onDispute: (url: string, reason: string) => Promise<boolean>;
 }) {
-    const [disputing, setDisputing] = useState(false);
     const { label, detail } = statusText(week);
-    const { confirmUrl, disputeUrl } = week;
+    const { disputeUrl } = week;
 
     return (
         <section
@@ -59,40 +57,16 @@ export default function WeekAnswer({
                     {week.disputeReason}
                 </blockquote>
             )}
-            {disputing && disputeUrl !== null ? (
+            {disputing && disputeUrl !== null && (
                 <DisputeForm
                     working={working}
-                    onCancel={() => setDisputing(false)}
+                    onCancel={onCloseDispute}
                     onSend={(reason) =>
                         void onDispute(disputeUrl, reason).then(
-                            (done) => done && setDisputing(false),
+                            (done) => done && onCloseDispute(),
                         )
                     }
                 />
-            ) : (
-                <div className="flex flex-col gap-2">
-                    {confirmUrl !== null && (
-                        <Button
-                            className="h-16 w-full text-lg font-semibold"
-                            disabled={working}
-                            onClick={() => onConfirm(confirmUrl)}
-                        >
-                            <Fingerprint aria-hidden className="size-6" />
-                            Confirmar mi semana
-                        </Button>
-                    )}
-                    {disputeUrl !== null && (
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            className="w-full text-base"
-                            disabled={working}
-                            onClick={() => setDisputing(true)}
-                        >
-                            No estoy de acuerdo
-                        </Button>
-                    )}
-                </div>
             )}
         </section>
     );

@@ -29,6 +29,9 @@ const DAYS = [
     'domingo',
 ];
 
+/** The initial of each day, Monday first: what goes under a bar when the ribbon is read at a glance. */
+export const RIBBON_INITIALS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
+
 const percent = (minutes: number): number =>
     Math.min(100, (minutes / RIBBON_CAP_MINUTES) * 100);
 

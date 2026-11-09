@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     RIBBON_CAP_MINUTES,
+    RIBBON_INITIALS,
     ribbonBars,
     ribbonLabel,
 } from '@/lib/attendance/week-ribbon';
@@ -69,5 +70,11 @@ describe('ribbonLabel', () => {
         expect(ribbonLabel(days)).toBe(
             'Horas por día: lunes 8 h, martes 9 h 30 min, miércoles sin horas, jueves sin horas, viernes sin horas, sábado sin horas, domingo sin horas',
         );
+    });
+});
+
+describe('RIBBON_INITIALS', () => {
+    it('names the seven bars by the initial of their day, Monday first, to go under them', () => {
+        expect(RIBBON_INITIALS).toEqual(['L', 'M', 'M', 'J', 'V', 'S', 'D']);
     });
 });

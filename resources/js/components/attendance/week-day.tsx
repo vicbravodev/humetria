@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import DayCorrection from '@/components/attendance/day-correction';
 import WeekMark from '@/components/attendance/week-mark';
+import EvidenceDots from '@/components/attendance/evidence-dots';
 import { Badge } from '@/components/ui/badge';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
 import type { WeekDay as Day, WeekMark as Mark } from '@/lib/attendance/week';
-import { dayTitle, duration } from '@/lib/attendance/week-text';
+import { dayEvidence, dayTitle, duration } from '@/lib/attendance/week-text';
 
 /**
  * One day of the week: its marks with their local time, what it worked against what was scheduled, its flags, and the
@@ -23,6 +24,7 @@ export default function WeekDay({
     onCorrect: (draft: CorrectionDraft) => Promise<boolean>;
 }) {
     const [asking, setAsking] = useState<Mark | 'missing' | null>(null);
+    const evidence = dayEvidence(day.marks);
     const scheduled = day.restDay
         ? 'Descanso'
         : `de ${duration(day.scheduledMinutes)}`;
@@ -40,6 +42,13 @@ export default function WeekDay({
                     <span className="text-muted-foreground">{scheduled}</span>
                 </p>
             </div>
+            {evidence !== null && (
+                <p className="flex items-center gap-2 text-base text-muted-foreground">
+                    <EvidenceDots dots={evidence.dots} />
+                    <span className="sr-only">Evidencia </span>
+                    {evidence.text}
+                </p>
+            )}
             {day.marks.length === 0 ? (
                 <p className="text-base text-muted-foreground">Sin marcas.</p>
             ) : (
