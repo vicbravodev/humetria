@@ -148,12 +148,24 @@ describe('mapZones', () => {
     it('keeps only the zones that say where they are', () => {
         expect(
             mapZones([
-                { id: 'a', name: 'Con lugar', radius: 50, latitude: 1, longitude: 2 },
+                {
+                    id: 'a',
+                    name: 'Con lugar',
+                    radius: 50,
+                    latitude: 1,
+                    longitude: 2,
+                },
                 { id: 'b', name: 'Sin lugar', radius: 50 },
                 { id: 'c', name: 'Sin longitud', radius: 50, latitude: 1 },
             ]),
         ).toEqual([
-            { id: 'a', name: 'Con lugar', radius: 50, latitude: 1, longitude: 2 },
+            {
+                id: 'a',
+                name: 'Con lugar',
+                radius: 50,
+                latitude: 1,
+                longitude: 2,
+            },
         ]);
     });
 });
