@@ -160,12 +160,36 @@ export type ReportSummary = {
     confirmedPercent: number;
     withCorrections: number;
     unconfirmed: number;
+    /** Days whose week the person confirmed. */
+    confirmedDays: number;
+    ordinaryMinutes: number;
+    /** The double and triple minutes: what is paid beyond the ordinary. */
+    overtimeMinutes: number;
+    overTwelveDays: number;
+    withoutEndDays: number;
+    /** People with at least one flagged day / at least one day of a week no one answered. */
+    flaggedPeople: number;
+    unconfirmedPeople: number;
+};
+
+/** Which people the report lists: all, those with a flagged day or those with a week no one answered. */
+export type ReportShow = 'all' | 'flagged' | 'unconfirmed';
+
+/** A usual period the report offers: its first and last local day. */
+export type ReportPreset = {
+    key: 'this-week' | 'last-week' | 'last-month';
+    label: string;
+    from: string;
+    to: string;
 };
 
 export type AttendanceReportProps = {
     center: { id: string; name: string } | null;
     period: { from: string; to: string };
-    filters: { q: string };
+    presets: ReportPreset[];
+    /** How many days the screen shows and how many the CSV takes. */
+    limits: { screenDays: number; exportDays: number };
+    filters: { q: string; show: ReportShow };
     summary: ReportSummary | null;
     people: Paginated<ReportPerson> | null;
     /** When the report was put together, as «Y-m-d H:i» in UTC and in the display time zone. */

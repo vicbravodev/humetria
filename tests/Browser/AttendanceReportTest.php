@@ -48,7 +48,14 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
         ->assertSee('cada descarga también')
         ->assertDontSee('Ofrecer solo el CSV no se anota')
         ->assertSee('«hora corregida de 08:12 a 08:00»')
-        ->assertSee('con el horario vigente de cada persona al generar el reporte');
+        ->assertSee('con el horario vigente de cada persona al generar el reporte')
+        ->assertSee('Imprimir')
+        ->assertSee('Días confirmados')
+        ->assertSee('Antes de mostrarlo en una inspección')
+        ->assertSee('1 día sin marca de fin')
+        ->assertSee('1 día de una semana que nadie respondió')
+        ->assertSee('La evidencia de un día es la de su marca más débil')
+        ->assertScript('() => document.querySelectorAll(\'[role="img"][aria-label^="Horas por día"]\').length', 2);
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -98,4 +105,36 @@ it('takes RH from the sidebar to the report, a center and its days, with the CSV
         ->assertAttributeContains('a:has-text("Descargar CSV")', 'href', "/attendance/report/export?center={$plant->id}")
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('lists only the people with flags or an unanswered week from the tabs, and goes back to everyone', function (): void {
+    [$url, $plant] = reportPanel();
+
+    visit("{$url}/attendance/report?center={$plant->id}")
+        ->assertSee('Ana López')
+        ->assertSee('Bob Díaz')
+        ->click('nav[aria-label="Qué personas ver"] >> text=Con avisos')
+        ->waitForText('Sin marca de fin')
+        ->assertDontSee('Ana López')
+        ->assertSee('Bob Díaz')
+        ->assertQueryStringHas('show', 'flagged')
+        ->click('nav[aria-label="Qué personas ver"] >> text=Todas')
+        ->waitForText('Ana López')
+        ->assertSee('Bob Díaz')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('lets RH pick a usual period, and opens the two days only for «Otro»', function (): void {
+    [$url, $plant] = reportPanel();
+
+    visit("{$url}/attendance/report?center={$plant->id}")
+        ->assertChecked('input[name="period"][value="last-week"]')
+        ->assertMissing('#report-from')
+        ->click('label:has-text("Otro")')
+        ->assertVisible('#report-from')
+        ->assertVisible('#report-to')
+        ->click('label:has-text("Esta semana")')
+        ->assertMissing('#report-from')
+        ->assertNoJavaScriptErrors();
 });

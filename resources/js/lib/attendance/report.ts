@@ -1,14 +1,16 @@
 import { duration } from '@/lib/attendance/week-text';
-import type { ReportDay } from '@/types';
+import type { ReportDay, ReportShow } from '@/types';
 
 export type ReportFilters = {
     center: string;
     from: string;
     to: string;
     q: string;
+    /** Which people to list; all when it is left out. */
+    show?: ReportShow;
 };
 
-/** The report's address as the server reads it: the center and the period that are set, and a search with text. */
+/** The report's address as the server reads it: the center and the period that are set, a search with text and a filter. */
 export function reportQuery(
     filters: ReportFilters,
 ): Partial<Record<keyof ReportFilters, string>> {
@@ -19,6 +21,9 @@ export function reportQuery(
         ...(filters.from === '' ? {} : { from: filters.from }),
         ...(filters.to === '' ? {} : { to: filters.to }),
         ...(q === '' ? {} : { q }),
+        ...(filters.show === undefined || filters.show === 'all'
+            ? {}
+            : { show: filters.show }),
     };
 }
 
@@ -62,4 +67,11 @@ export function dayHours(day: ReportDay): string {
 /** «3 personas · 12 días». */
 export function summaryHint(people: number, days: number): string {
     return `${people} ${people === 1 ? 'persona' : 'personas'} · ${days} ${days === 1 ? 'día' : 'días'}`;
+}
+
+const DOTS: Record<string, number> = { Fuerte: 3, Media: 2 };
+
+/** How many of the evidence's three dots are filled: Fuerte 3, Media 2, Básica and Corregida 1. */
+export function evidenceDots(level: string): number {
+    return DOTS[level] ?? 1;
 }

@@ -65,6 +65,7 @@ final readonly class ReportPages
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
             'presets' => self::presets(),
+            'limits' => ['screenDays' => config()->integer('attendance.report.page_max_days'), 'exportDays' => config()->integer('attendance.report.export_max_days')],
             'filters' => ['q' => $search, 'show' => $show],
             'summary' => null,
             'people' => null,

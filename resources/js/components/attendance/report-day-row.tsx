@@ -1,4 +1,5 @@
 import { TriangleAlert } from 'lucide-react';
+import ReportEvidence from '@/components/attendance/report-evidence';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { confirmationBadge, dayHours, endText } from '@/lib/attendance/report';
@@ -22,7 +23,9 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
                 {day.breakMinutes === 0 ? '—' : duration(day.breakMinutes)}
             </TableCell>
             <TableCell className="tabular-nums">{dayHours(day)}</TableCell>
-            <TableCell>{day.evidence}</TableCell>
+            <TableCell className="whitespace-nowrap">
+                <ReportEvidence level={day.evidence} />
+            </TableCell>
             <TableCell className="min-w-56 whitespace-normal">
                 {notes.length === 0 ? (
                     <span className="text-muted-foreground">Sin notas</span>

@@ -63,6 +63,7 @@ describe('the page', function (): void {
             ->where('summary', null)
             ->where('people', null)
             ->where('longPeriod', null)
+            ->where('limits', ['screenDays' => 93, 'exportDays' => 366])
             ->where('exportUrl', null));
     });
 

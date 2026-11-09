@@ -1,12 +1,10 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { FileDown } from 'lucide-react';
+import ReportBody from '@/components/attendance/report-body';
 import ReportFilters from '@/components/attendance/report-filters';
 import ReportLegend from '@/components/attendance/report-legend';
-import ReportLongPeriod from '@/components/attendance/report-long-period';
-import ReportPeople from '@/components/attendance/report-people';
-import ReportStart from '@/components/attendance/report-start';
-import ReportSummary from '@/components/attendance/report-summary';
 import PageHeader from '@/components/humetria/page-header';
+import PrintButton from '@/components/humetria/print-button';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { weekTitle } from '@/lib/attendance/week-text';
@@ -18,7 +16,7 @@ import type { AttendanceReportProps } from '@/types';
  * period's figures, the people page by page): every day of every person in one center and a period, to hand over.
  */
 export default function AttendanceReport(props: AttendanceReportProps) {
-    const { center, period, summary, people, exportUrl, longPeriod } = props;
+    const { center, period, exportUrl, longPeriod } = props;
     const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: [
@@ -41,36 +39,29 @@ export default function AttendanceReport(props: AttendanceReportProps) {
                     }
                 >
                     {exportUrl !== null && (
-                        <Button asChild>
-                            <a href={exportUrl} download>
-                                <FileDown aria-hidden />
-                                Descargar CSV
-                            </a>
-                        </Button>
+                        <div className="flex gap-2.5 print:hidden">
+                            {longPeriod === null && (
+                                <PrintButton
+                                    variant="outline"
+                                    label="Imprimir"
+                                />
+                            )}
+                            <Button asChild>
+                                <a href={exportUrl} download>
+                                    <FileDown aria-hidden />
+                                    Descargar CSV
+                                </a>
+                            </Button>
+                        </div>
                     )}
                 </PageHeader>
-                <ReportFilters center={center} period={period} />
-                {longPeriod !== null && exportUrl !== null ? (
-                    <ReportLongPeriod
-                        days={longPeriod.days}
-                        maxOnScreen={longPeriod.maxOnScreen}
-                        exportUrl={exportUrl}
-                    />
-                ) : summary === null || people === null || center === null ? (
-                    <ReportStart />
-                ) : (
-                    <>
-                        <ReportSummary summary={summary} />
-                        <ReportPeople
-                            people={people}
-                            filters={{
-                                ...period,
-                                center: center.id,
-                                q: props.filters.q,
-                            }}
-                        />
-                    </>
-                )}
+                <ReportFilters
+                    center={center}
+                    period={period}
+                    presets={props.presets}
+                    limits={props.limits}
+                />
+                <ReportBody {...props} />
                 <ReportLegend
                     generatedAt={props.generatedAt}
                     onlyDownload={longPeriod !== null}
