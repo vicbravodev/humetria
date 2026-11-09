@@ -69,6 +69,22 @@ describe('fetchKioskCode', () => {
             ? Promise.reject(response)
             : Promise.resolve(response);
 
+    it('gives null when the server never answers, so a hung request cannot keep an old code on the wall', async () => {
+        const never = () => new Promise<Response>(() => undefined);
+
+        expect(await fetchKioskCode('/a/acme/qr', never, 20)).toBeNull();
+    });
+
+    it('still reads a good answer that comes before the wait ends', async () => {
+        expect(
+            await fetchKioskCode(
+                '/a/acme/qr',
+                () => Promise.resolve(Response.json(code)),
+                1_000,
+            ),
+        ).toEqual(code);
+    });
+
     it('reads the code of a good answer, asking as JSON with the cookie and no cache', async () => {
         const calls: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
         const fetcher = (input: RequestInfo | URL, init?: RequestInit) => {
