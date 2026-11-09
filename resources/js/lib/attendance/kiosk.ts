@@ -3,6 +3,26 @@ export type KioskCode = { url: string; qr: string; expiresIn: number };
 
 const MAX_WAIT_MS = 30_000;
 
+/** What the screen shows: its code, the first one on its way, or the lost connection. */
+export type KioskView = 'code' | 'preparing' | 'offline';
+
+/**
+ * Without connection the screen shows no code at all, not even the one it still holds: a code on the wall that no longer
+ * turns could be photographed and used to mark from elsewhere.
+ */
+export function kioskView(code: KioskCode | null, online: boolean): KioskView {
+    if (!online) {
+        return 'offline';
+    }
+
+    return code === null ? 'preparing' : 'code';
+}
+
+/** Whole seconds until a code of `durationMs` turns, `elapsedMs` after it came; never below 0, and 0 only once it turned. */
+export function secondsLeft(durationMs: number, elapsedMs: number): number {
+    return Math.max(0, Math.ceil((durationMs - elapsedMs) / 1000));
+}
+
 /**
  * When to ask for the next code: half a second after the window turns, since asking before gives the same code. The code
  * on the screen stays valid 30 s past its window, so a person scanning at the turn still marks.

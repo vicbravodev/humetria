@@ -137,6 +137,8 @@ describe('the screen', function (): void {
                 ->where('company', 'Acme')
                 ->where('center', 'Planta Norte')
                 ->where('qrUrl', route('attendance.device.kiosk.qr', $this->tenant->slug))
+                // The clock on the screen is read on the company's clock, whatever the tablet's zone.
+                ->where('timezone', 'America/Mexico_City')
                 ->missing('token'));
     });
 
