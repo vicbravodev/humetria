@@ -73,6 +73,8 @@ it('shows a viewer the policy without letting them change it', function (): void
 
     visitPage('attendance/policy', "{$url}/attendance/policy")
         ->assertSee('Solo el dueño y RH la cambian')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
         ->assertDontSee('Guardar política')
         ->assertScript('() => document.querySelector("#policy-retention_months").matches(":disabled")', true);
 });

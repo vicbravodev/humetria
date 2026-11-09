@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
@@ -108,4 +109,15 @@ it('sends their link to everyone of a center without a device, leaving who has n
         ->waitForText('Enviamos 1 enlace de alta. 1 persona no tiene correo')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('tells a viewer the devices are theirs to see and not to change', function (): void {
+    $url = devicesPanel();
+    $this->actingAs(memberOf(Tenant::query()->where('slug', 'acme')->sole(), TenantRole::Viewer));
+
+    visitPage('attendance/devices', "{$url}/attendance/devices")
+        ->assertSee('Ana López')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
+        ->assertDontSee('Revocar');
 });

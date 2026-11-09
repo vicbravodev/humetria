@@ -3,6 +3,7 @@ import { Briefcase, MapPin, MonitorSmartphone, Users } from 'lucide-react';
 import CenterScreens from '@/components/attendance/center-screens';
 import CenterZones from '@/components/attendance/center-zones';
 import PageHeader from '@/components/humetria/page-header';
+import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { centerState } from '@/lib/attendance/center-state';
@@ -65,6 +66,7 @@ export default function AttendanceCenter({
                         },
                     ]}
                 />
+                {!canManage && <ReadOnlyNotice />}
                 <CenterZones
                     zones={zones}
                     centerId={center.id}

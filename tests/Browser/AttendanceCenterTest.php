@@ -82,6 +82,8 @@ it('shows a viewer the zones without where they are, nor a way to change them', 
 
     visitPage('attendance/center', $url)
         ->assertSee('Nave 1')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
         ->assertDontSee('19.432712')
         ->assertDontSee('Agregar zona')
         ->assertDontSee('Cambiar');

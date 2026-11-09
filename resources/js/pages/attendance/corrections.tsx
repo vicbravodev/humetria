@@ -3,6 +3,7 @@ import CorrectionDetail from '@/components/attendance/correction-detail';
 import CorrectionList from '@/components/attendance/correction-list';
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
+import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import SearchField from '@/components/humetria/search-field';
 import { useCorrectionFilters } from '@/hooks/use-correction-filters';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -63,6 +64,7 @@ export default function Corrections({
                     title="Correcciones"
                     description="Cada una agrega una marca nueva. La original se conserva y las dos se ven en el reporte."
                 />
+                {!canResolve && <ReadOnlyNotice />}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <CountTabs
                         label="Estado de las solicitudes"

@@ -1,6 +1,7 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import PolicyForm from '@/components/attendance/policy-form';
 import PageHeader from '@/components/humetria/page-header';
+import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/attendance';
@@ -38,6 +39,7 @@ export default function AttendancePolicyPage({
                             : 'Cómo marcan las personas de todos los centros y cuánto se conserva su registro. Solo el dueño y RH la cambian.'
                     }
                 />
+                {!canManage && <ReadOnlyNotice />}
                 <PolicyForm
                     key={JSON.stringify(policy)}
                     policy={policy}

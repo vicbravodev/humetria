@@ -4,6 +4,7 @@ import DevicePipeline from '@/components/attendance/device-pipeline';
 import EnrollAllButton from '@/components/attendance/enroll-all-button';
 import OneTimeLink from '@/components/attendance/one-time-link';
 import PageHeader from '@/components/humetria/page-header';
+import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/attendance';
 import type { AttendanceDevicesProps } from '@/types';
@@ -41,6 +42,7 @@ export default function AttendanceDevices(props: AttendanceDevicesProps) {
                         />
                     )}
                 </PageHeader>
+                {!props.canManage && <ReadOnlyNotice />}
                 {link !== undefined && (
                     <OneTimeLink
                         id="enrollment-link"

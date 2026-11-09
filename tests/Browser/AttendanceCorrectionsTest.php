@@ -146,5 +146,7 @@ it('shows a viewer the request and its effect, without the decision', function (
     visitPage('attendance/corrections', "{$url}/attendance/corrections")
         ->assertSee('Si la apruebas')
         ->assertSee('Solo el dueño y RH resuelven las solicitudes')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
         ->assertDontSee('Aprobar corrección');
 });

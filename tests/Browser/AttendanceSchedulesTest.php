@@ -135,5 +135,7 @@ it('shows a viewer the schedules without choosing anyone', function (): void {
 
     visitPage('attendance/schedules', "{$url}/attendance/schedules")
         ->assertSee('Ana López')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
         ->assertScript('() => document.querySelectorAll("[aria-label^=\'Elegir a\']").length', 0);
 });
