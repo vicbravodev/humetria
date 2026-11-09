@@ -41,44 +41,57 @@ export default function ZoneMap({ zones }: { zones: MapZone[] }) {
 
     return (
         <div className="flex flex-col gap-3">
-            <svg
-                role="img"
-                aria-label={`Plano de ${zones.length} ${zones.length === 1 ? 'zona' : 'zonas'} a escala`}
-                viewBox={`0 0 ${SIZE.width} ${SIZE.height}`}
-                className="h-auto w-full cursor-crosshair rounded-xl border bg-muted"
-                onClick={touch}
-            >
-                {layout.shapes.map((shape) => (
-                    <g key={shape.id}>
+            <div className="relative">
+                <svg
+                    role="img"
+                    aria-label={`Plano de ${zones.length} ${zones.length === 1 ? 'zona' : 'zonas'} a escala`}
+                    viewBox={`0 0 ${SIZE.width} ${SIZE.height}`}
+                    className="h-auto w-full cursor-crosshair rounded-xl border bg-muted"
+                    onClick={touch}
+                >
+                    {layout.shapes.map((shape) => (
                         <circle
+                            key={shape.id}
                             cx={shape.cx}
                             cy={shape.cy}
                             r={shape.r}
                             className="fill-primary/15 stroke-primary"
                             strokeWidth={2}
                         />
-                        <text
-                            x={shape.cx}
-                            y={shape.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            className="fill-foreground text-sm font-semibold"
-                        >
-                            {shape.name}
-                        </text>
-                    </g>
-                ))}
-                <g transform={`translate(16 ${SIZE.height - 24})`}>
+                    ))}
                     <rect
+                        x={16}
+                        y={SIZE.height - 24}
                         width={bar.width}
                         height={4}
                         className="fill-muted-foreground"
                     />
-                    <text y={-6} className="fill-muted-foreground text-caption">
-                        {bar.label}
-                    </text>
-                </g>
-            </svg>
+                </svg>
+                {/* The names are HTML, not SVG text: the plan shrinks on a phone and its text would shrink with it. */}
+                {layout.shapes.map((shape) => (
+                    <span
+                        key={shape.id}
+                        aria-hidden
+                        className="pointer-events-none absolute -translate-x-1/2 rounded bg-background/80 px-1 text-sm font-semibold whitespace-nowrap"
+                        style={{
+                            left: `${(shape.cx / SIZE.width) * 100}%`,
+                            top: `${((shape.cy + shape.r + 4) / SIZE.height) * 100}%`,
+                        }}
+                    >
+                        {shape.name}
+                    </span>
+                ))}
+                <span
+                    aria-hidden
+                    className="pointer-events-none absolute text-caption text-muted-foreground"
+                    style={{
+                        left: `${(16 / SIZE.width) * 100}%`,
+                        bottom: `${(28 / SIZE.height) * 100}%`,
+                    }}
+                >
+                    {bar.label}
+                </span>
+            </div>
             <ZoneProbeNote probe={probe} />
         </div>
     );
