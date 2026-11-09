@@ -30,7 +30,7 @@ final readonly class CorrectionController
     {
         Gate::authorize('view-attendance');
 
-        return Inertia::render('attendance/corrections', $pages->index($request->string('status')->toString(), $request->string('q')->trim()->toString()));
+        return Inertia::render('attendance/corrections', $pages->index($request->string('status')->toString(), $request->string('q')->trim()->toString(), $request->string('request')->toString()));
     }
 
     public function approve(ResolveCorrectionRequest $request, mixed $tenant, string $correction, ResolveCorrection $resolve): RedirectResponse
