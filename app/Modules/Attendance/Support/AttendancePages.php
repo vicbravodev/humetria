@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\WeekStatus;
@@ -47,7 +48,7 @@ final readonly class AttendancePages
         $names = $panel->names;
         $people = $panel->people;
         $scope = $center === null ? array_keys($names) : [$center->id];
-        $summaries = TeamWeek::summaries($people, $period);
+        [$summaries, $worked] = TeamWeek::withDays($people, $period);
         $answers = WeeklyConfirmation::query()->among('employee_id', $people)->where('week_start', $period->start()->toDateString())
             ->toBase()->pluck('status', 'employee_id')->all();
         $states = [];
@@ -98,10 +99,30 @@ final readonly class AttendancePages
                 'status' => $states[$person->id] ?? WeekStatus::Pending->value,
                 'atRisk' => in_array($person->id, $atRisk, true),
                 'hasSchedule' => isset($scheduled[$person->id]),
+                'days' => $this->ribbon($worked[$person->id] ?? [], $summaries[$person->id]->overtimeByDay ?? [], $period),
             ]),
             'centers' => $this->centers($panel->byCenter, $zones),
+            'hours' => [
+                'ordinaryMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->ordinaryMinutes, $summaries)),
+                'overtimeMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->overtimeMinutes, $summaries)),
+            ],
             'canManage' => Gate::allows('manage-attendance'),
         ];
+    }
+
+    /**
+     * The seven days of a person's week for the ribbon: the minutes worked and, of them, the overtime.
+     *
+     * @param  list<int>  $worked  minutes worked each day, Monday to Sunday
+     * @param  array<string, int>  $overtimeByDay  overtime minutes by date (Y-m-d)
+     * @return list<array{worked: int, overtime: int}>
+     */
+    private function ribbon(array $worked, array $overtimeByDay, WeekPeriod $period): array
+    {
+        return array_map(fn (int $offset): array => [
+            'worked' => $worked[$offset] ?? 0,
+            'overtime' => $overtimeByDay[$period->start()->addDays($offset)->toDateString()] ?? 0,
+        ], range(0, 6));
     }
 
     /**
