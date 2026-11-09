@@ -197,3 +197,21 @@ it('shows the screens of a center in use, with when each was last seen', functio
         ->assertSee('Revocar')
         ->assertDontSee('Volver a emitir');
 })->with(['desktop' => [false], 'phone' => [true]]);
+
+it('warns before revoking the only screen that shows the code, and not when another does', function (): void {
+    [$url, $plant] = centerPanel();
+    $screen = fn () => KioskDevice::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+    $screen();
+
+    visit($url)
+        ->click('Revocar')
+        ->assertSee('Es la única pantalla activa de este centro')
+        ->assertSee('nadie podrá marcar con el QR en el sitio hasta que active otra');
+
+    $screen();
+
+    visit($url)
+        ->click('Revocar')
+        ->assertSee('Dejará de mostrar el código de inmediato.')
+        ->assertDontSee('Es la única pantalla activa de este centro');
+});

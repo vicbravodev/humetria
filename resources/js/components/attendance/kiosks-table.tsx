@@ -12,9 +12,11 @@ import type { KioskScreen } from '@/types';
 export default function KiosksTable({
     kiosks,
     canManage,
+    active,
 }: {
     kiosks: KioskScreen[];
     canManage: boolean;
+    active: number;
 }) {
     return (
         <Table>
@@ -36,6 +38,7 @@ export default function KiosksTable({
                         key={screen.id}
                         screen={screen}
                         canManage={canManage}
+                        active={active}
                     />
                 ))}
             </TableBody>

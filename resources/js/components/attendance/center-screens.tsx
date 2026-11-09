@@ -16,11 +16,14 @@ export default function CenterScreens({
     centerId,
     canManage,
     qrSeconds,
+    active,
 }: {
     kiosks: Paginated<KioskScreen>;
     centerId: string;
     canManage: boolean;
     qrSeconds: number;
+    /** How many of the screens show the code. */
+    active: number;
 }) {
     const tenantSlug = useTenantSlug();
     const newLink = usePage().flash.kioskLink;
@@ -80,7 +83,11 @@ export default function CenterScreens({
                     {kiosks.data.some(
                         (screen) => screen.state === 'issued',
                     ) && <ScreenSteps />}
-                    <KiosksTable kiosks={kiosks.data} canManage={canManage} />
+                    <KiosksTable
+                        kiosks={kiosks.data}
+                        canManage={canManage}
+                        active={active}
+                    />
                     <Pagination
                         page={kiosks}
                         label="Páginas de pantallas"

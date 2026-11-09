@@ -2,7 +2,11 @@ import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { deviceKind, deviceUse } from '@/lib/attendance/devices';
+import {
+    deviceKind,
+    deviceUse,
+    revokeDeviceText,
+} from '@/lib/attendance/devices';
 import { revoke } from '@/routes/tenant/attendance/devices';
 import type { LinkedDevice } from '@/types';
 
@@ -49,7 +53,7 @@ export default function DeviceItem({
                         </Button>
                     }
                     title={`¿Revocar «${device.label}»?`}
-                    description={`${owner} ya no podrá marcar con ese dispositivo, desde este momento. Para usar otro, envíale un enlace de alta nuevo.`}
+                    description={revokeDeviceText(owner, device.label)}
                     confirmLabel="Revocar dispositivo"
                     form={revoke.form({
                         tenant: tenantSlug,

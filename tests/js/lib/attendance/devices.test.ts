@@ -7,6 +7,7 @@ import {
     linkProgress,
     nextForPerson,
     panelListQuery,
+    revokeDeviceText,
     stageNames,
 } from '@/lib/attendance/devices';
 
@@ -211,5 +212,13 @@ describe('the names of a stage', () => {
                 names: ['Bob Díaz', 'Carla Ruiz', 'Elena Vega'],
             }),
         ).toBe('Bob, Carla, Elena y 2 más');
+    });
+});
+
+describe('revokeDeviceText', () => {
+    it('says what is lost at once, what is kept and how the person marks again', () => {
+        expect(revokeDeviceText('Ana López', 'Pixel 8')).toBe(
+            'Con «Pixel 8» Ana López dejará de poder marcar de inmediato. Las marcas que ya hizo se conservan. Para volver a marcar tendrá que vincular un teléfono otra vez: envíale un enlace de alta nuevo.',
+        );
     });
 });

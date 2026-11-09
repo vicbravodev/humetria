@@ -89,6 +89,8 @@ it('lets RH revoke a lost phone after asking', function (): void {
     visit("{$url}/attendance/devices")
         ->click('Revocar')
         ->assertSee('¿Revocar «iPhone de Ana»?')
+        ->assertSee('Las marcas que ya hizo se conservan')
+        ->assertSee('Para volver a marcar tendrá que vincular un teléfono otra vez')
         ->click('Revocar dispositivo')
         ->waitForText('Dispositivo revocado')
         ->assertScript(deviceChipOf('Ana López'), 'Revocado')

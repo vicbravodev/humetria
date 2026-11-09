@@ -78,6 +78,7 @@ export default function AttendanceCenter({
                     centerId={center.id}
                     canManage={canManage}
                     qrSeconds={qrSeconds}
+                    active={screens}
                 />
             </div>
         </>

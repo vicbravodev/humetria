@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { shortMoment } from '@/lib/attendance/corrections';
-import { screenBadge, screenSeen } from '@/lib/attendance/kiosk-screens';
+import {
+    revokeScreenText,
+    screenBadge,
+    screenSeen,
+} from '@/lib/attendance/kiosk-screens';
 import { destroy, reissue } from '@/routes/tenant/attendance/kiosks';
 import type { KioskScreen } from '@/types';
 
@@ -12,9 +16,12 @@ import type { KioskScreen } from '@/types';
 export default function KioskRow({
     screen,
     canManage,
+    active,
 }: {
     screen: KioskScreen;
     canManage: boolean;
+    /** How many screens of the center show the code. */
+    active: number;
 }) {
     const tenantSlug = useTenantSlug();
     const route = { tenant: tenantSlug, kiosk: screen.id };
@@ -56,7 +63,7 @@ export default function KioskRow({
                                 </Button>
                             }
                             title="¿Revocar esta pantalla?"
-                            description="Dejará de mostrar el código de inmediato. Para volver a usar la tableta, emite otra pantalla."
+                            description={revokeScreenText(screen.state, active)}
                             confirmLabel="Revocar pantalla"
                             form={destroy.form(route)}
                             preserveScroll

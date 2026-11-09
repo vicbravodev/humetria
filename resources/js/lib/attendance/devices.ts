@@ -147,3 +147,8 @@ export function stageNames(stage: { count: number; names: string[] }): string {
         ? (last ?? '')
         : `${first.join(', ')} y ${last ?? ''}`;
 }
+
+/** What revoking a phone does (board A8): it loses its key at once, the marks stay and the person links one again. */
+export function revokeDeviceText(owner: string, label: string): string {
+    return `Con «${label}» ${owner} dejará de poder marcar de inmediato. Las marcas que ya hizo se conservan. Para volver a marcar tendrá que vincular un teléfono otra vez: envíale un enlace de alta nuevo.`;
+}
