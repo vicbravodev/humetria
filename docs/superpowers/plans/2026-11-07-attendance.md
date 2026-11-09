@@ -185,13 +185,13 @@ tests/Unit/Attendance  tests/Feature/Attendance  tests/Browser/Attendance
 - [ ] **Step 1: Write failing tests:** el CSV trae las columnas y filas esperadas con horas locales; incluye correcciones con su motivo y la conformidad («sin confirmar» cuando falta); la exportación escribe auditoría; no incluye coordenadas; otro centro/empresa 404; periodo mayor a 366 días rechazado.
 - [ ] **Step 2–4:** FAIL, implementar, PASS. Commit.
 
-### Task 12: Transversales y cierre
+### Task 12 ✅: Transversales y cierre
 
 **Files:** Modify `app/Logging/…RedactSensitiveData` (+ test), `tests/Feature/RouteSecurityTest.php` (rutas `attendance.device.*`, con su razón), `tests/Feature/TenantScopedModelsTest.php` (solo si algún modelo debe leerse entre empresas: ninguno previsto), `ForbidWhileImpersonating::protectedRoutes()` si aplica, `tests/Unit/BrowserCoverageTest.php`, `.env.example` y `config/attendance.php` (huso de la semana, ventana del QR, vigencia del enlace). Docs: `docs/normas/jornada/criterios.md` historial.
 
-- [ ] **Step 1: Write failing tests:** `RedactSensitiveData` borra `latitude`, `longitude`, `credential_id`, `public_key`; ninguna línea de log de un flujo completo de marcado contiene coordenadas; toda ruta de `attendance*` tiene nombre y está en auth o en la lista pública; `BrowserCoverageTest` exige `visitPage()` por página.
-- [ ] **Step 2–4:** FAIL, implementar, PASS.
-- [ ] **Step 5:** `composer ci:check`, `npm run types:check`, `npm run test:js`. Commit `chore(attendance): cross-cutting checks`.
+- [x] **Step 1: Write failing tests:** `RedactSensitiveData` borra `latitude`, `longitude`, `credential_id`, `public_key`; ninguna línea de log de un flujo completo de marcado contiene coordenadas; toda ruta de `attendance*` tiene nombre y está en auth o en la lista pública; `BrowserCoverageTest` exige `visitPage()` por página.
+- [x] **Step 2–4:** FAIL, implementar, PASS.
+- [x] **Step 5:** `composer ci:check`, `npm run types:check`, `npm run test:js`. Commit `chore(attendance): cross-cutting checks`.
 
 ---
 
