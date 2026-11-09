@@ -1,9 +1,11 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { currentPosition } from '@/lib/attendance/geolocation';
+import type { LocationError } from '@/lib/attendance/geolocation';
 import type { MarkType } from '@/lib/attendance/next-step';
 import { punch, punchMessage } from '@/lib/attendance/punch';
+import type { PunchPhase } from '@/lib/attendance/punch-phase';
 import type { Signer } from '@/lib/attendance/punch';
 import { stateAfter } from '@/lib/attendance/punch-state';
 import type { PunchState } from '@/lib/attendance/punch-state';
@@ -30,7 +32,9 @@ const NOBODY: PunchState = { person: null, marks: null, feedback: null };
 /**
  * Marks from this device. The position is asked at every tap (whoever taps may not be who the screen shows) and kept
  * nowhere; the server drops it when the person does not need it. After each mark the screen shows only what the server
- * said of the person it verified. «¿No es usted?» makes the browser forget the person.
+ * said of the person it verified. While it works it says which test it is on (position, the person's fingerprint, face or
+ * PIN, the server's check); `retry` marks again what was just tried; `dismiss` closes the answer. «¿No es usted?» makes
+ * the browser forget the person.
  */
 export function usePunch({
     optionsUrl,
@@ -49,23 +53,32 @@ export function usePunch({
         ...NOBODY,
         person: initial,
     });
-    const [working, setWorking] = useState(false);
+    const [phase, setPhase] = useState<PunchPhase | null>(null);
+    const [location, setLocation] = useState<LocationError | null>(null);
+    const last = useRef<MarkType | null>(null);
 
     const mark = async (type: MarkType) => {
+        last.current = type;
+
         if (!('PublicKeyCredential' in window)) {
             setState({
                 ...state,
-                feedback: { kind: 'error', text: punchMessage('unsupported') },
+                feedback: {
+                    kind: 'error',
+                    text: punchMessage('unsupported'),
+                    reason: 'unsupported',
+                },
             });
 
             return;
         }
 
-        setWorking(true);
+        setPhase('locating');
         setState({ ...state, feedback: null });
         const located = await currentPosition(
             'geolocation' in navigator ? navigator.geolocation : undefined,
         );
+        setLocation(located.ok ? null : located.error);
         const outcome = await punch(
             {
                 optionsUrl,
@@ -76,11 +89,17 @@ export function usePunch({
             },
             {
                 fetcher: fetch.bind(window),
-                getKey,
+                getKey: async (options) => {
+                    setPhase('signing');
+                    const key = await getKey(options);
+                    setPhase('verifying');
+
+                    return key;
+                },
                 xsrf: xsrfToken(document.cookie),
             },
         );
-        setWorking(false);
+        setPhase(null);
         setState(stateAfter(outcome));
     };
 
@@ -92,5 +111,17 @@ export function usePunch({
         );
     };
 
-    return { ...state, working, mark, forget };
+    return {
+        ...state,
+        phase,
+        location,
+        mark,
+        forget,
+        retry: () => {
+            if (last.current !== null) {
+                void mark(last.current);
+            }
+        },
+        dismiss: () => setState({ ...state, feedback: null }),
+    };
 }

@@ -45,7 +45,9 @@ it('opens the screen of Marcar for a device not known yet: every step, why the p
         ->assertSee('Marcar entrada')
         ->assertSee('Salir a comer')
         ->assertSee('Al marcar, el teléfono le pedirá su ubicación: si usted trabaja en un centro, la usamos para comprobar que está ahí; si no, se descarta. No se guarda en este teléfono ni se sigue entre marcas.')
-        ->assertSee('¿Aún no vincula este teléfono?');
+        ->assertSee('¿Aún no vincula este teléfono?')
+        // Whether the center asks for the screen's code is the server's to say when marking: until then it says how.
+        ->assertSee('Si su centro tiene una pantalla QR');
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -58,12 +60,22 @@ it('marks the entry inside the zone with the QR, and shows the day and the next 
     standingAt($page, 19.4327, -99.1332);
 
     $page->press('Marcar entrada')
-        ->waitForText('Listo: se registró su entrada')
+        ->waitForText('Entrada registrada')
+        ->assertSee('Evidencia fuerte: QR y ubicación')
         ->assertSee('Su día')
-        ->assertSee('Salir a comer')
-        ->assertDontSee('Regresar de comer')
+        ->assertSee('Su registro no se puede borrar')
+        ->assertSee('Ver mi semana')
+        // The big button is gone: the day is told, and the next step comes back with «Listo».
+        ->assertDontSee('Marcar entrada')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1)
+        ->press('Listo')
+        ->assertSee('Está trabajando')
+        ->assertSee('Salir a comer')
+        ->assertSee('Marcar salida')
+        ->assertDontSee('Regresar de comer')
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1);
 
@@ -71,25 +83,60 @@ it('marks the entry inside the zone with the QR, and shows the day and the next 
     expect($mark->method)->toBe(MarkMethod::QrAndGeofence)->and($mark->employee_id)->toBe($this->ana->id)->and($mark->zone_id)->not->toBeNull();
 })->with(['light' => [false], 'dark' => [true]]);
 
-it('blocks the mark outside the zone and says what to do', function (): void {
+it('shows each test while the mark is checked, so the person sees it pass', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4327, -99.1332);
+    // The server answers slowly, as on a bad connection.
+    $page->script('() => { const real = window.fetch; window.fetch = (url, init) => String(url).endsWith("/punch") ? new Promise((resolve) => setTimeout(() => resolve(real(url, init)), 2500)) : real(url, init); }');
+
+    $page->press('Marcar entrada')
+        ->waitForText('Comprobando el código y la zona')
+        ->assertSee('Verificando')
+        ->assertSee('Leyendo su ubicación')
+        ->assertSee('Confirme con su huella, su rostro o su PIN')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
+
+    // Position and fingerprint passed (the browser's reader is instant); the server's check is the one in course.
+    $page->wait(1)->assertScript('() => document.querySelector("[aria-current=step]").textContent', 'Comprobando el código y la zona')
+        ->waitForText('Entrada registrada');
+});
+
+it('blocks the mark outside the zone and says what happened and what to do', function (): void {
     $page = phoneAtThePunchScreen();
     standingAt($page, 19.4336, -99.1332);
 
     $page->press('Marcar entrada')
-        ->waitForText('Está fuera de la zona de su centro de trabajo')
+        ->waitForText('Está fuera de la zona')
+        ->assertSee('Acérquese a su centro de trabajo')
         ->assertSee('pida a Recursos Humanos una corrección')
+        ->assertSee('Intentar de nuevo')
+        ->assertSee('Pedir una corrección')
+        ->assertScript(smallTouchTargets(), '')
         ->assertNoJavaScriptErrors()
         ->assertNoAccessibilityIssues(1);
 
     expect(AttendanceMark::query()->count())->toBe(0);
+
+    // «Intentar de nuevo» marks again, now from inside the zone.
+    standingAt($page, 19.4327, -99.1332);
+    $page->press('Intentar de nuevo')->waitForText('Entrada registrada');
+
+    expect(AttendanceMark::query()->sole()->zone_id)->not->toBeNull();
 });
 
 it('asks for the location when the person does not allow it', function (): void {
     $page = phoneAtThePunchScreen();
 
     $page->press('Marcar entrada')
-        ->waitForText('Para marcar se necesita su ubicación')
-        ->assertNoJavaScriptErrors();
+        ->waitForText('No tenemos su ubicación')
+        ->assertSee('Permita la ubicación para este sitio')
+        ->assertDontSee('Puede marcar sin ubicación')
+        ->press('Cómo activarla')
+        ->assertSee('Abra los ajustes de su teléfono')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
 
     expect(AttendanceMark::query()->count())->toBe(0);
 });
@@ -110,8 +157,10 @@ function bobOnAnasPhone(): AwaitableWebpage
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->press('Marcar entrada')
-        ->waitForText('Listo: se registró su entrada')
-        ->assertSee('Hola, Ana López');
+        ->waitForText('Entrada registrada')
+        ->press('Listo')
+        ->waitForText('Está trabajando')
+        ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true);
 
     expect($clearKeys)->toBeInstanceOf(Closure::class);
     $clearKeys();
@@ -119,7 +168,7 @@ function bobOnAnasPhone(): AwaitableWebpage
         ->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
 
     return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
-        ->assertSee('Hola, Ana López')
+        ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true)
         ->assertDontSee('Su día');
 }
 
@@ -129,13 +178,15 @@ it('shows Bob his own name and steps when he marks on the phone that remembers A
     // Bob taps the step offered to Ana: rejected, the screen now speaks to him and offers every step.
     $page->press('Salir a comer')
         ->waitForText('Primero marque su entrada.')
-        ->assertSee('Hola, Bob Ruiz')
-        ->assertDontSee('Ana López')
+        ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Bob")', true)
+        ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->assertSee('Marcar entrada')
         ->press('Marcar entrada')
-        ->waitForText('Listo: se registró su entrada')
-        ->assertSee('Hola, Bob Ruiz')
-        ->assertDontSee('Ana López')
+        ->waitForText('Entrada registrada')
+        ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
+        ->press('Listo')
+        ->waitForText('Está trabajando')
+        ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Bob")', true)
         ->assertSee('Salir a comer')
         ->assertNoJavaScriptErrors()
         ->assertNoAccessibilityIssues(1);
@@ -149,11 +200,13 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
 
     $page->press('¿No es usted?')
         ->waitForText('Marcar su jornada')
-        ->assertDontSee('Ana López')
+        ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->assertSee('¿Aún no vincula este teléfono?')
         ->press('Marcar entrada')
-        ->waitForText('Listo: se registró su entrada')
-        ->assertSee('Hola, Bob Ruiz')
+        ->waitForText('Entrada registrada')
+        ->press('Listo')
+        ->waitForText('Está trabajando')
+        ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Bob")', true)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });

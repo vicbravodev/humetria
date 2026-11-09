@@ -19,6 +19,7 @@ describe('stateAfter', () => {
                 kind: 'done',
                 text: 'Listo: se registró su entrada a las 09:00.',
                 evidence: 'strong',
+                flag: null,
             },
         });
     });

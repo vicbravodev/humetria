@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { isSequence, punchProblem } from '@/lib/attendance/punch-problem';
+import {
+    feedbackProblem,
+    isSequence,
+    punchProblem,
+} from '@/lib/attendance/punch-problem';
 
 const labels = (
     reason: string,
@@ -109,5 +113,34 @@ describe('punchProblem', () => {
         }
 
         expect(isSequence('outside_zone')).toBe(false);
+    });
+});
+
+describe('feedbackProblem', () => {
+    it('is the problem of an error with a reason, told with where the location failed', () => {
+        expect(
+            feedbackProblem(
+                { kind: 'error', text: 'x', reason: 'no_location' },
+                'timeout',
+            )?.title,
+        ).toBe('No encontramos su ubicación');
+        expect(
+            feedbackProblem(
+                { kind: 'error', text: 'x', reason: 'outside_zone' },
+                null,
+            )?.title,
+        ).toBe('Está fuera de la zona');
+    });
+
+    it('is none for a mark taken, an error with no reason, an order that does not fit, or no answer', () => {
+        expect(feedbackProblem({ kind: 'done', text: 'x' }, null)).toBeNull();
+        expect(feedbackProblem({ kind: 'error', text: 'x' }, null)).toBeNull();
+        expect(
+            feedbackProblem(
+                { kind: 'error', text: 'x', reason: 'day_not_open' },
+                null,
+            ),
+        ).toBeNull();
+        expect(feedbackProblem(null, null)).toBeNull();
     });
 });

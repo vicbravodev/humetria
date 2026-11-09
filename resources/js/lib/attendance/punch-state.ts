@@ -5,7 +5,12 @@ import type { PunchOutcome, Signer } from '@/lib/attendance/punch';
 
 /** How the last mark went; an error carries its reason, so the screen can say what to do (punchProblem). */
 export type PunchFeedback =
-    | { kind: 'done'; text: string; evidence?: string | null }
+    | {
+          kind: 'done';
+          text: string;
+          evidence?: string | null;
+          flag?: string | null;
+      }
     | { kind: 'error'; text: string; reason?: string };
 
 export type PunchState = {
@@ -27,6 +32,7 @@ export function stateAfter(outcome: PunchOutcome): PunchState {
                 kind: 'done',
                 text: doneMessage(outcome.day),
                 evidence: outcome.day.evidence,
+                flag: outcome.day.flag,
             },
         };
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { doneMessage, punchMessage } from '@/lib/attendance/punch';
+import { doneMessage, flagNotice, punchMessage } from '@/lib/attendance/punch';
 
 const day = {
     marks: [{ type: 'start', time: '09:00' }],
@@ -72,5 +72,21 @@ describe('doneMessage of each mark', () => {
                 flag: null,
             }),
         ).toBe(text);
+    });
+});
+
+describe('flagNotice', () => {
+    it('tells what RH will see flagged, for the flags the person is told about', () => {
+        expect(flagNotice('outside_zone')).toBe(
+            'Quedó fuera de zona y Recursos Humanos la verá señalada.',
+        );
+        expect(flagNotice('no_location')).toBe(
+            'Quedó sin ubicación y Recursos Humanos la verá señalada.',
+        );
+    });
+
+    it('says nothing of a flag only the panel reads, or of none', () => {
+        expect(flagNotice('center_without_zones')).toBeNull();
+        expect(flagNotice(null)).toBeNull();
     });
 });

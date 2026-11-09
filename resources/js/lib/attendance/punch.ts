@@ -174,6 +174,15 @@ const FLAGGED: Record<string, string> = {
     no_location: 'Quedó sin ubicación',
 };
 
+/** What the person is told of a flag on their mark: that RH will see it; null for a flag only the panel reads, or none. */
+export function flagNotice(flag: string | null): string | null {
+    const flagged = FLAGGED[flag ?? ''];
+
+    return flagged === undefined
+        ? null
+        : `${flagged} y Recursos Humanos la verá señalada.`;
+}
+
 /** What to tell the person once the mark was taken: which, at what time, and whether RH will see it flagged. */
 export function doneMessage(day: Pick<PunchDay, 'marks' | 'flag'>): string {
     const last = day.marks.at(-1);
@@ -183,10 +192,7 @@ export function doneMessage(day: Pick<PunchDay, 'marks' | 'flag'>): string {
     }
 
     const done = `Listo: se registró su ${markName(last.type).toLowerCase()} a las ${last.time}.`;
+    const notice = flagNotice(day.flag);
 
-    const flagged = FLAGGED[day.flag ?? ''];
-
-    return flagged === undefined
-        ? done
-        : `${done} ${flagged} y Recursos Humanos la verá señalada.`;
+    return notice === null ? done : `${done} ${notice}`;
 }

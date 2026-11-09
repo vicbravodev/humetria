@@ -1,27 +1,18 @@
-import { Head, Link } from '@inertiajs/react';
-import { CalendarDays } from 'lucide-react';
-import DayMarks from '@/components/attendance/day-marks';
-import LinkDeviceNote from '@/components/attendance/link-device-note';
-import LocationNote from '@/components/attendance/location-note';
-import NotYou from '@/components/attendance/not-you';
-import PersonFrame from '@/components/attendance/person-frame';
-import PunchButton from '@/components/attendance/punch-button';
-import PunchCorrection from '@/components/attendance/punch-correction';
-import PunchFeedback from '@/components/attendance/punch-feedback';
-import { Button } from '@/components/ui/button';
+import { Head } from '@inertiajs/react';
+import PunchScreen from '@/components/attendance/punch-screen';
+import { useNow } from '@/hooks/use-now';
 import { usePunch } from '@/hooks/use-punch';
-import { ANY_STEP, nextSteps } from '@/lib/attendance/next-step';
 import type { Signer } from '@/lib/attendance/punch';
 
 /**
- * A person marks their working day from their linked device (no account): the big button of the next step, why the
- * position is asked for, and their day once they mark. When nobody is known in this browser, every step is offered. A
- * mark refused can be asked of RH from here.
+ * A person marks their working day from their linked device (no account), screen by screen (board P2): before marking, each
+ * test as it passes, the mark taken, or what went wrong and what to do (board P3). When nobody is known in this browser,
+ * every step is offered. A mark refused can be asked of RH from here.
  */
 export default function Punch({
     company,
     qr,
-    person: remembered,
+    person,
     optionsUrl,
     punchUrl,
     forgetUrl,
@@ -41,59 +32,28 @@ export default function Punch({
     correctionUrl: string;
     timezone: string;
 }) {
-    const { person, marks, feedback, working, mark, forget } = usePunch({
+    const punch = usePunch({
         optionsUrl,
         punchUrl,
         forgetUrl,
         qr,
-        initial: remembered,
+        initial: person,
     });
-    const { primary, others } = nextSteps(person?.next ?? ANY_STEP);
+    const now = useNow(30_000);
 
     return (
-        <PersonFrame company={company}>
+        <>
             <Head title="Marcar" />
-            <div className="flex w-full max-w-md flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                        {person === null
-                            ? 'Marcar su jornada'
-                            : `Hola, ${person.name}`}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Marque con su huella, su rostro o su PIN.
-                    </p>
-                    {person !== null && <NotYou onForget={forget} />}
-                </div>
-                <PunchButton
-                    primary={primary}
-                    others={others}
-                    working={working}
-                    onMark={(type) => void mark(type)}
-                />
-                <PunchFeedback feedback={feedback} />
-                {feedback?.kind === 'error' && (
-                    <PunchCorrection
-                        optionsUrl={correctionOptionsUrl}
-                        url={correctionUrl}
-                        timezone={timezone}
-                    />
-                )}
-                <LocationNote />
-                {marks !== null && <DayMarks marks={marks} />}
-                {person === null && <LinkDeviceNote />}
-                <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="text-base"
-                >
-                    <Link href={weekUrl}>
-                        <CalendarDays aria-hidden className="size-5" />
-                        Mi semana
-                    </Link>
-                </Button>
-            </div>
-        </PersonFrame>
+            <PunchScreen
+                company={company}
+                punch={punch}
+                scanned={qr !== null}
+                weekUrl={weekUrl}
+                correctionOptionsUrl={correctionOptionsUrl}
+                correctionUrl={correctionUrl}
+                timezone={timezone}
+                now={now}
+            />
+        </>
     );
 }

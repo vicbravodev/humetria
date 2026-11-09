@@ -176,8 +176,8 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/a/acme')
         ->press('Marcar entrada')
-        ->waitForText('Pedir corrección a Recursos Humanos')
-        ->press('Pedir corrección a Recursos Humanos')
+        ->waitForText('Pedir una corrección')
+        ->press('Pedir una corrección')
         ->waitForText('¿Qué marca le faltó?')
         ->assertNoAccessibilityIssues(1)
         ->select('mark_type', 'start')

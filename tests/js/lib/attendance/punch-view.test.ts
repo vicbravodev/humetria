@@ -3,6 +3,7 @@ import {
     dayStatus,
     doneTitle,
     evidenceText,
+    firstName,
     greeting,
 } from '@/lib/attendance/punch-view';
 
@@ -27,6 +28,7 @@ describe('dayStatus', () => {
                 [{ type: 'start', time: '08:02' }],
             ),
         ).toEqual({
+            kind: 'working',
             title: 'Está trabajando',
             text: 'Entrada 08:02',
         });
@@ -38,7 +40,11 @@ describe('dayStatus', () => {
                     { type: 'break_start', time: '13:00' },
                 ],
             ),
-        ).toEqual({ title: 'Está en su comida', text: 'Salió a comer 13:00' });
+        ).toEqual({
+            kind: 'break',
+            title: 'Está en su comida',
+            text: 'Salió a comer 13:00',
+        });
         expect(
             dayStatus(
                 ['break_start', 'end'],
@@ -48,7 +54,11 @@ describe('dayStatus', () => {
                     { type: 'break_end', time: '13:30' },
                 ],
             ),
-        ).toEqual({ title: 'Está trabajando', text: 'Regresó de comer 13:30' });
+        ).toEqual({
+            kind: 'working',
+            title: 'Está trabajando',
+            text: 'Regresó de comer 13:30',
+        });
         expect(
             dayStatus(
                 ['start'],
@@ -57,21 +67,39 @@ describe('dayStatus', () => {
                     { type: 'end', time: '17:01' },
                 ],
             ),
-        ).toEqual({ title: 'Jornada terminada', text: 'Salida 17:01' });
+        ).toEqual({
+            kind: 'done',
+            title: 'Jornada terminada',
+            text: 'Salida 17:01',
+        });
     });
 
     it('tells only what the next steps allow when the marks are not known (never the marks of whoever marked before)', () => {
-        expect(dayStatus(['start'], null).title).toBe('Listo para su entrada');
-        expect(dayStatus(['break_end', 'end'], null).title).toBe(
-            'Está en su comida',
-        );
-        expect(dayStatus(['break_start', 'end'], null).title).toBe(
-            'Está trabajando',
-        );
+        expect(dayStatus(['start'], null)).toMatchObject({
+            kind: 'ready',
+            title: 'Listo para su entrada',
+        });
+        expect(dayStatus(['break_end', 'end'], null)).toMatchObject({
+            kind: 'break',
+            title: 'Está en su comida',
+        });
+        expect(dayStatus(['break_start', 'end'], null)).toMatchObject({
+            kind: 'working',
+            title: 'Está trabajando',
+        });
     });
 
     it('does not say a thing of an empty day', () => {
         expect(dayStatus(['start'], []).title).toBe('Listo para su entrada');
+    });
+});
+
+describe('firstName', () => {
+    it('is the first word of the name, to greet the person as a person', () => {
+        expect(firstName('Ana López')).toBe('Ana');
+        expect(firstName('  María del Carmen Ruiz ')).toBe('María');
+        expect(firstName('Beyoncé')).toBe('Beyoncé');
+        expect(firstName('')).toBe('');
     });
 });
 

@@ -11,6 +11,17 @@ export function greeting(hour: number): string {
 
 type DayMark = { type: string; time: string };
 
+export type DayStatus = {
+    kind: 'ready' | 'working' | 'break' | 'done';
+    title: string;
+    text: string;
+};
+
+/** The first word of the name: «Ana López» is greeted as «Ana». */
+export function firstName(name: string): string {
+    return name.trim().split(/\s+/)[0] ?? '';
+}
+
 /**
  * Where the person's day stands, in a title and a line. From their marks when the server gave them (right after a mark); from
  * what may come next otherwise, never from marks: whoever marked before in this browser may not be who taps now.
@@ -18,32 +29,43 @@ type DayMark = { type: string; time: string };
 export function dayStatus(
     next: readonly string[],
     marks: readonly DayMark[] | null,
-): { title: string; text: string } {
+): DayStatus {
     const last = marks?.at(-1);
 
     switch (last?.type) {
         case 'start':
-            return { title: 'Está trabajando', text: `Entrada ${last.time}` };
+            return {
+                kind: 'working',
+                title: 'Está trabajando',
+                text: `Entrada ${last.time}`,
+            };
         case 'break_start':
             return {
+                kind: 'break',
                 title: 'Está en su comida',
                 text: `Salió a comer ${last.time}`,
             };
         case 'break_end':
             return {
+                kind: 'working',
                 title: 'Está trabajando',
                 text: `Regresó de comer ${last.time}`,
             };
         case 'end':
-            return { title: 'Jornada terminada', text: `Salida ${last.time}` };
+            return {
+                kind: 'done',
+                title: 'Jornada terminada',
+                text: `Salida ${last.time}`,
+            };
         default:
             return fromNext(next);
     }
 }
 
-function fromNext(next: readonly string[]): { title: string; text: string } {
+function fromNext(next: readonly string[]): DayStatus {
     if (next[0] === 'break_end') {
         return {
+            kind: 'break',
             title: 'Está en su comida',
             text: 'Marque su regreso cuando termine.',
         };
@@ -51,10 +73,12 @@ function fromNext(next: readonly string[]): { title: string; text: string } {
 
     return next[0] === 'start'
         ? {
+              kind: 'ready',
               title: 'Listo para su entrada',
               text: 'Marque cuando llegue a su centro de trabajo.',
           }
         : {
+              kind: 'working',
               title: 'Está trabajando',
               text: 'Marque su salida a comer o su salida cuando corresponda.',
           };

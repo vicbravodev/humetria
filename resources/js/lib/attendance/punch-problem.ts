@@ -1,4 +1,5 @@
 import type { LocationError } from '@/lib/attendance/geolocation';
+import type { PunchFeedback } from '@/lib/attendance/punch-state';
 
 /**
  * The errors of Marcar (board P3): what happened and what to do, in words that blame nobody. The server gives only a stable
@@ -154,6 +155,16 @@ export function punchProblem(
     return reason === 'no_location'
         ? locationProblem(location)
         : (PROBLEMS[reason] ?? GENERIC);
+}
+
+/** The problem the last answer of a mark is, if it is one: an error with its reason that is not just an order that did not fit. */
+export function feedbackProblem(
+    feedback: PunchFeedback | null,
+    location: LocationError | null,
+): Problem | null {
+    return feedback?.kind === 'error' && feedback.reason !== undefined
+        ? punchProblem(feedback.reason, location)
+        : null;
 }
 
 /** What the person sends RH when their phone is not linked: asks for the link, with their company's name. */
