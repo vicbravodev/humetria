@@ -124,7 +124,7 @@ autorizados, y se conserva por el plazo del criterio 7. Base: LFPDPPP (copia en
 
 **4.2 Presencial** · el método fuerte es **QR rotativo del centro + geocerca** a la vez; solo uno de los dos es evidencia
 más débil (criterio 5.3). **Por defecto se bloquea marcar fuera de toda zona**; la empresa puede cambiar su política a
-«permitir y señalar» (la marca queda como evidencia débil). Aun bloqueando, la persona puede pedir una corrección.
+«permitir y señalar» (la marca queda como evidencia media y señalada). Aun bloqueando, la persona puede pedir una corrección.
 
 **4.3 Teletrabajo (NOM-037)** · sin geocerca; marca desde su dispositivo con la confirmación del dispositivo vinculado.
 
