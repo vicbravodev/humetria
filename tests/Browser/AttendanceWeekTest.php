@@ -62,6 +62,7 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
     linkThePhone($page);
 
     return $page->navigate('/a/acme')
+        ->waitForText('Mi semana')
         ->click('Mi semana')
         ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
@@ -176,6 +177,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->toDateString();
     $page->navigate("/a/acme/week/{$monday}")
+        ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
         ->waitForText('Su respuesta')
         ->assertSee('Sin confirmar')
@@ -195,6 +197,7 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
 
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/a/acme')
+        ->waitForText('Marcar entrada')
         ->press('Marcar entrada')
         ->waitForText('Pedir una corrección')
         ->press('Pedir una corrección')
