@@ -47,7 +47,7 @@ final readonly class CommitmentPages
         if (! $available) {
             $empty = new LengthAwarePaginator([], 0, self::PER_PAGE);
 
-            return [...$base, 'commitments' => $empty, 'counts' => $this->counts($survey), 'groups' => [], 'suggestions' => []];
+            return [...$base, 'commitments' => $empty, 'counts' => $this->counts($survey), 'groups' => [], 'suggestions' => [], 'loopAction' => null];
         }
 
         return [
@@ -56,6 +56,7 @@ final readonly class CommitmentPages
             'counts' => $this->counts($survey),
             'groups' => $this->groups($survey),
             'suggestions' => $this->suggestions($survey),
+            'loopAction' => $this->presenter->loopAction(SurveyResults::for($survey)),
         ];
     }
 

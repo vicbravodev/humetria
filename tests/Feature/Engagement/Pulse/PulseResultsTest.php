@@ -57,3 +57,42 @@ it('does not open a pulse by the climate results, nor a climate survey by the pu
     $this->get(route('tenant.pulse.results', [$this->tenant, $climate]))->assertNotFound();
     $this->get(route('tenant.pulse.commitments.index', [$this->tenant, $climate]))->assertNotFound();
 });
+
+it('tells how many have seen the improvements the company presented, once five have answered', function (): void {
+    $pulse = pulseResultsSurvey($this->tenant, PulseMode::Tour, 12);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->where('loopAction', ['shown' => true, 'favorable' => 100, 'vsPrevious' => null]));
+    $this->get(route('tenant.pulse.commitments.index', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->where('loopAction.shown', true)->where('loopAction.favorable', 100));
+});
+
+it('gives no number for the improvements seen under five answers, and none for a survey that did not ask', function (): void {
+    $few = pulseResultsSurvey($this->tenant, PulseMode::Tour, 4);
+    $climate = climateResultsSurvey($this->tenant, 6);
+    $climate->update(['items' => array_values(array_filter($climate->items, fn (string $ref): bool => ! str_starts_with($ref, 'loop.action@')))]);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $few]))->assertInertia(fn (Assert $page) => $page
+        ->where('loopAction', ['shown' => false, 'favorable' => null, 'vsPrevious' => null]));
+    $this->get(route('tenant.climate.results', [$this->tenant, $climate]))->assertInertia(fn (Assert $page) => $page->where('loopAction', null));
+});
+
+it('compares the improvements seen with the previous pulse', function (): void {
+    $before = pulseResultsSurvey($this->tenant, PulseMode::Tour, 40, 2);
+    $before->update(['closed_at' => now()->subMonth()]);
+    $now = pulseResultsSurvey($this->tenant, PulseMode::Tour, 40, 4);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $now]))->assertInertia(fn (Assert $page) => $page
+        ->where('loopAction.vsPrevious', ['points' => 100, 'direction' => 'up']));
+});
+
+it('shows only the drivers a pulse asked about', function (): void {
+    $pulse = pulseResultsSurvey($this->tenant, PulseMode::Tour, 6);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->has('drivers', 5)->where('drivers.0.key', 'clarity'));
+});

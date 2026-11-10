@@ -45,7 +45,7 @@ final readonly class ResultsPresenter
         ];
 
         if (! $results->available()) {
-            return [...$base, 'participation' => null, 'index' => null, 'indexDelta' => null, 'stay' => null, 'recommendation' => null, 'drivers' => [], 'highlights' => null, 'priorities' => [], 'comparison' => null, 'groups' => null, 'hasHidden' => false];
+            return [...$base, 'participation' => null, 'index' => null, 'indexDelta' => null, 'stay' => null, 'recommendation' => null, 'drivers' => [], 'loopAction' => null, 'highlights' => null, 'priorities' => [], 'comparison' => null, 'groups' => null, 'hasHidden' => false];
         }
 
         $company = $results->company();
@@ -62,6 +62,7 @@ final readonly class ResultsPresenter
             'stay' => $this->stay($company),
             'recommendation' => $this->recommendation($company->recommendation),
             'drivers' => $this->drivers($company, $results, $previous, $before),
+            'loopAction' => $this->loopAction($results),
             'highlights' => $this->highlights($company->highlights),
             'priorities' => $this->priorities($survey->priorities ?? []),
             'comparison' => $previous === null ? null : ['name' => $previous->survey()->name],
@@ -166,6 +167,9 @@ final readonly class ResultsPresenter
             $beforeByDriver[$driver->driver->value] = $driver;
         }
 
+        // A survey that did not ask about a driver has nothing to say of it.
+        $asked = array_values(array_filter($company->drivers, fn (DriverResult $driver): bool => $driver->items !== []));
+
         return array_map(function (DriverResult $driver) use ($results, $previous, $beforeByDriver): array {
             $earlier = $beforeByDriver[$driver->driver->value] ?? null;
             $same = $previous !== null && array_reduce($driver->items, fn (bool $all, ItemResult $item): bool => $all && $results->sameWording($item->key, $previous), true);
@@ -178,7 +182,27 @@ final readonly class ResultsPresenter
                 'delta' => $earlier === null ? null : $this->delta($this->score($driver), $this->score($earlier), $same),
                 'items' => array_map($this->item(...), $driver->items),
             ];
-        }, $company->drivers);
+        }, $asked);
+    }
+
+    /**
+     * How many have seen the improvements the company presented after the previous survey; `null` when the survey did not
+     * ask, and no figure under the minimum.
+     *
+     * @return array{shown: bool, favorable: int|null, vsPrevious: array{points: int, direction: string|null}|null}|null
+     */
+    public function loopAction(SurveyResults $results): ?array
+    {
+        $now = $results->company()->byKey[ItemBank::LOOP] ?? null;
+
+        if ($now === null) {
+            return null;
+        }
+
+        $previous = $results->previous();
+        $before = $previous?->company()->byKey[ItemBank::LOOP] ?? null;
+
+        return ['shown' => $now->shown, 'favorable' => $now->favorable, 'vsPrevious' => $this->delta($now, $before, $previous !== null && $results->sameWording(ItemBank::LOOP, $previous))];
     }
 
     /**
