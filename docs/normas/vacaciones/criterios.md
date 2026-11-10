@@ -281,11 +281,12 @@ con el nombre de quien los autorizó y registro en la bitácora.
 
 **Qué hacemos.** La solicitud le llega al jefe directo. Si está inactivo, al primer jefe activo hacia arriba. Le llega
 a RH cuando no hay ningún jefe activo, o cuando el jefe no responde en 3 días hábiles (lunes a viernes, sin los
-descansos obligatorios; configurable). RH puede ver y corregir cualquier solicitud en todo momento, y queda en la
-bitácora.
+descansos obligatorios ni los festivos que la empresa agregue; configurable). RH puede ver y corregir cualquier
+solicitud en todo momento, y queda en la bitácora.
 
 **Por qué.** La ley obliga a la empresa a conceder las vacaciones (C-09), no dice quién dentro de ella. El plazo evita
-que una solicitud se quede sin respuesta.
+que una solicitud se quede sin respuesta. Un festivo de la empresa tampoco es día de trabajo para el jefe (C-04), así
+que no cuenta para el plazo.
 
 ### C-19. Licencias de ley sembradas; el permiso por luto no está en la ley · Ley + Nuestro
 
