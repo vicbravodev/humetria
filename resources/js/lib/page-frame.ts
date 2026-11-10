@@ -36,6 +36,8 @@ const STANDALONE_NAMES = new Set([
 const STANDALONE_PREFIXES = [
     // The person's portal has its own frame (PortalShell): no account, no panel.
     'telework/portal',
+    // The vacations pages of the person's portal (theirs, their team's, a statement): their own link, no account.
+    'leave/portal',
     // The channel for complaints is public and keeps no trace of who came: no panel, no account.
     'complaints-public/',
     // The permanent page of the workers, opened with a link: no account, no panel.

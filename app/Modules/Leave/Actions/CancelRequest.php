@@ -27,6 +27,15 @@ final readonly class CancelRequest
     public function __construct(private RecordAudit $audit) {}
 
     /**
+     * Whether the person who asked may still cancel it: while it waits, or once approved until the day before it starts.
+     */
+    public static function openToRequester(LeaveRequest $request): bool
+    {
+        return $request->status === RequestStatus::Requested
+            || ($request->status === RequestStatus::Approved && $request->starts_on->toDateString() > PeriodWindow::today()->toDateString());
+    }
+
+    /**
      * @throws AlreadyDecided when it is no longer theirs to cancel; nothing changes
      * @throws ModelNotFoundException<LeaveRequest> when it is not theirs
      */
@@ -39,9 +48,7 @@ final readonly class CancelRequest
             $request = LeaveRequest::query()->lockForUpdate()->findOrFail($requestId);
             $was = $request->status;
 
-            $theirs = $by->isHr
-                ? in_array($was, RequestStatus::live(), true)
-                : $was === RequestStatus::Requested || ($was === RequestStatus::Approved && $request->starts_on->toDateString() > PeriodWindow::today()->toDateString());
+            $theirs = $by->isHr ? in_array($was, RequestStatus::live(), true) : self::openToRequester($request);
 
             if (! $theirs) {
                 throw new AlreadyDecided;
