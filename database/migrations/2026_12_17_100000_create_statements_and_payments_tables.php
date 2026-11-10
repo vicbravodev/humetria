@@ -56,6 +56,9 @@ return new class extends Migration
             $table->date('period_end');
             $table->string('status', 20);
             $table->char('currency', 3);
+            // The catalog version and the VAT rate the amounts were reached with.
+            $table->string('catalog_version', 20);
+            $table->unsignedSmallInteger('vat_percent');
             $table->bigInteger('subtotal_cents');
             $table->bigInteger('vat_cents');
             $table->bigInteger('total_cents');

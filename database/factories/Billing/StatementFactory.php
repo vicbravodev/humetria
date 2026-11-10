@@ -31,6 +31,8 @@ final class StatementFactory extends Factory
             'period_end' => '2027-01-01',
             'status' => StatementStatus::Draft,
             'currency' => 'MXN',
+            'catalog_version' => 'v1',
+            'vat_percent' => 16,
             'subtotal_cents' => 490_000,
             'vat_cents' => 78_400,
             'total_cents' => 568_400,

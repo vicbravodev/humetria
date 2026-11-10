@@ -28,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable $period_end
  * @property StatementStatus $status
  * @property string $currency
+ * @property string $catalog_version
+ * @property int $vat_percent
  * @property int $subtotal_cents
  * @property int $vat_cents
  * @property int $total_cents
@@ -38,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $created_by
  * @property CarbonImmutable $created_at
  */
-#[Fillable(['billing_account_id', 'tenant_id', 'adjusts_statement_id', 'period_start', 'period_end', 'status', 'currency', 'subtotal_cents', 'vat_cents', 'total_cents', 'snapshot', 'reason', 'issued_at', 'issued_by', 'created_by'])]
+#[Fillable(['billing_account_id', 'tenant_id', 'adjusts_statement_id', 'period_start', 'period_end', 'status', 'currency', 'catalog_version', 'vat_percent', 'subtotal_cents', 'vat_cents', 'total_cents', 'snapshot', 'reason', 'issued_at', 'issued_by', 'created_by'])]
 #[UseFactory(StatementFactory::class)]
 final class Statement extends Model
 {
