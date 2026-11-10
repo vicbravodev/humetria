@@ -85,8 +85,8 @@ it('queues one job per block of fifty people with a link, and marks the others a
     launchOn($this->survey->id, '2026-11-20', $this->user->id);
 
     Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->count() === 3 && $batch->jobs->every(fn (mixed $job): bool => $job instanceof SendInvitations));
-    $statuses = Invitation::query()->get()->groupBy(fn (Invitation $i): string => $i->invitation_status->value ?? '')->map->count()->all();
-    expect($statuses)->toBe(['queued' => 120, 'no_email' => 1])
+    $statuses = Invitation::query()->get()->groupBy(fn (Invitation $i): string => $i->invitation_status->value ?? '')->map->count()->sortKeys()->all();
+    expect($statuses)->toBe(['no_email' => 1, 'queued' => 120])
         ->and(Invitation::query()->where('employee_id', $withoutEmail->id)->sole()->invitation_status)->toBe(InvitationStatus::NoEmail)
         ->and(Invitation::query()->whereNotNull('invitation_batch')->distinct()->count('invitation_batch'))->toBe(1);
 });
