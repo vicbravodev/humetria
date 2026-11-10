@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Billing\Actions\CreateAccount;
+use App\Modules\Billing\Actions\ListAccountCharges;
 use App\Modules\Billing\Actions\ListAccountCompanies;
 use App\Modules\Billing\Actions\ListAccounts;
 use App\Modules\Billing\Actions\SummarizeAccount;
@@ -48,7 +49,7 @@ final class AccountConsoleController extends Controller
         return redirect()->route('billing.accounts.show', $account);
     }
 
-    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, SummarizeAccount $summarize): Response
+    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize): Response
     {
         Gate::authorize('view-billing');
 
@@ -58,6 +59,7 @@ final class AccountConsoleController extends Controller
             'today' => now(config()->string('app.display_timezone'))->toDateString(),
             'summary' => $summarize->handle($account),
             'companies' => $listCompanies->handle($account),
+            'charges' => $listCharges->handle($account),
         ]);
     }
 

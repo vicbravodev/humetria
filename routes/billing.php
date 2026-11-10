@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Billing\Http\Controllers\AccountCompaniesController;
 use App\Modules\Billing\Http\Controllers\AccountConsoleController;
+use App\Modules\Billing\Http\Controllers\ChargeConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionPreviewController;
@@ -46,3 +47,8 @@ Route::post('admin/billing/companies/{company}/subscription/preview', Subscripti
     ->middleware(['auth', 'verified', 'throttle:billing-preview'])
     ->whereUuid('company')
     ->name('billing.subscriptions.preview');
+
+Route::post('admin/billing/companies/{company}/charges', [ChargeConsoleController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('company')
+    ->name('billing.charges.store');

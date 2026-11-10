@@ -12,6 +12,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Billing/Actions/ListAccounts.php' => 'reads a paginated list and counts',
     'app/Modules/Billing/Actions/ListAccountCompanies.php' => 'reads a paginated list',
     'app/Modules/Billing/Actions/SummarizeAccount.php' => 'adds up what the account pays',
+    'app/Modules/Billing/Actions/ListAccountCharges.php' => 'reads a paginated list',
     'app/Modules/Billing/Actions/PreviewSubscription.php' => 'prices a plan without saving it',
     'app/Modules/Billing/Actions/SearchLinkableCompanies.php' => 'reads the options of a field',
     'app/Modules/Compensation/Actions/CountBenefits.php' => 'counts',
