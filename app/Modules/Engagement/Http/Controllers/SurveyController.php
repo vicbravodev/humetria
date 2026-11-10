@@ -7,6 +7,7 @@ namespace App\Modules\Engagement\Http\Controllers;
 use App\Modules\Engagement\Actions\CreateSurveyDraft;
 use App\Modules\Engagement\Actions\DeleteSurveyDraft;
 use App\Modules\Engagement\Enums\SurveyKind;
+use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\SurveyPages;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -14,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,7 +56,10 @@ final readonly class SurveyController
         abort_unless($survey->kind->value === $kind, 404);
         Gate::authorize('view', $survey);
 
-        return Inertia::render('engagement/show', $pages->show($survey, Gate::allows('manage', $survey)));
+        // The results are another screen's: the link is there once it exists, and only for a survey that closed.
+        $results = $survey->status === SurveyStatus::Closed && Route::has("tenant.{$kind}.results") ? route("tenant.{$kind}.results", [$tenant, $survey->id]) : null;
+
+        return Inertia::render('engagement/show', $pages->show($survey, Gate::allows('manage', $survey), $results));
     }
 
     public function destroy(Request $request, mixed $tenant, string $id, string $kind, DeleteSurveyDraft $delete): RedirectResponse

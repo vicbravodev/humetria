@@ -25,13 +25,14 @@ use Illuminate\Support\Collection;
  * @phpstan-type Draft array{people: int, withoutEmail: int, companyOnly: int, minGroup: int, canLaunch: bool, limits: array{min: string, suggested: string, max: string}}
  * @phpstan-type Unreachable array{id: string, name: string, area: string}
  * @phpstan-type Section array{title: string, items: list<array{text: string}>}
+ * @phpstan-type Totals array{invited: int, answered: int, rate: int|null, pending: int, withoutLink: int, canRemind: bool, minGroup: int, cuts: list<array{key: string, title: string, groups: list<array{label: string, invited: int, answered: int}>}>}
  * @phpstan-type HistoryRow array{id: string, name: string, closedOn: string|null, invited: int|null, answered: int, rate: int|null}
  */
 final readonly class SurveyPages
 {
     public const int PER_PAGE = 10;
 
-    public function __construct(private SnapshotAudience $snapshot) {}
+    public function __construct(private SnapshotAudience $snapshot, private Participation $participation) {}
 
     /**
      * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool}
@@ -57,18 +58,20 @@ final readonly class SurveyPages
     }
 
     /**
-     * The survey in its state. A draft shows what RH reviews before launching; the rest is what each state adds.
+     * The survey in its state. A draft shows what RH reviews before launching; the rest is what each state adds. The
+     * link to the results is the controller's to give, once the survey is closed.
      *
-     * @return array{survey: Card, canManage: bool, draft: Draft|null, unreachable: LengthAwarePaginator<int, Unreachable>|null, sections: list<Section>, participation: null}
+     * @return array{survey: Card, canManage: bool, draft: Draft|null, unreachable: LengthAwarePaginator<int, Unreachable>|null, sections: list<Section>, participation: Totals|null, resultsUrl: string|null}
      */
-    public function show(Survey $survey, bool $canManage): array
+    public function show(Survey $survey, bool $canManage, ?string $resultsUrl = null): array
     {
         $draft = $survey->status === SurveyStatus::Draft;
+        $participation = $draft ? null : $this->participation->of($survey, $canManage);
         $people = $draft ? $this->snapshot->invitees() : [];
         $unreached = array_values(array_filter($people, fn (RosterEntry $person): bool => ($person->email ?? '') === ''));
 
         return [
-            'survey' => $this->card($survey),
+            'survey' => $this->card($survey, $participation['answered'] ?? null),
             'canManage' => $canManage,
             'draft' => $draft ? [
                 'people' => count($people),
@@ -80,7 +83,8 @@ final readonly class SurveyPages
             ] : null,
             'unreachable' => $draft ? self::unreachablePage($unreached) : null,
             'sections' => $draft ? self::sections($survey) : [],
-            'participation' => null,
+            'participation' => $participation,
+            'resultsUrl' => $resultsUrl,
         ];
     }
 
@@ -147,10 +151,10 @@ final readonly class SurveyPages
     /**
      * @return Card
      */
-    private function card(Survey $survey): array
+    private function card(Survey $survey, ?int $counted = null): array
     {
         $launched = $survey->status !== SurveyStatus::Draft;
-        $answered = $launched ? self::countOf(self::answeredBySurvey([$survey->id]), $survey->id) : null;
+        $answered = $launched ? $counted ?? self::countOf(self::answeredBySurvey([$survey->id]), $survey->id) : null;
 
         return [
             'id' => $survey->id,

@@ -39,3 +39,25 @@ export type ClimateUnreachable = { id: string; name: string; area: string };
 
 /** A section of the questionnaire as the people will read it. */
 export type ClimateSection = { title: string; items: { text: string }[] };
+
+/** A group a participation cut shows: the people invited to it and how many answered, never who. */
+export type ClimateGroup = { label: string; invited: number; answered: number };
+
+/** Participation by one attribute; only the groups big enough to show are in it. */
+export type ClimateCut = {
+    key: 'work_center' | 'area' | 'tenure';
+    title: string;
+    groups: ClimateGroup[];
+};
+
+/** How far a survey has come: counts of people, never who. */
+export type ClimateParticipation = {
+    invited: number;
+    answered: number;
+    rate: number | null;
+    pending: number;
+    withoutLink: number;
+    canRemind: boolean;
+    minGroup: number;
+    cuts: ClimateCut[];
+};

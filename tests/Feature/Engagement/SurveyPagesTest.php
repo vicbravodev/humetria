@@ -6,12 +6,16 @@ use App\Modules\Engagement\Actions\SnapshotAudience;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
+use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\SurveyPages;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;
+
+/** The queries of a survey in progress, whatever the number of people or groups (the session and the panel frame included). */
+const CLIMATE_SHOW_QUERIES = 18;
 
 mutates(SurveyController::class, SurveyPages::class, SnapshotAudience::class);
 
@@ -211,3 +215,137 @@ it('asks for a last day that is a date', function (string $closesOn): void {
 
     $this->actingAs($this->hr)->post(route('tenant.climate.launch', [$this->tenant, $survey]), ['closes_on' => $closesOn])->assertSessionHasErrors('closes_on');
 })->with(['', 'mañana', '2026-13-40', '20/11/2026']);
+
+/**
+ * Invitations of a survey, all in the same coarse group.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function climatePanelInvited(Survey $survey, int $count, array $attributes = []): void
+{
+    Invitation::factory()->count($count)->create(['survey_id' => $survey->id, 'tenant_id' => $survey->tenant_id, ...$attributes]);
+}
+
+it('shows the survey in progress as counts: who is invited, how many answered, how many are missing', function (): void {
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id, 'invited' => 8]);
+    climatePanelInvited($survey, 3, ['answered' => true]);
+    climatePanelInvited($survey, 3);
+    climatePanelInvited($survey, 1, ['cancelled' => true]);
+    climatePanelInvited($survey, 1, ['invitation_status' => App\Modules\Engagement\Enums\InvitationStatus::NoEmail]);
+
+    $props = $this->actingAs($this->viewer)->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk()->inertiaProps();
+
+    expect($props['draft'])->toBeNull()
+        ->and($props['unreachable'])->toBeNull()
+        ->and($props['sections'])->toBe([])
+        ->and($props['survey'])->toMatchArray(['status' => 'active', 'invited' => 8, 'answered' => 3, 'rate' => 38])
+        ->and($props['participation'])->toMatchArray(['invited' => 8, 'answered' => 3, 'rate' => 38, 'pending' => 4, 'withoutLink' => 1, 'canRemind' => false]);
+});
+
+it('counts participation by work center, area and tenure with the minimum applied to who was invited', function (): void {
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id, 'invited' => 17]);
+    $big = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Norte']);
+    $other = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficina Sur']);
+    $small = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create(['name' => 'Bodega Chica']);
+    $tiny = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create(['name' => 'Kiosco']);
+    $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ventas']);
+    climatePanelInvited($survey, 3, ['work_center_id' => $big->id, 'area_id' => $area->id, 'tenure_band' => 'lt1', 'answered' => true]);
+    climatePanelInvited($survey, 4, ['work_center_id' => $big->id, 'area_id' => $area->id, 'tenure_band' => 'lt1']);
+    climatePanelInvited($survey, 5, ['work_center_id' => $other->id, 'area_id' => $area->id, 'tenure_band' => '6plus']);
+    // Two small groups that together make five: hidden, and nobody can tell either apart from the rest.
+    climatePanelInvited($survey, 2, ['work_center_id' => $small->id]);
+    climatePanelInvited($survey, 3, ['work_center_id' => $tiny->id]);
+
+    $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->inertiaProps();
+    $cuts = array_column($props['participation']['cuts'], null, 'key');
+
+    expect(array_keys($cuts))->toBe(['work_center', 'area', 'tenure'])
+        ->and($cuts['work_center']['title'])->toBe('Por centro de trabajo')
+        ->and($cuts['work_center']['groups'])->toBe([['label' => 'Planta Norte', 'invited' => 7, 'answered' => 3], ['label' => 'Oficina Sur', 'invited' => 5, 'answered' => 0]])
+        ->and($cuts['area']['groups'])->toBe([['label' => 'Ventas', 'invited' => 12, 'answered' => 3]])
+        ->and($cuts['tenure']['groups'])->toBe([['label' => 'Menos de 1 año', 'invited' => 7, 'answered' => 3], ['label' => '6 años o más', 'invited' => 5, 'answered' => 0]]);
+    expect(json_encode($props, JSON_UNESCAPED_UNICODE))->not->toContain('Bodega Chica')->not->toContain('Kiosco');
+});
+
+it('never lets the groups shown add up so that what is hidden can be worked out', function (array $sizes): void {
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id, 'invited' => array_sum($sizes)]);
+
+    foreach ($sizes as $name => $size) {
+        $center = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create(['name' => $name]);
+        climatePanelInvited($survey, $size, ['work_center_id' => $center->id]);
+    }
+
+    $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->inertiaProps();
+    $shown = array_sum(array_column($props['participation']['cuts'][0]['groups'], 'invited'));
+    $hidden = array_sum($sizes) - $shown;
+
+    expect($hidden === 0 || $hidden >= 5)->toBeTrue();
+})->with([
+    'one small group' => [['A' => 6, 'B' => 6, 'C' => 1]],
+    'two small groups' => [['A' => 7, 'B' => 5, 'C' => 2, 'D' => 2]],
+    'nothing hidden' => [['A' => 6, 'B' => 5]],
+]);
+
+it('keeps names, emails and who answered out of the page', function (): void {
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id, 'invited' => 6]);
+    $people = App\Modules\Organization\Models\Employee::factory()->count(6)->create(['tenant_id' => $this->tenant->id, 'name' => 'Zulema Quiroz', 'email' => fn () => fake()->unique()->numerify('zulema####@empresa.test')]);
+    foreach ($people as $index => $person) {
+        Invitation::factory()->create(['survey_id' => $survey->id, 'tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'answered' => $index < 3]);
+    }
+
+    $sent = (string) json_encode($this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->inertiaProps(), JSON_UNESCAPED_UNICODE);
+
+    expect($sent)->not->toContain('Zulema')->not->toContain('zulema')->not->toContain('employee_id')->not->toContain('token');
+    foreach ($people as $person) {
+        expect($sent)->not->toContain($person->id);
+    }
+});
+
+it('reads the same number of queries whatever the people', function (): void {
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id, 'invited' => 30]);
+    $center = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    climatePanelInvited($survey, 30, ['work_center_id' => $center->id, 'tenure_band' => 'lt1']);
+    $this->actingAs($this->hr);
+
+    $this->expectsDatabaseQueryCount(CLIMATE_SHOW_QUERIES);
+
+    $this->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk();
+});
+
+it('lets RH remind who is missing, and a survey that is no longer in progress answers with a conflict', function (): void {
+    Bus::fake();
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
+    $person = App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $this->tenant->id, 'email' => 'falta@empresa.test']);
+    Invitation::factory()->create(['survey_id' => $survey->id, 'tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
+    $this->actingAs($this->hr);
+
+    $this->post(route('tenant.climate.remind', [$this->tenant, $survey]))->assertRedirect();
+    Bus::assertBatched(fn (Illuminate\Bus\PendingBatch $batch): bool => $batch->name === "engagement-invitations:{$survey->id}");
+
+    $survey->update(['status' => SurveyStatus::Closed, 'closed_at' => now()]);
+    $this->post(route('tenant.climate.remind', [$this->tenant, $survey]))->assertStatus(409);
+});
+
+it('lets RH close the survey and nobody else', function (): void {
+    $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
+
+    $this->actingAs($this->viewer)->post(route('tenant.climate.close', [$this->tenant, $survey]))->assertForbidden();
+    expect($survey->fresh()?->status)->toBe(SurveyStatus::Active);
+
+    $this->actingAs($this->hr)->post(route('tenant.climate.close', [$this->tenant, $survey]))->assertRedirect();
+    expect($survey->fresh()?->status)->toBe(SurveyStatus::Closed);
+
+    $this->post(route('tenant.climate.close', [$this->tenant, $survey]))->assertStatus(409);
+});
+
+it('shows a closed survey with its participation and no way to send anything', function (): void {
+    $survey = Survey::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'invited' => 6]);
+    climatePanelInvited($survey, 4, ['answered' => true]);
+    climatePanelInvited($survey, 2);
+
+    $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk()->inertiaProps();
+
+    expect($props['survey'])->toMatchArray(['status' => 'closed', 'statusLabel' => 'Cerrada', 'daysLeft' => null])
+        ->and($props['participation'])->toMatchArray(['invited' => 6, 'answered' => 4, 'rate' => 67, 'canRemind' => false])
+        ->and($props)->toHaveKey('resultsUrl');
+});
