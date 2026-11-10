@@ -224,6 +224,27 @@ export type LimitRow = {
     over: boolean;
 };
 
+/** Humi's tokens of the current month for a company, in the console. */
+export type UsageSummary = {
+    period_label: string;
+    used: number;
+    /** Held for answers still being written. */
+    reserved: number;
+    /** The plan's quota plus what a person added this month. */
+    quota: number;
+    granted: number;
+    remaining: number;
+};
+
+/** A month of Humi's use. */
+export type UsageMonth = {
+    period: string;
+    label: string;
+    used: number;
+    /** The quota the month had when last asked; null when nobody asked. */
+    quota: number | null;
+};
+
 export type ModuleRow = {
     key: string;
     label: string;

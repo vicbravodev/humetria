@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Billing\Contracts\UsageMeter;
+use App\Modules\Billing\Data\UsageHistoryRow;
+use App\Modules\Billing\Data\UsageSnapshot;
 use App\Modules\Tenancy\Actions\GrantModule;
 use App\Modules\Tenancy\Actions\RevokeModule;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
@@ -23,7 +26,7 @@ use Inertia\Response;
 /** One company in the console, with its modules and what it has used of its plan's limits: the staff reads them, the superadmin grants and takes them away by hand. */
 final class CompanyModulesController extends Controller
 {
-    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits): Response
+    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage): Response
     {
         Gate::authorize('view-console');
 
@@ -58,8 +61,31 @@ final class CompanyModulesController extends Controller
                 'remaining' => $usage->remaining(),
                 'over' => $usage->over,
             ], $limits->usage($tenant->id)),
+            // Humi's tokens this month against the quota (plan plus grants), and the months before, a page at a time.
+            'usage' => $this->usage($usage->snapshot($tenant->id, UsageMeter::ASSISTANT_TOKENS)),
+            'usage_history' => $usage->history($tenant->id, UsageMeter::ASSISTANT_TOKENS)->through(fn (UsageHistoryRow $row): array => [
+                'period' => $row->periodStart,
+                'label' => $row->periodLabel,
+                'used' => $row->used,
+                'quota' => $row->quota,
+            ]),
             'can_manage' => Gate::allows('manage-tenants'),
         ]);
+    }
+
+    /**
+     * @return array{period_label: string, used: int, reserved: int, quota: int, granted: int, remaining: int}
+     */
+    private function usage(UsageSnapshot $snapshot): array
+    {
+        return [
+            'period_label' => $snapshot->periodLabel,
+            'used' => $snapshot->used,
+            'reserved' => $snapshot->reserved,
+            'quota' => $snapshot->quota,
+            'granted' => $snapshot->granted,
+            'remaining' => $snapshot->remaining(),
+        ];
     }
 
     public function grant(GrantModuleRequest $request, Tenant $tenant, GrantModule $grant): RedirectResponse

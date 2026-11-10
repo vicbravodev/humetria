@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Billing\Models\UsageCounter;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantLimit;
@@ -109,3 +110,18 @@ it('says a company without a plan has no limits', function (): void {
 
     visitPage('tenancy/company', "/admin/companies/{$tenant->id}")->assertSee('Sin plan asignado: la empresa no tiene límites.');
 });
+
+it('shows the tokens of Humi this month, with the quota and the months before', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create();
+    UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'used' => 12_000, 'reserved' => 0]);
+    UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'period_start' => '2026-01-01', 'used' => 7000, 'quota' => 15_000]);
+
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)
+        ->assertSee('Consumo de Humi')
+        ->assertSee('tokens usados')
+        ->assertSee('2,000,000')
+        ->assertSee('Agregar tokens')
+        ->assertSee('Enero 2026')
+        ->assertSee('15,000');
+})->with($looks);

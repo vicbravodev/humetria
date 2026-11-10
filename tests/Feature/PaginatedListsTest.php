@@ -259,6 +259,13 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('billing.accounts.show', $account);
     }, ['companies', 'charges', 'statements', 'payments']],
+    'a company in the console and its months of use of Humi' => ['tenancy/company', function () {
+        $tenant = Tenant::factory()->create();
+        App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id]);
+        signInAsSuperadmin();
+
+        return route('companies.show', $tenant);
+    }, ['usage_history']],
     'demo requests' => ['demos/index', function () {
         DemoRequest::factory()->create();
         signInAsSuperadmin();

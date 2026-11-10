@@ -26,3 +26,37 @@ it('shows no limits for a company without a plan', function (): void {
 
     $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertOk()->assertInertia(fn (Assert $page) => $page->has('limits', 0));
 });
+
+it('shows the staff the tokens of Humi the company used, holds and may use this month, and the months before', function (): void {
+    $this->travelTo('2026-12-10 12:00:00');
+    config(['billing.unplanned_quotas.assistant_tokens' => 20_000]);
+    $tenant = Tenant::factory()->create();
+    App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'period_start' => '2026-10-01', 'used' => 7000, 'quota' => 15_000]);
+    App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'period_start' => '2026-12-01', 'used' => 1200, 'reserved' => 9000]);
+    App\Modules\Billing\Models\UsageGrant::factory()->create(['tenant_id' => $tenant->id, 'period_start' => '2026-12-01', 'quantity' => 5000]);
+    App\Modules\Billing\Models\UsageCounter::factory()->create(['period_start' => '2026-12-01', 'used' => 999]);
+
+    foreach ([superadmin(), support()] as $user) {
+        $this->actingAs($user)->get(route('companies.show', $tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('usage.period_label', 'Diciembre 2026')
+            ->where('usage.used', 1200)
+            ->where('usage.reserved', 9000)
+            ->where('usage.quota', 25_000)
+            ->where('usage.granted', 5000)
+            ->where('usage.remaining', 14_800)
+            ->has('usage_history.data', 2)
+            ->where('usage_history.data.0', ['period' => '2026-12-01', 'label' => 'Diciembre 2026', 'used' => 1200, 'quota' => null])
+            ->where('usage_history.data.1', ['period' => '2026-10-01', 'label' => 'Octubre 2026', 'used' => 7000, 'quota' => 15_000]));
+    }
+});
+
+it('pages the months of use', function (): void {
+    $tenant = Tenant::factory()->create();
+
+    foreach (range(1, 8) as $month) {
+        App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'period_start' => "2025-0{$month}-01"]);
+    }
+
+    $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertInertia(fn (Assert $page) => $page->has('usage_history.data', 6)->where('usage_history.total', 8));
+    $this->actingAs(superadmin())->get(route('companies.show', [$tenant, 'usage_page' => 2]))->assertInertia(fn (Assert $page) => $page->has('usage_history.data', 2));
+});
