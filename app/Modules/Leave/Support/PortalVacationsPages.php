@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Support;
 use App\Modules\Leave\Actions\CancelRequest;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Models\LeaveType;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -19,7 +20,7 @@ final class PortalVacationsPages
     public const int PER_PAGE = 10;
 
     /**
-     * @return array{today: string, periods: list<array{year: int, granted: int, available: int, enjoyBy: string, mayPrescribe: bool}>, advanced: int, teamPending: int, requests: LengthAwarePaginator<int, array{id: string, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, rejectionReason: string|null, canCancel: bool}>, types: list<array{id: string, name: string}>}
+     * @return array{today: string, periods: list<array{year: int, granted: int, available: int, enjoyBy: string, mayPrescribe: bool}>, advanced: int, teamPending: int, statements: list<array{id: string, year: int}>, requests: LengthAwarePaginator<int, array{id: string, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, rejectionReason: string|null, canCancel: bool}>, types: list<array{id: string, name: string}>}
      */
     public static function for(string $employeeId): array
     {
@@ -28,9 +29,23 @@ final class PortalVacationsPages
             'periods' => self::periods($employeeId),
             'advanced' => max(0, -(Balances::advanced([$employeeId])[$employeeId] ?? 0)),
             'requests' => self::requests($employeeId),
+            'statements' => self::statements($employeeId),
             'teamPending' => PortalTeamPages::pendingFor($employeeId),
             'types' => array_values(LeaveType::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')->get(['id', 'name'])->map(fn (LeaveType $type): array => ['id' => $type->id, 'name' => $type->name])->all()),
         ];
+    }
+
+    /**
+     * The annual statements the person has yet to confirm they received, the oldest first.
+     *
+     * @return list<array{id: string, year: int}>
+     */
+    private static function statements(string $employeeId): array
+    {
+        $pending = LeaveStatement::query()->where('employee_id', $employeeId)->whereNull('acknowledged_at')->orderBy('issued_at')->orderBy('id')->get(['id', 'leave_entitlement_id']);
+        $years = LeaveEntitlement::query()->whereIn('id', $pending->pluck('leave_entitlement_id'))->get(['id', 'anniversary_on'])->mapWithKeys(fn (LeaveEntitlement $period): array => [$period->id => $period->anniversary_on->year]);
+
+        return array_values($pending->map(fn (LeaveStatement $statement): array => ['id' => $statement->id, 'year' => $years->get($statement->leave_entitlement_id, 0)])->all());
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Required from routes/web.php: the vacations of a person and of their team in the employee portal, outside the company
 // group. Every name starts with portal.vacations.
 
+use App\Modules\Leave\Http\Controllers\PortalStatementController;
 use App\Modules\Leave\Http\Controllers\PortalTeamRequestsController;
 use App\Modules\Leave\Http\Controllers\PortalVacationsController;
 use Illuminate\Support\Facades\Route;
@@ -22,3 +23,7 @@ Route::post('portal/{token}/vacations/requests/{request}/cancel', [PortalVacatio
 Route::get('portal/{token}/vacations/team', [PortalTeamRequestsController::class, 'show'])->middleware('throttle:portal-views')->name('portal.vacations.team.show');
 Route::post('portal/{token}/vacations/team/{request}/approve', [PortalTeamRequestsController::class, 'approve'])->whereUuid('request')->middleware('throttle:portal-actions')->name('portal.vacations.team.approve');
 Route::post('portal/{token}/vacations/team/{request}/reject', [PortalTeamRequestsController::class, 'reject'])->whereUuid('request')->middleware('throttle:portal-actions')->name('portal.vacations.team.reject');
+
+// The annual statement of a period (LFT art. 81): read it and confirm they received it. One that is not theirs is a 404.
+Route::get('portal/{token}/vacations/statements/{statement}', [PortalStatementController::class, 'show'])->whereUuid('statement')->middleware('throttle:portal-views')->name('portal.vacations.statements.show');
+Route::post('portal/{token}/vacations/statements/{statement}/acknowledge', [PortalStatementController::class, 'acknowledge'])->whereUuid('statement')->middleware('throttle:portal-actions')->name('portal.vacations.statements.acknowledge');

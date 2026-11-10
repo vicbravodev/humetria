@@ -3,12 +3,14 @@ import { ArrowLeft } from 'lucide-react';
 import PortalBalance from '@/components/leave/portal-balance';
 import PortalRequests from '@/components/leave/portal-requests';
 import PortalShell from '@/components/leave/portal-shell';
+import PortalStatements from '@/components/leave/portal-statements';
 import PortalTeamLink from '@/components/leave/portal-team-link';
 import RequestForm from '@/components/leave/request-form';
 import { show } from '@/routes/portal';
 import type {
     LeavePeriod,
     LeaveTypeOption,
+    PendingStatement,
     Paginated,
     PortalLeaveRequest,
 } from '@/types';
@@ -24,6 +26,7 @@ export default function LeavePortal({
     periods,
     advanced,
     teamPending,
+    statements,
     requests,
     types,
 }: {
@@ -36,6 +39,8 @@ export default function LeavePortal({
     advanced: number;
     /** How many requests of their team wait for their answer. */
     teamPending: number;
+    /** The annual statements they have yet to confirm. */
+    statements: PendingStatement[];
     requests: Paginated<PortalLeaveRequest>;
     types: LeaveTypeOption[];
 }) {
@@ -59,6 +64,7 @@ export default function LeavePortal({
                         tiene registrados su empresa.
                     </p>
                 </div>
+                <PortalStatements token={token} statements={statements} />
                 <PortalTeamLink token={token} pending={teamPending} />
                 <PortalBalance periods={periods} advanced={advanced} />
                 <RequestForm token={token} today={today} types={types} />

@@ -62,3 +62,22 @@ export type TeamLeaveRequest = {
     allowsAdvance: boolean;
     canApprove: boolean;
 };
+
+/** What the annual statement of a period says (LFT art. 81), in days and dates; the premium is a percent, never an amount. */
+export type StatementSheetData = {
+    company: string;
+    name: string;
+    /** "15 de marzo de 2024": since when their seniority counts. */
+    startedOn: string;
+    years: number;
+    days: number;
+    enjoyFrom: string;
+    enjoyBy: string;
+    premiumPercent: number;
+    issuedOn: string;
+    /** When they confirmed they received it; null while they have not. */
+    acknowledgedOn: string | null;
+};
+
+/** A statement the person has yet to confirm. */
+export type PendingStatement = { id: string; year: number };
