@@ -591,3 +591,57 @@ html:has([data-smooth-scroll]) {
         break-inside: avoid;
     }
 }
+
+/*
+ * The org chart's lines: each group of reports hangs from a vertical line under its manager, and each report reaches
+ * it with a short horizontal one. The same nested list is the outline on a phone, with a smaller indent.
+ */
+.org-tree [role='group'] {
+    margin-left: 1.125rem;
+    padding-left: 0.875rem;
+    border-left: 1px solid var(--border);
+}
+
+.org-tree [role='group'] > li {
+    position: relative;
+}
+
+.org-tree [role='group'] > [role='treeitem']::before {
+    content: '';
+    position: absolute;
+    top: 2rem;
+    left: -0.875rem;
+    width: 0.875rem;
+    border-top: 1px solid var(--border);
+}
+
+@media (min-width: 48rem) {
+    .org-tree [role='group'] {
+        margin-left: 1.75rem;
+        padding-left: 1.5rem;
+    }
+
+    .org-tree [role='group'] > [role='treeitem']::before {
+        left: -1.5rem;
+        width: 1.5rem;
+    }
+}
+
+/* The chart prints as it is open on screen, in black on white, without splitting a card between two sheets. */
+@media print {
+    .org-tree {
+        --card: white;
+        --foreground: black;
+        --muted-foreground: black;
+        --border: black;
+        --secondary: white;
+        --warning: white;
+        --warning-foreground: black;
+        --primary: black;
+        color: black;
+    }
+
+    .org-tree [data-slot='org-node'] {
+        break-inside: avoid;
+    }
+}

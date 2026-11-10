@@ -142,6 +142,35 @@ export function focusedTree(
     return { expanded, children };
 }
 
+/**
+ * What the tree shows: the roots of the page, closed; or, with a focused person, the top of their chain with the way
+ * down to them open. `placement` says where those sit among all the roots, for a screen reader.
+ */
+export function chartView(
+    roots: Paginated<OrgNode>,
+    chain: OrgNode[],
+    focus: { id: string; children: Paginated<OrgNode> } | null,
+): {
+    nodes: OrgNode[];
+    initial: TreeState;
+    placement: { before: number; total: number };
+    focusId: string | null;
+} {
+    return focus === null
+        ? {
+              nodes: roots.data,
+              initial: emptyTree,
+              placement: { before: (roots.from ?? 1) - 1, total: roots.total },
+              focusId: null,
+          }
+        : {
+              nodes: chain.slice(0, 1),
+              initial: focusedTree(chain, focus.children),
+              placement: { before: 0, total: 1 },
+              focusId: focus.id,
+          };
+}
+
 const TEXTS = ['id', 'name', 'job_title', 'area', 'work_center'];
 const FLAGS = ['active', 'matches', 'manager_inactive'];
 const COUNTS = ['direct_reports', 'total_reports'];

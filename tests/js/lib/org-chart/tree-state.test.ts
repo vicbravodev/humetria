@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    chartView,
     emptyTree,
     focusedTree,
     parentsOf,
@@ -190,6 +191,39 @@ describe('focusedTree', () => {
 
     it('is empty without a focus', () => {
         expect(focusedTree([], null)).toEqual(emptyTree);
+    });
+});
+
+describe('chartView', () => {
+    it('shows the roots of the page, closed, and where they sit among all of them', () => {
+        const roots = {
+            ...page([node('dir'), node('sola')], 2, 3),
+            from: 51,
+            total: 120,
+        };
+
+        expect(chartView(roots, [], null)).toEqual({
+            nodes: [node('dir'), node('sola')],
+            initial: emptyTree,
+            placement: { before: 50, total: 120 },
+            focusId: null,
+        });
+        expect(
+            chartView({ ...page([]), from: null }, [], null).placement,
+        ).toEqual({ before: 0, total: 0 });
+    });
+
+    it('shows, with a focus, only the top of the chain with the way down open', () => {
+        const chain = [node('dir', { direct_reports: 1 }), node('ana')];
+        const view = chartView(page([node('dir'), node('sola')]), chain, {
+            id: 'ana',
+            children: page([]),
+        });
+
+        expect(view.nodes).toEqual([chain[0]]);
+        expect(view.placement).toEqual({ before: 0, total: 1 });
+        expect(view.focusId).toBe('ana');
+        expect([...view.initial.expanded]).toEqual(['dir']);
     });
 });
 

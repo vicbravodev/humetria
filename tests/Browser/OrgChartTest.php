@@ -43,9 +43,125 @@ function acmeOrgChart(bool $lines = true): array
     ];
 }
 
-it('opens the org chart', function (bool $dark, bool $mobile): void {
+it('shows who is at the top, and their reports when they are opened', function (bool $dark, bool $mobile): void {
     acmeOrgChart();
 
     visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
-        ->assertSee('Organigrama');
+        ->assertSee('5 personas activas, 4 con jefe directo.')
+        ->assertSee('Diana Torres')
+        ->assertSee('Directora general')
+        ->assertSee('2 directos · 4 en total')
+        ->assertDontSee('Gerardo Paz')
+        ->click('[aria-label="Ver los reportes de Diana Torres"]')
+        ->assertSee('Gerardo Paz')
+        ->assertSee('Sofía Luna')
+        ->assertSee('Revisar: pocos reportes')
+        ->assertDontSee('Ana López')
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
 })->with($looks);
+
+it('invites a company where nobody has a manager to assign them', function (bool $dark, bool $mobile): void {
+    acmeOrgChart(lines: false);
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
+        ->assertSee('5 personas activas, ninguna con jefe directo.')
+        ->assertSee('Todavía nadie tiene jefe asignado.')
+        ->assertSee('Ir a Empleados')
+        ->assertSee('Importar CSV')
+        ->assertSee('Diana Torres')
+        ->click('Ir a Empleados')
+        ->assertPathIs('/admin/acme/employees');
+})->with($looks);
+
+it('focuses the person searched: the way down to them and their card', function (bool $dark, bool $mobile): void {
+    $people = acmeOrgChart();
+
+    $page = visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
+        ->click('#org-chart-person')
+        ->type('[role="combobox"][aria-controls="org-chart-person-options"]', 'ana')
+        ->assertSee('Ana López · Operadora')
+        ->keys('[role="combobox"][aria-controls="org-chart-person-options"]', 'Enter')
+        ->assertQueryStringHas('focus', $people['ana']->id)
+        ->assertSeeIn('nav[aria-label="Línea de mando"]', 'Diana Torres')
+        ->assertSeeIn('nav[aria-label="Línea de mando"]', 'Gerardo Paz')
+        ->assertSeeIn('[aria-current="true"]', 'Ana López')
+        // Only the way down to her: the other manager waits behind «Ver más».
+        ->assertDontSee('Sofía Luna')
+        ->assertDontSee('Beto Díaz')
+        ->assertNoAccessibilityIssues(1)
+        ->assertScript(cspViolations(), '[]');
+
+    $page->click('[aria-label="Ver 1 más: reportes de Diana Torres"]')
+        ->assertSee('Sofía Luna')
+        ->click('nav[aria-label="Línea de mando"] a:has-text("Gerardo Paz")')
+        ->assertQueryStringHas('focus', $people['gerardo']->id)
+        ->assertSee('Beto Díaz')
+        ->click('nav[aria-label="Línea de mando"] a:has-text("Organigrama")')
+        ->assertQueryStringMissing('focus')
+        ->assertNoJavaScriptErrors();
+})->with($looks);
+
+it('walks the tree with the keyboard', function (): void {
+    acmeOrgChart();
+    $focused = '() => document.activeElement?.getAttribute("aria-label")';
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowRight')
+        ->assertSee('Gerardo Paz')
+        ->assertAttribute('[role="treeitem"][tabindex="0"]', 'aria-expanded', 'true')
+        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowDown')
+        ->assertScript($focused, 'Gerardo Paz, Gerente de planta')
+        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowRight')
+        ->assertSee('Ana López')
+        ->keys('[role="treeitem"][tabindex="0"]', 'End')
+        ->assertScript($focused, 'Sofía Luna, Gerente de ventas')
+        ->keys('[role="treeitem"][tabindex="0"]', 'Home')
+        ->assertScript($focused, 'Diana Torres, Directora general')
+        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowLeft')
+        ->assertDontSee('Gerardo Paz')
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('narrows the tree to an area, dimming whoever is only on the way', function (): void {
+    $people = acmeOrgChart();
+    $sales = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $people['ana']->tenant_id, 'name' => 'Ventas']);
+    $people['ana']->update(['area_id' => $sales->id]);
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('#org-chart-area')
+        ->type('[role="combobox"][aria-controls="org-chart-area-options"]', 'ventas')
+        ->assertSee('Ventas')
+        ->keys('[role="combobox"][aria-controls="org-chart-area-options"]', 'Enter')
+        ->assertQueryStringHas('area', $sales->id)
+        ->click('[aria-label="Ver los reportes de Diana Torres"]')
+        ->assertSee('Gerardo Paz')
+        ->assertDontSee('Sofía Luna')
+        ->click('Limpiar')
+        ->assertQueryStringMissing('area')
+        ->assertNoJavaScriptErrors();
+});
+
+it('loads the reports of a large team a page at a time', function (): void {
+    $people = acmeOrgChart();
+    Employee::factory()->count(58)->reportingTo($people['sofia'])->create(['work_center_id' => $people['sofia']->work_center_id, 'area_id' => $people['sofia']->area_id]);
+    Employee::factory()->reportingTo($people['sofia'])->create(['name' => 'Zoe Última', 'work_center_id' => $people['sofia']->work_center_id, 'area_id' => $people['sofia']->area_id]);
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart?focus='.$people['sofia']->id)
+        ->assertSee('Revisar: muchos reportes')
+        ->assertDontSee('Zoe Última')
+        ->click('Ver 9 más')
+        ->assertSee('Zoe Última')
+        ->assertDontSee('Ver 9 más')
+        ->assertNoJavaScriptErrors();
+});
+
+it('fits the tree inside the page at every width, three levels down', function (): void {
+    $people = acmeOrgChart();
+    $page = visitPage('organization/org-chart', '/admin/acme/org-chart?focus='.$people['ana']->id);
+
+    foreach ([375, 768, 1280] as $width) {
+        resizeTo($page, $width)->assertScript(spilledOut(), '');
+    }
+});
