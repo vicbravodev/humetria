@@ -18,6 +18,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Organization/Actions/CountEmployees.php' => 'counts',
     'app/Modules/Organization/Actions/ListEmployees.php' => 'reads a paginated list',
     'app/Modules/Organization/Actions/PlanEmployeeImport.php' => 'checks the rows without writing; ImportEmployees logs the import',
+    'app/Modules/Leave/Actions/PlanOpeningBalances.php' => 'checks the rows without writing; ImportOpeningBalances logs the import',
     'app/Modules/Tenancy/Actions/ListTenants.php' => 'reads a paginated list',
     'app/Modules/Tenancy/Actions/ListUserTenants.php' => 'reads a list',
     'app/Modules/Tenancy/Actions/ListWorkCenters.php' => 'reads a paginated list',
