@@ -22,7 +22,10 @@ describe('mobileTabs', () => {
     it('folds the menu of whoever runs the company into Panel, Cumplimiento, Quejas and Más (board 40)', () => {
         expect(shape(mobileTabs(acme('owner'), false))).toEqual([
             'Panel',
-            ['Cumplimiento', ['NOM-035', 'NOM-037', 'Ley Silla', 'Asistencia']],
+            [
+                'Cumplimiento',
+                ['NOM-035', 'NOM-037', 'Ley Silla', 'Asistencia', 'Vacaciones'],
+            ],
             'Quejas',
             'Más',
         ]);
