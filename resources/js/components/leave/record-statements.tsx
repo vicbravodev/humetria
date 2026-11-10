@@ -26,7 +26,7 @@ export default function RecordStatements({
                                 tenant: tenantSlug,
                                 statement: statement.id,
                             })}
-                            className="font-medium text-primary hover:underline"
+                            className="touch-hit flex items-center font-medium text-primary hover:underline"
                         >
                             Constancia del periodo {statement.year}
                         </Link>
