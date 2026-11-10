@@ -5,6 +5,7 @@ export type * from './compensation';
 export type * from './compensation-compare';
 export type * from './compensation-report';
 export type * from './dashboard';
+export type * from './engagement';
 export type * from './interventions';
 export type * from './leave';
 export type * from './leave-policy';

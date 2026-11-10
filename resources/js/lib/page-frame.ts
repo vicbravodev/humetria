@@ -3,6 +3,8 @@ const STANDALONE_NAMES = new Set([
     // The survey has its own frame (SurveyShell).
     'landing',
     'campaigns/survey',
+    // The climate and pulse survey of the person's emailed link: the same frame, no account.
+    'engagement/survey',
     'seating/portal',
     // «Mi equipo» in the person's portal: their own link, no account.
     'organization/portal-team',

@@ -5,6 +5,7 @@ describe('isStandalone', () => {
     it.each([
         'landing',
         'campaigns/survey',
+        'engagement/survey',
         'seating/portal',
         'organization/portal-team',
         'leave/portal',
