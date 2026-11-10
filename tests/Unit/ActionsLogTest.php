@@ -32,6 +32,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',
+    'app/Modules/Engagement/Actions/CloseExpiredSurveys.php' => 'each close is logged by CloseSurvey',
     'app/Modules/Campaigns/Actions/QueueSurveyInvitations.php' => 'its callers (launch, resend, invite missing, replacements) log with the counts',
     'app/Modules/Engagement/Actions/QueueInvitations.php' => 'its callers (launch, remind) log with the counts',
     'app/Modules/Tenancy/Actions/SendInvitationEmail.php' => 'only queues the email; InviteMember, InviteOwner and ResendInvitation log it',
