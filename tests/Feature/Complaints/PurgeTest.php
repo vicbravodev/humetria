@@ -53,6 +53,13 @@ function purge(): int
     return resolve(PurgeComplaints::class)->handle();
 }
 
+it('purges the cases of a company that does not have the module too: retention outlives the plan', function (): void {
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom037'], \Carbon\CarbonImmutable::now());
+    closedCase($this, '2024-11-19');
+
+    expect(purge())->toBe(1);
+});
+
 it('purges the content of a case once its retention is over, and leaves a skeleton with no personal data', function (): void {
     Log::spy();
     $complaint = closedCase($this, '2024-11-19');
