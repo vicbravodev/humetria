@@ -126,7 +126,7 @@ it('walks the tree with the keyboard', function (): void {
 
 it('narrows the tree to an area, dimming whoever is only on the way', function (): void {
     $people = acmeOrgChart();
-    $sales = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $people['ana']->tenant_id, 'name' => 'Ventas']);
+    $sales = Area::factory()->create(['tenant_id' => $people['ana']->tenant_id, 'name' => 'Ventas']);
     $people['ana']->update(['area_id' => $sales->id]);
 
     visitPage('organization/org-chart', '/admin/acme/org-chart')
@@ -164,4 +164,9 @@ it('fits the tree inside the page at every width, three levels down', function (
     foreach ([375, 768, 1280] as $width) {
         resizeTo($page, $width)->assertScript(spilledOut(), '');
     }
+});
+it('reaches the org chart from the sidebar', function (): void {
+    acmeOrgChart();
+
+    visit('/admin/acme')->click('Organigrama')->assertPathIs('/admin/acme/org-chart');
 });

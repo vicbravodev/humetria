@@ -11,21 +11,33 @@ const acme = (
 ) => ({ slug: 'acme', role, can: can(allowed, allowed) });
 
 describe('toolNavItems', () => {
-    it('offers Compensación to whoever may view it, in a company and in a union', () => {
-        const items = (tenant: ReturnType<typeof acme>, type?: 'union') =>
+    it('offers the org chart and Compensación to whoever may view them in a company', () => {
+        expect(
+            toolNavItems(acme()).map((item) => [item.title, toUrl(item.href)]),
+        ).toEqual([
+            ['Organigrama', '/admin/acme/org-chart'],
+            ['Compensación', '/admin/acme/compensation'],
+        ]);
+    });
+
+    it('offers a union Compensación and no org chart: its roster has no hierarchy', () => {
+        expect(
+            toolNavItems({ ...acme(), type: 'union' }).map((item) => [
+                item.title,
+                toUrl(item.href),
+            ]),
+        ).toEqual([['Compensación', '/admin/acme/compensation']]);
+    });
+
+    it('offers the org chart alone to whoever may only view it', () => {
+        const tenant = acme(false, 'viewer');
+
+        expect(
             toolNavItems({
                 ...tenant,
-                ...(type === undefined ? {} : { type }),
-            });
-
-        for (const type of [undefined, 'union' as const]) {
-            expect(
-                items(acme(), type).map((item) => [
-                    item.title,
-                    toUrl(item.href),
-                ]),
-            ).toEqual([['Compensación', '/admin/acme/compensation']]);
-        }
+                can: { ...tenant.can, view_org_chart: true },
+            }).map((item) => item.title),
+        ).toEqual(['Organigrama']);
     });
 
     it('offers nothing to a role that cannot view it, nor outside a company', () => {
