@@ -20,4 +20,6 @@ export const can = (manage_organization: boolean, manage_members: boolean) => ({
     handle_complaints: manage_organization,
     view_attendance: manage_organization,
     manage_attendance: manage_organization,
+    view_org_chart: manage_organization,
+    manage_org_chart: manage_organization,
 });

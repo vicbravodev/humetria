@@ -93,6 +93,8 @@ final class ResolveTenant
                 'handle_complaints' => $user->can('handle-complaints'),
                 'view_attendance' => $user->can('view-attendance'),
                 'manage_attendance' => $user->can('manage-attendance'),
+                'view_org_chart' => $user->can('view-org-chart'),
+                'manage_org_chart' => $user->can('manage-org-chart'),
             ],
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.
