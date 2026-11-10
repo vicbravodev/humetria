@@ -60,3 +60,17 @@ it('pages the months of use', function (): void {
     $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertInertia(fn (Assert $page) => $page->has('usage_history.data', 6)->where('usage_history.total', 8));
     $this->actingAs(superadmin())->get(route('companies.show', [$tenant, 'usage_page' => 2]))->assertInertia(fn (Assert $page) => $page->has('usage_history.data', 2));
 });
+
+it('shows the staff the campaign email and the files of the company this month against what the plan covers', function (): void {
+    $this->travelTo('2026-12-10 12:00:00');
+    $tenant = Tenant::factory()->create();
+    App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'meter' => 'email_campaign', 'period_start' => '2026-12-01', 'used' => 120]);
+    App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'meter' => 'storage_bytes', 'period_start' => '2026-12-01', 'used' => 1_073_741_824]);
+
+    foreach ([superadmin(), support()] as $user) {
+        $this->actingAs($user)->get(route('companies.show', $tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->has('other_usage', 2)
+            ->where('other_usage.0', ['meter' => 'email_campaign', 'label' => 'Correo de campañas', 'unit' => 'correos', 'used' => 120, 'quota' => 500, 'remaining' => 380])
+            ->where('other_usage.1', ['meter' => 'storage_bytes', 'label' => 'Archivos', 'unit' => 'bytes', 'used' => 1_073_741_824, 'quota' => 5_368_709_120, 'remaining' => 4_294_967_296]));
+    }
+});

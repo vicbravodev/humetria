@@ -30,3 +30,22 @@ export function usageLine(usage: UsageSummary): string {
         ? `${left}; ${formatTokens(usage.reserved)} están apartados para respuestas en curso.`
         : `${left}.`;
 }
+
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+/** 1572864 bytes as "1.5 MB"; 1200 correos as "1,200 correos". */
+export function formatAmount(amount: number, unit: string): string {
+    if (unit !== 'bytes') {
+        return `${formatTokens(amount)} ${unit}`;
+    }
+
+    let value = amount;
+    let step = 0;
+
+    while (value >= 1024 && step < BYTE_UNITS.length - 1) {
+        value /= 1024;
+        step += 1;
+    }
+
+    return `${Number(value.toFixed(1)).toLocaleString('es-MX')} ${BYTE_UNITS[step]}`;
+}

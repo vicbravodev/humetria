@@ -114,6 +114,7 @@ const ARRAY_PROPS = [
     'results/show:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'tenancy/company:limits' => 'resumen corto: los dos cupos del plan (personas y centros)',
     'tenancy/company:modules' => 'catálogo fijo: los nueve módulos del catálogo, cada uno con su estado',
+    'tenancy/company:other_usage' => 'resumen fijo: correo de campañas y archivos del mes (dos medidores)',
     'billing/statement:lines' => 'las líneas de un estado de cuenta: un documento, pocas',
     'billing/statement:payments' => 'resumen corto: los pagos aplicados a un estado de cuenta, pocos',
     'billing/statement:adjustments' => 'resumen corto: los ajustes de un estado de cuenta, pocos',

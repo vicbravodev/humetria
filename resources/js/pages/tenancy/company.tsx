@@ -3,6 +3,7 @@ import PageHeader from '@/components/humetria/page-header';
 import CompanyUsage from '@/components/tenancy/company-usage';
 import CompanyLimits from '@/components/tenancy/company-limits';
 import CompanyModules from '@/components/tenancy/company-modules';
+import CompanyOtherUsage from '@/components/tenancy/company-other-usage';
 import { Badge } from '@/components/ui/badge';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import { index } from '@/routes/companies';
@@ -10,6 +11,7 @@ import type {
     CompanyDetail,
     LimitRow,
     ModuleRow,
+    OtherUsage,
     Paginated,
     UsageMonth,
     UsageSummary,
@@ -21,6 +23,7 @@ export default function Company({
     modules,
     limits,
     usage,
+    other_usage: otherUsage,
     usage_history: usageHistory,
     can_manage: canManage,
 }: {
@@ -28,6 +31,7 @@ export default function Company({
     modules: ModuleRow[];
     limits: LimitRow[];
     usage: UsageSummary;
+    other_usage: OtherUsage[];
     usage_history: Paginated<UsageMonth>;
     can_manage: boolean;
 }) {
@@ -59,6 +63,7 @@ export default function Company({
                     history={usageHistory}
                     canManage={canManage}
                 />
+                <CompanyOtherUsage rows={otherUsage} />
                 <CompanyModules
                     companyId={company.id}
                     modules={modules}

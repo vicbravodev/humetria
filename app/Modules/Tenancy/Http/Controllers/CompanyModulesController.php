@@ -69,6 +69,15 @@ final class CompanyModulesController extends Controller
                 'used' => $row->used,
                 'quota' => $row->quota,
             ]),
+            // Campaign email and files are only measured: this is the figure, the quota is what the plan covers.
+            'other_usage' => array_map(function (array $meter) use ($usage, $tenant): array {
+                $snapshot = $usage->snapshot($tenant->id, $meter['meter']);
+
+                return [...$meter, 'used' => $snapshot->used, 'quota' => $snapshot->quota, 'remaining' => $snapshot->remaining()];
+            }, [
+                ['meter' => 'email_campaign', 'label' => 'Correo de campañas', 'unit' => 'correos'],
+                ['meter' => 'storage_bytes', 'label' => 'Archivos', 'unit' => 'bytes'],
+            ]),
             'can_manage' => Gate::allows('manage-tenants'),
         ]);
     }

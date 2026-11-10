@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { formatTokens, usageLine, usagePercent } from '@/lib/usage';
+import {
+    formatAmount,
+    formatTokens,
+    usageLine,
+    usagePercent,
+} from '@/lib/usage';
 
 const month = {
     period_label: 'Noviembre 2026',
@@ -40,5 +45,20 @@ describe('usageLine', () => {
         expect(usageLine({ ...month, used: 250000, remaining: 0 })).toBe(
             'Sin tokens: Humi no responde hasta el mes siguiente, o hasta agregar más.',
         );
+    });
+});
+
+describe('formatAmount', () => {
+    it('writes bytes in the largest unit that keeps the figure above one', () => {
+        expect(formatAmount(500, 'bytes')).toBe('500 B');
+        expect(formatAmount(1024, 'bytes')).toBe('1 KB');
+        expect(formatAmount(1_572_864, 'bytes')).toBe('1.5 MB');
+        expect(formatAmount(5_368_709_120, 'bytes')).toBe('5 GB');
+        expect(formatAmount(0, 'bytes')).toBe('0 B');
+    });
+
+    it('writes a count with its unit and thousands', () => {
+        expect(formatAmount(1200, 'correos')).toBe('1,200 correos');
+        expect(formatAmount(1, 'correos')).toBe('1 correos');
     });
 });

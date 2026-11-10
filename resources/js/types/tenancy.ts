@@ -236,6 +236,16 @@ export type UsageSummary = {
     remaining: number;
 };
 
+/** A meter that only measures (campaign email, files): this month's figure against the plan's quota. */
+export type OtherUsage = {
+    meter: string;
+    label: string;
+    unit: string;
+    used: number;
+    quota: number;
+    remaining: number;
+};
+
 /** A month of Humi's use. */
 export type UsageMonth = {
     period: string;
