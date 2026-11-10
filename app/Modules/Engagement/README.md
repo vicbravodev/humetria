@@ -50,7 +50,7 @@ de la empresa. Los errores del proveedor se registran solo con su clase, porque 
 - **Por empresa:** el superadmin la apaga en la consola, en la configuración del asistente de la empresa
   (`admin/companies/{tenant}/assistant`). Es el mismo interruptor de Humi: apagar Humi apaga también el resumen de
   comentarios. También se apaga al agotar el presupuesto mensual de tokens de la empresa (`HUMI_MONTHLY_TOKEN_BUDGET`).
-- **Global:** dejar `ANTHROPIC_API_KEY` vacío en el entorno hace fallar las llamadas, que quedan como resumen fallido.
+- **Global:** no hay una bandera propia del módulo; sin la llave del proveedor (`ANTHROPIC_API_KEY`, `config/ai.php`) las llamadas no pueden completarse. Ese caso no tiene prueba propia: para apagar de verdad, use el interruptor por empresa.
 - Con la IA apagada, el estado del resumen es `ai_off`: RH sigue leyendo los comentarios originales (desde 10), el jefe
   no recibe resumen y la encuesta funciona igual.
 
