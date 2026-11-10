@@ -233,3 +233,13 @@ it('reads pesos typed in a form as cents, never through a float', function (stri
     'a dot with nothing after it' => ['5.', null],
     'a huge amount' => ['99999999999999999999', null],
 ]);
+
+it('writes cents back as pesos for a form field: without decimals when there are none', function (int $cents, string $typed): void {
+    expect(Money::input($cents))->toBe($typed)->and(Money::parse(Money::input($cents)))->toBe($cents);
+})->with([
+    [0, '0'],
+    [800_000, '8000'],
+    [814_950, '8149.50'],
+    [14_905, '149.05'],
+    [5, '0.05'],
+]);

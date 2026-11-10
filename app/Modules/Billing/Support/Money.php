@@ -29,4 +29,12 @@ final class Money
 
         return (int) $parts[1] * 100 + (int) str_pad($parts[2] ?? '', 2, '0');
     }
+
+    /** Cents as a form field holds them: "8000" or "8149.50", the inverse of parse(). */
+    public static function input(int $cents): string
+    {
+        $rest = $cents % 100;
+
+        return intdiv($cents, 100).($rest === 0 ? '' : '.'.str_pad((string) $rest, 2, '0', STR_PAD_LEFT));
+    }
 }

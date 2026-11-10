@@ -7,15 +7,26 @@ namespace App\Modules\Billing\Actions;
 use App\Modules\Billing\Data\AccountCompanyRow;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\Eligibility;
 use App\Modules\Billing\Support\ShortDate;
+use App\Modules\Billing\Support\SubscriptionQuoter;
+use App\Modules\Billing\Support\SubscriptionView;
+use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
+use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 final readonly class ListAccountCompanies
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private CompanyRegistry $companies) {}
+    public function __construct(
+        private CompanyRegistry $companies,
+        private Headcount $headcount,
+        private Eligibility $eligibility,
+        private SubscriptionQuoter $quoter,
+    ) {}
 
     /**
      * The companies the account pays now, newest link first, a page at a time. Each name, status and size is read through
@@ -32,10 +43,15 @@ final readonly class ListAccountCompanies
             ->paginate(self::PER_PAGE, pageName: 'companies_page')
             ->withQueryString();
 
-        $briefs = $this->companies->many(array_values(array_map(fn (AccountCompany $link): string => $link->tenant_id, $page->items())));
+        $ids = array_values(array_map(fn (AccountCompany $link): string => $link->tenant_id, $page->items()));
+        $briefs = $this->companies->many($ids);
+        $subscriptions = Subscription::query()->whereIn('tenant_id', $ids)->get()->keyBy('tenant_id');
+        $eligible = $this->eligibility->count($account);
+        $today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay();
 
-        return $page->through(function (AccountCompany $link) use ($briefs): AccountCompanyRow {
+        return $page->through(function (AccountCompany $link) use ($briefs, $subscriptions, $eligible, $today): AccountCompanyRow {
             $brief = $briefs[$link->tenant_id];
+            $subscription = $subscriptions->get($link->tenant_id);
 
             return new AccountCompanyRow(
                 $brief->id,
@@ -47,7 +63,7 @@ final readonly class ListAccountCompanies
                 $brief->statusLabel,
                 $brief->workCenters,
                 ShortDate::format($link->starts_on),
-                null,
+                $subscription === null ? null : SubscriptionView::from($subscription, $this->quoter->quote($subscription, $eligible, $today), $this->headcount->ofCompany($link->tenant_id)),
             );
         });
     }
