@@ -36,8 +36,7 @@ final readonly class RequestNotifier
             $manager = $people[$request->approver_employee_id ?? ''] ?? null;
 
             if ($manager !== null && $manager->email !== null) {
-                // ponytail: the path of the team page of the portal; route('portal.vacations.team.show') once that page names it.
-                $url = url("portal/{$this->portal->token($manager->id)}/vacations/team");
+                $url = route('portal.vacations.team.show', $this->portal->token($manager->id));
                 Notification::route('mail', $manager->email)->notify(new RequestToDecide($url, $this->companies->current(), $manager->name, ($people[$request->employee_id] ?? $manager)->name, RequestSummary::of($request)));
             }
         });
@@ -54,8 +53,7 @@ final readonly class RequestNotifier
 
             if ($owner !== null && $person !== null && $request->escalation_reason !== null) {
                 $company = $this->companies->current();
-                // ponytail: the path of RH's queue; route('tenant.vacations.requests.index') once that page names it.
-                Notification::route('mail', $owner)->notify(new RequestEscalated(url("admin/{$company->slug}/vacations/requests"), $company, $person->name, $request->escalation_reason, RequestSummary::of($request)));
+                Notification::route('mail', $owner)->notify(new RequestEscalated(route('tenant.vacations.requests.index', $company->slug), $company, $person->name, $request->escalation_reason, RequestSummary::of($request)));
             }
         });
     }
@@ -69,8 +67,7 @@ final readonly class RequestNotifier
             $person = $this->roster->find($request->employee_id);
 
             if ($person !== null && $person->email !== null) {
-                // ponytail: the path of «Mis vacaciones» in the portal; route('portal.vacations.show') once that page names it.
-                $url = url("portal/{$this->portal->token($person->id)}/vacations");
+                $url = route('portal.vacations.show', $this->portal->token($person->id));
                 Notification::route('mail', $person->email)->notify(new RequestDecided($url, $this->companies->current(), $person->name, RequestSummary::of($request), $request->status === RequestStatus::Approved, $request->rejection_reason));
             }
         });

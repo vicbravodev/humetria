@@ -333,7 +333,7 @@ it('emails the answer to who asked, with the link of their own portal', function
         ->and($mail->greeting)->toBe('Hola, Ana Solís')
         ->and($mail->introLines)->toBe(['Su solicitud de vacaciones del 9 de noviembre de 2026 al 20 de noviembre de 2026: 9 días laborables fue aprobada.'])
         ->and($mail->actionText)->toBe('Ver mis vacaciones')
-        ->and($mail->actionUrl)->toBe(url('portal/'.resolve(PortalAccess::class)->token($this->ana->id).'/vacations'));
+        ->and($mail->actionUrl)->toBe(route('portal.vacations.show', resolve(PortalAccess::class)->token($this->ana->id)));
     Notification::assertSentOnDemandTimes(RequestDecided::class, 1);
 });
 

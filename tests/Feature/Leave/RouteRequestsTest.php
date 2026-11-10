@@ -127,7 +127,7 @@ it('gives a manager 3 business days: asked on a Friday before a holiday Monday, 
     $escalated = reloadedRequest($request);
     expect($escalated->only(['status', 'escalation_reason', 'approver_employee_id']))->toBe(['status' => RequestStatus::Requested, 'escalation_reason' => EscalationReason::Timeout, 'approver_employee_id' => $this->boss->id])
         ->and($escalated->escalated_at?->toDateTimeString())->toBe('2026-11-20 06:40:00')
-        ->and(routedMails(RequestEscalated::class))->toBe([[$this->owner->email, url('admin/autopartes/vacations/requests')]]);
+        ->and(routedMails(RequestEscalated::class))->toBe([[$this->owner->email, route('tenant.vacations.requests.index', $this->tenant)]]);
     Notification::assertSentOnDemandTimes(RequestToDecide::class, 0);
 });
 

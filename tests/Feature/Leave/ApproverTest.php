@@ -100,7 +100,7 @@ it('assigns the request to the manager and emails them the link of their own por
             ->and($mail->subject)->toBe('Ana Solís pidió vacaciones')
             ->and($mail->greeting)->toBe('Hola, Beto Ruiz')
             ->and($mail->actionText)->toBe('Revisar solicitud')
-            ->and($mail->actionUrl)->toBe(url('portal/'.resolve(PortalAccess::class)->token($this->boss->id).'/vacations/team'))
+            ->and($mail->actionUrl)->toBe(route('portal.vacations.team.show', resolve(PortalAccess::class)->token($this->boss->id)))
             ->and($mail->actionUrl)->not->toContain(resolve(PortalAccess::class)->token($this->ana->id))
             ->and($text)->toContain('Ana Solís pidió vacaciones del 9 de noviembre de 2026 al 20 de noviembre de 2026: 9 días laborables.')
             ->toContain('Tiene días disponibles.')
@@ -153,7 +153,7 @@ it('is born with RH when nobody above is active, and tells the owner', function 
             ->and($notifiable->routes['mail'])->toBe($this->owner->email)
             ->and($mail->subject)->toBe('Una solicitud de Ana Solís espera tu respuesta')
             ->and($mail->actionText)->toBe('Revisar solicitud')
-            ->and($mail->actionUrl)->toBe(url('admin/autopartes/vacations/requests'))
+            ->and($mail->actionUrl)->toBe(route('tenant.vacations.requests.index', $this->tenant))
             ->and($text)->toContain('Ana Solís no tiene un jefe activo que le responda.')
             ->toContain('Pidió vacaciones del 9 de noviembre de 2026 al 20 de noviembre de 2026: 9 días laborables.')
             ->not->toContain('Nota privada');
