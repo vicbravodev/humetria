@@ -84,6 +84,8 @@ export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 /** The company a request is working in, shared on every page under /admin/{slug}. */
 export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
+        /** Its people read and export but change nothing: an ended trial or term, or a person's decision. */
+        read_only: boolean;
         /** Whether the account is a company or a union; fixed when it was created. */
         type: 'company' | 'union';
         trial_days_left: number | null;
@@ -118,7 +120,9 @@ export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &
-    Pick<TenantRow, 'status' | 'status_label' | 'blocked'>;
+    Pick<TenantRow, 'status' | 'status_label' | 'blocked'> & {
+        read_only: boolean;
+    };
 
 /** One work center as its company's list shows it. */
 export type WorkCenterRow = {

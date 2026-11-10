@@ -32,11 +32,30 @@ enum TenantStatus: string
         };
     }
 
+    /** Whether portals, devices and jobs must not operate: every status but the three a company works in. */
     public function isBlocked(): bool
     {
         return match ($this) {
             self::TrialEnded, self::Expired, self::ReadOnly, self::Suspended, self::Archived => true,
             self::NotStarted, self::Trial, self::Active => false,
+        };
+    }
+
+    /** Whether its people still read and export but change nothing: an ended trial, a lapsed term, or a person's decision. */
+    public function isReadOnly(): bool
+    {
+        return match ($this) {
+            self::TrialEnded, self::Expired, self::ReadOnly => true,
+            self::NotStarted, self::Trial, self::Active, self::Suspended, self::Archived => false,
+        };
+    }
+
+    /** Whether the panel shows the blocked page instead of its pages: only a person's suspension or archive does. */
+    public function blocksPanel(): bool
+    {
+        return match ($this) {
+            self::Suspended, self::Archived => true,
+            self::NotStarted, self::Trial, self::Active, self::TrialEnded, self::Expired, self::ReadOnly => false,
         };
     }
 }

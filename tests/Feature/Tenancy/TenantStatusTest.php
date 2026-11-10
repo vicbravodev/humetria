@@ -48,16 +48,19 @@ it('ends the trial 14 days after it starts', function (): void {
         ->and(Tenant::factory()->make()->trialEndsAt())->toBeNull();
 });
 
-it('labels each status and says which ones block', function (TenantStatus $status, string $label, bool $blocked): void {
+it('labels each status and says what it leaves of the panel and of the portals, devices and jobs', function (TenantStatus $status, string $label, bool $operates, bool $readOnly, bool $panelBlocked): void {
     expect($status->label())->toBe($label)
-        ->and($status->isBlocked())->toBe($blocked);
+        ->and($status->isBlocked())->toBe(! $operates)
+        ->and($status->isReadOnly())->toBe($readOnly)
+        ->and($status->blocksPanel())->toBe($panelBlocked);
 })->with([
-    'not started' => [TenantStatus::NotStarted, 'Sin iniciar', false],
-    'trial' => [TenantStatus::Trial, 'En prueba', false],
-    'active' => [TenantStatus::Active, 'Activa', false],
-    'trial ended' => [TenantStatus::TrialEnded, 'Prueba terminada', true],
-    'expired' => [TenantStatus::Expired, 'Vencida', true],
-    'read only' => [TenantStatus::ReadOnly, 'Solo lectura', true],
-    'suspended' => [TenantStatus::Suspended, 'Suspendida', true],
-    'archived' => [TenantStatus::Archived, 'Archivada', true],
+    'not started' => [TenantStatus::NotStarted, 'Sin iniciar', true, false, false],
+    'trial' => [TenantStatus::Trial, 'En prueba', true, false, false],
+    'active' => [TenantStatus::Active, 'Activa', true, false, false],
+    // An ended trial and a lapsed term only stop operating: people still read and export. Only a person blocks the panel.
+    'trial ended' => [TenantStatus::TrialEnded, 'Prueba terminada', false, true, false],
+    'expired' => [TenantStatus::Expired, 'Vencida', false, true, false],
+    'read only' => [TenantStatus::ReadOnly, 'Solo lectura', false, true, false],
+    'suspended' => [TenantStatus::Suspended, 'Suspendida', false, false, true],
+    'archived' => [TenantStatus::Archived, 'Archivada', false, false, true],
 ]);

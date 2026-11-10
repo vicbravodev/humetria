@@ -60,6 +60,6 @@ final readonly class CompanyDirectory implements Companies
             (int) $tenant->logo_height,
         );
 
-        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type);
+        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type, $tenant->status()->isReadOnly());
     }
 }

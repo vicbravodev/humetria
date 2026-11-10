@@ -39,7 +39,8 @@ final class HomeController extends Controller
                 'trade_name' => $company->trade_name,
                 'status' => $company->status()->value,
                 'status_label' => $company->status()->label(),
-                'blocked' => $company->status()->isBlocked(),
+                'blocked' => $company->status()->blocksPanel(),
+                'read_only' => $company->status()->isReadOnly(),
             ]),
         ]);
     }

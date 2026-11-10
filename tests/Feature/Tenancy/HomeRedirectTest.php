@@ -58,9 +58,24 @@ it('lists the companies of a person with two, the blocked one flagged', function
             ->where('companies.data.0.status', 'not_started')
             ->where('companies.data.0.status_label', 'Sin iniciar')
             ->where('companies.data.0.blocked', false)
+            ->where('companies.data.0.read_only', false)
             ->where('companies.data.1.slug', 'beta')
             ->where('companies.data.1.status', 'suspended')
-            ->where('companies.data.1.blocked', true));
+            ->where('companies.data.1.blocked', true)
+            ->where('companies.data.1.read_only', false));
+});
+
+it('flags a read-only company as read only, not as blocked', function (): void {
+    $user = User::factory()->create();
+    TenantMembership::factory()->for(Tenant::factory()->activeUntil(now()->subDay())->create(['slug' => 'vencida']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->create())->for($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('companies.data', fn ($companies): bool => collect($companies)->firstWhere('slug', 'vencida') === [
+                'slug' => 'vencida', 'trade_name' => collect($companies)->firstWhere('slug', 'vencida')['trade_name'], 'status' => 'expired', 'status_label' => 'Vencida', 'blocked' => false, 'read_only' => true,
+            ]));
 });
 
 it('does not expose the legal name, the RFC or ids of the companies', function (): void {
@@ -73,7 +88,7 @@ it('does not expose the legal name, the RFC or ids of the companies', function (
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->has('companies.data.0', fn (Assert $company) => $company
-                ->hasAll(['slug', 'trade_name', 'status', 'status_label', 'blocked'])));
+                ->hasAll(['slug', 'trade_name', 'status', 'status_label', 'blocked', 'read_only'])));
 });
 
 it('pages the companies of a person 25 at a time', function (): void {

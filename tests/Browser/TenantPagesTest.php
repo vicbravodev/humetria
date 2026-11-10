@@ -193,7 +193,7 @@ it('takes a person with several companies from the blocked one to the list', fun
 
 it('lets an impersonating superadmin close the block modal and use the panel', function (bool $dark, bool $mobile): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn (AwaitableWebpage $page) => $page

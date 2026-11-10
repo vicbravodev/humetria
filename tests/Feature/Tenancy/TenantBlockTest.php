@@ -14,9 +14,15 @@ use Inertia\Testing\AssertableInertia as Assert;
 mutates(BlockSuspendedTenant::class);
 
 $blocked = [
+    'suspended' => fn (): Tenant => Tenant::factory()->suspended()->create(),
+    'archived' => fn (): Tenant => Tenant::factory()->archived()->create(),
+];
+
+// What a company falls to when its trial or term ends, or when a person says so: people read, nothing is changed.
+$readOnly = [
     'trial ended' => fn (): Tenant => Tenant::factory()->inTrial(now()->subDays(15))->create(),
     'expired' => fn (): Tenant => Tenant::factory()->activeUntil(now()->subDay())->create(),
-    'deactivated' => fn (): Tenant => Tenant::factory()->suspended()->create(),
+    'read only' => fn (): Tenant => Tenant::factory()->readOnly()->create(),
 ];
 
 $open = [
@@ -82,6 +88,37 @@ it('rejects with 423 any change to a blocked company, leaving no effect and a lo
     expect($this->effects)->toBe(0);
     Log::shouldHaveReceived('warning')->with('tenant.blocked_request_rejected', ['tenant_id' => $tenant->id])->once();
 })->with($blocked);
+
+it('lets the members of a read-only company read its pages, told that it is read only and not blocked', function (Closure $make): void {
+    $tenant = $make();
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.dashboard', $tenant))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('tenant.blocked', false)
+            ->where('tenant.read_only', true));
+})->with($readOnly);
+
+it('rejects with 423 any change to a read-only company, leaving no effect and a log', function (Closure $make): void {
+    $tenant = $make();
+    Log::spy();
+
+    $this->actingAs(ownerOf($tenant))
+        ->post(route('tenant.block-probe', $tenant))
+        ->assertStatus(423);
+
+    expect($this->effects)->toBe(0);
+    Log::shouldHaveReceived('warning')->with('tenant.read_only_request_rejected', ['tenant_id' => $tenant->id])->once();
+})->with($readOnly);
+
+it('does not say a company is read only while it works as usual', function (Closure $make): void {
+    $tenant = $make();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.read_only', false)->where('tenant.blocked', false));
+})->with($open);
 
 it('lets a company that is not blocked work as usual', function (Closure $make): void {
     $tenant = $make();
