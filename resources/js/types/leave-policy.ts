@@ -52,3 +52,32 @@ export type LeaveGradeAssignment = {
 };
 
 export type LeavePolicyOption = { value: string; label: string };
+
+export type LeaveSettingsTab = 'types' | 'holidays' | 'week';
+
+/** A leave type of the settings; the ones of the law cannot be changed or archived. */
+export type LeaveTypeRow = {
+    id: string;
+    name: string;
+    paid: boolean;
+    statutory: boolean;
+    archived: boolean;
+};
+
+export type LeaveHolidayRow = { id: string; date: string; name: string };
+
+/** Since which day the periods are granted (never edited) and the working week of the «Ley» policy. */
+export type LeaveSettingData = {
+    trackingSince: string;
+    statutoryWorkWeek: LeaveWorkWeek;
+};
+
+/** What the check of a file of opening balances found: the first rows of each list, and how many there are in all. */
+export type LeaveImportSummary = {
+    ready: number;
+    rejected: number;
+    readyRows: { line: number; name: string; year: number; days: number }[];
+    rejectedRows: { line: number; reason: string }[];
+    /** Rejected rows beyond the ones listed. */
+    hiddenRejected: number;
+};

@@ -33,6 +33,7 @@ final readonly class LeaveDefaults
             Log::info('leave.tracking_started', ['tracking_since' => $today]);
         }
 
-        return $setting;
+        // A row just created holds only what was given: the working week comes from the column's default.
+        return $setting->wasRecentlyCreated ? $setting->refresh() : $setting;
     }
 }

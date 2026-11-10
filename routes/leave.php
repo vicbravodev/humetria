@@ -11,6 +11,7 @@ use App\Modules\Leave\Http\Controllers\CalendarController;
 use App\Modules\Leave\Http\Controllers\EmployeeRecordController;
 use App\Modules\Leave\Http\Controllers\PolicyController;
 use App\Modules\Leave\Http\Controllers\RequestController;
+use App\Modules\Leave\Http\Controllers\SettingsController;
 use App\Modules\Leave\Http\Controllers\VacationsController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,3 +56,12 @@ Route::post('admin/{tenant:slug}/vacations/policies/{policy}/archive', [PolicyCo
 // Whom each policy goes to, and the job grades looked up by name for the field that picks one.
 Route::put('admin/{tenant:slug}/vacations/assignments', [AssignmentController::class, 'update'])->where('tenant', $notReserved)->name('tenant.vacations.assignments.update');
 Route::get('admin/{tenant:slug}/vacations/grades/options', [AssignmentController::class, 'grades'])->where('tenant', $notReserved)->name('tenant.vacations.grades.options');
+
+// What RH adjusts: leave types, holidays of the company and the working week of the law. Owner and hr write; a viewer reads.
+Route::get('admin/{tenant:slug}/vacations/settings', [SettingsController::class, 'show'])->where('tenant', $notReserved)->name('tenant.vacations.settings.show');
+Route::patch('admin/{tenant:slug}/vacations/settings', [SettingsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.vacations.settings.update');
+Route::post('admin/{tenant:slug}/vacations/types', [SettingsController::class, 'storeType'])->where('tenant', $notReserved)->name('tenant.vacations.types.store');
+Route::put('admin/{tenant:slug}/vacations/types/{type}', [SettingsController::class, 'updateType'])->where('tenant', $notReserved)->whereUuid('type')->name('tenant.vacations.types.update');
+Route::post('admin/{tenant:slug}/vacations/types/{type}/archive', [SettingsController::class, 'archiveType'])->where('tenant', $notReserved)->whereUuid('type')->name('tenant.vacations.types.archive');
+Route::post('admin/{tenant:slug}/vacations/holidays', [SettingsController::class, 'storeHoliday'])->where('tenant', $notReserved)->name('tenant.vacations.holidays.store');
+Route::delete('admin/{tenant:slug}/vacations/holidays/{holiday}', [SettingsController::class, 'destroyHoliday'])->where('tenant', $notReserved)->whereUuid('holiday')->name('tenant.vacations.holidays.destroy');
