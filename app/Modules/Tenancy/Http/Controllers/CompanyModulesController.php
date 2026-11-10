@@ -7,7 +7,9 @@ namespace App\Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\GrantModule;
 use App\Modules\Tenancy\Actions\RevokeModule;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
+use App\Modules\Tenancy\Data\LimitUsage;
 use App\Modules\Tenancy\Data\ModuleRow;
 use App\Modules\Tenancy\Exceptions\InvalidModuleChange;
 use App\Modules\Tenancy\Http\Requests\GrantModuleRequest;
@@ -18,10 +20,10 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** One company in the console, with its modules: the staff reads them, the superadmin grants and takes them away by hand. */
+/** One company in the console, with its modules and what it has used of its plan's limits: the staff reads them, the superadmin grants and takes them away by hand. */
 final class CompanyModulesController extends Controller
 {
-    public function show(Tenant $tenant, CompanyModules $modules): Response
+    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits): Response
     {
         Gate::authorize('view-console');
 
@@ -48,6 +50,14 @@ final class CompanyModulesController extends Controller
                 'ends_on' => $row->endsOn,
                 'exists_in_code' => $row->existsInCode,
             ], $modules->list($tenant->id)),
+            'limits' => array_map(fn (LimitUsage $usage): array => [
+                'resource' => $usage->resource,
+                'label' => $usage->label,
+                'used' => $usage->used,
+                'amount' => $usage->amount,
+                'remaining' => $usage->remaining(),
+                'over' => $usage->over,
+            ], $limits->usage($tenant->id)),
             'can_manage' => Gate::allows('manage-tenants'),
         ]);
     }

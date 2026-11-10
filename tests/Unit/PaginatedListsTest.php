@@ -112,6 +112,7 @@ const ARRAY_PROPS = [
     'results/report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'results/shared-report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'results/show:levels' => 'catálogo fijo: los cinco niveles de riesgo',
+    'tenancy/company:limits' => 'resumen corto: los dos cupos del plan (personas y centros)',
     'tenancy/company:modules' => 'catálogo fijo: los nueve módulos del catálogo, cada uno con su estado',
     'billing/statement:lines' => 'las líneas de un estado de cuenta: un documento, pocas',
     'billing/statement:payments' => 'resumen corto: los pagos aplicados a un estado de cuenta, pocos',

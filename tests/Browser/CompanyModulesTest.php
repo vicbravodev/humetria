@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantModule;
 use Carbon\CarbonImmutable;
 
@@ -84,4 +85,27 @@ it('opens a company\'s modules from its name in the console', function (): void 
         ->click('Cliente Visible')
         ->assertSee('Módulos')
         ->assertSee('NOM-035');
+});
+
+it('shows what the company has used of the people and centers its plan covers', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create();
+    TenantLimit::factory()->create(['tenant_id' => $tenant->id, 'resource' => 'seats', 'amount' => 50, 'used' => 42]);
+    TenantLimit::factory()->create(['tenant_id' => $tenant->id, 'resource' => 'centers', 'amount' => 2, 'used' => 3]);
+
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)
+        ->assertSee('Límites')
+        ->assertSee('Personas')
+        ->assertSee('de 50')
+        ->assertSee('Quedan 8 lugares.')
+        ->assertSee('Centros de trabajo')
+        ->assertSee('Por encima')
+        ->assertSee('Tiene 1 lugar de más');
+})->with($looks);
+
+it('says a company without a plan has no limits', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create();
+
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}")->assertSee('Sin plan asignado: la empresa no tiene límites.');
 });

@@ -1,19 +1,22 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
+import CompanyLimits from '@/components/tenancy/company-limits';
 import CompanyModules from '@/components/tenancy/company-modules';
 import { Badge } from '@/components/ui/badge';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import { index } from '@/routes/companies';
-import type { CompanyDetail, ModuleRow } from '@/types';
+import type { CompanyDetail, LimitRow, ModuleRow } from '@/types';
 
-/** One company in the console: who it is, where it stands and which modules it has, with where each comes from. */
+/** One company in the console: who it is, where it stands and which modules it has, with where each comes from, and what it has used of its plan's limits. */
 export default function Company({
     company,
     modules,
+    limits,
     can_manage: canManage,
 }: {
     company: CompanyDetail;
     modules: ModuleRow[];
+    limits: LimitRow[];
     can_manage: boolean;
 }) {
     setLayoutProps({
@@ -37,6 +40,7 @@ export default function Company({
                     }
                     description={`${company.legal_name} · ${company.rfc}`}
                 />
+                <CompanyLimits limits={limits} />
                 <CompanyModules
                     companyId={company.id}
                     modules={modules}
