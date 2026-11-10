@@ -18,6 +18,15 @@ enum SurveyKind: string
         };
     }
 
+    /** About how long answering takes, as the email says it. */
+    public function minutes(): int
+    {
+        return match ($this) {
+            self::Climate => 12,
+            self::Pulse => 2,
+        };
+    }
+
     public function viewPermission(): string
     {
         return "view-{$this->value}";

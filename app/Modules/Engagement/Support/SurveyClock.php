@@ -21,6 +21,14 @@ final class SurveyClock
         return ! CarbonImmutable::now()->lessThan(CarbonImmutable::parse($closesOn->toDateString(), self::zone())->addDay());
     }
 
+    /** How many days a survey whose last day is `$closesOn` still takes answers, counting today: 1 on its last day and after it. */
+    public static function daysToAnswer(CarbonImmutable $closesOn): int
+    {
+        $last = CarbonImmutable::parse($closesOn->toDateString());
+
+        return max(0, intdiv($last->getTimestamp() - self::day()->getTimestamp(), 86400)) + 1;
+    }
+
     private static function zone(): string
     {
         return config()->string('app.display_timezone');
