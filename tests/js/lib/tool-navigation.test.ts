@@ -11,13 +11,27 @@ const acme = (
 ) => ({ slug: 'acme', role, can: can(allowed, allowed) });
 
 describe('toolNavItems', () => {
-    it('offers the org chart and Compensación to whoever may view them in a company', () => {
+    it('offers the org chart, Clima and Compensación to whoever may view them in a company', () => {
         expect(
             toolNavItems(acme()).map((item) => [item.title, toUrl(item.href)]),
         ).toEqual([
             ['Organigrama', '/admin/acme/org-chart'],
+            ['Clima', '/admin/acme/climate'],
             ['Compensación', '/admin/acme/compensation'],
         ]);
+    });
+
+    it('offers Clima alone to whoever may only view it, and none to a union', () => {
+        const tenant = acme(false, 'viewer');
+        const climate = {
+            ...tenant,
+            can: { ...tenant.can, view_climate: true },
+        };
+
+        expect(toolNavItems(climate).map((item) => item.title)).toEqual([
+            'Clima',
+        ]);
+        expect(toolNavItems({ ...climate, type: 'union' })).toEqual([]);
     });
 
     it('lists the pages of the org chart under it', () => {

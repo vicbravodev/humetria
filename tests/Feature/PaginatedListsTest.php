@@ -227,6 +227,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.vacations.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['requests']],
+    'Clima' => ['engagement/index', fn () => route('tenant.climate.index', listsCompany()[0]), ['surveys']],
     'the vacations overview' => ['leave/index', fn () => route('tenant.vacations.index', listsCompany()[0]), ['people']],
     'the vacations balances' => ['leave/balances', fn () => route('tenant.vacations.balances.index', listsCompany()[0]), ['people']],
     'the vacations record of a person' => ['leave/employee', function () {

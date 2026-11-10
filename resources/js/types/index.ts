@@ -33,3 +33,4 @@ export type * from './complaints';
 export type * from './attendance';
 export type * from './attendance-corrections';
 export type * from './attendance-panel';
+export type * from './engagement-panel';
