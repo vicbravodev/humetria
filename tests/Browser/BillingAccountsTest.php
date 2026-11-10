@@ -7,6 +7,7 @@ use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Models\SubscriptionCharge;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 
@@ -228,4 +229,55 @@ it('asks for a quotation in the preview above the limit, and refuses a channel r
         ->fill('seats', '101')
         ->assertSee('Más de 100 personas: requiere cotización')
         ->assertSee('Pon un precio negociado para fijar el importe.');
+});
+
+it('shows the extra charges of the account with who approved each', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    [$tenant, $account] = paidCompany();
+    $tenant->update(['trade_name' => 'Cliente Nuevo']);
+    $subscription = Subscription::factory()->create(['tenant_id' => $tenant->id, 'profile' => Profile::Direct]);
+    SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'description' => 'Implementación', 'amount_cents' => 1_250_000, 'charge_on' => '2026-12-15']);
+    SubscriptionCharge::factory()->recurring()->for($subscription)->create(['tenant_id' => $tenant->id, 'description' => 'Acompañamiento', 'amount_cents' => 150_050, 'charge_on' => '2026-12-01', 'ends_on' => '2027-05-31']);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}", $dark, $mobile)
+        ->assertSee('Cargos extra')
+        ->assertSee('Implementación')
+        ->assertSee('$12,500')
+        ->assertSee('Desde 15 dic 2026')
+        ->assertSee('Acompañamiento')
+        ->assertSee('$1,500.50')
+        ->assertSee('1 dic 2026 al 31 may 2027')
+        ->assertSee('Recurrente')
+        ->assertSee('Una sola vez')
+        ->assertSee('Agregar cargo');
+})->with($looks);
+
+it('adds a charge to a company with a plan, and lists it', function (): void {
+    signInAsSuperadmin();
+    [$tenant, $account] = paidCompany();
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'profile' => Profile::Direct]);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Agregar cargo')
+        ->assertSee('Queda a tu nombre como quien lo aprobó.')
+        ->click('[name="kind"][value="recurring"]')
+        ->assertSee('Termina el (opcional)')
+        ->fill('description', 'Acompañamiento')
+        ->fill('scope', 'Una sesión al mes')
+        ->fill('amount', '1500')
+        ->press('Guardar cargo')
+        ->assertSee('Cargo agregado.')
+        ->assertSee('Una sesión al mes')
+        ->assertSee('$1,500');
+
+    expect(SubscriptionCharge::query()->sole())->amount_cents->toBe(150_000);
+});
+
+it('does not offer a charge to a company with no plan', function (): void {
+    signInAsSuperadmin();
+    [, $account] = paidCompany();
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->assertSee('Asignar plan')
+        ->assertDontSee('Agregar cargo');
 });

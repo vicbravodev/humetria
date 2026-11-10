@@ -7,6 +7,9 @@ import type {
     SubscriptionView,
 } from '@/types';
 
+/** A charge made once or every period. */
+export type ChargeKind = 'one_time' | 'recurring';
+
 type Choice<V extends string> = { value: V; label: string };
 
 export const PLANS: Choice<Plan>[] = [

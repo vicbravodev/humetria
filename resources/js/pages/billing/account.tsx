@@ -1,4 +1,5 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import AccountCharges from '@/components/billing/account-charges';
 import AccountCompaniesEmpty from '@/components/billing/account-companies-empty';
 import AccountFigures from '@/components/billing/account-figures';
 import AccountCompaniesTable from '@/components/billing/account-companies-table';
@@ -9,6 +10,7 @@ import Pagination from '@/components/humetria/pagination';
 import { Badge } from '@/components/ui/badge';
 import { index } from '@/routes/billing/accounts';
 import type {
+    AccountChargeRow,
     AccountCompanyRow,
     AccountDetail,
     AccountSummary,
@@ -19,11 +21,13 @@ import type {
 export default function Account({
     account,
     companies,
+    charges,
     summary,
     today,
 }: {
     account: AccountDetail;
     companies: Paginated<AccountCompanyRow>;
+    charges: Paginated<AccountChargeRow>;
     summary: AccountSummary;
     today: string;
 }) {
@@ -70,6 +74,7 @@ export default function Account({
                     page={companies}
                     label="Páginas de empresas de la cuenta"
                 />
+                {charges.total > 0 && <AccountCharges charges={charges} />}
             </div>
         </>
     );

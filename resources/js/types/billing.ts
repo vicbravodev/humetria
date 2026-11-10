@@ -117,3 +117,20 @@ export type AccountSummary = {
     next_renewal: string | null;
     discount: DiscountNote | null;
 };
+
+/** An extra charge of a company the account pays, as the account's page lists it. */
+export type AccountChargeRow = {
+    id: string;
+    company_id: string;
+    trade_name: string;
+    kind: 'recurring' | 'one_time';
+    kind_label: string;
+    description: string;
+    scope: string;
+    /** Pesos, written for display ("$1,500.50"). */
+    amount: string;
+    charge_on: string;
+    /** The last day of a recurring charge that ends; null otherwise. */
+    ends_on: string | null;
+    approved_by: string;
+};
