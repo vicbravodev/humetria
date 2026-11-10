@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Engagement\Support\Results;
 
 use App\Modules\Engagement\Data\BankItem;
+use App\Modules\Engagement\Enums\CommitmentGroup;
 use App\Modules\Engagement\Enums\CutAttribute;
 use App\Modules\Engagement\Enums\ItemBlock;
 use App\Modules\Engagement\Enums\ItemScale;
@@ -74,6 +75,21 @@ final class SurveyResults
         $cut = CutReport::of($by, $this->rows(), $this->thresholds);
 
         return ['groups' => array_map($this->summarize(...), $cut->visible), 'hasHidden' => $cut->hasHidden];
+    }
+
+    /**
+     * Whether a group is one the results show: the company always, any other only when its cut lists it, so a commitment
+     * never points at a group too small to be shown.
+     */
+    public function showsGroup(CommitmentGroup $group, ?string $id): bool
+    {
+        $cut = $group->cut();
+
+        if ($cut === null) {
+            return $id === null;
+        }
+
+        return $id !== null && isset($this->cut($cut)['groups'][$id]);
     }
 
     /** The survey of the same kind closed just before this one, with its own results; `null` in the first wave. */
