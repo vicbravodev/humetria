@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Providers;
 
+use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
+use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -19,7 +21,10 @@ use Illuminate\Support\ServiceProvider;
  */
 final class AttendanceServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
+    }
 
     public function boot(): void
     {
