@@ -9,6 +9,7 @@ import { balanceNote } from '@/lib/leave/balances';
 import { dateSpan } from '@/lib/leave/format';
 import { countOf } from '@/lib/plural';
 import { index as employees } from '@/routes/tenant/employees';
+import { show } from '@/routes/tenant/vacations/employees';
 import type { LeaveBalanceRow } from '@/types';
 
 /** A person of the list of balances: their policy, the days they can ask for and when the next period starts. */
@@ -70,6 +71,19 @@ export default function BalanceRow({
                 ) : (
                     dateSpan(person.nextAnniversary, person.nextAnniversary)
                 )}
+            </TableCell>
+            <TableCell className="text-right">
+                <Button variant="outline" size="sm" asChild>
+                    <Link
+                        href={show.url({
+                            tenant: tenantSlug,
+                            employee: person.id,
+                        })}
+                        aria-label={`Ver el expediente de ${person.name}`}
+                    >
+                        Expediente
+                    </Link>
+                </Button>
             </TableCell>
         </TableRow>
     );

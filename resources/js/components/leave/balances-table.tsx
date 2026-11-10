@@ -40,6 +40,9 @@ export default function BalancesTable({
                     <TableHead>Persona</TableHead>
                     <TableHead>Disponibles</TableHead>
                     <TableHead>Próximo periodo</TableHead>
+                    <TableHead className="w-0">
+                        <span className="sr-only">Expediente</span>
+                    </TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>

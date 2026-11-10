@@ -174,3 +174,74 @@ export type LeaveBalanceRow = {
     /** Y-m-d: when their next period starts; null while they have no start date. */
     nextAnniversary: string | null;
 };
+
+/** A period in the record of a person, newest first. */
+export type LeaveRecordPeriod = {
+    id: string;
+    year: number;
+    anniversaryOn: string;
+    enjoyBy: string;
+    prescribesOn: string;
+    granted: number;
+    available: number;
+    /** Past its eighteen months with days still in it: marked, never taken off. */
+    mayPrescribe: boolean;
+};
+
+/** A movement of the ledger of a person. The note only reaches whoever may manage vacations. */
+export type LeaveLedgerEntry = {
+    id: string;
+    kind: string;
+    kindLabel: string;
+    tranche: 'statutory' | 'extra';
+    /** With its sign: below zero leaves the balance. */
+    days: number;
+    /** The year of the period it moved; null for days given in advance. */
+    period: number | null;
+    note: string | null;
+    /** Y-m-d. */
+    on: string;
+};
+
+/** A request in the record of a person, with who answered it and when. */
+export type LeaveRecordRequest = {
+    id: string;
+    /** The name of the leave for whoever manages vacations, «Permiso» for a viewer; null for vacations. */
+    type: string | null;
+    startsOn: string;
+    endsOn: string;
+    workingDays: number;
+    status: LeaveRequestStatus;
+    statusLabel: string;
+    /** The manager, or «RH»; null while nobody answered. */
+    decidedBy: string | null;
+    decidedOn: string | null;
+    note: string | null;
+};
+
+export type LeaveRecordStatement = {
+    id: string;
+    year: number;
+    issuedOn: string;
+    acknowledgedOn: string | null;
+};
+
+/** What a person who left is owed, in days. */
+export type LeaveRecordTermination = {
+    id: string;
+    terminatedOn: string;
+    pendingDays: number;
+    proportionalDays: number;
+    settledOn: string | null;
+    canSettle: boolean;
+};
+
+export type LeaveRecordPerson = {
+    id: string;
+    name: string;
+    active: boolean;
+    jobTitle: string;
+    area: string;
+    policy: string;
+    startedOn: string | null;
+};

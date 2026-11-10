@@ -6,6 +6,7 @@ declare(strict_types=1);
 // Every name starts with tenant.vacations.
 
 use App\Modules\Leave\Http\Controllers\BalanceController;
+use App\Modules\Leave\Http\Controllers\EmployeeRecordController;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Http\Controllers\VacationsController;
 use Illuminate\Support\Facades\Route;
@@ -29,3 +30,6 @@ Route::get('admin/{tenant:slug}/vacations/people/options', [RequestController::c
 // The days of everybody, and the link to their own vacations that RH sends to some of them.
 Route::get('admin/{tenant:slug}/vacations/balances', [BalanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.vacations.balances.index');
 Route::post('admin/{tenant:slug}/vacations/balances/links', [BalanceController::class, 'links'])->where('tenant', $notReserved)->name('tenant.vacations.balances.links');
+
+// The record of one person: periods, ledger, requests, statements and, if they left, what they are owed in days.
+Route::get('admin/{tenant:slug}/vacations/employees/{employee}', [EmployeeRecordController::class, 'show'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.vacations.employees.show');

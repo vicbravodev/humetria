@@ -229,6 +229,12 @@ it('sends each list of records as a paginator', function (string $component, Clo
     }, ['requests']],
     'the vacations overview' => ['leave/index', fn () => route('tenant.vacations.index', listsCompany()[0]), ['people']],
     'the vacations balances' => ['leave/balances', fn () => route('tenant.vacations.balances.index', listsCompany()[0]), ['people']],
+    'the vacations record of a person' => ['leave/employee', function () {
+        [$tenant] = listsCompany();
+        $person = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.vacations.employees.show', [$tenant, $person]);
+    }, ['entries', 'requests']],
     'the vacations requests queue' => ['leave/requests', fn () => route('tenant.vacations.requests.index', listsCompany()[0]), ['requests']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
