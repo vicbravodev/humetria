@@ -46,6 +46,9 @@ interface CompanyLimits
      */
     public function usage(string $tenantId): array;
 
+    /** What the company has used of one limit; null when it has no plan (or no limit on it). */
+    public function limit(string $tenantId, string $resource): ?LimitUsage;
+
     /**
      * Sets what the plan contracts. A resource the company had no limit on starts counting from what it already has; one it had keeps its count.
      *

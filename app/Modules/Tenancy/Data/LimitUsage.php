@@ -18,6 +18,14 @@ final readonly class LimitUsage
         public bool $over,
     ) {}
 
+    /**
+     * @return array{used: int, amount: int, remaining: int, over: bool}
+     */
+    public function toArray(): array
+    {
+        return ['used' => $this->used, 'amount' => $this->amount, 'remaining' => $this->remaining(), 'over' => $this->over];
+    }
+
     public function remaining(): int
     {
         return max(0, $this->amount - $this->used);

@@ -183,3 +183,16 @@ describe('importing a file', function (): void {
         expect(Employee::query()->withoutGlobalScopes()->count())->toBe(6);
     });
 });
+
+describe('shown on the employees page', function (): void {
+    it('tells the company how many of the seats of its plan it uses', function (): void {
+        seatsFor($this->tenant, 50, 42);
+
+        $this->actingAs($this->owner)->get(route('tenant.employees.index', $this->tenant))->assertOk()->assertInertia(fn ($page) => $page
+            ->where('plan_limit', ['used' => 42, 'amount' => 50, 'remaining' => 8, 'over' => false]));
+    });
+
+    it('has no limit to show a company without a plan', function (): void {
+        $this->actingAs($this->owner)->get(route('tenant.employees.index', $this->tenant))->assertOk()->assertInertia(fn ($page) => $page->where('plan_limit', null));
+    });
+});

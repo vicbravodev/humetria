@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import CountTabs from '@/components/humetria/count-tabs';
+import PlanLimitNotice from '@/components/humetria/plan-limit-notice';
 import PageHeader from '@/components/humetria/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
 import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
@@ -10,17 +11,20 @@ import { index } from '@/routes/tenant/work-centers';
 import type {
     MexicanStateOption,
     Paginated,
+    PlanLimit,
     WorkCenterRow,
     WorkCentersView,
 } from '@/types';
 
 export default function WorkCenters({
     view,
+    plan_limit: planLimit,
     counts,
     workCenters,
     states,
 }: {
     view: WorkCentersView;
+    plan_limit: PlanLimit | null;
     counts: Record<WorkCentersView, number>;
     workCenters: Paginated<WorkCenterRow>;
     states: MexicanStateOption[];
@@ -40,6 +44,13 @@ export default function WorkCenters({
                 >
                     {canManage && <CreateWorkCenterDialog states={states} />}
                 </PageHeader>
+                <PlanLimitNotice
+                    limit={planLimit}
+                    noun={{
+                        singular: 'centro de trabajo',
+                        plural: 'centros de trabajo',
+                    }}
+                />
                 {/* Only once there is something archived, or while looking at the archive. */}
                 {(counts.archived > 0 || view === 'archived') && (
                     <div>

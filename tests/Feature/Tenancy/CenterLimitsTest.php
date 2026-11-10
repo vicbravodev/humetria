@@ -103,3 +103,14 @@ it('keeps each company to its own centers', function (): void {
 
     expect(centersUsed($this->tenant))->toBe(1)->and(centersUsed($other))->toBe(1);
 });
+
+it('tells the company how many of the centers of its plan it uses, on its centers page', function (): void {
+    centersFor($this->tenant, 3, 2);
+
+    $this->actingAs($this->owner)->get(route('tenant.work-centers.index', $this->tenant))->assertOk()->assertInertia(fn ($page) => $page
+        ->where('plan_limit', ['used' => 2, 'amount' => 3, 'remaining' => 1, 'over' => false]));
+});
+
+it('has no limit to show a company without a plan on its centers page', function (): void {
+    $this->actingAs($this->owner)->get(route('tenant.work-centers.index', $this->tenant))->assertOk()->assertInertia(fn ($page) => $page->where('plan_limit', null));
+});

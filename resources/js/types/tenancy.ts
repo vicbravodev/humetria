@@ -205,7 +205,15 @@ export type RoleMatrix = {
 export type ModuleSource = 'plan' | 'legacy' | 'grant' | 'revoke';
 
 /** A module of a company as its console page lists it. */
-/** What a company has used of one limit of its plan (people or work centers). */
+/** What a company has used of one limit of its plan, as its own pages show it; null when it has no plan. */
+export type PlanLimit = {
+    used: number;
+    amount: number;
+    remaining: number;
+    over: boolean;
+};
+
+/** What a company has used of one limit of its plan (people or work centers), as the console shows it. */
 export type LimitRow = {
     resource: 'seats' | 'centers';
     label: string;

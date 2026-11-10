@@ -55,7 +55,7 @@ final readonly class CompanyLimitCounters implements CompanyLimits
 
     public function ensureRoom(string $resource, int $quantity, string $field): void
     {
-        $limit = $this->limit($resource);
+        $limit = $this->ofCurrent($resource);
 
         if ($limit !== null && $limit->used + $quantity > $limit->amount) {
             $this->refuse($limit, $quantity, $field);
@@ -78,6 +78,11 @@ final readonly class CompanyLimitCounters implements CompanyLimits
         return $usage;
     }
 
+    public function limit(string $tenantId, string $resource): ?LimitUsage
+    {
+        return array_find($this->usage($tenantId), fn (LimitUsage $usage): bool => $usage->resource === $resource);
+    }
+
     public function sync(string $tenantId, array $amounts): void
     {
         $this->sync->handle($tenantId, $amounts);
@@ -91,14 +96,14 @@ final readonly class CompanyLimitCounters implements CompanyLimits
     /** The statement took nothing: either the company has no limit on it, or it is full. */
     private function refuseIfLimited(string $resource, int $quantity, string $field): void
     {
-        $limit = $this->limit($resource);
+        $limit = $this->ofCurrent($resource);
 
         if ($limit !== null) {
             $this->refuse($limit, $quantity, $field);
         }
     }
 
-    private function limit(string $resource): ?TenantLimit
+    private function ofCurrent(string $resource): ?TenantLimit
     {
         return TenantLimit::query()->where('tenant_id', $this->currentTenant->id())->where('resource', $resource)->first();
     }
