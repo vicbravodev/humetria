@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Listeners;
 
 use App\Modules\Leave\Actions\CancelRequest;
+use App\Modules\Leave\Actions\RecordTermination;
 use App\Modules\Leave\Actions\RouteRequests;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveRequest;
@@ -16,12 +17,12 @@ use App\Modules\Tenancy\Contracts\Companies;
 /**
  * When a person leaves: their requests still waiting and their approved vacations that have not started are cancelled,
  * and the days go back to their balance (what they are owed is counted from it); what they already enjoyed or started
- * stays. The requests that waited for their answer go right away to the next active manager above, or to RH. It runs
- * inside the transaction that deactivates them.
+ * stays. The requests that waited for their answer go right away to the next active manager above, or to RH. Then the
+ * days they are owed are counted (criterio C-07). It runs inside the transaction that deactivates them.
  */
 final readonly class CloseOnDeactivation
 {
-    public function __construct(private Companies $companies, private CancelRequest $cancel, private RouteRequests $route) {}
+    public function __construct(private Companies $companies, private CancelRequest $cancel, private RouteRequests $route, private RecordTermination $terminate) {}
 
     public function handle(EmployeeDeactivated $event): void
     {
@@ -39,5 +40,6 @@ final readonly class CloseOnDeactivation
         }
 
         $this->route->reroute($event->employeeId);
+        $this->terminate->handle($event->employeeId);
     }
 }
