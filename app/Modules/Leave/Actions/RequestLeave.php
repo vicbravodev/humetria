@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Actions;
 
 use App\Modules\Leave\Enums\EntryKind;
+use App\Modules\Leave\Enums\EscalationReason;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Enums\WorkWeek;
 use App\Modules\Leave\Exceptions\RequestRefused;
@@ -14,6 +15,7 @@ use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Leave\Support\Allocation;
 use App\Modules\Leave\Support\AllocationLine;
 use App\Modules\Leave\Support\Allocator;
+use App\Modules\Leave\Support\Approver;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\ContinuousRun;
 use App\Modules\Leave\Support\EmployeeLock;
@@ -22,6 +24,7 @@ use App\Modules\Leave\Support\PeriodBalance;
 use App\Modules\Leave\Support\PeriodWindow;
 use App\Modules\Leave\Support\PolicyResolver;
 use App\Modules\Leave\Support\PolicyTerms;
+use App\Modules\Leave\Support\RequestNotifier;
 use App\Modules\Leave\Support\WorkingDays;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -33,14 +36,15 @@ use Illuminate\Support\Facades\Log;
  * A person asks for vacations (no type) or for a leave that uses no balance. The working days are counted now, with the
  * week of their policy and the holidays of today (criterio C-04), and never again. For vacations it keeps whether they had
  * the days and where they would come from: it can be sent without them (criterio C-17) and the ledger is not touched until
- * someone approves. The note and the type never reach the logs.
+ * someone approves. It is the first active manager's above them to answer; with none, it is born with RH (criterio C-18).
+ * What RH records for a person emails nobody: RH answers it on the same screen. The note and the type never reach the logs.
  */
 final readonly class RequestLeave
 {
     /** The longest a request may be, in calendar days. */
     private const int LONGEST = 366;
 
-    public function __construct(private CurrentTenant $tenant, private Roster $roster, private PolicyResolver $policies) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private PolicyResolver $policies, private Approver $approver, private RequestNotifier $notifier) {}
 
     /**
      * @param  int|null  $recordedBy  the user of RH who records it for the person; RH may record days already gone
@@ -60,6 +64,7 @@ final readonly class RequestLeave
             // Held until the end: two requests of the same person never both pass the check of overlaps.
             EmployeeLock::of($employeeId);
             $plan = $this->plan($employeeId, $leaveTypeId, $startsOn, $endsOn);
+            $approver = $this->approver->for($employeeId);
 
             return LeaveRequest::query()->create([
                 'tenant_id' => $this->tenant->id(),
@@ -73,12 +78,23 @@ final readonly class RequestLeave
                 'had_balance' => $plan['hadBalance'],
                 'allocation' => array_map(fn (AllocationLine $line): array => ['entitlement_id' => $line->entitlementId, 'tranche' => $line->tranche->value, 'days' => $line->days], $plan['allocation']),
                 'short_by' => $plan['shortBy'],
+                'approver_employee_id' => $approver,
+                'escalated_at' => $approver === null ? now() : null,
+                'escalation_reason' => $approver === null ? EscalationReason::NoManager : null,
                 'recorded_by' => $recordedBy,
                 'requested_on' => $today,
             ]);
         });
 
         Log::info('leave.request_created', ['request_id' => $request->id, 'employee_id' => $employeeId, 'working_days' => $request->working_days, 'had_balance' => $request->had_balance]);
+
+        if ($request->escalation_reason !== null) {
+            Log::info('leave.request_escalated', ['request_id' => $request->id, 'reason' => $request->escalation_reason->value]);
+        }
+
+        if ($recordedBy === null) {
+            $request->approver_employee_id === null ? $this->notifier->escalated($request) : $this->notifier->toDecide($request);
+        }
 
         return $request;
     }

@@ -279,7 +279,10 @@ it('logs the request with ids and days, never the note nor the type', function (
 
     expect($lines)->toBe([
         'leave.request_created '.json_encode(['request_id' => $vacations->id, 'employee_id' => $this->ana->id, 'working_days' => 9, 'had_balance' => true], JSON_THROW_ON_ERROR),
+        // Ana has no manager: each request is born with RH (ApproverTest).
+        'leave.request_escalated '.json_encode(['request_id' => $vacations->id, 'reason' => 'no_manager'], JSON_THROW_ON_ERROR),
         'leave.request_created '.json_encode(['request_id' => $leave->id, 'employee_id' => $this->ana->id, 'working_days' => 2, 'had_balance' => null], JSON_THROW_ON_ERROR),
+        'leave.request_escalated '.json_encode(['request_id' => $leave->id, 'reason' => 'no_manager'], JSON_THROW_ON_ERROR),
     ])->and(implode("\n", $lines))->not->toContain('privada')->not->toContain('Mudanza')->not->toContain($type->id);
 });
 
