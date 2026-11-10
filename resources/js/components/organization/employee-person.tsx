@@ -16,6 +16,11 @@ export default function EmployeePerson({
                 <p className="text-caption text-muted-foreground">
                     {employeeDetails(employee)}
                 </p>
+                {employee.manager !== null && (
+                    <p className="text-caption text-muted-foreground">
+                        Reporta a {employee.manager.label}
+                    </p>
+                )}
             </div>
         </div>
     );

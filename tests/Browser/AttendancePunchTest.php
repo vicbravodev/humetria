@@ -156,6 +156,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     linkThePhone($page);
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+        ->waitForText('Marcar entrada')
         ->press('Marcar entrada')
         ->waitForText('Entrada registrada')
         ->press('Listo')

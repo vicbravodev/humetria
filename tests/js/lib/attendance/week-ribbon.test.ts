@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     RIBBON_CAP_MINUTES,
     RIBBON_INITIALS,
+    ribbonAway,
     ribbonBars,
     ribbonLabel,
 } from '@/lib/attendance/week-ribbon';
@@ -69,6 +70,33 @@ describe('ribbonLabel', () => {
 
         expect(ribbonLabel(days)).toBe(
             'Horas por día: lunes 8 h, martes 9 h 30 min, miércoles sin horas, jueves sin horas, viernes sin horas, sábado sin horas, domingo sin horas',
+        );
+    });
+});
+
+describe('days away', () => {
+    const days = [
+        { worked: 0, overtime: 0, absent: true },
+        { worked: hours(4), overtime: 0, absent: true },
+        { worked: 0, overtime: 0, absent: false },
+        none,
+    ];
+
+    it('draws as away only a day of vacations or leave with no hours: a day worked draws its hours', () => {
+        expect(ribbonAway(days)).toEqual([
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+        ]);
+    });
+
+    it('says «ausente», not «sin horas», of a day away, and the hours of one worked', () => {
+        expect(ribbonLabel(days)).toBe(
+            'Horas por día: lunes ausente, martes 4 h, miércoles sin horas, jueves sin horas, viernes sin horas, sábado sin horas, domingo sin horas',
         );
     });
 });

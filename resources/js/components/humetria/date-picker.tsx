@@ -29,6 +29,8 @@ type Props = {
     /** The day picked, when the page holds it (Y-m-d); without it the field keeps its own. */
     value?: string | undefined;
     onChange?: ((value: string) => void) | undefined;
+    /** What an empty field says; the portal, which speaks in usted, passes its own. */
+    prompt?: string;
 };
 
 /**
@@ -45,6 +47,7 @@ export default function DatePicker({
     describedBy,
     value: held,
     onChange,
+    prompt = 'Elige una fecha',
 }: Props) {
     const [value, setValue] = useHeldValue(defaultValue, held, onChange);
     const [open, setOpen] = useState(false);
@@ -74,11 +77,11 @@ export default function DatePicker({
                         written === undefined && 'text-muted-foreground',
                     )}
                 >
-                    {written ?? 'Elige una fecha'}
+                    {written ?? prompt}
                 </span>
             </PopoverTrigger>
             <PopoverContent
-                aria-label="Elige una fecha"
+                aria-label={prompt}
                 // Focus lands on the day the calendar offers to the keyboard: the chosen one, today or the first allowed.
                 onOpenAutoFocus={(event) => {
                     event.preventDefault();

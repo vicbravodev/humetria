@@ -102,6 +102,8 @@ it('redacts each sensitive key', function (string $key): void {
     'credential_id', 'public_key', 'latitude', 'longitude',
     // ...and what the Marcar page sends: the signed assertion, the position, the screen's code; and a stored token's hash.
     'credential', 'lat', 'lng', 'q', 'token_hash',
+    // Vacaciones: why a request was turned down is written by a person, about a person.
+    'rejection_reason',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

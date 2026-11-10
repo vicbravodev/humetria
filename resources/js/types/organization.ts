@@ -24,6 +24,12 @@ export type EmployeeRow = {
     job_level: string;
     /** `AAAA-MM-DD`. */
     hired_on: string | null;
+    /** `AAAA-MM-DD`: the day their seniority counts from, when it is not the day they joined. */
+    seniority_on: string | null;
+    /** Their direct manager, as «Nombre · Puesto». */
+    manager: ChoiceOption | null;
+    /** How many active people report directly to them. */
+    direct_reports: number;
     staff_group: 'unionized' | 'trusted' | '';
     /** The state's code; empty when not given. */
     state: string;
@@ -35,15 +41,85 @@ export type EmployeeRow = {
 export type ChoiceOption = { value: string; label: string };
 
 /**
- * What the employee form chooses from: the routes that search work centers, areas and the pay scale's categories and
- * levels, and the fixed catalogs (genders, staff groups, states).
+ * What the employee form chooses from: the routes that search work centers, areas, managers and the pay scale's
+ * categories and levels, and the fixed catalogs (genders, staff groups, states).
  */
 export type EmployeeChoices = {
     workCentersUrl: string;
     areasUrl: string;
+    managersUrl: string;
     jobCategoriesUrl: string;
     jobLevelsUrl: string;
     genders: ChoiceOption[];
     staffGroups: ChoiceOption[];
     states: ChoiceOption[];
+};
+
+/** A person in the org chart: who they are, where, and the size of their team. Never contact data. */
+export type OrgNode = {
+    id: string;
+    name: string;
+    job_title: string;
+    area: string;
+    work_center: string;
+    active: boolean;
+    /** Active people who report to them. */
+    direct_reports: number;
+    /** Active people below them, at any level. */
+    total_reports: number;
+    flag: { value: 'few' | 'many'; label: string } | null;
+    /** Whether the person is within the filters, or only on the way to someone who is. */
+    matches: boolean;
+    /** Their manager left and nobody took their place. */
+    manager_inactive: boolean;
+    /** Away today with approved vacations or a leave: only that, never why nor until when. */
+    absent_today: boolean;
+};
+
+/** The shape of the company: its levels, and how many people a manager leads. */
+export type OrgIndicators = {
+    levels: number;
+    /** Among whoever leads at least one person; null where nobody does. */
+    median_direct_reports: number | null;
+    managers: number;
+    /** Managers with 1–2 or more than 15 direct reports. */
+    to_review: number;
+};
+
+/** Each chosen filter of the org chart with its name. */
+export type OrgChartFilters = {
+    work_center: { value: string; label: string } | null;
+    area: { value: string; label: string } | null;
+};
+
+/** A gap of the reporting line, with how many people it holds. */
+export type ReportingIssue = {
+    value: 'without_manager' | 'roots' | 'inactive_manager';
+    label: string;
+    /** What its list holds, said to whoever will fix it. */
+    hint: string;
+    count: number;
+    /** Whether that many people are something to fix: one person at the top is not. */
+    pending: boolean;
+};
+
+/** A person in a list of «Calidad de datos». Never contact data. */
+export type QualityPerson = {
+    id: string;
+    name: string;
+    job_title: string;
+    area: string;
+    work_center: string;
+    /** Their manager as it is saved, who may have left. */
+    manager: ChoiceOption | null;
+};
+
+/** The person's manager as their portal names them. */
+export type PortalTeamManager = { name: string; job_title: string };
+
+/** Someone of the person's team in their portal: no contact data and no id. */
+export type PortalTeamPerson = {
+    name: string;
+    job_title: string;
+    area: string;
 };

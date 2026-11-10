@@ -9,6 +9,7 @@ use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\CompanyRoster;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -183,3 +184,33 @@ it('tells whether a person is trusted staff, and no one else is', function (?Sta
     'unionized' => [StaffGroup::Unionized, false],
     'no group' => [null, false],
 ]);
+
+it('tells the staff group and the job grade of a person, and null without them', function (): void {
+    $grade = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Operador', 'level' => 'G3']);
+    $unionized = rosterEmployee($this->tenant, $this->plant, $this->production, ['staff_group' => StaffGroup::Unionized, 'job_grade_id' => $grade->id]);
+    $trusted = rosterEmployee($this->tenant, $this->plant, $this->production, ['staff_group' => StaffGroup::Trusted]);
+    $plain = rosterEmployee($this->tenant, $this->plant, $this->production);
+    workIn($this->tenant);
+
+    $people = resolve(Roster::class)->findMany([$unionized->id, $trusted->id, $plain->id]);
+
+    expect([$people[$unionized->id]->staffGroup, $people[$unionized->id]->jobGradeId])->toBe(['unionized', $grade->id])
+        ->and([$people[$trusted->id]->staffGroup, $people[$trusted->id]->jobGradeId])->toBe(['trusted', null])
+        ->and([$people[$plain->id]->staffGroup, $people[$plain->id]->jobGradeId])->toBe([null, null]);
+});
+
+it('looks people up by their employee number, whatever its case, deactivated ones too, inside the company only', function (): void {
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['employee_number' => 'A-001']);
+    $gone = rosterEmployee($this->tenant, $this->plant, $this->production, ['employee_number' => 'b-002', 'deactivated_at' => now()]);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['employee_number' => 'C-003']);
+    rosterEmployee($this->tenant, $this->plant, $this->production);
+    $other = Tenant::factory()->create();
+    Employee::factory()->create(['tenant_id' => $other->id, 'employee_number' => 'A-001']);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->idsByEmployeeNumber(['a-001', 'B-002', 'Z-999', '']))->toBe(['a-001' => $ana->id, 'B-002' => $gone->id])
+        ->and(resolve(Roster::class)->idsByEmployeeNumber([]))->toBe([]);
+
+    workIn(Tenant::factory()->create());
+    expect(resolve(Roster::class)->idsByEmployeeNumber(['A-001']))->toBe([]);
+});

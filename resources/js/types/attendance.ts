@@ -32,6 +32,8 @@ export type OverviewPerson = {
     hasSchedule: boolean;
     /** Minutes worked each day, Monday to Sunday, and of them the overtime: what the week ribbon draws. */
     days: { worked: number; overtime: number }[];
+    /** The days of the week they were away with vacations or a leave (0 Monday to 6 Sunday): not days they missed. */
+    absentDays: number[];
 };
 
 /** A center in use with its active people, its zones and the screens that show its code. */

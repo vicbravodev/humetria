@@ -2,6 +2,10 @@ const KEYS = [
     { label: 'Horas ordinarias', tone: 'bg-primary' },
     { label: 'Horas extra', tone: 'bg-risk-medio' },
     { label: 'Día de más de 12 h', tone: 'bg-risk-muy-alto' },
+    {
+        label: 'Vacaciones o permiso',
+        tone: 'border border-dashed border-muted-foreground',
+    },
 ];
 
 /** What the colors of `<WeekRibbon>` mean, and what its bars are; goes once under the list that shows ribbons. */

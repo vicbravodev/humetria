@@ -3,7 +3,15 @@ const STANDALONE_NAMES = new Set([
     // The survey has its own frame (SurveyShell).
     'landing',
     'campaigns/survey',
+    // The climate and pulse survey of the person's emailed link: the same frame, no account.
+    'engagement/survey',
+    // The feedback a manager reads in their portal: their own link, no account.
+    'engagement/portal-feedback',
     'seating/portal',
+    // «Nos dijeron / Haremos» in the person's portal: their own link, no account.
+    'engagement/portal-climate',
+    // «Mi equipo» in the person's portal: their own link, no account.
+    'organization/portal-team',
     // The policy page of the person's portal: their own link, no account.
     'disclosure/portal-policy',
     // The support message of the person's portal, when RH channeled them through it: their own link, no account.
@@ -34,6 +42,8 @@ const STANDALONE_NAMES = new Set([
 const STANDALONE_PREFIXES = [
     // The person's portal has its own frame (PortalShell): no account, no panel.
     'telework/portal',
+    // The vacations pages of the person's portal (theirs, their team's, a statement): their own link, no account.
+    'leave/portal',
     // The channel for complaints is public and keeps no trace of who came: no panel, no account.
     'complaints-public/',
     // The permanent page of the workers, opened with a link: no account, no panel.

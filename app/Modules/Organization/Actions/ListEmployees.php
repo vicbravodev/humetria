@@ -15,14 +15,16 @@ final class ListEmployees
     public const int PER_PAGE = 25;
 
     /**
-     * The current company's employees that match the filters, by name, a page at a time, with their area.
+     * The current company's employees that match the filters, by name, a page at a time, with their area, their manager
+     * and how many active people report to them.
      *
      * @return LengthAwarePaginator<int, Employee>
      */
     public function handle(EmployeeFilters $filters): LengthAwarePaginator
     {
         return Employee::query()
-            ->with('area:id,name')
+            ->with(['area:id,name', 'manager:id,name,employee_number,job_title'])
+            ->withCount(['reports as direct_reports' => fn (Builder $query) => $query->whereNull('deactivated_at')])
             // The grade's names come in the same query, as columns: no second query per page.
             ->addSelect([
                 'job_category' => JobGrade::query()->select('category')->whereColumn('job_grades.id', 'employees.job_grade_id'),

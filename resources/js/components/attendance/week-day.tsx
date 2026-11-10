@@ -5,11 +5,17 @@ import EvidenceDots from '@/components/attendance/evidence-dots';
 import { Badge } from '@/components/ui/badge';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
 import type { WeekDay as Day, WeekMark as Mark } from '@/lib/attendance/week';
-import { dayEvidence, dayTitle, duration } from '@/lib/attendance/week-text';
+import {
+    absenceLabel,
+    dayEvidence,
+    dayTitle,
+    duration,
+} from '@/lib/attendance/week-text';
 
 /**
  * One day of the week: its marks with their local time, what it worked against what was scheduled, its flags, and the
- * ways to ask RH for a correction (a mark that is wrong, a mark missing).
+ * ways to ask RH for a correction (a mark that is wrong, a mark missing). A day of approved vacations or a leave says so
+ * instead of «Sin marcas.»; if it has marks, they still show.
  */
 export default function WeekDay({
     day,
@@ -25,6 +31,7 @@ export default function WeekDay({
 }) {
     const [asking, setAsking] = useState<Mark | 'missing' | null>(null);
     const evidence = dayEvidence(day.marks);
+    const away = absenceLabel(day.absence);
     const scheduled = day.restDay
         ? 'Descanso'
         : `de ${duration(day.scheduledMinutes)}`;
@@ -49,8 +56,13 @@ export default function WeekDay({
                     {evidence.text}
                 </p>
             )}
+            {away !== null && <Badge variant="secondary">{away}</Badge>}
             {day.marks.length === 0 ? (
-                <p className="text-base text-muted-foreground">Sin marcas.</p>
+                away === null && (
+                    <p className="text-base text-muted-foreground">
+                        Sin marcas.
+                    </p>
+                )
             ) : (
                 <ul className="flex flex-col gap-1">
                     {day.marks.map((mark) => (

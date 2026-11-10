@@ -14,6 +14,7 @@ use App\Modules\Organization\Actions\UpdateEmployee;
 use App\Modules\Organization\Data\EmployeeFilters;
 use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Enums\StaffGroup;
+use App\Modules\Organization\Http\Requests\DeactivateEmployeeRequest;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
@@ -63,6 +64,9 @@ final class EmployeeController extends Controller
                 'staff_group' => $employee->staff_group->value ?? '',
                 'state' => $employee->state ?? '',
                 'deactivated_on' => $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'),
+                'seniority_on' => $employee->seniority_on?->toDateString(),
+                'manager' => $employee->manager === null ? null : ['value' => $employee->manager->id, 'label' => $employee->manager->label()],
+                'direct_reports' => $employee->getAttributeValue('direct_reports'),
             ]),
             // Each chosen filter with its name, for the fields that search them on the server.
             'filters' => [
@@ -94,10 +98,10 @@ final class EmployeeController extends Controller
         return $this->done('Empleado actualizado.');
     }
 
-    public function deactivate(mixed $tenant, string $employee, DeactivateEmployee $deactivateEmployee): RedirectResponse
+    public function deactivate(DeactivateEmployeeRequest $request, mixed $tenant, string $employee, DeactivateEmployee $deactivateEmployee): RedirectResponse
     {
         Gate::authorize('manage-organization');
-        $deactivateEmployee->handle($this->find($employee, active: true));
+        $deactivateEmployee->handle($this->find($employee, active: true), $request->reassignTo());
 
         return $this->done('Empleado dado de baja.');
     }

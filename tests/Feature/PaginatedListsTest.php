@@ -204,6 +204,49 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['notices']],
+    'my team in the portal' => ['organization/portal-team', function () {
+        [$tenant] = listsCompany();
+        $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        workIn($tenant);
+
+        return route('portal.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+    }, ['peers', 'reports']],
+    'my vacations in the portal' => ['leave/portal', function () {
+        [$tenant] = listsCompany();
+        Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
+        $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        workIn($tenant);
+
+        return route('portal.vacations.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+    }, ['requests']],
+    'the requests a manager answers in the portal' => ['leave/portal-team', function () {
+        [$tenant] = listsCompany();
+        Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
+        $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        workIn($tenant);
+
+        return route('portal.vacations.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+    }, ['requests']],
+    'Clima' => ['engagement/index', fn () => route('tenant.climate.index', listsCompany()[0]), ['surveys']],
+    'a draft of Clima' => ['engagement/show', function () {
+        [$tenant] = listsCompany();
+        $survey = App\Modules\Engagement\Models\Survey::factory()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.climate.show', [$tenant, $survey]);
+    }, ['unreachable']],
+    'Pulso' => ['engagement/index', fn () => route('tenant.pulse.index', listsCompany()[0]), ['surveys']],
+    'the vacations overview' => ['leave/index', fn () => route('tenant.vacations.index', listsCompany()[0]), ['people']],
+    'the vacations balances' => ['leave/balances', fn () => route('tenant.vacations.balances.index', listsCompany()[0]), ['people']],
+    'the vacations record of a person' => ['leave/employee', function () {
+        [$tenant] = listsCompany();
+        $person = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.vacations.employees.show', [$tenant, $person]);
+    }, ['entries', 'requests']],
+    'the vacations policies' => ['leave/policies', fn () => route('tenant.vacations.policies.index', listsCompany()[0]), ['policies']],
+    'the vacations settings' => ['leave/settings', fn () => route('tenant.vacations.settings.show', listsCompany()[0]), ['types', 'holidays']],
+    'the vacations calendar' => ['leave/calendar', fn () => route('tenant.vacations.calendar', listsCompany()[0]), ['people']],
+    'the vacations requests queue' => ['leave/requests', fn () => route('tenant.vacations.requests.index', listsCompany()[0]), ['requests']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
     'the results for the people' => ['disclosure/results', function () {
@@ -226,6 +269,40 @@ it('sends each list of records as a paginator', function (string $component, Clo
         return route('workers.show', (string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(auth()->id() ?? 0)->token());
     }, ['centers']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
+    'org chart' => ['organization/org-chart', function () {
+        [$tenant] = listsCompany();
+        $boss = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        Database\Factories\Organization\EmployeeFactory::new()->reportingTo($boss)->create();
+
+        return route('tenant.org-chart.index', [$tenant, 'focus' => $boss->id]);
+    }, ['roots', 'focus.children']],
+    'org chart data quality' => ['organization/org-chart-quality', fn () => route('tenant.org-chart.quality', [listsCompany()[0], 'issue' => 'without_manager']), ['people']],
+    'the managers of a climate survey' => ['engagement/managers', function () {
+        [$tenant] = listsCompany();
+        workIn($tenant);
+        $boss = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.climate.managers', [$tenant, climateManagerSurvey($tenant, [$boss->id => [5, 4]])]);
+    }, ['managers']],
+    'the comments about the company' => ['engagement/comments', function () {
+        [$tenant] = listsCompany();
+        workIn($tenant);
+        $survey = App\Modules\Engagement\Models\Survey::factory()->closed()->create(['tenant_id' => $tenant->id]);
+        App\Modules\Engagement\Models\Comment::factory()->count(11)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'item_key' => 'open.best']);
+
+        return route('tenant.climate.comments', [$tenant, $survey]);
+    }, ['comments']],
+    'the feedback of a manager' => ['engagement/manager', function () {
+        [$tenant] = listsCompany();
+        workIn($tenant);
+        $boss = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        $survey = climateManagerSurvey($tenant, [$boss->id => [5, 4]]);
+        foreach (range(1, 11) as $i) {
+            App\Modules\Engagement\Models\Comment::factory()->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'item_key' => 'manager.keep', 'comment_group_id' => $boss->id]);
+        }
+
+        return route('tenant.climate.managers.show', [$tenant, $survey, $boss->id]);
+    }, ['comments']],
     'benefits' => ['compensation/benefits', fn () => route('tenant.compensation.benefits.index', listsCompany()[0]), ['benefits']],
     'tabulator' => ['compensation/tabulator', fn () => route('tenant.compensation.tabulator.index', listsCompany()[0]), ['grades']],
     'salary overrides' => ['compensation/overrides', fn () => route('tenant.compensation.overrides.index', listsCompany()[0]), ['people']],

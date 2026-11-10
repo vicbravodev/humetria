@@ -27,6 +27,19 @@ describe('loadServerOptions', () => {
         );
     });
 
+    it('keeps the query a route already carries', async () => {
+        const fetch = respond([]);
+        vi.stubGlobal('fetch', fetch);
+        const signal = new AbortController().signal;
+
+        await loadServerOptions('/people/options?except=e1', 'ana', signal);
+
+        expect(fetch).toHaveBeenCalledWith('/people/options?except=e1&q=ana', {
+            headers: { Accept: 'application/json' },
+            signal,
+        });
+    });
+
     it('fails when the server does, and reads anything but a list as none', async () => {
         const signal = new AbortController().signal;
         vi.stubGlobal('fetch', respond([], false));

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+    absentNote,
     flagLabel,
     hoursSplit,
     hoursText,
     overviewQuery,
+    overviewRibbon,
     weekBadge,
     weekNotes,
 } from '@/lib/attendance/overview';
@@ -104,5 +106,27 @@ describe('hoursSplit', () => {
     it('has no extra line without overtime, and says so when nothing was worked', () => {
         expect(hoursSplit(2400, 0)).toEqual({ total: '40 h', extra: null });
         expect(hoursSplit(0, 0)).toEqual({ total: 'Sin horas', extra: null });
+    });
+});
+
+describe("days away in RH's overview", () => {
+    const days = [
+        { worked: 0, overtime: 0 },
+        { worked: 600, overtime: 120 },
+        { worked: 0, overtime: 0 },
+    ];
+
+    it('marks on the ribbon the days the person was away', () => {
+        expect(overviewRibbon({ days, absentDays: [0, 2] })).toEqual([
+            { worked: 0, overtime: 0, absent: true },
+            { worked: 600, overtime: 120, absent: false },
+            { worked: 0, overtime: 0, absent: true },
+        ]);
+    });
+
+    it('says how many days, and nothing when none', () => {
+        expect(absentNote([])).toBeNull();
+        expect(absentNote([1])).toBe('Ausente 1 día');
+        expect(absentNote([1, 2, 6])).toBe('Ausente 3 días');
     });
 });

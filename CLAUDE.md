@@ -33,7 +33,7 @@ npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 ```
 
 y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden: se corre al cerrar un trabajo, antes
-del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo) y `composer check:fast`.
+del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo): los tests de la tarea, Pint y PHPStan.
 El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (auditoría, Pint, PHPStan, frontend),
 `tests` (Unit/Feature con cobertura) y `browser` (3 shards), todos en paralelo (`.github/workflows/tests.yml`).
 
@@ -58,7 +58,7 @@ argumentos del sistema, ver `docs/testing.md`) y con el 95 aplicado a cada módu
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
 `composer test:fast` (Tia: solo los tests que tu cambio afecta; la primera corrida graba el grafo).
-`composer check:fast` = Pint + PHPStan + Tia: es lo que corre el hook de Stop.
+`composer check:fast` = Pint + PHPStan + Tia; su primera corrida repasa toda la suite (35+ min), así que ya no lo corre el hook de Stop: se corre a mano, y solo cuando haga falta.
 
 ## Arquitectura: monolito modular
 
@@ -280,9 +280,10 @@ contra él.
 - El correo local va a mailtrap-local (bandeja en `http://localhost:3550`): ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
 - Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
 - Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado
-  (en el checkout dueño del archivo, sea worktree o principal); al terminar, `composer check:fast` si hay cambios
-  (Pint, PHPStan y solo los tests afectados) y además `npm run check` + `npm run types:check` + `npm run test:js` si
-  cambió frontend. La suite completa es `composer ci:check`, al cerrar el trabajo, y el CI la repite.
+  (en el checkout dueño del archivo, sea worktree o principal); al terminar, solo checks
+  estáticos sobre lo cambiado: Pint (`--test`) y PHPStan en los PHP cambiados, y `npm run check` + `npm run types:check` si
+  cambió frontend. El hook de Stop NO corre tests: cada tarea corre los suyos (archivo o `--filter`), la suite completa
+  es `composer ci:check` al cerrar el trabajo, y el CI la repite.
 - Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
 
 ## Flujo de trabajo: un PR por trabajo, commits atómicos

@@ -14,8 +14,8 @@ final class EmployeeCsv
 {
     public const int MAX_ROWS = 2000;
 
-    /** The template's columns; correo, celular and numero_de_empleado may be left out of a file. */
-    public const array COLUMNS = ['nombre', 'correo', 'celular', 'genero', 'centro_de_trabajo', 'area', 'puesto', 'numero_de_empleado'];
+    /** The template's columns; correo, celular, numero_de_empleado, fecha_de_ingreso and jefe may be left out of a file. */
+    public const array COLUMNS = ['nombre', 'correo', 'celular', 'genero', 'centro_de_trabajo', 'area', 'puesto', 'numero_de_empleado', 'fecha_de_ingreso', 'jefe'];
 
     /** A union's template: the company ID leads, and it is the only column a file must have. */
     public const array UNION_COLUMNS = ['numero_de_empleado', 'nombre', 'categoria', 'nivel', 'fecha_de_ingreso', 'grupo', 'estado', 'area', 'puesto'];
@@ -24,9 +24,11 @@ final class EmployeeCsv
 
     public static function template(string $workCenter): string
     {
-        $example = ['Ana López', 'ana@empresa.mx', '55 1234 5678', 'Mujer', $workCenter, 'Producción', 'Operadora', 'A-001'];
+        // Two examples, so the file imports as it comes: the manager the second names is the first.
+        $manager = ['Laura Ruiz', 'laura@empresa.mx', '55 8765 4321', 'Mujer', $workCenter, 'Producción', 'Supervisora', 'A-000', '2022-01-10', ''];
+        $example = ['Ana López', 'ana@empresa.mx', '55 1234 5678', 'Mujer', $workCenter, 'Producción', 'Operadora', 'A-001', '2024-03-15', 'A-000'];
 
-        return "\u{FEFF}".implode(',', self::COLUMNS)."\n".self::line($example)."\n";
+        return "\u{FEFF}".implode(',', self::COLUMNS)."\n".self::line($manager)."\n".self::line($example)."\n";
     }
 
     public static function unionTemplate(): string

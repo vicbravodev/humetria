@@ -1,6 +1,5 @@
 import {
     Building2,
-    Clock,
     ClipboardCheck,
     Factory,
     House,
@@ -17,14 +16,6 @@ import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
-import {
-    index as attendanceIndex,
-    report as attendanceReport,
-} from '@/routes/tenant/attendance';
-import { index as attendanceCorrections } from '@/routes/tenant/attendance/corrections';
-import { index as attendanceDevices } from '@/routes/tenant/attendance/devices';
-import { show as attendancePolicy } from '@/routes/tenant/attendance/policy';
-import { index as attendanceSchedules } from '@/routes/tenant/attendance/schedules';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as disclosure } from '@/routes/tenant/disclosure';
 import { index as employees } from '@/routes/tenant/employees';
@@ -42,6 +33,8 @@ import {
     complaints,
     handlesOrManagesComplaints,
 } from '@/lib/complaints-navigation';
+import { attendance } from '@/lib/attendance-navigation';
+import { vacationsNavItems } from '@/lib/leave-navigation';
 import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, InCourse, NavItem, NavTenant } from '@/types';
 
@@ -135,31 +128,6 @@ const seating = (tenant: NavTenant): NavItem => ({
 });
 
 /**
- * The registro de jornada's entry: the week's overview (its centers hang from it), the people's correction requests, their
- * devices and schedules, the company's policy and, for whoever may manage it, the report for the authority.
- */
-const attendance = (tenant: NavTenant): NavItem => ({
-    title: 'Asistencia',
-    href: attendanceIndex(tenant.slug),
-    icon: Clock,
-    children: [
-        { title: 'Resumen', href: attendanceIndex(tenant.slug) },
-        { title: 'Correcciones', href: attendanceCorrections(tenant.slug) },
-        { title: 'Dispositivos', href: attendanceDevices(tenant.slug) },
-        { title: 'Horarios', href: attendanceSchedules(tenant.slug) },
-        { title: 'Política', href: attendancePolicy(tenant.slug) },
-        ...(tenant.can.manage_attendance
-            ? [
-                  {
-                      title: 'Reporte para la autoridad',
-                      href: attendanceReport(tenant.slug),
-                  },
-              ]
-            : []),
-    ],
-});
-
-/**
  * NOM-035's entry: the evaluations, the Programas de intervención (num. 8.3 to 8.5) and the policy and its disclosure (5.1,
  * 5.7), for whoever may read each; with only the evaluations it stays a plain link.
  */
@@ -205,6 +173,7 @@ export const complianceNavItems = (
         telework(tenant),
         ...(tenant.can.view_seating ? [seating(tenant)] : []),
         ...(tenant.can.view_attendance ? [attendance(tenant)] : []),
+        ...vacationsNavItems(tenant),
         ...(handlesOrManagesComplaints(tenant) ? [complaints(tenant)] : []),
     ];
 };
