@@ -150,7 +150,7 @@ it('shows RH the leave type, the note and the reason of a rejection, and a viewe
 it('searches by name without caring for accents or case, and narrows by work center and area', function (): void {
     $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Norte']);
     $area = Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción']);
-    $joel = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Joel Álvarez', 'work_center_id' => $plant->id, 'area_id' => $area->id]);
+    $joel = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Joel Álvarez', 'email' => 'joel@acme.test', 'employee_number' => 'J-1', 'work_center_id' => $plant->id, 'area_id' => $area->id]);
     leaveQueueRequest($joel, 'escalated');
     leaveQueueRequest($this->ana, 'escalated');
 
