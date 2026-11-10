@@ -27,6 +27,8 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'complaints:send-digests' => '0 * * * *',
         'complaints:purge' => '15 3 * * *',
         'attendance:close-days' => '15 0 * * *',
+        'humetria:reconcile-limits' => '30 3 * * *',
+        'billing:expire-usage-reservations' => '*/10 * * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',

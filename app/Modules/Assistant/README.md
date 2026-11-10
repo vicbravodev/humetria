@@ -6,17 +6,17 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 
 ## Cómo está hecho
 
-| Pieza                             | Dónde                                                                                                                                             |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                            |
-| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`                             |
-| Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                |
-| Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                     |
-| Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                         |
+| Pieza                             | Dónde                                                                                                                                                                                                |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                               |
+| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`                                                                                |
+| Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                   |
+| Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                        |
+| Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                            |
 | Cuota del plan (libro de Billing) | `Support/HumiTokens` reserva 9,000 tokens (`humi.reservation_tokens`) por el contrato `UsageMeter` antes de llamar, liquida con el conteo real del SDK y libera si falla; sin cuota, 403 sin llamada |
-| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                    |
-| Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php` |
-| Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                   |
+| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                                                                       |
+| Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                    |
+| Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                      |
 
 Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{CampaignRecords,EvaluationSchedule}`,
 `Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Tenancy\Contracts\{Companies,Members,WorkCenters}`.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Billing\Actions;
 
 use App\Modules\Billing\Models\UsageReservation;
+use Illuminate\Support\Facades\Log;
 
 final readonly class ExpireUsageReservations
 {
@@ -22,6 +23,8 @@ final readonly class ExpireUsageReservations
         foreach (UsageReservation::query()->where('state', UsageReservation::RESERVED)->where('expires_at', '<=', now())->get(['tenant_id', 'idempotency_key']) as $stale) {
             $expired += $this->release->handle($stale->tenant_id, $stale->idempotency_key, UsageReservation::EXPIRED) ? 1 : 0;
         }
+
+        Log::info('usage.reservations_expired', ['count' => $expired]);
 
         return $expired;
     }
