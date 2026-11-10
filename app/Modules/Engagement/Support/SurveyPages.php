@@ -38,7 +38,7 @@ final readonly class SurveyPages
     public function __construct(private SnapshotAudience $snapshot, private Participation $participation) {}
 
     /**
-     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool}
+     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string}
      */
     public function index(SurveyKind $kind, bool $canManage): array
     {
@@ -57,6 +57,7 @@ final readonly class SurveyPages
                 'rate' => self::rate(self::countOf($answered, $survey->id), $survey->invited),
             ]),
             'canManage' => $canManage,
+            'kind' => $kind->value,
         ];
     }
 
@@ -64,7 +65,7 @@ final readonly class SurveyPages
      * The survey in its state. A draft shows what RH reviews before launching; the rest is what each state adds. The
      * link to the results is the controller's to give, once the survey is closed.
      *
-     * @return array{survey: Card, canManage: bool, draft: Draft|null, unreachable: LengthAwarePaginator<int, Unreachable>|null, sections: list<Section>, participation: Totals|null, resultsUrl: string|null, openCommitments: OpenCommitments|null}
+     * @return array{survey: Card, canManage: bool, kind: string, draft: Draft|null, unreachable: LengthAwarePaginator<int, Unreachable>|null, sections: list<Section>, participation: Totals|null, resultsUrl: string|null, openCommitments: OpenCommitments|null}
      */
     public function show(Survey $survey, bool $canManage, ?string $resultsUrl = null): array
     {
@@ -76,6 +77,7 @@ final readonly class SurveyPages
         return [
             'survey' => $this->card($survey, $participation['answered'] ?? null),
             'canManage' => $canManage,
+            'kind' => $survey->kind->value,
             'draft' => $draft ? [
                 'people' => count($people),
                 'withoutEmail' => count($unreached),
@@ -93,13 +95,13 @@ final readonly class SurveyPages
     }
 
     /**
-     * What the previous closed survey of the same kind left open: shown before launching the next, never blocking it.
+     * What the last closed climate survey left open (commitments are only made after a climate survey): shown before launching the next, never blocking it.
      *
      * @return OpenCommitments|null
      */
     private static function openCommitments(Survey $survey): ?array
     {
-        $previous = Survey::query()->where('kind', $survey->kind)->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->first();
+        $previous = Survey::query()->where('kind', SurveyKind::Climate)->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->first();
 
         if ($previous === null) {
             return null;

@@ -99,6 +99,8 @@ final class ResolveTenant
                 'manage_vacations' => $user->can('manage-vacations'),
                 'view_climate' => $user->can('view-climate'),
                 'manage_climate' => $user->can('manage-climate'),
+                'view_pulse' => $user->can('view-pulse'),
+                'manage_pulse' => $user->can('manage-pulse'),
             ],
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.

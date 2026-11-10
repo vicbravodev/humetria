@@ -1,9 +1,10 @@
-import { Calculator, Gauge, Network } from 'lucide-react';
+import { Activity, Calculator, Gauge, Network } from 'lucide-react';
 
 import type { NavTenant } from '@/lib/app-navigation';
 import { index as climate } from '@/routes/tenant/climate';
 import { index as compensation } from '@/routes/tenant/compensation';
 import { index as orgChart, quality } from '@/routes/tenant/org-chart';
+import { index as pulse } from '@/routes/tenant/pulse';
 import type { NavItem } from '@/types';
 
 /**
@@ -39,6 +40,15 @@ export const toolNavItems = (tenant: NavTenant | null): NavItem[] =>
                             title: 'Clima',
                             href: climate(tenant.slug),
                             icon: Gauge,
+                        },
+                    ]
+                  : []),
+              ...(tenant.can.view_pulse && tenant.type !== 'union'
+                  ? [
+                        {
+                            title: 'Pulso',
+                            href: pulse(tenant.slug),
+                            icon: Activity,
                         },
                     ]
                   : []),

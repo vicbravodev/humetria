@@ -6,9 +6,9 @@ import DeadlineStep from '@/components/engagement/deadline-step';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { countOf } from '@/lib/plural';
-import { launch } from '@/routes/tenant/climate';
 import type { ClimateDraft, ClimateUnreachable, Paginated } from '@/types';
 
 /** The draft reviewed in three steps and launched (pantalla Eval-Borrador): who, how the links reach them, and the last day. */
@@ -22,12 +22,13 @@ export default function LaunchForm({
     unreachable: Paginated<ClimateUnreachable>;
 }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     const [lastDay, setLastDay] = useState(draft.limits.suggested);
     const reached = draft.people - draft.withoutEmail;
 
     return (
         <Form
-            {...launch.form([tenantSlug, surveyId])}
+            {...routes.launch.form([tenantSlug, surveyId])}
             className="flex flex-col card px-6 pt-1 pb-6"
         >
             {({ processing, errors }) => (

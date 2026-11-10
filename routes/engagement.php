@@ -39,6 +39,7 @@ if (! function_exists('engagementRoutes')) {
 
 /** @var string $notReserved */
 engagementRoutes(SurveyKind::Climate, $notReserved);
+engagementRoutes(SurveyKind::Pulse, $notReserved);
 
 // The results of a closed survey: the company, or one cut at a time (?cut=work_center|area|tenure|manager).
 Route::get('admin/{tenant:slug}/climate/{survey}/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results');

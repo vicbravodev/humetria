@@ -11,12 +11,13 @@ const acme = (
 ) => ({ slug: 'acme', role, can: can(allowed, allowed) });
 
 describe('toolNavItems', () => {
-    it('offers the org chart, Clima and Compensación to whoever may view them in a company', () => {
+    it('offers the org chart, Clima, Pulso and Compensación to whoever may view them in a company', () => {
         expect(
             toolNavItems(acme()).map((item) => [item.title, toUrl(item.href)]),
         ).toEqual([
             ['Organigrama', '/admin/acme/org-chart'],
             ['Clima', '/admin/acme/climate'],
+            ['Pulso', '/admin/acme/pulse'],
             ['Compensación', '/admin/acme/compensation'],
         ]);
     });
@@ -32,6 +33,16 @@ describe('toolNavItems', () => {
             'Clima',
         ]);
         expect(toolNavItems({ ...climate, type: 'union' })).toEqual([]);
+    });
+
+    it('offers Pulso alone to whoever may only view it, and none to a union', () => {
+        const tenant = acme(false, 'viewer');
+        const pulse = { ...tenant, can: { ...tenant.can, view_pulse: true } };
+
+        expect(toolNavItems(pulse).map((item) => item.title)).toEqual([
+            'Pulso',
+        ]);
+        expect(toolNavItems({ ...pulse, type: 'union' })).toEqual([]);
     });
 
     it('lists the pages of the org chart under it', () => {

@@ -9,9 +9,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
-import { show } from '@/routes/tenant/climate';
 import type { ClimateSurveyHistoryRow, Paginated } from '@/types';
 
 /** "Historial" (pantalla NOM035): the closed surveys, a page at a time, with how many answered each. */
@@ -21,6 +21,7 @@ export default function SurveyHistory({
     surveys: Paginated<ClimateSurveyHistoryRow>;
 }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
 
     if (surveys.total === 0) {
         return null;
@@ -67,7 +68,7 @@ export default function SurveyHistory({
                             </TableCell>
                             <TableCell className="text-right">
                                 <Link
-                                    href={show([tenantSlug, survey.id])}
+                                    href={routes.show([tenantSlug, survey.id])}
                                     className="touch-hit text-sm font-medium text-primary underline-offset-4 hover:underline"
                                 >
                                     Ver

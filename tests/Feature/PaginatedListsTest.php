@@ -234,6 +234,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.climate.show', [$tenant, $survey]);
     }, ['unreachable']],
+    'Pulso' => ['engagement/index', fn () => route('tenant.pulse.index', listsCompany()[0]), ['surveys']],
     'the vacations overview' => ['leave/index', fn () => route('tenant.vacations.index', listsCompany()[0]), ['people']],
     'the vacations balances' => ['leave/balances', fn () => route('tenant.vacations.balances.index', listsCompany()[0]), ['people']],
     'the vacations record of a person' => ['leave/employee', function () {

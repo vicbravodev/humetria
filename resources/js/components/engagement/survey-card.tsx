@@ -3,14 +3,15 @@ import { ArrowRight } from 'lucide-react';
 import SurveyStatusBadge from '@/components/engagement/survey-status-badge';
 import ProgressBar from '@/components/humetria/progress-bar';
 import { Button } from '@/components/ui/button';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { answeredText, deadlineText } from '@/lib/engagement/panel';
-import { show } from '@/routes/tenant/climate';
 import type { ClimateSurveyCard } from '@/types';
 
 /** The survey in progress (pantalla NOM035, CampaignCard): its state, how far it is and the one thing to do next. */
 export default function SurveyCard({ survey }: { survey: ClimateSurveyCard }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     const deadline = deadlineText(survey);
 
     return (
@@ -50,7 +51,7 @@ export default function SurveyCard({ survey }: { survey: ClimateSurveyCard }) {
             )}
             <footer className="flex justify-end border-t pt-4">
                 <Button variant="outline" asChild>
-                    <Link href={show([tenantSlug, survey.id])}>
+                    <Link href={routes.show([tenantSlug, survey.id])}>
                         {survey.status === 'draft'
                             ? 'Continuar borrador'
                             : 'Ver avance'}

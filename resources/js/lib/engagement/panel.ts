@@ -43,3 +43,40 @@ export function pendingText(count: number): string {
         ? 'Nadie falta por contestar.'
         : `${count === 1 ? 'Falta' : 'Faltan'} ${count} por contestar.`;
 }
+
+type HomeCopy = {
+    title: string;
+    description: string;
+    emptyTitle: string;
+    emptyBody: string;
+    createLabel: string;
+};
+
+/** The words of the home of Clima or of Pulso: the same screen, each with its own tool. */
+export function homeCopy(kind: 'climate' | 'pulse', surveys: number): HomeCopy {
+    if (kind === 'pulse') {
+        return {
+            title: 'Pulso',
+            description:
+                'Una encuesta corta, mensual o trimestral, para ver cómo cambia el clima entre una encuesta y otra. Las respuestas son anónimas y los resultados solo se muestran por grupos.',
+            emptyTitle: 'Todavía no hay un pulso',
+            emptyBody:
+                'Prepara el borrador, elige qué mirar en esta ola y lánzalo cuando estés listo. Nadie recibe nada hasta entonces.',
+            createLabel:
+                surveys === 0 ? 'Crear el primer pulso' : 'Crear un pulso',
+        };
+    }
+
+    return {
+        title: 'Clima',
+        description:
+            'Cómo se vive trabajar en tu empresa. Las respuestas son anónimas y los resultados solo se muestran por grupos.',
+        emptyTitle: 'Todavía no hay una encuesta de clima',
+        emptyBody:
+            'Prepara el borrador, revisa a quién se invita y lánzala cuando estés listo. Nadie recibe nada hasta entonces.',
+        createLabel:
+            surveys === 0
+                ? 'Crear la primera encuesta de clima'
+                : 'Crear una encuesta de clima',
+    };
+}
