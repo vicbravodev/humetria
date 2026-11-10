@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
+use App\Modules\Billing\Actions\ReleaseMailHolds;
 use App\Modules\Billing\Actions\RenewSubscriptions;
 use App\Modules\Billing\Actions\SendBillingNotices;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
@@ -127,6 +128,12 @@ Artisan::command('billing:notify', function (SendBillingNotices $notices): void 
 })->purpose('Email each account the next amount and the loss of the channel discount before the cut, and a balance past due; once each');
 
 Schedule::command('billing:notify')->dailyAt('09:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:release-mail-holds', function (ReleaseMailHolds $release): void {
+    $this->info('Correos liberados: '.$release->handle());
+})->purpose('Give back the campaign mail a bulk send held and nobody used');
+
+// After the day's mail has gone out: what a send held and no mail took (people without an address) goes back to the quota.
+Schedule::command('billing:release-mail-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

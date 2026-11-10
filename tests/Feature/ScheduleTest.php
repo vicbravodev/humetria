@@ -32,6 +32,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'billing:measure-storage' => '45 3 * * *',
         'billing:renew' => '0 2 1 * *',
         'billing:notify' => '15 9 * * *',
+        'billing:release-mail-holds' => '50 3 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',

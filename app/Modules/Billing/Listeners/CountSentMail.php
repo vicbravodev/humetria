@@ -40,6 +40,6 @@ final readonly class CountSentMail
             return;
         }
 
-        $this->record->handle($tenantId, self::METER, 1, $key);
+        $this->record->handle($tenantId, self::METER, 1, $key, fromHold: true);
     }
 }
