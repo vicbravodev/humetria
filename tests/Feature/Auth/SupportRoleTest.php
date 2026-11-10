@@ -8,7 +8,9 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Notifications\InvitationEmail;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
@@ -87,10 +89,26 @@ it('refuses support every change to a company with a 404 that reveals nothing, w
     'set the logo' => ['POST', 'companies.logo.update'],
     'remove the logo' => ['DELETE', 'companies.logo.destroy'],
     'invite the owner' => ['POST', 'companies.invitations.store'],
-    'resend an invitation' => ['POST', 'companies.invitations.resend'],
     'cancel an invitation' => ['DELETE', 'companies.invitations.cancel'],
     'Humi settings' => ['PUT', 'companies.assistant.update'],
 ]);
+
+it('lets support resend the owner invitation with a new link, and still not cancel it', function (): void {
+    Notification::fake();
+    $tenant = Tenant::factory()->create();
+    $invitation = TenantInvitation::factory()->for($tenant)->withToken('old-token')->create();
+    $support = support();
+
+    $this->actingAs($support)->post(route('companies.invitations.resend', [$tenant, $invitation]))
+        ->assertRedirect(route('companies.index'));
+
+    expect($invitation->refresh()->token_hash)->not->toBe(TenantInvitation::hashToken('old-token'))
+        ->and($invitation->invited_by)->toBe($support->id);
+    Notification::assertSentOnDemandTimes(InvitationEmail::class, 1);
+
+    $this->delete(route('companies.invitations.cancel', [$tenant, $invitation]))->assertNotFound();
+    expect($invitation->refresh()->cancelled_at)->toBeNull();
+});
 
 it('lets support work as the owner of a company, and come back to its own session', function (): void {
     $support = support();

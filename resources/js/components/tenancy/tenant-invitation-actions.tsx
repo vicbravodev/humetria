@@ -1,11 +1,11 @@
-import { Form } from '@inertiajs/react';
+import { Form, usePage } from '@inertiajs/react';
 import CancelInvitationDialog from '@/components/tenancy/cancel-invitation-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { resend } from '@/routes/companies/invitations';
 import type { TenantRow } from '@/types';
 
-/** Sends the owner's pending invitation again, or cancels it: the superadmin's, since both change the company's access. */
+/** Sends the owner's pending invitation again (support too, it changes nothing), or cancels it (the superadmin's: it changes who can enter). */
 export default function TenantInvitationActions({
     tenant,
     invitationId,
@@ -13,6 +13,8 @@ export default function TenantInvitationActions({
     tenant: TenantRow;
     invitationId: string;
 }) {
+    const { auth } = usePage().props;
+
     return (
         <div className="-ml-3 flex">
             <Form
@@ -34,10 +36,12 @@ export default function TenantInvitationActions({
                     </Button>
                 )}
             </Form>
-            <CancelInvitationDialog
-                tenant={tenant}
-                invitationId={invitationId}
-            />
+            {auth.isSuperadmin && (
+                <CancelInvitationDialog
+                    tenant={tenant}
+                    invitationId={invitationId}
+                />
+            )}
         </div>
     );
 }

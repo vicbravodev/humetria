@@ -25,7 +25,7 @@ export default function TenantOwnerCell({ tenant }: { tenant: TenantRow }) {
             {invitation !== null && (
                 <div className="grid justify-items-start gap-1">
                     <TenantInvitationLines invitation={invitation} />
-                    {auth.isSuperadmin && (
+                    {auth.isStaff && (
                         <TenantInvitationActions
                             tenant={tenant}
                             invitationId={invitation.id}

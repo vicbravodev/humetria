@@ -368,6 +368,17 @@ it('shows support the console and the way into a company, and nothing that chang
         ->assertDontSee('Reenviar');
 })->with($looks);
 
+it('lets support resend a pending invitation, without the option to cancel it', function (): void {
+    $this->actingAs(support());
+    TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Con invitación']))
+        ->create(['name' => 'Beto Ruiz', 'email' => 'beto@acme.mx']);
+
+    visitPage('tenancy/index', '/admin/companies')
+        ->assertSee('Reenviar')
+        ->assertDontSee('Cancelar')
+        ->assertMissing('[aria-label="Cancelar invitación de Con invitación"]');
+});
+
 it('lets support enter a company as its owner', function (): void {
     $this->actingAs(support());
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']))
