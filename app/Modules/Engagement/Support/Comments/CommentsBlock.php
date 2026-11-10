@@ -25,6 +25,6 @@ final class CommentsBlock
             $items[] = ['n' => $n, 'texto' => trim((string) preg_replace('/\s+/u', ' ', $plain))];
         }
 
-        return "<comentarios>\n".json_encode($items, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)."\n</comentarios>";
+        return "<comentarios>\n".json_encode($items, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n</comentarios>";
     }
 }

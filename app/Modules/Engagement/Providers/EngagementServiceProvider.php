@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Providers;
 
+use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Listeners\CancelOnDeactivation;
+use App\Modules\Engagement\Listeners\QueueCommentSummaries;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -38,5 +40,6 @@ final class EngagementServiceProvider extends ServiceProvider
         ]);
 
         Event::listen(EmployeeDeactivated::class, CancelOnDeactivation::class);
+        Event::listen(SurveyClosed::class, QueueCommentSummaries::class);
     }
 }
