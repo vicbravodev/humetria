@@ -31,8 +31,20 @@ function managerPlan(array $rows, string $header = MANAGER_HEADER): EmployeeImpo
 it('offers a template with the hire date and the manager, which the import reads', function (): void {
     $template = $this->actingAs($this->owner)->get(route('tenant.employees.import.template', $this->tenant))->assertOk()->getContent();
 
-    expect($template)->toBe("\u{FEFF}".MANAGER_HEADER."\nAna López,ana@empresa.mx,55 1234 5678,Mujer,Planta,Producción,Operadora,A-001,2024-03-15,A-000\n")
+    expect($template)->toBe("\u{FEFF}".MANAGER_HEADER."\nLaura Ruiz,laura@empresa.mx,55 8765 4321,Mujer,Planta,Producción,Supervisora,A-000,2022-01-10,\nAna López,ana@empresa.mx,55 1234 5678,Mujer,Planta,Producción,Operadora,A-001,2024-03-15,A-000\n")
         ->and(EmployeeCsv::COLUMNS)->toBe(explode(',', MANAGER_HEADER));
+});
+
+it('offers a template that imports as it is: its example manager is another of its rows', function (): void {
+    $template = $this->actingAs($this->owner)->get(route('tenant.employees.import.template', $this->tenant))->assertOk()->getContent();
+
+    $read = EmployeeCsv::read((string) $template);
+    $plan = resolve(PlanEmployeeImport::class)->handle($read['rows']);
+
+    expect($read['error'])->toBeNull()
+        ->and($plan->errors)->toBe([])
+        ->and($plan->isValid())->toBeTrue()
+        ->and(array_map(fn ($row): array => [$row->managerId, $row->managerRow], $plan->rows))->toBe([[null, null], [null, 0]]);
 });
 
 it('plans each row under the manager its cell names: someone the company has or another row of the file', function (): void {

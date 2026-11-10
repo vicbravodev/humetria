@@ -24,9 +24,11 @@ final class EmployeeCsv
 
     public static function template(string $workCenter): string
     {
+        // Two examples, so the file imports as it comes: the manager the second names is the first.
+        $manager = ['Laura Ruiz', 'laura@empresa.mx', '55 8765 4321', 'Mujer', $workCenter, 'Producción', 'Supervisora', 'A-000', '2022-01-10', ''];
         $example = ['Ana López', 'ana@empresa.mx', '55 1234 5678', 'Mujer', $workCenter, 'Producción', 'Operadora', 'A-001', '2024-03-15', 'A-000'];
 
-        return "\u{FEFF}".implode(',', self::COLUMNS)."\n".self::line($example)."\n";
+        return "\u{FEFF}".implode(',', self::COLUMNS)."\n".self::line($manager)."\n".self::line($example)."\n";
     }
 
     public static function unionTemplate(): string
