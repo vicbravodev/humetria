@@ -9,7 +9,9 @@ use App\Modules\Engagement\Support\Bank\Questionnaire;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -84,4 +86,39 @@ it('does not dump the comment when saving it fails', function (): void {
 
     $log = File::get($this->logPath);
     expect($log)->toContain('database.query_failed')->not->toContain(LOG_PRIVACY_COMMENT);
+});
+
+it('leaves no value of the answer or the comments in any log message of any channel, in the audit trail or in any other table', function (): void {
+    $texts = ['open.best' => 'ZZ-mejor-77', 'open.improve' => 'ZZ-mejorar-78', 'manager.keep' => 'ZZ-jefe-79'];
+    $heard = [];
+    Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$heard): void {
+        $heard[] = $event->message.json_encode($event->context, JSON_PARTIAL_OUTPUT_ON_ERROR);
+    });
+
+    $manager = Employee::factory()->create(['tenant_id' => $this->survey->tenant_id, 'name' => 'Jefa Prueba']);
+    $this->invitation->update(['about_manager_id' => $manager->id, 'manager_group_id' => $manager->id, 'comment_group_id' => $manager->id]);
+
+    $answers = [];
+    foreach (Questionnaire::presentedTo($this->survey->items, true) as $item) {
+        if ($item->scale->range() !== null) {
+            $answers[$item->key] = $item->key === 'eng.recommend' ? 7 : 3;
+        }
+    }
+
+    $this->get(route('engagement.survey.show', 'the-token'))->assertOk();
+    $this->post(route('engagement.survey.submit', 'the-token'), ['answers' => $answers, 'comments' => $texts, 'minutes' => 6])->assertRedirect();
+    expect(Comment::query()->withoutGlobalScopes()->count())->toBeGreaterThan(0);
+
+    $everywhere = implode("\n", $heard).File::get($this->logPath);
+    foreach ($texts as $text) {
+        expect($everywhere)->not->toContain($text);
+    }
+
+    // No other table keeps what was written: the only home of a comment is its own table.
+    foreach (DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name <> 'engagement_comments'") as $table) {
+        $rows = json_encode(DB::table($table->table_name)->get(), JSON_THROW_ON_ERROR | JSON_PARTIAL_OUTPUT_ON_ERROR);
+        foreach ($texts as $text) {
+            expect($rows)->not->toContain($text, "{$table->table_name} keeps a comment");
+        }
+    }
 });
