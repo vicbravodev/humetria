@@ -682,3 +682,29 @@ function climateResultsSurvey(Tenant $tenant, int $count, ?Closure $answers = nu
 
     return $survey;
 }
+
+/**
+ * A closed climate survey of `$tenant` whose responses belong to the groups of managers in `$groups`: the id of the manager
+ * (an employee) => [how many answered, the answer 1 to 5 each gives to the questions about their manager]. Everything else
+ * is answered 4 (the recommendation, 9).
+ *
+ * @param  array<string, array{int, int}>  $groups
+ */
+function climateManagerSurvey(Tenant $tenant, array $groups): App\Modules\Engagement\Models\Survey
+{
+    $survey = App\Modules\Engagement\Models\Survey::factory()->closed()->create(['tenant_id' => $tenant->id, 'invited' => 40]);
+
+    foreach ($groups as $manager => [$count, $level]) {
+        $answers = [];
+        foreach (App\Modules\Engagement\Support\Bank\ItemBank::all() as $item) {
+            if ($item->scale !== App\Modules\Engagement\Enums\ItemScale::Open) {
+                $manages = $item->block === App\Modules\Engagement\Enums\ItemBlock::Manager;
+                $answers[$item->key] = $item->scale === App\Modules\Engagement\Enums\ItemScale::Recommend ? 9 : ($manages ? $level : 4);
+            }
+        }
+
+        App\Modules\Engagement\Models\Response::factory()->count($count)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'manager_group_id' => $manager, 'answers' => $answers]);
+    }
+
+    return $survey;
+}

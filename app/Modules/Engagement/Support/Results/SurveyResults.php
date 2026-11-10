@@ -90,6 +90,32 @@ final class SurveyResults
         }
 
         return $id !== null && isset($this->cut($cut)['groups'][$id]);
+     * The groups of managers that may be shown, with their responses: one group per manager, none inside another, so a
+     * group taken from another never leaves fewer than the minimum.
+     */
+    public function managerGroups(): CutGroups
+    {
+        return CutReport::of(CutAttribute::Manager, $this->rows(), $this->thresholds);
+    }
+
+    /**
+     * How the responses given (all of the survey's when `null`) answered the questions about the manager that this survey
+     * asked. What fewer than the minimum answered is hidden, item by item.
+     *
+     * @param  list<ResponseRow>|null  $rows
+     * @return array<string, ItemResult>
+     */
+    public function managerItems(?array $rows = null): array
+    {
+        $asked = array_map(fn (string $ref): string => explode('@', $ref)[0], $this->survey->items);
+        $byKey = [];
+        foreach (ItemBank::all() as $item) {
+            if ($item->scale === ItemScale::Agreement && $item->block === ItemBlock::Manager && in_array($item->key, $asked, true)) {
+                $byKey[$item->key] = ItemTally::of($item, $rows ?? $this->rows(), $this->thresholds);
+            }
+        }
+
+        return $byKey;
     }
 
     /** The survey of the same kind closed just before this one, with its own results; `null` in the first wave. */
