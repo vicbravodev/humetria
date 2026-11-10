@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import HumiDock from '@/components/assistant/humi-dock';
 import { CommandPalette } from '@/components/command-palette';
+import { CompanyReadOnlyNotice } from '@/components/company-read-only-notice';
 import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
 import { MobileTabBar } from '@/components/mobile-tab-bar';
@@ -28,6 +29,7 @@ export default function AppSidebarLayout({
                     data-slot="page-body"
                     className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-16 [view-transition-name:page] md:pb-0"
                 >
+                    <CompanyReadOnlyNotice />
                     {children}
                 </div>
             </AppContent>

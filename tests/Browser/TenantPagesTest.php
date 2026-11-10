@@ -235,3 +235,19 @@ it('lets the closed block modal stay closed while moving through the panel', fun
         ->assertPathIs('/admin/acme')
         ->assertMissing('[data-test="tenant-blocked-dialog"]');
 });
+
+it('tells the members of a read-only company why nothing can be changed and whom to ask, in the frame of every page', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->readOnly()->create(['slug' => 'solo-lectura']);
+    $this->actingAs(ownerOf($tenant));
+
+    visitPage('dashboard', '/admin/solo-lectura', $dark, $mobile)
+        ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Tu empresa está en solo lectura')
+        ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Contacta al administrador de Humetría');
+})->with($looks);
+
+it('shows no read-only notice in a company that works', function (): void {
+    $this->actingAs(ownerOf(Tenant::factory()->create(['slug' => 'activa'])));
+
+    visitPage('dashboard', '/admin/activa')
+        ->assertScript('() => document.querySelector(\'[data-slot="company-read-only-notice"]\') === null', true);
+});
