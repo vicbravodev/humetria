@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { screenBadge, screenSeen } from '@/lib/attendance/kiosk-screens';
+import {
+    revokeScreenText,
+    screenBadge,
+    screenSeen,
+} from '@/lib/attendance/kiosk-screens';
 
 describe('screenBadge', () => {
     it('names where each screen stands', () => {
@@ -37,5 +41,26 @@ describe('screenSeen', () => {
                 revokedAt: '2026-11-09 12:00',
             }),
         ).toBe('Revocada el 9 nov · 12:00');
+    });
+});
+
+describe('revokeScreenText', () => {
+    it('says what stops and what to do to use the tablet again', () => {
+        expect(revokeScreenText('issued', 0)).toBe(
+            'Dejará de mostrar el código de inmediato. Para volver a usar la tableta, emite otra pantalla.',
+        );
+    });
+
+    it('warns that nobody can scan on site when it is the only active screen', () => {
+        expect(revokeScreenText('active', 1)).toBe(
+            'Dejará de mostrar el código de inmediato. Es la única pantalla activa de este centro: nadie podrá marcar con el QR en el sitio hasta que active otra. Para volver a usar la tableta, emite otra pantalla.',
+        );
+    });
+
+    it('does not warn when another screen is active, or when this one never showed the code', () => {
+        expect(revokeScreenText('active', 2)).toBe(
+            revokeScreenText('issued', 2),
+        );
+        expect(revokeScreenText('issued', 1)).not.toContain('única');
     });
 });

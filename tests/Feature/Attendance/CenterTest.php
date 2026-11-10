@@ -8,6 +8,7 @@ use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use App\Modules\Attendance\Http\Requests\ZoneRequest;
+use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -58,6 +59,22 @@ describe('the center', function (): void {
         $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 30));
         config(['attendance.qr.window_seconds' => 45]);
         $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 45));
+    });
+
+    it('tells RH whether the policy asks for the QR on site, how many screens show the code, and the accuracy it accepts', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('requiresQr', true)->where('screens', 0)->where('tolerance', 100));
+
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'require_qr_onsite' => false, 'max_accuracy_m' => 60]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now(), 'revoked_at' => now()]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now()]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('requiresQr', false)->where('screens', 1)->where('tolerance', 60));
     });
 
     it('shows RH its zones with where each is, and its active people', function (): void {

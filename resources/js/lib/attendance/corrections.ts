@@ -1,3 +1,5 @@
+import type { CorrectionCounts } from '@/types';
+
 const MONTHS = [
     'ene',
     'feb',
@@ -41,4 +43,21 @@ export function waitingFor(days: number): string {
     }
 
     return days === 1 ? 'ayer' : `hace ${days} días`;
+}
+
+/** The way from an empty queue to the requests already resolved: the tab to open and what its button says; none if no request was ever resolved. */
+export function resolvedShortcut(counts: CorrectionCounts): {
+    status: 'approved' | 'rejected';
+    label: string;
+} | null {
+    const total = counts.approved + counts.rejected;
+
+    if (total === 0) {
+        return null;
+    }
+
+    return {
+        status: counts.approved > 0 ? 'approved' : 'rejected',
+        label: total === 1 ? 'Ver la resuelta' : `Ver las ${total} resueltas`,
+    };
 }

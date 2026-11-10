@@ -1,7 +1,9 @@
-import { TriangleAlert } from 'lucide-react';
+import { Clock, TriangleAlert } from 'lucide-react';
+import ReportEvidence from '@/components/attendance/report-evidence';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { confirmationBadge, dayHours, endText } from '@/lib/attendance/report';
+import { isWarning } from '@/lib/attendance/report-person';
 import { dayTitle, duration } from '@/lib/attendance/week-text';
 import type { ReportDay } from '@/types';
 
@@ -12,18 +14,21 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
 
     return (
         <TableRow>
-            <TableCell className="pl-8 whitespace-nowrap">
+            <TableCell className="pl-8 font-medium whitespace-nowrap max-md:w-full">
                 {dayTitle(day.date)}
             </TableCell>
             <TableCell className="whitespace-nowrap tabular-nums">
                 {day.start ?? '—'} – {endText(day)}
             </TableCell>
             <TableCell className="tabular-nums">
+                <span className="text-muted-foreground md:hidden">Pausas </span>
                 {day.breakMinutes === 0 ? '—' : duration(day.breakMinutes)}
             </TableCell>
             <TableCell className="tabular-nums">{dayHours(day)}</TableCell>
-            <TableCell>{day.evidence}</TableCell>
-            <TableCell className="min-w-56 whitespace-normal">
+            <TableCell className="whitespace-nowrap">
+                <ReportEvidence level={day.evidence} />
+            </TableCell>
+            <TableCell className="min-w-56 whitespace-normal max-md:w-full">
                 {notes.length === 0 ? (
                     <span className="text-muted-foreground">Sin notas</span>
                 ) : (
@@ -34,12 +39,19 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
                         {day.flags.map((flag) => (
                             <li
                                 key={flag}
-                                className="flex items-start gap-1.5 text-destructive"
+                                className={`flex items-start gap-1.5 ${isWarning(flag) ? 'text-destructive' : 'text-muted-foreground'}`}
                             >
-                                <TriangleAlert
-                                    aria-hidden
-                                    className="mt-0.5 size-4 shrink-0"
-                                />
+                                {isWarning(flag) ? (
+                                    <TriangleAlert
+                                        aria-hidden
+                                        className="mt-0.5 size-4 shrink-0"
+                                    />
+                                ) : (
+                                    <Clock
+                                        aria-hidden
+                                        className="mt-0.5 size-4 shrink-0"
+                                    />
+                                )}
                                 {flag}
                             </li>
                         ))}

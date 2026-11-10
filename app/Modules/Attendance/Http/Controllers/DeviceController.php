@@ -69,7 +69,7 @@ final readonly class DeviceController
             abort(404);
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => self::batchMessage($counts['sent'], $counts['without_email'])]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => self::batchMessage($counts['sent'], $counts['with_link'], $counts['without_email'])]);
 
         return back();
     }
@@ -83,22 +83,28 @@ final readonly class DeviceController
         return back();
     }
 
-    private static function batchMessage(int $sent, int $withoutEmail): string
+    private static function batchMessage(int $sent, int $withLink, int $withoutEmail): string
     {
-        if ($sent === 0 && $withoutEmail === 0) {
+        if ($sent === 0 && $withLink === 0 && $withoutEmail === 0) {
             return 'No había a quién enviar: todas las personas del centro tienen dispositivo o no tienen correo.';
         }
 
-        $message = match ($sent) {
-            0 => 'No enviamos ningún enlace.',
-            1 => 'Enviamos 1 enlace de alta.',
-            default => "Enviamos {$sent} enlaces de alta.",
-        };
-
-        return match ($withoutEmail) {
-            0 => $message,
-            1 => "{$message} 1 persona no tiene correo: crea su enlace desde su renglón.",
-            default => "{$message} {$withoutEmail} personas no tienen correo: crea su enlace desde su renglón.",
-        };
+        return implode(' ', array_filter([
+            match ($sent) {
+                0 => 'No enviamos ningún enlace.',
+                1 => 'Enviamos 1 enlace de alta.',
+                default => "Enviamos {$sent} enlaces de alta.",
+            },
+            match ($withLink) {
+                0 => null,
+                1 => 'Omitimos 1 persona que ya tenía un enlace vigente.',
+                default => "Omitimos {$withLink} personas que ya tenían un enlace vigente.",
+            },
+            match ($withoutEmail) {
+                0 => null,
+                1 => '1 persona no tiene correo: crea su enlace desde su renglón.',
+                default => "{$withoutEmail} personas no tienen correo: crea su enlace desde su renglón.",
+            },
+        ]));
     }
 }

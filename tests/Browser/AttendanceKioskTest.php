@@ -17,13 +17,17 @@ function kioskLink(): string
     return route('attendance.device.kiosk.activate', [$tenant->slug, $token], absolute: false);
 }
 
-it('shows the center\'s code, large, and that it reaches the server', function (bool $dark, bool $mobile): void {
+it('shows the center\'s code, large, with the seconds it has left, the company\'s clock and that it reaches the server', function (bool $dark, bool $mobile): void {
     visitPage('attendance/kiosk', kioskLink(), $dark, $mobile)
         ->assertSee('Planta Norte')
         ->assertSee('Acme')
-        ->waitForText('Conectado')
+        ->waitForText('Conectada')
+        ->assertSee('Escanee para marcar')
+        ->assertSee('Cambia en')
+        ->assertSee('Un código nuevo cada 30 segundos')
         ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
-        ->assertSee('Escanee el código con la cámara de su teléfono')
+        ->assertSee('Apunte la cámara de su teléfono al código')
+        ->assertScript('() => /\d{2}:\d{2}/.test(document.querySelector("header").textContent)', true)
         ->assertScript('() => window.location.pathname.endsWith("/kiosk")', true);
 })->with([
     'light desktop' => [false, false],
@@ -31,27 +35,64 @@ it('shows the center\'s code, large, and that it reaches the server', function (
     'light mobile' => [false, true],
 ]);
 
-it('says when it lost the connection and keeps retrying', function (): void {
+it('counts the seconds until the code turns', function (): void {
+    // Frozen at 12:00:10 of a 30 s window: every answer says 20 s.
+    $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC'));
+    $seconds = '() => Number(document.body.innerText.match(/Cambia en (\d+) s/)?.[1] ?? -1)';
+
+    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Cambia en');
+    $first = $page->script($seconds);
+    $page->wait(2.2);
+
+    expect($first)->toBeGreaterThan(15)->and($page->script($seconds))->toBeLessThan($first - 1);
+});
+
+it('says when it lost the connection, shows no code at all, and keeps retrying', function (): void {
     // One second before the code turns: the screen asks again in a second and a half.
     $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:29', 'UTC'));
 
-    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectado');
+    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectada');
     $page->script('() => { window.fetch = () => Promise.reject(new TypeError("offline")); }');
 
-    $page->waitForText('Sin conexión, reintentando')
+    // A code on the wall that no longer turns could be photographed and used from elsewhere: nothing of it stays on the screen.
+    $page->waitForText('Esta pantalla perdió la conexión')
+        ->assertSee('Sin conexión')
+        ->assertSee('Último código válido')
+        ->assertSee('No se muestran códigos mientras no haya internet')
+        ->assertSee('avise a RH')
+        ->assertMissing('img[alt="Código para registrar su entrada o su salida"]')
+        ->assertScript('() => document.documentElement.outerHTML.includes("data:image/svg+xml")', false)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('asks again at once when «Reintentar ahora» is pressed, and shows a code only when the server answers', function (): void {
+    $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:29', 'UTC'));
+
+    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectada');
+    $page->script('() => { window.realFetch = window.fetch; window.fetch = () => Promise.reject(new TypeError("offline")); }');
+    $page->waitForText('Esta pantalla perdió la conexión');
+
+    // The network is back: it does not wait for its own retry.
+    $page->script('() => { window.fetch = window.realFetch; }');
+    $page->press('Reintentar ahora')
+        ->waitForText('Conectada')
         ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
+        ->assertDontSee('Esta pantalla perdió la conexión')
         ->assertNoJavaScriptErrors();
 });
 
 it('keeps turning after an answer that is not JSON, as from a captive portal, and recovers', function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:29', 'UTC'));
 
-    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectado');
+    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectada');
     // The next answer is a 200 page of HTML; the one after, the server's again.
     $page->script('() => { const real = window.fetch; window.fetch = (...args) => { window.fetch = real; return Promise.resolve(new Response("<html>Wi-Fi</html>", { status: 200 })); }; }');
 
-    $page->waitForText('Sin conexión, reintentando')
-        ->waitForText('Conectado')
+    $page->waitForText('Esta pantalla perdió la conexión')
+        ->assertMissing('img[alt="Código para registrar su entrada o su salida"]')
+        ->waitForText('Conectada')
         ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
         ->assertNoJavaScriptErrors();
 });
@@ -63,7 +104,7 @@ it('opens from a link tapped on another site, as in an email or a chat', functio
     $other = str_replace('127.0.0.1', 'localhost', rtrim($page->url(), '/'));
     $page->script("() => { window.location.href = '{$other}{$link}'; }");
 
-    $page->waitForText('Conectado')
+    $page->waitForText('Conectada')
         ->assertSee('Planta Norte')
         ->assertNoJavaScriptErrors();
 });

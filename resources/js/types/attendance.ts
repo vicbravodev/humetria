@@ -1,26 +1,5 @@
 import type { Paginated } from './demos';
 
-/** Where a person's request to correct their record stands. */
-export type CorrectionStatus = 'pending' | 'approved' | 'rejected';
-
-/** A row of RH's queue of correction requests: who, what they ask, why, and RH's note once resolved. Never a position. */
-export type CorrectionRow = {
-    id: string;
-    person: { name: string; jobTitle: string };
-    type: string;
-    /** The time asked, local («Y-m-d H:i»). */
-    requestedAt: string;
-    /** The mark's time before the correction, local; null for a mark the person forgot. */
-    previousAt: string | null;
-    reason: string;
-    /** Days the request waits since it was asked. */
-    ageDays: number;
-    status: CorrectionStatus;
-    note: string | null;
-};
-
-export type CorrectionCounts = Record<CorrectionStatus, number>;
-
 /** The tabs of RH's overview: every person, each answer to the week, and the weeks near the year's limits. */
 export type OverviewView =
     | 'all'
@@ -51,6 +30,8 @@ export type OverviewPerson = {
     atRisk: boolean;
     /** Without an agreed schedule they are held to 8 h a day with no rest day, until RH sets one. */
     hasSchedule: boolean;
+    /** Minutes worked each day, Monday to Sunday, and of them the overtime: what the week ribbon draws. */
+    days: { worked: number; overtime: number }[];
 };
 
 /** A center in use with its active people, its zones and the screens that show its code. */
@@ -62,6 +43,39 @@ export type OverviewCenter = {
     screens: number;
 };
 
+/** What a center still needs before its people can mark in it. */
+export type SetupCenterNeed = 'zone' | 'screen';
+
+/** How far the company is from the first mark (SetupProgress): counts and a few names, never a position or a device. */
+export type AttendanceSetup = {
+    /** The day the registro is mandatory (LFT art. 132-XXXIV), Y-m-d, and the days left to it. */
+    deadline: string;
+    daysLeft: number;
+    /** Whether the policy asks for the QR on site, so a center needs a screen that shows the code. */
+    requiresQr: boolean;
+    centers: {
+        done: number;
+        total: number;
+        /** Up to five centers that cannot take a mark yet, with what each lacks. */
+        pending: { id: string; name: string; needs: SetupCenterNeed[] }[];
+    };
+    schedules: { done: number; total: number; pending: string[] };
+    devices: { done: number; total: number };
+    policy: { done: number; total: number };
+    /** Zones smaller than the accuracy the policy accepts, one per center, five at most. */
+    findings: {
+        center: { id: string; name: string };
+        zone: string;
+        radius: number;
+        tolerance: number;
+    }[];
+};
+
+export type AttendanceSetupProps = {
+    setup: AttendanceSetup;
+    canManage: boolean;
+};
+
 export type AttendanceOverviewProps = {
     week: OverviewWeek;
     center: { id: string; name: string } | null;
@@ -69,6 +83,9 @@ export type AttendanceOverviewProps = {
     counts: Record<OverviewView, number>;
     pendingCorrections: number;
     centersWithoutZones: number;
+    setup: AttendanceSetup;
+    /** The hours of everyone in scope, ordinary and overtime, in minutes. */
+    hours: { ordinaryMinutes: number; overtimeMinutes: number };
     people: Paginated<OverviewPerson>;
     centers: Paginated<OverviewCenter>;
     canManage: boolean;
@@ -92,6 +109,11 @@ export type AttendanceCenterProps = {
     canManage: boolean;
     /** Seconds each code of its screens lasts (config/attendance.php). */
     qrSeconds: number;
+    /** Whether the policy asks for the QR on site, and how many of its screens already show the code. */
+    requiresQr: boolean;
+    screens: number;
+    /** The meters of imprecision the policy accepts in a reading: a zone smaller than this is a risk. */
+    tolerance: number;
 };
 
 /** A QR screen of a center: issued until it shows the code, active once seen, revoked. Local times; never its token. */
@@ -101,99 +123,6 @@ export type KioskScreen = {
     issuedAt: string;
     lastSeenAt: string | null;
     revokedAt: string | null;
-};
-
-/** The tabs of the devices page: everyone, with an active device, never linked, and with only revoked ones. */
-export type DeviceView = 'all' | 'linked' | 'unlinked' | 'revoked';
-
-/** A person's linked device: its name, when, and whether its key is synced. Never its credential or its key. */
-export type LinkedDevice = {
-    id: string;
-    label: string;
-    synced: boolean;
-    /** Local times («Y-m-d H:i»). */
-    enrolledAt: string;
-    lastUsedAt: string | null;
-    revokedAt: string | null;
-};
-
-/** A person on the devices page: whether they have an email (their link goes there), where they stand, their devices. */
-export type DevicePerson = {
-    id: string;
-    name: string;
-    jobTitle: string;
-    center: string;
-    hasEmail: boolean;
-    status: Exclude<DeviceView, 'all'>;
-    devices: LinkedDevice[];
-};
-
-export type AttendanceDevicesProps = {
-    center: { id: string; name: string } | null;
-    filters: { q: string; status: DeviceView };
-    counts: Record<DeviceView, number>;
-    people: Paginated<DevicePerson>;
-    canManage: boolean;
-    /** Hours an enrollment link lasts (config/attendance.php). */
-    linkHours: number;
-};
-
-/** The company's policy of the registro, as saved or the defaults it starts with. */
-export type AttendancePolicy = {
-    outOfZone: 'block' | 'allow_and_flag';
-    maxAccuracyM: number;
-    requireQrOnsite: boolean;
-    trustedMayUseBrowser: boolean;
-    retentionMonths: number;
-};
-
-export type AttendancePolicyProps = {
-    policy: AttendancePolicy;
-    /** False while RH has not saved one: the page shows the defaults. */
-    saved: boolean;
-    canManage: boolean;
-};
-
-/** The tabs of the schedules page: everyone, with an agreed schedule, and without one. */
-export type ScheduleView = 'all' | 'scheduled' | 'unscheduled';
-
-/** Minutes agreed by ISO weekday, «1» Monday to «7» Sunday; 0 is a rest day. */
-export type WeekMinutes = Partial<Record<string, number>>;
-
-/** A person's agreed weekly schedule (criterio 2.6). */
-export type WorkSchedule = {
-    shiftType: 'day' | 'night' | 'mixed';
-    workMode: 'onsite' | 'remote';
-    minutes: WeekMinutes;
-};
-
-/** A person on the schedules page, with their schedule or null: held to 8 h a day with no rest day until RH sets one. */
-export type SchedulePerson = {
-    id: string;
-    name: string;
-    jobTitle: string;
-    center: string;
-    schedule: WorkSchedule | null;
-};
-
-/**
- * The year's weekly ordinary maximum (art. 59 and transitorio segundo), its weekly overtime cap (transitorio cuarto) and
- * each shift's daily ordinary limit (art. 61), in minutes: the server's LegalLimits, the one place these numbers live.
- */
-export type WeeklyMaximum = {
-    year: number;
-    minutes: number;
-    overtimeMinutes: number;
-    dailyMinutes: Record<WorkSchedule['shiftType'], number>;
-};
-
-export type AttendanceSchedulesProps = {
-    center: { id: string; name: string } | null;
-    filters: { q: string; status: ScheduleView };
-    counts: Record<ScheduleView, number>;
-    weeklyMaximum: WeeklyMaximum;
-    people: Paginated<SchedulePerson>;
-    canManage: boolean;
 };
 
 /** One day of a person in the report for the authority: local dates and times, minutes as criterio 2.9 splits them. */
@@ -231,12 +160,36 @@ export type ReportSummary = {
     confirmedPercent: number;
     withCorrections: number;
     unconfirmed: number;
+    /** Days whose week the person confirmed. */
+    confirmedDays: number;
+    ordinaryMinutes: number;
+    /** The double and triple minutes: what is paid beyond the ordinary. */
+    overtimeMinutes: number;
+    overTwelveDays: number;
+    withoutEndDays: number;
+    /** People with at least one flagged day / at least one day of a week no one answered. */
+    flaggedPeople: number;
+    unconfirmedPeople: number;
+};
+
+/** Which people the report lists: all, those with a flagged day or those with a week no one answered. */
+export type ReportShow = 'all' | 'flagged' | 'unconfirmed';
+
+/** A usual period the report offers: its first and last local day. */
+export type ReportPreset = {
+    key: 'this-week' | 'last-week' | 'last-month';
+    label: string;
+    from: string;
+    to: string;
 };
 
 export type AttendanceReportProps = {
     center: { id: string; name: string } | null;
     period: { from: string; to: string };
-    filters: { q: string };
+    presets: ReportPreset[];
+    /** How many days the screen shows and how many the CSV takes. */
+    limits: { screenDays: number; exportDays: number };
+    filters: { q: string; show: ReportShow };
     summary: ReportSummary | null;
     people: Paginated<ReportPerson> | null;
     /** When the report was put together, as «Y-m-d H:i» in UTC and in the display time zone. */

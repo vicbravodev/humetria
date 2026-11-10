@@ -27,3 +27,19 @@ export function screenSeen(
         ? 'Aún no muestra el código'
         : `Vista el ${shortMoment(screen.lastSeenAt)}`;
 }
+
+/**
+ * What revoking a QR screen does (board A8): the code stops at once, and when it is the only one showing it nobody can
+ * scan on site until another is active. `active` is how many screens of the center show the code.
+ */
+export function revokeScreenText(
+    state: KioskScreen['state'],
+    active: number,
+): string {
+    const only =
+        state === 'active' && active <= 1
+            ? ' Es la única pantalla activa de este centro: nadie podrá marcar con el QR en el sitio hasta que active otra.'
+            : '';
+
+    return `Dejará de mostrar el código de inmediato.${only} Para volver a usar la tableta, emite otra pantalla.`;
+}

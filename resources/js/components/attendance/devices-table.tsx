@@ -2,8 +2,8 @@ import { Smartphone } from 'lucide-react';
 import DevicePersonRow from '@/components/attendance/device-person-row';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
+import StackedTable from '@/components/humetria/stacked-table';
 import {
-    Table,
     TableBody,
     TableHead,
     TableHeader,
@@ -57,11 +57,11 @@ export default function DevicesTable({
 
     return (
         <>
-            <Table>
+            <StackedTable>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Persona</TableHead>
-                        <TableHead>Centro</TableHead>
+                        <TableHead>Camino al teléfono</TableHead>
                         <TableHead>Dispositivos</TableHead>
                         <TableHead>Estado</TableHead>
                         {canManage && (
@@ -80,7 +80,7 @@ export default function DevicesTable({
                         />
                     ))}
                 </TableBody>
-            </Table>
+            </StackedTable>
             <Pagination
                 page={people}
                 label="Páginas de personas"

@@ -38,6 +38,17 @@ beforeEach(function (): void {
     Notification::fake();
 });
 
+function linkFor(string $employeeId, string $expires = '+24 hours'): EnrollmentLink
+{
+    return EnrollmentLink::query()->create([
+        'tenant_id' => test()->tenant->id,
+        'employee_id' => $employeeId,
+        'token_hash' => EnrollmentLink::hashToken("token-{$employeeId}"),
+        'issued_by' => test()->hr->id,
+        'expires_at' => now()->modify($expires),
+    ]);
+}
+
 function enrollAll(string $centerId): Illuminate\Testing\TestResponse
 {
     return test()->from(route('tenant.attendance.devices.index', 'acme'))->post(route('tenant.attendance.devices.enroll-all', 'acme'), ['work_center_id' => $centerId]);
@@ -61,8 +72,19 @@ it('queues one link per person of the center without a device, skipping who has 
     expect($queued)->toEqualCanonicalizing([$this->ana->id, $this->carla->id])
         ->and(EnrollmentLink::query()->count())->toBe(0);
     $entry = AuditEntry::query()->where('event', 'attendance.enrollments_sent')->sole();
-    expect($entry)->subject_id->toBeNull()->metadata->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1]);
-    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1]);
+    expect($entry)->subject_id->toBeNull()->metadata->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1, 'with_link' => 0]);
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1, 'with_link' => 0]);
+});
+
+it('says how many it skipped when the only ones left already have a link', function (): void {
+    Queue::fake();
+    $this->actingAs($this->hr);
+    $store = WorkCenter::factory()->for($this->tenant)->create();
+    $one = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $store->id, 'email' => 'uno@acme.test']);
+    linkFor($one->id);
+
+    enrollAll($store->id)->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'No enviamos ningún enlace. Omitimos 1 persona que ya tenía un enlace vigente.']);
+    Queue::assertNothingPushed();
 });
 
 it('says so when there is nobody to send to', function (): void {
@@ -202,4 +224,81 @@ it('writes the batch to the audit trail before queueing anything, so a failed au
     expect(fn () => resolve(SendEnrollmentLinks::class)->handle($this->plant->id, $this->hr->id))->toThrow(RuntimeException::class, 'audit down');
 
     Queue::assertNothingPushed();
+});
+
+it('leaves alone who already has a link that still opens: the batch queues nobody for them, keeps their link and says how many it skipped', function (): void {
+    Queue::fake();
+    Log::spy();
+    $this->actingAs($this->hr);
+    $eva = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'email' => 'eva@acme.test']);
+    $evaLink = linkFor($eva->id);
+    $bobLink = linkFor($this->bob->id);
+
+    enrollAll($this->plant->id)
+        ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Enviamos 2 enlaces de alta. Omitimos 2 personas que ya tenían un enlace vigente.']);
+
+    $queued = [];
+    Queue::assertPushed(SendEnrollmentLink::class, function (SendEnrollmentLink $job) use (&$queued): bool {
+        $queued[] = $job->employeeId;
+
+        return true;
+    });
+    expect($queued)->toEqualCanonicalizing([$this->ana->id, $this->carla->id])
+        ->and(EnrollmentLink::query()->whereNull('revoked_at')->pluck('id')->all())->toEqualCanonicalizing([$evaLink->id, $bobLink->id]);
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 0, 'linked' => 1, 'with_link' => 2]);
+    expect(AuditEntry::query()->where('event', 'attendance.enrollments_sent')->sole()->metadata)->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 0, 'linked' => 1, 'with_link' => 2]);
+});
+
+it('does not replace a waiting link when the worker runs: the person keeps the same token and gets no new email', function (): void {
+    $waiting = linkFor($this->ana->id);
+
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));
+
+    Notification::assertNothingSent();
+    expect(EnrollmentLink::query()->sole())->id->toBe($waiting->id)->token_hash->toBe(EnrollmentLink::hashToken("token-{$this->ana->id}"))->revoked_at->toBeNull();
+});
+
+it('logs why the worker skipped a person who already has a link, with ids only', function (): void {
+    linkFor($this->ana->id);
+    Log::spy();
+
+    app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));
+
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollment_skipped', ['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'reason' => 'has_link']);
+});
+
+it('sends again to who has a link that expired, replacing it, and to who has one already used or replaced', function (): void {
+    Queue::fake();
+    $this->actingAs($this->hr);
+    $expired = linkFor($this->ana->id, '-1 hour');
+    $used = linkFor($this->carla->id);
+    $used->forceFill(['used_at' => now()])->save();
+
+    enrollAll($this->plant->id)->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Enviamos 2 enlaces de alta. 1 persona no tiene correo: crea su enlace desde su renglón.']);
+
+    $queued = [];
+    Queue::assertPushed(SendEnrollmentLink::class, function (SendEnrollmentLink $job) use (&$queued): bool {
+        $queued[] = $job->employeeId;
+
+        return true;
+    });
+    expect($queued)->toEqualCanonicalizing([$this->ana->id, $this->carla->id]);
+
+    foreach ($queued as $id) {
+        app()->call((new SendEnrollmentLink($this->tenant->id, $id, $this->hr->id))->handle(...));
+    }
+    Notification::assertSentOnDemandTimes(EnrollmentInvitation::class, 2);
+    expect($expired->refresh()->revoked_at)->not->toBeNull();
+});
+
+it('only counts the links of the company: another company\'s waiting link does not stop the batch', function (): void {
+    Queue::fake();
+    $this->actingAs($this->hr);
+    $other = Tenant::factory()->create();
+    $stranger = EmployeeFactory::new()->create(['tenant_id' => $other->id, 'work_center_id' => WorkCenter::factory()->for($other)->create()->id, 'email' => 'x@otra.test']);
+    EnrollmentLink::query()->withoutGlobalScopes()->create(['tenant_id' => $other->id, 'employee_id' => $stranger->id, 'token_hash' => 'h', 'issued_by' => $this->hr->id, 'expires_at' => now()->addHour()]);
+
+    enrollAll($this->plant->id);
+
+    Queue::assertPushed(SendEnrollmentLink::class, 2);
 });

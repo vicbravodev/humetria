@@ -1,14 +1,16 @@
 import { CalendarClock } from 'lucide-react';
+import ChooseBox from '@/components/attendance/choose-box';
 import ScheduleRow from '@/components/attendance/schedule-row';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
+import StackedTable from '@/components/humetria/stacked-table';
 import {
-    Table,
     TableBody,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import type { ScheduleSelection } from '@/hooks/use-schedule-selection';
 import type {
     Paginated,
     SchedulePerson,
@@ -38,12 +40,14 @@ export default function SchedulesTable({
     searching,
     weeklyMaximum,
     canManage,
+    selection,
 }: {
     people: Paginated<SchedulePerson>;
     status: ScheduleView;
     searching: boolean;
     weeklyMaximum: WeeklyMaximum;
     canManage: boolean;
+    selection: ScheduleSelection;
 }) {
     if (people.total === 0) {
         return (
@@ -60,12 +64,21 @@ export default function SchedulesTable({
 
     return (
         <>
-            <Table>
+            <StackedTable>
                 <TableHeader>
                     <TableRow>
+                        {canManage && (
+                            <TableHead className="w-10">
+                                <ChooseBox
+                                    checked={selection.allChosen}
+                                    onChange={selection.toggleAll}
+                                    name="Elegir a todas las personas de esta página"
+                                />
+                            </TableHead>
+                        )}
                         <TableHead>Persona</TableHead>
-                        <TableHead>Centro</TableHead>
-                        <TableHead>Horario</TableHead>
+                        <TableHead>Semana acordada</TableHead>
+                        <TableHead>A la semana</TableHead>
                         <TableHead>Jornada</TableHead>
                         {canManage && (
                             <TableHead>
@@ -81,10 +94,14 @@ export default function SchedulesTable({
                             person={person}
                             weeklyMaximum={weeklyMaximum}
                             canManage={canManage}
+                            chosen={selection.isChosen(person.id)}
+                            onChoose={(checked) =>
+                                selection.toggle(person.id, checked)
+                            }
                         />
                     ))}
                 </TableBody>
-            </Table>
+            </StackedTable>
             <Pagination
                 page={people}
                 label="Páginas de personas"

@@ -96,6 +96,8 @@ final class KioskController
             'center' => $center->name,
             'qrUrl' => route('attendance.device.kiosk.qr', $tenant),
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
+            // The clock on the screen is the company's, whatever the tablet's zone.
+            'timezone' => config()->string('app.display_timezone'),
         ]);
     }
 

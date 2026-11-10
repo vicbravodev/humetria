@@ -182,6 +182,9 @@ return [
         'minutes.*' => [
             'between' => 'Un día puede tener de 0 a 12 horas.',
         ],
+        'employee_ids' => [
+            'max' => 'Elige hasta 100 personas a la vez.',
+        ],
         'shift_type' => [
             'in' => 'Elige diurna, nocturna o mixta.',
         ],

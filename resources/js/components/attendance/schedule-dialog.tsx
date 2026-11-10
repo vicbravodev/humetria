@@ -1,9 +1,17 @@
-import { useState } from 'react';
 import ScheduleDaysField from '@/components/attendance/schedule-days-field';
+import SchedulePreview from '@/components/attendance/schedule-preview';
+import ScheduleTemplates from '@/components/attendance/schedule-templates';
 import ChoiceField from '@/components/humetria/choice-field';
+import InputError from '@/components/humetria/input-error';
 import FormDialog from '@/components/humetria/form-dialog';
+import { useScheduleDraft } from '@/hooks/use-schedule-draft';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { update } from '@/routes/tenant/attendance/schedules';
+import {
+    peopleNames,
+    replacingText,
+    scheduleTemplates,
+} from '@/lib/attendance/schedule';
+import { bulk, update } from '@/routes/tenant/attendance/schedules';
 import type { SchedulePerson, WeeklyMaximum, WorkSchedule } from '@/types';
 
 const SHIFTS: { value: WorkSchedule['shiftType']; label: string }[] = [
@@ -17,39 +25,76 @@ const MODES: { value: WorkSchedule['workMode']; label: string }[] = [
     { value: 'remote', label: 'Remoto' },
 ];
 
-/** RH fixes a person's agreed schedule: their shift, where they work and the hours of each day, with the week's total. */
+/**
+ * RH fixes the agreed schedule of one person, or the same one for everyone chosen: a template to start from, their shift,
+ * where they work and the hours of each day, drawn as the week with its total. For several, it says who loses the schedule
+ * they had.
+ */
 export default function ScheduleDialog({
     open,
     onOpenChange,
-    person,
+    people,
     weeklyMaximum,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    person: SchedulePerson;
+    people: SchedulePerson[];
     weeklyMaximum: WeeklyMaximum;
 }) {
     const tenantSlug = useTenantSlug();
-    const [shift, setShift] = useState(person.schedule?.shiftType ?? 'day');
-    const [mode, setMode] = useState(person.schedule?.workMode ?? 'onsite');
+    const [only] = people;
+    const draft = useScheduleDraft(
+        people.length === 1 ? (only?.schedule ?? null) : null,
+    );
+    const replacing = replacingText(people);
+    const names = peopleNames(people.map((person) => person.name));
 
     return (
         <FormDialog
             open={open}
             onOpenChange={onOpenChange}
-            title={`Horario de ${person.name}`}
-            description="El horario que acordó con la empresa: con él se cuentan sus horas extra y sus días de descanso."
-            form={update.form({ tenant: tenantSlug, employee: person.id })}
-            submit="Guardar horario"
+            title={
+                people.length === 1
+                    ? `Horario de ${names}`
+                    : `Horario para ${people.length} personas`
+            }
+            description={
+                people.length === 1
+                    ? 'El horario que acordó con la empresa: con él se cuentan sus horas extra y sus días de descanso.'
+                    : `${names}. El mismo horario para todas: con él se cuentan sus horas extra y sus días de descanso. ${replacing ?? ''}`
+            }
+            form={
+                only !== undefined && people.length === 1
+                    ? update.form({ tenant: tenantSlug, employee: only.id })
+                    : bulk.form(tenantSlug)
+            }
+            submit={
+                people.length === 1
+                    ? 'Guardar horario'
+                    : `Guardar horario en ${people.length} personas`
+            }
         >
             {(errors) => (
                 <div className="grid gap-5">
+                    {people.length > 1 &&
+                        people.map((person) => (
+                            <input
+                                key={person.id}
+                                type="hidden"
+                                name="employee_ids[]"
+                                value={person.id}
+                            />
+                        ))}
+                    <ScheduleTemplates
+                        templates={scheduleTemplates(weeklyMaximum)}
+                        onPick={draft.apply}
+                    />
                     <ChoiceField
                         name="shift_type"
                         legend="Jornada"
                         options={SHIFTS}
-                        value={shift}
-                        onChange={setShift}
+                        value={draft.shift}
+                        onChange={draft.setShift}
                         columns={3}
                         error={errors['shift_type']}
                     />
@@ -57,17 +102,26 @@ export default function ScheduleDialog({
                         name="work_mode"
                         legend="Modalidad"
                         options={MODES}
-                        value={mode}
-                        onChange={setMode}
+                        value={draft.mode}
+                        onChange={draft.setMode}
                         columns={2}
                         error={errors['work_mode']}
                     />
                     <ScheduleDaysField
-                        initial={person.schedule?.minutes ?? null}
-                        shift={shift}
+                        hours={draft.hours}
+                        onChange={draft.setDay}
+                        minutes={draft.minutes}
+                        total={draft.total}
+                        shift={draft.shift}
                         weeklyMaximum={weeklyMaximum}
                         errors={errors}
                     />
+                    <SchedulePreview
+                        minutes={draft.minutes}
+                        total={draft.total}
+                        weeklyMaximum={weeklyMaximum}
+                    />
+                    <InputError message={errors['employee_ids']} />
                 </div>
             )}
         </FormDialog>

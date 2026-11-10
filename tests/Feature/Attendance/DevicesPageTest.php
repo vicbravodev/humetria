@@ -22,7 +22,7 @@ use Inertia\Testing\AssertableInertia;
 mutates(DeviceController::class, DevicePages::class);
 
 /** The queries of the devices page, whatever the number of people or devices. */
-const DEVICES_PAGE_QUERIES = 18;
+const DEVICES_PAGE_QUERIES = 21;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City.
@@ -74,14 +74,14 @@ describe('the list', function (): void {
             ->where('people.total', 3)
             ->where('people.per_page', 25)
             ->where('people.data.0', [
-                'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte', 'hasEmail' => true, 'status' => 'linked',
+                'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte', 'hasEmail' => true, 'status' => 'linked', 'link' => null,
                 'devices' => [
                     ['id' => $this->phone->id, 'label' => 'iPhone de Ana', 'synced' => false, 'enrolledAt' => '2026-11-02 09:00', 'lastUsedAt' => '2026-11-10 08:05', 'revokedAt' => null],
                     ['id' => $this->old->id, 'label' => 'Moto viejo', 'synced' => false, 'enrolledAt' => '2026-10-01 09:00', 'lastUsedAt' => null, 'revokedAt' => '2026-11-01 09:00'],
                 ],
             ])
             ->where('people.data.1', [
-                'id' => $this->bob->id, 'name' => 'Bob Díaz', 'jobTitle' => 'Almacenista', 'center' => 'Planta Norte', 'hasEmail' => false, 'status' => 'unlinked', 'devices' => [],
+                'id' => $this->bob->id, 'name' => 'Bob Díaz', 'jobTitle' => 'Almacenista', 'center' => 'Planta Norte', 'hasEmail' => false, 'status' => 'unlinked', 'link' => null, 'devices' => [],
             ])
             ->where('people.data.2.status', 'revoked')
             ->where('people.data.2.devices.0.synced', true));
@@ -89,6 +89,71 @@ describe('the list', function (): void {
         expect($response->getContent())->not->toContain($this->phone->credential_id)->not->toContain($this->phone->public_key)
             ->not->toContain('credential')->not->toContain('public_key')->not->toContain('publicKey')
             ->not->toContain('latitude')->not->toContain('ana@acme.test');
+    });
+
+    it('says where each person stands before their phone: no link, a link sent and when it ends, or a link that expired', function (): void {
+        $enrollment = fn (Employee $person, string $created, string $expires, array $state = []) => EnrollmentLink::query()->create([
+            'tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'token_hash' => hash('sha256', $person->id), 'issued_by' => $this->hr->id,
+            'expires_at' => CarbonImmutable::parse($expires, 'UTC'), ...$state,
+        ])->forceFill(['created_at' => CarbonImmutable::parse($created, 'UTC')])->save();
+        // Bob's was sent an hour ago and lasts until Friday 13 at 17:00 UTC; Carla's expired yesterday.
+        $enrollment($this->bob, '2026-11-11 17:00:00', '2026-11-13 17:00:00');
+        $enrollment($this->carla, '2026-11-08 17:00:00', '2026-11-10 17:00:00');
+        $this->actingAs($this->hr);
+
+        $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.link', null)
+            ->where('people.data.1.link', ['state' => 'sent', 'sentAt' => '2026-11-11 11:00', 'hoursLeft' => 47])
+            ->where('people.data.2.link', ['state' => 'expired', 'sentAt' => '2026-11-08 11:00', 'hoursLeft' => null]));
+    });
+
+    it('does not count a link already used or replaced as one waiting', function (): void {
+        foreach (['used_at', 'revoked_at'] as $column) {
+            EnrollmentLink::query()->create([
+                'tenant_id' => $this->tenant->id, 'employee_id' => $this->bob->id, 'token_hash' => hash('sha256', $column), 'issued_by' => $this->hr->id,
+                'expires_at' => now()->addDay(), $column => now(),
+            ]);
+        }
+        $this->actingAs($this->hr);
+
+        $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('people.data.1.link', null));
+    });
+
+    it('sums the road to the phone over everyone in scope, with the first names of each stage, whatever the tab or page', function (): void {
+        EnrollmentLink::query()->create([
+            'tenant_id' => $this->tenant->id, 'employee_id' => $this->bob->id, 'token_hash' => hash('sha256', 'bob'), 'issued_by' => $this->hr->id, 'expires_at' => now()->addDay(),
+        ]);
+        $this->actingAs($this->hr);
+
+        $this->get(devicesUrl(['status' => 'linked', 'q' => 'ana']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('pipeline', [
+                'none' => ['count' => 1, 'names' => ['Carla Ruiz']],
+                'sent' => ['count' => 1, 'names' => ['Bob Díaz']],
+                'linked' => ['count' => 1, 'names' => ['Ana López']],
+            ]));
+    });
+
+    it('names at most three people of a stage, and counts them all', function (): void {
+        foreach (['Dora', 'Elena', 'Fabián'] as $name) {
+            devicesPerson($this->plant, "{$name} Soto", 'Auxiliar', null);
+        }
+        $this->actingAs($this->hr);
+
+        $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('pipeline.none.count', 5)
+            ->where('pipeline.none.names', fn ($names): bool => count($names) === 3));
+    });
+
+    it('does not count another company\'s links', function (): void {
+        $globex = Tenant::factory()->create();
+        $stranger = EmployeeFactory::new()->create(['tenant_id' => $globex->id, 'work_center_id' => WorkCenter::factory()->for($globex)->create()->id]);
+        EnrollmentLink::query()->withoutGlobalScopes()->create([
+            'tenant_id' => $globex->id, 'employee_id' => $stranger->id, 'token_hash' => hash('sha256', 'x'), 'issued_by' => $this->hr->id, 'expires_at' => now()->addDay(),
+        ]);
+        workIn($this->tenant);
+        $this->actingAs($this->hr);
+
+        $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('pipeline.sent', ['count' => 0, 'names' => []]));
     });
 
     it('calls synced a key that may be backed up, even if it is not yet', function (): void {

@@ -34,6 +34,14 @@ final readonly class AttendanceController
         ));
     }
 
+    /** The road to the first mark: what each center, schedule, phone and the policy still need, and the deadline. */
+    public function setup(AttendancePages $pages): Response
+    {
+        Gate::authorize('view-attendance');
+
+        return Inertia::render('attendance/setup', $pages->setup());
+    }
+
     /**
      * A center's zones and screens. The panel's Permissions-Policy denies geolocation; this page's document allows it to its
      * own origin, for «Usar mi ubicación actual». A page opened inside the panel keeps the document it was opened from, so an

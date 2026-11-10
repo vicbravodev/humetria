@@ -1,57 +1,36 @@
 import { TriangleAlert } from 'lucide-react';
-import { useState } from 'react';
 import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { duration } from '@/lib/attendance/week-text';
 import {
     WEEKDAYS,
-    hoursText,
     minutesOf,
     overDailyLimit,
     overMaximum,
-    weekTotal,
 } from '@/lib/attendance/schedule';
 import type { WeeklyMaximum, WeekMinutes, WorkSchedule } from '@/types';
 
-/** Monday to Friday 8 h: where a new schedule starts. */
-const STARTING: WeekMinutes = {
-    1: 480,
-    2: 480,
-    3: 480,
-    4: 480,
-    5: 480,
-    6: 0,
-    7: 0,
-};
-
 /**
- * The hours of each day (0 is rest), sent as minutes, with the week's total and gentle notes above the year's maximum,
- * its overtime cap and the shift's daily limit.
+ * The hours of each day as typed (0 is rest), sent as minutes, with gentle notes above the year's maximum, its overtime cap
+ * and the shift's daily limit.
  */
 export default function ScheduleDaysField({
-    initial,
+    hours,
+    onChange,
+    minutes,
+    total,
     shift,
     weeklyMaximum,
     errors,
 }: {
-    initial: WeekMinutes | null;
+    hours: Record<string, string>;
+    onChange: (day: string, text: string) => void;
+    minutes: WeekMinutes;
+    total: number;
     shift: WorkSchedule['shiftType'];
     weeklyMaximum: WeeklyMaximum;
     errors: Partial<Record<string, string>>;
 }) {
-    const [hours, setHours] = useState<Record<string, string>>(() =>
-        Object.fromEntries(
-            WEEKDAYS.map(({ day }) => [
-                day,
-                hoursText((initial ?? STARTING)[day] ?? 0),
-            ]),
-        ),
-    );
-    const minutes = Object.fromEntries(
-        WEEKDAYS.map(({ day }) => [day, minutesOf(hours[day] ?? '') ?? 0]),
-    );
-    const total = weekTotal(minutes);
     const warnings = [
         overMaximum(total, weeklyMaximum),
         overDailyLimit(minutes, shift, weeklyMaximum),
@@ -74,10 +53,7 @@ export default function ScheduleDaysField({
                             inputMode="decimal"
                             value={hours[day] ?? ''}
                             onChange={(event) =>
-                                setHours({
-                                    ...hours,
-                                    [day]: event.target.value,
-                                })
+                                onChange(day, event.target.value)
                             }
                             aria-invalid={
                                 errors[`minutes.${day}`] === undefined
@@ -101,12 +77,6 @@ export default function ScheduleDaysField({
                     )
                 }
             />
-            <p className="text-sm">
-                <span className="font-medium tabular-nums">
-                    {duration(total)}
-                </span>{' '}
-                <span className="text-muted-foreground">a la semana</span>
-            </p>
             {warnings.map((warning) => (
                 <p
                     key={warning}

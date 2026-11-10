@@ -1,0 +1,122 @@
+[
+    {
+        "policy": {
+            "outOfZone": "block",
+            "requireQrOnsite": true,
+            "trustedMayUseBrowser": true,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "rejected",
+            "qr_inaccurate": "rejected",
+            "qr_outside": "rejected",
+            "trusted_browser": "basic"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "block",
+            "requireQrOnsite": true,
+            "trustedMayUseBrowser": false,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "rejected",
+            "qr_inaccurate": "rejected",
+            "qr_outside": "rejected",
+            "trusted_browser": "rejected"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "block",
+            "requireQrOnsite": false,
+            "trustedMayUseBrowser": true,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "medium",
+            "qr_inaccurate": "rejected",
+            "qr_outside": "rejected",
+            "trusted_browser": "basic"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "block",
+            "requireQrOnsite": false,
+            "trustedMayUseBrowser": false,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "medium",
+            "qr_inaccurate": "rejected",
+            "qr_outside": "rejected",
+            "trusted_browser": "medium"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "allow_and_flag",
+            "requireQrOnsite": true,
+            "trustedMayUseBrowser": true,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "rejected",
+            "qr_inaccurate": "medium",
+            "qr_outside": "medium",
+            "trusted_browser": "basic"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "allow_and_flag",
+            "requireQrOnsite": true,
+            "trustedMayUseBrowser": false,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "rejected",
+            "qr_inaccurate": "medium",
+            "qr_outside": "medium",
+            "trusted_browser": "rejected"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "allow_and_flag",
+            "requireQrOnsite": false,
+            "trustedMayUseBrowser": true,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "medium",
+            "qr_inaccurate": "medium",
+            "qr_outside": "medium",
+            "trusted_browser": "basic"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "allow_and_flag",
+            "requireQrOnsite": false,
+            "trustedMayUseBrowser": false,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "medium",
+            "qr_inaccurate": "medium",
+            "qr_outside": "medium",
+            "trusted_browser": "medium"
+        }
+    }
+]

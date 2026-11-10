@@ -1,62 +1,57 @@
 import { Head } from '@inertiajs/react';
-import AgreementCard from '@/components/attendance/agreement-card';
-import EnrollDone from '@/components/attendance/enroll-done';
-import EnrollForm from '@/components/attendance/enroll-form';
-import PersonFrame from '@/components/attendance/person-frame';
+import { useState } from 'react';
+import EnrollScreen from '@/components/attendance/enroll-screen';
 import { useEnrollment } from '@/hooks/use-enrollment';
+import type { EnrollStep } from '@/lib/attendance/enroll';
 import { deviceLabel } from '@/lib/attendance/webauthn';
 
-/** A person links their phone with the link RH sent them: reads and accepts the agreement, and creates a key (no account). */
+/**
+ * A person links their phone with the link RH sent them, in four steps (board P1): reads and accepts the agreement, confirms
+ * the link is theirs, creates a key (no account), and learns what follows. Anything that goes wrong says what to do (P3).
+ */
 export default function Enroll({
     company,
     name,
+    jobTitle,
+    linkHours,
+    punchUrl,
     agreement,
     optionsUrl,
     registerUrl,
 }: {
     company: string;
     name: string;
+    jobTitle: string;
+    linkHours: number;
+    punchUrl: string;
     agreement: { version: number; body: string };
     optionsUrl: string;
     registerUrl: string;
 }) {
-    const { working, done, error, enroll } = useEnrollment({
+    const [step, setStep] = useState<EnrollStep>('agreement');
+    const device = deviceLabel(navigator.userAgent);
+    const enrollment = useEnrollment({
         optionsUrl,
         registerUrl,
         agreement: agreement.version,
-        label: deviceLabel(navigator.userAgent),
+        label: device,
     });
 
     return (
-        <PersonFrame company={company}>
+        <>
             <Head title="Vincular su teléfono" />
-            <div className="flex w-full max-w-2xl flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                        Vincule su teléfono, {name}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        {company} registra su jornada de forma electrónica. Lea
-                        el acuerdo y, si está de acuerdo, acéptelo para marcar
-                        su entrada y su salida con este teléfono.
-                    </p>
-                </div>
-                {done ? (
-                    <EnrollDone />
-                ) : (
-                    <>
-                        <AgreementCard
-                            version={agreement.version}
-                            body={agreement.body}
-                        />
-                        <EnrollForm
-                            working={working}
-                            error={error}
-                            onEnroll={() => void enroll()}
-                        />
-                    </>
-                )}
-            </div>
-        </PersonFrame>
+            <EnrollScreen
+                step={step}
+                setStep={setStep}
+                company={company}
+                name={name}
+                jobTitle={jobTitle}
+                linkHours={linkHours}
+                punchUrl={punchUrl}
+                agreement={agreement}
+                enrollment={enrollment}
+                device={device}
+            />
+        </>
     );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
-import { enrollDevice, enrollMessage } from '@/lib/attendance/enroll';
-import type { EnrollRequest } from '@/lib/attendance/enroll';
+import { enrollDevice } from '@/lib/attendance/enroll';
+import type { EnrollOutcome, EnrollRequest } from '@/lib/attendance/enroll';
 import type { CreatedKey } from '@/lib/attendance/webauthn';
 
 /** `navigator.credentials.create()` for a new key; null when the browser gave something else. */
@@ -22,7 +22,7 @@ async function createKey(
         : null;
 }
 
-/** Links this device: working while the phone and the server answer, then done or an error to show. */
+/** Links this device: working while the phone and the server answer, then done or how it failed (to say what to do). */
 export function useEnrollment(
     request: Omit<EnrollRequest, 'label'> & {
         label: string;
@@ -30,17 +30,20 @@ export function useEnrollment(
 ) {
     const [working, setWorking] = useState(false);
     const [done, setDone] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [failure, setFailure] = useState<Exclude<
+        EnrollOutcome,
+        'done'
+    > | null>(null);
 
     const enroll = async () => {
         if (!('PublicKeyCredential' in window)) {
-            setError(enrollMessage('unsupported'));
+            setFailure('unsupported');
 
             return;
         }
 
         setWorking(true);
-        setError(null);
+        setFailure(null);
         const outcome = await enrollDevice(request, {
             fetcher: fetch.bind(window),
             createKey,
@@ -51,9 +54,14 @@ export function useEnrollment(
         if (outcome === 'done') {
             setDone(true);
         } else {
-            setError(enrollMessage(outcome));
+            setFailure(outcome);
         }
     };
 
-    return { working, done, error, enroll };
+    return {
+        working,
+        done,
+        failure,
+        enroll,
+    };
 }

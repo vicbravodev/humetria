@@ -1,7 +1,9 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import CorrectionsTable from '@/components/attendance/corrections-table';
+import CorrectionDetail from '@/components/attendance/correction-detail';
+import CorrectionList from '@/components/attendance/correction-list';
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
+import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import SearchField from '@/components/humetria/search-field';
 import { useCorrectionFilters } from '@/hooks/use-correction-filters';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -9,6 +11,7 @@ import { correctionsQuery } from '@/lib/attendance/corrections';
 import { index } from '@/routes/tenant/attendance/corrections';
 import type {
     CorrectionCounts,
+    CorrectionDetail as Detail,
     CorrectionRow,
     CorrectionStatus,
     Paginated,
@@ -20,18 +23,25 @@ const TABS: { status: CorrectionStatus; label: string }[] = [
     { status: 'rejected', label: 'Rechazadas' },
 ];
 
-/** RH's queue of the people's requests to correct their record (criterio 5.4): what they ask, why, and since when. */
+/**
+ * RH's queue of the people's requests to correct their record (criterio 5.4): the list at the left and, at its right, the
+ * one in view with its day and what approving it would do, to decide it there.
+ */
 export default function Corrections({
     requests,
     status,
     filters,
     counts,
+    selectedId,
+    detail,
     canResolve,
 }: {
     requests: Paginated<CorrectionRow>;
     status: CorrectionStatus;
     filters: { q: string };
     counts: CorrectionCounts;
+    selectedId: string | null;
+    detail: Detail | null;
     canResolve: boolean;
 }) {
     const tenantSlug = useTenantSlug();
@@ -52,8 +62,9 @@ export default function Corrections({
             <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Correcciones"
-                    description="Lo que las personas piden corregir de su registro. Al aprobar, se agrega una marca corregida y la original se conserva."
+                    description="Cada una agrega una marca nueva. La original se conserva y las dos se ven en el reporte."
                 />
+                {!canResolve && <ReadOnlyNotice />}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <CountTabs
                         label="Estado de las solicitudes"
@@ -76,12 +87,24 @@ export default function Corrections({
                         className="w-full sm:max-w-[320px]"
                     />
                 </div>
-                <CorrectionsTable
-                    requests={requests}
-                    status={status}
-                    searching={filters.q !== ''}
-                    canResolve={canResolve}
-                />
+                <div className="grid items-start gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
+                    <CorrectionList
+                        counts={counts}
+                        requests={requests}
+                        selectedId={selectedId}
+                        status={status}
+                        q={filters.q}
+                    />
+                    {detail !== null && (
+                        <CorrectionDetail
+                            detail={detail}
+                            canResolve={canResolve}
+                            pending={counts.pending}
+                            status={status}
+                            q={filters.q}
+                        />
+                    )}
+                </div>
             </div>
         </>
     );

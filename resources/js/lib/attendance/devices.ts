@@ -65,3 +65,90 @@ const STATUSES: Record<
 export function deviceStatus(status: DevicePerson['status']) {
     return STATUSES[status];
 }
+
+/** One step of the road to the phone: done, the one waiting, or not reached. */
+export type StepState = 'done' | 'current' | 'todo';
+
+/**
+ * Where a person is on the road «Enlace → Acuerdo → Llave»: the agreement and the key are given in the same sitting, on the
+ * phone, so a link sent puts them at the agreement and the phone linked finishes all three. The caption says it in a line.
+ */
+export function linkProgress(
+    person: Pick<DevicePerson, 'status' | 'link' | 'devices'>,
+): { steps: [StepState, StepState, StepState]; caption: string } {
+    const { link } = person;
+
+    if (person.status === 'linked') {
+        const newest = person.devices.find(
+            (device) => device.revokedAt === null,
+        );
+
+        return {
+            steps: ['done', 'done', 'done'],
+            caption: `Vinculada el ${shortMoment(newest?.enrolledAt ?? '')}`,
+        };
+    }
+
+    if (link?.state === 'sent') {
+        return {
+            steps: ['done', 'current', 'todo'],
+            caption: `Enviado el ${shortMoment(link.sentAt)} · vence en ${link.hoursLeft} h`,
+        };
+    }
+
+    if (link !== null) {
+        return {
+            steps: ['current', 'todo', 'todo'],
+            caption: `El enlace del ${shortMoment(link.sentAt)} ya no abre`,
+        };
+    }
+
+    return {
+        steps: ['todo', 'todo', 'todo'],
+        caption:
+            person.status === 'revoked'
+                ? 'Su teléfono se revocó: necesita un enlace nuevo'
+                : 'Aún no se le envía el enlace',
+    };
+}
+
+/** What to do about a person who has no phone yet, or null when they have one. */
+export function nextForPerson(
+    person: Pick<DevicePerson, 'status' | 'link' | 'hasEmail'>,
+): string | null {
+    if (person.status === 'linked') {
+        return null;
+    }
+
+    if (person.link?.state === 'sent') {
+        return 'Esperando que abra el enlace.';
+    }
+
+    if (person.link !== null) {
+        return 'El enlace ya no abre: envía uno nuevo.';
+    }
+
+    return person.hasEmail
+        ? 'Tiene correo registrado: se le puede enviar.'
+        : 'Sin correo no podemos enviarle el enlace: crea el suyo y entrégaselo.';
+}
+
+/** «Bob, Carla y Elena»: the first names of a stage, and how many more there are beyond those named. */
+export function stageNames(stage: { count: number; names: string[] }): string {
+    if (stage.count === 0) {
+        return 'Nadie';
+    }
+
+    const first = stage.names.map((name) => name.split(' ')[0] ?? name);
+    const more = stage.count - first.length;
+    const last = more > 0 ? `${more} más` : first.pop();
+
+    return first.length === 0
+        ? (last ?? '')
+        : `${first.join(', ')} y ${last ?? ''}`;
+}
+
+/** What revoking a phone does (board A8): it loses its key at once, the marks stay and the person links one again. */
+export function revokeDeviceText(owner: string, label: string): string {
+    return `Con «${label}» ${owner} dejará de poder marcar de inmediato. Las marcas que ya hizo se conservan. Para volver a marcar tendrá que vincular un teléfono otra vez: envíale un enlace de alta nuevo.`;
+}

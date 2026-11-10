@@ -1,3 +1,4 @@
+import type { Problem } from '@/lib/attendance/punch-problem';
 import type { CreatedKey } from '@/lib/attendance/webauthn';
 import {
     creationOptions,
@@ -148,4 +149,85 @@ export function agreementSections(
                   text: paragraph.slice(end + 2),
               };
     });
+}
+
+/** Where the person is on the way to linking their phone (board P1): the agreement, who they are, the key, done; or off the way. */
+export type EnrollStep =
+    | 'agreement'
+    | 'confirm'
+    | 'key'
+    | 'done'
+    | 'not-you'
+    | 'later';
+
+const WAY: readonly EnrollStep[] = ['agreement', 'confirm', 'key', 'done'];
+
+/** «Paso 2 de 4» and the bar for it; null once the person left the way (said it is not them, or not now). */
+export function stepProgress(
+    step: EnrollStep,
+): { label: string; value: number; max: number } | null {
+    const at = WAY.indexOf(step) + 1;
+
+    return at === 0
+        ? null
+        : { label: `Paso ${at} de ${WAY.length}`, value: at, max: WAY.length };
+}
+
+/** The agreement in three lines, before the full text: what is kept and when, and what the person can see. */
+export const AGREEMENT_POINTS = [
+    'Se guardan la hora y el lugar solo en el momento de marcar.',
+    'No se sigue su ubicación en ningún otro momento.',
+    'Usted puede ver todas sus marcas en «Mi semana».',
+] as const;
+
+/**
+ * What the screen says when linking did not end well (board P3): what happened and what to do, blaming nobody. `linkHours`
+ * is how long a link works.
+ */
+export function enrollProblem(
+    outcome: Exclude<EnrollOutcome, 'done'>,
+    linkHours: number,
+): Problem {
+    switch (outcome) {
+        case 'cancelled':
+            return {
+                kind: 'verify',
+                tone: 'warning',
+                title: 'No se creó la llave',
+                text: 'Vuelva a intentarlo y confirme con su huella, su rostro o su PIN.',
+                actions: [{ kind: 'retry', label: 'Intentar de nuevo' }],
+            };
+        case 'gone':
+            return {
+                kind: 'device',
+                tone: 'blocked',
+                title: 'Este enlace ya no sirve',
+                text: `Venció después de ${linkHours} horas o ya se usó. No pasó nada con sus datos. Pida a Recursos Humanos un enlace nuevo, por correo o en persona.`,
+                actions: [{ kind: 'copy-hr', label: 'Copiar mensaje para RH' }],
+            };
+        case 'outdated':
+            return {
+                kind: 'generic',
+                tone: 'warning',
+                title: 'El acuerdo cambió',
+                text: 'Recargue la página para leer la versión nueva.',
+                actions: [{ kind: 'reload', label: 'Recargar la página' }],
+            };
+        case 'unsupported':
+            return {
+                kind: 'browser',
+                tone: 'warning',
+                title: 'Este navegador no puede crear llaves',
+                text: 'Abra el enlace en el navegador de su teléfono.',
+                actions: [],
+            };
+        default:
+            return {
+                kind: 'generic',
+                tone: 'blocked',
+                title: 'No se pudo vincular su teléfono',
+                text: 'Revise su conexión e inténtelo de nuevo.',
+                actions: [{ kind: 'retry', label: 'Intentar de nuevo' }],
+            };
+    }
 }

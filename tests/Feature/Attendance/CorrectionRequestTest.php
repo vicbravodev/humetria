@@ -338,7 +338,7 @@ describe('in Mi semana', function (): void {
         $correction = AttendanceMark::factory()->correcting($this->start)->create(['marked_at' => CarbonImmutable::parse('2026-11-10 09:00', 'America/Mexico_City')->utc(), 'reason' => 'El QR no cargaba.']);
 
         weekReadBy($this->phone, $this->ana->id, '2026-11-09')->assertOk()
-            ->assertJsonPath('days.1.marks.0', ['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'nextDay' => false, 'corrected' => true, 'reason' => 'El QR no cargaba.']);
+            ->assertJsonPath('days.1.marks.0', ['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'nextDay' => false, 'corrected' => true, 'reason' => 'El QR no cargaba.', 'evidence' => 'corrected']);
     });
 });
 

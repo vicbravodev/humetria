@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Actions\SaveSchedules;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Http\Controllers\ScheduleController;
+use App\Modules\Attendance\Http\Requests\BulkScheduleRequest;
 use App\Modules\Attendance\Http\Requests\ScheduleRequest;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Support\SchedulePages;
@@ -13,9 +15,10 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia;
 
-mutates(ScheduleController::class, ScheduleRequest::class, SchedulePages::class);
+mutates(ScheduleController::class, ScheduleRequest::class, BulkScheduleRequest::class, SchedulePages::class, SaveSchedules::class);
 
 /** The queries of the schedules page, whatever the number of people or schedules. */
 const SCHEDULES_PAGE_QUERIES = 18;
@@ -169,6 +172,90 @@ describe('saving a schedule', function (): void {
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
 
         saveSchedule($this->bob->id, scheduleInput())->assertForbidden();
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse();
+    });
+});
+
+/** The same schedule for several people, as the form sends it. */
+function saveSchedules(array $employeeIds, array $input = []): Illuminate\Testing\TestResponse
+{
+    return test()->from(schedulesUrl())->put(route('tenant.attendance.schedules.bulk', 'acme'), ['employee_ids' => $employeeIds, ...scheduleInput(), ...$input]);
+}
+
+describe('saving the same schedule for several people', function (): void {
+    it('gives each of them the one schedule, replacing the one they had, and tells RH how many', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->ana->id, $this->bob->id], scheduleInput(['shift_type' => 'mixed', 'work_mode' => 'remote', 'minutes' => array_replace(scheduleInput()['minutes'], ['6' => '240'])]))
+            ->assertRedirect(schedulesUrl())
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Horario guardado para 2 personas.']);
+
+        foreach ([$this->ana, $this->bob] as $person) {
+            expect(AttendanceSchedule::query()->where('employee_id', $person->id)->sole())
+                ->shift_type->toBe(ShiftType::Mixed)->work_mode->toBe(WorkMode::Remote)
+                ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 240, 7 => 0]);
+        }
+        // Carla was not chosen: hers stays.
+        expect(AttendanceSchedule::query()->where('employee_id', $this->carla->id)->sole())->shift_type->toBe(ShiftType::Night);
+    });
+
+    it('says «de la persona» for one', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->bob->id])->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Horario de Bob Díaz guardado.']);
+    });
+
+    it('writes a line of the log for each of them, with their ids and no schedule', function (): void {
+        Log::spy();
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->ana->id, $this->bob->id]);
+
+        Log::shouldHaveReceived('info')->with('attendance.schedule_saved', Mockery::on(fn (array $context): bool => $context['employee_id'] === $this->bob->id && ! array_key_exists('minutes', $context)))->once();
+        Log::shouldHaveReceived('info')->with('attendance.schedule_saved', Mockery::on(fn (array $context): bool => $context['employee_id'] === $this->ana->id))->once();
+    });
+
+    it('saves nobody when one of them is of another company or unknown: the same 404', function (): void {
+        $foreign = EmployeeFactory::new()->create();
+        workIn($this->tenant);
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->bob->id, $foreign->id])->assertNotFound();
+        saveSchedules([$this->bob->id, '0b8a3a4e-0000-4000-8000-000000000000'])->assertNotFound();
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse()
+            ->and(AttendanceSchedule::query()->withoutGlobalScopes()->where('employee_id', $foreign->id)->exists())->toBeFalse();
+    });
+
+    it('takes the exact limits of the group: one person and a hundred', function (): void {
+        $this->actingAs($this->hr);
+        $crowd = EmployeeFactory::new()->count(100)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id])->pluck('id')->all();
+
+        saveSchedules($crowd)->assertSessionHasNoErrors();
+        expect(AttendanceSchedule::query()->whereIn('employee_id', $crowd)->count())->toBe(100);
+        saveSchedules([...$crowd, $this->bob->id])->assertSessionHasErrors(['employee_ids' => 'Elige hasta 100 personas a la vez.']);
+    });
+
+    it('is checked in Spanish', function (array $ids, string $field, string $message): void {
+        $this->actingAs($this->hr);
+
+        saveSchedules($ids === ['bob', 'bob'] ? [$this->bob->id, $this->bob->id] : $ids)->assertSessionHasErrors([$field => $message]);
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse();
+    })->with([
+        'nobody' => [[], 'employee_ids', 'El campo personas es obligatorio.'],
+        'the same person twice' => [['bob', 'bob'], 'employee_ids.0', 'El campo persona tiene un valor duplicado.'],
+        'something that is not an id' => [['bob'], 'employee_ids.0', 'El campo persona debe ser un UUID válido.'],
+    ]);
+
+    it('is checked like a single schedule', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->bob->id], ['minutes' => array_replace(scheduleInput()['minutes'], ['3' => '721'])])->assertSessionHasErrors(['minutes.3' => 'Un día puede tener de 0 a 12 horas.']);
+    });
+
+    it('cannot be done by a viewer', function (): void {
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+
+        saveSchedules([$this->bob->id])->assertForbidden();
         expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse();
     });
 });

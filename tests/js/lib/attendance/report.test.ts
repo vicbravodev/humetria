@@ -3,7 +3,9 @@ import {
     confirmationBadge,
     dayHours,
     endText,
+    evidenceDots,
     reportQuery,
+    shortenedPeriod,
     summaryHint,
 } from '@/lib/attendance/report';
 import type { ReportDay } from '@/types';
@@ -39,6 +41,24 @@ describe('reportQuery', () => {
         expect(
             reportQuery({ center: '', from: '', to: '', q: ' Ana ' }),
         ).toEqual({ q: 'Ana' });
+    });
+});
+
+describe('reportQuery with a filter', () => {
+    it('sends which people to list only when it is not «all»', () => {
+        const base = { center: 'c-1', from: '', to: '', q: '' };
+
+        expect(reportQuery({ ...base, show: 'flagged' })).toEqual({
+            center: 'c-1',
+            show: 'flagged',
+        });
+        expect(reportQuery({ ...base, show: 'unconfirmed' })).toEqual({
+            center: 'c-1',
+            show: 'unconfirmed',
+        });
+        expect(reportQuery({ ...base, show: 'all' })).toEqual({
+            center: 'c-1',
+        });
     });
 });
 
@@ -94,5 +114,23 @@ describe('summaryHint', () => {
     it('counts the people and their days', () => {
         expect(summaryHint(1, 1)).toBe('1 persona · 1 día');
         expect(summaryHint(3, 12)).toBe('3 personas · 12 días');
+    });
+});
+
+describe('evidenceDots', () => {
+    it('gives a strong mark three dots, a medium one two and the rest one', () => {
+        expect(evidenceDots('Fuerte')).toBe(3);
+        expect(evidenceDots('Media')).toBe(2);
+        expect(evidenceDots('Básica')).toBe(1);
+        expect(evidenceDots('Corregida')).toBe(1);
+        expect(evidenceDots('otra')).toBe(1);
+    });
+});
+
+describe('shortenedPeriod', () => {
+    it('keeps the first day and ends so that the period has the days the screen shows', () => {
+        expect(shortenedPeriod('2026-08-01', 93)).toBe('2026-11-01');
+        expect(shortenedPeriod('2026-08-01', 1)).toBe('2026-08-01');
+        expect(shortenedPeriod('2027-12-20', 14)).toBe('2028-01-02');
     });
 });

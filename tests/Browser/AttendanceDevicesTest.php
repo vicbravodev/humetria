@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
@@ -45,6 +46,28 @@ it('shows RH each person with their devices and the kind of key', function (bool
     'dark, phone' => [true, true],
 ]);
 
+it('shows RH the road to the phone: who has no link, who was sent one and who already has a phone', function (): void {
+    $url = devicesPanel();
+
+    visit("{$url}/attendance/devices")
+        ->assertSee('Avance del alta')
+        ->assertSee('Sin enlace')
+        ->assertSee('Bob')
+        ->assertSee('Con teléfono')
+        ->assertSee('Aún no se le envía el enlace')
+        ->assertSee('Sin correo no podemos enviarle el enlace: crea el suyo y entrégaselo.')
+        ->assertSee('Vinculada el')
+        ->click('Crear enlace de alta')
+        ->click('Crear enlace')
+        ->waitForText('Enlace de alta de Bob Díaz')
+        ->assertSee('Enviado el')
+        ->assertSee('vence en 48 h')
+        ->assertSee('Esperando que abra el enlace.')
+        ->assertScript('() => document.querySelector("section[aria-labelledby=\'device-pipeline\']").textContent.includes("Enlace enviado")', true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('gives RH the link of a person without email once, to hand over', function (): void {
     $url = devicesPanel();
 
@@ -66,6 +89,8 @@ it('lets RH revoke a lost phone after asking', function (): void {
     visit("{$url}/attendance/devices")
         ->click('Revocar')
         ->assertSee('¿Revocar «iPhone de Ana»?')
+        ->assertSee('Las marcas que ya hizo se conservan')
+        ->assertSee('Para volver a marcar tendrá que vincular un teléfono otra vez')
         ->click('Revocar dispositivo')
         ->waitForText('Dispositivo revocado')
         ->assertScript(deviceChipOf('Ana López'), 'Revocado')
@@ -86,4 +111,15 @@ it('sends their link to everyone of a center without a device, leaving who has n
         ->waitForText('Enviamos 1 enlace de alta. 1 persona no tiene correo')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('tells a viewer the devices are theirs to see and not to change', function (): void {
+    $url = devicesPanel();
+    $this->actingAs(memberOf(Tenant::query()->where('slug', 'acme')->sole(), TenantRole::Viewer));
+
+    visitPage('attendance/devices', "{$url}/attendance/devices")
+        ->assertSee('Ana López')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
+        ->assertDontSee('Revocar');
 });

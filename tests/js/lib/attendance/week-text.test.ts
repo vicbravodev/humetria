@@ -14,6 +14,7 @@ const day: WeekDay = {
     marks: [],
     workedMinutes: 480,
     scheduledMinutes: 480,
+    overtimeMinutes: 0,
     restDay: false,
     missingEnd: false,
 };

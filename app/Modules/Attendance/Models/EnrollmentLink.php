@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Table('attendance_enrollment_links')]
 final class EnrollmentLink extends Model
 {
-    use BelongsToCurrentTenant, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasVersion4Uuids, MatchesManyIds;
 
     public static function hashToken(string $token): string
     {
@@ -42,6 +43,19 @@ final class EnrollmentLink extends Model
     {
         return self::query()->where('token_hash', self::hashToken($token))->whereNull('used_at')->whereNull('revoked_at')
             ->where('expires_at', '>', CarbonImmutable::now())->first();
+    }
+
+    /**
+     * Of these people, the ones with a link that still opens (the same rule as findPending).
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<int, string>
+     */
+    public static function openAmong(array $employeeIds): array
+    {
+        return self::query()->among('employee_id', $employeeIds)->whereNull('used_at')->whereNull('revoked_at')
+            ->where('expires_at', '>', CarbonImmutable::now())->get(['employee_id'])
+            ->map(fn (self $link): string => $link->employee_id)->all();
     }
 
     /**

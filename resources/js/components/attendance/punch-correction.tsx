@@ -1,30 +1,27 @@
-import { useState } from 'react';
 import CorrectionForm from '@/components/attendance/correction-form';
 import PunchFeedback from '@/components/attendance/punch-feedback';
-import { Button } from '@/components/ui/button';
 import { usePunchCorrection } from '@/hooks/use-punch-correction';
-import { clockNow } from '@/lib/attendance/correction';
 
-/** When a mark was refused: the person asks RH to add it, at the time on their clock, and is told it arrived. */
+/**
+ * When a mark was refused: the person asks RH to add it, at the time on their clock (read when they open the form: the time
+ * of the mark refused), and is told it arrived. Open while `asking` has the date and time to propose.
+ */
 export default function PunchCorrection({
     optionsUrl,
     url,
-    timezone,
+    asking,
+    onClose,
 }: {
     optionsUrl: string;
     url: string;
-    /** The company's time zone: the time asked is read on its clock. */
-    timezone: string;
+    asking: { date: string; time: string } | null;
+    onClose: () => void;
 }) {
-    // The clock is read when the person opens the form: the time of the mark refused.
-    const [asking, setAsking] = useState<{ date: string; time: string } | null>(
-        null,
-    );
     const { working, feedback, ask } = usePunchCorrection({ optionsUrl, url });
 
     return (
         <>
-            {asking !== null ? (
+            {asking !== null && (
                 <CorrectionForm
                     title="Pedir a Recursos Humanos que agregue su marca"
                     markId={null}
@@ -33,20 +30,10 @@ export default function PunchCorrection({
                     time={asking.time}
                     working={working}
                     onSend={(draft) =>
-                        void ask(draft).then((sent) => sent && setAsking(null))
+                        void ask(draft).then((sent) => sent && onClose())
                     }
-                    onCancel={() => setAsking(null)}
+                    onCancel={onClose}
                 />
-            ) : (
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    className="text-base"
-                    onClick={() => setAsking(clockNow(new Date(), timezone))}
-                >
-                    Pedir corrección a Recursos Humanos
-                </Button>
             )}
             <PunchFeedback feedback={feedback} />
         </>

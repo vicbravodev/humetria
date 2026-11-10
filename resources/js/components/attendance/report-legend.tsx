@@ -1,4 +1,18 @@
+import ReportEvidence from '@/components/attendance/report-evidence';
 import type { AttendanceReportProps } from '@/types';
+
+const EVIDENCE = [
+    { level: 'Fuerte', text: 'Marcó con el QR y estaba dentro de una zona.' },
+    { level: 'Media', text: 'Solo cumplió una de las dos pruebas.' },
+    {
+        level: 'Básica',
+        text: 'Marcó en remoto o desde un navegador de confianza.',
+    },
+    {
+        level: 'Corregida',
+        text: 'RH o la persona la corrigió; la original se conserva.',
+    },
+];
 
 /** How to read the report: what it holds, how its hours are split and what is left out. */
 export default function ReportLegend({
@@ -16,7 +30,20 @@ export default function ReportLegend({
             >
                 Cómo leer este reporte
             </h2>
-            <ul className="flex list-disc flex-col gap-2 pl-5 text-pretty">
+            <p className="text-foreground">
+                La evidencia de un día es la de su marca más débil:
+            </p>
+            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {EVIDENCE.map(({ level, text }) => (
+                    <div key={level} className="flex flex-col gap-1.5">
+                        <dt className="font-semibold text-foreground">
+                            <ReportEvidence level={level} />
+                        </dt>
+                        <dd>{text}</dd>
+                    </div>
+                ))}
+            </dl>
+            <ul className="flex list-disc flex-col gap-2 border-t pt-4 pl-5 text-pretty">
                 <li>
                     Las horas son de la Ciudad de México (America/Mexico_City).
                     Un día es de la fecha de su inicio y del centro donde
@@ -34,11 +61,6 @@ export default function ReportLegend({
                     doble y lo que lo rebasa, triple: el tope se llena con el
                     extra más temprano de la semana, día por día, desde el
                     lunes, aunque el periodo empiece después.
-                </li>
-                <li>
-                    La evidencia de un día es la más débil de sus marcas: Fuerte
-                    (QR y ubicación), Media (solo uno de los dos), Básica
-                    (remoto o navegador de confianza) o Corregida.
                 </li>
                 <li>
                     Las marcas no se editan ni se borran: este reporte es una

@@ -1,6 +1,7 @@
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import ZoneDialog from '@/components/attendance/zone-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { placeText, radiusText } from '@/lib/attendance/zone';
@@ -11,10 +12,12 @@ export default function ZoneRow({
     zone,
     centerId,
     canManage,
+    tolerance,
 }: {
     zone: AttendanceZone;
     centerId: string;
     canManage: boolean;
+    tolerance: number;
 }) {
     const [open, setOpen] = useState(false);
 
@@ -22,7 +25,17 @@ export default function ZoneRow({
         <TableRow>
             <TableCell className="font-medium">{zone.name}</TableCell>
             <TableCell className="tabular-nums">
-                {radiusText(zone.radius)}
+                <span className="flex flex-wrap items-center gap-2">
+                    {radiusText(zone.radius)}
+                    {zone.radius < tolerance && (
+                        <Badge
+                            variant="warning"
+                            title={`Es menor que la precisión que aceptas (${radiusText(tolerance)}): una marca con señal débil podría parecer dentro sin estarlo.`}
+                        >
+                            Menor que la precisión
+                        </Badge>
+                    )}
+                </span>
             </TableCell>
             {canManage && (
                 <>

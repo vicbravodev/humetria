@@ -34,7 +34,14 @@ final class ReportRequest extends FormRequest
             'center' => [$export ? 'required' : 'nullable', 'string'],
             'from' => [$export ? 'required' : 'required_with:to', 'date_format:Y-m-d'],
             'to' => [$export ? 'required' : 'required_with:from', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'show' => ['nullable', 'string', 'in:all,flagged,unconfirmed'],
         ];
+    }
+
+    /** Which people the page lists: all, those with a day flagged, or those with a week no one answered. */
+    public function show(): string
+    {
+        return $this->string('show', 'all')->toString();
     }
 
     /** Whether the period was asked for: without it the page shows the last week that ended. */
@@ -67,6 +74,7 @@ final class ReportRequest extends FormRequest
             'from.date_format' => 'Escribe una fecha inicial válida.',
             'to.date_format' => 'Escribe una fecha final válida.',
             'to.after_or_equal' => 'La fecha final no puede ser anterior a la inicial.',
+            'show.in' => 'Elige Todas, Con avisos o Sin confirmar.',
         ];
     }
 

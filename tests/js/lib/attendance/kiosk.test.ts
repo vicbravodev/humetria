@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
     fetchKioskCode,
+    kioskView,
     parseKioskCode,
     refreshDelay,
     retryDelay,
+    secondsLeft,
 } from '@/lib/attendance/kiosk';
 
 describe('refreshDelay', () => {
@@ -67,6 +69,22 @@ describe('fetchKioskCode', () => {
             ? Promise.reject(response)
             : Promise.resolve(response);
 
+    it('gives null when the server never answers, so a hung request cannot keep an old code on the wall', async () => {
+        const never = () => new Promise<Response>(() => undefined);
+
+        expect(await fetchKioskCode('/a/acme/qr', never, 20)).toBeNull();
+    });
+
+    it('still reads a good answer that comes before the wait ends', async () => {
+        expect(
+            await fetchKioskCode(
+                '/a/acme/qr',
+                () => Promise.resolve(Response.json(code)),
+                1_000,
+            ),
+        ).toEqual(code);
+    });
+
     it('reads the code of a good answer, asking as JSON with the cookie and no cache', async () => {
         const calls: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
         const fetcher = (input: RequestInfo | URL, init?: RequestInit) => {
@@ -116,5 +134,39 @@ describe('fetchKioskCode', () => {
         expect(
             await fetchKioskCode('/qr', answering(Response.json({ url: 1 }))),
         ).toBeNull();
+    });
+});
+
+describe('kioskView', () => {
+    const code = {
+        url: 'https://humetria.test/a/acme/punch?q=abc',
+        qr: 'data:image/svg+xml;base64,PHN2Zz4=',
+        expiresIn: 20,
+    };
+
+    it('shows the code only while the screen reaches the server', () => {
+        expect(kioskView(code, true)).toBe('code');
+    });
+
+    it('never shows a code without connection, even one it still holds (a stale code must not be scanned)', () => {
+        expect(kioskView(code, false)).toBe('offline');
+        expect(kioskView(null, false)).toBe('offline');
+    });
+
+    it('says it is preparing the first code while connected and without one', () => {
+        expect(kioskView(null, true)).toBe('preparing');
+    });
+});
+
+describe('secondsLeft', () => {
+    it('counts the whole seconds until the code turns, rounding up so it never shows 0 before it turns', () => {
+        expect(secondsLeft(30_000, 0)).toBe(30);
+        expect(secondsLeft(30_000, 12_100)).toBe(18);
+        expect(secondsLeft(30_000, 29_999)).toBe(1);
+    });
+
+    it('stops at zero once the time passed', () => {
+        expect(secondsLeft(30_000, 30_000)).toBe(0);
+        expect(secondsLeft(30_000, 45_000)).toBe(0);
     });
 });

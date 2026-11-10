@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\WeekStatus;
@@ -35,7 +36,7 @@ final readonly class AttendancePages
     /** The tabs of the list: every person, each answer, and the weeks at risk. */
     private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk'];
 
-    public function __construct(private Roster $roster, private WorkCenters $workCenters) {}
+    public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup) {}
 
     /**
      * @return array<string, mixed>
@@ -47,7 +48,7 @@ final readonly class AttendancePages
         $names = $panel->names;
         $people = $panel->people;
         $scope = $center === null ? array_keys($names) : [$center->id];
-        $summaries = TeamWeek::summaries($people, $period);
+        [$summaries, $worked] = TeamWeek::withDays($people, $period);
         $answers = WeeklyConfirmation::query()->among('employee_id', $people)->where('week_start', $period->start()->toDateString())
             ->toBase()->pluck('status', 'employee_id')->all();
         $states = [];
@@ -98,10 +99,43 @@ final readonly class AttendancePages
                 'status' => $states[$person->id] ?? WeekStatus::Pending->value,
                 'atRisk' => in_array($person->id, $atRisk, true),
                 'hasSchedule' => isset($scheduled[$person->id]),
+                'days' => $this->ribbon($worked[$person->id] ?? [], $summaries[$person->id]->overtimeByDay ?? [], $period),
             ]),
             'centers' => $this->centers($panel->byCenter, $zones),
+            'setup' => $this->setup->of($names, $panel->byCenter),
+            'hours' => [
+                'ordinaryMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->ordinaryMinutes, $summaries)),
+                'overtimeMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->overtimeMinutes, $summaries)),
+            ],
             'canManage' => Gate::allows('manage-attendance'),
         ];
+    }
+
+    /**
+     * The road to the first mark of the whole company, whatever center the overview is narrowed to.
+     *
+     * @return array<string, mixed>
+     */
+    public function setup(): array
+    {
+        $panel = PanelScope::of($this->workCenters, $this->roster, null);
+
+        return ['setup' => $this->setup->of($panel->names, $panel->byCenter), 'canManage' => Gate::allows('manage-attendance')];
+    }
+
+    /**
+     * The seven days of a person's week for the ribbon: the minutes worked and, of them, the overtime.
+     *
+     * @param  list<int>  $worked  minutes worked each day, Monday to Sunday
+     * @param  array<string, int>  $overtimeByDay  overtime minutes by date (Y-m-d)
+     * @return list<array{worked: int, overtime: int}>
+     */
+    private function ribbon(array $worked, array $overtimeByDay, WeekPeriod $period): array
+    {
+        return array_map(fn (int $offset): array => [
+            'worked' => $worked[$offset] ?? 0,
+            'overtime' => $overtimeByDay[$period->start()->addDays($offset)->toDateString()] ?? 0,
+        ], range(0, 6));
     }
 
     /**
@@ -113,10 +147,14 @@ final readonly class AttendancePages
     public function center(WorkCenterSummary $center): array
     {
         $manage = Gate::allows('manage-attendance');
+        $policy = CompanyPolicy::current();
 
         return [
             'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
+            'requiresQr' => $policy->require_qr_onsite,
+            'tolerance' => $policy->max_accuracy_m,
+            'screens' => KioskDevice::query()->where('work_center_id', $center->id)->whereNotNull('last_seen_at')->whereNull('revoked_at')->count(),
             'people' => count($this->roster->activeIdsIn($center->id)),
             'zones' => AttendanceZone::query()->where('work_center_id', $center->id)->orderBy('name')->orderBy('id')
                 ->paginate(self::PER_PAGE, pageName: 'zones')->withQueryString()

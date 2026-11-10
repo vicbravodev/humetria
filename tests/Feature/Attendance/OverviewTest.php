@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(AttendanceController::class, AttendancePages::class, PanelScope::class);
 
-/** The queries of the overview, whatever the number of people, centers or marks (26: the page's schedules, for «Sin horario»). */
-const OVERVIEW_QUERIES = 26;
+/** The queries of the overview, whatever the number of people, centers or marks (34: the page's schedules, for «Sin horario», and the road to the first mark). */
+const OVERVIEW_QUERIES = 34;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City: the last week that ended is 2 to 8 November.
@@ -91,16 +91,19 @@ describe('the summary', function (): void {
             ->where('people.data.0', [
                 'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte',
                 'ordinaryMinutes' => 480, 'overtimeMinutes' => 120, 'flags' => [], 'status' => 'confirmed', 'atRisk' => false, 'hasSchedule' => false,
+                'days' => [['worked' => 0, 'overtime' => 0], ['worked' => 600, 'overtime' => 120], ...array_fill(0, 5, ['worked' => 0, 'overtime' => 0])],
             ])
             ->where('people.data.1.status', 'disputed')
             ->where('people.data.2', [
                 'id' => $this->carla->id, 'name' => 'Carla Ruiz', 'jobTitle' => 'Analista', 'center' => 'Oficinas',
                 'ordinaryMinutes' => 480, 'overtimeMinutes' => 300, 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'], 'status' => 'pending', 'atRisk' => true, 'hasSchedule' => false,
+                'days' => [['worked' => 0, 'overtime' => 0], ['worked' => 780, 'overtime' => 300], ...array_fill(0, 5, ['worked' => 0, 'overtime' => 0])],
             ])
             // Dan has no marks and a week still pending.
             ->where('people.data.3', [
                 'id' => $this->dan->id, 'name' => 'Dan Soto', 'jobTitle' => 'Contador', 'center' => 'Oficinas',
                 'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'flags' => [], 'status' => 'pending', 'atRisk' => false, 'hasSchedule' => true,
+                'days' => array_fill(0, 7, ['worked' => 0, 'overtime' => 0]),
             ])
             ->where('centers.total', 2)
             ->where('centers.data.0', ['id' => $this->office->id, 'name' => 'Oficinas', 'people' => 2, 'zones' => 0, 'screens' => 0])
@@ -108,6 +111,28 @@ describe('the summary', function (): void {
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
             ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id')->not->toContain('deviceId');
+    });
+
+    it('gives each person the minutes of each day and of it the overtime, Monday to Sunday, for the week ribbon', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(overviewUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.days', [
+                ['worked' => 0, 'overtime' => 0], ['worked' => 600, 'overtime' => 120], ['worked' => 0, 'overtime' => 0], ['worked' => 0, 'overtime' => 0],
+                ['worked' => 0, 'overtime' => 0], ['worked' => 0, 'overtime' => 0], ['worked' => 0, 'overtime' => 0],
+            ])
+            ->where('people.data.2.days.1', ['worked' => 780, 'overtime' => 300])
+            ->where('people.data.3.days', array_fill(0, 7, ['worked' => 0, 'overtime' => 0])));
+    });
+
+    it('adds up the hours of everyone in scope, not only of the page shown, and of one center when narrowed', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(overviewUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('hours', ['ordinaryMinutes' => 960, 'overtimeMinutes' => 420]));
+        $this->get(overviewUrl(['center' => $this->office->id, 'q' => 'zzz']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.total', 0)
+            ->where('hours', ['ordinaryMinutes' => 480, 'overtimeMinutes' => 300]));
     });
 
     it('lists each state on its own tab, and the weeks at risk', function (string $status, array $names): void {

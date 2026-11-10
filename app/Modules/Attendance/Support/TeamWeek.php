@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Data\DayHours;
 use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -23,8 +24,20 @@ final class TeamWeek
      */
     public static function summaries(array $employeeIds, WeekPeriod $week): array
     {
+        return self::withDays($employeeIds, $week)[0];
+    }
+
+    /**
+     * The same summaries and, for each person, the minutes worked each day of the week (seven, Monday to Sunday: what the
+     * week ribbon draws).
+     *
+     * @param  list<string>  $employeeIds
+     * @return array{0: array<string, WeekSummary>, 1: array<string, list<int>>} both by employee id, in the order asked
+     */
+    public static function withDays(array $employeeIds, WeekPeriod $week): array
+    {
         if ($employeeIds === []) {
-            return [];
+            return [[], []];
         }
 
         // ponytail: hydrates every scoped person's marks of the week (one query, each inside its index-bounded window): fine
@@ -32,6 +45,7 @@ final class TeamWeek
         $byPerson = EffectiveMarks::byDayOf($employeeIds, $week);
         $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
         $summaries = [];
+        $worked = [];
 
         foreach ($employeeIds as $employeeId) {
             $schedule = $schedules->get($employeeId);
@@ -40,9 +54,10 @@ final class TeamWeek
                 range(0, 6),
             );
             $summaries[$employeeId] = HoursCalculator::week($days, $schedule->shift_type ?? ShiftType::Day, $week->start()->year);
+            $worked[$employeeId] = array_map(fn (DayHours $day): int => $day->workedMinutes, $days);
         }
 
-        return $summaries;
+        return [$summaries, $worked];
     }
 
     /**

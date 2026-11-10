@@ -35,6 +35,9 @@ final readonly class EnrollmentController
         return Inertia::render('attendance/enroll', [
             'company' => $this->companies->current()->tradeName,
             'name' => $person->name,
+            'jobTitle' => $person->jobTitle,
+            'linkHours' => config()->integer('attendance.enrollment.link_hours'),
+            'punchUrl' => route('attendance.device.punch.home', $tenant),
             'agreement' => ['version' => $current->version, 'body' => $current->body],
             'optionsUrl' => route('attendance.device.enroll.options', [$tenant, $token]),
             'registerUrl' => route('attendance.device.enroll.register', [$tenant, $token]),

@@ -58,7 +58,7 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
 {
     $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
     $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page);
 
     return $page->navigate('/a/acme')
         ->click('Mi semana')
@@ -71,7 +71,12 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
 it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {
     $page = anaSeesHerWeek($dark);
 
-    $page->assertSee('Ana López')
+    $page->assertSee('Su semana está lista')
+        ->assertSee('Ana López')
+        ->assertSee('Total de la semana')
+        // The shape of the week first: seven bars, and each day with how much it proves.
+        ->assertPresent('[role="img"][aria-label^="Horas por día"]')
+        ->assertSee('Fuerte')
         ->assertSee('Sin confirmar')
         ->assertSee('Salida a comer')
         ->assertSee('19:00')
@@ -84,6 +89,7 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
 
     $page->press('Confirmar mi semana')
         ->waitForText('La confirmó el')
+        ->assertSee('Semana confirmada')
         ->assertSee('Confirmada')
         ->assertDontSee('Confirmar mi semana')
         ->assertSee('No estoy de acuerdo')
@@ -149,9 +155,9 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 
     $page->navigate('/admin/acme/attendance/corrections')
         ->waitForText('El martes salí a las 20:00, el QR no cargaba.')
-        ->click('[aria-label="Aprobar la solicitud de Ana López"]')
-        ->waitForText('Aprobar la corrección')
-        ->click('[role="dialog"] button[type="submit"]')
+        // The panel says first that her confirmed week reopens.
+        ->waitForText('estaba confirmada: se reabre y le pedimos confirmarla otra vez')
+        ->click('#approve-correction')
         ->waitForText('Solicitud aprobada');
 
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->toDateString();
@@ -171,13 +177,13 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 it('lets a person whose mark was refused ask RH from Marcar to add it', function (): void {
     $enroll = (string) parse_url(enrollmentUrl($this->ana->id), PHP_URL_PATH);
     $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    $page->click('Leí el acuerdo y lo acepto.')->press('Aceptar y vincular este teléfono')->waitForText('Su teléfono quedó vinculado');
+    linkThePhone($page);
 
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/a/acme')
         ->press('Marcar entrada')
-        ->waitForText('Pedir corrección a Recursos Humanos')
-        ->press('Pedir corrección a Recursos Humanos')
+        ->waitForText('Pedir una corrección')
+        ->press('Pedir una corrección')
         ->waitForText('¿Qué marca le faltó?')
         ->assertNoAccessibilityIssues(1)
         ->select('mark_type', 'start')

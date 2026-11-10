@@ -1,16 +1,17 @@
+import ReportConfirmed from '@/components/attendance/report-confirmed';
 import ReportFigure from '@/components/attendance/report-figure';
-import { summaryHint } from '@/lib/attendance/report';
+import { hoursHint } from '@/lib/attendance/report-findings';
 import { duration } from '@/lib/attendance/week-text';
 import type { ReportSummary as Summary } from '@/types';
 
-/** The period at a glance, over every person-day of it: who and how much, how much was confirmed and what changed. */
+/** The period at a glance (board A7), over every person-day of it: who, how many days, the hours and how much was confirmed. */
 export default function ReportSummary({ summary }: { summary: Summary }) {
     const count = (value: number) => value.toLocaleString('es-MX');
 
     return (
         <section
             aria-label="El periodo en cifras"
-            className="grid grid-cols-2 gap-3 min-[1240px]:grid-cols-6 md:grid-cols-3"
+            className="grid grid-cols-2 gap-3 md:grid-cols-4"
         >
             <ReportFigure
                 label="Personas"
@@ -18,30 +19,22 @@ export default function ReportSummary({ summary }: { summary: Summary }) {
                 hint="Con al menos un día en el periodo"
             />
             <ReportFigure
-                label="Días"
+                label="Días con marcas"
                 value={count(summary.days)}
-                hint="Días con marcas, persona por persona"
+                hint="Persona por persona"
             />
             <ReportFigure
                 label="Horas trabajadas"
                 value={duration(summary.workedMinutes)}
-                hint={summaryHint(summary.people, summary.days)}
+                hint={hoursHint(
+                    summary.ordinaryMinutes,
+                    summary.overtimeMinutes,
+                )}
             />
-            <ReportFigure
-                label="Confirmados"
-                value={`${summary.confirmedPercent} %`}
-                hint="De los días, con su semana confirmada"
-            />
-            <ReportFigure
-                label="Con correcciones"
-                value={count(summary.withCorrections)}
-                hint="Días con una marca corregida o agregada"
-            />
-            <ReportFigure
-                label="Sin confirmar"
-                value={count(summary.unconfirmed)}
-                hint="Días de semanas que nadie respondió"
-                alert={summary.unconfirmed > 0}
+            <ReportConfirmed
+                percent={summary.confirmedPercent}
+                confirmed={summary.confirmedDays}
+                days={summary.days}
             />
         </section>
     );

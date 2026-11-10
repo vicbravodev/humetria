@@ -1,6 +1,7 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import SchedulePeople from '@/components/attendance/schedule-people';
 import PageHeader from '@/components/humetria/page-header';
+import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { duration } from '@/lib/attendance/week-text';
 import { index } from '@/routes/tenant/attendance';
@@ -28,6 +29,7 @@ export default function AttendanceSchedules(props: AttendanceSchedulesProps) {
                     title="Horarios"
                     description={`El horario que cada persona acordó: lo que trabaje de más cuenta como tiempo extra. En ${props.weeklyMaximum.year} la jornada ordinaria es de hasta ${duration(props.weeklyMaximum.minutes)} a la semana.`}
                 />
+                {!props.canManage && <ReadOnlyNotice />}
                 <SchedulePeople {...props} />
             </div>
         </>

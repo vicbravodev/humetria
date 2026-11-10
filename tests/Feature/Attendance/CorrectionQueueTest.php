@@ -6,8 +6,12 @@ use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\CorrectionPages;
+use App\Modules\Attendance\Support\CorrectionPreview;
+use App\Modules\Attendance\Support\TouchedWeeks;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -16,10 +20,10 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia;
 
-mutates(CorrectionController::class, CorrectionPages::class);
+mutates(CorrectionController::class, CorrectionPages::class, CorrectionPreview::class, TouchedWeeks::class);
 
-/** The queries of the queue, whatever its rows: the request's own, the counts, the page, its people and its marks. */
-const QUEUE_QUERIES = 17;
+/** The queries of the queue, whatever its rows: the counts, the page, its people and marks, and the request in view with its day, weeks and schedule. */
+const QUEUE_QUERIES = 25;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City.
@@ -160,6 +164,165 @@ describe('the queue', function (): void {
         $this->actingAs(memberOf($union, TenantRole::Owner));
 
         $this->get(route('tenant.attendance.corrections.index', $union->slug))->assertNotFound();
+    });
+});
+
+describe('the request in view', function (): void {
+    /** The request open in the page: `detail` of `selectedId`. */
+    function openRequest(?string $id = null): Illuminate\Testing\TestResponse
+    {
+        return test()->get(queueUrl($id === null ? [] : ['request' => $id]))->assertOk();
+    }
+
+    it('opens the oldest request of the page, with its person, what they ask and why', function (): void {
+        $first = queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00', 2);
+        queued($this->ana, null, MarkType::End, '2026-11-10 18:00', 0, 'Olvidé mi salida.');
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('selectedId', $first->id)
+            ->where('detail.id', $first->id)
+            ->where('detail.person', ['name' => 'Ana López', 'jobTitle' => 'Operadora'])
+            ->where('detail.type', 'start')
+            ->where('detail.requestedAt', '2026-11-10 09:00')
+            ->where('detail.previousAt', '2026-11-10 09:20')
+            ->where('detail.reason', 'Llegué a las 9, el QR no cargaba.')
+            ->where('detail.ageDays', 2)
+            ->where('detail.status', 'pending')
+            ->where('detail.note', null));
+    });
+
+    it('opens the one asked for, whatever its state, and the first one when it is unknown, of another company or not an id', function (): void {
+        $first = queued($this->ana, null, MarkType::Start, '2026-11-09 09:00', 3);
+        $second = queued($this->ana, null, MarkType::Start, '2026-11-10 09:00', 1);
+        $globex = Tenant::factory()->create();
+        $foreign = CorrectionRequest::factory()->create(['tenant_id' => $globex->id]);
+        workIn($this->tenant);
+        $this->actingAs($this->hr);
+
+        openRequest($second->id)->assertInertia(fn (AssertableInertia $page) => $page->where('selectedId', $second->id)->where('detail.id', $second->id));
+        foreach ([$foreign->id, '0b8a3a4e-0000-4000-8000-000000000000', 'ana'] as $other) {
+            openRequest($other)->assertInertia(fn (AssertableInertia $page) => $page->where('selectedId', $first->id));
+        }
+
+        $second->update(['status' => CorrectionStatus::Rejected, 'resolved_by' => $this->hr->id, 'resolved_at' => now(), 'note' => 'Llegaste a las 9:20.']);
+        // Resolved a moment ago, still in view: it is not on the tab of what is pending, yet it is the one shown.
+        openRequest($second->id)->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('selectedId', $second->id)->where('detail.status', 'rejected')->where('detail.note', 'Llegaste a las 9:20.')->where('detail.effect', null));
+    });
+
+    it('has nothing in view when there is nothing to resolve', function (): void {
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('selectedId', null)->where('detail', null));
+    });
+
+    it('shows that day in the record: its marks and the one asked, in local time', function (): void {
+        $request = queued($this->ana, null, MarkType::End, '2026-11-10 18:00', 0, 'Olvidé mi salida.');
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('detail.day', [
+                'date' => '2026-11-10',
+                'marks' => [['type' => 'start', 'time' => '09:20', 'nextDay' => false]],
+                'asked' => ['type' => 'end', 'time' => '18:00', 'nextDay' => false],
+            ])
+            ->where('detail.id', $request->id));
+    });
+
+    it('puts a night that ends after midnight on the day it began', function (): void {
+        AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id, 'type' => MarkType::Start, 'marked_at' => CarbonImmutable::parse('2026-11-09 22:00', 'America/Mexico_City')->utc()]);
+        queued($this->ana, null, MarkType::End, '2026-11-10 02:00', 0, 'Olvidé mi salida.');
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('detail.day.date', '2026-11-09')
+            ->where('detail.day.marks', [['type' => 'start', 'time' => '22:00', 'nextDay' => false]])
+            ->where('detail.day.asked', ['type' => 'end', 'time' => '02:00', 'nextDay' => true])
+            ->where('detail.effect.afterApproval', 'complete')
+            ->where('detail.effect.sequenceOk', true));
+    });
+
+    it('does not pull an end to a start more than a day before it: it belongs to its own date', function (): void {
+        // Ana\'s start is Tuesday 09:20; this end is Wednesday 15:00, almost 30 hours later.
+        queued($this->ana, null, MarkType::End, '2026-11-11 15:00', 0, 'Olvidé mi salida.');
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('detail.day.date', '2026-11-11')->where('detail.day.marks', [])->where('detail.day.asked', ['type' => 'end', 'time' => '15:00', 'nextDay' => false]));
+    });
+
+    it('tells whether the day ends complete once approved: with its end, or a start still open', function (string $type, string $local, ?bool $correcting, string $after): void {
+        queued($this->ana, $correcting === true ? $this->start : null, MarkType::from($type), $local);
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('detail.effect.sequenceOk', true)->where('detail.effect.afterApproval', $after));
+    })->with([
+        'the end that was forgotten' => ['end', '2026-11-10 18:00', false, 'complete'],
+        'a start moved, still with no end' => ['start', '2026-11-10 09:00', true, 'missing_end'],
+    ]);
+
+    it('says the approval would be refused when it leaves the day out of order', function (): void {
+        // An end before the start of the same day, and an end with no start at all.
+        queued($this->ana, null, MarkType::End, '2026-11-10 08:00', 2);
+        queued($this->ana, null, MarkType::End, '2026-11-08 18:30', 1);
+        $this->actingAs($this->hr);
+
+        $page = openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.sequenceOk', false));
+        $second = $page->viewData('page')['props']['requests']['data'][1]['id'];
+        openRequest($second)->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.sequenceOk', false));
+    });
+
+    it('lists the confirmed weeks the approval would reopen, by their Monday', function (): void {
+        queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-09']);
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02']);
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.reopensWeeks', ['2026-11-09']));
+    });
+
+    it('reopens nothing when the week was not confirmed', function (): void {
+        queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
+        WeeklyConfirmation::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-09']);
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.reopensWeeks', []));
+    });
+
+    it('says how the day is counted: with no schedule, or a rest day', function (): void {
+        queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.noSchedule', true)->where('detail.effect.restDay', false));
+
+        // Tuesday 10 November is the day of the request: a rest day of Ana's schedule.
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'minutes_by_weekday' => [1 => 480, 2 => 0, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.noSchedule', false)->where('detail.effect.restDay', true));
+
+        AttendanceSchedule::query()->where('employee_id', $this->ana->id)->update(['minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.restDay', false));
+    });
+
+    it('keeps the detail free of positions and devices', function (): void {
+        queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
+        $this->actingAs($this->hr);
+
+        $content = openRequest()->getContent();
+
+        expect($content)->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id');
+    });
+
+    it('reads the request in view in the same queries whatever the people and requests of the page', function (): void {
+        foreach (range(1, 5) as $day) {
+            queued(EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]), null, MarkType::Start, '2026-11-10 09:00', $day);
+        }
+        queued($this->ana, $this->start, MarkType::End, '2026-11-10 18:00');
+        $this->actingAs($this->hr);
+
+        $this->expectsDatabaseQueryCount(QUEUE_QUERIES);
+        openRequest();
     });
 });
 

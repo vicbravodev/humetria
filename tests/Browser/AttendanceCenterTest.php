@@ -34,12 +34,14 @@ it('shows RH a center with its zones and where each is', function (bool $dark, b
 
     visitPage('attendance/center', $url, $dark, $mobile)
         ->assertSee('Planta Norte')
-        ->assertSee('Listo para marcar')
+        ->assertSee('Falta pantalla QR')
+        ->assertSee('0 pantallas activas')
         ->assertSee('2 personas')
         ->assertSee('Nave 1')
         ->assertSee('80 m')
         ->assertSee('19.432712, -99.133298')
-        ->assertSee('Agregar zona');
+        ->assertSee('Agregar zona')
+        ->assertSee('Menor que la precisión');
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -47,13 +49,34 @@ it('shows RH a center with its zones and where each is', function (bool $dark, b
     'dark, phone' => [true, true],
 ]);
 
+it('lets RH touch the plan of the zones to see whether a mark there would count', function (): void {
+    [$url] = centerPanel();
+
+    // The plan's center is the center of its only zone; its corner is far outside it.
+    visit($url)
+        ->assertSee('Toca cualquier punto del plano')
+        ->click('svg[aria-label^="Plano de"]')
+        ->waitForText('Dentro de Nave 1')
+        ->assertSee('Aquí una marca se acepta')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('shows a viewer no plan, since where the zones are is for whoever may change them', function (): void {
+    [$url] = centerPanel(role: TenantRole::Viewer);
+
+    visit($url)->assertSee('Nave 1')->assertDontSee('Toca cualquier punto del plano');
+});
+
 it('flags a center without zones with the next step', function (bool $dark): void {
     [$url] = centerPanel(withZone: false);
 
     visitPage('attendance/center', $url, $dark)
         ->assertSee('Sin zonas')
         ->assertSee('Este centro aún no tiene zonas')
-        ->assertSee('Agregar zona');
+        ->assertSee('Agregar zona')
+        ->assertSee('Cambiar política')
+        ->assertAttributeContains('a:has-text("Cambiar política")', 'href', '/attendance/policy');
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('shows a viewer the zones without where they are, nor a way to change them', function (): void {
@@ -61,6 +84,8 @@ it('shows a viewer the zones without where they are, nor a way to change them', 
 
     visitPage('attendance/center', $url)
         ->assertSee('Nave 1')
+        ->assertSee('Solo lectura')
+        ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
         ->assertDontSee('19.432712')
         ->assertDontSee('Agregar zona')
         ->assertDontSee('Cambiar');
@@ -174,3 +199,21 @@ it('shows the screens of a center in use, with when each was last seen', functio
         ->assertSee('Revocar')
         ->assertDontSee('Volver a emitir');
 })->with(['desktop' => [false], 'phone' => [true]]);
+
+it('warns before revoking the only screen that shows the code, and not when another does', function (): void {
+    [$url, $plant] = centerPanel();
+    $screen = fn () => KioskDevice::factory()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+    $screen();
+
+    visit($url)
+        ->click('Revocar')
+        ->assertSee('Es la única pantalla activa de este centro')
+        ->assertSee('nadie podrá marcar con el QR en el sitio hasta que active otra');
+
+    $screen();
+
+    visit($url)
+        ->click('Revocar')
+        ->assertSee('Dejará de mostrar el código de inmediato.')
+        ->assertDontSee('Es la única pantalla activa de este centro');
+});
