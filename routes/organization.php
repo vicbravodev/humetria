@@ -6,6 +6,7 @@ use App\Modules\Organization\Http\Controllers\AreaOptionsController;
 use App\Modules\Organization\Http\Controllers\EmployeeController;
 use App\Modules\Organization\Http\Controllers\EmployeeImportController;
 use App\Modules\Organization\Http\Controllers\JobGradeOptionsController;
+use App\Modules\Organization\Http\Controllers\OrgChartPeopleController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}.
@@ -20,3 +21,4 @@ Route::get('admin/{tenant:slug}/employees/import/template', [EmployeeImportContr
 Route::post('admin/{tenant:slug}/employees/import', [EmployeeImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.employees.import.store');
 Route::get('admin/{tenant:slug}/areas/options', AreaOptionsController::class)->where('tenant', $notReserved)->name('tenant.areas.options');
 Route::get('admin/{tenant:slug}/job-grades/{field}/options', JobGradeOptionsController::class)->where('tenant', $notReserved)->whereIn('field', ['category', 'level'])->name('tenant.job-grades.options');
+Route::get('admin/{tenant:slug}/org-chart/people/options', [OrgChartPeopleController::class, 'options'])->where('tenant', $notReserved)->name('tenant.org-chart.people.options');
