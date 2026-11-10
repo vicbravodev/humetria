@@ -18,6 +18,7 @@ require __DIR__.'/portal.php';
 require __DIR__.'/seating-portal.php';
 require __DIR__.'/organization-portal.php';
 require __DIR__.'/attendance-device.php';
+require __DIR__.'/leave-portal.php';
 require __DIR__.'/disclosure-portal.php';
 require __DIR__.'/results-portal.php';
 require __DIR__.'/workers.php';

@@ -93,6 +93,8 @@ export type CurrentTenant = TenantSummary &
             manage_attendance: boolean;
             view_org_chart: boolean;
             manage_org_chart: boolean;
+            view_vacations: boolean;
+            manage_vacations: boolean;
             manage_seating: boolean;
             assess_seating: boolean;
             view_compensation: boolean;

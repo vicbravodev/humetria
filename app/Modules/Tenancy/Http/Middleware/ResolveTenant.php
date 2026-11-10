@@ -95,6 +95,8 @@ final class ResolveTenant
                 'manage_attendance' => $user->can('manage-attendance'),
                 'view_org_chart' => $user->can('view-org-chart'),
                 'manage_org_chart' => $user->can('manage-org-chart'),
+                'view_vacations' => $user->can('view-vacations'),
+                'manage_vacations' => $user->can('manage-vacations'),
             ],
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.
