@@ -27,7 +27,7 @@ export default function TenantRowView({
                     <div className="flex min-w-0 flex-col">
                         <Link
                             href={show(tenant.id)}
-                            className="font-medium underline-offset-4 hover:underline"
+                            className="-my-2.5 py-2.5 font-medium underline-offset-4 hover:underline"
                         >
                             {tenant.trade_name}
                         </Link>
