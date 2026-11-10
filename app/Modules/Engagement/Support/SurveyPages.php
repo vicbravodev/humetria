@@ -17,6 +17,7 @@ use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
 use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
 use App\Modules\Engagement\Support\Pulse\PulsePlanner;
+use App\Modules\Engagement\Support\Pulse\SchedulePage;
 use App\Modules\Organization\Data\RosterEntry;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -41,7 +42,7 @@ final readonly class SurveyPages
     public function __construct(private SnapshotAudience $snapshot, private Participation $participation) {}
 
     /**
-     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, modes: list<array{value: string, label: string}>|null}
+     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, modes: list<array{value: string, label: string}>|null, schedule: array<string, mixed>|null, frequencies: list<array{value: string, label: string}>|null}
      */
     public function index(SurveyKind $kind, bool $canManage): array
     {
@@ -61,6 +62,8 @@ final readonly class SurveyPages
             ]),
             'canManage' => $canManage,
             'kind' => $kind->value,
+            'schedule' => $kind === SurveyKind::Pulse ? SchedulePage::props() : null,
+            'frequencies' => $kind === SurveyKind::Pulse ? SchedulePage::frequencies() : null,
             'modes' => $kind === SurveyKind::Pulse ? array_map(fn (PulseMode $mode): array => ['value' => $mode->value, 'label' => $mode->label()], PulsePlanner::available(PriorityDrivers::ofLatestClimate() !== [])) : null,
         ];
     }

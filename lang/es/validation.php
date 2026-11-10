@@ -231,6 +231,10 @@ return [
     ],
 
     'attributes' => [
+        'mode' => 'modalidad',
+        'next_mode' => 'modalidad del siguiente pulso',
+        'day_of_month' => 'día del mes',
+        'open_days' => 'días abierto',
         'group_type' => 'grupo',
         'group_id' => 'grupo',
         'heard' => 'lo que dijeron',

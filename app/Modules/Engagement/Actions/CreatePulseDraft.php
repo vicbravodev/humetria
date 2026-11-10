@@ -11,6 +11,7 @@ use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Engagement\Support\Bank\PulseComposer;
 use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
+use App\Modules\Engagement\Support\Pulse\PulseHistory;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
@@ -38,8 +39,8 @@ final readonly class CreatePulseDraft
         $items = PulseComposer::compose(
             $mode,
             $prioritized,
-            Survey::query()->where('kind', SurveyKind::Pulse)->where('pulse_mode', PulseMode::Tour)->count(),
-            Survey::query()->where('status', SurveyStatus::Closed)->exists(),
+            PulseHistory::tours(),
+            PulseHistory::hasPreviousWave(),
         );
         $month = CarbonImmutable::now(config()->string('app.display_timezone'))->isoFormat('MMMM YYYY');
         $survey = Survey::query()->create([

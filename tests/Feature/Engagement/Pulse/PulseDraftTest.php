@@ -129,6 +129,16 @@ it('shows the mode and the questions of the draft, and offers only the modes ava
         ->has('sections'));
 });
 
+it('brings the open commitments of the last climate survey to the draft of a pulse', function (): void {
+    $climate = pulseClimateBefore($this->tenant, null);
+    App\Modules\Engagement\Models\Commitment::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'survey_id' => $climate->id]);
+    $pulse = Survey::factory()->pulse()->create(['tenant_id' => $this->tenant->id]);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.show', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->where('openCommitments.count', 2)
+        ->where('openCommitments.surveyId', $climate->id));
+});
+
 it('leaves the questions of a pulse draft with no route to edit them', function (): void {
     $pulse = Survey::factory()->pulse()->create(['tenant_id' => $this->tenant->id]);
 

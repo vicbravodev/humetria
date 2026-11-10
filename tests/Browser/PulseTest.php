@@ -36,6 +36,7 @@ it('opens the pulse on the next step: choose what to look at', function (bool $d
         ->assertSee('Todavía no hay un pulso')
         ->assertSee('Recorrido')
         ->assertSee('Crear el primer pulso')
+        ->assertSee('Todavía no está programado')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($pulseLooks);
@@ -49,6 +50,21 @@ it('starts a draft in the chosen mode and shows it', function (): void {
         ->assertSee('Pulso ·')
         ->assertSee('Jefe')
         ->assertSee('Su jefe directo')
+        ->assertNoJavaScriptErrors();
+});
+
+it('schedules the pulse from its home and says when the next one goes out', function (): void {
+    $url = signInToPanel();
+
+    visitPage('engagement/index', "{$url}/pulse")
+        ->click('Programar')
+        ->assertSee('Programar el pulso')
+        ->assertScript(cspViolations(), '[]')
+        ->click('Guardar')
+        ->assertSee('El siguiente pulso sale el')
+        ->assertSee('Pausar')
+        ->click('Pausar')
+        ->assertSee('En pausa')
         ->assertNoJavaScriptErrors();
 });
 

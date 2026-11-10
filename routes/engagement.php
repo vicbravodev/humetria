@@ -12,6 +12,7 @@ use App\Modules\Engagement\Http\Controllers\ExportController;
 use App\Modules\Engagement\Http\Controllers\ManagerResultsController;
 use App\Modules\Engagement\Http\Controllers\PublishFeedbackController;
 use App\Modules\Engagement\Http\Controllers\PulseDraftController;
+use App\Modules\Engagement\Http\Controllers\PulseScheduleController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use App\Modules\Engagement\Http\Controllers\SurveyActionController;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
@@ -41,6 +42,8 @@ if (! function_exists('engagementRoutes')) {
 /** @var string $notReserved */
 engagementRoutes(SurveyKind::Climate, $notReserved);
 engagementRoutes(SurveyKind::Pulse, $notReserved);
+// When the pulse goes out by itself: one schedule per company.
+Route::put('admin/{tenant:slug}/pulse/schedule', [PulseScheduleController::class, 'update'])->where('tenant', $notReserved)->defaults('kind', 'pulse')->name('tenant.pulse.schedule.update');
 
 // The results of a closed survey: the company, or one cut at a time (?cut=work_center|area|tenure|manager).
 Route::get('admin/{tenant:slug}/climate/{survey}/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results');

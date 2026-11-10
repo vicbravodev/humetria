@@ -3,6 +3,19 @@ export type ClimateSurveyStatus = 'draft' | 'active' | 'closed';
 /** What a pulse looks at this time (Seguimiento, Recorrido or Jefe). */
 export type PulseModeOption = { value: string; label: string };
 
+/** When the pulse of the company goes out by itself, and what the next one will be. */
+export type PulseSchedule = {
+    frequency: string;
+    frequencyLabel: string;
+    dayOfMonth: number;
+    openDays: number;
+    active: boolean;
+    nextRunOn: string;
+    /** The mode RH chose for the next pulse only; null when the calendar decides. */
+    nextMode: string | null;
+    upcoming: { mode: string; modeLabel: string; items: number };
+};
+
 /** A survey as the panel shows it: only counts, never who answered. */
 export type ClimateSurveyCard = {
     id: string;
