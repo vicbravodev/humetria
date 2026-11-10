@@ -65,7 +65,7 @@ final readonly class Impersonation
 
     /**
      * Ends the impersonation, recorded while still the owner. Gives the superadmin back, or
-     * signs out and gives null when they are gone or no longer a superadmin.
+     * signs out and gives null when they are gone or no longer on the staff.
      */
     public function stop(): ?User
     {
@@ -80,7 +80,7 @@ final readonly class Impersonation
         $this->session->forget([self::SESSION_KEY, self::IMPERSONATED_KEY, self::PASSWORD_CONFIRMED_KEY]);
         $impersonator = User::query()->find($impersonatorId);
 
-        if ($impersonator === null || ! $impersonator->isSuperadmin()) {
+        if ($impersonator === null || ! $impersonator->isStaff()) {
             $this->guard->logout();
             $this->session->invalidate();
             $this->session->regenerateToken();

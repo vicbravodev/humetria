@@ -20,7 +20,7 @@ final class HomeController extends Controller
 {
     public function __invoke(#[CurrentUser] User $user, ListUserTenants $listUserTenants, CompanyRoles $roles): RedirectResponse|Response
     {
-        if ($user->isSuperadmin()) {
+        if ($user->isStaff()) {
             return redirect()->route('companies.index');
         }
 

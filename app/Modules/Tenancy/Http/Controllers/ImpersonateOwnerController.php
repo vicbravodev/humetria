@@ -18,12 +18,12 @@ final class ImpersonateOwnerController extends Controller
 {
     public function __invoke(Tenant $tenant, #[CurrentUser] User $user, Impersonation $impersonation): RedirectResponse
     {
-        Gate::authorize('manage-tenants');
+        Gate::authorize('view-console');
 
         $owner = $tenant->ownerMembership?->user;
 
-        // Never another superadmin: that would hand over the console under someone else's name.
-        abort_if($owner === null || $owner->isSuperadmin(), 404);
+        // Never another member of the staff: that would hand over the console under someone else's name.
+        abort_if($owner === null || $owner->isStaff(), 404);
 
         Context::scope(fn () => $impersonation->start($user, $owner), ['tenant_id' => $tenant->id]);
 

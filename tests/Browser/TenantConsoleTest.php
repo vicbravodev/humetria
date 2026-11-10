@@ -354,6 +354,32 @@ it('says nothing of working time to a company that does not use Attendance', fun
         ->assertDontSee('registra la jornada');
 });
 
+it('shows support the console and the way into a company, and nothing that changes one', function (bool $dark, bool $mobile): void {
+    $this->actingAs(support());
+    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Con owner']))
+        ->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+    Tenant::factory()->create(['trade_name' => 'Sin owner']);
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile)
+        ->assertSee('Con owner')
+        ->assertSee('Entrar como owner')
+        ->assertDontSee('Dar de alta empresa')
+        ->assertMissing('@tenant-actions')
+        ->assertDontSee('Reenviar');
+})->with($looks);
+
+it('lets support enter a company as its owner', function (): void {
+    $this->actingAs(support());
+    TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']))
+        ->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+
+    visit('/admin/companies')
+        ->click('Entrar como owner')
+        ->assertPathBeginsWith('/admin/acme')
+        ->assertSee('Estás viendo Humetría como Ana Pérez')
+        ->assertNoJavaScriptErrors();
+});
+
 it('does not suspend without a reason', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->activeUntil(now()->addMonths(2))->create();

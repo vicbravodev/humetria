@@ -23,7 +23,7 @@ import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
-    const mainItems = mainNavItems(tenant, auth.isSuperadmin);
+    const mainItems = mainNavItems(tenant, auth.isStaff);
     const complianceItems = complianceNavItems(tenant, inCourse?.count);
     const toolItems = toolNavItems(tenant);
 
@@ -42,7 +42,7 @@ export function AppSidebar() {
                     <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                         <Logo className="h-7" />
                         {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
-                        {auth.isSuperadmin && tenant === null && (
+                        {auth.isStaff && tenant === null && (
                             <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-caption font-medium text-warning-foreground">
                                 Consola
                             </span>
@@ -67,7 +67,7 @@ export function AppSidebar() {
                 {toolItems.length > 0 && (
                     <NavMain label="Herramientas" items={toolItems} />
                 )}
-                {auth.isSuperadmin && (
+                {auth.isStaff && (
                     <NavMain label="Plataforma" items={superadminNavItems} />
                 )}
             </SidebarContent>

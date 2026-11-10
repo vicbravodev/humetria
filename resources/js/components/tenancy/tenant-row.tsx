@@ -1,6 +1,8 @@
+import { usePage } from '@inertiajs/react';
 import Initials from '@/components/humetria/initials';
 import TenantOwnerCell from '@/components/tenancy/tenant-owner-cell';
 import TenantRowActions from '@/components/tenancy/tenant-row-actions';
+import TenantSupportActions from '@/components/tenancy/tenant-support-actions';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { tenantStatusVariant } from '@/lib/tenant-status';
@@ -14,6 +16,8 @@ export default function TenantRowView({
     tenant: Tenant;
     activationMinDate: string;
 }) {
+    const { auth } = usePage().props;
+
     return (
         <TableRow>
             <TableCell className="min-w-60 whitespace-normal">
@@ -49,10 +53,14 @@ export default function TenantRowView({
                 <TenantOwnerCell tenant={tenant} />
             </TableCell>
             <TableCell className="w-px text-right">
-                <TenantRowActions
-                    tenant={tenant}
-                    activationMinDate={activationMinDate}
-                />
+                {auth.isSuperadmin ? (
+                    <TenantRowActions
+                        tenant={tenant}
+                        activationMinDate={activationMinDate}
+                    />
+                ) : (
+                    <TenantSupportActions tenant={tenant} />
+                )}
             </TableCell>
         </TableRow>
     );

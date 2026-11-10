@@ -85,10 +85,10 @@ const companyItems = (tenant: NavTenant): NavItem[] => [
  */
 export const mainNavItems = (
     tenant: NavTenant | null,
-    isSuperadmin: boolean,
+    isStaff: boolean,
 ): NavItem[] => {
     if (tenant === null) {
-        return isSuperadmin
+        return isStaff
             ? []
             : [{ title: 'Panel', href: dashboard(), icon: House }];
     }

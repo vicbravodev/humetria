@@ -30,7 +30,7 @@ export function CommandPalette() {
     const [active, setActive] = useState(0);
     const results = matchCommands(
         paletteCommands({
-            isSuperadmin: auth.isSuperadmin,
+            isStaff: auth.isStaff,
             tenant,
             sidebarExpanded: state === 'expanded',
             impersonating: impersonator !== null,

@@ -12,6 +12,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { UserMenuContent } from '@/components/user-menu-content';
+import { staffLabel } from '@/lib/staff';
 
 export function NavUser() {
     const { auth } = usePage().props;
@@ -32,9 +33,7 @@ export function NavUser() {
                                     {auth.user.name}
                                 </span>
                                 <span className="truncate text-caption text-muted-foreground">
-                                    {auth.isSuperadmin
-                                        ? 'Superadmin'
-                                        : auth.user.email}
+                                    {staffLabel(auth) ?? auth.user.email}
                                 </span>
                             </span>
                             <Settings

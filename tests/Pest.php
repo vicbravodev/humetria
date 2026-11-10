@@ -57,6 +57,16 @@ function superadmin(): User
     return $user;
 }
 
+function support(): User
+{
+    $user = User::factory()->create();
+    // The platform role belongs to no company: assigned outside any team.
+    setPermissionsTeamId(null);
+    $user->assignRole(User::SUPPORT);
+
+    return $user;
+}
+
 /**
  * The columns that suspend a company, for tests that write them straight to the table.
  *

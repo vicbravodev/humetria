@@ -1,0 +1,43 @@
+import { Form } from '@inertiajs/react';
+import CancelInvitationDialog from '@/components/tenancy/cancel-invitation-dialog';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { resend } from '@/routes/companies/invitations';
+import type { TenantRow } from '@/types';
+
+/** Sends the owner's pending invitation again, or cancels it: the superadmin's, since both change the company's access. */
+export default function TenantInvitationActions({
+    tenant,
+    invitationId,
+}: {
+    tenant: TenantRow;
+    invitationId: string;
+}) {
+    return (
+        <div className="-ml-3 flex">
+            <Form
+                {...resend.form({
+                    tenant: tenant.id,
+                    invitation: invitationId,
+                })}
+            >
+                {({ processing }) => (
+                    <Button
+                        type="submit"
+                        variant="ghost"
+                        size="sm"
+                        disabled={processing}
+                        aria-label={`Reenviar invitación de ${tenant.trade_name}`}
+                    >
+                        {processing && <Spinner />}
+                        Reenviar
+                    </Button>
+                )}
+            </Form>
+            <CancelInvitationDialog
+                tenant={tenant}
+                invitationId={invitationId}
+            />
+        </div>
+    );
+}

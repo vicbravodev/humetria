@@ -33,7 +33,7 @@ final class TenantConsoleController extends Controller
 {
     public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance): Response
     {
-        Gate::authorize('manage-tenants');
+        Gate::authorize('view-console');
 
         $search = trim($request->string('q')->toString());
         $view = TenantView::tryFrom($request->string('status')->toString()) ?? TenantView::All;

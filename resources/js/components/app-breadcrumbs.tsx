@@ -25,7 +25,7 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                   [
                       {
                           label: tenant?.trade_name ?? 'Humetría',
-                          items: mainNavItems(tenant, auth.isSuperadmin),
+                          items: mainNavItems(tenant, auth.isStaff),
                       },
                       {
                           label: 'Cumplimiento',
@@ -37,7 +37,7 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                       },
                       {
                           label: 'Plataforma',
-                          items: auth.isSuperadmin ? superadminNavItems : [],
+                          items: auth.isStaff ? superadminNavItems : [],
                       },
                   ],
                   currentUrl,

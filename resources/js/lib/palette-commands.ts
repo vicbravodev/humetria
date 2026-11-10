@@ -31,7 +31,7 @@ export type PaletteCommand = Command & {
 };
 
 type Options = {
-    isSuperadmin: boolean;
+    isStaff: boolean;
     tenant: NavTenant | null;
     sidebarExpanded: boolean;
     impersonating: boolean;
@@ -84,17 +84,17 @@ function companyActions(
 
 /** What the ⌘K palette offers: what this person can start, the pages they can open, the theme and the sidebar. */
 export function paletteCommands({
-    isSuperadmin,
+    isStaff,
     tenant,
     sidebarExpanded,
     impersonating,
     actions,
 }: Options): PaletteCommand[] {
     const pages = [
-        ...mainNavItems(tenant, isSuperadmin),
+        ...mainNavItems(tenant, isStaff),
         ...complianceNavItems(tenant),
         ...toolNavItems(tenant),
-        ...(isSuperadmin ? superadminNavItems : []),
+        ...(isStaff ? superadminNavItems : []),
     ];
 
     return [

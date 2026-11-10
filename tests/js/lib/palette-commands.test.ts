@@ -13,7 +13,7 @@ describe('paletteCommands', () => {
     it("opens the current company's panel from Panel", () => {
         const spies = actions();
         paletteCommands({
-            isSuperadmin: false,
+            isStaff: false,
             tenant: {
                 slug: 'acme',
                 role: 'owner',
@@ -54,9 +54,9 @@ describe('paletteCommands', () => {
     });
 
     it('offers the console pages only to the superadmin', () => {
-        const labels = (isSuperadmin: boolean) =>
+        const labels = (isStaff: boolean) =>
             paletteCommands({
-                isSuperadmin,
+                isStaff,
                 tenant: null,
                 sidebarExpanded: true,
                 impersonating: false,
@@ -73,7 +73,7 @@ describe('paletteCommands', () => {
     it('names the sidebar command after what it will do', () => {
         const label = (sidebarExpanded: boolean) =>
             paletteCommands({
-                isSuperadmin: false,
+                isStaff: false,
                 tenant: null,
                 sidebarExpanded,
                 impersonating: false,
@@ -87,7 +87,7 @@ describe('paletteCommands', () => {
     it('runs each command through the action it stands for', () => {
         const spies = actions();
         const commands = paletteCommands({
-            isSuperadmin: true,
+            isStaff: true,
             tenant: null,
             sidebarExpanded: true,
             impersonating: false,
@@ -117,7 +117,7 @@ describe('paletteCommands inside a company', () => {
     it('offers the actions a role may take inside a company, before the pages', () => {
         const actionsFor = (manage: boolean) =>
             paletteCommands({
-                isSuperadmin: false,
+                isStaff: false,
                 tenant: {
                     slug: 'acme',
                     role: 'owner',
@@ -170,7 +170,7 @@ describe('paletteCommands while impersonating', () => {
         const settingsUrl = (impersonating: boolean) => {
             const spies = actions();
             paletteCommands({
-                isSuperadmin: true,
+                isStaff: true,
                 tenant: null,
                 sidebarExpanded: true,
                 impersonating,
@@ -190,7 +190,7 @@ describe('paletteCommands while impersonating', () => {
 describe('paletteCommands inside a union', () => {
     it('offers loading employees but no evaluation, and no compliance page', () => {
         const commands = paletteCommands({
-            isSuperadmin: false,
+            isStaff: false,
             tenant: {
                 slug: 'sindicato',
                 type: 'union',
@@ -235,7 +235,7 @@ describe('paletteCommands inside a union', () => {
 describe('paletteCommands for Compensación', () => {
     const pagesOf = (type: 'company' | 'union', allowed: boolean) =>
         paletteCommands({
-            isSuperadmin: false,
+            isStaff: false,
             tenant: {
                 slug: 'acme',
                 type,

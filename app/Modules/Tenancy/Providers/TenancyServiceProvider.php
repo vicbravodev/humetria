@@ -39,6 +39,10 @@ final class TenancyServiceProvider extends ServiceProvider
         // Only the superadmin manages companies, through Gate::before; everyone else gets a 404 that reveals nothing.
         Gate::define('manage-tenants', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
 
+        // Looking at the console, and entering a company as its owner, is for the support role too (the superadmin passes
+        // through Gate::before): it changes nothing, so every change stays behind manage-tenants.
+        Gate::define('view-console', fn (User $user): AccessResponse => $user->isSupport() ? AccessResponse::allow() : AccessResponse::denyAsNotFound());
+
         // The invitation link is public. Viewing it has its own budget, so the page shown again after a mistyped
         // password does not spend the attempts.
         RateLimiter::for('invitation-views', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));

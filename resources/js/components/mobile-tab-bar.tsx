@@ -37,7 +37,7 @@ export function MobileTabBar() {
     const { auth, tenant, inCourse } = usePage().props;
     const { setOpenMobile } = useSidebar();
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
-    const tabs = mobileTabs(tenant, auth.isSuperadmin, inCourse?.count);
+    const tabs = mobileTabs(tenant, auth.isStaff, inCourse?.count);
 
     return (
         <nav
