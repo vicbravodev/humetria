@@ -64,7 +64,9 @@ describe('paletteCommands', () => {
             }).map(({ label }) => label);
 
         expect(labels(true)).toContain('Empresas');
+        expect(labels(true)).toContain('Cuentas');
         expect(labels(false)).not.toContain('Empresas');
+        expect(labels(false)).not.toContain('Cuentas');
         expect(labels(false)).toContain('Panel');
         // Outside a company the superadmin has no panel: /admin takes them to Empresas.
         expect(labels(true)).not.toContain('Panel');

@@ -35,6 +35,8 @@ final class ForbidWhileImpersonating
             'two-factor.recovery-codes', 'two-factor.regenerate-recovery-codes', 'two-factor.secret-key',
             'passkey.store', 'passkey.registration-options', 'passkey.destroy',
             'tenant.complaints.index', 'tenant.complaints.cases.*', 'tenant.complaints.procedure',
+            // What is paid and by whom is the staff's, never the owner's: nothing of billing is reached while acting as one.
+            'billing.*',
         ];
     }
 

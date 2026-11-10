@@ -12,11 +12,8 @@ import {
     SidebarMenu,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import {
-    complianceNavItems,
-    mainNavItems,
-    superadminNavItems,
-} from '@/lib/app-navigation';
+import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import { superadminNavItems } from '@/lib/staff-navigation';
 import { toolNavItems } from '@/lib/tool-navigation';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';

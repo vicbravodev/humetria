@@ -227,6 +227,11 @@ return [
     ],
 
     'attributes' => [
+        'tax_regime' => 'régimen fiscal',
+        'cfdi_use' => 'uso de CFDI',
+        'contact_name' => 'nombre del contacto',
+        'contact_email' => 'correo del contacto',
+        'contact_phone' => 'teléfono del contacto',
         'from' => 'fecha inicial',
         'minutes' => 'horario de la semana',
         'minutes.*' => 'minutos del día',

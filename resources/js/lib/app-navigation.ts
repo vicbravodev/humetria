@@ -1,18 +1,14 @@
 import {
-    Building2,
     Clock,
     ClipboardCheck,
     Factory,
     House,
     Laptop,
     Armchair,
-    Inbox,
     UserCog,
     Users,
 } from 'lucide-react';
 import { dashboard } from '@/routes';
-import { index as companies } from '@/routes/companies';
-import { index as demoRequests } from '@/routes/demo-requests';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
@@ -225,12 +221,6 @@ export const nextObligation = (
 
     return { lead: 'La próxima evaluación cierra', when };
 };
-
-// Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
-export const superadminNavItems: NavItem[] = [
-    { title: 'Empresas', href: companies(), icon: Building2 },
-    { title: 'Solicitudes de demo', href: demoRequests(), icon: Inbox },
-];
 
 const appearanceItem: NavItem = {
     title: 'Apariencia',

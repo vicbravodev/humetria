@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Attendance\Providers\AttendanceServiceProvider;
+use App\Modules\Billing\Providers\BillingServiceProvider;
 use App\Modules\Campaigns\Providers\CampaignsServiceProvider;
 use App\Modules\Compensation\Providers\CompensationServiceProvider;
 use App\Modules\Complaints\Providers\ComplaintsServiceProvider;
@@ -27,6 +28,7 @@ return [
     HorizonServiceProvider::class,
     DemosServiceProvider::class,
     TenancyServiceProvider::class,
+    BillingServiceProvider::class,
     OrganizationServiceProvider::class,
     InstrumentsServiceProvider::class,
     CampaignsServiceProvider::class,

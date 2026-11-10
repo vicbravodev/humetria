@@ -16,8 +16,8 @@ import {
     mainNavItems,
     type NavTenant,
     settingsEntryHref,
-    superadminNavItems,
 } from '@/lib/app-navigation';
+import { superadminNavItems } from '@/lib/staff-navigation';
 import { toolNavItems } from '@/lib/tool-navigation';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';

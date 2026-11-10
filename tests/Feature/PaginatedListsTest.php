@@ -246,6 +246,12 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('companies.index');
     }, ['tenants']],
+    'billing accounts' => ['billing/accounts', function () {
+        App\Modules\Billing\Models\BillingAccount::factory()->create();
+        signInAsSuperadmin();
+
+        return route('billing.accounts.index');
+    }, ['accounts']],
     'demo requests' => ['demos/index', function () {
         DemoRequest::factory()->create();
         signInAsSuperadmin();

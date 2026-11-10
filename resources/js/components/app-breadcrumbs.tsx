@@ -6,8 +6,8 @@ import {
     complianceNavItems,
     mainNavItems,
     navTrail,
-    superadminNavItems,
 } from '@/lib/app-navigation';
+import { superadminNavItems } from '@/lib/staff-navigation';
 import { toolNavItems } from '@/lib/tool-navigation';
 import type { BreadcrumbItem } from '@/types';
 
