@@ -3,7 +3,8 @@ import type { TenantRow } from '@/types/tenancy';
 export type AccountKind = 'direct' | 'consultant';
 
 /** The kinds the console's tabs choose among: one, or all. */
-export type AccountView = AccountKind | 'all';
+/** A kind of account, all of them, or the queue of those with a balance past due. */
+export type AccountView = AccountKind | 'all' | 'overdue';
 
 export type AccountFilters = { q: string; kind: AccountView };
 
@@ -17,10 +18,12 @@ export type AccountRow = {
     contact_name: string;
     contact_email: string;
     companies: number;
+    /** What it owes past due, written as pesos; null when nothing is. */
+    overdue: string | null;
 };
 
 /** An account with the fiscal data a CFDI will need and the contract notes. */
-export type AccountDetail = Omit<AccountRow, 'companies'> & {
+export type AccountDetail = Omit<AccountRow, 'companies' | 'overdue'> & {
     tax_regime: string | null;
     postal_code: string | null;
     cfdi_use: string | null;

@@ -9,6 +9,7 @@ const VIEWS: { value: AccountView; label: string }[] = [
     { value: 'all', label: 'Todas' },
     { value: 'direct', label: 'Directas' },
     { value: 'consultant', label: 'Consultores' },
+    { value: 'overdue', label: 'Con saldo vencido' },
 ];
 
 /** Narrows the accounts: text in their name, RFC or contact, and one kind at a time with how many each holds. */

@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Billing\Actions\ExportReport;
 use App\Modules\Billing\Http\Controllers\AccountCompaniesController;
 use App\Modules\Billing\Http\Controllers\AccountConsoleController;
 use App\Modules\Billing\Http\Controllers\AccountOptionsController;
 use App\Modules\Billing\Http\Controllers\ChargeConsoleController;
+use App\Modules\Billing\Http\Controllers\ExportConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
 use App\Modules\Billing\Http\Controllers\PaymentConsoleController;
 use App\Modules\Billing\Http\Controllers\StatementConsoleController;
@@ -135,3 +137,9 @@ Route::post('admin/billing/payments/{payment}/reversal', [PaymentConsoleControll
     ->middleware(['auth', 'verified'])
     ->whereUuid('payment')
     ->name('billing.payments.reverse');
+
+// The three reports of the console as CSV (portfolio, balances, renewals): read by the staff, each download logged and audited.
+Route::get('admin/billing/exports/{report}', [ExportConsoleController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->whereIn('report', ExportReport::REPORTS)
+    ->name('billing.exports.show');

@@ -25,6 +25,7 @@ export default function AccountsTable({
                     <TableHead>Tipo</TableHead>
                     <TableHead>Empresas</TableHead>
                     <TableHead>Contacto</TableHead>
+                    <TableHead>Saldo vencido</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>

@@ -32,14 +32,18 @@ final class AccountConsoleController extends Controller
         Gate::authorize('view-billing');
 
         $search = trim($request->string('q')->toString());
-        $kind = AccountKind::tryFrom($request->string('kind')->toString());
+        $overdue = $request->string('kind')->toString() === 'overdue';
+        $kind = $overdue ? null : AccountKind::tryFrom($request->string('kind')->toString());
+        $accounts = $listAccounts->handle($search, $kind, $overdue);
+        $owed = $listAccounts->overdueAmounts(array_values($accounts->getCollection()->map(fn (BillingAccount $account): string => $account->id)->all()));
 
         return Inertia::render('billing/accounts', [
-            'filters' => ['q' => $search, 'kind' => $kind->value ?? 'all'],
+            'filters' => ['q' => $search, 'kind' => $overdue ? 'overdue' : ($kind->value ?? 'all')],
             'counts' => $listAccounts->counts($search),
-            'accounts' => $listAccounts->handle($search, $kind)->through(fn (BillingAccount $account): array => [
+            'accounts' => $accounts->through(fn (BillingAccount $account): array => [
                 ...$this->summary($account),
                 'companies' => $account->getAttribute('current_companies_count'),
+                'overdue' => $owed[$account->id] ?? null,
             ]),
         ]);
     }

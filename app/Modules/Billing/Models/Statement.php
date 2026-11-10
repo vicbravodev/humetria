@@ -88,6 +88,16 @@ final class Statement extends Model
     }
 
     /**
+     * Issued, with a balance, and issued at least the days it takes to pay ago (`billing.overdue_after_days`).
+     *
+     * @param  Builder<Statement>  $query
+     */
+    public function scopeOverdue(Builder $query, CarbonImmutable $now): void
+    {
+        $query->withBalance()->where('issued_at', '<=', $now->subDays(config()->integer('billing.overdue_after_days')));
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

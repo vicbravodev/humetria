@@ -206,7 +206,7 @@ it('lists the accounts in a page, newest first, with how many companies each pay
             ->where('accounts.data.1.kind_label', 'Consultor')
             ->where('accounts.data.1.legal_name', 'Antigua')
             ->hasAll(['accounts.current_page', 'accounts.last_page', 'accounts.per_page', 'accounts.total', 'accounts.links'])
-            ->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1])
+            ->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1, 'overdue' => 0])
             ->where('filters', ['q' => '', 'kind' => 'all']));
 });
 
@@ -222,7 +222,7 @@ it('searches by legal name, RFC or contact, without regard to case or accents, a
         ->and($names('q=jose&kind=consultant'))->toBe(['Otra S.C.'])
         ->and($names('q=nada'))->toBe([]);
 
-    $this->get(route('billing.accounts.index', 'q=jose'))->assertInertia(fn (Assert $page) => $page->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1]));
+    $this->get(route('billing.accounts.index', 'q=jose'))->assertInertia(fn (Assert $page) => $page->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1, 'overdue' => 0]));
 });
 
 it('pages the accounts 25 at a time', function (): void {

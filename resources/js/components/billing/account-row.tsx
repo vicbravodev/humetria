@@ -46,6 +46,11 @@ export default function AccountRowView({ account }: { account: Account }) {
                     </span>
                 </div>
             </TableCell>
+            <TableCell className="text-sm tabular-nums">
+                {account.overdue ?? (
+                    <span className="text-muted-foreground">Al corriente</span>
+                )}
+            </TableCell>
         </TableRow>
     );
 }

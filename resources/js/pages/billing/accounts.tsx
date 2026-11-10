@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import AccountDialog from '@/components/billing/account-dialog';
 import AccountsEmpty from '@/components/billing/accounts-empty';
+import AccountsExports from '@/components/billing/accounts-exports';
 import AccountsTable from '@/components/billing/accounts-table';
 import AccountsToolbar from '@/components/billing/accounts-toolbar';
 import PageHeader from '@/components/humetria/page-header';
@@ -34,6 +35,7 @@ export default function Accounts({
                     title="Cuentas"
                     description={accountsSummary(counts.all)}
                 >
+                    <AccountsExports />
                     {/* Support reads who pays what; only the superadmin changes it. */}
                     {auth.isSuperadmin && <AccountDialog />}
                 </PageHeader>

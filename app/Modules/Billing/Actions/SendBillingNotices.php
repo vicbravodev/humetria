@@ -114,7 +114,7 @@ final readonly class SendBillingNotices
 
     private function overdue(CarbonImmutable $now): int
     {
-        $due = Statement::query()->withBalance()->where('issued_at', '<=', $now->subDays(config()->integer('billing.overdue_after_days')))
+        $due = Statement::query()->overdue($now)
             ->whereRaw('statements.id::text NOT IN (SELECT reference FROM billing_notices WHERE kind = ?)', ['overdue'])->orderBy('period_start')->orderBy('id')->get();
         $paid = $this->balances->paid(array_values($due->map(fn (Statement $statement): string => $statement->id)->all()));
         $names = $this->names(array_values(array_unique($due->map(fn (Statement $statement): string => $statement->tenant_id)->all())));
