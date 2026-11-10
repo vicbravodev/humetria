@@ -11,6 +11,7 @@ use App\Modules\Billing\Exceptions\InvalidSubscription;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\Catalog;
 use App\Modules\Billing\Support\SubscriptionGuard;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 
 final readonly class SetSubscription
 {
-    public function __construct(private RecordAudit $recordAudit, private CompanyModules $modules) {}
+    public function __construct(private RecordAudit $recordAudit, private CompanyModules $modules, private CompanyLimits $limits) {}
 
     /**
      * Gives the company its plan, or changes the one it has: the plan, how it is priced, the people and centers it pays for.
@@ -62,6 +63,12 @@ final readonly class SetSubscription
                 $data->status === SubscriptionStatus::Trial ? Catalog::current()->allModules() : Catalog::current()->modules($data->plan),
                 $data->startsOn->greaterThan($today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay()) ? $data->startsOn : $today,
             );
+
+            // What the plan contracts is what the company may have: its people, and its centers (never fewer than the plan includes).
+            $this->limits->sync($tenantId, [
+                CompanyLimits::SEATS => $data->seats,
+                CompanyLimits::CENTERS => max($data->centers, Catalog::current()->includedCenters($data->plan)),
+            ]);
 
             Log::info('billing.subscription_set', ['tenant_id' => $tenantId, 'created' => $created]);
             $this->recordAudit->handle('billing.subscription_set', $subscription, [
