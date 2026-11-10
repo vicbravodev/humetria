@@ -47,6 +47,14 @@ final class LeavePolicy extends Model
     }
 
     /**
+     * @return HasMany<LeavePolicyAssignment, $this>
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(LeavePolicyAssignment::class);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

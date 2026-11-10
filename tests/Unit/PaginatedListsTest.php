@@ -51,6 +51,7 @@ const ARRAY_PROPS = [
     'seating/inspection:ready' => 'catálogo fijo: los requisitos que se pueden mostrar (13 a lo más)',
     'leave/employee:periods' => 'resumen corto: los periodos de una persona, uno por aniversario',
     'leave/employee:statements' => 'resumen corto: las constancias anuales de una persona, una por periodo',
+    'leave/policy:floors' => 'catálogo fijo: los días que da la ley para cada año de servicio, de 1 a 60 (art. 76)',
     'leave/calendar:holidays' => 'catálogo corto: los festivos de un mes, para sombrear sus columnas',
     'leave/calendar:out' => 'resumen corto: cuántas personas están fuera cada día del mes, un número por día',
     'leave/portal:statements' => 'resumen corto: las constancias anuales que la persona aún no confirma, una por periodo',

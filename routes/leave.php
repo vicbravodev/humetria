@@ -8,6 +8,7 @@ declare(strict_types=1);
 use App\Modules\Leave\Http\Controllers\BalanceController;
 use App\Modules\Leave\Http\Controllers\CalendarController;
 use App\Modules\Leave\Http\Controllers\EmployeeRecordController;
+use App\Modules\Leave\Http\Controllers\PolicyController;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Http\Controllers\VacationsController;
 use Illuminate\Support\Facades\Route;
@@ -41,3 +42,11 @@ Route::post('admin/{tenant:slug}/vacations/terminations/{termination}/settle', [
 
 // The team's calendar of a month, by work center and area.
 Route::get('admin/{tenant:slug}/vacations/calendar', [CalendarController::class, 'index'])->where('tenant', $notReserved)->name('tenant.vacations.calendar');
+
+// The policies of the company: the law first, then its own, which can only improve it. Owner and hr write; a viewer reads.
+Route::get('admin/{tenant:slug}/vacations/policies', [PolicyController::class, 'index'])->where('tenant', $notReserved)->name('tenant.vacations.policies.index');
+Route::get('admin/{tenant:slug}/vacations/policies/create', [PolicyController::class, 'create'])->where('tenant', $notReserved)->name('tenant.vacations.policies.create');
+Route::post('admin/{tenant:slug}/vacations/policies', [PolicyController::class, 'store'])->where('tenant', $notReserved)->name('tenant.vacations.policies.store');
+Route::get('admin/{tenant:slug}/vacations/policies/{policy}/edit', [PolicyController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('policy')->name('tenant.vacations.policies.edit');
+Route::put('admin/{tenant:slug}/vacations/policies/{policy}', [PolicyController::class, 'update'])->where('tenant', $notReserved)->whereUuid('policy')->name('tenant.vacations.policies.update');
+Route::post('admin/{tenant:slug}/vacations/policies/{policy}/archive', [PolicyController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('policy')->name('tenant.vacations.policies.archive');

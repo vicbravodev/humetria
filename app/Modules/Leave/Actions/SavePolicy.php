@@ -20,7 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class SavePolicy
 {
-    private const int PREMIUM_FLOOR = 25;
+    public const int PREMIUM_FLOOR = 25;
 
     public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
 
