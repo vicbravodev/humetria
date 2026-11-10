@@ -10,6 +10,7 @@ use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Engagement\Actions\CloseExpiredSurveys;
+use App\Modules\Engagement\Support\Results\ItemStatisticsReport;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Leave\Actions\RouteRequests;
@@ -22,6 +23,22 @@ use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+
+Artisan::command('engagement:item-stats {survey}', function (string $survey, ItemStatisticsReport $report): int {
+    $lines = $report->lines($survey);
+
+    if ($lines === null) {
+        $this->error('No hay una encuesta con ese id.');
+
+        return 1;
+    }
+
+    foreach ($lines as $line) {
+        $this->line($line);
+    }
+
+    return 0;
+})->purpose('Print, per question of a survey, how many were shown it, answered and skipped it (for the pilot)');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
