@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Billing\Providers;
 
 use App\Models\User;
+use App\Modules\Billing\Contracts\PlanSteps;
+use App\Modules\Billing\Support\SubscriptionSteps;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -14,6 +16,11 @@ use Illuminate\Support\ServiceProvider;
 
 final class BillingServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(PlanSteps::class, SubscriptionSteps::class);
+    }
+
     public function boot(): void
     {
         // Looking at who pays what is for the support role too (the superadmin passes through Gate::before); it changes
