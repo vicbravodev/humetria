@@ -62,8 +62,8 @@ calendario. Sus rutas son `tenant.pulse.*` y sus permisos `view-pulse` (owner, h
 
 - **Contenido:** a lo más 11 preguntas, sin abiertas: 5 fijas (orgullo, motivación, conexión, recomendación y «mejoras
   vistas», esta última solo si la empresa ya cerró una encuesta) y hasta 6 rotativas en **una sola** modalidad:
-  *seguimiento* (los temas prioritarios del último clima), *recorrido* (un ancla por tema, la mitad de los diez cada vez)
-  o *jefe* (dos preguntas sobre el jefe y cuatro anclas). Sin prioridades, el seguimiento no está disponible y se
+  _seguimiento_ (los temas prioritarios del último clima), _recorrido_ (un ancla por tema, la mitad de los diez cada vez)
+  o _jefe_ (dos preguntas sobre el jefe y cuatro anclas). Sin prioridades, el seguimiento no está disponible y se
   hace un recorrido.
 - **Calendario:** mensual o trimestral, nunca «siempre abierto» (con anonimato real no se controlan duplicados). El
   comando `engagement:launch-pulses` corre a las 08:00 de `app.display_timezone`, lanza el pulso del día y deja la
