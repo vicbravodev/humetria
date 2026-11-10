@@ -82,3 +82,13 @@ it('is not for outsiders', function (): void {
         ->getJson(route('tenant.org-chart.people.options', $this->tenant))
         ->assertNotFound();
 });
+
+it('can leave out the person alone, to choose who takes their place among those who report to them', function (): void {
+    $carla = person($this->tenant, 'Carla');
+    $beto = Employee::factory()->reportingTo($carla)->create(['name' => 'Beto']);
+
+    $this->actingAs($this->hr)
+        ->getJson(route('tenant.org-chart.people.options', [$this->tenant, 'except' => $carla->id, 'keep_reports' => '1']))
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.value', $beto->id);
+});

@@ -20,7 +20,7 @@ final class OrgChartPeopleController extends Controller
 
     /**
      * The active people whose name or employee number has what was typed, to choose a manager: a few at a time, by
-     * name, without `except` and whoever reports to them. Name and job title only, never contact data.
+     * name, without `except` and whoever reports to them (who cannot be their manager). Name and job title only, never contact data.
      *
      * @return list<array{value: string, label: string}>
      */
@@ -30,7 +30,8 @@ final class OrgChartPeopleController extends Controller
 
         $search = $request->string('q')->trim()->limit(100, '')->toString();
         $except = $request->string('except')->toString();
-        $excluded = Str::isUuid($except) ? [$except, ...$lines->subtreeIds($except)] : [];
+        // `keep_reports` leaves out the person alone: whoever reports to them may take their place when they leave.
+        $excluded = Str::isUuid($except) ? [$except, ...($request->boolean('keep_reports') ? [] : $lines->subtreeIds($except))] : [];
 
         return array_values(Employee::query()
             ->whereNull('deactivated_at')

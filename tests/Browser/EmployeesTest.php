@@ -168,6 +168,25 @@ it('deactivates an employee and reactivates them from the deactivated ones', fun
         ->assertNoJavaScriptErrors();
 });
 
+it('asks who takes the reports of a manager before deactivating them', function (): void {
+    $tenant = acmeWithEmployees();
+    $ana = Employee::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Ana López')->sole();
+    Employee::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Beto Díaz')->update(['manager_id' => $ana->id]);
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Dar de baja')
+        ->assertSee('Ana López tiene 1 reporte directo. Elige a quién le reportarán.')
+        ->assertDisabled('[role="dialog"] button[type="submit"]')
+        ->click('#employee-reassign_to')
+        ->type('[role="combobox"][aria-controls="employee-reassign_to-options"]', 'carla')
+        ->assertSeeIn('#employee-reassign_to-options', 'Carla Ruiz')
+        ->keys('[role="combobox"][aria-controls="employee-reassign_to-options"]', 'Enter')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Empleado dado de baja.')
+        ->assertSee('Reporta a Carla Ruiz')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows Empleados in the sidebar to owner and hr, never to a viewer', function (): void {
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
     $this->actingAs(memberOf($tenant, TenantRole::Viewer));

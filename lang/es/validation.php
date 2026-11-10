@@ -393,6 +393,7 @@ return [
         'hired_on' => 'fecha de ingreso',
         'seniority_on' => 'antigüedad reconocida',
         'manager_id' => 'jefe directo',
+        'reassign_to' => 'nuevo jefe directo',
         'staff_group' => 'grupo',
         'kind' => 'tipo de solicitud',
         'legal_name' => 'razón social',
