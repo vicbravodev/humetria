@@ -12,6 +12,8 @@ use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeavePolicy;
+use App\Modules\Leave\Models\LeavePolicyAssignment;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Leave\Notifications\RequestDecided;
@@ -85,6 +87,12 @@ function chargesOf(LeaveRequest $request): array
 function leftByPeriod(): array
 {
     return array_map(fn ($period): int => $period->left(), Balances::of([test()->ana->id])[test()->ana->id] ?? []);
+}
+
+function allowAdvances(): void
+{
+    $policy = LeavePolicy::factory()->create(['tenant_id' => test()->tenant->id, 'allows_advance' => true]);
+    LeavePolicyAssignment::factory()->create(['tenant_id' => test()->tenant->id, 'leave_policy_id' => $policy->id]);
 }
 
 /**
@@ -253,7 +261,7 @@ it('lets RH answer any request, with who did it and in the audit trail', functio
         ]);
 });
 
-it('does not approve without the days', function (): void {
+it('does not approve without the days when the policy gives none in advance', function (): void {
     $request = waiting(['starts_on' => '2026-11-02', 'ends_on' => '2026-11-27', 'working_days' => 19]);
     Log::spy();
 
@@ -275,6 +283,37 @@ it('approves with exactly the days the person has, without advancing any', funct
     decide($request, true, asBoss());
 
     expect(leftByPeriod())->toBe([0, 0])->and(Balances::advanced([$this->ana->id]))->toBe([]);
+});
+
+it('advances the missing days when the policy allows it, with who authorized them and in the audit trail', function (): void {
+    allowAdvances();
+    $request = waiting(['starts_on' => '2026-11-02', 'ends_on' => '2026-11-27', 'working_days' => 19, 'had_balance' => false]);
+
+    $approved = decide($request, true, asRh())->refresh();
+
+    $advance = LeaveEntry::query()->where('leave_request_id', $request->id)->whereNull('leave_entitlement_id')->sole();
+    $audit = AuditEntry::query()->where('event', 'leave.advance_authorized')->sole();
+    expect($approved->only(['status', 'short_by']))->toBe(['status' => RequestStatus::Approved, 'short_by' => 2])
+        ->and($advance->only(['kind', 'tranche', 'days', 'authorized_by', 'recorded_by']))->toBe(['kind' => EntryKind::Taken, 'tranche' => Tranche::Statutory, 'days' => -2, 'authorized_by' => $this->rh->id, 'recorded_by' => null])
+        ->and(chargesOf($request))->toBe([[$this->b->id, Tranche::Statutory, -14], [$this->a->id, Tranche::Statutory, -3], [null, Tranche::Statutory, -2]])
+        ->and(leftByPeriod())->toBe([0, 0])
+        ->and(Balances::advanced([$this->ana->id]))->toBe([$this->ana->id => -2])
+        ->and(Balances::available($this->ana->id))->toBe(-2)
+        ->and($audit->subject_id)->toBe($request->id)
+        ->and($audit->metadata)->toEqual(['employee_id' => $this->ana->id, 'days' => 2, 'authorized_by_employee_id' => null, 'authorized_by_user_id' => $this->rh->id]);
+});
+
+it('advances every day to a person with no period yet, and says which manager authorized it', function (): void {
+    allowAdvances();
+    $new = Employee::factory()->reportingTo($this->boss)->create();
+    $request = LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $new->id, 'approver_employee_id' => $this->boss->id, 'working_days' => 3, 'had_balance' => false]);
+
+    $approved = decide($request, true, asBoss())->refresh();
+
+    expect($approved->only(['short_by', 'allocation', 'decided_by_employee_id']))->toBe(['short_by' => 3, 'allocation' => [], 'decided_by_employee_id' => $this->boss->id])
+        ->and(chargesOf($request))->toBe([[null, Tranche::Statutory, -3]])
+        ->and(Balances::advanced([$new->id]))->toBe([$new->id => -3])
+        ->and(AuditEntry::query()->where('event', 'leave.advance_authorized')->sole()->metadata)->toEqual(['employee_id' => $new->id, 'days' => 3, 'authorized_by_employee_id' => $this->boss->id, 'authorized_by_user_id' => null]);
 });
 
 it('approves a leave without touching any balance, whatever the person has', function (): void {

@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\RequestStatus;
+use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Models\LeaveEntry;
@@ -17,6 +18,7 @@ use App\Modules\Leave\Support\Allocator;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\EmployeeLock;
+use App\Modules\Leave\Support\PolicyResolver;
 use App\Modules\Leave\Support\RequestNotifier;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -26,12 +28,13 @@ use Illuminate\Validation\ValidationException;
 /**
  * Approves or rejects a request, once (criterio C-18): the manager whose it is to answer, or RH at any time, which is
  * audited. Approving vacations charges the ledger with the balance of that moment, the oldest period first (criterio
- * C-16); without the days it is not approved. A leave uses no balance. The reason of a rejection never reaches the logs
+ * C-16). Days the person does not have are only given in advance when their policy allows it, as an entry with no period
+ * and with who authorized them (criterio C-17). A leave uses no balance. The reason of a rejection never reaches the logs
  * nor the audit trail.
  */
 final readonly class DecideRequest
 {
-    public function __construct(private RecordAudit $audit, private RequestNotifier $notifier) {}
+    public function __construct(private PolicyResolver $policies, private RecordAudit $audit, private RequestNotifier $notifier) {}
 
     /**
      * @throws AlreadyDecided when it was answered or cancelled first; nothing changes
@@ -57,7 +60,7 @@ final readonly class DecideRequest
                 throw new AlreadyDecided;
             }
 
-            $advanced = $approve && $request->leave_type_id === null ? $this->charge($request) : 0;
+            $advanced = $approve && $request->leave_type_id === null ? $this->charge($request, $by) : 0;
             $request->update([
                 'status' => $approve ? RequestStatus::Approved : RequestStatus::Rejected,
                 'decided_by_employee_id' => $by->employeeId,
@@ -85,12 +88,12 @@ final readonly class DecideRequest
      *
      * @return int the days given in advance
      */
-    private function charge(LeaveRequest $request): int
+    private function charge(LeaveRequest $request, Decider $by): int
     {
         $periods = Balances::of([$request->employee_id])[$request->employee_id] ?? [];
         $allocation = $periods === [] ? new Allocation([], $request->working_days) : Allocator::allocate($periods, $request->working_days);
 
-        if (! $allocation->covered()) {
+        if (! $allocation->covered() && ! ($this->policies->for([$request->employee_id])[$request->employee_id]->allowsAdvance ?? false)) {
             throw new RequestRefused('insufficient_balance');
         }
 
@@ -98,6 +101,12 @@ final readonly class DecideRequest
 
         foreach ($allocation->lines as $line) {
             LeaveEntry::query()->create([...$entry, 'leave_entitlement_id' => $line->entitlementId, 'tranche' => $line->tranche, 'days' => -$line->days]);
+        }
+
+        if (! $allocation->covered()) {
+            // No period: days the person does not have yet. A manager has no account: who authorized is the one who decided the request.
+            LeaveEntry::query()->create([...$entry, 'leave_entitlement_id' => null, 'tranche' => Tranche::Statutory, 'days' => -$allocation->shortBy, 'authorized_by' => $by->userId]);
+            $this->audit->handle('leave.advance_authorized', $request, ['employee_id' => $request->employee_id, 'days' => $allocation->shortBy, 'authorized_by_employee_id' => $by->employeeId, 'authorized_by_user_id' => $by->userId]);
         }
 
         $request->fill([
