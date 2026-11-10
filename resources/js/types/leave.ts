@@ -245,3 +245,26 @@ export type LeaveRecordPerson = {
     policy: string;
     startedOn: string | null;
 };
+
+/** A stretch of days a person is away in the month of the calendar, cut to it. */
+export type LeaveCalendarStretch = {
+    /** Y-m-d. */
+    from: string;
+    to: string;
+    /** Vacations or leave: never which leave. */
+    kind: 'vacation' | 'leave';
+    /** Still waits for an answer; only whoever manages vacations gets these. */
+    pending: boolean;
+};
+
+export type LeaveCalendarPerson = {
+    id: string;
+    name: string;
+    absences: LeaveCalendarStretch[];
+};
+
+/** How the calendar is narrowed, as the server sends it back. */
+export type LeaveCalendarFilters = {
+    center: { value: string; label: string } | null;
+    area: { value: string; label: string } | null;
+};

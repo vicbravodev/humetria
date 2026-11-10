@@ -6,6 +6,7 @@ declare(strict_types=1);
 // Every name starts with tenant.vacations.
 
 use App\Modules\Leave\Http\Controllers\BalanceController;
+use App\Modules\Leave\Http\Controllers\CalendarController;
 use App\Modules\Leave\Http\Controllers\EmployeeRecordController;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Http\Controllers\VacationsController;
@@ -37,3 +38,6 @@ Route::get('admin/{tenant:slug}/vacations/employees/{employee}', [EmployeeRecord
 // RH corrects a tranche of a period with its note, and settles the days of a person who left. Owner and hr.
 Route::post('admin/{tenant:slug}/vacations/employees/{employee}/adjust', [EmployeeRecordController::class, 'adjust'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.vacations.employees.adjust');
 Route::post('admin/{tenant:slug}/vacations/terminations/{termination}/settle', [EmployeeRecordController::class, 'settle'])->where('tenant', $notReserved)->whereUuid('termination')->name('tenant.vacations.terminations.settle');
+
+// The team's calendar of a month, by work center and area.
+Route::get('admin/{tenant:slug}/vacations/calendar', [CalendarController::class, 'index'])->where('tenant', $notReserved)->name('tenant.vacations.calendar');
