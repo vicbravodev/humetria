@@ -38,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $reason
  * @property CarbonImmutable|null $issued_at
  * @property int|null $issued_by
- * @property int $created_by
+ * @property int|null $created_by
  * @property CarbonImmutable $created_at
  */
 #[Fillable(['billing_account_id', 'tenant_id', 'adjusts_statement_id', 'period_start', 'period_end', 'status', 'currency', 'catalog_version', 'vat_percent', 'subtotal_cents', 'vat_cents', 'total_cents', 'snapshot', 'reason', 'issued_at', 'issued_by', 'created_by'])]

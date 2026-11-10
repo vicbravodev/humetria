@@ -62,7 +62,7 @@ final readonly class DescribeStatement
                 'total' => Money::format($statement->total_cents),
                 'paid' => $draft ? null : Money::format($paid),
                 'balance' => $draft ? null : Money::format($statement->total_cents - $paid),
-                'created_by' => $names[$statement->created_by] ?? '',
+                'created_by' => $statement->created_by === null ? 'Renovación mensual' : $names[$statement->created_by] ?? '',
                 'issued_by' => $statement->issued_by === null ? null : $names[$statement->issued_by] ?? '',
                 'issued_at' => $statement->issued_at === null ? null : ShortDate::format($statement->issued_at->setTimezone(config()->string('app.display_timezone'))),
             ],

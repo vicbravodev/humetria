@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
+use App\Modules\Billing\Actions\RenewSubscriptions;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
@@ -113,6 +114,13 @@ Artisan::command('billing:measure-storage', function (MeasureStorage $measure): 
 
 // After the day is closed and the limits recounted: sum the real size of the files of every company.
 Schedule::command('billing:measure-storage')->dailyAt('03:45')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:renew', function (RenewSubscriptions $renew): void {
+    $summary = $renew->handle();
+    $this->info("Borradores: {$summary->drafted}; ya hechos: {$summary->alreadyDrafted}; planes terminados: {$summary->ended}; omitidas: ".count($summary->skipped));
+})->purpose('At the cut, end the cancellations scheduled for it and draft the month of every company that pays, for a person to review and issue');
+
+// The cut is the first of the month, Mexico City. Running it again changes nothing, so a retry or a late start is safe.
+Schedule::command('billing:renew')->monthlyOn(1, '02:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

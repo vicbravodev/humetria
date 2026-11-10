@@ -28,7 +28,7 @@ final readonly class GenerateStatement
      *
      * @throws InvalidStatement
      */
-    public function handle(string $tenantId, CarbonImmutable $month, User $author): Statement
+    public function handle(string $tenantId, CarbonImmutable $month, ?User $author): Statement
     {
         $existing = $this->existing($tenantId, $month);
 
@@ -55,7 +55,7 @@ final readonly class GenerateStatement
             ->first();
     }
 
-    private function write(StatementDraft $draft, User $author): Statement
+    private function write(StatementDraft $draft, ?User $author): Statement
     {
         $statement = Statement::query()->create([
             'billing_account_id' => $draft->accountId,
@@ -70,7 +70,7 @@ final readonly class GenerateStatement
             'vat_cents' => $draft->vatCents,
             'total_cents' => $draft->totalCents,
             'snapshot' => $draft->snapshot,
-            'created_by' => $author->id,
+            'created_by' => $author?->id,
         ]);
 
         $billed = [];
