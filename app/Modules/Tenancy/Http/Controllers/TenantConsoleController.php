@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
@@ -30,20 +31,23 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
-    public function index(Request $request, ListTenants $listTenants): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance): Response
     {
         Gate::authorize('manage-tenants');
 
         $search = trim($request->string('q')->toString());
         $view = TenantView::tryFrom($request->string('status')->toString()) ?? TenantView::All;
         $summary = $listTenants->summary($search);
+        $tenants = $listTenants->handle($search, $view);
+        // One question for the whole page, so the warning before restricting a company costs nothing per row.
+        $usingAttendance = $attendance->among(array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all()));
 
         return Inertia::render('tenancy/index', [
             'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
-            'tenants' => $listTenants->handle($search, $view)->through(function (Tenant $tenant): array {
+            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance): array {
                 $status = $tenant->status();
 
                 return [
@@ -57,6 +61,7 @@ final class TenantConsoleController extends Controller
                     'status_label' => $status->label(),
                     'status_date' => $this->statusDate($tenant, $status),
                     'restriction_reason' => $tenant->restriction_reason,
+                    'uses_attendance' => in_array($tenant->id, $usingAttendance, true),
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
                     'owner' => $this->owner($tenant),

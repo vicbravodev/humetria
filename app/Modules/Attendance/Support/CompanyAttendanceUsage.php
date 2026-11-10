@@ -18,11 +18,13 @@ final class CompanyAttendanceUsage implements AttendanceUsage
             return [];
         }
 
-        $using = [];
+        $query = DB::table(self::TABLES[0])->select('tenant_id')->whereIn('tenant_id', $tenantIds);
 
-        foreach (self::TABLES as $table) {
-            $using = [...$using, ...DB::table($table)->whereIn('tenant_id', $tenantIds)->distinct()->pluck('tenant_id')->all()];
+        foreach (array_slice(self::TABLES, 1) as $table) {
+            $query->union(DB::table($table)->select('tenant_id')->whereIn('tenant_id', $tenantIds));
         }
+
+        $using = $query->pluck('tenant_id')->all();
 
         return array_values(array_filter($tenantIds, fn (string $id): bool => in_array($id, $using, true)));
     }

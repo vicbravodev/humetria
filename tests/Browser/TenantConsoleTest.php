@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -330,6 +331,27 @@ it('suspends an active company after showing what changes and asking the reason,
 
     expect($tenant->status()->value)->toBe('suspended')
         ->and($tenant->restriction_reason)->toBe('Falta de pago de octubre');
+});
+
+it('warns, before restricting a company that records working time, that it must do it another way', function (): void {
+    signInAsSuperadmin();
+    AttendancePolicy::factory()->create(['tenant_id' => Tenant::factory()->activeUntil(now()->addMonths(2))->create(['trade_name' => 'Con jornada'])->id]);
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Suspender')
+        ->assertSee('Esta empresa registra la jornada con Humetría')
+        ->assertSee('debe registrar la jornada por otro medio')
+        ->assertSee('Esto no la exime de esa obligación');
+});
+
+it('says nothing of working time to a company that does not use Attendance', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->activeUntil(now()->addMonths(2))->create();
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Suspender')
+        ->assertSee('Nunca se borran')
+        ->assertDontSee('registra la jornada');
 });
 
 it('does not suspend without a reason', function (): void {

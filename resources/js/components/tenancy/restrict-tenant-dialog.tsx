@@ -43,7 +43,12 @@ export default function RestrictTenantDialog({
                         name="restriction"
                         value={restriction}
                     />
-                    <TenantEffects effects={restrictionEffects(restriction)} />
+                    <TenantEffects
+                        effects={restrictionEffects(
+                            restriction,
+                            tenant.uses_attendance,
+                        )}
+                    />
                     <TenantReasonField error={errors['reason']} />
                 </>
             )}

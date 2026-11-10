@@ -58,10 +58,20 @@ const ACCESS: Record<Restriction, string> = {
         'Nadie de la empresa entra al panel: ven un aviso de acceso en pausa.',
 };
 
+/** A company that records working time with Humetría cannot do it while restricted: the law still asks for the record. */
+const ATTENDANCE_WARNING: Effect = {
+    label: 'Asistencia',
+    text: 'Esta empresa registra la jornada con Humetría. Mientras dure, nadie podrá marcar entrada ni salida: debe registrar la jornada por otro medio. Esto no la exime de esa obligación.',
+};
+
 /** What happens to the company the moment the person confirms, so nothing is a surprise. */
-export function restrictionEffects(restriction: Restriction): Effect[] {
+export function restrictionEffects(
+    restriction: Restriction,
+    usesAttendance: boolean,
+): Effect[] {
     return [
         { label: 'Acceso', text: ACCESS[restriction] },
+        ...(usesAttendance ? [ATTENDANCE_WARNING] : []),
         {
             label: 'Portales y envíos',
             text: 'Las encuestas, el buzón, los portales, el checador y los correos programados dejan de operar.',

@@ -34,6 +34,8 @@ export type TenantRow = {
     status_date: string | null;
     /** Why a person restricted it (read only, suspended, archived); null otherwise. */
     restriction_reason: string | null;
+    /** Whether it records working time with Attendance: restricting it stops that. */
+    uses_attendance: boolean;
     /** Last paid day as Y-m-d in Mexico City time; null when never activated. */
     active_until: string | null;
     blocked: boolean;
