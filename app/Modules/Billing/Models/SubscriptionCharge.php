@@ -28,8 +28,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $charge_on
  * @property CarbonImmutable|null $ends_on
  * @property int $approved_by
+ * @property CarbonImmutable|null $billed_at
  */
-#[Fillable(['subscription_id', 'tenant_id', 'kind', 'description', 'scope', 'amount_cents', 'charge_on', 'ends_on', 'approved_by'])]
+#[Fillable(['subscription_id', 'tenant_id', 'kind', 'description', 'scope', 'amount_cents', 'charge_on', 'ends_on', 'approved_by', 'billed_at'])]
 #[UseFactory(SubscriptionChargeFactory::class)]
 final class SubscriptionCharge extends Model
 {
@@ -53,6 +54,7 @@ final class SubscriptionCharge extends Model
             'kind' => ChargeKind::class,
             'charge_on' => 'immutable_date',
             'ends_on' => 'immutable_date',
+            'billed_at' => 'immutable_datetime',
         ];
     }
 }

@@ -6,6 +6,10 @@ use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Payment;
+use App\Modules\Billing\Models\PaymentAllocation;
+use App\Modules\Billing\Models\Statement;
+use App\Modules\Billing\Models\StatementLine;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\SubscriptionCharge;
 use App\Modules\Compensation\Models\FiscalParameter;
@@ -28,6 +32,8 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     AccountCompany::class => 'read across companies by the billing console',
     Subscription::class => 'read across companies by the billing console',
     SubscriptionCharge::class => 'read across companies by the billing console',
+    // The statement of a company is read with the rest of what its account owes, across all the companies it pays.
+    Statement::class => 'read across companies by the billing console',
 ];
 
 /**
@@ -39,6 +45,10 @@ const PLATFORM_MODELS = [
     FiscalParameter::class => 'fiscal and legal values shared by every company',
     // The payer of one or many companies (a consultant's clients): commercial data of Humetría, read by the staff's console.
     BillingAccount::class => 'who pays for the companies, across all of them',
+    // Lines belong to a statement and payments to an account: neither belongs to a single company.
+    StatementLine::class => 'a line of a statement; the statement carries the company',
+    Payment::class => 'money an account paid, for all the companies it pays',
+    PaymentAllocation::class => 'the part of a payment that settles a statement',
 ];
 
 /** @return list<class-string<Model>> */
