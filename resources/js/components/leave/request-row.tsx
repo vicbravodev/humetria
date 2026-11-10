@@ -1,11 +1,16 @@
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { dateSpan, statusTone, workingDaysOf } from '@/lib/leave/format';
+import { cancel } from '@/routes/portal/vacations/requests';
 import type { PortalLeaveRequest } from '@/types';
 
-/** A request of the person: what they asked, for which days, and where it stands. */
+/** A request of the person: what they asked, for which days, where it stands, and the way to cancel it while they can. */
 export default function RequestRow({
+    token,
     request,
 }: {
+    token: string;
     request: PortalLeaveRequest;
 }) {
     return (
@@ -30,6 +35,21 @@ export default function RequestRow({
             )}
             {request.rejectionReason !== null && (
                 <p className="text-base">Motivo: {request.rejectionReason}</p>
+            )}
+            {request.canCancel && (
+                <ConfirmDialog
+                    trigger={
+                        <Button variant="outline" className="w-fit">
+                            Cancelar solicitud
+                        </Button>
+                    }
+                    title="¿Cancelar esta solicitud?"
+                    description="Sus fechas quedan libres. Si ya estaba aprobada, los días vuelven a su saldo."
+                    confirmLabel="Sí, cancelar"
+                    dismissLabel="Volver"
+                    form={cancel.form({ token, request: request.id })}
+                    preserveScroll
+                />
             )}
         </li>
     );

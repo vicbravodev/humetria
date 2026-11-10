@@ -33,3 +33,13 @@ export type PortalLeaveRequest = {
 };
 
 export type LeaveTypeOption = { id: string; name: string };
+
+/** What a first and a last day would be as a request, before sending it. */
+export type LeavePreview = {
+    workingDays: number;
+    /** Whether the person has the days; null for a leave, which uses none. */
+    hadBalance: boolean | null;
+    shortBy: number;
+    /** Whether to remind them of the twelve days in a row the law gives them. */
+    continuousNotice: boolean;
+};

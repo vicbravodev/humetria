@@ -251,6 +251,8 @@ return [
         'area_ids' => 'áreas',
         'area_ids.*' => 'área',
         'starts_on' => 'fecha de inicio',
+        'ends_on' => 'fecha de fin',
+        'leave_type_id' => 'tipo de permiso',
         'responsible_user_id' => 'responsable',
         'professional' => 'profesional',
         'item_ids' => 'filas',

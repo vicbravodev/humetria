@@ -204,3 +204,140 @@ it('sends nothing of anybody else, no note and no amounts', function (): void {
     expect($props['periods'])->toHaveCount(2)
         ->and($sent)->not->toContain('Caro Luz', 'Nota de Caro', 'Nota privada', $this->caro->id, $this->boss->id, $this->ana->id, 'premium', 'amount', 'salary');
 });
+
+describe('asking for days', function (): void {
+    it('previews, asks and cancels under the personal link, throttled as the actions of the portal', function (): void {
+        expect(route('portal.vacations.preview', 'abc', absolute: false))->toBe('/portal/abc/vacations/preview')
+            ->and(route('portal.vacations.requests.store', 'abc', absolute: false))->toBe('/portal/abc/vacations/requests')
+            ->and(route('portal.vacations.requests.cancel', ['abc', 'r1'], absolute: false))->toBe('/portal/abc/vacations/requests/r1/cancel')
+            ->and(Route::getRoutes()->getByName('portal.vacations.preview')?->gatherMiddleware())->toContain('throttle:portal-views')
+            ->and(Route::getRoutes()->getByName('portal.vacations.requests.store')?->gatherMiddleware())->toContain('throttle:portal-actions')
+            ->and(Route::getRoutes()->getByName('portal.vacations.requests.cancel')?->gatherMiddleware())->toContain('throttle:portal-actions');
+    });
+
+    it('says, before sending, how many working days the dates are and whether the person has them', function (string $from, string $to, array $expected): void {
+        $this->getJson(route('portal.vacations.preview', [$this->token, 'starts_on' => $from, 'ends_on' => $to]))
+            ->assertOk()
+            ->assertExactJson($expected);
+    })->with([
+        // Two weeks from Monday to Friday, less the third Monday of November.
+        'nine days they have' => ['2026-11-09', '2026-11-20', ['workingDays' => 9, 'hadBalance' => true, 'shortBy' => 0, 'continuousNotice' => true]],
+        'twelve days in a row' => ['2026-11-09', '2026-11-25', ['workingDays' => 12, 'hadBalance' => true, 'shortBy' => 0, 'continuousNotice' => false]],
+        'more than they have' => ['2026-11-09', '2026-12-11', ['workingDays' => 24, 'hadBalance' => false, 'shortBy' => 7, 'continuousNotice' => false]],
+    ]);
+
+    it('previews a leave, which uses no balance', function (): void {
+        $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id]);
+
+        $this->getJson(route('portal.vacations.preview', [$this->token, 'starts_on' => '2026-11-09', 'ends_on' => '2026-11-20', 'leave_type_id' => $type->id]))
+            ->assertOk()
+            ->assertExactJson(['workingDays' => 9, 'hadBalance' => null, 'shortBy' => 0, 'continuousNotice' => false]);
+    });
+
+    it('says in Spanish why dates cannot be asked, before sending', function (): void {
+        $this->getJson(route('portal.vacations.preview', [$this->token, 'starts_on' => '2026-11-07', 'ends_on' => '2026-11-08']))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.ends_on.0', 'Esas fechas no incluyen ningún día laborable.');
+
+        $this->getJson(route('portal.vacations.preview', [$this->token, 'starts_on' => '2026-11-09']))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.ends_on.0', 'El campo fecha de fin es obligatorio.');
+    });
+
+    it('sends the request to whoever answers it and tells the person', function (): void {
+        $this->post(route('portal.vacations.requests.store', $this->token), ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-20', 'note' => ' Viaje familiar ', 'employee_id' => $this->caro->id])
+            ->assertRedirect(route('portal.vacations.show', $this->token))
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Enviamos su solicitud. Le avisaremos cuando la respondan.']);
+
+        $request = LeaveRequest::query()->sole();
+        expect($request->only(['employee_id', 'leave_type_id', 'working_days', 'note', 'approver_employee_id', 'recorded_by', 'had_balance']))->toBe([
+            'employee_id' => $this->ana->id, 'leave_type_id' => null, 'working_days' => 9, 'note' => 'Viaje familiar', 'approver_employee_id' => $this->boss->id, 'recorded_by' => null, 'had_balance' => true,
+        ])->and($request->status->value)->toBe('requested')
+            ->and($request->starts_on->toDateString())->toBe('2026-11-09')
+            ->and($request->ends_on->toDateString())->toBe('2026-11-20');
+    });
+
+    it('sends a leave of a type of the company, and a request without the days', function (): void {
+        $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id]);
+
+        $this->post(route('portal.vacations.requests.store', $this->token), ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'leave_type_id' => $type->id])->assertRedirect();
+        $this->post(route('portal.vacations.requests.store', $this->token), ['starts_on' => '2026-11-23', 'ends_on' => '2026-12-31'])->assertRedirect()->assertSessionHasNoErrors();
+
+        expect(LeaveRequest::query()->orderBy('starts_on')->get()->map(fn (LeaveRequest $request): array => [$request->leave_type_id, $request->had_balance])->all())
+            ->toBe([[$type->id, null], [null, false]]);
+    });
+
+    it('says in Spanish, on its field, why a request cannot be made', function (array $data, string $field, string $message): void {
+        portalRequest($this->ana, 'approved', ['starts_on' => '2026-12-01', 'ends_on' => '2026-12-04']);
+        $archived = LeaveType::factory()->archived()->create(['tenant_id' => $this->tenant->id]);
+        $foreign = LeaveType::factory()->create();
+        $data = array_map(fn (string $value): string => str_replace(['{archived}', '{foreign}'], [$archived->id, $foreign->id], $value), $data);
+
+        $this->from(route('portal.vacations.show', $this->token))
+            ->post(route('portal.vacations.requests.store', $this->token), $data)
+            ->assertRedirect(route('portal.vacations.show', $this->token))
+            ->assertSessionHasErrors([$field => $message]);
+
+        expect(LeaveRequest::query()->count())->toBe(1);
+    })->with([
+        'already gone' => [['starts_on' => '2026-11-01', 'ends_on' => '2026-11-06'], 'starts_on', 'La fecha de inicio ya pasó. Elija una fecha de hoy en adelante.'],
+        'a weekend' => [['starts_on' => '2026-11-07', 'ends_on' => '2026-11-08'], 'ends_on', 'Esas fechas no incluyen ningún día laborable.'],
+        'over days already asked' => [['starts_on' => '2026-12-04', 'ends_on' => '2026-12-08'], 'starts_on', 'Ya tiene una solicitud en esas fechas. Cancélela o elija otras fechas.'],
+        'longer than a year' => [['starts_on' => '2027-01-04', 'ends_on' => '2028-01-10'], 'ends_on', 'Una solicitud no puede durar más de un año. Divídala en varias.'],
+        'an archived type' => [['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'leave_type_id' => '{archived}'], 'leave_type_id', 'Ese tipo de permiso ya no está disponible. Elija otro.'],
+        'a type of another company' => [['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'leave_type_id' => '{foreign}'], 'leave_type_id', 'Ese tipo de permiso ya no está disponible. Elija otro.'],
+        'the end before the start' => [['starts_on' => '2026-11-10', 'ends_on' => '2026-11-09'], 'ends_on', 'El campo fecha de fin debe ser una fecha posterior o igual a fecha de inicio.'],
+        'no dates' => [[], 'starts_on', 'El campo fecha de inicio es obligatorio.'],
+        'a note too long' => [['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'note' => str_repeat('a', 501)], 'note', 'El campo nota no debe tener más de 500 caracteres.'],
+        'a type that is not an id' => [['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'leave_type_id' => 'x'], 'leave_type_id', 'El campo tipo de permiso debe ser un UUID válido.'],
+    ]);
+
+    it('lets the person cancel their own request', function (): void {
+        $request = portalRequest($this->ana);
+
+        $this->post(route('portal.vacations.requests.cancel', [$this->token, $request->id]))
+            ->assertRedirect(route('portal.vacations.show', $this->token))
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Su solicitud quedó cancelada.']);
+
+        expect($request->refresh()->status->value)->toBe('cancelled');
+    });
+
+    it('says a request that already passed can no longer be cancelled, and leaves it as it was', function (): void {
+        $request = portalRequest($this->ana, 'taken', ['starts_on' => '2026-10-01', 'ends_on' => '2026-10-02']);
+
+        $this->post(route('portal.vacations.requests.cancel', [$this->token, $request->id]))
+            ->assertRedirect(route('portal.vacations.show', $this->token))
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya no se puede cancelar.']);
+
+        expect($request->refresh()->status->value)->toBe('taken');
+    });
+
+    it("answers 'not found' when cancelling what is not theirs, and changes nothing", function (): void {
+        $caros = portalRequest($this->caro);
+        $other = Tenant::factory()->create();
+        $foreign = LeaveRequest::factory()->create(['tenant_id' => $other->id]);
+
+        $this->post(route('portal.vacations.requests.cancel', [$this->token, $caros->id]))->assertNotFound();
+        $this->post(route('portal.vacations.requests.cancel', [$this->token, $foreign->id]))->assertNotFound();
+        $this->post(route('portal.vacations.requests.cancel', [$this->token, 'not-an-id']))->assertNotFound();
+
+        expect($caros->refresh()->status->value)->toBe('requested')
+            ->and(LeaveRequest::query()->withoutGlobalScopes()->findOrFail($foreign->id)->status->value)->toBe('requested');
+    });
+
+    it("answers 'not found' to every action of a link that is not valid", function (): void {
+        $request = portalRequest($this->ana);
+        $dates = ['starts_on' => '2026-11-23', 'ends_on' => '2026-11-24'];
+
+        $this->getJson(route('portal.vacations.preview', ['made-up', ...$dates]))->assertNotFound();
+        $this->post(route('portal.vacations.requests.store', 'made-up'), $dates)->assertNotFound();
+        $this->post(route('portal.vacations.requests.cancel', ['made-up', $request->id]))->assertNotFound();
+
+        LeaveSetting::query()->delete();
+
+        $this->post(route('portal.vacations.requests.store', $this->token), $dates)->assertNotFound();
+
+        expect(LeaveRequest::query()->count())->toBe(1)
+            ->and($request->refresh()->status->value)->toBe('requested');
+    });
+});

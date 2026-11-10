@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import PortalBalance from '@/components/leave/portal-balance';
 import PortalRequests from '@/components/leave/portal-requests';
 import PortalShell from '@/components/leave/portal-shell';
+import RequestForm from '@/components/leave/request-form';
 import { show } from '@/routes/portal';
 import type {
     LeavePeriod,
@@ -12,15 +13,17 @@ import type {
 } from '@/types';
 
 /**
- * «Mis vacaciones» in the person's portal, in usted: the days they have by period, and what they have asked for. Only
+ * «Mis vacaciones» in the person's portal, in usted: the days they have by period, the form to ask for days, and what they have asked for. Only
  * days and dates, never an amount.
  */
 export default function LeavePortal({
     token,
     company,
+    today,
     periods,
     advanced,
     requests,
+    types,
 }: {
     token: string;
     company: string;
@@ -53,7 +56,8 @@ export default function LeavePortal({
                     </p>
                 </div>
                 <PortalBalance periods={periods} advanced={advanced} />
-                <PortalRequests requests={requests} />
+                <RequestForm token={token} today={today} types={types} />
+                <PortalRequests token={token} requests={requests} />
             </div>
         </PortalShell>
     );

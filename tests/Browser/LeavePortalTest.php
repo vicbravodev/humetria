@@ -6,6 +6,7 @@ use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
+use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
@@ -48,6 +49,8 @@ it('shows a person their days by period and what they asked for', function (bool
     $portal = vacationsPortal();
     LeaveRequest::factory()->rejected()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id, 'starts_on' => '2026-06-01', 'ends_on' => '2026-06-05', 'working_days' => 5]);
 
+    LeaveRequest::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id, 'starts_on' => '2026-12-21', 'ends_on' => '2026-12-22', 'working_days' => 2]);
+
     visitPage('leave/portal', $portal['url'], $dark, $mobile)
         ->assertSee('Mis vacaciones')
         // The person's own frame, even in a browser signed in to the panel: no sidebar, no top bar.
@@ -57,6 +60,9 @@ it('shows a person their days by period and what they asked for', function (bool
         ->assertSeeIn('section[aria-labelledby="leave-balance"]', 'Disfrútelos antes del 15 de septiembre de 2025.')
         ->assertSeeIn('section[aria-labelledby="leave-balance"]', 'Podría prescribir')
         ->assertSeeIn('section[aria-labelledby="leave-balance"]', 'Periodo 2026')
+        ->assertSeeIn('section[aria-labelledby="leave-ask"]', 'Enviar solicitud')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', '21 al 22 de diciembre de 2026 · 2 días laborables')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Cancelar solicitud')
         ->assertSeeIn('section[aria-labelledby="leave-requests"]', '1 al 5 de junio de 2026 · 5 días laborables')
         ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Rechazada')
         ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Motivo: Cierre de mes')
@@ -69,3 +75,97 @@ it('tells a person with no days yet when they will have them', function (): void
         ->assertSee('Aún no tiene días disponibles')
         ->assertSee('Aún no ha pedido días.');
 });
+
+it('lets a person ask for days and see the request waiting', function (bool $dark, bool $mobile): void {
+    $portal = vacationsPortal();
+
+    visitPage('leave/portal', $portal['url'], $dark, $mobile)
+        // The dates are picked in a calendar, never typed; it opens on the month of the first day it allows.
+        ->click('#leave-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-09"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->click('#leave-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-20"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertSee('Son 9 días laborables.')
+        // A reminder that never stops the request.
+        ->assertSee('La ley le da derecho a 12 días seguidos de vacaciones. Dividirlos es decisión suya.')
+        ->assertDontSee('No tiene días disponibles para estas fechas.')
+        ->type('#leave-note', 'Viaje familiar')
+        ->press('Enviar solicitud')
+        ->assertSee('Enviamos su solicitud. Le avisaremos cuando la respondan.')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Solicitada')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', '9 al 20 de noviembre de 2026 · 9 días laborables')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(LeaveRequest::query()->sole()->only(['employee_id', 'note', 'working_days']))->toBe(['employee_id' => $portal['ana']->id, 'note' => 'Viaje familiar', 'working_days' => 9]);
+})->with($looks);
+
+it('says a person has no days for the dates and still lets them send the request', function (): void {
+    $portal = vacationsPortal(periods: false);
+
+    visitPage('leave/portal', $portal['url'])
+        ->click('#leave-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-09"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->click('#leave-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-10"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertSee('Son 2 días laborables.')
+        ->assertSee('No tiene días disponibles para estas fechas. Puede enviar la solicitud; quien la apruebe lo verá.')
+        ->press('Enviar solicitud')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Solicitada')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'No tenía días disponibles al pedirla; quien la apruebe lo verá.');
+
+    expect(LeaveRequest::query()->sole()->had_balance)->toBeFalse();
+});
+
+it('says why dates cannot be asked as soon as they are picked', function (): void {
+    visitPage('leave/portal', vacationsPortal()['url'])
+        ->click('#leave-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-07"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->click('#leave-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-08"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertSee('Esas fechas no incluyen ningún día laborable.')
+        ->assertDontSee('días laborables.');
+});
+
+it('lets a person ask for a leave of the company, which uses none of their days', function (): void {
+    $portal = vacationsPortal();
+    LeaveType::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'name' => 'Paternidad']);
+
+    visitPage('leave/portal', $portal['url'])
+        ->click('#leave-type')
+        ->click('[role="option"]:has-text("Paternidad")')
+        ->click('#leave-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-09"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->click('#leave-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-10"] button')
+        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertSee('Son 2 días laborables.')
+        ->assertDontSee('La ley le da derecho a 12 días seguidos')
+        ->press('Enviar solicitud')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Paternidad')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Solicitada');
+});
+
+it('lets a person cancel a request of theirs, after asking', function (bool $dark, bool $mobile): void {
+    $portal = vacationsPortal();
+    $request = LeaveRequest::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id]);
+
+    visitPage('leave/portal', $portal['url'], $dark, $mobile)
+        ->press('Cancelar solicitud')
+        ->assertSee('¿Cancelar esta solicitud?')
+        // The answer that goes ahead is the dialog's submit: its text has a comma, which a text selector would split.
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Su solicitud quedó cancelada.')
+        ->assertSeeIn('section[aria-labelledby="leave-requests"]', 'Cancelada')
+        ->assertDontSee('Cancelar solicitud')
+        ->assertNoJavaScriptErrors();
+
+    expect($request->refresh()->status->value)->toBe('cancelled');
+})->with($looks);
