@@ -356,6 +356,7 @@ return [
         'actions' => 'qué se hizo',
         'actions.*' => 'qué se hizo',
         'answers' => 'respuestas',
+        'comments' => 'comentarios',
         'step' => 'pregunta',
         'section' => 'sección',
         'text' => 'texto',

@@ -34,6 +34,7 @@ function publicRouteNames(): array
         'survey.show', // guest: survey link from the email; the token is the credential; throttled
         'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
         'engagement.survey.show', // guest: la persona abre la encuesta de clima o pulso desde su correo; el token del enlace es la credencial; no muestra nada de nadie; un enlace inválido, usado o cancelado no dice por qué; throttled
+        'engagement.survey.submit', // guest: envía la encuesta completa una sola vez, bajo candado; el token es la credencial; throttled
         'portal.show', // guest: la persona teletrabajadora no tiene cuenta; el token es la credencial; throttled
         'portal.checklist.show', // guest: la lista de verificación de la persona; el token del portal es la credencial; solo ve sus lugares; throttled
         'portal.checklist.store', // guest: envía la lista una sola vez, bajo candado; el token del portal es la credencial; throttled

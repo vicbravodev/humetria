@@ -6,15 +6,35 @@ namespace App\Modules\Engagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Engagement\Actions\OpenInvitation;
+use App\Modules\Engagement\Actions\SubmitResponse;
 use App\Modules\Engagement\Exceptions\SurveyUnavailable;
+use App\Modules\Engagement\Http\Requests\SubmitResponseRequest;
 use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Engagement\Support\SurveyPages;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 /** The survey of a climate or pulse wave, reached from the emailed link. No account: the token of the link is the credential. */
 final class RespondentController extends Controller
 {
+    /**
+     * Back to the survey either way: it shows the thanks, or why the link no longer works.
+     */
+    public function submit(SubmitResponseRequest $request, string $token, SubmitResponse $submitResponse): RedirectResponse
+    {
+        try {
+            $submitResponse->handle($token, $request->answers(), $request->comments(), $request->minutes());
+        } catch (InvalidArgumentException) {
+            return redirect()->route('engagement.survey.show', $token)->withErrors(['answers' => 'No pudimos guardar sus respuestas. Revise la encuesta e inténtelo de nuevo.']);
+        } catch (SurveyUnavailable) {
+            return redirect()->route('engagement.survey.show', $token);
+        }
+
+        return redirect()->route('engagement.survey.show', $token);
+    }
+
     public function show(string $token, OpenInvitation $openInvitation): Response
     {
         try {
