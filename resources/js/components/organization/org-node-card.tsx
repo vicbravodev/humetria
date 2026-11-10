@@ -27,7 +27,7 @@ export default function OrgNodeCard({
         <div
             data-slot="org-node"
             className={cn(
-                'flex max-w-xl break-inside-avoid items-center gap-3 rounded-xl border bg-card p-3 md:px-4',
+                'flex max-w-xl break-inside-avoid items-center gap-3 card p-3 md:px-4',
                 focused && 'border-primary ring-1 ring-primary',
                 !node.matches && 'border-dashed bg-transparent',
             )}

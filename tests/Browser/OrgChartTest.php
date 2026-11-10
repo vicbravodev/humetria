@@ -141,6 +141,8 @@ it('narrows the tree to an area, dimming whoever is only on the way', function (
         ->assertSee('Ventas')
         ->keys('[role="combobox"][aria-controls="org-chart-area-options"]', 'Enter')
         ->assertQueryStringHas('area', $sales->id)
+        // Diana is not in Ventas, only on the way to Ana: her card is an outline.
+        ->assertScript('() => { const style = getComputedStyle(document.querySelector(\'[data-slot="org-node"]\')); return [style.borderTopStyle, style.backgroundColor].join(); }', 'dashed,rgba(0, 0, 0, 0)')
         ->click('[aria-label="Ver los reportes de Diana Torres"]')
         ->assertSee('Gerardo Paz')
         ->assertDontSee('Sofía Luna')
