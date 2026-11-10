@@ -30,6 +30,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'leave:grant-entitlements' => '30 0 * * *',
         'leave:route-requests' => '40 0 * * *',
         'engagement:close-expired' => '0 * * * *',
+        'engagement:launch-pulses' => '0 8 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
@@ -73,6 +74,15 @@ it('closes the expired climate surveys every hour, once and without overlapping'
     $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'engagement:close-expired'));
 
     expect($event->onOneServer)->toBeTrue()
+        ->and($event->withoutOverlapping)->toBeTrue();
+});
+
+it('launches the scheduled pulses at 08:00 display time, once and without overlapping', function (): void {
+    $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'engagement:launch-pulses'));
+
+    expect($event->expression)->toBe('0 8 * * *')
+        ->and($event->timezone)->toBe('America/Mexico_City')
+        ->and($event->onOneServer)->toBeTrue()
         ->and($event->withoutOverlapping)->toBeTrue();
 });
 

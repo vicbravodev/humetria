@@ -10,6 +10,7 @@ use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Engagement\Actions\CloseExpiredSurveys;
+use App\Modules\Engagement\Actions\LaunchScheduledPulses;
 use App\Modules\Engagement\Support\Results\ItemStatisticsReport;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
@@ -108,6 +109,10 @@ Artisan::command('engagement:close-expired', function (CloseExpiredSurveys $clos
     $this->info('Encuestas cerradas: '.$closeExpired->handle());
 })->purpose('Close the climate and pulse surveys whose last day is over');
 
+Artisan::command('engagement:launch-pulses', function (LaunchScheduledPulses $launch): void {
+    $this->info('Pulsos lanzados: '.$launch->handle());
+})->purpose('Launch the pulse of every company whose schedule is due today, and move its next date ahead');
+
 Artisan::command('leave:route-requests', function (RouteRequests $route): void {
     $done = $route->handle();
     $this->info("Solicitudes disfrutadas: {$done['taken']}, reasignadas: {$done['reassigned']}, escaladas a RH: {$done['escalated']}");
@@ -136,6 +141,8 @@ Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config
 // After the grant: what ended yesterday becomes taken, and a request nobody answered reaches RH first thing in the day.
 Schedule::command('leave:route-requests')->dailyAt('00:40')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('engagement:close-expired')->hourly()->onOneServer()->withoutOverlapping();
+// First thing in the local morning, so a pulse goes out at the start of the working day; a run again launches nothing twice.
+Schedule::command('engagement:launch-pulses')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
