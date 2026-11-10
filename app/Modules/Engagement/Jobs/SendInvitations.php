@@ -134,6 +134,7 @@ final class SendInvitations implements ShouldQueue
     {
         return Invitation::query()
             ->whereKey($this->invitationIds)
+            ->where('cancelled', false)
             ->where('invitation_status', InvitationStatus::Queued)
             ->where('invitation_batch', $this->invitationBatch);
     }
