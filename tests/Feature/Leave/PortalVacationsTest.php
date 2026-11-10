@@ -29,13 +29,13 @@ beforeEach(function (): void {
     $this->ana = Employee::factory()->reportingTo($this->boss)->create(['name' => 'Ana Solís']);
     $this->caro = Employee::factory()->reportingTo($this->boss)->create(['name' => 'Caro Luz']);
     // 3 days left of the older period, which can already prescribe, and 14 of the newer one.
-    $this->older = portalPeriod($this->ana, 1, '2025-03-15', 12);
+    $this->older = leavePortalPeriod($this->ana, 1, '2025-03-15', 12);
     LeaveEntry::factory()->of($this->older)->taken(9)->create();
-    $this->newer = portalPeriod($this->ana, 2, '2026-03-15', 14);
+    $this->newer = leavePortalPeriod($this->ana, 2, '2026-03-15', 14);
     $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
 });
 
-function portalPeriod(Employee $person, int $years, string $anniversary, int $statutory, int $extra = 0): LeaveEntitlement
+function leavePortalPeriod(Employee $person, int $years, string $anniversary, int $statutory, int $extra = 0): LeaveEntitlement
 {
     return LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'years_of_service' => $years, 'anniversary_on' => $anniversary, 'statutory_days' => $statutory, 'extra_days' => $extra]);
 }
@@ -43,7 +43,7 @@ function portalPeriod(Employee $person, int $years, string $anniversary, int $st
 /**
  * @param  array<string, mixed>  $attributes
  */
-function portalRequest(Employee $person, string $state = 'requested', array $attributes = []): LeaveRequest
+function leavePortalRequest(Employee $person, string $state = 'requested', array $attributes = []): LeaveRequest
 {
     $factory = LeaveRequest::factory();
     $factory = match ($state) {
@@ -80,7 +80,7 @@ it('shows the person a row per period with days left, from the oldest', function
 
 it('counts the extra days of a period and leaves out a period with nothing left', function (): void {
     LeaveEntry::factory()->of($this->older)->taken(3)->create();
-    portalPeriod($this->ana, 3, '2026-10-15', 16, 2);
+    leavePortalPeriod($this->ana, 3, '2026-10-15', 16, 2);
 
     $this->get(route('portal.vacations.show', $this->token))
         ->assertInertia(fn (Assert $page) => $page
@@ -109,9 +109,9 @@ it('says how many days the person was given in advance', function (): void {
 
 it('lists only their own requests, the newest first, a few at a time', function (): void {
     $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Paternidad']);
-    $first = portalRequest($this->ana, 'rejected', ['starts_on' => '2026-06-01', 'ends_on' => '2026-06-05', 'working_days' => 5, 'had_balance' => false]);
-    $second = portalRequest($this->ana, 'requested', ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-20', 'leave_type_id' => $type->id, 'had_balance' => null]);
-    portalRequest($this->caro, 'requested', ['starts_on' => '2026-12-01', 'ends_on' => '2026-12-02']);
+    $first = leavePortalRequest($this->ana, 'rejected', ['starts_on' => '2026-06-01', 'ends_on' => '2026-06-05', 'working_days' => 5, 'had_balance' => false]);
+    $second = leavePortalRequest($this->ana, 'requested', ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-20', 'leave_type_id' => $type->id, 'had_balance' => null]);
+    leavePortalRequest($this->caro, 'requested', ['starts_on' => '2026-12-01', 'ends_on' => '2026-12-02']);
 
     $this->get(route('portal.vacations.show', $this->token))
         ->assertInertia(fn (Assert $page) => $page
@@ -124,7 +124,7 @@ it('lists only their own requests, the newest first, a few at a time', function 
 });
 
 it('offers to cancel what waits and what was approved and has not started', function (string $state, string $startsOn, bool $offered): void {
-    portalRequest($this->ana, $state, ['starts_on' => $startsOn, 'ends_on' => '2026-11-20']);
+    leavePortalRequest($this->ana, $state, ['starts_on' => $startsOn, 'ends_on' => '2026-11-20']);
 
     $this->get(route('portal.vacations.show', $this->token))
         ->assertInertia(fn (Assert $page) => $page->where('requests.data.0.canCancel', $offered));
@@ -138,7 +138,7 @@ it('offers to cancel what waits and what was approved and has not started', func
 
 it('turns the pages of the requests', function (): void {
     foreach (range(1, 12) as $month) {
-        portalRequest($this->ana, 'taken', ['starts_on' => sprintf('2025-%02d-01', $month), 'ends_on' => sprintf('2025-%02d-02', $month)]);
+        leavePortalRequest($this->ana, 'taken', ['starts_on' => sprintf('2025-%02d-01', $month), 'ends_on' => sprintf('2025-%02d-02', $month)]);
     }
 
     $this->get(route('portal.vacations.show', [$this->token, 'page' => 2]))
@@ -177,7 +177,7 @@ it("answers 'not found' in a company that does not use Vacaciones", function ():
 });
 
 it('never shows a link of another company what is of this one', function (): void {
-    portalRequest($this->ana);
+    leavePortalRequest($this->ana);
     LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Cuidados']);
     $other = Tenant::factory()->create(['trade_name' => 'Otra']);
     LeaveSetting::factory()->create(['tenant_id' => $other->id]);
@@ -194,9 +194,9 @@ it('never shows a link of another company what is of this one', function (): voi
 });
 
 it('sends nothing of anybody else, no note and no amounts', function (): void {
-    portalPeriod($this->caro, 1, '2026-01-10', 12);
-    portalRequest($this->caro, 'requested', ['note' => 'Nota de Caro']);
-    portalRequest($this->ana, 'requested', ['note' => 'Nota privada']);
+    leavePortalPeriod($this->caro, 1, '2026-01-10', 12);
+    leavePortalRequest($this->caro, 'requested', ['note' => 'Nota de Caro']);
+    leavePortalRequest($this->ana, 'requested', ['note' => 'Nota privada']);
 
     $props = $this->get(route('portal.vacations.show', $this->token))->assertOk()->inertiaProps();
     $sent = (string) json_encode($props, JSON_UNESCAPED_UNICODE);
@@ -268,7 +268,7 @@ describe('asking for days', function (): void {
     });
 
     it('says in Spanish, on its field, why a request cannot be made', function (array $data, string $field, string $message): void {
-        portalRequest($this->ana, 'approved', ['starts_on' => '2026-12-01', 'ends_on' => '2026-12-04']);
+        leavePortalRequest($this->ana, 'approved', ['starts_on' => '2026-12-01', 'ends_on' => '2026-12-04']);
         $archived = LeaveType::factory()->archived()->create(['tenant_id' => $this->tenant->id]);
         $foreign = LeaveType::factory()->create();
         $data = array_map(fn (string $value): string => str_replace(['{archived}', '{foreign}'], [$archived->id, $foreign->id], $value), $data);
@@ -293,7 +293,7 @@ describe('asking for days', function (): void {
     ]);
 
     it('lets the person cancel their own request', function (): void {
-        $request = portalRequest($this->ana);
+        $request = leavePortalRequest($this->ana);
 
         $this->post(route('portal.vacations.requests.cancel', [$this->token, $request->id]))
             ->assertRedirect(route('portal.vacations.show', $this->token))
@@ -303,7 +303,7 @@ describe('asking for days', function (): void {
     });
 
     it('says a request that already passed can no longer be cancelled, and leaves it as it was', function (): void {
-        $request = portalRequest($this->ana, 'taken', ['starts_on' => '2026-10-01', 'ends_on' => '2026-10-02']);
+        $request = leavePortalRequest($this->ana, 'taken', ['starts_on' => '2026-10-01', 'ends_on' => '2026-10-02']);
 
         $this->post(route('portal.vacations.requests.cancel', [$this->token, $request->id]))
             ->assertRedirect(route('portal.vacations.show', $this->token))
@@ -313,7 +313,7 @@ describe('asking for days', function (): void {
     });
 
     it("answers 'not found' when cancelling what is not theirs, and changes nothing", function (): void {
-        $caros = portalRequest($this->caro);
+        $caros = leavePortalRequest($this->caro);
         $other = Tenant::factory()->create();
         $foreign = LeaveRequest::factory()->create(['tenant_id' => $other->id]);
 
@@ -326,7 +326,7 @@ describe('asking for days', function (): void {
     });
 
     it("answers 'not found' to every action of a link that is not valid", function (): void {
-        $request = portalRequest($this->ana);
+        $request = leavePortalRequest($this->ana);
         $dates = ['starts_on' => '2026-11-23', 'ends_on' => '2026-11-24'];
 
         $this->getJson(route('portal.vacations.preview', ['made-up', ...$dates]))->assertNotFound();

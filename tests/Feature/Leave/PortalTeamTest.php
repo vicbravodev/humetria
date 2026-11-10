@@ -52,18 +52,18 @@ beforeEach(function (): void {
  *
  * @param  array<string, mixed>  $attributes
  */
-function teamRequest(Employee $person, array $attributes = []): LeaveRequest
+function leaveTeamRequest(Employee $person, array $attributes = []): LeaveRequest
 {
     return LeaveRequest::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'approver_employee_id' => $person->manager_id, ...$attributes]);
 }
 
-function teamPolicyAllowsAdvances(): void
+function leaveTeamAllowsAdvances(): void
 {
     $policy = LeavePolicy::factory()->create(['tenant_id' => test()->tenant->id, 'allows_advance' => true]);
     LeavePolicyAssignment::factory()->create(['tenant_id' => test()->tenant->id, 'leave_policy_id' => $policy->id]);
 }
 
-function teamStatus(LeaveRequest $request): string
+function leaveTeamStatus(LeaveRequest $request): string
 {
     return LeaveRequest::query()->withoutGlobalScopes()->findOrFail($request->id)->status->value;
 }
@@ -79,12 +79,12 @@ it('lives under the personal link of the manager, throttled as the rest of the p
 
 it('shows a manager only the requests that wait for them, the oldest first, with where the days would come from', function (): void {
     $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Paternidad']);
-    $leave = teamRequest($this->caro, ['requested_on' => '2026-11-01', 'starts_on' => '2026-12-01', 'ends_on' => '2026-12-02', 'working_days' => 2, 'leave_type_id' => $type->id, 'had_balance' => null]);
-    $vacations = teamRequest($this->ana, ['requested_on' => '2026-10-30', 'note' => 'Viaje familiar']);
+    $leave = leaveTeamRequest($this->caro, ['requested_on' => '2026-11-01', 'starts_on' => '2026-12-01', 'ends_on' => '2026-12-02', 'working_days' => 2, 'leave_type_id' => $type->id, 'had_balance' => null]);
+    $vacations = leaveTeamRequest($this->ana, ['requested_on' => '2026-10-30', 'note' => 'Viaje familiar']);
     // Not theirs to answer: a peer's, one already answered, one that went to RH with nobody above.
-    teamRequest($this->dan);
+    leaveTeamRequest($this->dan);
     LeaveRequest::factory()->rejected()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id, 'starts_on' => '2026-06-01', 'ends_on' => '2026-06-02']);
-    teamRequest($this->caro, ['approver_employee_id' => null, 'starts_on' => '2027-01-11', 'ends_on' => '2027-01-12']);
+    leaveTeamRequest($this->caro, ['approver_employee_id' => null, 'starts_on' => '2027-01-11', 'ends_on' => '2027-01-12']);
 
     $this->get(route('portal.vacations.team.show', $this->token))
         ->assertOk()
@@ -103,7 +103,7 @@ it('shows a manager only the requests that wait for them, the oldest first, with
 
 it('adds up the tranches of a period and says how many days are missing', function (): void {
     LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->caro->id, 'years_of_service' => 1, 'anniversary_on' => '2026-02-01', 'statutory_days' => 2, 'extra_days' => 3]);
-    teamRequest($this->caro);
+    leaveTeamRequest($this->caro);
 
     $this->get(route('portal.vacations.team.show', $this->token))
         ->assertInertia(fn (Assert $page) => $page
@@ -114,10 +114,10 @@ it('adds up the tranches of a period and says how many days are missing', functi
 
 it('offers to approve vacations without the days only when the policy of the person gives days in advance', function (bool $advances): void {
     if ($advances) {
-        teamPolicyAllowsAdvances();
+        leaveTeamAllowsAdvances();
     }
 
-    teamRequest($this->caro, ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-12', 'working_days' => 4, 'had_balance' => false]);
+    leaveTeamRequest($this->caro, ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-12', 'working_days' => 4, 'had_balance' => false]);
 
     $this->get(route('portal.vacations.team.show', $this->token))
         ->assertInertia(fn (Assert $page) => $page
@@ -128,7 +128,7 @@ it('offers to approve vacations without the days only when the policy of the per
 })->with([false, true]);
 
 it('shows whoever has nothing to answer an empty list', function (): void {
-    teamRequest($this->ana);
+    leaveTeamRequest($this->ana);
 
     $this->get(route('portal.vacations.team.show', resolve(IssuePortalLink::class)->handle($this->ana->id)))
         ->assertOk()
@@ -137,7 +137,7 @@ it('shows whoever has nothing to answer an empty list', function (): void {
 
 it('turns the pages of the requests', function (): void {
     foreach (range(1, 12) as $day) {
-        teamRequest($this->ana, ['requested_on' => sprintf('2026-10-%02d', $day), 'starts_on' => sprintf('2027-%02d-01', $day), 'ends_on' => sprintf('2027-%02d-02', $day)]);
+        leaveTeamRequest($this->ana, ['requested_on' => sprintf('2026-10-%02d', $day), 'starts_on' => sprintf('2027-%02d-01', $day), 'ends_on' => sprintf('2027-%02d-02', $day)]);
     }
 
     $this->get(route('portal.vacations.team.show', [$this->token, 'page' => 2]))
@@ -152,7 +152,7 @@ it('reads the page with the same queries whatever the number of requests', funct
     $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id]);
 
     foreach (range(1, $requests) as $month) {
-        teamRequest($month % 2 === 0 ? $this->ana : $this->caro, ['starts_on' => sprintf('2027-%02d-01', $month), 'ends_on' => sprintf('2027-%02d-02', $month), ...($month % 3 === 0 ? ['leave_type_id' => $type->id, 'had_balance' => null] : [])]);
+        leaveTeamRequest($month % 2 === 0 ? $this->ana : $this->caro, ['starts_on' => sprintf('2027-%02d-01', $month), 'ends_on' => sprintf('2027-%02d-02', $month), ...($month % 3 === 0 ? ['leave_type_id' => $type->id, 'had_balance' => null] : [])]);
     }
 
     $this->expectsDatabaseQueryCount(PORTAL_TEAM_REQUESTS_QUERIES);
@@ -162,8 +162,8 @@ it('reads the page with the same queries whatever the number of requests', funct
 
 it('sends nothing of who did not ask, and nobody\'s id', function (): void {
     LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->caro->id, 'anniversary_on' => '2026-02-01', 'statutory_days' => 12]);
-    teamRequest($this->ana);
-    teamRequest($this->dan, ['note' => 'Nota de Dan']);
+    leaveTeamRequest($this->ana);
+    leaveTeamRequest($this->dan, ['note' => 'Nota de Dan']);
 
     $sent = (string) json_encode($this->get(route('portal.vacations.team.show', $this->token))->assertOk()->inertiaProps(), JSON_UNESCAPED_UNICODE);
 
@@ -172,7 +172,7 @@ it('sends nothing of who did not ask, and nobody\'s id', function (): void {
 });
 
 it('approves: the request changes and the days are charged to the ledger, the oldest period first', function (): void {
-    $request = teamRequest($this->ana);
+    $request = leaveTeamRequest($this->ana);
 
     $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
         ->assertRedirect(route('portal.vacations.team.show', $this->token))
@@ -186,7 +186,7 @@ it('approves: the request changes and the days are charged to the ledger, the ol
 });
 
 it('rejects with the reason, which the person will read', function (): void {
-    $request = teamRequest($this->ana);
+    $request = leaveTeamRequest($this->ana);
 
     $this->post(route('portal.vacations.team.reject', [$this->token, $request->id]), ['reason' => 'Cierre de mes: tome otra semana.'])
         ->assertRedirect(route('portal.vacations.team.show', $this->token))
@@ -200,14 +200,14 @@ it('rejects with the reason, which the person will read', function (): void {
 });
 
 it('asks in Spanish for the reason of a rejection', function (array $data, string $message): void {
-    $request = teamRequest($this->ana);
+    $request = leaveTeamRequest($this->ana);
 
     $this->from(route('portal.vacations.team.show', $this->token))
         ->post(route('portal.vacations.team.reject', [$this->token, $request->id]), $data)
         ->assertRedirect(route('portal.vacations.team.show', $this->token))
         ->assertSessionHasErrors(['reason' => $message]);
 
-    expect(teamStatus($request))->toBe('requested');
+    expect(leaveTeamStatus($request))->toBe('requested');
 })->with([
     'none' => [[], 'El campo motivo es obligatorio.'],
     'too short' => [['reason' => 'No.'], 'El campo motivo debe tener al menos 5 caracteres.'],
@@ -218,39 +218,39 @@ it("answers 'not found' to a request that is not theirs to answer, and changes n
     $other = Tenant::factory()->create();
     $request = match ($whose) {
         // Dan reports to Dora, beside Beto.
-        'of a peer' => teamRequest($this->dan),
-        'given to another manager' => teamRequest($this->ana, ['approver_employee_id' => $this->dora->id]),
-        'with RH, nobody above' => teamRequest($this->ana, ['approver_employee_id' => null, 'escalated_at' => now(), 'escalation_reason' => EscalationReason::NoManager]),
+        'of a peer' => leaveTeamRequest($this->dan),
+        'given to another manager' => leaveTeamRequest($this->ana, ['approver_employee_id' => $this->dora->id]),
+        'with RH, nobody above' => leaveTeamRequest($this->ana, ['approver_employee_id' => null, 'escalated_at' => now(), 'escalation_reason' => EscalationReason::NoManager]),
         'of another company' => LeaveRequest::factory()->create(['tenant_id' => $other->id]),
     };
 
     $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))->assertNotFound();
     $this->post(route('portal.vacations.team.reject', [$this->token, $request->id]), ['reason' => 'Cierre de mes'])->assertNotFound();
 
-    expect(teamStatus($request))->toBe('requested')
+    expect(leaveTeamStatus($request))->toBe('requested')
         ->and(LeaveEntry::query()->withoutGlobalScopes()->where('leave_request_id', $request->id)->count())->toBe(0);
 })->with(['of a peer', 'given to another manager', 'with RH, nobody above', 'of another company']);
 
 it('lets nobody answer their own request, nor one named by something that is not an id', function (): void {
-    $request = teamRequest($this->ana);
+    $request = leaveTeamRequest($this->ana);
     $anas = resolve(IssuePortalLink::class)->handle($this->ana->id);
 
     $this->post(route('portal.vacations.team.approve', [$anas, $request->id]))->assertNotFound();
     $this->post(route('portal.vacations.team.approve', [$this->token, 'not-an-id']))->assertNotFound();
     $this->post(route('portal.vacations.team.reject', [$this->token, 'not-an-id']), ['reason' => 'Cierre de mes'])->assertNotFound();
 
-    expect(teamStatus($request))->toBe('requested');
+    expect(leaveTeamStatus($request))->toBe('requested');
 });
 
 it('gives a request to its new manager: the one before can no longer answer it', function (): void {
-    $request = teamRequest($this->ana);
+    $request = leaveTeamRequest($this->ana);
     $request->update(['approver_employee_id' => $this->dora->id]);
 
     $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))->assertNotFound();
-    expect(teamStatus($request))->toBe('requested');
+    expect(leaveTeamStatus($request))->toBe('requested');
 
     $this->post(route('portal.vacations.team.approve', [resolve(IssuePortalLink::class)->handle($this->dora->id), $request->id]))->assertRedirect();
-    expect(teamStatus($request))->toBe('approved');
+    expect(leaveTeamStatus($request))->toBe('approved');
 });
 
 it('still lets the manager answer what reached RH because they took too long, once', function (): void {
@@ -267,7 +267,7 @@ it('still lets the manager answer what reached RH because they took too long, on
         ->assertRedirect(route('portal.vacations.team.show', $this->token))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya fue respondida.']);
 
-    expect(teamStatus($request))->toBe('approved')
+    expect(leaveTeamStatus($request))->toBe('approved')
         ->and((int) LeaveEntry::query()->where('leave_request_id', $request->id)->sum('days'))->toBe(-9);
 });
 
@@ -279,23 +279,23 @@ it('says a request RH answered first was already answered', function (): void {
         ->assertRedirect(route('portal.vacations.team.show', $this->token))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya fue respondida.']);
 
-    expect(teamStatus($request))->toBe('rejected')
+    expect(leaveTeamStatus($request))->toBe('rejected')
         ->and(LeaveEntry::query()->where('leave_request_id', $request->id)->count())->toBe(0);
 });
 
 it('refuses, in words, to approve vacations without the days when the policy gives none in advance', function (): void {
-    $request = teamRequest($this->caro, ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-12', 'working_days' => 4, 'had_balance' => false]);
+    $request = leaveTeamRequest($this->caro, ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-12', 'working_days' => 4, 'had_balance' => false]);
 
     $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
         ->assertRedirect(route('portal.vacations.team.show', $this->token))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'No tiene días disponibles y su política no permite adelantar vacaciones.']);
 
-    expect(teamStatus($request))->toBe('requested')
+    expect(leaveTeamStatus($request))->toBe('requested')
         ->and(LeaveEntry::query()->where('leave_request_id', $request->id)->count())->toBe(0);
 });
 
 it("answers 'not found' to a link that is not valid, and in a company that does not use Vacaciones", function (): void {
-    $request = teamRequest($this->ana);
+    $request = leaveTeamRequest($this->ana);
 
     $this->get(route('portal.vacations.team.show', 'made-up'))->assertNotFound();
     $this->post(route('portal.vacations.team.approve', ['made-up', $request->id]))->assertNotFound();
@@ -306,13 +306,13 @@ it("answers 'not found' to a link that is not valid, and in a company that does 
     $this->get(route('portal.vacations.team.show', $this->token))->assertNotFound();
     $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))->assertNotFound();
 
-    expect(teamStatus($request))->toBe('requested');
+    expect(leaveTeamStatus($request))->toBe('requested');
 });
 
 it('tells the person, in «Mis vacaciones», how many requests wait for their answer', function (): void {
-    teamRequest($this->ana);
-    teamRequest($this->caro);
-    teamRequest($this->dan);
+    leaveTeamRequest($this->ana);
+    leaveTeamRequest($this->caro);
+    leaveTeamRequest($this->dan);
 
     $this->get(route('portal.vacations.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('teamPending', 2));
     $this->get(route('portal.vacations.show', resolve(IssuePortalLink::class)->handle($this->ana->id)))->assertInertia(fn (Assert $page) => $page->where('teamPending', 0));

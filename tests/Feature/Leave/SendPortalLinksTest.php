@@ -26,7 +26,7 @@ beforeEach(function (): void {
 /**
  * @return array<string, string> the link sent, by address
  */
-function vacationLinksSent(): array
+function leaveLinksSent(): array
 {
     $links = [];
     Notification::assertSentOnDemand(VacationsPortalLink::class, function (VacationsPortalLink $notification, array $channels, AnonymousNotifiable $notifiable) use (&$links): bool {
@@ -42,7 +42,7 @@ it('sends each person the link of their own «Mis vacaciones», and says how man
     $sent = resolve(SendPortalLinks::class)->handle([$this->ana->id, $this->beto->id], $this->rh->id);
 
     expect($sent)->toBe(2)
-        ->and(vacationLinksSent())->toBe([
+        ->and(leaveLinksSent())->toBe([
             'ana@autopartes.test' => route('portal.vacations.show', resolve(PortalAccess::class)->token($this->ana->id)),
             'beto@autopartes.test' => route('portal.vacations.show', resolve(PortalAccess::class)->token($this->beto->id)),
         ]);
@@ -72,7 +72,7 @@ it('skips whoever has no email, whoever left and whoever is of another company',
     $sent = resolve(SendPortalLinks::class)->handle([$noMail->id, $gone->id, $stranger->id, $this->ana->id], $this->rh->id);
 
     expect($sent)->toBe(1)
-        ->and(array_keys(vacationLinksSent()))->toBe(['ana@autopartes.test']);
+        ->and(array_keys(leaveLinksSent()))->toBe(['ana@autopartes.test']);
 });
 
 it('sends nothing to nobody', function (): void {

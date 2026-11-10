@@ -25,7 +25,7 @@ $looks = [
  *
  * @return array{ana: Employee, boss: Employee, url: string}
  */
-function vacationsPortal(bool $periods = true): array
+function leaveVacationsPortal(bool $periods = true): array
 {
     test()->travelTo('2026-11-02 18:00:00');
     $tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Autopartes Demo']);
@@ -46,7 +46,7 @@ function vacationsPortal(bool $periods = true): array
 
 // Boards LS-Portal and N037-Portal: one column, the person's own frame.
 it('shows a person their days by period and what they asked for', function (bool $dark, bool $mobile): void {
-    $portal = vacationsPortal();
+    $portal = leaveVacationsPortal();
     LeaveRequest::factory()->rejected()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id, 'starts_on' => '2026-06-01', 'ends_on' => '2026-06-05', 'working_days' => 5]);
 
     LeaveRequest::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id, 'starts_on' => '2026-12-21', 'ends_on' => '2026-12-22', 'working_days' => 2]);
@@ -71,13 +71,13 @@ it('shows a person their days by period and what they asked for', function (bool
 })->with($looks);
 
 it('tells a person with no days yet when they will have them', function (): void {
-    visitPage('leave/portal', vacationsPortal(periods: false)['url'])
+    visitPage('leave/portal', leaveVacationsPortal(periods: false)['url'])
         ->assertSee('Aún no tiene días disponibles')
         ->assertSee('Aún no ha pedido días.');
 });
 
 it('lets a person ask for days and see the request waiting', function (bool $dark, bool $mobile): void {
-    $portal = vacationsPortal();
+    $portal = leaveVacationsPortal();
 
     visitPage('leave/portal', $portal['url'], $dark, $mobile)
         // The dates are picked in a calendar, never typed; it opens on the month of the first day it allows.
@@ -103,7 +103,7 @@ it('lets a person ask for days and see the request waiting', function (bool $dar
 })->with($looks);
 
 it('says a person has no days for the dates and still lets them send the request', function (): void {
-    $portal = vacationsPortal(periods: false);
+    $portal = leaveVacationsPortal(periods: false);
 
     visitPage('leave/portal', $portal['url'])
         ->click('#leave-starts-on')
@@ -122,7 +122,7 @@ it('says a person has no days for the dates and still lets them send the request
 });
 
 it('says why dates cannot be asked as soon as they are picked', function (): void {
-    visitPage('leave/portal', vacationsPortal()['url'])
+    visitPage('leave/portal', leaveVacationsPortal()['url'])
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-07"] button')
         ->assertMissing('[data-slot=\"calendar\"]')
@@ -134,7 +134,7 @@ it('says why dates cannot be asked as soon as they are picked', function (): voi
 });
 
 it('lets a person ask for a leave of the company, which uses none of their days', function (): void {
-    $portal = vacationsPortal();
+    $portal = leaveVacationsPortal();
     LeaveType::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'name' => 'Paternidad']);
 
     visitPage('leave/portal', $portal['url'])
@@ -154,7 +154,7 @@ it('lets a person ask for a leave of the company, which uses none of their days'
 });
 
 it('lets a person cancel a request of theirs, after asking', function (bool $dark, bool $mobile): void {
-    $portal = vacationsPortal();
+    $portal = leaveVacationsPortal();
     $request = LeaveRequest::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id]);
 
     visitPage('leave/portal', $portal['url'], $dark, $mobile)

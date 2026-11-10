@@ -24,7 +24,7 @@ $looks = [
  *
  * @return array{url: string, ana: LeaveRequest, leave: LeaveRequest, short: LeaveRequest}
  */
-function teamPortalWithRequests(): array
+function leaveTeamPortal(): array
 {
     test()->travelTo('2026-11-02 18:00:00');
     $tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Autopartes Demo']);
@@ -47,7 +47,7 @@ function teamPortalWithRequests(): array
 
 // Boards LS-Portal and N037-Portal: one column, the person's own frame.
 it('shows a manager the requests that wait for them, each with where its days would come from', function (bool $dark, bool $mobile): void {
-    $team = teamPortalWithRequests();
+    $team = leaveTeamPortal();
 
     visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile)
         ->assertSee('Solicitudes de mi equipo')
@@ -68,7 +68,7 @@ it('shows a manager the requests that wait for them, each with where its days wo
 })->with($looks);
 
 it('lets a manager approve one request and reject another with its reason', function (bool $dark, bool $mobile): void {
-    $team = teamPortalWithRequests();
+    $team = leaveTeamPortal();
 
     visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile)
         ->click('li:has-text("Viaje familiar") button:has-text("Aprobar")')
@@ -96,7 +96,7 @@ it('lets a manager approve one request and reject another with its reason', func
 })->with($looks);
 
 it('takes a manager from «Mis vacaciones» to the requests that wait for them', function (): void {
-    $team = teamPortalWithRequests();
+    $team = leaveTeamPortal();
 
     visitPage('leave/portal', $team['url'])
         ->assertSee('3 solicitudes esperan su respuesta.')
@@ -109,7 +109,7 @@ it('takes a manager from «Mis vacaciones» to the requests that wait for them',
 });
 
 it('tells whoever has nothing to answer that nothing waits', function (bool $dark, bool $mobile): void {
-    $team = teamPortalWithRequests();
+    $team = leaveTeamPortal();
     LeaveRequest::query()->update(['approver_employee_id' => null]);
 
     visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile)
