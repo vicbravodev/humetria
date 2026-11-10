@@ -9,6 +9,7 @@ use App\Modules\Leave\Http\Controllers\AssignmentController;
 use App\Modules\Leave\Http\Controllers\BalanceController;
 use App\Modules\Leave\Http\Controllers\CalendarController;
 use App\Modules\Leave\Http\Controllers\EmployeeRecordController;
+use App\Modules\Leave\Http\Controllers\OpeningBalanceController;
 use App\Modules\Leave\Http\Controllers\PolicyController;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Http\Controllers\SettingsController;
@@ -65,3 +66,9 @@ Route::put('admin/{tenant:slug}/vacations/types/{type}', [SettingsController::cl
 Route::post('admin/{tenant:slug}/vacations/types/{type}/archive', [SettingsController::class, 'archiveType'])->where('tenant', $notReserved)->whereUuid('type')->name('tenant.vacations.types.archive');
 Route::post('admin/{tenant:slug}/vacations/holidays', [SettingsController::class, 'storeHoliday'])->where('tenant', $notReserved)->name('tenant.vacations.holidays.store');
 Route::delete('admin/{tenant:slug}/vacations/holidays/{holiday}', [SettingsController::class, 'destroyHoliday'])->where('tenant', $notReserved)->whereUuid('holiday')->name('tenant.vacations.holidays.destroy');
+
+// Opening balances by CSV, for owner and hr: check the file first, write only on confirming (planned again from the file).
+Route::get('admin/{tenant:slug}/vacations/import', [OpeningBalanceController::class, 'show'])->where('tenant', $notReserved)->name('tenant.vacations.import.show');
+Route::get('admin/{tenant:slug}/vacations/import/template', [OpeningBalanceController::class, 'template'])->where('tenant', $notReserved)->name('tenant.vacations.import.template');
+Route::post('admin/{tenant:slug}/vacations/import/plan', [OpeningBalanceController::class, 'plan'])->where('tenant', $notReserved)->name('tenant.vacations.import.plan');
+Route::post('admin/{tenant:slug}/vacations/import', [OpeningBalanceController::class, 'store'])->where('tenant', $notReserved)->name('tenant.vacations.import.store');

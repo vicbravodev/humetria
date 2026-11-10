@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Support;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -15,6 +16,12 @@ final class OpeningCsv
 {
     /** The employee number, the calendar year of the anniversary (2025) and the days still pending of that period. */
     public const array COLUMNS = ['numero_de_empleado', 'aniversario', 'dias_pendientes'];
+
+    /** The file to fill: the columns and one row as an example. */
+    public static function template(): string
+    {
+        return implode(',', self::COLUMNS)."\nA-001,".(CarbonImmutable::now()->year - 1).",8\n";
+    }
 
     /**
      * The rows of the file without the empty ones, each with its columns and the line it is on.
