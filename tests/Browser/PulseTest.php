@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Engagement\Data\BankItem;
+use App\Modules\Engagement\Enums\ItemScale;
 use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
@@ -76,6 +79,33 @@ it('lets RH review the draft of a pulse before launching it', function (bool $da
         ->assertSee('Pulso · diciembre 2026')
         ->assertSee('Recorrido')
         ->assertSee('Lanzar e invitar a 4 personas')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($pulseLooks);
+
+it('shows how the company moves from survey to survey', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $first = climateResultsSurvey($tenant, 40);
+    $first->update(['closed_at' => now()->subMonths(2)]);
+    $second = climateResultsSurvey($tenant, 40, fn (int $i): array => collect(ItemBank::closed())->mapWithKeys(fn (BankItem $item): array => [$item->key => $item->scale === ItemScale::Recommend ? ($i % 2 === 0 ? 10 : 3) : ($i % 2 === 0 ? 4 : 2)])->all());
+    $second->update(['closed_at' => now()->subMonth()]);
+
+    visitPage('engagement/trend', "{$url}/pulse/trend", $dark, $mobile)
+        ->assertSee('Tendencia')
+        ->assertSee('Índice de compromiso')
+        ->assertSee('Índice de recomendación')
+        ->assertSee('Claridad y alineación')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($pulseLooks);
+
+it('says there is nothing to compare yet, with the next step', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('engagement/trend', "{$url}/pulse/trend", $dark, $mobile)
+        ->assertSee('Todavía no hay con qué comparar')
+        ->assertSee('Programa tu primer pulso')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($pulseLooks);

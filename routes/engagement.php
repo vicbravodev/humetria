@@ -16,6 +16,7 @@ use App\Modules\Engagement\Http\Controllers\PulseScheduleController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use App\Modules\Engagement\Http\Controllers\SurveyActionController;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
+use App\Modules\Engagement\Http\Controllers\TrendController;
 use Illuminate\Support\Facades\Route;
 
 // The routes load again with every application a test boots, and a function can only be declared once.
@@ -42,6 +43,8 @@ if (! function_exists('engagementRoutes')) {
 /** @var string $notReserved */
 engagementRoutes(SurveyKind::Climate, $notReserved);
 engagementRoutes(SurveyKind::Pulse, $notReserved);
+// How the company moves across its closed surveys: the whole company, no cuts.
+Route::get('admin/{tenant:slug}/pulse/trend', [TrendController::class, 'show'])->where('tenant', $notReserved)->name('tenant.pulse.trend');
 // When the pulse goes out by itself: one schedule per company.
 Route::put('admin/{tenant:slug}/pulse/schedule', [PulseScheduleController::class, 'update'])->where('tenant', $notReserved)->defaults('kind', 'pulse')->name('tenant.pulse.schedule.update');
 

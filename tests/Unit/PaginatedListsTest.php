@@ -106,6 +106,7 @@ const ARRAY_PROPS = [
     'complaints/index:types' => 'catálogo fijo: los tres tipos de queja, denuncia y aviso',
     'engagement/index:frequencies' => 'catálogo fijo: mensual o trimestral',
     'engagement/index:modes' => 'catálogo fijo: las tres modalidades del pulso',
+    'engagement/trend:series' => 'resumen corto: a lo más 12 olas por serie, y 13 series fijas (los índices, las mejoras vistas y los 10 temas)',
     'engagement/show:sections' => 'catálogo fijo: las secciones de las 44 preguntas del banco (12 a lo más), las que contestarán las personas',
     'seating/dossier:rows' => 'expediente imprimible: documento completo para la inspección',
     'seating/dossier:documents' => 'expediente imprimible: documento completo para la inspección',

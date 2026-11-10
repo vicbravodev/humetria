@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Gauge } from 'lucide-react';
+import TrendLink from '@/components/engagement/pulse/trend-link';
 import ScheduleCard from '@/components/engagement/pulse/schedule-card';
 import ModePicker from '@/components/engagement/pulse/mode-picker';
 import CreateSurveyButton from '@/components/engagement/create-survey-button';
@@ -44,7 +45,9 @@ export default function EngagementIndex({
         <>
             <Head title={copy.title} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <PageHeader title={copy.title} description={copy.description} />
+                <PageHeader title={copy.title} description={copy.description}>
+                    {modes !== null && <TrendLink />}
+                </PageHeader>
                 {current !== null ? (
                     <SurveyCard survey={current} />
                 ) : (

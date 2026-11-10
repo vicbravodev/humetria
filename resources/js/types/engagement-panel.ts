@@ -86,3 +86,23 @@ export type ClimateParticipation = {
     minGroup: number;
     cuts: ClimateCut[];
 };
+
+/** The arrow of a point against the one before it; null when either wave was too small for it. */
+export type TrendDirection = 'up' | 'down' | 'same' | null;
+
+/** A wave of a series: its month, its value and the arrow. Nothing of who answered. */
+export type TrendPoint = {
+    surveyId: string;
+    label: string;
+    value: number;
+    direction: TrendDirection;
+};
+
+/** A figure of the company across its closed surveys. */
+export type TrendSeries = {
+    key: string;
+    title: string;
+    hint: string | null;
+    kind: 'percent' | 'index';
+    points: TrendPoint[];
+};
