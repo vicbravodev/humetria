@@ -10,7 +10,7 @@ use App\Modules\Engagement\Actions\SubmitResponse;
 use App\Modules\Engagement\Exceptions\SurveyUnavailable;
 use App\Modules\Engagement\Http\Requests\SubmitResponseRequest;
 use App\Modules\Engagement\Support\Bank\ItemBank;
-use App\Modules\Engagement\Support\SurveyPages;
+use App\Modules\Engagement\Support\SurveyScreenPages;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -67,7 +67,7 @@ final class RespondentController extends Controller
             'managerName' => $opened->managerName,
             'agreementLabels' => array_values(ItemBank::AGREEMENT_LABELS),
             'openNotice' => ItemBank::OPEN_NOTICE,
-            'sections' => SurveyPages::sections($opened->presented(), $opened->managerName),
+            'sections' => SurveyScreenPages::sections($opened->presented(), $opened->managerName),
         ]);
     }
 }

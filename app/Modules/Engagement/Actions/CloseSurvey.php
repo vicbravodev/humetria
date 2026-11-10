@@ -37,8 +37,6 @@ final readonly class CloseSurvey
             $this->recordAudit->handle('engagement.survey_closed', $survey, ['automatic' => $automatic]);
             event(new SurveyClosed($survey->id, $survey->kind));
 
-            Log::info('engagement.survey_closed', ['survey_id' => $survey->id]);
-
             return $survey;
         });
     }
