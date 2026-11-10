@@ -25,6 +25,7 @@ export default function Results(props: EngagementResults) {
                     tenantSlug={tenantSlug}
                     survey={survey}
                     available={participation !== null}
+                    cut={props.cut}
                 />
                 {participation === null ? (
                     <EmptyState

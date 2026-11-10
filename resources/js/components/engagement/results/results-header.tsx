@@ -1,8 +1,9 @@
 import { Link } from '@inertiajs/react';
-import { ClipboardCheck, ListChecks } from 'lucide-react';
+import { ClipboardCheck, Download, ListChecks } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { exportMethod as exportCsv } from '@/routes/tenant/climate';
 import { items } from '@/routes/tenant/climate/results';
 import type { EngagementResults } from '@/types';
 
@@ -11,10 +12,12 @@ export default function ResultsHeader({
     tenantSlug,
     survey,
     available,
+    cut,
 }: {
     tenantSlug: string;
     survey: EngagementResults['survey'];
     available: boolean;
+    cut: EngagementResults['cut'];
 }) {
     return (
         <PageHeader
@@ -37,12 +40,28 @@ export default function ResultsHeader({
             ]}
         >
             {available && (
-                <Button asChild variant="outline">
-                    <Link href={items.url([tenantSlug, survey.id])}>
-                        <ListChecks aria-hidden />
-                        Ver por pregunta
-                    </Link>
-                </Button>
+                <>
+                    <Button asChild variant="outline">
+                        <a
+                            href={exportCsv.url(
+                                [tenantSlug, survey.id],
+                                cut === null ? {} : { query: { cut } },
+                            )}
+                            download
+                        >
+                            <Download aria-hidden />
+                            {cut === null
+                                ? 'Exportar CSV'
+                                : 'Exportar este corte'}
+                        </a>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link href={items.url([tenantSlug, survey.id])}>
+                            <ListChecks aria-hidden />
+                            Ver por pregunta
+                        </Link>
+                    </Button>
+                </>
             )}
         </PageHeader>
     );

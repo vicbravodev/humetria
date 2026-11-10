@@ -242,7 +242,7 @@ final readonly class ResultsPresenter
      * @param  list<string>  $keys
      * @return array<string, string>
      */
-    private function names(CutAttribute $cut, array $keys): array
+    public function names(CutAttribute $cut, array $keys): array
     {
         return match ($cut) {
             CutAttribute::WorkCenter => array_column(array_map(fn (WorkCenterSummary $center): array => [$center->id, $center->name], $this->workCenters->all()), 1, 0),

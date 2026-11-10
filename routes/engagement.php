@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Required from routes/company.php, inside the company group: the panel of the climate survey lives under
 // /admin/{tenant}/climate. Every name starts with tenant.climate.
 
+use App\Modules\Engagement\Http\Controllers\ExportController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,3 +14,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('admin/{tenant:slug}/climate/{survey}/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results');
 // The same results question by question.
 Route::get('admin/{tenant:slug}/climate/{survey}/results/items', [ResultsController::class, 'items'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results.items');
+// The same figures as a CSV, under the same minimums.
+Route::get('admin/{tenant:slug}/climate/{survey}/export', [ExportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.export');
