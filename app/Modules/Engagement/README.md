@@ -54,6 +54,32 @@ de la empresa. Los errores del proveedor se registran solo con su clase, porque 
 - Con la IA apagada, el estado del resumen es `ai_off`: RH sigue leyendo los comentarios originales (desde 10), el jefe
   no recibe resumen y la encuesta funciona igual.
 
+## Pulso
+
+El pulso es una encuesta corta que usa el mismo motor que el clima (invitaciones de un solo uso, respuestas sin llaves,
+cortes, mínimos por grupo, resultados solo con la encuesta cerrada y compromisos); lo que cambia es su contenido y su
+calendario. Sus rutas son `tenant.pulse.*` y sus permisos `view-pulse` (owner, hr, viewer) y `manage-pulse` (owner, hr).
+
+- **Contenido:** a lo más 11 preguntas, sin abiertas: 5 fijas (orgullo, motivación, conexión, recomendación y «mejoras
+  vistas», esta última solo si la empresa ya cerró una encuesta) y hasta 6 rotativas en **una sola** modalidad:
+  *seguimiento* (los temas prioritarios del último clima), *recorrido* (un ancla por tema, la mitad de los diez cada vez)
+  o *jefe* (dos preguntas sobre el jefe y cuatro anclas). Sin prioridades, el seguimiento no está disponible y se
+  hace un recorrido.
+- **Calendario:** mensual o trimestral, nunca «siempre abierto» (con anonimato real no se controlan duplicados). El
+  comando `engagement:launch-pulses` corre a las 08:00 de `app.display_timezone`, lanza el pulso del día y deja la
+  siguiente fecha en el futuro; los días 29 a 31 se limitan al 28. Se omite el ciclo, con su log, si hay un clima
+  activo, otro pulso abierto, la empresa está suspendida o tiene menos de 5 personas. Tres días antes, `engagement:announce-pulses`
+  avisa a owner y hr con los compromisos que siguen abiertos.
+- **Resultados y portal:** la pantalla de resultados de un pulso solo muestra los temas que preguntó y la tarjeta
+  «Mejoras vistas» (desde 5 respuestas). En la modalidad jefe, el jefe ve en su portal solo las preguntas del jefe que el
+  pulso hizo, contra la empresa; sin fortalezas ni oportunidades (con menos de 8 preguntas no hay cuáles elegir) y sin
+  resumen de comentarios, porque un pulso no tiene comentarios y no se encola ningún resumen. Un pulso que no preguntó por el jefe nunca
+  sustituye en el portal al último resultado que sí lo hizo.
+- **Tendencia (`tenant.pulse.trend`):** solo de la empresa, sin cortes. Un punto por ola cerrada (a lo más 12), y solo
+  entre olas donde la pregunta tuvo la misma redacción; una pregunta que no se hizo, que cambió o que quedó oculta por
+  menos de 5 respuestas no es un cero: ese punto no existe. Las flechas aparecen solo con 30 respuestas o más en las dos
+  olas (`ENGAGEMENT_MIN_TREND`).
+
 ## Configuración
 
 `config/engagement.php`: `ENGAGEMENT_MIN_COMMENTS` (10), `ENGAGEMENT_MIN_TREND` (30), largo máximo de un comentario

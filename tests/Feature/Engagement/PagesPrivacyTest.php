@@ -137,6 +137,46 @@ it('names every route of climate and puts it behind auth, unless it is a link wi
     expect($seen)->toBeGreaterThan(20);
 });
 
+it('keeps every individual response out of the props of every page of the pulse, the trend included', function (): void {
+    $ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Ruiz']);
+    $pulse = pulseResultsSurvey($this->tenant, App\Modules\Engagement\Enums\PulseMode::Manager, 12, manager: $ana->id);
+    Commitment::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $pulse->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    $visited = [];
+
+    foreach (Route::getRoutes()->getRoutes() as $route) {
+        $name = $route->getName();
+        if ($name === null || ! str_starts_with($name, 'tenant.pulse.') || ! in_array('GET', $route->methods(), true)) {
+            continue;
+        }
+
+        $response = $this->get(route($name, ['tenant' => $this->tenant, 'survey' => $pulse, 'manager' => $ana->id]))->assertOk();
+        $visited[] = $name;
+
+        if ($name !== 'tenant.pulse.export') {
+            $response->assertInertia(fn (Assert $page) => expectNoEngagementResponses($page->toArray()['props']));
+        }
+    }
+
+    expect($visited)->toContain('tenant.pulse.index', 'tenant.pulse.show', 'tenant.pulse.results', 'tenant.pulse.results.items', 'tenant.pulse.commitments.index', 'tenant.pulse.managers', 'tenant.pulse.managers.show', 'tenant.pulse.trend');
+});
+
+it('names every route of the pulse and puts it behind auth: its link is the one of the survey, with its own token', function (): void {
+    $seen = 0;
+
+    foreach (Route::getRoutes()->getRoutes() as $route) {
+        if (! str_contains($route->uri(), '/pulse')) {
+            continue;
+        }
+
+        $seen++;
+        $name = (string) $route->getName();
+        expect($name)->toStartWith('tenant.pulse.')->and(in_array('auth', $route->gatherMiddleware(), true))->toBeTrue("{$name} has no auth");
+    }
+
+    expect($seen)->toBeGreaterThan(15);
+});
+
 it('has the keys of its knobs in .env.example, and no file names the metric it must not use', function (): void {
     $env = File::get(base_path('.env.example'));
     expect($env)->toContain('ENGAGEMENT_MIN_COMMENTS=')->toContain('ENGAGEMENT_MIN_TREND=');

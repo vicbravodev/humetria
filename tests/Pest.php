@@ -684,6 +684,26 @@ function climateResultsSurvey(Tenant $tenant, int $count, ?Closure $answers = nu
 }
 
 /**
+ * A closed pulse of the company in `$mode` with `$count` responses; `$answer` is what each gives to every question that
+ * is an agreement (the recommendation, 9).
+ */
+function pulseResultsSurvey(Tenant $tenant, App\Modules\Engagement\Enums\PulseMode $mode, int $count, int $answer = 5, ?string $manager = null): App\Modules\Engagement\Models\Survey
+{
+    $refs = App\Modules\Engagement\Support\Bank\PulseComposer::compose($mode, [App\Modules\Engagement\Enums\Driver::Clarity], 0, true);
+    $survey = App\Modules\Engagement\Models\Survey::factory()->closed()->pulse()->create(['tenant_id' => $tenant->id, 'pulse_mode' => $mode, 'items' => $refs, 'invited' => max($count, 12)]);
+    $answers = [];
+
+    foreach ($refs as $ref) {
+        $key = explode('@', $ref)[0];
+        $answers[$key] = $key === 'eng.recommend' ? 9 : $answer;
+    }
+
+    App\Modules\Engagement\Models\Response::factory()->count($count)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'manager_group_id' => $manager, 'answers' => $answers]);
+
+    return $survey;
+}
+
+/**
  * A closed climate survey of `$tenant` whose responses belong to the groups of managers in `$groups`: the id of the manager
  * (an employee) => [how many answered, the answer 1 to 5 each gives to the questions about their manager]. Everything else
  * is answered 4 (the recommendation, 9).
