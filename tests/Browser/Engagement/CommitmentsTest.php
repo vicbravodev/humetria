@@ -25,6 +25,8 @@ it('shows RH the commitments of a closed survey and the ideas for the themes to 
     visitPage('engagement/commitments', "{$url}/climate/{$survey}/commitments", $dark, $mobile)
         ->assertSee('Nos dijeron / Haremos')
         ->assertSee('Nuevo compromiso')
+        ->assertSee('Sin publicar')
+        ->assertSee('Publicar en el portal')
         ->assertSee('Que el buen trabajo no se reconoce.')
         ->assertSee('Reconocer por escrito cada logro del mes.')
         ->assertSee('Ana Torres')

@@ -8,9 +8,12 @@ import Logo from '@/components/humetria/logo';
  */
 export default function SurveyShell({
     company,
+    label = 'Confidencial',
     children,
 }: {
     company: string | null;
+    /** What the badge at the right says; the survey is confidential, the personal pages of the portal are the person's. */
+    label?: string;
     children: ReactNode;
 }) {
     return (
@@ -21,7 +24,7 @@ export default function SurveyShell({
                 </p>
                 <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">
                     <Lock aria-hidden="true" className="size-4" />
-                    Confidencial
+                    {label}
                 </p>
             </header>
             <main className="flex w-full flex-1 justify-center px-4 pt-6 pb-4 md:px-6 md:py-10">

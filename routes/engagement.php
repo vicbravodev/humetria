@@ -8,6 +8,7 @@ declare(strict_types=1);
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Http\Controllers\CommitmentController;
 use App\Modules\Engagement\Http\Controllers\ExportController;
+use App\Modules\Engagement\Http\Controllers\PublishFeedbackController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use App\Modules\Engagement\Http\Controllers\SurveyActionController;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
@@ -48,3 +49,5 @@ Route::get('admin/{tenant:slug}/climate/{survey}/commitments', [CommitmentContro
 Route::post('admin/{tenant:slug}/climate/{survey}/commitments', [CommitmentController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.commitments.store');
 Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}', [CommitmentController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.update');
 Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}/status', [CommitmentController::class, 'status'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.status');
+// Publishes «Nos dijeron / Haremos» to the portal of the people of the company, once.
+Route::post('admin/{tenant:slug}/climate/{survey}/publish', [PublishFeedbackController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.publish');

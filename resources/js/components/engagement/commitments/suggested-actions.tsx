@@ -1,4 +1,5 @@
 import { Lightbulb } from 'lucide-react';
+import IconTile from '@/components/humetria/icon-tile';
 import type { CommitmentSuggestion } from '@/types';
 
 /** What could be done for the themes to act on first (a fixed catalog). It only suggests: nothing here is saved. */
@@ -14,9 +15,7 @@ export default function SuggestedActions({
     return (
         <section className="flex flex-col gap-5 card p-5 sm:p-6">
             <div className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                    <Lightbulb aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={Lightbulb} />
                 <div>
                     <h2 className="text-lg font-semibold">
                         Ideas para empezar

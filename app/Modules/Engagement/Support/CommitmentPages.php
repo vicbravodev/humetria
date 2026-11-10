@@ -38,6 +38,7 @@ final readonly class CommitmentPages
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
             'available' => $available,
             'canManage' => $canManage,
+            'published' => $survey->results_published_at !== null,
             'status' => $status?->value,
             'statuses' => array_map(fn (CommitmentStatus $case): array => ['value' => $case->value, 'label' => $case->label()], CommitmentStatus::cases()),
             'drivers' => array_map(fn (Driver $driver): array => ['value' => $driver->value, 'label' => $driver->label()], Driver::cases()),

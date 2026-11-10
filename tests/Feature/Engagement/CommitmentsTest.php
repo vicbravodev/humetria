@@ -103,7 +103,8 @@ it('shows every role that views climate the commitments, paginated and filtered 
             ->has('commitments.data', 10)
             ->where('commitments.total', 13)
             ->where('counts', ['all' => 13, 'open' => 12, 'in_progress' => 0, 'done' => 1, 'dropped' => 0])
-            ->where('canManage', false));
+            ->where('canManage', false)
+            ->where('published', false));
     $this->get(commitmentsUrl($this->tenant, $this->survey, '?status=done'))
         ->assertInertia(fn (Assert $page) => $page->has('commitments.data', 1)->where('commitments.data.0.will_do', 'Hecho y listo'));
 

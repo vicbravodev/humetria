@@ -47,6 +47,8 @@ export type EngagementCommitments = {
     survey: { id: string; name: string; status: string };
     available: boolean;
     canManage: boolean;
+    /** The commitments already reached the portal of the people. */
+    published: boolean;
     status: CommitmentStatus | null;
     statuses: { value: CommitmentStatus; label: string }[];
     drivers: CommitmentOption[];
@@ -54,4 +56,30 @@ export type EngagementCommitments = {
     counts: Record<'all' | CommitmentStatus, number>;
     groups: CommitmentGroupOption[];
     suggestions: CommitmentSuggestion[];
+};
+
+/** A commitment as the portal shows it: no id of a group, only what the person reads. */
+export type PortalCommitment = {
+    id: string;
+    group_name: string;
+    driver_label: string | null;
+    heard: string;
+    will_do: string;
+    owner_name: string;
+    /** Y-m-d */
+    due_on: string;
+    status: CommitmentStatus;
+    status_label: string;
+    overdue: boolean;
+};
+
+export type PortalClimate = {
+    token: string;
+    company: string;
+    name: string;
+    survey: { name: string };
+    /** Null when the company is too small to say how many answered. */
+    participation: { percent: number } | null;
+    index: number | null;
+    commitments: Paginated<PortalCommitment>;
 };

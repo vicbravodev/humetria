@@ -1,5 +1,6 @@
 import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { BarChart3, Hourglass } from 'lucide-react';
+import PublishFeedbackButton from '@/components/engagement/commitments/publish-feedback-button';
 import CommitmentsBoard from '@/components/engagement/commitments/commitments-board';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
@@ -27,7 +28,15 @@ export default function Commitments(props: EngagementCommitments) {
                 <PageHeader
                     caption="Nos dijeron / Haremos"
                     title={survey.name}
-                    status={<Badge variant="secondary">Compromisos</Badge>}
+                    status={
+                        props.published ? (
+                            <Badge variant="success">
+                                Publicado en el portal
+                            </Badge>
+                        ) : (
+                            <Badge variant="secondary">Sin publicar</Badge>
+                        )
+                    }
                     description="Lo que la empresa hará con lo que dijo su gente: quién responde y para cuándo. Un grupo tiene a lo más 3."
                 >
                     {available && (
@@ -38,6 +47,12 @@ export default function Commitments(props: EngagementCommitments) {
                             </Link>
                         </Button>
                     )}
+                    {available &&
+                        props.canManage &&
+                        !props.published &&
+                        props.counts.all > props.counts.dropped && (
+                            <PublishFeedbackButton surveyId={survey.id} />
+                        )}
                 </PageHeader>
                 {available ? (
                     <CommitmentsBoard {...props} />
