@@ -13,11 +13,11 @@ import {
 import type { Appearance } from '@/hooks/use-appearance';
 import {
     complianceNavItems,
-    hasModule,
     mainNavItems,
     type NavTenant,
     settingsEntryHref,
 } from '@/lib/app-navigation';
+import { hasModule } from '@/lib/modules';
 import { superadminNavItems } from '@/lib/staff-navigation';
 import { toolNavItems } from '@/lib/tool-navigation';
 import type { Command } from '@/lib/commands';
