@@ -123,6 +123,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'assistant_message',
             'prompt',
             'user_message',
+            // Vacaciones: why a request was turned down is written by a person, about a person.
+            'rejection_reason',
         ];
 
         foreach ($data as $key => $value) {
