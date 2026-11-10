@@ -74,4 +74,9 @@ final class TenantRegistry implements CompanyRegistry
 
         return $briefs;
     }
+
+    public function ids(): array
+    {
+        return array_values(Tenant::query()->get(['id'])->map(fn (Tenant $tenant): string => $tenant->id)->all());
+    }
 }

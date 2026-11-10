@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
+use App\Modules\Billing\Actions\MeasureStorage;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
@@ -106,6 +107,12 @@ Artisan::command('billing:expire-usage-reservations', function (ExpireUsageReser
 
 // A call that died mid-answer leaves its hold on the quota: give it back every ten minutes.
 Schedule::command('billing:expire-usage-reservations')->everyTenMinutes()->onOneServer()->withoutOverlapping();
+Artisan::command('billing:measure-storage', function (MeasureStorage $measure): void {
+    $this->info('Empresas medidas: '.$measure->handle());
+})->purpose('Measure the files each company keeps (everything under its prefix on the module disks) and set the month\'s figure');
+
+// After the day is closed and the limits recounted: sum the real size of the files of every company.
+Schedule::command('billing:measure-storage')->dailyAt('03:45')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

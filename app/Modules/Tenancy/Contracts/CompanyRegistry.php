@@ -30,4 +30,11 @@ interface CompanyRegistry
      * @return list<CompanyBrief>
      */
     public function search(string $term, int $limit = 20): array;
+
+    /**
+     * The id of every company, for a job that visits them all (the nightly measure of their files).
+     *
+     * @return list<string>
+     */
+    public function ids(): array;
 }

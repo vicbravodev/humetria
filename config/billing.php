@@ -29,6 +29,9 @@ return [
     */
     'unplanned_quotas' => ['assistant_tokens' => 2_000_000, 'email_campaign' => 500, 'storage_bytes' => 5_368_709_120],
 
+    /* Los discos privados de los módulos que guardan archivos (claves de config/filesystems.php); su ruta es {tipo}/{empresa}/…. */
+    'storage_disks' => ['telework_files', 'seating_files', 'intervention_files', 'disclosure_files'],
+
     /* Minutos que una reserva sin liquidar ni liberar se da por muerta (una respuesta de Humi dura menos de 6 minutos). */
     'reservation_ttl_minutes' => 30,
 
