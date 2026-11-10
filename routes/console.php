@@ -10,6 +10,7 @@ use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Interventions\Actions\SendProgramDigests;
+use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -80,6 +81,10 @@ Artisan::command('attendance:close-days', function (CloseDays $closeDays): void 
     $this->info('Días cerrados: '.$closeDays->handle());
 })->purpose('Close the day before yesterday for every active person with a mark that day or a working day by their schedule (the registro de jornada)');
 
+Artisan::command('leave:grant-entitlements', function (GrantEntitlements $grant): void {
+    $this->info('Periodos otorgados: '.$grant->handle());
+})->purpose('Grant each active person the vacation period of every anniversary they reached since their company started using Vacaciones');
+
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
 Schedule::command('campaigns:remind-next-evaluations')->dailyAt('08:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
@@ -97,6 +102,9 @@ Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->stri
 // Shortly after local midnight; it closes the day before yesterday, a whole day after it ended. Once is enough: closing a
 // day again gives the same day.
 Schedule::command('attendance:close-days')->dailyAt('00:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// After local midnight, so the anniversary of the day is granted on its day; a run again grants nothing twice and a day
+// it did not run is made up the next one.
+Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
