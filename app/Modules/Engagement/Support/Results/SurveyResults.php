@@ -90,6 +90,9 @@ final class SurveyResults
         }
 
         return $id !== null && isset($this->cut($cut)['groups'][$id]);
+    }
+
+    /**
      * The groups of managers that may be shown, with their responses: one group per manager, none inside another, so a
      * group taken from another never leaves fewer than the minimum.
      */
