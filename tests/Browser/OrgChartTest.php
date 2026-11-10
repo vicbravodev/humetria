@@ -163,6 +163,24 @@ it('loads the reports of a large team a page at a time', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
+it('says when the reports could not be loaded, and loads them on trying again', function (): void {
+    acmeOrgChart();
+
+    $page = visitPage('organization/org-chart', '/admin/acme/org-chart');
+    // The first request for somebody's reports fails, as when the connection drops; the next ones go through.
+    $page->script('() => { const real = window.fetch; window.fetch = (url, init) => { if (String(url).includes("/reports")) { window.fetch = real; return Promise.reject(new TypeError("offline")); } return real(url, init); }; }');
+
+    $page->click('[aria-label="Ver los reportes de Diana Torres"]')
+        ->assertSeeIn('[role="alert"]', 'No se pudieron cargar los reportes.')
+        ->assertDontSee('Gerardo Paz')
+        ->assertNoAccessibilityIssues(1)
+        ->click('Reintentar')
+        ->assertSee('Gerardo Paz')
+        ->assertSee('Sofía Luna')
+        ->assertDontSee('No se pudieron cargar los reportes.')
+        ->assertNoJavaScriptErrors();
+});
+
 it('fits the tree inside the page at every width, three levels down', function (): void {
     $people = acmeOrgChart();
     $page = visitPage('organization/org-chart', '/admin/acme/org-chart?focus='.$people['ana']->id);
