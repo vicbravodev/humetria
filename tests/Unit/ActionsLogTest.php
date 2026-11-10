@@ -32,6 +32,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',
     'app/Modules/Campaigns/Actions/QueueSurveyInvitations.php' => 'its callers (launch, resend, invite missing, replacements) log with the counts',
+    'app/Modules/Engagement/Actions/QueueInvitations.php' => 'its callers (launch, remind) log with the counts',
     'app/Modules/Tenancy/Actions/SendInvitationEmail.php' => 'only queues the email; InviteMember, InviteOwner and ResendInvitation log it',
     // The audit trail itself: every caller logs the same event beside it.
     'app/Actions/RecordAudit.php' => 'it is the audit trail; its callers log',
