@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\TenantAiSettings;
+use App\Modules\Engagement\Actions\RetrySummary;
 use App\Modules\Engagement\Agents\CommentScreener;
 use App\Modules\Engagement\Agents\CommentSummarizer;
 use App\Modules\Engagement\Enums\SummaryStatus;
+use App\Modules\Engagement\Exceptions\SurveyStateChanged;
 use App\Modules\Engagement\Exceptions\UnsafeSummary;
 use App\Modules\Engagement\Jobs\SummarizeComments;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
@@ -19,7 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Ai\Prompts\AgentPrompt;
 
-mutates(SummarizeComments::class, QueueCommentSummaries::class);
+mutates(SummarizeComments::class, QueueCommentSummaries::class, RetrySummary::class);
 
 const SUMMARY_THEMES = ['valued' => [['theme' => 'Buen trato entre compañeros', 'count' => 4]], 'change' => [['theme' => 'Más comunicación de la dirección', 'count' => 5]]];
 
@@ -269,4 +271,36 @@ it('writes no comment and no theme in the logs', function (): void {
         ->not->toContain('Secreto-único-del-comentario')
         ->not->toContain('Buen trato entre compañeros')
         ->not->toContain('Comentario número');
+});
+
+it('retries only a summary that failed: it goes back to pending and one job is queued for its group', function (): void {
+    Queue::fake();
+    $group = '0d3f1b6c-5d5e-4b0e-8a3d-2f7a9c1d4e10';
+    $failed = CommentSummary::factory()->status(SummaryStatus::Failed)->create(['tenant_id' => $this->tenant->id, 'survey_id' => $this->survey->id, 'manager_group_id' => $group]);
+
+    resolve(RetrySummary::class)->handle($failed->id);
+
+    expect($failed->refresh()->status)->toBe(SummaryStatus::Pending);
+    Queue::assertPushed(SummarizeComments::class, 1);
+    Queue::assertPushed(SummarizeComments::class, fn (SummarizeComments $job): bool => $job->surveyId === $this->survey->id && $job->groupId === $group);
+});
+
+it('does not retry a summary that is not failed', function (SummaryStatus $status): void {
+    Queue::fake();
+    $summary = $status === SummaryStatus::Ready
+        ? CommentSummary::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $this->survey->id])
+        : CommentSummary::factory()->status($status)->create(['tenant_id' => $this->tenant->id, 'survey_id' => $this->survey->id]);
+
+    expect(fn () => resolve(RetrySummary::class)->handle($summary->id))->toThrow(SurveyStateChanged::class);
+
+    Queue::assertNothingPushed();
+    expect($summary->refresh()->status)->toBe($status);
+})->with([SummaryStatus::Ready, SummaryStatus::Pending, SummaryStatus::Withheld, SummaryStatus::AiOff]);
+
+it('does not find the summary of another company to retry', function (): void {
+    $other = Tenant::factory()->create();
+    $survey = Survey::factory()->closed()->create(['tenant_id' => $other->id]);
+    $summary = CommentSummary::factory()->status(SummaryStatus::Failed)->create(['tenant_id' => $other->id, 'survey_id' => $survey->id]);
+
+    expect(fn () => resolve(RetrySummary::class)->handle($summary->id))->toThrow(Illuminate\Database\Eloquent\ModelNotFoundException::class);
 });
