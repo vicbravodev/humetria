@@ -6,6 +6,7 @@ declare(strict_types=1);
 // /admin/{tenant}/climate. Every name starts with tenant.climate.
 
 use App\Modules\Engagement\Enums\SurveyKind;
+use App\Modules\Engagement\Http\Controllers\CommitmentController;
 use App\Modules\Engagement\Http\Controllers\ExportController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use App\Modules\Engagement\Http\Controllers\SurveyActionController;
@@ -42,3 +43,8 @@ Route::get('admin/{tenant:slug}/climate/{survey}/results', [ResultsController::c
 Route::get('admin/{tenant:slug}/climate/{survey}/results/items', [ResultsController::class, 'items'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results.items');
 // The same figures as a CSV, under the same minimums.
 Route::get('admin/{tenant:slug}/climate/{survey}/export', [ExportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.export');
+// What the company commits to do after a closed survey: everyone who views climate reads it, who manages it writes it.
+Route::get('admin/{tenant:slug}/climate/{survey}/commitments', [CommitmentController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.commitments.index');
+Route::post('admin/{tenant:slug}/climate/{survey}/commitments', [CommitmentController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.commitments.store');
+Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}', [CommitmentController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.update');
+Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}/status', [CommitmentController::class, 'status'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.status');

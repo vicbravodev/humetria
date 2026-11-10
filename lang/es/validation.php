@@ -231,6 +231,11 @@ return [
     ],
 
     'attributes' => [
+        'group_type' => 'grupo',
+        'group_id' => 'grupo',
+        'heard' => 'lo que dijeron',
+        'will_do' => 'lo que haremos',
+        'owner_name' => 'responsable',
         'from' => 'fecha inicial',
         'minutes' => 'horario de la semana',
         'minutes.*' => 'minutos del día',
