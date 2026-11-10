@@ -95,7 +95,7 @@ it('emails each person of its block the link of the survey, and keeps only the h
     foreach (Invitation::query()->with('survey')->get() as $invitation) {
         $email = Employee::query()->findOrFail($invitation->employee_id)->email;
         $token = $invitation->surveyToken();
-        expect($links[(string) $email])->toBe(url("engagement/{$token}"))
+        expect($links[(string) $email])->toBe(route('engagement.survey.show', $token))
             ->and($invitation->token_hash)->toBe(Invitation::hashToken($token))
             ->and($invitation->invitation_status)->toBe(InvitationStatus::Sent)
             ->and($invitation->invited_at?->toIso8601String())->toBe('2026-11-09T15:00:00+00:00');
@@ -228,7 +228,7 @@ it('writes the invitation and the reminder in «usted», with the minimum of the
         ->and($message->actionText)->toBe('Contestar la encuesta')
         ->and($html)->toContain('El sistema no guarda quién contestó qué y solo muestra resultados de grupos de 5 personas o más')
         ->toContain('12 minutos')
-        ->toContain(url('engagement/tok'))
+        ->toContain(route('engagement.survey.show', 'tok'))
         ->not->toMatch('/anónim|nadie sabr|eNPS|Net Promoter/iu');
 })->with([false, true]);
 

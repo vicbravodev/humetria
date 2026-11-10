@@ -46,7 +46,7 @@ final class SurveyInvitation extends Notification
 
         return (new MailMessage)
             ->subject($this->reminder ? $title : "Su opinión sobre el trabajo en {$this->company->tradeName}")
-            ->action('Contestar la encuesta', url("engagement/{$this->token}"))
+            ->action('Contestar la encuesta', route('engagement.survey.show', $this->token))
             ->markdown($this->reminder ? 'mail.engagement.reminder' : 'mail.engagement.invitation', [
                 'name' => $this->name,
                 'company' => $this->company,

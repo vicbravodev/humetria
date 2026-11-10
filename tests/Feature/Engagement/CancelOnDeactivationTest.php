@@ -45,6 +45,15 @@ it('cancels the link of someone who is deactivated before answering', function (
     expect($this->invitation->fresh()?->cancelled)->toBeTrue();
 });
 
+it('opens «not available» at the link of someone who left', function (): void {
+    $this->get(route('engagement.survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', null));
+
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+
+    auth()->logout();
+    $this->get(route('engagement.survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', 'invalid')->where('sections', []));
+});
+
 it('keeps what someone already answered: it cannot be taken back', function (): void {
     $this->invitation->update(['answered' => true]);
 
