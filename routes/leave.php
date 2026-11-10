@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/vacations.
 // Every name starts with tenant.vacations.
 
+use App\Modules\Leave\Http\Controllers\AssignmentController;
 use App\Modules\Leave\Http\Controllers\BalanceController;
 use App\Modules\Leave\Http\Controllers\CalendarController;
 use App\Modules\Leave\Http\Controllers\EmployeeRecordController;
@@ -50,3 +51,7 @@ Route::post('admin/{tenant:slug}/vacations/policies', [PolicyController::class, 
 Route::get('admin/{tenant:slug}/vacations/policies/{policy}/edit', [PolicyController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('policy')->name('tenant.vacations.policies.edit');
 Route::put('admin/{tenant:slug}/vacations/policies/{policy}', [PolicyController::class, 'update'])->where('tenant', $notReserved)->whereUuid('policy')->name('tenant.vacations.policies.update');
 Route::post('admin/{tenant:slug}/vacations/policies/{policy}/archive', [PolicyController::class, 'archive'])->where('tenant', $notReserved)->whereUuid('policy')->name('tenant.vacations.policies.archive');
+
+// Whom each policy goes to, and the job grades looked up by name for the field that picks one.
+Route::put('admin/{tenant:slug}/vacations/assignments', [AssignmentController::class, 'update'])->where('tenant', $notReserved)->name('tenant.vacations.assignments.update');
+Route::get('admin/{tenant:slug}/vacations/grades/options', [AssignmentController::class, 'grades'])->where('tenant', $notReserved)->name('tenant.vacations.grades.options');

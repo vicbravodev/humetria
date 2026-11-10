@@ -3,12 +3,20 @@ import { Plus } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import ReadOnlyNotice from '@/components/humetria/read-only-notice';
+import AssignmentTable from '@/components/leave/assignment-table';
 import LawCard from '@/components/leave/law-card';
 import PolicyCard from '@/components/leave/policy-card';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { create } from '@/routes/tenant/vacations/policies';
-import type { LeaveLaw, LeavePolicyCard, Paginated } from '@/types';
+import type {
+    LeaveAssignments,
+    LeaveGradeAssignment,
+    LeaveLaw,
+    LeavePolicyCard,
+    LeavePolicyOption,
+    Paginated,
+} from '@/types';
 
 /**
  * The policies of the company: the law first, which cannot be edited, then each policy of its own, which can only improve
@@ -17,10 +25,17 @@ import type { LeaveLaw, LeavePolicyCard, Paginated } from '@/types';
 export default function LeavePolicies({
     law,
     policies,
+    assignments,
+    policyOptions,
+    grades,
     canManage,
 }: {
     law: LeaveLaw;
     policies: Paginated<LeavePolicyCard>;
+    assignments: LeaveAssignments;
+    /** The active policies, to choose which one a target follows. */
+    policyOptions: LeavePolicyOption[];
+    grades: Paginated<LeaveGradeAssignment>;
     canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
@@ -61,7 +76,17 @@ export default function LeavePolicies({
                         />
                     ))}
                 </section>
-                <Pagination page={policies} label="Páginas de políticas" />
+                <Pagination
+                    page={policies}
+                    label="Páginas de políticas"
+                    pinned={false}
+                />
+                <AssignmentTable
+                    assignments={assignments}
+                    options={policyOptions}
+                    grades={grades}
+                    canManage={canManage}
+                />
             </div>
         </>
     );

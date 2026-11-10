@@ -36,3 +36,19 @@ export type LeavePolicyData = {
     extraCarryoverCapDays: number | null;
     rows: LeavePolicyRowData[];
 };
+
+/** The policy (an id) the company and each staff group follow; null where the law follows. */
+export type LeaveAssignments = {
+    default: string | null;
+    unionized: string | null;
+    trusted: string | null;
+};
+
+/** A job grade with a policy of its own. */
+export type LeaveGradeAssignment = {
+    id: string;
+    label: string;
+    policyId: string;
+};
+
+export type LeavePolicyOption = { value: string; label: string };

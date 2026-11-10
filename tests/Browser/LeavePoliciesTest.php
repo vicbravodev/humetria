@@ -43,3 +43,16 @@ it('shows the law first and the policies of the company', function (bool $dark, 
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
+
+it('assigns a policy to the whole company from the page', function (): void {
+    [$url, $policy] = leavePoliciesBrowserSetup();
+
+    visitPage('leave/policies', "{$url}/policies")
+        ->assertSee('A quién le toca cada una')
+        ->click('[aria-label="Política de toda la empresa"]')
+        ->click('[role=option]:has-text("Corporativo")')
+        ->assertSee('Asignada a 1 grupo')
+        ->assertNoJavaScriptErrors();
+
+    expect($policy->assignments()->count())->toBe(1);
+});
