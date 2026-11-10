@@ -9,6 +9,7 @@ import type {
     ClimateSection,
     ClimateSurveyCard,
     ClimateUnreachable,
+    OpenCommitments,
     Paginated,
 } from '@/types';
 
@@ -24,6 +25,7 @@ export default function EngagementShow({
     sections: ClimateSection[];
     participation: ClimateParticipation | null;
     resultsUrl: string | null;
+    openCommitments: OpenCommitments | null;
 }) {
     const tenantSlug = useTenantSlug();
 

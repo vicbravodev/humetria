@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Organization\Models\Area;
@@ -42,6 +43,20 @@ it('lets RH review the draft before launching it', function (bool $dark, bool $m
         ->assertSee('Revisa tres cosas y lanza.')
         ->assertSee('2 personas no tienen correo.')
         ->assertSee('Lo que van a contestar')
+        ->assertSee('Lanzar e invitar a 4 personas')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('shows the open commitments of the last survey before the launch form', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $survey = climateDraftWithPeople();
+    $previous = Survey::factory()->closed()->create(['tenant_id' => $survey->tenant_id, 'closed_at' => now()->subMonth()]);
+    Commitment::factory()->create(['tenant_id' => $survey->tenant_id, 'survey_id' => $previous->id, 'will_do' => 'Presentar las metas por área.']);
+
+    visitPage('engagement/show', "{$url}/climate/{$survey->id}", $dark, $mobile)
+        ->assertSee('Compromisos abiertos de la encuesta anterior')
+        ->assertSee('Presentar las metas por área.')
         ->assertSee('Lanzar e invitar a 4 personas')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');

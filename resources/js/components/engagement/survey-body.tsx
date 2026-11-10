@@ -7,6 +7,7 @@ import type {
     ClimateSection,
     ClimateSurveyCard,
     ClimateUnreachable,
+    OpenCommitments,
     Paginated,
 } from '@/types';
 
@@ -17,6 +18,7 @@ type Props = {
     sections: ClimateSection[];
     participation: ClimateParticipation | null;
     resultsUrl: string | null;
+    openCommitments: OpenCommitments | null;
 };
 
 /** What the survey shows in its state: the draft to review, the follow-up of one in progress, or how a closed one ended. */
@@ -27,6 +29,7 @@ export default function SurveyBody({
     sections,
     participation,
     resultsUrl,
+    openCommitments,
 }: Props) {
     if (draft !== null && unreachable !== null) {
         return (
@@ -35,6 +38,7 @@ export default function SurveyBody({
                 draft={draft}
                 unreachable={unreachable}
                 sections={sections}
+                openCommitments={openCommitments}
             />
         );
     }

@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Engagement\Actions\SnapshotAudience;
+use App\Modules\Engagement\Enums\CommitmentStatus;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
+use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\SurveyPages;
@@ -348,4 +350,32 @@ it('shows a closed survey with its participation and no way to send anything', f
     expect($props['survey'])->toMatchArray(['status' => 'closed', 'statusLabel' => 'Cerrada', 'daysLeft' => null])
         ->and($props['participation'])->toMatchArray(['invited' => 6, 'answered' => 4, 'rate' => 67, 'canRemind' => false])
         ->and($props)->toHaveKey('resultsUrl');
+});
+
+it('brings the open commitments of the previous survey to the draft of the next one', function (): void {
+    $previous = Survey::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'closed_at' => now()->subMonth()]);
+    $older = Survey::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'closed_at' => now()->subYear()]);
+    $due = fn (int $days): array => ['tenant_id' => $this->tenant->id, 'survey_id' => $previous->id, 'due_on' => now()->addDays($days)->toDateString()];
+    foreach ([40, 10, 30, 20] as $days) {
+        Commitment::factory()->create($due($days));
+    }
+    Commitment::factory()->create([...$due(1), 'status' => CommitmentStatus::Done]);
+    Commitment::factory()->create([...$due(2), 'survey_id' => $older->id]);
+    $draft = Survey::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $draft]))->assertOk()->inertiaProps();
+
+    expect($props['openCommitments']['count'])->toBe(4)
+        ->and(array_column($props['openCommitments']['next'], 'due_on'))->toBe([
+            now()->addDays(10)->toDateString(), now()->addDays(20)->toDateString(), now()->addDays(30)->toDateString(),
+        ]);
+});
+
+it('has no open commitments to show on a draft without a previous survey, nor on a launched survey', function (): void {
+    $draft = Survey::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $draft]))->assertInertia(fn (Assert $page) => $page->where('openCommitments', null));
+
+    $draft->delete();
+    $active = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
+    $this->get(route('tenant.climate.show', [$this->tenant, $active]))->assertInertia(fn (Assert $page) => $page->where('openCommitments', null));
 });

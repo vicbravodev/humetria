@@ -34,6 +34,13 @@ export type ClimateDraft = {
     limits: { min: string; suggested: string; max: string };
 };
 
+/** What the previous survey left open: the count and the three closest to their date. */
+export type OpenCommitments = {
+    count: number;
+    surveyId: string;
+    next: { id: string; will_do: string; owner_name: string; due_on: string }[];
+};
+
 /** Someone with no email, who will not receive their link: RH knows who, the survey never does. */
 export type ClimateUnreachable = { id: string; name: string; area: string };
 
