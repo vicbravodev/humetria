@@ -24,7 +24,8 @@ final readonly class RecordUsage
         $now = CarbonImmutable::now();
         $period = UsagePeriod::containing($now);
 
-        return DB::transaction(function () use ($tenantId, $meter, $quantity, $key, $now, $period): bool {
+        // On the connection itself: a mail goes out inside other writers' transactions (and their lock-order tests watch the manager).
+        return DB::connection()->transaction(function () use ($tenantId, $meter, $quantity, $key, $now, $period): bool {
             $new = UsageEvent::query()->insertOrIgnore([
                 'id' => Str::uuid()->toString(),
                 'tenant_id' => $tenantId,
