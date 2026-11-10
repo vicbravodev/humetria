@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Support;
 
 /**
- * Who answers or cancels a request: a manager or the person who asked, from their portal, or RH from the panel.
+ * Who answers or cancels a request: a manager or the person who asked, from their portal, RH from the panel, or the
+ * system with the reach of RH (when a person leaves).
  */
 final readonly class Decider
 {
@@ -24,5 +25,10 @@ final readonly class Decider
     public static function hr(int $userId): self
     {
         return new self(null, $userId, true);
+    }
+
+    public static function system(): self
+    {
+        return new self(null, null, true);
     }
 }

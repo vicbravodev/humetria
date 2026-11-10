@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Providers;
 
+use App\Modules\Leave\Listeners\CloseOnDeactivation;
+use App\Modules\Organization\Events\EmployeeDeactivated;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -15,5 +18,8 @@ final class LeaveServiceProvider extends ServiceProvider
 {
     public function register(): void {}
 
-    public function boot(): void {}
+    public function boot(): void
+    {
+        Event::listen(EmployeeDeactivated::class, CloseOnDeactivation::class);
+    }
 }
