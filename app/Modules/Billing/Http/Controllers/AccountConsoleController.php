@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Billing\Actions\CreateAccount;
+use App\Modules\Billing\Actions\ListAccountCompanies;
 use App\Modules\Billing\Actions\ListAccounts;
 use App\Modules\Billing\Actions\UpdateAccount;
 use App\Modules\Billing\Enums\AccountKind;
@@ -46,11 +47,14 @@ final class AccountConsoleController extends Controller
         return redirect()->route('billing.accounts.show', $account);
     }
 
-    public function show(BillingAccount $account): Response
+    public function show(BillingAccount $account, ListAccountCompanies $listCompanies): Response
     {
         Gate::authorize('view-billing');
 
-        return Inertia::render('billing/account', ['account' => $this->detail($account)]);
+        return Inertia::render('billing/account', [
+            'account' => $this->detail($account),
+            'companies' => $listCompanies->handle($account),
+        ]);
     }
 
     public function update(UpdateAccountRequest $request, BillingAccount $account, UpdateAccount $updateAccount): RedirectResponse

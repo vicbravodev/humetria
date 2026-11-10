@@ -1,3 +1,5 @@
+import type { TenantRow } from '@/types/tenancy';
+
 export type AccountKind = 'direct' | 'consultant';
 
 /** The kinds the console's tabs choose among: one, or all. */
@@ -24,4 +26,19 @@ export type AccountDetail = Omit<AccountRow, 'companies'> & {
     cfdi_use: string | null;
     contact_phone: string | null;
     notes: string | null;
+};
+
+/** A company an account pays, as the account's page lists it; `subscription` is null while it has no plan. */
+export type AccountCompanyRow = {
+    company_id: string;
+    trade_name: string;
+    legal_name: string;
+    rfc: string;
+    slug: string;
+    status: TenantRow['status'];
+    status_label: string;
+    work_centers: number;
+    /** The day the account started paying it, written for display ("1 dic 2026"). */
+    linked_since: string;
+    subscription: null;
 };

@@ -10,6 +10,8 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     // Read-only: they change nothing.
     'app/Modules/Demos/Actions/ListDemoRequests.php' => 'reads a paginated list',
     'app/Modules/Billing/Actions/ListAccounts.php' => 'reads a paginated list and counts',
+    'app/Modules/Billing/Actions/ListAccountCompanies.php' => 'reads a paginated list',
+    'app/Modules/Billing/Actions/SearchLinkableCompanies.php' => 'reads the options of a field',
     'app/Modules/Compensation/Actions/CountBenefits.php' => 'counts',
     'app/Modules/Compensation/Actions/ListBenefits.php' => 'reads a paginated list',
     'app/Modules/Compensation/Actions/ListSalaryOverrides.php' => 'reads a paginated list',

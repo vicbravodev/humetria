@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 
 $looks = [
     'light desktop' => [false, false],
@@ -63,6 +65,53 @@ it('creates an account from the list and lands on its page', function (): void {
         ->assertSee('Consultores Nuevos S.C.');
 
     expect(BillingAccount::query()->sole()->kind->value)->toBe('consultant');
+});
+
+it('shows an account with the companies it pays, none of them with a plan yet', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->consultant()->create(['legal_name' => 'Consultores Asociados S.C.', 'rfc' => 'CAS010101AB1', 'contact_name' => 'Laura Pérez', 'contact_email' => 'laura@consultores.mx']);
+    $acme = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'rfc' => 'ACM010101AB1']);
+    WorkCenter::factory()->for($acme)->count(2)->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $acme->id, 'starts_on' => '2026-12-01']);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}", $dark, $mobile)
+        ->assertSee('Consultores Asociados S.C.')
+        ->assertSee('Consultor')
+        ->assertSee('CAS010101AB1')
+        ->assertSee('Editar cuenta')
+        ->assertSee('Vincular empresa')
+        ->assertSee('Acme Industrial')
+        ->assertSee('2 centros')
+        ->assertSee('Sin plan asignado')
+        ->assertSee('Desde 1 dic 2026');
+})->with($looks);
+
+it('shows an account that pays nothing yet with its next step', function (): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->create();
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->assertSee('Esta cuenta aún no paga ninguna empresa')
+        ->assertSee('Vincula una empresa');
+});
+
+it('links a company found by name, and the account then pays it', function (): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->create();
+    Tenant::factory()->create(['trade_name' => 'Zapatería Libre', 'rfc' => 'ZAP010101AB1']);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Vincular empresa')
+        ->click('#billing-company_id')
+        ->type('[role="combobox"][aria-controls="billing-company_id-options"]', 'zapat')
+        ->assertSee('Zapatería Libre · ZAP010101AB1')
+        ->keys('[role="combobox"][aria-controls="billing-company_id-options"]', 'Enter')
+        ->press('Vincular')
+        ->assertSee('Empresa vinculada.')
+        ->assertSee('Zapatería Libre')
+        ->assertSee('Sin plan asignado');
+
+    expect(AccountCompany::query()->sole()->billing_account_id)->toBe($account->id);
 });
 
 it('shows an account with its fiscal data and the way to correct it', function (bool $dark, bool $mobile): void {
