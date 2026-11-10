@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * Vacaciones: the period each year of service gives (criterios C-03, C-09, C-11 and C-15) and the ledger of its days. A
  * balance is not a counter: it is the sum of the entries of a period, and the ledger only takes inserts (criterio C-12), as
  * audit_entries and attendance_marks do. A period keeps the name and the terms of the policy it was granted with. An entry
- * with no period is days given in advance (criterio C-17). leave_request_id gets its foreign key with the requests table.
+ * with no period is days given in advance (criterio C-17). leave_request_id gets its foreign key in the migration of the requests table.
  */
 return new class extends Migration
 {
