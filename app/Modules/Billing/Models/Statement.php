@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Billing\StatementFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -69,6 +70,21 @@ final class Statement extends Model
     public function allocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class);
+    }
+
+    /**
+     * The issued statements that still have something to pay: more owed than the payments that stand have settled.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeWithBalance(Builder $query): void
+    {
+        $query->where('status', StatementStatus::Issued)->whereRaw(<<<'SQL'
+            total_cents > COALESCE((
+                SELECT SUM(a.amount_cents) FROM payment_allocations a JOIN payments p ON p.id = a.payment_id
+                WHERE a.statement_id = statements.id AND p.reversed_at IS NULL
+            ), 0)
+        SQL);
     }
 
     /**

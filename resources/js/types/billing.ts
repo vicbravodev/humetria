@@ -134,3 +134,117 @@ export type AccountChargeRow = {
     ends_on: string | null;
     approved_by: string;
 };
+
+/** Where a statement stands: a draft, or an issued one by how much of it has been paid. */
+export type StatementState =
+    | 'draft'
+    | 'open'
+    | 'partially_paid'
+    | 'paid'
+    | 'credit';
+
+/** A statement of account as the account's page lists it. A draft has nothing paid and no balance yet. */
+export type StatementRow = {
+    id: string;
+    company_id: string;
+    trade_name: string;
+    period: string;
+    is_adjustment: boolean;
+    total: string;
+    paid: string | null;
+    balance: string | null;
+    state: StatementState;
+    state_label: string;
+};
+
+/** A payment of the account: what came in, how much of it settled statements, and why it was reversed if it was. */
+export type PaymentRow = {
+    id: string;
+    reference: string;
+    paid_on: string;
+    amount: string;
+    applied: string;
+    unapplied: string;
+    note: string | null;
+    recorded_by: string;
+    reversed: boolean;
+    reversal_reason: string | null;
+};
+
+/** What the account owes across its issued statements. */
+export type Receivable = {
+    outstanding: string;
+    open_statements: number;
+};
+
+/** The statement page's document: the snapshot the amounts came from and who made and issued it. */
+export type StatementDetail = {
+    id: string;
+    account_id: string;
+    account_name: string;
+    account_rfc: string;
+    company_id: string;
+    trade_name: string;
+    legal_name: string;
+    company_rfc: string;
+    period: string;
+    period_range: string;
+    status: 'draft' | 'issued';
+    state: StatementState;
+    state_label: string;
+    is_adjustment: boolean;
+    adjusts_id: string | null;
+    reason: string | null;
+    currency: string;
+    catalog_version: string;
+    vat_percent: number;
+    subtotal: string;
+    vat: string;
+    total: string;
+    paid: string | null;
+    balance: string | null;
+    created_by: string;
+    issued_by: string | null;
+    issued_at: string | null;
+};
+
+/** One line of a statement, with how its amount was reached. */
+export type StatementLine = {
+    label: string;
+    amount: string;
+    explanation: string;
+    code: string;
+};
+
+/** A payment applied to a statement. */
+export type AppliedPayment = {
+    payment_id: string;
+    reference: string;
+    paid_on: string;
+    amount: string;
+    reversed: boolean;
+};
+
+/** A statement that corrects the one on the page. */
+export type StatementAdjustment = {
+    id: string;
+    total: string;
+    reason: string;
+};
+
+/** The lines of a month before its draft is made. */
+export type StatementPreview = {
+    period: string;
+    lines: QuoteLine[];
+    subtotal: string;
+    vat: string;
+    total: string;
+};
+
+/** An issued statement with a balance, which a payment can be applied to. */
+export type OpenStatement = {
+    id: string;
+    label: string;
+    balance: string;
+    balance_input: string;
+};

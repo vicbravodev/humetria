@@ -8,8 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Modules\Billing\Actions\CreateAccount;
 use App\Modules\Billing\Actions\ListAccountCharges;
 use App\Modules\Billing\Actions\ListAccountCompanies;
+use App\Modules\Billing\Actions\ListAccountPayments;
 use App\Modules\Billing\Actions\ListAccounts;
+use App\Modules\Billing\Actions\ListAccountStatements;
 use App\Modules\Billing\Actions\SummarizeAccount;
+use App\Modules\Billing\Actions\SummarizeReceivable;
 use App\Modules\Billing\Actions\UpdateAccount;
 use App\Modules\Billing\Enums\AccountKind;
 use App\Modules\Billing\Http\Requests\StoreAccountRequest;
@@ -49,7 +52,7 @@ final class AccountConsoleController extends Controller
         return redirect()->route('billing.accounts.show', $account);
     }
 
-    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize): Response
+    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize, ListAccountStatements $listStatements, ListAccountPayments $listPayments, SummarizeReceivable $receivable): Response
     {
         Gate::authorize('view-billing');
 
@@ -60,6 +63,9 @@ final class AccountConsoleController extends Controller
             'summary' => $summarize->handle($account),
             'companies' => $listCompanies->handle($account),
             'charges' => $listCharges->handle($account),
+            'statements' => $listStatements->handle($account),
+            'payments' => $listPayments->handle($account),
+            'receivable' => $receivable->handle($account),
         ]);
     }
 

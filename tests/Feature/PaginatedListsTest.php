@@ -258,7 +258,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         signInAsSuperadmin();
 
         return route('billing.accounts.show', $account);
-    }, ['companies', 'charges']],
+    }, ['companies', 'charges', 'statements', 'payments']],
     'demo requests' => ['demos/index', function () {
         DemoRequest::factory()->create();
         signInAsSuperadmin();

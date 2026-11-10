@@ -112,6 +112,9 @@ const ARRAY_PROPS = [
     'results/report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'results/shared-report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'results/show:levels' => 'catálogo fijo: los cinco niveles de riesgo',
+    'billing/statement:lines' => 'las líneas de un estado de cuenta: un documento, pocas',
+    'billing/statement:payments' => 'resumen corto: los pagos aplicados a un estado de cuenta, pocos',
+    'billing/statement:adjustments' => 'resumen corto: los ajustes de un estado de cuenta, pocos',
 ];
 
 /** @return array<string, string> page => its source */

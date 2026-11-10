@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import AddChargeDialog from '@/components/billing/add-charge-dialog';
+import GenerateStatementDialog from '@/components/billing/generate-statement-dialog';
 import AccountCompanyPlan from '@/components/billing/account-company-plan';
 import SubscriptionDialog from '@/components/billing/subscription-dialog';
 import Initials from '@/components/humetria/initials';
@@ -49,7 +50,13 @@ export default function AccountCompanyRowView({
                 {auth.isSuperadmin && (
                     <div className="flex justify-end">
                         {company.subscription !== null && (
-                            <AddChargeDialog company={company} />
+                            <>
+                                <GenerateStatementDialog
+                                    company={company}
+                                    today={today}
+                                />
+                                <AddChargeDialog company={company} />
+                            </>
                         )}
                         <SubscriptionDialog
                             company={company}

@@ -6,6 +6,8 @@ use App\Modules\Billing\Http\Controllers\AccountCompaniesController;
 use App\Modules\Billing\Http\Controllers\AccountConsoleController;
 use App\Modules\Billing\Http\Controllers\ChargeConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
+use App\Modules\Billing\Http\Controllers\PaymentConsoleController;
+use App\Modules\Billing\Http\Controllers\StatementConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionPreviewController;
 use Illuminate\Support\Facades\Route;
@@ -52,3 +54,50 @@ Route::post('admin/billing/companies/{company}/charges', [ChargeConsoleControlle
     ->middleware(['auth', 'verified'])
     ->whereUuid('company')
     ->name('billing.charges.store');
+
+// Statements of account: read by the staff, made, issued and adjusted by the superadmin.
+Route::get('admin/billing/statements/{statement}', [StatementConsoleController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('statement')
+    ->name('billing.statements.show');
+
+Route::get('admin/billing/statements/{statement}/print', [StatementConsoleController::class, 'print'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('statement')
+    ->name('billing.statements.print');
+
+Route::post('admin/billing/companies/{company}/statements/preview', [StatementConsoleController::class, 'preview'])
+    ->middleware(['auth', 'verified', 'throttle:billing-preview'])
+    ->whereUuid('company')
+    ->name('billing.statements.preview');
+
+Route::post('admin/billing/companies/{company}/statements', [StatementConsoleController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('company')
+    ->name('billing.statements.store');
+
+Route::post('admin/billing/statements/{statement}/issue', [StatementConsoleController::class, 'issue'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('statement')
+    ->name('billing.statements.issue');
+
+Route::post('admin/billing/statements/{statement}/adjustments', [StatementConsoleController::class, 'adjust'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('statement')
+    ->name('billing.statements.adjustments.store');
+
+// Manual transfers (SPEI): recorded, applied and reversed by the superadmin; none of it touches a company's access.
+Route::get('admin/billing/accounts/{account}/open-statements', [PaymentConsoleController::class, 'open'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('account')
+    ->name('billing.accounts.open-statements');
+
+Route::post('admin/billing/accounts/{account}/payments', [PaymentConsoleController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('account')
+    ->name('billing.payments.store');
+
+Route::post('admin/billing/payments/{payment}/reversal', [PaymentConsoleController::class, 'reverse'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('payment')
+    ->name('billing.payments.reverse');
