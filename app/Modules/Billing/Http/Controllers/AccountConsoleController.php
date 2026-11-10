@@ -54,6 +54,8 @@ final class AccountConsoleController extends Controller
 
         return Inertia::render('billing/account', [
             'account' => $this->detail($account),
+            // The day a new plan starts unless another is chosen: today, in the time zone the panel shows.
+            'today' => now(config()->string('app.display_timezone'))->toDateString(),
             'summary' => $summarize->handle($account),
             'companies' => $listCompanies->handle($account),
         ]);

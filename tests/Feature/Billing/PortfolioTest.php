@@ -65,7 +65,7 @@ it('shows what a company contracted and what it costs, line by line', function (
             ->where('companies.data.0.subscription.status_label', 'Activa')
             ->where('companies.data.0.subscription.seats', 100)
             ->where('companies.data.0.subscription.centers', 4)
-            ->where('companies.data.0.subscription.people', 5)
+            ->where('companies.data.0.people', 5)
             ->where('companies.data.0.subscription.starts_on', '2026-12-01')
             ->where('companies.data.0.subscription.renews_on', '1 ene 2027')
             ->where('companies.data.0.subscription.catalog_version', 'v1')
@@ -206,6 +206,15 @@ it('keeps the totals of all the companies, though the list shows a page of them'
 
     $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))
         ->assertInertia(fn (Assert $page) => $page->has('companies.data', 25)->where('companies.total', 26)->where('summary.companies', 26)->where('summary.subtotal', '$103,740'));
+});
+
+it('gives the day a new plan starts unless another is chosen: today where the panel shows it', function (): void {
+    $account = BillingAccount::factory()->create();
+    $this->travelTo(CarbonImmutable::parse('2026-12-10 02:00:00', 'UTC'));
+
+    // 02:00 UTC is still the 9th in Mexico City.
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))
+        ->assertInertia(fn (Assert $page) => $page->where('today', '2026-12-09'));
 });
 
 it('lets support read the same figures', function (): void {

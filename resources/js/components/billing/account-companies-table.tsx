@@ -7,12 +7,16 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { AccountCompanyRow } from '@/types';
+import type { AccountCompanyRow, AccountKind } from '@/types';
 
 export default function AccountCompaniesTable({
     companies,
+    accountKind,
+    today,
 }: {
     companies: AccountCompanyRow[];
+    accountKind: AccountKind;
+    today: string;
 }) {
     return (
         <Table>
@@ -24,9 +28,13 @@ export default function AccountCompaniesTable({
                 <TableRow>
                     <TableHead>Empresa</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Centros</TableHead>
                     <TableHead>Plan</TableHead>
-                    <TableHead>Vínculo</TableHead>
+                    <TableHead>Tamaño</TableHead>
+                    <TableHead>Al mes, sin IVA</TableHead>
+                    <TableHead>Renueva</TableHead>
+                    <TableHead>
+                        <span className="sr-only">Acciones</span>
+                    </TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -34,6 +42,8 @@ export default function AccountCompaniesTable({
                     <AccountCompanyRowView
                         key={company.company_id}
                         company={company}
+                        accountKind={accountKind}
+                        today={today}
                     />
                 ))}
             </TableBody>

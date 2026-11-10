@@ -52,6 +52,7 @@ final readonly class ListAccountCompanies
         return $page->through(function (AccountCompany $link) use ($briefs, $subscriptions, $eligible, $today): AccountCompanyRow {
             $brief = $briefs[$link->tenant_id];
             $subscription = $subscriptions->get($link->tenant_id);
+            $people = $this->headcount->ofCompany($link->tenant_id);
 
             return new AccountCompanyRow(
                 $brief->id,
@@ -62,8 +63,9 @@ final readonly class ListAccountCompanies
                 $brief->status,
                 $brief->statusLabel,
                 $brief->workCenters,
+                $people,
                 ShortDate::format($link->starts_on),
-                $subscription === null ? null : SubscriptionView::from($subscription, $this->quoter->quote($subscription, $eligible, $today), $this->headcount->ofCompany($link->tenant_id)),
+                $subscription === null ? null : SubscriptionView::from($subscription, $this->quoter->quote($subscription, $eligible, $today)),
             );
         });
     }

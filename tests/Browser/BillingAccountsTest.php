@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 
@@ -81,9 +84,8 @@ it('shows an account with the companies it pays, none of them with a plan yet', 
         ->assertSee('Editar cuenta')
         ->assertSee('Vincular empresa')
         ->assertSee('Acme Industrial')
-        ->assertSee('2 centros')
         ->assertSee('Sin plan asignado')
-        ->assertSee('Desde 1 dic 2026');
+        ->assertSee('Asignar plan');
 })->with($looks);
 
 it('shows an account that pays nothing yet with its next step', function (): void {
@@ -124,3 +126,106 @@ it('shows an account with its fiscal data and the way to correct it', function (
         ->assertSee('CAS010101AB1')
         ->assertSee('Editar cuenta');
 })->with($looks);
+
+it('shows a consultant\'s portfolio: each company with its plan and cost, and what the account adds up to', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->consultant()->create(['legal_name' => 'Consultores Asociados S.C.']);
+    foreach (range(1, 5) as $number) {
+        planFor($account, [], Tenant::factory()->create(['trade_name' => "Cliente {$number}"]));
+    }
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}", $dark, $mobile)
+        ->assertSee('Al mes, sin IVA')
+        ->assertSee('$19,950')
+        ->assertSee('$23,142')
+        ->assertSee('Próxima renovación')
+        ->assertSee('Cliente 1')
+        ->assertSee('Cumplimiento')
+        ->assertSee('Canal Cumplimiento')
+        ->assertSee('$3,990')
+        ->assertSee('0 de 100 personas')
+        ->assertSee('Editar plan');
+})->with($looks);
+
+it('says why the channel discount applies, or what is missing for it', function (): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->consultant()->create();
+    foreach (range(1, 2) as $ignored) {
+        planFor($account, ['plan' => Plan::Integral, 'profile' => Profile::ChannelIntegral, 'centers' => 3]);
+    }
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->assertSee('Sin descuento: 2 de las 3 empresas con Integral pagado')
+        ->assertSee('$19,800');
+});
+
+it('shows a company that needs a quotation without an amount', function (): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->create();
+    planFor($account, ['profile' => Profile::Direct, 'seats' => 150]);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->assertSee('Requiere cotización')
+        ->assertSee('1 empresa requiere cotización');
+});
+
+it('shows support the portfolio without the buttons that change it', function (): void {
+    $this->actingAs(support());
+    $account = BillingAccount::factory()->create();
+    planFor($account, ['profile' => Profile::Direct]);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->assertSee('$4,900')
+        ->assertDontSee('Editar plan')
+        ->assertDontSee('Vincular empresa')
+        ->assertDontSee('Editar cuenta');
+});
+
+it('shows the next amount before saving a plan, and saves it', function (): void {
+    signInAsSuperadmin();
+    [$tenant, $account] = paidCompany('consultant');
+    $tenant->update(['trade_name' => 'Cliente Nuevo']);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->assertSee('Sin plan asignado')
+        ->click('Asignar plan')
+        ->assertSee('Cambiar el plan no cambia el acceso de la empresa')
+        ->click('[name="profile"][value="channel_compliance"]')
+        ->fill('seats', '50')
+        ->assertSee('Banda de canal hasta 50 personas: $2,490')
+        ->fill('seats', '100')
+        ->assertSee('Banda de canal hasta 100 personas: $3,990')
+        ->assertSee('IVA')
+        ->press('Guardar plan')
+        ->assertSee('Plan asignado.')
+        ->assertSee('Canal Cumplimiento')
+        ->assertSee('$3,990');
+
+    expect(Subscription::query()->sole())->seats->toBe(100);
+});
+
+it('shows $2,490 to $3,990 when a channel company goes from 50 to 51 people, before it is saved', function (): void {
+    signInAsSuperadmin();
+    [$tenant, $account] = paidCompany('consultant');
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 50, 'centers' => 2]);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Editar plan')
+        ->assertSee('Banda de canal hasta 50 personas: $2,490')
+        ->fill('seats', '51')
+        ->assertSee('De $2,490 a $3,990 al mes');
+
+    expect(Subscription::query()->sole()->seats)->toBe(50);
+});
+
+it('asks for a quotation in the preview above the limit, and refuses a channel rate on a direct account', function (): void {
+    signInAsSuperadmin();
+    [, $account] = paidCompany('direct');
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Asignar plan')
+        ->assertDontSee('Canal Cumplimiento')
+        ->fill('seats', '101')
+        ->assertSee('Más de 100 personas: requiere cotización')
+        ->assertSee('Pon un precio negociado para fijar el importe.');
+});

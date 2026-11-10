@@ -1,5 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import AccountCompaniesEmpty from '@/components/billing/account-companies-empty';
+import AccountFigures from '@/components/billing/account-figures';
 import AccountCompaniesTable from '@/components/billing/account-companies-table';
 import AccountDialog from '@/components/billing/account-dialog';
 import LinkCompanyDialog from '@/components/billing/link-company-dialog';
@@ -7,15 +8,24 @@ import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import { Badge } from '@/components/ui/badge';
 import { index } from '@/routes/billing/accounts';
-import type { AccountCompanyRow, AccountDetail, Paginated } from '@/types';
+import type {
+    AccountCompanyRow,
+    AccountDetail,
+    AccountSummary,
+    Paginated,
+} from '@/types';
 
 /** One payer account: who it is, and the companies it pays. */
 export default function Account({
     account,
     companies,
+    summary,
+    today,
 }: {
     account: AccountDetail;
     companies: Paginated<AccountCompanyRow>;
+    summary: AccountSummary;
+    today: string;
 }) {
     const { auth } = usePage().props;
     setLayoutProps({
@@ -42,10 +52,17 @@ export default function Account({
                         </>
                     )}
                 </PageHeader>
+                {companies.data.length > 0 && (
+                    <AccountFigures summary={summary} />
+                )}
                 {companies.data.length === 0 ? (
                     <AccountCompaniesEmpty />
                 ) : (
-                    <AccountCompaniesTable companies={companies.data} />
+                    <AccountCompaniesTable
+                        companies={companies.data}
+                        accountKind={account.kind}
+                        today={today}
+                    />
                 )}
                 <Pagination
                     previous="Ver más recientes"

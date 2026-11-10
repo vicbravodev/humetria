@@ -26,6 +26,7 @@ final readonly class AccountCompanyRow implements Arrayable
         public string $status,
         public string $statusLabel,
         public int $workCenters,
+        public int $people,
         public string $linkedSince,
         public ?array $subscription,
     ) {}
@@ -44,6 +45,7 @@ final readonly class AccountCompanyRow implements Arrayable
             'status' => $this->status,
             'status_label' => $this->statusLabel,
             'work_centers' => $this->workCenters,
+            'people' => $this->people,
             'linked_since' => $this->linkedSince,
             'subscription' => $this->subscription,
         ];

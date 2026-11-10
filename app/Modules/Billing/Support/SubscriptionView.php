@@ -11,10 +11,9 @@ use App\Modules\Billing\Models\Subscription;
 final class SubscriptionView
 {
     /**
-     * @param  int  $people  the active people the company has now, against the seats it pays.
      * @return array<string, mixed>
      */
-    public static function from(Subscription $subscription, QuoteResult $quote, int $people): array
+    public static function from(Subscription $subscription, QuoteResult $quote): array
     {
         return [
             'plan' => $subscription->plan->value,
@@ -25,7 +24,6 @@ final class SubscriptionView
             'status_label' => $subscription->status->label(),
             'seats' => $subscription->seats,
             'centers' => $subscription->centers,
-            'people' => $people,
             'starts_on' => $subscription->starts_on->toDateString(),
             'renews_on' => ShortDate::format($subscription->renews_on),
             'catalog_version' => $subscription->catalog_version,
