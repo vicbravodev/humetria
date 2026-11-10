@@ -9,6 +9,7 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekPeriod;
+use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -97,6 +98,19 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
         ->assertNoAccessibilityIssues(1);
 
     expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Confirmed);
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('shows Ana a day of approved vacations as vacations, not as a day without marks', function (bool $dark): void {
+    $wednesday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->addDays(2)->toDateString();
+    LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => $wednesday, 'ends_on' => $wednesday, 'working_days' => 1]);
+
+    anaSeesHerWeek($dark)
+        ->assertSee('Vacaciones')
+        ->assertSee('Vacaciones o permiso')
+        ->assertPresent('[role="img"][aria-label*="miércoles ausente"]')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertNoAccessibilityIssues(1);
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('lets Ana say what is not right, with her reason', function (): void {
