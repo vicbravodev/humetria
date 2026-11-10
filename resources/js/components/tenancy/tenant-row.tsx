@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import Initials from '@/components/humetria/initials';
 import TenantOwnerCell from '@/components/tenancy/tenant-owner-cell';
 import TenantRowActions from '@/components/tenancy/tenant-row-actions';
@@ -6,6 +6,7 @@ import TenantSupportActions from '@/components/tenancy/tenant-support-actions';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { tenantStatusVariant } from '@/lib/tenant-status';
+import { show } from '@/routes/companies';
 import type { TenantRow as Tenant } from '@/types';
 
 /** A company of the console (pantallas: Consola-Empresas): its names, RFC, status with its date and owner. */
@@ -24,7 +25,12 @@ export default function TenantRowView({
                 <div className="flex items-center gap-2.5">
                     <Initials name={tenant.trade_name} kind="company" />
                     <div className="flex min-w-0 flex-col">
-                        <span className="font-medium">{tenant.trade_name}</span>
+                        <Link
+                            href={show(tenant.id)}
+                            className="font-medium underline-offset-4 hover:underline"
+                        >
+                            {tenant.trade_name}
+                        </Link>
                         <span className="text-caption text-muted-foreground">
                             {tenant.legal_name}
                         </span>

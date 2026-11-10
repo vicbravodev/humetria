@@ -200,3 +200,33 @@ export type RoleMatrix = {
     columns: string[];
     rows: { label: string; cells: string[] }[];
 };
+
+/** Where a module of a company comes from: its plan, what it had before the plan, a person's grant, or a person's revocation. */
+export type ModuleSource = 'plan' | 'legacy' | 'grant' | 'revoke';
+
+/** A module of a company as its console page lists it. */
+export type ModuleRow = {
+    key: string;
+    label: string;
+    enabled: boolean;
+    source: ModuleSource | null;
+    source_label: string | null;
+    reason: string | null;
+    /** The day it stops being on, written for display; null when it does not end. */
+    ends_on: string | null;
+    /** False for the tools the catalog names but nobody has built yet. */
+    exists_in_code: boolean;
+};
+
+/** The company a console page is about. */
+export type CompanyDetail = Pick<
+    TenantRow,
+    | 'id'
+    | 'legal_name'
+    | 'trade_name'
+    | 'rfc'
+    | 'slug'
+    | 'status'
+    | 'status_label'
+    | 'restriction_reason'
+>;
