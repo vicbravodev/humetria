@@ -16,6 +16,7 @@ use App\Modules\Billing\Models\SubscriptionCharge;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\TenantModule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -35,6 +36,8 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     SubscriptionCharge::class => 'read across companies by the billing console',
     // The statement of a company is read with the rest of what its account owes, across all the companies it pays.
     Statement::class => 'read across companies by the billing console',
+    // What a company has of each module is read from inside it (menu, routes) and from the console across companies.
+    TenantModule::class => 'read across companies by the console and by the module gate',
     // Who paid a company before and why it moved is read across companies, from both accounts' pages.
     CompanyTransfer::class => 'read across companies by the billing console',
 ];

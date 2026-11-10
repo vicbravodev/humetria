@@ -6,12 +6,14 @@ namespace App\Modules\Tenancy\Providers;
 
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyDirectory;
 use App\Modules\Tenancy\Support\CompanyMembers;
+use App\Modules\Tenancy\Support\CompanyModuleAccess;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
 use App\Modules\Tenancy\Support\TenantContext;
 use App\Modules\Tenancy\Support\TenantRegistry;
@@ -35,6 +37,7 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->scoped(Members::class, fn (Application $app): CompanyMembers => $app->make(CompanyMembers::class));
         $this->app->bind(Companies::class, CompanyDirectory::class);
         $this->app->bind(CompanyRegistry::class, TenantRegistry::class);
+        $this->app->bind(CompanyModules::class, CompanyModuleAccess::class);
     }
 
     public function boot(): void
