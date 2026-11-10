@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Http\Middleware;
 use App\Modules\Tenancy\Contracts\Companies;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -28,6 +29,11 @@ final readonly class ResolveDeviceTenant
         $company = is_string($slug) ? $this->companies->enterBySlug($slug) : null;
 
         // A company that does not have the registro de jornada gets the same 404: its devices do not work.
+        if ($company !== null && ! $company->allows('attendance')) {
+            // It was entered to read its modules: take it out again so this 404 is not logged under its id either.
+            Context::forget('tenant_id');
+        }
+
         abort_if($company === null || ! $company->allows('attendance'), 404);
 
         return $next($request);

@@ -75,3 +75,12 @@ it('stops the time-clock devices of a company without the attendance module with
     $this->get("a/{$without->slug}/probe")->assertNotFound();
     $this->get("a/{$with->slug}/probe")->assertOk();
 });
+
+it('does not leave the id of a company without the attendance module in the context of the request that gets the 404', function (): void {
+    $without = Tenant::factory()->create();
+    resolve(CompanyModules::class)->syncPlan($without->id, ['seating'], CarbonImmutable::now());
+
+    $this->get("a/{$without->slug}/probe")->assertNotFound();
+
+    expect(Illuminate\Support\Facades\Context::get('tenant_id'))->toBeNull();
+});
