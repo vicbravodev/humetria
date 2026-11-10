@@ -12,6 +12,7 @@ use App\Modules\Billing\Http\Controllers\StatementConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionPreviewController;
 use App\Modules\Billing\Http\Controllers\TransferConsoleController;
+use App\Modules\Billing\Http\Controllers\UsageGrantController;
 use Illuminate\Support\Facades\Route;
 
 // Who pays what, for the staff only: support reads it, the superadmin changes it (each controller checks its gate).
@@ -71,6 +72,12 @@ Route::post('admin/billing/companies/{company}/charges', [ChargeConsoleControlle
     ->middleware(['auth', 'verified'])
     ->whereUuid('company')
     ->name('billing.charges.store');
+
+// Extra tokens of Humi for a company in the current month, with the reason: the superadmin's.
+Route::post('admin/billing/companies/{company}/usage-grants', [UsageGrantController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('company')
+    ->name('billing.usage.grant');
 
 // Statements of account: read by the staff, made, issued and adjusted by the superadmin.
 Route::get('admin/billing/statements/{statement}', [StatementConsoleController::class, 'show'])
