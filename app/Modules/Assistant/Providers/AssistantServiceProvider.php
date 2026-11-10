@@ -33,7 +33,7 @@ final class AssistantServiceProvider extends ServiceProvider
         $this->app->singleton(ComplianceReaders::class, fn (Application $app): ComplianceReaders => new ComplianceReaders([
             $app->make(Nom035Reader::class),
             $app->make(Nom037Reader::class),
-        ]));
+        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
@@ -42,6 +42,12 @@ final class AssistantServiceProvider extends ServiceProvider
             GetRiskResults::class,
             ListPendingActions::class,
             SearchRegulations::class,
+        ], [
+            // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
+            GetComplianceOverview::class => ['nom035', 'nom037'],
+            GetCampaignProgress::class => ['nom035'],
+            GetRiskResults::class => ['nom035'],
+            ListPendingActions::class => ['nom035', 'nom037'],
         ]));
     }
 
