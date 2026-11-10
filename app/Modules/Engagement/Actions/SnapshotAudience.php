@@ -15,6 +15,7 @@ use App\Modules\Engagement\Support\Thresholds;
 use App\Modules\Organization\Contracts\ReportingLines;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Contracts\Seniority;
+use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -44,11 +45,61 @@ final readonly class SnapshotAudience
             return $existing;
         }
 
+        ['ids' => $ids, 'segments' => $segments, 'commentGroups' => $commentGroups, 'activeSet' => $activeSet] = $this->plan();
+
+        DB::transaction(function () use ($survey, $ids, $segments, $commentGroups, $activeSet): void {
+            foreach ($ids as $id) {
+                $direct = $this->lines->managerOf($id);
+                Invitation::query()->create([
+                    'tenant_id' => $survey->tenant_id,
+                    'survey_id' => $survey->id,
+                    'employee_id' => $id,
+                    'work_center_id' => $segments[$id]->workCenterId,
+                    'area_id' => $segments[$id]->areaId,
+                    'tenure_band' => $segments[$id]->tenure,
+                    'manager_group_id' => $segments[$id]->managerGroupId,
+                    'comment_group_id' => $commentGroups[$id],
+                    'about_manager_id' => $direct !== null && isset($activeSet[$direct]) ? $direct : null,
+                ]);
+            }
+        });
+
+        Log::info('engagement.audience_snapshotted', ['survey_id' => $survey->id, 'invited' => count($ids)]);
+
+        return count($ids);
+    }
+
+    /**
+     * Everyone a launch today would invite: the active people of the company's work centers, by id.
+     *
+     * @return array<string, RosterEntry>
+     */
+    public function invitees(): array
+    {
         $centers = array_map(fn ($center): string => $center->id, $this->workCenters->all());
-        $active = array_values(array_unique(array_merge(...array_values($this->roster->activeIdsInMany($centers)))));
-        $people = $this->roster->findMany($active);
+
+        return $this->roster->findMany(array_values(array_unique(array_merge(...array_values($this->roster->activeIdsInMany($centers))))));
+    }
+
+    /**
+     * How many people the next launch would report only at company level, because every group they could be in is too small
+     * to show: what RH reads on the draft before launching.
+     */
+    public function companyOnly(): int
+    {
+        return count(array_filter($this->plan()['segments'], fn (Segment $segment): bool => $segment->key() === '|||'));
+    }
+
+    /**
+     * Who would be invited and the coarse group each one is in, as of today.
+     *
+     * @return array{ids: list<string>, segments: array<string, Segment>, commentGroups: array<string, string|null>, activeSet: array<string, int>}
+     */
+    private function plan(): array
+    {
+        $people = $this->invitees();
         $ids = array_keys($people);
-        $activeSet = array_flip($active);
+        $activeSet = array_flip($ids);
         $starts = $this->seniority->startDatesFor($ids);
         $today = SurveyClock::day();
 
@@ -77,25 +128,6 @@ final readonly class SnapshotAudience
 
         $segments = SegmentGeneralizer::generalize($segments, $this->thresholds->met(...));
 
-        DB::transaction(function () use ($survey, $ids, $segments, $commentGroups, $activeSet): void {
-            foreach ($ids as $id) {
-                $direct = $this->lines->managerOf($id);
-                Invitation::query()->create([
-                    'tenant_id' => $survey->tenant_id,
-                    'survey_id' => $survey->id,
-                    'employee_id' => $id,
-                    'work_center_id' => $segments[$id]->workCenterId,
-                    'area_id' => $segments[$id]->areaId,
-                    'tenure_band' => $segments[$id]->tenure,
-                    'manager_group_id' => $segments[$id]->managerGroupId,
-                    'comment_group_id' => $commentGroups[$id],
-                    'about_manager_id' => $direct !== null && isset($activeSet[$direct]) ? $direct : null,
-                ]);
-            }
-        });
-
-        Log::info('engagement.audience_snapshotted', ['survey_id' => $survey->id, 'invited' => count($ids)]);
-
-        return count($ids);
+        return ['ids' => $ids, 'segments' => $segments, 'commentGroups' => $commentGroups, 'activeSet' => $activeSet];
     }
 }
