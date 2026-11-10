@@ -9,8 +9,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { show } from '@/routes/tenant/climate/managers';
 import type { ManagerRow } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 /**
  * The managers whose group of people is shown, by name: never ordered by result and with no figure beside the name, so
@@ -25,6 +25,8 @@ export default function ManagerTable({
     surveyId: string;
     managers: ManagerRow[];
 }) {
+    const routes = useEngagementRoutes();
+
     return (
         <section className="overflow-hidden card">
             <StackedTable>
@@ -47,7 +49,7 @@ export default function ManagerTable({
                             </TableCell>
                             <TableCell className="text-right">
                                 <Link
-                                    href={show.url([
+                                    href={routes.managers.show.url([
                                         tenantSlug,
                                         surveyId,
                                         manager.id,

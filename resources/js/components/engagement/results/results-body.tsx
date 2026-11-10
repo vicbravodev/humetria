@@ -2,6 +2,7 @@ import CutSection from '@/components/engagement/results/cut-section';
 import DriverList from '@/components/engagement/results/driver-list';
 import HighlightsCard from '@/components/engagement/results/highlights-card';
 import IndexCard from '@/components/engagement/results/index-card';
+import LoopActionCard from '@/components/engagement/results/loop-action-card';
 import PriorityList from '@/components/engagement/results/priority-list';
 import RecommendationCard from '@/components/engagement/results/recommendation-card';
 import type { EngagementParticipation, EngagementResults } from '@/types';
@@ -30,6 +31,9 @@ export default function ResultsBody({
             )}
             <PriorityList priorities={results.priorities} />
             <DriverList drivers={results.drivers} />
+            {results.loopAction !== null && (
+                <LoopActionCard loopAction={results.loopAction} />
+            )}
             {results.highlights !== null && (
                 <HighlightsCard
                     strengths={results.highlights.strengths}

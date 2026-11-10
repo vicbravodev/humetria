@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import * as climate from '@/routes/tenant/climate';
-import * as pulse from '@/routes/tenant/pulse';
+import climate from '@/routes/tenant/climate';
+import pulse from '@/routes/tenant/pulse';
 
 /** The survey kind of the page: the pages of Clima and of Pulso are the same ones, each with its own routes. */
 export function useEngagementKind(): 'climate' | 'pulse' {

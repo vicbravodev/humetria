@@ -2,16 +2,18 @@ import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { BarChart3, Hourglass } from 'lucide-react';
 import PublishFeedbackButton from '@/components/engagement/commitments/publish-feedback-button';
 import CommitmentsBoard from '@/components/engagement/commitments/commitments-board';
+import LoopActionCard from '@/components/engagement/results/loop-action-card';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { results } from '@/routes/tenant/climate';
 import type { EngagementCommitments } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 export default function Commitments(props: EngagementCommitments) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     const { survey, available } = props;
     setLayoutProps({
         breadcrumbs: [
@@ -41,7 +43,9 @@ export default function Commitments(props: EngagementCommitments) {
                 >
                     {available && (
                         <Button asChild variant="outline">
-                            <Link href={results([tenantSlug, survey.id])}>
+                            <Link
+                                href={routes.results([tenantSlug, survey.id])}
+                            >
                                 <BarChart3 aria-hidden />
                                 Ver resultados
                             </Link>
@@ -55,7 +59,12 @@ export default function Commitments(props: EngagementCommitments) {
                         )}
                 </PageHeader>
                 {available ? (
-                    <CommitmentsBoard {...props} />
+                    <>
+                        {props.loopAction !== null && (
+                            <LoopActionCard loopAction={props.loopAction} />
+                        )}
+                        <CommitmentsBoard {...props} />
+                    </>
                 ) : (
                     <EmptyState
                         icon={Hourglass}

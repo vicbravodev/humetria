@@ -23,6 +23,13 @@ export type EngagementBands = {
     promoters: number;
 };
 
+/** Whether people have seen the improvements the company presented; `null` where the survey did not ask. */
+export type EngagementLoopAction = {
+    shown: boolean;
+    favorable: number | null;
+    vsPrevious: Delta | null;
+};
+
 export type EngagementRecommendation = {
     shown: boolean;
     index: number | null;
@@ -78,6 +85,7 @@ export type EngagementResults = {
     stay: { shown: boolean; favorable: number | null } | null;
     recommendation: EngagementRecommendation | null;
     drivers: EngagementDriver[];
+    loopAction: EngagementLoopAction | null;
     highlights: {
         strengths: EngagementItem[];
         opportunities: EngagementItem[];

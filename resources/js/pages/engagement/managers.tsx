@@ -6,8 +6,8 @@ import Notice from '@/components/humetria/notice';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { results } from '@/routes/tenant/climate';
 import type { ManagerResults, ManagerRow, Paginated } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 /** The managers whose group of people is shown, by name (pantallas: Empleados, Eval-Cerrada). Never a ranking. */
 export default function Managers({
@@ -17,10 +17,14 @@ export default function Managers({
     hasHidden,
 }: ManagerResults & { managers: Paginated<ManagerRow> }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     setLayoutProps({
         breadcrumbs: [
             { title: 'Clima' },
-            { title: survey.name, href: results.url([tenantSlug, survey.id]) },
+            {
+                title: survey.name,
+                href: routes.results.url([tenantSlug, survey.id]),
+            },
             { title: 'Por jefe' },
         ],
     });

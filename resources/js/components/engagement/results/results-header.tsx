@@ -3,9 +3,11 @@ import { ClipboardCheck, Download, ListChecks } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { exportMethod as exportCsv } from '@/routes/tenant/climate';
-import { items } from '@/routes/tenant/climate/results';
 import type { EngagementResults } from '@/types';
+import {
+    useEngagementName,
+    useEngagementRoutes,
+} from '@/hooks/use-engagement-routes';
 
 /** The top of the results (pantallas: Eval-Cerrada): the survey with its state, what the figures are and the way to each question. */
 export default function ResultsHeader({
@@ -19,9 +21,12 @@ export default function ResultsHeader({
     available: boolean;
     cut: EngagementResults['cut'];
 }) {
+    const routes = useEngagementRoutes();
+    const name = useEngagementName();
+
     return (
         <PageHeader
-            caption="Resultados de clima"
+            caption={`Resultados de ${name.toLowerCase()}`}
             title={survey.name}
             status={
                 <Badge
@@ -43,7 +48,7 @@ export default function ResultsHeader({
                 <>
                     <Button asChild variant="outline">
                         <a
-                            href={exportCsv.url(
+                            href={routes.export.url(
                                 [tenantSlug, survey.id],
                                 cut === null ? {} : { query: { cut } },
                             )}
@@ -56,7 +61,12 @@ export default function ResultsHeader({
                         </a>
                     </Button>
                     <Button asChild variant="outline">
-                        <Link href={items.url([tenantSlug, survey.id])}>
+                        <Link
+                            href={routes.results.items.url([
+                                tenantSlug,
+                                survey.id,
+                            ])}
+                        >
                             <ListChecks aria-hidden />
                             Ver por pregunta
                         </Link>

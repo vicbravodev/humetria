@@ -6,7 +6,6 @@ import ManagerItems from '@/components/engagement/results/manager-items';
 import SummaryThemes from '@/components/engagement/results/summary-themes';
 import PageHeader from '@/components/humetria/page-header';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { managers, results } from '@/routes/tenant/climate';
 import type {
     ManagerComment,
     ManagerFeedback,
@@ -14,6 +13,7 @@ import type {
     ManagerRow,
     Paginated,
 } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 /** The feedback of one manager as they will read it, plus the original comments of the group for who manages climate. */
 export default function Manager({
@@ -30,13 +30,17 @@ export default function Manager({
     comments: Paginated<ManagerComment> | null;
 }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     setLayoutProps({
         breadcrumbs: [
             { title: 'Clima' },
-            { title: survey.name, href: results.url([tenantSlug, survey.id]) },
+            {
+                title: survey.name,
+                href: routes.results.url([tenantSlug, survey.id]),
+            },
             {
                 title: 'Por jefe',
-                href: managers.url([tenantSlug, survey.id]),
+                href: routes.managers.url([tenantSlug, survey.id]),
             },
             { title: manager.name },
         ],

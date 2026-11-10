@@ -8,20 +8,21 @@ import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/climate/commitments';
 import type { CommitmentRow, EngagementCommitments } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 /** The commitments of a closed survey by state, a page at a time, with the way to write and edit them. */
 export default function CommitmentsBoard(props: EngagementCommitments) {
     const { survey, commitments, counts, statuses, canManage } = props;
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     const [dialog, setDialog] = useState<{
         editing: CommitmentRow | null;
     } | null>(null);
     const tab = (value: string | null, label: string, count: number) => ({
         label,
         count,
-        href: index([tenantSlug, survey.id], {
+        href: routes.commitments.index([tenantSlug, survey.id], {
             query: value === null ? {} : { status: value },
         }),
         active: props.status === value,

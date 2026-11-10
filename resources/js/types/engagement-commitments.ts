@@ -1,4 +1,5 @@
 import type { Paginated } from './demos';
+import type { EngagementLoopAction } from './engagement-results';
 
 export type CommitmentStatus = 'open' | 'in_progress' | 'done' | 'dropped';
 
@@ -56,6 +57,7 @@ export type EngagementCommitments = {
     counts: Record<'all' | CommitmentStatus, number>;
     groups: CommitmentGroupOption[];
     suggestions: CommitmentSuggestion[];
+    loopAction: EngagementLoopAction | null;
 };
 
 /** A commitment as the portal shows it: no id of a group, only what the person reads. */

@@ -109,3 +109,40 @@ it('says there is nothing to compare yet, with the next step', function (bool $d
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($pulseLooks);
+
+/** A closed pulse of the company of the signed-in user, tour mode, answered by twelve people. */
+function closedPulseWithAnswers(): Survey
+{
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $refs = App\Modules\Engagement\Support\Bank\PulseComposer::compose(PulseMode::Tour, [], 0, true);
+    $survey = Survey::factory()->closed()->pulse()->create(['tenant_id' => $tenant->id, 'items' => $refs, 'invited' => 15]);
+    $answers = collect($refs)->mapWithKeys(fn (string $ref): array => [explode('@', $ref)[0] => 4])->all();
+    App\Modules\Engagement\Models\Response::factory()->count(12)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'answers' => $answers]);
+
+    return $survey;
+}
+
+it('shows RH the results of a pulse with the improvements seen and only the themes it asked about', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $survey = closedPulseWithAnswers();
+
+    visitPage('engagement/results', "{$url}/pulse/{$survey->id}/results", $dark, $mobile)
+        ->assertSee('Resultados de pulso')
+        ->assertSee('Mejoras vistas')
+        ->assertSee('Claridad y alineación')
+        ->assertDontSee('Compensación y prestaciones')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($pulseLooks);
+
+it('shows RH the commitments of a pulse with the improvements seen', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $survey = closedPulseWithAnswers();
+
+    visitPage('engagement/commitments', "{$url}/pulse/{$survey->id}/commitments", $dark, $mobile)
+        ->assertSee('Mejoras vistas')
+        ->assertSee('Nuevo compromiso')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($pulseLooks);

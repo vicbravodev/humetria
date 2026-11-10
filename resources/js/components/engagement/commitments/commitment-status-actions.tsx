@@ -2,8 +2,8 @@ import { Form } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { nextStatuses } from '@/lib/engagement/commitments';
-import { status as statusRoute } from '@/routes/tenant/climate/commitments';
 import type { CommitmentRow } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 const VERB: Record<CommitmentRow['status'], string> = {
     open: 'Reabrir',
@@ -21,13 +21,14 @@ export default function CommitmentStatusActions({
     commitment: CommitmentRow;
 }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
 
     return (
         <>
             {nextStatuses(commitment.status).map((next) => (
                 <Form
                     key={next}
-                    {...statusRoute.form.put([
+                    {...routes.commitments.status.form.put([
                         tenantSlug,
                         surveyId,
                         commitment.id,

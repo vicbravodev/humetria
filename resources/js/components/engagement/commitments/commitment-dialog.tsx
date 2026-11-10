@@ -5,12 +5,12 @@ import FormDialog from '@/components/humetria/form-dialog';
 import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { store, update } from '@/routes/tenant/climate/commitments';
 import type {
     CommitmentGroupOption,
     CommitmentOption,
     CommitmentRow,
 } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 /**
  * Writes a commitment, or edits one (its group stays): what people said, what the company will do, who answers and
@@ -32,6 +32,7 @@ export default function CommitmentDialog({
     drivers: CommitmentOption[];
 }) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     const driver = drivers.find((option) => option.value === editing?.driver);
 
     return (
@@ -43,8 +44,12 @@ export default function CommitmentDialog({
             description="Lo que escribas aquí lo leerá todo el personal en su portal cuando lo publiques. No cites a nadie ni pegues comentarios."
             form={
                 editing === null
-                    ? store.form([tenantSlug, surveyId])
-                    : update.form.put([tenantSlug, surveyId, editing.id])
+                    ? routes.commitments.store.form([tenantSlug, surveyId])
+                    : routes.commitments.update.form.put([
+                          tenantSlug,
+                          surveyId,
+                          editing.id,
+                      ])
             }
             submit="Guardar"
         >

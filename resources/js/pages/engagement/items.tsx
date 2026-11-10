@@ -5,8 +5,8 @@ import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { results } from '@/routes/tenant/climate';
 import type { EngagementItems } from '@/types';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
 export default function Items({
     survey,
@@ -14,10 +14,14 @@ export default function Items({
     sections,
 }: EngagementItems) {
     const tenantSlug = useTenantSlug();
+    const routes = useEngagementRoutes();
     setLayoutProps({
         breadcrumbs: [
             { title: 'Clima' },
-            { title: survey.name, href: results.url([tenantSlug, survey.id]) },
+            {
+                title: survey.name,
+                href: routes.results.url([tenantSlug, survey.id]),
+            },
             { title: 'Por pregunta' },
         ],
     });
@@ -32,7 +36,9 @@ export default function Items({
                     description="Cada pregunta con sus respuestas favorables y cómo se reparten. Las preguntas con menos de 5 respuestas no muestran cifras."
                 >
                     <Button asChild variant="outline">
-                        <Link href={results.url([tenantSlug, survey.id])}>
+                        <Link
+                            href={routes.results.url([tenantSlug, survey.id])}
+                        >
                             <ArrowLeft aria-hidden />
                             Resumen
                         </Link>
