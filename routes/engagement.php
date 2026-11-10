@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Http\Controllers\CommitmentController;
+use App\Modules\Engagement\Http\Controllers\CommentsController;
 use App\Modules\Engagement\Http\Controllers\ExportController;
 use App\Modules\Engagement\Http\Controllers\PublishFeedbackController;
 use App\Modules\Engagement\Http\Controllers\ManagerResultsController;
@@ -55,3 +56,7 @@ Route::post('admin/{tenant:slug}/climate/{survey}/publish', [PublishFeedbackCont
 // The managers whose group of people is shown (never a ranking), and the feedback of each.
 Route::get('admin/{tenant:slug}/climate/{survey}/managers', [ManagerResultsController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.managers');
 Route::get('admin/{tenant:slug}/climate/{survey}/managers/{manager}', [ManagerResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->whereUuid('manager')->defaults('kind', 'climate')->name('tenant.climate.managers.show');
+// The comments about the company (?item=open.best|open.improve): the AI summary and, for who manages climate, the originals.
+Route::get('admin/{tenant:slug}/climate/{survey}/comments', [CommentsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.comments');
+// Tries again a summary that failed; one that is ready is never made twice.
+Route::post('admin/{tenant:slug}/climate/summaries/{summary}/retry', [CommentsController::class, 'retry'])->where('tenant', $notReserved)->whereUuid('summary')->defaults('kind', 'climate')->name('tenant.climate.summaries.retry');

@@ -501,5 +501,6 @@ return [
         'rows.*.year_from' => 'año inicial',
         'rows.*.year_to' => 'año final',
         'rows.*.days' => 'días',
+        'item' => 'pregunta',
     ],
 ];

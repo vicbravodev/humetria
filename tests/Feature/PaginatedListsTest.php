@@ -283,6 +283,14 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.climate.managers', [$tenant, climateManagerSurvey($tenant, [$boss->id => [5, 4]])]);
     }, ['managers']],
+    'the comments about the company' => ['engagement/comments', function () {
+        [$tenant] = listsCompany();
+        workIn($tenant);
+        $survey = App\Modules\Engagement\Models\Survey::factory()->closed()->create(['tenant_id' => $tenant->id]);
+        App\Modules\Engagement\Models\Comment::factory()->count(11)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'item_key' => 'open.best']);
+
+        return route('tenant.climate.comments', [$tenant, $survey]);
+    }, ['comments']],
     'the feedback of a manager' => ['engagement/manager', function () {
         [$tenant] = listsCompany();
         workIn($tenant);
