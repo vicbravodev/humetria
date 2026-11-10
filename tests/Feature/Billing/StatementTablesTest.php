@@ -16,13 +16,13 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /** Runs a write the database should refuse, in a savepoint so the test's own transaction survives. */
-function refused(Closure $write, string $message): void
+function billingDbRefuses(Closure $write, string $message): void
 {
     expect(fn () => DB::transaction($write))->toThrow(QueryException::class, $message);
 }
 
 /** A draft with one line that adds up to its total, ready to issue. */
-function draftWithLine(): Statement
+function billingDraftWithLine(): Statement
 {
     $statement = Statement::factory()->create(['subtotal_cents' => 100_000, 'vat_cents' => 16_000, 'total_cents' => 116_000]);
     StatementLine::factory()->for($statement)->create(['amount_cents' => 100_000, 'position' => 1]);
@@ -31,7 +31,7 @@ function draftWithLine(): Statement
     return $statement;
 }
 
-function issue(Statement $statement): void
+function billingIssueDirectly(Statement $statement): void
 {
     $statement->update(['status' => StatementStatus::Issued, 'issued_at' => now(), 'issued_by' => User::factory()->create()->id]);
 }
@@ -53,7 +53,7 @@ it('keeps one statement per company and month, but lets an adjustment share the 
     $first = Statement::factory()->create();
     $same = ['billing_account_id' => $first->billing_account_id, 'tenant_id' => $first->tenant_id];
 
-    refused(fn () => Statement::factory()->create($same), 'statements_one_per_company_period');
+    billingDbRefuses(fn () => Statement::factory()->create($same), 'statements_one_per_company_period');
 
     Statement::factory()->create([...$same, 'period_start' => '2027-01-01', 'period_end' => '2027-02-01']);
     Statement::factory()->create([...$same, 'adjusts_statement_id' => $first->id, 'reason' => 'Error de captura', 'total_cents' => -100, 'subtotal_cents' => -100, 'vat_cents' => 0]);
@@ -62,7 +62,7 @@ it('keeps one statement per company and month, but lets an adjustment share the 
 });
 
 it('refuses a statement the console would refuse, whatever path writes it', function (array $overrides, string $constraint): void {
-    refused(fn () => Statement::factory()->create($overrides), $constraint);
+    billingDbRefuses(fn () => Statement::factory()->create($overrides), $constraint);
 })->with([
     'a period that ends before it starts' => [['period_end' => '2026-11-30'], 'statements_period_ordered'],
     'a total that is not the subtotal plus the VAT' => [['total_cents' => 1], 'statements_total_adds_up'],
@@ -73,17 +73,17 @@ it('refuses a statement the console would refuse, whatever path writes it', func
 it('refuses a status that does not exist', function (): void {
     $statement = Statement::factory()->create();
 
-    refused(fn () => DB::table('statements')->where('id', $statement->id)->update(['status' => 'paid']), 'statements_status_known');
+    billingDbRefuses(fn () => DB::table('statements')->where('id', $statement->id)->update(['status' => 'paid']), 'statements_status_known');
 });
 
 it('refuses an adjustment with no reason', function (): void {
     $original = Statement::factory()->create();
 
-    refused(fn () => Statement::factory()->create(['adjusts_statement_id' => $original->id, 'period_start' => '2027-01-01', 'period_end' => '2027-02-01']), 'statements_adjustment_has_reason');
+    billingDbRefuses(fn () => Statement::factory()->create(['adjusts_statement_id' => $original->id, 'period_start' => '2027-01-01', 'period_end' => '2027-02-01']), 'statements_adjustment_has_reason');
 });
 
 it('lets a draft change and be deleted, with its lines', function (): void {
-    $statement = draftWithLine();
+    $statement = billingDraftWithLine();
 
     $statement->update(['subtotal_cents' => 100_000]);
     StatementLine::query()->where('statement_id', $statement->id)->first()?->update(['label' => 'Otro']);
@@ -93,18 +93,18 @@ it('lets a draft change and be deleted, with its lines', function (): void {
 });
 
 it('issues a statement whose lines add up to its total, and from then on refuses any change to it or to its lines', function (): void {
-    $statement = draftWithLine();
-    issue($statement);
+    $statement = billingDraftWithLine();
+    billingIssueDirectly($statement);
 
-    refused(fn () => $statement->update(['total_cents' => 1, 'subtotal_cents' => 1, 'vat_cents' => 0]), 'an issued statement is immutable');
-    refused(fn () => $statement->update(['reason' => 'x']), 'an issued statement is immutable');
-    refused(fn () => $statement->delete(), 'an issued statement is immutable');
-    refused(fn () => DB::table('statements')->where('id', $statement->id)->delete(), 'an issued statement is immutable');
+    billingDbRefuses(fn () => $statement->update(['total_cents' => 1, 'subtotal_cents' => 1, 'vat_cents' => 0]), 'an issued statement is immutable');
+    billingDbRefuses(fn () => $statement->update(['reason' => 'x']), 'an issued statement is immutable');
+    billingDbRefuses(fn () => $statement->delete(), 'an issued statement is immutable');
+    billingDbRefuses(fn () => DB::table('statements')->where('id', $statement->id)->delete(), 'an issued statement is immutable');
 
     $line = StatementLine::query()->where('statement_id', $statement->id)->firstOrFail();
-    refused(fn () => $line->update(['amount_cents' => 1]), 'the lines of an issued statement are immutable');
-    refused(fn () => $line->delete(), 'the lines of an issued statement are immutable');
-    refused(fn () => StatementLine::factory()->for($statement)->create(['position' => 9]), 'the lines of an issued statement are immutable');
+    billingDbRefuses(fn () => $line->update(['amount_cents' => 1]), 'the lines of an issued statement are immutable');
+    billingDbRefuses(fn () => $line->delete(), 'the lines of an issued statement are immutable');
+    billingDbRefuses(fn () => StatementLine::factory()->for($statement)->create(['position' => 9]), 'the lines of an issued statement are immutable');
 
     expect(Statement::query()->findOrFail($statement->id)->total_cents)->toBe(116_000)->and(StatementLine::query()->count())->toBe(2);
 });
@@ -113,7 +113,7 @@ it('refuses to issue a statement whose lines do not add up to its total', functi
     $statement = Statement::factory()->create(['subtotal_cents' => 100_000, 'vat_cents' => 16_000, 'total_cents' => 116_000]);
     StatementLine::factory()->for($statement)->create(['amount_cents' => 100_000]);
 
-    refused(fn () => issue($statement), 'the lines of a statement must add up to its total');
+    billingDbRefuses(fn () => billingIssueDirectly($statement), 'the lines of a statement must add up to its total');
 
     expect($statement->refresh()->status)->toBe(StatementStatus::Draft);
 });
@@ -123,18 +123,18 @@ it('bills a one-time charge on one line only', function (): void {
     $charge = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $subscription->tenant_id]);
     StatementLine::factory()->create(['code' => 'charge_one_time', 'charge_id' => $charge->id]);
 
-    refused(fn () => StatementLine::factory()->create(['code' => 'charge_one_time', 'charge_id' => $charge->id]), 'statement_lines_one_time_charge_once');
+    billingDbRefuses(fn () => StatementLine::factory()->create(['code' => 'charge_one_time', 'charge_id' => $charge->id]), 'statement_lines_one_time_charge_once');
 });
 
 it('refuses a billed date on a recurring charge', function (): void {
     $subscription = Subscription::factory()->create();
     $charge = SubscriptionCharge::factory()->recurring()->for($subscription)->create(['tenant_id' => $subscription->tenant_id]);
 
-    refused(fn () => $charge->forceFill(['billed_at' => now()])->save(), 'subscription_charges_only_one_time_billed');
+    billingDbRefuses(fn () => $charge->forceFill(['billed_at' => now()])->save(), 'subscription_charges_only_one_time_billed');
 });
 
 it('refuses a payment of nothing, with no reference, or half reversed', function (array $overrides, string $constraint): void {
-    refused(fn () => Payment::factory()->create($overrides), $constraint);
+    billingDbRefuses(fn () => Payment::factory()->create($overrides), $constraint);
 })->with([
     'zero' => [['amount_cents' => 0], 'payments_amount_positive'],
     'no reference' => [['reference' => ' '], 'payments_reference_filled'],
@@ -144,7 +144,7 @@ it('refuses a payment of nothing, with no reference, or half reversed', function
 it('detects the same reference twice on one account, but not on another, nor once the first was reversed', function (): void {
     $payment = Payment::factory()->create(['reference' => 'SPEI-1']);
 
-    refused(fn () => Payment::factory()->create(['billing_account_id' => $payment->billing_account_id, 'reference' => 'SPEI-1']), 'payments_reference_unique');
+    billingDbRefuses(fn () => Payment::factory()->create(['billing_account_id' => $payment->billing_account_id, 'reference' => 'SPEI-1']), 'payments_reference_unique');
 
     Payment::factory()->create(['reference' => 'SPEI-1']);
     $payment->forceFill(['reversed_at' => now(), 'reversed_by' => User::factory()->create()->id, 'reversal_reason' => 'Duplicado'])->save();
@@ -156,18 +156,18 @@ it('detects the same reference twice on one account, but not on another, nor onc
 it('never deletes or edits a payment, except to reverse it once', function (): void {
     $payment = Payment::factory()->create();
 
-    refused(fn () => $payment->delete(), 'a payment is never deleted');
-    refused(fn () => Payment::query()->findOrFail($payment->id)->update(['amount_cents' => 1]), 'a payment can only be reversed, once');
-    refused(fn () => Payment::query()->findOrFail($payment->id)->update(['reference' => 'otra']), 'a payment can only be reversed, once');
+    billingDbRefuses(fn () => $payment->delete(), 'a payment is never deleted');
+    billingDbRefuses(fn () => Payment::query()->findOrFail($payment->id)->update(['amount_cents' => 1]), 'a payment can only be reversed, once');
+    billingDbRefuses(fn () => Payment::query()->findOrFail($payment->id)->update(['reference' => 'otra']), 'a payment can only be reversed, once');
 
     $payment->forceFill(['reversed_at' => now(), 'reversed_by' => User::factory()->create()->id, 'reversal_reason' => 'Equivocado'])->save();
 
-    refused(fn () => Payment::query()->findOrFail($payment->id)->forceFill(['reversal_reason' => 'Otra razón'])->save(), 'a payment can only be reversed, once');
+    billingDbRefuses(fn () => Payment::query()->findOrFail($payment->id)->forceFill(['reversal_reason' => 'Otra razón'])->save(), 'a payment can only be reversed, once');
     expect($payment->refresh()->isReversed())->toBeTrue()->and(Payment::query()->standing()->count())->toBe(0);
 });
 
 /** A payment and an issued statement of one account. */
-function paymentAndStatement(int $payment = 100_000, int $total = 116_000): array
+function billingPaymentAndStatement(int $payment = 100_000, int $total = 116_000): array
 {
     $account = BillingAccount::factory()->create();
 
@@ -179,7 +179,7 @@ function paymentAndStatement(int $payment = 100_000, int $total = 116_000): arra
 }
 
 it('applies a payment to a statement, in whole or in part, and one payment over several statements', function (): void {
-    [$payment, $first, $account] = paymentAndStatement(150_000, 100_000);
+    [$payment, $first, $account] = billingPaymentAndStatement(150_000, 100_000);
     $second = Statement::factory()->issued()->create(['billing_account_id' => $account->id, 'tenant_id' => Tenant::factory()->create()->id, 'subtotal_cents' => 100_000, 'vat_cents' => 0, 'total_cents' => 100_000]);
 
     PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $first->id, 'amount_cents' => 100_000]);
@@ -189,21 +189,21 @@ it('applies a payment to a statement, in whole or in part, and one payment over 
 });
 
 it('refuses to apply more than the payment holds, or more than the statement is worth', function (): void {
-    [$payment, $statement, $account] = paymentAndStatement(100_000, 116_000);
+    [$payment, $statement, $account] = billingPaymentAndStatement(100_000, 116_000);
     $other = Statement::factory()->issued()->create(['billing_account_id' => $account->id, 'tenant_id' => Tenant::factory()->create()->id, 'subtotal_cents' => 90_000, 'vat_cents' => 0, 'total_cents' => 90_000]);
     PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id, 'amount_cents' => 60_000]);
 
-    refused(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $other->id, 'amount_cents' => 40_001]), 'the payment is over-allocated');
+    billingDbRefuses(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $other->id, 'amount_cents' => 40_001]), 'the payment is over-allocated');
 
     $second = Payment::factory()->create(['billing_account_id' => $account->id, 'amount_cents' => 100_000]);
-    refused(fn () => PaymentAllocation::factory()->create(['payment_id' => $second->id, 'statement_id' => $statement->id, 'amount_cents' => 56_001]), 'the statement is over-paid');
+    billingDbRefuses(fn () => PaymentAllocation::factory()->create(['payment_id' => $second->id, 'statement_id' => $statement->id, 'amount_cents' => 56_001]), 'the statement is over-paid');
 
     PaymentAllocation::factory()->create(['payment_id' => $second->id, 'statement_id' => $statement->id, 'amount_cents' => 56_000]);
     expect(PaymentAllocation::query()->count())->toBe(2);
 });
 
 it('counts the payments that were reversed as nothing when it checks a statement is not over-paid', function (): void {
-    [$payment, $statement, $account] = paymentAndStatement(116_000, 116_000);
+    [$payment, $statement, $account] = billingPaymentAndStatement(116_000, 116_000);
     PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id, 'amount_cents' => 116_000]);
     $payment->forceFill(['reversed_at' => now(), 'reversed_by' => User::factory()->create()->id, 'reversal_reason' => 'Equivocado'])->save();
     $again = Payment::factory()->create(['billing_account_id' => $account->id, 'amount_cents' => 116_000]);
@@ -214,22 +214,22 @@ it('counts the payments that were reversed as nothing when it checks a statement
 });
 
 it('refuses to apply a reversed payment, a payment to a draft, or a payment to another account\'s statement', function (): void {
-    [$payment, $statement] = paymentAndStatement();
+    [$payment, $statement] = billingPaymentAndStatement();
     $draft = Statement::factory()->create(['billing_account_id' => $payment->billing_account_id, 'tenant_id' => Tenant::factory()->create()->id]);
     $foreign = Statement::factory()->issued()->create();
 
-    refused(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $draft->id]), 'a payment is applied to an issued statement');
-    refused(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $foreign->id]), 'a payment is applied to a statement of its own account');
+    billingDbRefuses(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $draft->id]), 'a payment is applied to an issued statement');
+    billingDbRefuses(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $foreign->id]), 'a payment is applied to a statement of its own account');
 
     $payment->forceFill(['reversed_at' => now(), 'reversed_by' => User::factory()->create()->id, 'reversal_reason' => 'Equivocado'])->save();
-    refused(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id]), 'a reversed payment cannot be applied');
+    billingDbRefuses(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id]), 'a reversed payment cannot be applied');
 });
 
 it('never changes or deletes an allocation, and refuses an amount of nothing', function (): void {
-    [$payment, $statement] = paymentAndStatement();
+    [$payment, $statement] = billingPaymentAndStatement();
     $allocation = PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id, 'amount_cents' => 50_000]);
 
-    refused(fn () => $allocation->update(['amount_cents' => 60_000]), 'an allocation is never changed');
-    refused(fn () => $allocation->delete(), 'an allocation is never changed');
-    refused(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => Statement::factory()->issued()->create(['billing_account_id' => $payment->billing_account_id, 'tenant_id' => Tenant::factory()->create()->id])->id, 'amount_cents' => 0]), 'payment_allocations_amount_positive');
+    billingDbRefuses(fn () => $allocation->update(['amount_cents' => 60_000]), 'an allocation is never changed');
+    billingDbRefuses(fn () => $allocation->delete(), 'an allocation is never changed');
+    billingDbRefuses(fn () => PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => Statement::factory()->issued()->create(['billing_account_id' => $payment->billing_account_id, 'tenant_id' => Tenant::factory()->create()->id])->id, 'amount_cents' => 0]), 'payment_allocations_amount_positive');
 });

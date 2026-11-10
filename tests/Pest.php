@@ -685,3 +685,22 @@ function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenan
 
     return $tenant;
 }
+
+function statementMonth(): Carbon\CarbonImmutable
+{
+    return Carbon\CarbonImmutable::parse('2026-12-01');
+}
+
+/**
+ * A direct company with a plan from a month before; 100 people and 2 centers of Cumplimiento unless said otherwise.
+ *
+ * @param  array<string, mixed>  $plan
+ * @return array{0: Tenant, 1: Subscription}
+ */
+function statementCompany(array $plan = []): array
+{
+    [$tenant] = paidCompany();
+    $subscription = Subscription::factory()->create(['tenant_id' => $tenant->id, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01', ...$plan]);
+
+    return [$tenant, $subscription];
+}

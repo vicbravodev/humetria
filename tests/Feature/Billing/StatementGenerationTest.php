@@ -21,31 +21,12 @@ use Illuminate\Support\Facades\Log;
 
 mutates(BuildStatement::class, GenerateStatement::class);
 
-function december(): CarbonImmutable
-{
-    return CarbonImmutable::parse('2026-12-01');
-}
-
-/**
- * A direct company with a plan from a month before; 100 people and 2 centers of Cumplimiento unless said otherwise.
- *
- * @param  array<string, mixed>  $plan
- * @return array{0: Tenant, 1: Subscription}
- */
-function billedCompany(array $plan = []): array
-{
-    [$tenant] = paidCompany();
-    $subscription = Subscription::factory()->create(['tenant_id' => $tenant->id, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01', ...$plan]);
-
-    return [$tenant, $subscription];
-}
-
 it('makes the draft of a month from the quote: the plan line, then the VAT on its own line, with the whole snapshot', function (): void {
     Log::spy();
-    [$tenant, $subscription] = billedCompany();
+    [$tenant, $subscription] = statementCompany();
     $author = User::factory()->create();
 
-    $statement = resolve(GenerateStatement::class)->handle($tenant->id, december(), $author);
+    $statement = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), $author);
 
     expect($statement->status)->toBe(StatementStatus::Draft)
         ->and($statement->tenant_id)->toBe($tenant->id)
@@ -79,9 +60,9 @@ it('makes the draft of a month from the quote: the plan line, then the VAT on it
 });
 
 it('takes every amount from the quote, VAT included, whatever the plan', function (array $plan, int $subtotal, int $vat): void {
-    [$tenant] = billedCompany($plan);
+    [$tenant] = statementCompany($plan);
 
-    $statement = resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    $statement = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
 
     expect([$statement->subtotal_cents, $statement->vat_cents, $statement->total_cents])->toBe([$subtotal, $vat, $subtotal + $vat]);
 })->with([
@@ -95,11 +76,11 @@ it('gives a channel Integral company its share of the discount only when the acc
     $integral = ['plan' => Plan::Integral, 'profile' => Profile::ChannelIntegral, 'seats' => 100, 'centers' => 3, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01'];
     $tenants = [planFor($account, $integral), planFor($account, $integral)];
 
-    $without = resolve(GenerateStatement::class)->handle($tenants[0]->id, december(), User::factory()->create());
+    $without = resolve(GenerateStatement::class)->handle($tenants[0]->id, statementMonth(), User::factory()->create());
     expect($without->subtotal_cents)->toBe(990_000);
 
     $tenants[] = planFor($account, $integral);
-    $with = resolve(GenerateStatement::class)->handle($tenants[1]->id, december(), User::factory()->create());
+    $with = resolve(GenerateStatement::class)->handle($tenants[1]->id, statementMonth(), User::factory()->create());
     $codes = StatementLine::query()->where('statement_id', $with->id)->orderBy('position')->pluck('code')->all();
 
     expect($with->subtotal_cents)->toBe(792_000)
@@ -109,9 +90,9 @@ it('gives a channel Integral company its share of the discount only when the acc
 });
 
 it('prorates the first month of a plan that starts in the middle of it, and only that one', function (): void {
-    [$tenant] = billedCompany(['starts_on' => '2026-12-16', 'renews_on' => '2027-01-01']);
+    [$tenant] = statementCompany(['starts_on' => '2026-12-16', 'renews_on' => '2027-01-01']);
 
-    $first = resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    $first = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
     $next = resolve(GenerateStatement::class)->handle($tenant->id, CarbonImmutable::parse('2027-01-01'), User::factory()->create());
 
     // 16 of 31 days of $4,900.
@@ -124,10 +105,10 @@ it('prorates the first month of a plan that starts in the middle of it, and only
 });
 
 it('refuses a month before the plan starts, and a plan in trial or ended', function (): void {
-    [$tenant] = billedCompany(['starts_on' => '2027-01-10', 'renews_on' => '2027-02-01']);
-    [$trial] = billedCompany(['status' => SubscriptionStatus::Trial]);
-    [$ended] = billedCompany(['status' => SubscriptionStatus::Ended]);
-    $generate = fn (Tenant $company) => fn () => resolve(GenerateStatement::class)->handle($company->id, december(), User::factory()->create());
+    [$tenant] = statementCompany(['starts_on' => '2027-01-10', 'renews_on' => '2027-02-01']);
+    [$trial] = statementCompany(['status' => SubscriptionStatus::Trial]);
+    [$ended] = statementCompany(['status' => SubscriptionStatus::Ended]);
+    $generate = fn (Tenant $company) => fn () => resolve(GenerateStatement::class)->handle($company->id, statementMonth(), User::factory()->create());
 
     expect($generate($tenant))->toThrow(InvalidStatement::class, 'La suscripción empieza después de ese periodo.')
         ->and($generate($trial))->toThrow(InvalidStatement::class, 'Una suscripción en prueba no se factura.')
@@ -139,33 +120,33 @@ it('refuses a company with no plan or no payer, saying what to do first', functi
     [$unplanned] = paidCompany();
     $unpaid = Tenant::factory()->create();
     Subscription::factory()->create(['tenant_id' => $unpaid->id, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01']);
-    $generate = fn (Tenant $company) => fn () => resolve(GenerateStatement::class)->handle($company->id, december(), User::factory()->create());
+    $generate = fn (Tenant $company) => fn () => resolve(GenerateStatement::class)->handle($company->id, statementMonth(), User::factory()->create());
 
     expect($generate($unplanned))->toThrow(InvalidStatement::class, 'Asigna un plan a la empresa antes de hacerle un estado de cuenta.')
         ->and($generate($unpaid))->toThrow(InvalidStatement::class, 'Vincula la empresa a una cuenta antes de hacerle un estado de cuenta.');
 });
 
 it('cannot be made for a plan that needs a quotation, and writes nothing, not even a billed charge', function (): void {
-    [$tenant, $subscription] = billedCompany(['seats' => 150]);
+    [$tenant, $subscription] = statementCompany(['seats' => 150]);
     $charge = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2026-12-10']);
 
-    expect(fn () => resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create()))
+    expect(fn () => resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create()))
         ->toThrow(InvalidStatement::class, 'Esta suscripción requiere cotización: fija un precio negociado antes de hacer el estado de cuenta.');
 
     expect(Statement::query()->count())->toBe(0)->and(StatementLine::query()->count())->toBe(0)->and($charge->refresh()->billed_at)->toBeNull();
 });
 
 it('bills a plan above the limit that has a negotiated price in force', function (): void {
-    [$tenant] = billedCompany(['seats' => 150, 'profile' => Profile::Negotiated, 'negotiated_price_cents' => 1_500_000]);
+    [$tenant] = statementCompany(['seats' => 150, 'profile' => Profile::Negotiated, 'negotiated_price_cents' => 1_500_000]);
 
-    $statement = resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    $statement = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
 
     expect([$statement->subtotal_cents, $statement->vat_cents])->toBe([1_500_000, 240_000])
         ->and($statement->snapshot['negotiated_price_cents'])->toBe(1_500_000);
 });
 
 it('adds the recurring charges that are in force that month as lines of their own', function (): void {
-    [$tenant, $subscription] = billedCompany();
+    [$tenant, $subscription] = statementCompany();
     $make = fn (array $dates, string $name) => SubscriptionCharge::factory()->recurring()->for($subscription)->create(['tenant_id' => $tenant->id, 'description' => $name, 'scope' => 'Una sesión al mes', 'amount_cents' => 150_050, ...$dates]);
     $make(['charge_on' => '2026-11-15', 'ends_on' => null], 'Acompañamiento');
     $make(['charge_on' => '2026-10-01', 'ends_on' => '2026-11-30'], 'Terminado en noviembre');
@@ -173,31 +154,31 @@ it('adds the recurring charges that are in force that month as lines of their ow
     $make(['charge_on' => '2027-01-01', 'ends_on' => null], 'Empieza en enero');
     $make(['charge_on' => '2026-01-01', 'ends_on' => '2026-12-01'], 'Termina el primero');
 
-    $statement = resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    $statement = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
     $lines = StatementLine::query()->where('statement_id', $statement->id)->orderBy('position')->get();
 
     expect($lines->pluck('label')->all())->toBe(['Cumplimiento', 'Termina el primero', 'Acompañamiento', 'Empieza el último día', 'IVA 16%'])
         ->and($lines[2]->code)->toBe('charge_recurring')
         ->and($lines[2]->explanation)->toBe('Cargo recurrente desde 15 nov 2026: Una sesión al mes')
         ->and($statement->subtotal_cents)->toBe(490_000 + 3 * 150_050)
-        ->and($statement->vat_cents)->toBe(Quote_divide((490_000 + 3 * 150_050) * 16, 100));
+        ->and($statement->vat_cents)->toBe(statementHalfUp((490_000 + 3 * 150_050) * 16, 100));
 });
 
 /** Half a cent up, as the quote does it. */
-function Quote_divide(int $numerator, int $denominator): int
+function statementHalfUp(int $numerator, int $denominator): int
 {
     return App\Modules\Billing\Support\Quote::divide($numerator, $denominator);
 }
 
 it('bills a one-time charge once: on the month it falls in, and never again', function (): void {
-    [$tenant, $subscription] = billedCompany();
+    [$tenant, $subscription] = statementCompany();
     $inDecember = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2026-12-31', 'amount_cents' => 1_250_000, 'description' => 'Implementación', 'scope' => 'Alta de 3 centros']);
     $inJanuary = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2027-01-01']);
     $before = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2026-11-30']);
     $already = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2026-12-10', 'billed_at' => '2026-12-11 10:00:00']);
     $this->freezeTime();
 
-    $statement = resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    $statement = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
     $january = resolve(GenerateStatement::class)->handle($tenant->id, CarbonImmutable::parse('2027-01-01'), User::factory()->create());
 
     $line = StatementLine::query()->where('statement_id', $statement->id)->where('code', 'charge_one_time')->sole();
@@ -212,10 +193,10 @@ it('bills a one-time charge once: on the month it falls in, and never again', fu
 });
 
 it('is idempotent: making the same month twice returns the first statement and bills nothing twice', function (): void {
-    [$tenant, $subscription] = billedCompany();
+    [$tenant, $subscription] = statementCompany();
     $charge = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2026-12-10']);
 
-    $first = resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    $first = resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
     $billedAt = $charge->refresh()->billed_at;
     $again = resolve(GenerateStatement::class)->handle($tenant->id, CarbonImmutable::parse('2026-12-20'), User::factory()->create());
 
@@ -226,10 +207,10 @@ it('is idempotent: making the same month twice returns the first statement and b
 });
 
 it('builds the lines for the preview without writing anything', function (): void {
-    [$tenant, $subscription] = billedCompany();
+    [$tenant, $subscription] = statementCompany();
     $charge = SubscriptionCharge::factory()->for($subscription)->create(['tenant_id' => $tenant->id, 'charge_on' => '2026-12-10']);
 
-    $draft = resolve(BuildStatement::class)->handle($tenant->id, december());
+    $draft = resolve(BuildStatement::class)->handle($tenant->id, statementMonth());
 
     expect(array_map(fn ($line) => $line->code, $draft->lines))->toBe(['plan', 'charge_one_time', 'vat'])
         ->and([$draft->subtotalCents, $draft->vatCents, $draft->totalCents])->toBe([990_000, 158_400, 1_148_400])
@@ -238,10 +219,10 @@ it('builds the lines for the preview without writing anything', function (): voi
 });
 
 it('does not change the company: no access, no dates, no restriction', function (): void {
-    [$tenant] = billedCompany();
+    [$tenant] = statementCompany();
     $before = $tenant->refresh()->getAttributes();
 
-    resolve(GenerateStatement::class)->handle($tenant->id, december(), User::factory()->create());
+    resolve(GenerateStatement::class)->handle($tenant->id, statementMonth(), User::factory()->create());
 
     expect($tenant->refresh()->getAttributes())->toBe($before)
         ->and(AuditEntry::query()->count())->toBe(0);
