@@ -176,10 +176,12 @@ it('lets RH issue a screen, showing its link once to copy, and revoke it', funct
 
     $page->navigate($url)
         ->assertDontSee('Enlace de la pantalla')
+        ->waitForText('Volver a emitir')
         ->click('Volver a emitir')
         ->click('[role="dialog"] button[type="submit"]')
         ->waitForText('Enlace de la pantalla')
         ->navigate($url)
+        ->waitForText('Revocar')
         ->click('Revocar')
         ->click('[role="dialog"] button[type="submit"]')
         ->waitForText('Pantalla revocada')
