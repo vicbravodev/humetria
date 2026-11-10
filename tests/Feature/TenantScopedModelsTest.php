@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
+use App\Modules\Billing\Models\AccountCompany;
+use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Models\SubscriptionCharge;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -20,6 +24,10 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     TenantInvitation::class => 'accepted from outside the company',
     // The audit trail is the superadmin's too, across companies, and some entries have no company.
     AuditEntry::class => 'read across companies by the superadmin',
+    // What each company pays and who pays it is read across all of them, by the staff's console, never from inside a company.
+    AccountCompany::class => 'read across companies by the billing console',
+    Subscription::class => 'read across companies by the billing console',
+    SubscriptionCharge::class => 'read across companies by the billing console',
 ];
 
 /**
@@ -29,6 +37,8 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
 const PLATFORM_MODELS = [
     // Maintained by Humetria from official sources (UMA, IMSS, ISN...); an account only reads them through the calculator.
     FiscalParameter::class => 'fiscal and legal values shared by every company',
+    // The payer of one or many companies (a consultant's clients): commercial data of Humetría, read by the staff's console.
+    BillingAccount::class => 'who pays for the companies, across all of them',
 ];
 
 /** @return list<class-string<Model>> */
