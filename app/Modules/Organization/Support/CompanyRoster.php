@@ -123,6 +123,8 @@ final class CompanyRoster implements Roster
             $employee->deactivated_at === null,
             $employee->job_title,
             $employee->staff_group === StaffGroup::Trusted,
+            $employee->job_grade_id,
+            $employee->staff_group?->value,
         );
     }
 }
