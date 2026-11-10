@@ -6,7 +6,6 @@ namespace App\Modules\Leave\Support;
 
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -19,7 +18,7 @@ final readonly class LeaveDefaults
 
     public function ensure(): LeaveSetting
     {
-        $today = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
+        $today = PeriodWindow::today()->toDateString();
         $setting = LeaveSetting::query()->firstOrCreate(['tenant_id' => $this->tenant->id()], ['tracking_since' => $today]);
 
         if ($setting->wasRecentlyCreated) {
