@@ -81,3 +81,32 @@ export type StatementSheetData = {
 
 /** A statement the person has yet to confirm. */
 export type PendingStatement = { id: string; year: number };
+
+/** What RH reads first in Vacaciones: people and days, never an amount. */
+export type LeaveSummary = {
+    outToday: number;
+    outThisWeek: number;
+    /** Requests that wait for the manager. */
+    pending: number;
+    /** Requests the manager did not answer in time, now in RH's hands. */
+    escalated: number;
+    windowsClosing: number;
+    /** Days still in the balance past their eighteen months: the company decides whether to oppose the prescription. */
+    prescribableDays: number;
+    liabilityDays: number;
+    missingStartDate: number;
+    statementsUnacknowledged: number;
+};
+
+export type LeaveSummaryView = 'out' | 'windows' | 'prescribable';
+
+/** A row of the detail under the summary: who is out, or whose period is about to close or past its eighteen months. */
+export type LeaveSummaryRow = {
+    id: string;
+    name: string;
+    /** "Vacaciones" or "Permiso" for who is out (never which leave); "Periodo 2025" for a period. */
+    label: string;
+    days: number;
+    startsOn: string;
+    endsOn: string;
+};
