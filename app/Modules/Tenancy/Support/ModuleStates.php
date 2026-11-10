@@ -16,26 +16,61 @@ use Illuminate\Support\Collection;
  */
 final class ModuleStates
 {
+    /** @var array<string, array{states: array<string, ModuleRow>, restricted: bool}> what was read for each company in this request. */
+    private array $memo = [];
+
     /**
+     * One query per company and request; whoever writes a row calls forget().
+     *
      * @return array<string, ModuleRow> by module key, in the catalog's order.
      */
     public function for(string $tenantId): array
     {
-        $rows = TenantModule::query()->where('tenant_id', $tenantId)->active()->get();
-        $planned = self::hasPlan($tenantId);
-        $states = [];
+        return ($this->memo[$tenantId] ??= $this->read($tenantId))['states'];
+    }
 
-        foreach (Module::cases() as $module) {
-            $states[$module->value] = $this->state($module, $rows->where('module', $module->value), $planned);
+    /** Whether something limits the company: a plan has spoken for it, or a person took a module from it. */
+    public function restricted(string $tenantId): bool
+    {
+        return ($this->memo[$tenantId] ??= $this->read($tenantId))['restricted'];
+    }
+
+    /** Drops what was read, for a new request or after a write. */
+    public function forget(?string $tenantId = null): void
+    {
+        if ($tenantId === null) {
+            $this->memo = [];
+
+            return;
         }
 
-        return $states;
+        unset($this->memo[$tenantId]);
     }
 
     /** Whether a plan ever said what this company has. Without one, nothing is taken from it. */
-    public static function hasPlan(string $tenantId): bool
+    public function hasPlan(string $tenantId): bool
     {
         return TenantModule::query()->where('tenant_id', $tenantId)->where('source', ModuleSource::Plan)->exists();
+    }
+
+    /**
+     * @return array{states: array<string, ModuleRow>, restricted: bool}
+     */
+    private function read(string $tenantId): array
+    {
+        $all = TenantModule::query()->where('tenant_id', $tenantId)->get();
+        $planned = $all->contains(fn (TenantModule $row): bool => $row->source === ModuleSource::Plan);
+        $now = now();
+        $active = $all->filter(fn (TenantModule $row): bool => $row->expires_at === null || $row->expires_at->greaterThan($now));
+        $states = [];
+
+        foreach (Module::cases() as $module) {
+            $states[$module->value] = $this->state($module, $active->where('module', $module->value), $planned);
+        }
+
+        $revoked = $active->contains(fn (TenantModule $row): bool => $row->source === ModuleSource::Revoke);
+
+        return ['states' => $states, 'restricted' => $planned || $revoked];
     }
 
     /**

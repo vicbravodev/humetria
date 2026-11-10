@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\CompanyModuleAccess;
+use App\Modules\Tenancy\Support\ModuleStates;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,9 @@ mutates(SyncCompanyModules::class, CompanyModuleAccess::class);
 /** @return list<string> */
 function enabledModulesOf(Tenant $tenant): array
 {
+    // What was read before the clock moved is stale: a request starts without it.
+    resolve(ModuleStates::class)->forget();
+
     return resolve(CompanyModules::class)->enabledKeys($tenant->id);
 }
 

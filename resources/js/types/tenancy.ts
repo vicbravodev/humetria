@@ -92,6 +92,8 @@ export type CurrentTenant = TenantSummary &
         read_only: boolean;
         /** Whether the account is a company or a union; fixed when it was created. */
         type: 'company' | 'union';
+        /** The modules the company has (attendance, nom035, nom037, seating, complaints…); the others are hidden. */
+        modules: string[];
         trial_days_left: number | null;
         role: TenantRole;
         role_label: string;

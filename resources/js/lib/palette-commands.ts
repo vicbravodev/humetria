@@ -13,6 +13,7 @@ import {
 import type { Appearance } from '@/hooks/use-appearance';
 import {
     complianceNavItems,
+    hasModule,
     mainNavItems,
     type NavTenant,
     settingsEntryHref,
@@ -75,7 +76,9 @@ function companyActions(
     };
 
     return [
-        ...(tenant.can.manage_campaigns && tenant.type !== 'union'
+        ...(tenant.can.manage_campaigns &&
+        tenant.type !== 'union' &&
+        hasModule(tenant, 'nom035')
             ? [newEvaluation]
             : []),
         ...(tenant.can.manage_organization ? [importEmployees] : []),

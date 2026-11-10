@@ -166,7 +166,8 @@ it('reads the page in a fixed number of queries', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
     nom035Route()->assertOk();
 
-    $this->expectsDatabaseQueryCount(25);
+    // 25 + 1: the modules the company has (tenant_modules), read once per request for the menu and the gate.
+    $this->expectsDatabaseQueryCount(26);
     nom035Route()->assertOk();
 });
 

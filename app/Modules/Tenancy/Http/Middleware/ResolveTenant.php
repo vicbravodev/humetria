@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Modules\Tenancy\Actions\ListUserTenants;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyRoles;
+use App\Modules\Tenancy\Support\ModuleStates;
 use App\Modules\Tenancy\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -28,6 +30,7 @@ final class ResolveTenant
         private readonly ListUserTenants $listUserTenants,
         private readonly TenantContext $tenantContext,
         private readonly CompanyRoles $companyRoles,
+        private readonly CompanyModules $modules,
     ) {}
 
     /**
@@ -37,6 +40,7 @@ final class ResolveTenant
     {
         // A new request starts without the people of the last one's company (a long-lived process serves many).
         resolve(CompanyMembers::class)->forget();
+        resolve(ModuleStates::class)->forget();
         $slug = $request->route('tenant');
 
         // Implicit route binding only runs when the action type-hints the model; this middleware must not depend on that.
@@ -71,6 +75,8 @@ final class ResolveTenant
             'read_only' => $status->isReadOnly(),
             'trial_days_left' => $tenant->trialDaysLeft(),
             'type' => $tenant->type->value,
+            // What the company has, for the menu to hide the rest; the routes of the others answer 404 anyway.
+            'modules' => $this->modules->enabledKeys($tenant->id),
             'role' => $role->value,
             'role_label' => $role->label(),
             'can' => [

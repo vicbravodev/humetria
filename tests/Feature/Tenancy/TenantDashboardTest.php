@@ -213,5 +213,5 @@ it('reads the panel in the same number of queries however much the company holds
     $this->get(route('tenant.dashboard', $this->tenant))->assertOk();
 })->with([1, 3]);
 
-// Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2).
-const QUERIES_OF_THE_PANEL = 57;
+// Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2); 58: the modules the company has, read once per request.
+const QUERIES_OF_THE_PANEL = 58;

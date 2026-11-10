@@ -16,7 +16,7 @@ use InvalidArgumentException;
 
 final readonly class SyncCompanyModules
 {
-    public function __construct(private RecordAudit $recordAudit) {}
+    public function __construct(private RecordAudit $recordAudit, private ModuleStates $states) {}
 
     /**
      * Gives the company the modules of its plan. What the plan adds is on at once; what it takes away stays on until the day the
@@ -33,7 +33,7 @@ final readonly class SyncCompanyModules
 
         DB::transaction(function () use ($tenantId, $modules, $end): void {
             $rows = TenantModule::query()->where('tenant_id', $tenantId)->whereIn('source', [ModuleSource::Plan, ModuleSource::Legacy])->lockForUpdate()->get();
-            $basis = $this->basis($rows->all(), ModuleStates::hasPlan($tenantId));
+            $basis = $this->basis($rows->all(), $this->states->hasPlan($tenantId));
             $kept = array_map(fn (Module $module): string => $module->value, $modules);
 
             foreach ($modules as $module) {
@@ -52,6 +52,8 @@ final readonly class SyncCompanyModules
             Log::info('tenant.modules_synced', $changes);
             $this->recordAudit->handle('tenant.modules_synced', null, $changes);
         });
+
+        $this->states->forget($tenantId);
     }
 
     /**

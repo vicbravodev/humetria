@@ -15,6 +15,7 @@ use App\Modules\Tenancy\Support\CompanyDirectory;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyModuleAccess;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
+use App\Modules\Tenancy\Support\ModuleStates;
 use App\Modules\Tenancy\Support\TenantContext;
 use App\Modules\Tenancy\Support\TenantRegistry;
 use Illuminate\Auth\Access\Response as AccessResponse;
@@ -37,6 +38,8 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->scoped(Members::class, fn (Application $app): CompanyMembers => $app->make(CompanyMembers::class));
         $this->app->bind(Companies::class, CompanyDirectory::class);
         $this->app->bind(CompanyRegistry::class, TenantRegistry::class);
+        // One instance per request, so the modules of a company are read once; whoever changes them drops the memo.
+        $this->app->scoped(ModuleStates::class);
         $this->app->bind(CompanyModules::class, CompanyModuleAccess::class);
     }
 

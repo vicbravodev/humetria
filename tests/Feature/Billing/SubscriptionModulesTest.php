@@ -10,6 +10,7 @@ use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\ModuleStates;
 use Carbon\CarbonImmutable;
 
 mutates(SetSubscription::class);
@@ -17,6 +18,9 @@ mutates(SetSubscription::class);
 /** @return list<string> */
 function companyModulesNow(Tenant $tenant): array
 {
+    // What was read before the clock moved is stale: a request starts without it.
+    resolve(ModuleStates::class)->forget();
+
     return resolve(CompanyModules::class)->enabledKeys($tenant->id);
 }
 

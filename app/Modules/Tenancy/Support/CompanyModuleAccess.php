@@ -6,8 +6,6 @@ namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Actions\SyncCompanyModules;
 use App\Modules\Tenancy\Contracts\CompanyModules;
-use App\Modules\Tenancy\Enums\ModuleSource;
-use App\Modules\Tenancy\Models\TenantModule;
 use Carbon\CarbonImmutable;
 use InvalidArgumentException;
 
@@ -32,9 +30,7 @@ final readonly class CompanyModuleAccess implements CompanyModules
 
     public function restrictedTo(string $tenantId): ?array
     {
-        $revoked = TenantModule::query()->where('tenant_id', $tenantId)->where('source', ModuleSource::Revoke)->active()->exists();
-
-        return ModuleStates::hasPlan($tenantId) || $revoked ? $this->enabledKeys($tenantId) : null;
+        return $this->states->restricted($tenantId) ? $this->enabledKeys($tenantId) : null;
     }
 
     public function list(string $tenantId): array

@@ -46,6 +46,10 @@ export type { NavTenant } from '@/types';
 /** A union has no compliance tools (the server answers 404 to them); everything else is a company's. */
 const isUnion = (tenant: NavTenant): boolean => tenant.type === 'union';
 
+/** Whether the company has the module; a page that did not share the list (outside a company) offers everything. */
+export const hasModule = (tenant: NavTenant, module: string): boolean =>
+    tenant.modules === undefined || tenant.modules.includes(module);
+
 /** The company's own pages the role may open: a union has no work centers, and its people are its members. */
 const companyItems = (tenant: NavTenant): NavItem[] => [
     { title: 'Panel', href: tenantDashboard(tenant.slug), icon: House },
@@ -93,9 +97,13 @@ export const mainNavItems = (
         return [];
     }
 
-    return tenant.role === 'complaints'
-        ? complaintCasesItems(tenant)
-        : companyItems(tenant);
+    if (tenant.role === 'complaints') {
+        return hasModule(tenant, 'complaints')
+            ? complaintCasesItems(tenant)
+            : [];
+    }
+
+    return companyItems(tenant);
 };
 
 /** NOM-037's own pages, under its entry: only those the role may open (the server answers 403 to the rest anyway). */
@@ -197,11 +205,20 @@ export const complianceNavItems = (
     }
 
     return [
-        ...(tenant.role === 'committee' ? [] : [nom035(tenant, inCourse)]),
-        telework(tenant),
-        ...(tenant.can.view_seating ? [seating(tenant)] : []),
-        ...(tenant.can.view_attendance ? [attendance(tenant)] : []),
-        ...(handlesOrManagesComplaints(tenant) ? [complaints(tenant)] : []),
+        ...(tenant.role === 'committee' || !hasModule(tenant, 'nom035')
+            ? []
+            : [nom035(tenant, inCourse)]),
+        ...(hasModule(tenant, 'nom037') ? [telework(tenant)] : []),
+        ...(tenant.can.view_seating && hasModule(tenant, 'seating')
+            ? [seating(tenant)]
+            : []),
+        ...(tenant.can.view_attendance && hasModule(tenant, 'attendance')
+            ? [attendance(tenant)]
+            : []),
+        ...(handlesOrManagesComplaints(tenant) &&
+        hasModule(tenant, 'complaints')
+            ? [complaints(tenant)]
+            : []),
     ];
 };
 
