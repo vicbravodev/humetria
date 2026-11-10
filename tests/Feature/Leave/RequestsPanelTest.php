@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
+use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
+use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\RequestPages;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
@@ -215,3 +218,124 @@ it('asks the same queries whatever the number of requests and people', function 
     $this->expectsDatabaseQueryCount(LEAVE_REQUESTS_QUERIES);
     $this->get(route('tenant.vacations.requests.index', $this->tenant))->assertOk();
 })->with(['a few' => [1], 'many more' => [30]]);
+
+describe('answering and correcting', function (): void {
+    beforeEach(function (): void {
+        Notification::fake();
+        // Ana: 3 days left of the older period, 14 of the newer one.
+        $this->older = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 1, 'anniversary_on' => '2025-03-15', 'statutory_days' => 3]);
+        $this->newer = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 2, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
+    });
+
+    function leaveQueueLeft(Employee $person): int
+    {
+        return Balances::available($person->id);
+    }
+
+    it('answers under the vacations of the company', function (): void {
+        expect(route('tenant.vacations.requests.approve', ['acme', 'r1'], absolute: false))->toBe('/admin/acme/vacations/requests/r1/approve')
+            ->and(route('tenant.vacations.requests.reject', ['acme', 'r1'], absolute: false))->toBe('/admin/acme/vacations/requests/r1/reject')
+            ->and(route('tenant.vacations.requests.cancel', ['acme', 'r1'], absolute: false))->toBe('/admin/acme/vacations/requests/r1/cancel');
+    });
+
+    it('approves a request that reached RH and charges the ledger, audited', function (): void {
+        $request = leaveQueueRequest($this->ana, 'escalated');
+
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.approve', [$this->tenant, $request->id]))
+            ->assertRedirect()
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud aprobada.']);
+
+        expect($request->refresh()->only(['status', 'decided_by_user_id']))->toBe(['status' => RequestStatus::Approved, 'decided_by_user_id' => $this->hr->id])
+            ->and(leaveQueueLeft($this->ana))->toBe(17 - 9)
+            ->and(AuditEntry::query()->where('event', 'leave.request_decided_by_hr')->count())->toBe(1);
+    });
+
+    it('approves one that still waits for the manager: RH may answer at any time', function (): void {
+        $request = leaveQueueRequest($this->ana);
+
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.approve', [$this->tenant, $request->id]))->assertRedirect();
+
+        expect($request->refresh()->status)->toBe(RequestStatus::Approved);
+    });
+
+    it('rejects with the reason the person will read, and asks for it', function (): void {
+        $request = leaveQueueRequest($this->ana, 'escalated');
+        $url = route('tenant.vacations.requests.reject', [$this->tenant, $request->id]);
+
+        $this->actingAs($this->hr)->post($url)->assertSessionHasErrors(['reason']);
+        $this->post($url, ['reason' => 'corto'])->assertSessionDoesntHaveErrors();
+        expect($request->refresh()->status)->toBe(RequestStatus::Rejected);
+
+        $second = leaveQueueRequest($this->caro, 'escalated');
+        $this->post(route('tenant.vacations.requests.reject', [$this->tenant, $second->id]), ['reason' => str_repeat('a', 501)])->assertSessionHasErrors(['reason']);
+        expect($second->refresh()->status)->toBe(RequestStatus::Requested);
+    });
+
+    it('records the reason of a rejection and leaves the ledger alone', function (): void {
+        $request = leaveQueueRequest($this->ana, 'escalated');
+
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.reject', [$this->tenant, $request->id]), ['reason' => 'Cierre de mes'])
+            ->assertRedirect()
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud rechazada.']);
+
+        expect($request->refresh()->only(['status', 'rejection_reason']))->toBe(['status' => RequestStatus::Rejected, 'rejection_reason' => 'Cierre de mes'])
+            ->and(leaveQueueLeft($this->ana))->toBe(17);
+    });
+
+    it('says why vacations cannot be approved without days, in tú, and keeps the request waiting', function (): void {
+        $request = leaveQueueRequest($this->caro, 'escalated');
+
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.approve', [$this->tenant, $request->id]))
+            ->assertRedirect()
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'La persona no tiene días disponibles y su política no permite adelantar vacaciones.']);
+
+        expect($request->refresh()->status)->toBe(RequestStatus::Requested);
+    });
+
+    it('tells the second answer that the request was already answered, without changing anything', function (): void {
+        $request = leaveQueueRequest($this->ana, 'escalated');
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.approve', [$this->tenant, $request->id]));
+
+        $this->post(route('tenant.vacations.requests.reject', [$this->tenant, $request->id]), ['reason' => 'Cierre de mes'])
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya fue respondida.']);
+
+        expect($request->refresh()->status)->toBe(RequestStatus::Approved)
+            ->and(leaveQueueLeft($this->ana))->toBe(17 - 9);
+    });
+
+    it('corrects by cancelling one already enjoyed, which gives the days back and is audited', function (): void {
+        $request = leaveQueueRequest($this->ana, 'escalated');
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.approve', [$this->tenant, $request->id]));
+        $request->update(['status' => RequestStatus::Taken]);
+
+        $this->post(route('tenant.vacations.requests.cancel', [$this->tenant, $request->id]))
+            ->assertRedirect()
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'La solicitud quedó cancelada.']);
+
+        expect($request->refresh()->status)->toBe(RequestStatus::Cancelled)
+            ->and(leaveQueueLeft($this->ana))->toBe(17)
+            ->and(AuditEntry::query()->where('event', 'leave.request_cancelled')->count())->toBe(1);
+    });
+
+    it('does not cancel what is no longer holding its dates', function (): void {
+        $request = leaveQueueRequest($this->ana, 'rejected');
+
+        $this->actingAs($this->hr)->post(route('tenant.vacations.requests.cancel', [$this->tenant, $request->id]))
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya no se puede cancelar.']);
+
+        expect($request->refresh()->status)->toBe(RequestStatus::Rejected);
+    });
+
+    it('lets a viewer read the queue but not answer, and shows nobody else\'s request', function (string $action): void {
+        $request = leaveQueueRequest($this->ana, 'escalated');
+        $other = Tenant::factory()->create(['slug' => 'otra']);
+        $stranger = leaveQueueRequest(Employee::factory()->create(['tenant_id' => $other->id]), 'escalated');
+        $data = $action === 'reject' ? ['reason' => 'Cierre de mes'] : [];
+
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(route("tenant.vacations.requests.{$action}", [$this->tenant, $request->id]), $data)->assertForbidden();
+        expect($request->refresh()->status)->toBe(RequestStatus::Requested);
+
+        $this->actingAs($this->hr)->post(route("tenant.vacations.requests.{$action}", [$this->tenant, $stranger->id]), $data)->assertNotFound();
+        expect(LeaveRequest::query()->withoutGlobalScopes()->findOrFail($stranger->id)->status)->toBe(RequestStatus::Requested);
+    })->with(['approve', 'reject', 'cancel']);
+});

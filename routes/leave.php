@@ -15,3 +15,8 @@ Route::get('admin/{tenant:slug}/vacations', [VacationsController::class, 'index'
 
 // RH's queue: what reached them first, then what waits for the manager and what was answered.
 Route::get('admin/{tenant:slug}/vacations/requests', [RequestController::class, 'index'])->where('tenant', $notReserved)->name('tenant.vacations.requests.index');
+
+// RH answers a request at any time, or corrects one by cancelling it. Owner and hr; a viewer reads the queue only.
+Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/approve', [RequestController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('leaveRequest')->name('tenant.vacations.requests.approve');
+Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/reject', [RequestController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('leaveRequest')->name('tenant.vacations.requests.reject');
+Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/cancel', [RequestController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('leaveRequest')->name('tenant.vacations.requests.cancel');

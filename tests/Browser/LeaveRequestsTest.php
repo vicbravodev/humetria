@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Tenancy\Models\Tenant;
@@ -69,4 +70,46 @@ it('searches the queue by name', function (): void {
         ->type('input[type=search]', 'zzz')
         ->assertSee('Ninguna solicitud espera a un jefe.')
         ->assertDontSee('Caro Luz');
+});
+
+it('lets RH read a request and approve it', function (bool $dark, bool $mobile): void {
+    $queue = leaveRequestsPanel();
+    $ana = LeaveRequest::query()->whereNotNull('escalated_at')->firstOrFail();
+    LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $queue['tenant']->id, 'employee_id' => $ana->employee_id, 'years_of_service' => 1, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
+
+    visitPage('leave/requests', $queue['url'], $dark, $mobile)
+        ->click('button[aria-label="Ver la solicitud de Ana Solís"]')
+        ->assertSee('Le tocaba a')
+        ->assertSee('Su jefe no respondió en 3 días hábiles')
+        ->assertNoJavaScriptErrors()
+        ->press('Aprobar')
+        ->click('[role=dialog] button:has-text("Sí, aprobar")')
+        ->assertSee('Solicitud aprobada.')
+        ->assertSee('Nada por atender.')
+        ->assertNoJavaScriptErrors();
+})->with($looks);
+
+it('lets RH reject a request with the reason the person will read', function (): void {
+    $queue = leaveRequestsPanel();
+
+    visitPage('leave/requests', $queue['url'])
+        ->click('button[aria-label="Ver la solicitud de Ana Solís"]')
+        ->press('Rechazar')
+        ->type('textarea[name=reason]', 'Cierre de mes')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Solicitud rechazada.')
+        ->assertSee('Nada por atender.');
+
+    expect(LeaveRequest::query()->where('rejection_reason', 'Cierre de mes')->count())->toBe(1);
+});
+
+it('lets RH correct a request by cancelling it', function (): void {
+    $queue = leaveRequestsPanel();
+    visitPage('leave/requests', "{$queue['url']}?tab=waiting")
+        ->click('button[aria-label^="Ver la solicitud de"]')
+        ->press('Cancelar solicitud')
+        ->click('[role=dialog] button:has-text("Sí, cancelar solicitud")')
+        ->assertSee('La solicitud quedó cancelada.');
+
+    expect(LeaveRequest::query()->where('status', 'cancelled')->count())->toBe(1);
 });
