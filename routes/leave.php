@@ -33,3 +33,7 @@ Route::post('admin/{tenant:slug}/vacations/balances/links', [BalanceController::
 
 // The record of one person: periods, ledger, requests, statements and, if they left, what they are owed in days.
 Route::get('admin/{tenant:slug}/vacations/employees/{employee}', [EmployeeRecordController::class, 'show'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.vacations.employees.show');
+
+// RH corrects a tranche of a period with its note, and settles the days of a person who left. Owner and hr.
+Route::post('admin/{tenant:slug}/vacations/employees/{employee}/adjust', [EmployeeRecordController::class, 'adjust'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.vacations.employees.adjust');
+Route::post('admin/{tenant:slug}/vacations/terminations/{termination}/settle', [EmployeeRecordController::class, 'settle'])->where('tenant', $notReserved)->whereUuid('termination')->name('tenant.vacations.terminations.settle');

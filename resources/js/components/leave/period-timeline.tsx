@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { dateSpan } from '@/lib/leave/format';
 import { countOf } from '@/lib/plural';
 import type { LeaveRecordPeriod } from '@/types';
@@ -6,8 +7,11 @@ import type { LeaveRecordPeriod } from '@/types';
 /** The periods of the person, newest first: the days each gave, what is left and the dates of its window. */
 export default function PeriodTimeline({
     periods,
+    onAdjust,
 }: {
     periods: LeaveRecordPeriod[];
+    /** Present only for whoever may adjust. */
+    onAdjust?: ((period: LeaveRecordPeriod) => void) | undefined;
 }) {
     return (
         <ol className="flex flex-col divide-y card">
@@ -37,14 +41,27 @@ export default function PeriodTimeline({
                             </Badge>
                         )}
                     </div>
-                    <p className="flex shrink-0 flex-col items-end">
-                        <span className="text-2xl leading-8 font-semibold tabular-nums">
-                            {period.available}
-                        </span>
-                        <span className="text-meta text-muted-foreground">
-                            disponibles
-                        </span>
-                    </p>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                        <p className="flex flex-col items-end">
+                            <span className="text-2xl leading-8 font-semibold tabular-nums">
+                                {period.available}
+                            </span>
+                            <span className="text-meta text-muted-foreground">
+                                disponibles
+                            </span>
+                        </p>
+                        {onAdjust !== undefined && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onAdjust(period)}
+                                aria-label={`Ajustar el periodo ${period.year}`}
+                            >
+                                Ajustar
+                            </Button>
+                        )}
+                    </div>
                 </li>
             ))}
         </ol>

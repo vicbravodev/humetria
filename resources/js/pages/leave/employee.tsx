@@ -3,7 +3,7 @@ import { Briefcase, CalendarCheck, MapPin } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import LedgerTable from '@/components/leave/ledger-table';
-import PeriodTimeline from '@/components/leave/period-timeline';
+import PeriodsSection from '@/components/leave/periods-section';
 import RecordSection from '@/components/leave/record-section';
 import RecordRequests from '@/components/leave/record-requests';
 import RecordStatements from '@/components/leave/record-statements';
@@ -28,6 +28,7 @@ import type {
  */
 export default function LeaveEmployee({
     person,
+    canManage,
     balance,
     periods,
     entries,
@@ -98,7 +99,11 @@ export default function LeaveEmployee({
                             cargar sus saldos iniciales.
                         </EmptyState>
                     ) : (
-                        <PeriodTimeline periods={periods} />
+                        <PeriodsSection
+                            employeeId={person.id}
+                            periods={periods}
+                            canManage={canManage}
+                        />
                     )}
                 </RecordSection>
                 <RecordSection title="Movimientos de sus días">

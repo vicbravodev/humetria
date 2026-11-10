@@ -70,3 +70,52 @@ it('shows what a person who left is owed, in days', function (bool $dark, bool $
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
+
+it('lets RH adjust a period and see it in the ledger', function (): void {
+    $record = leaveEmployeePanel();
+
+    visitPage('leave/employee', $record['url'])
+        ->click('button[aria-label="Ajustar el periodo 2026"]')
+        ->type('#adjust-days', '2')
+        ->type('#adjust-note', 'Antigüedad reconocida')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Ajuste registrado.')
+        ->assertSee('Antigüedad reconocida')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(LeaveEntry::query()->where('note', 'Antigüedad reconocida')->count())->toBe(1);
+});
+
+it('says why an adjustment cannot be saved', function (): void {
+    visitPage('leave/employee', leaveEmployeePanel()['url'])
+        ->click('button[aria-label="Ajustar el periodo 2026"]')
+        ->type('#adjust-days', '2')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('nota')
+        ->assertNoJavaScriptErrors();
+});
+
+it('lets RH settle the days of a person who left', function (): void {
+    $record = leaveEmployeePanel(left: true);
+
+    visitPage('leave/employee', $record['url'])
+        ->press('Finiquitar los días')
+        ->click('[role=dialog] button:has-text("Sí, finiquitar")')
+        ->assertSee('Días finiquitados.')
+        ->assertSee('Finiquitado el')
+        ->assertDontSee('Finiquitar los días')
+        ->assertNoJavaScriptErrors();
+
+    expect(LeaveTermination::query()->whereNotNull('settled_at')->count())->toBe(1);
+});
+
+it('does not offer a viewer to adjust or settle', function (): void {
+    $record = leaveEmployeePanel(left: true);
+    test()->actingAs(memberOf($record['tenant'], App\Modules\Tenancy\Enums\TenantRole::Viewer));
+
+    visitPage('leave/employee', $record['url'])
+        ->assertSee('Periodo 2026')
+        ->assertDontSee('Ajustar')
+        ->assertDontSee('Finiquitar los días');
+});

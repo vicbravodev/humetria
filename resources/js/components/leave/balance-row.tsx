@@ -29,7 +29,7 @@ export default function BalanceRow({
     return (
         <TableRow>
             {selectable && (
-                <TableCell className="max-md:hidden">
+                <TableCell>
                     <ChooseBox
                         checked={chosen}
                         onChange={onChoose}

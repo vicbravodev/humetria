@@ -1,7 +1,11 @@
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dateSpan } from '@/lib/leave/format';
 import { owedDays } from '@/lib/leave/record';
 import { countOf } from '@/lib/plural';
+import { settle } from '@/routes/tenant/vacations/terminations';
 import type { LeaveRecordTermination } from '@/types';
 
 /**
@@ -13,6 +17,8 @@ export default function TerminationCard({
 }: {
     termination: LeaveRecordTermination;
 }) {
+    const tenantSlug = useTenantSlug();
+
     return (
         <section
             aria-labelledby="termination-title"
@@ -64,6 +70,23 @@ export default function TerminationCard({
                     </dd>
                 </div>
             </dl>
+            {termination.canSettle && (
+                <div className="flex justify-end">
+                    <ConfirmDialog
+                        trigger={<Button>Finiquitar los días</Button>}
+                        title="¿Finiquitar los días de esta persona?"
+                        description="Lo que le queda de cada periodo sale del libro y su saldo queda en cero. Se registra en la bitácora y no se puede deshacer."
+                        confirmLabel="Sí, finiquitar"
+                        dismissLabel="Volver"
+                        destructive={false}
+                        form={settle.form({
+                            tenant: tenantSlug,
+                            termination: termination.id,
+                        })}
+                        preserveScroll
+                    />
+                </div>
+            )}
         </section>
     );
 }
