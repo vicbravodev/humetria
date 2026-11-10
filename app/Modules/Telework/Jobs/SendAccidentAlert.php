@@ -29,7 +29,7 @@ final class SendAccidentAlert implements ShouldQueue, ShouldQueueAfterCommit
     public function handle(Companies $companies, Roster $roster, WorkCenters $workCenters): void
     {
         $company = $companies->enter($this->tenantId);
-        $contact = $company->blocked ? null : $companies->contact();
+        $contact = $company->stopped('nom037') ? null : $companies->contact();
         $notice = WorkerNotice::query()->find($this->noticeId, ['id', 'teleworker_id', 'occurred_on']);
         $teleworker = $notice === null ? null : Teleworker::query()->find($notice->teleworker_id, ['id', 'employee_id', 'work_center_id']);
 

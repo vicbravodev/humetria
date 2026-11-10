@@ -34,6 +34,12 @@ final class TenantModule extends Model
     /** @use HasFactory<TenantModuleFactory> */
     use HasFactory, HasVersion4Uuids;
 
+    protected static function booted(): void
+    {
+        // A company with a row is no longer known to have every module: pages must read its rows from now on.
+        self::created(fn (self $row): int => Tenant::query()->whereKey($row->tenant_id)->update(['has_module_rows' => true]));
+    }
+
     /**
      * @return BelongsTo<Tenant, $this>
      */

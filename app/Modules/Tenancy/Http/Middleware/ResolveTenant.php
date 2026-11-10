@@ -58,6 +58,8 @@ final class ResolveTenant
         $request->route()?->setParameter('tenant', $tenant);
         // Also tags every log line, audit entry and queued job with the company, and makes it Spatie's team.
         $this->tenantContext->set($tenant);
+        // A company with no module rows has every module, and the page need not ask.
+        resolve(ModuleStates::class)->prime($tenant);
         // Roles read before (as the superadmin's, with no team) must be read again inside the company.
         $user->unsetRelation('roles')->unsetRelation('permissions');
         $role = $this->companyRoles->of($user, $tenant);

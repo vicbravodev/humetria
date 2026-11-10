@@ -56,7 +56,7 @@ final readonly class ScheduleReviews
 
     private function schedule(string $tenantId): int
     {
-        if ($this->companies->enter($tenantId)->blocked) {
+        if ($this->companies->enter($tenantId)->stopped('nom037')) {
             return 0;
         }
 

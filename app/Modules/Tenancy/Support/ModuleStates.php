@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Support;
 use App\Modules\Tenancy\Data\ModuleRow;
 use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Enums\ModuleSource;
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
 use Illuminate\Support\Collection;
 
@@ -35,6 +36,19 @@ final class ModuleStates
         return ($this->memo[$tenantId] ??= $this->read($tenantId))['restricted'];
     }
 
+    /**
+     * Learns what a company has from its own row, without a query when it has no module rows: it has every module that exists.
+     * The company is the one a request or a job just loaded; one that has rows is read when someone asks.
+     */
+    public function prime(Tenant $tenant): void
+    {
+        unset($this->memo[$tenant->id]);
+
+        if (! $tenant->has_module_rows) {
+            $this->memo[$tenant->id] = $this->build(new Collection);
+        }
+    }
+
     /** Drops what was read, for a new request or after a write. */
     public function forget(?string $tenantId = null): void
     {
@@ -58,7 +72,15 @@ final class ModuleStates
      */
     private function read(string $tenantId): array
     {
-        $all = TenantModule::query()->where('tenant_id', $tenantId)->get();
+        return $this->build(TenantModule::query()->where('tenant_id', $tenantId)->get());
+    }
+
+    /**
+     * @param  Collection<int, TenantModule>  $all  every row of the company.
+     * @return array{states: array<string, ModuleRow>, restricted: bool}
+     */
+    private function build(Collection $all): array
+    {
         $planned = $all->contains(fn (TenantModule $row): bool => $row->source === ModuleSource::Plan);
         $now = now();
         $active = $all->filter(fn (TenantModule $row): bool => $row->expires_at === null || $row->expires_at->greaterThan($now));

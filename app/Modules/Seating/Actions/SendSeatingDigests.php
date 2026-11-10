@@ -47,7 +47,7 @@ final readonly class SendSeatingDigests
                 Context::scope(function () use ($tenantId, &$sent): void {
                     $company = $this->companies->enter($tenantId);
 
-                    if (! $company->blocked) {
+                    if (! $company->stopped('seating')) {
                         $counts = $this->digest($company);
                         $sent['owner'] += $counts['owner'];
                         $sent['committee'] += $counts['committee'];

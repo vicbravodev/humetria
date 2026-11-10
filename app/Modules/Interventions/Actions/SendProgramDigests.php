@@ -42,7 +42,7 @@ final readonly class SendProgramDigests
                 Context::scope(function () use ($tenantId, &$sent): void {
                     $company = $this->companies->enter($tenantId);
 
-                    if (! $company->blocked) {
+                    if (! $company->stopped('nom035')) {
                         $counts = $this->company($company);
                         $sent['owner'] += $counts['owner'];
                         $sent['responsible'] += $counts['responsible'];

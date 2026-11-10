@@ -43,7 +43,7 @@ final readonly class OpenSurvey
             $participant = Participant::query()->lockForUpdate()->findOrFail($participant->id);
         }
 
-        if ($company->blocked) {
+        if ($company->stopped('nom035')) {
             throw new SurveyUnavailable(SurveyUnavailableReason::Suspended, $company->tradeName);
         }
 

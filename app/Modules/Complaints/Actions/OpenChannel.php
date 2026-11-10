@@ -34,7 +34,7 @@ final readonly class OpenChannel
 
         $company = $this->companies->enter($channel->tenant_id);
 
-        if ($company->blocked) {
+        if ($company->stopped('complaints')) {
             throw new ChannelUnavailable;
         }
 

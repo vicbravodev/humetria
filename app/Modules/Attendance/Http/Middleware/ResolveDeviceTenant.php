@@ -27,7 +27,8 @@ final readonly class ResolveDeviceTenant
         $slug = $request->route('tenant');
         $company = is_string($slug) ? $this->companies->enterBySlug($slug) : null;
 
-        abort_if($company === null, 404);
+        // A company that does not have the registro de jornada gets the same 404: its devices do not work.
+        abort_if($company === null || ! $company->allows('attendance'), 404);
 
         return $next($request);
     }

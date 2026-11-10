@@ -72,7 +72,7 @@ final class SendSurveyInvitations implements ShouldQueue
         $company = $companies->current();
 
         // A blocked company sends nothing; who was waiting is marked failed, so a resend reaches them once it is back.
-        if ($company->blocked) {
+        if ($company->stopped('nom035')) {
             $this->failed(null);
 
             return;

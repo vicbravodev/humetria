@@ -70,7 +70,7 @@ final readonly class SendProgressDigests
         $campaign = Campaign::query()->findOrFail($campaignId);
         $progress = $this->pages->progress($campaign, $this->tally->of([$campaign->id])[$campaign->id] ?? []);
 
-        if ($company->blocked || $owner === null || $progress === null || $campaign->closes_on === null) {
+        if ($company->stopped('nom035') || $owner === null || $progress === null || $campaign->closes_on === null) {
             return 0;
         }
 

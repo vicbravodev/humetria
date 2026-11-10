@@ -38,6 +38,7 @@ use Illuminate\Database\Query\Builder;
  * @property string|null $restriction_reason
  * @property CarbonImmutable|null $restricted_at
  * @property string|null $logo_path
+ * @property bool $has_module_rows Whether tenant_modules has any row of it; without any, it has every module that exists.
  * @property int|null $logo_width
  * @property int|null $logo_height
  * @property CarbonImmutable $created_at
@@ -166,6 +167,7 @@ final class Tenant extends Model
             'active_until' => 'immutable_datetime',
             'restriction' => TenantRestriction::class,
             'restricted_at' => 'immutable_datetime',
+            'has_module_rows' => 'boolean',
             'logo_width' => 'integer',
             'logo_height' => 'integer',
         ];

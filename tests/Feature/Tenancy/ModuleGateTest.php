@@ -144,3 +144,21 @@ it('shares the modules the company has so the menu hides the rest', function ():
     $this->actingAs(ownerOf($legacy))->get(route('tenant.dashboard', $legacy))
         ->assertInertia(fn (Assert $page) => $page->where('tenant.modules', ['attendance', 'nom035', 'nom037', 'seating', 'complaints']));
 });
+
+it('costs a company with no module rows no query for its modules, and one with rows a single one', function (): void {
+    $legacy = Tenant::factory()->create();
+    $planned = companyWithOnly(['attendance']);
+    $queries = [];
+    Illuminate\Support\Facades\DB::listen(function ($query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
+    $count = function (Tenant $tenant) use (&$queries): int {
+        $owner = ownerOf($tenant);
+        $queries = [];
+        $this->actingAs($owner)->get(route('tenant.dashboard', $tenant))->assertOk();
+
+        return count(array_filter($queries, fn (string $sql): bool => str_contains($sql, 'tenant_modules')));
+    };
+
+    expect($count($legacy))->toBe(0)->and($count($planned))->toBe(1);
+});

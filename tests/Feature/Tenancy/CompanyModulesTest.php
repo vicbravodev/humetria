@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-mutates(SyncCompanyModules::class, CompanyModuleAccess::class);
+mutates(SyncCompanyModules::class, CompanyModuleAccess::class, ModuleStates::class);
 
 /** @return list<string> */
 function enabledModulesOf(Tenant $tenant): array
