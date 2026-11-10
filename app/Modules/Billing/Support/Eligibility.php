@@ -10,6 +10,7 @@ use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
+use Carbon\CarbonImmutable;
 
 /**
  * How many of an account's companies pay Integral now, which is what a consultant's discount asks for: companies it pays
@@ -21,8 +22,10 @@ final readonly class Eligibility
 
     /**
      * @param  Subscription|null  $simulated  a plan not saved yet: it counts instead of the one the company has.
+     * @param  CarbonImmutable|null  $periodStart  count the companies the account paid during that month instead of today's.
+     * @param  string|null  $without  a company to leave out, as if it were already somewhere else.
      */
-    public function count(BillingAccount $account, ?Subscription $simulated = null): int
+    public function count(BillingAccount $account, ?Subscription $simulated = null, ?CarbonImmutable $periodStart = null, ?string $without = null): int
     {
         $payingStatuses = array_map(
             fn (SubscriptionStatus $status): string => $status->value,
@@ -30,8 +33,11 @@ final readonly class Eligibility
         );
 
         $others = Subscription::query()
-            ->whereIn('tenant_id', AccountCompany::query()->current()->where('billing_account_id', $account->id)->select('tenant_id'))
+            ->whereIn('tenant_id', AccountCompany::query()
+                ->when($periodStart === null, fn ($links) => $links->current(), fn ($links) => $links->covering($periodStart ?? now(), ($periodStart ?? now())->addMonth()))
+                ->where('billing_account_id', $account->id)->select('tenant_id'))
             ->when($simulated !== null, fn ($query) => $query->where('tenant_id', '<>', $simulated?->tenant_id))
+            ->when($without !== null, fn ($query) => $query->where('tenant_id', '<>', $without))
             ->where('plan', Plan::Integral)
             ->whereIn('status', $payingStatuses)
             ->pluck('tenant_id')

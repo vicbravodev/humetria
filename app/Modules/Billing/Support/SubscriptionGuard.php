@@ -30,6 +30,18 @@ final class SubscriptionGuard
         }
 
         $account = BillingAccount::query()->findOrFail($link->billing_account_id);
+        self::checkAgainst($account, $data, $current);
+
+        return $account;
+    }
+
+    /**
+     * What an account can hold of a plan: the plan its profile asks for, and a channel rate only in a consultant's account.
+     *
+     * @throws InvalidSubscription
+     */
+    public static function checkAgainst(BillingAccount $account, SubscriptionData $data, ?Subscription $current): void
+    {
         $required = $data->profile->requiredPlan();
 
         if ($required !== null && $required !== $data->plan) {
@@ -44,7 +56,5 @@ final class SubscriptionGuard
         if ($data->status === SubscriptionStatus::Active && $current?->status !== SubscriptionStatus::Active && $data->seats < 1) {
             throw new InvalidSubscription('seats', 'Para activar un plan hace falta al menos una persona.');
         }
-
-        return $account;
     }
 }

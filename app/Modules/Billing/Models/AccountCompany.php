@@ -52,6 +52,17 @@ final class AccountCompany extends Model
     }
 
     /**
+     * The links that paid the company during a period [start, end): they began before it ended and had not ended when it began.
+     * A transfer happens on a cut, so a month has one.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeCovering(Builder $query, CarbonImmutable $start, CarbonImmutable $end): void
+    {
+        $query->where('starts_on', '<', $end->toDateString())->where(fn (Builder $open) => $open->whereNull('ends_on')->orWhere('ends_on', '>', $start->toDateString()));
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

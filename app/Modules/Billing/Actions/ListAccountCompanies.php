@@ -7,6 +7,7 @@ namespace App\Modules\Billing\Actions;
 use App\Modules\Billing\Data\AccountCompanyRow;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\CompanyTransfer;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\Eligibility;
 use App\Modules\Billing\Support\ShortDate;
@@ -47,9 +48,10 @@ final readonly class ListAccountCompanies
         $briefs = $this->companies->many($ids);
         $subscriptions = Subscription::query()->whereIn('tenant_id', $ids)->get()->keyBy('tenant_id');
         $eligible = $this->eligibility->count($account);
+        $arrivals = $this->arrivals($account, $ids);
         $today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay();
 
-        return $page->through(function (AccountCompany $link) use ($briefs, $subscriptions, $eligible, $today): AccountCompanyRow {
+        return $page->through(function (AccountCompany $link) use ($briefs, $subscriptions, $eligible, $today, $arrivals): AccountCompanyRow {
             $brief = $briefs[$link->tenant_id];
             $subscription = $subscriptions->get($link->tenant_id);
             $people = $this->headcount->ofCompany($link->tenant_id);
@@ -66,7 +68,32 @@ final readonly class ListAccountCompanies
                 $people,
                 ShortDate::format($link->starts_on),
                 $subscription === null ? null : SubscriptionView::from($subscription, $this->quoter->quote($subscription, $eligible, $today)),
+                $arrivals[$link->tenant_id] ?? null,
             );
         });
+    }
+
+    /**
+     * Who paid each of these companies before, for those that came to the account by a transfer: the account they left.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, string> account name, by company id.
+     */
+    private function arrivals(BillingAccount $account, array $ids): array
+    {
+        $transfers = CompanyTransfer::query()->where('to_account_id', $account->id)->whereIn('tenant_id', $ids)->orderBy('effective_on')->orderBy('created_at')->get(['tenant_id', 'from_account_id']);
+        $names = [];
+
+        foreach (BillingAccount::query()->whereIn('id', $transfers->pluck('from_account_id'))->get(['id', 'legal_name']) as $payer) {
+            $names[$payer->id] = $payer->legal_name;
+        }
+
+        $arrivals = [];
+
+        foreach ($transfers as $transfer) {
+            $arrivals[$transfer->tenant_id] = $names[$transfer->from_account_id] ?? '';
+        }
+
+        return $arrivals;
     }
 }

@@ -6,6 +6,7 @@ use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\CompanyTransfer;
 use App\Modules\Billing\Models\Payment;
 use App\Modules\Billing\Models\PaymentAllocation;
 use App\Modules\Billing\Models\Statement;
@@ -34,6 +35,8 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     SubscriptionCharge::class => 'read across companies by the billing console',
     // The statement of a company is read with the rest of what its account owes, across all the companies it pays.
     Statement::class => 'read across companies by the billing console',
+    // Who paid a company before and why it moved is read across companies, from both accounts' pages.
+    CompanyTransfer::class => 'read across companies by the billing console',
 ];
 
 /**

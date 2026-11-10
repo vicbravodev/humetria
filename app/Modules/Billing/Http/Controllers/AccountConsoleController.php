@@ -11,6 +11,7 @@ use App\Modules\Billing\Actions\ListAccountCompanies;
 use App\Modules\Billing\Actions\ListAccountPayments;
 use App\Modules\Billing\Actions\ListAccounts;
 use App\Modules\Billing\Actions\ListAccountStatements;
+use App\Modules\Billing\Actions\ListAccountTransfers;
 use App\Modules\Billing\Actions\SummarizeAccount;
 use App\Modules\Billing\Actions\SummarizeReceivable;
 use App\Modules\Billing\Actions\UpdateAccount;
@@ -52,7 +53,7 @@ final class AccountConsoleController extends Controller
         return redirect()->route('billing.accounts.show', $account);
     }
 
-    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize, ListAccountStatements $listStatements, ListAccountPayments $listPayments, SummarizeReceivable $receivable): Response
+    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize, ListAccountStatements $listStatements, ListAccountPayments $listPayments, SummarizeReceivable $receivable, ListAccountTransfers $listTransfers): Response
     {
         Gate::authorize('view-billing');
 
@@ -66,6 +67,7 @@ final class AccountConsoleController extends Controller
             'statements' => $listStatements->handle($account),
             'payments' => $listPayments->handle($account),
             'receivable' => $receivable->handle($account),
+            'transfers' => $listTransfers->handle($account),
         ]);
     }
 

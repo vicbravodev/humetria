@@ -29,6 +29,7 @@ final readonly class AccountCompanyRow implements Arrayable
         public int $people,
         public string $linkedSince,
         public ?array $subscription,
+        public ?string $previousPayer = null,
     ) {}
 
     /**
@@ -48,6 +49,7 @@ final readonly class AccountCompanyRow implements Arrayable
             'people' => $this->people,
             'linked_since' => $this->linkedSince,
             'subscription' => $this->subscription,
+            'previous_payer' => $this->previousPayer,
         ];
     }
 }

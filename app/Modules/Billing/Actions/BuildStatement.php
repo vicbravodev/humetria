@@ -41,11 +41,11 @@ final readonly class BuildStatement
         $end = $start->addMonth();
 
         $subscription = Subscription::query()->where('tenant_id', $tenantId)->first() ?? throw new InvalidStatement('company', 'Asigna un plan a la empresa antes de hacerle un estado de cuenta.');
-        $link = AccountCompany::query()->current()->where('tenant_id', $tenantId)->first() ?? throw new InvalidStatement('company', 'Vincula la empresa a una cuenta antes de hacerle un estado de cuenta.');
+        $link = AccountCompany::query()->covering($start, $end)->where('tenant_id', $tenantId)->orderByDesc('starts_on')->first() ?? throw new InvalidStatement('company', 'Vincula la empresa a una cuenta antes de hacerle un estado de cuenta.');
         $this->guard($subscription, $end);
 
         $account = BillingAccount::query()->findOrFail($link->billing_account_id);
-        $eligible = $this->eligibility->count($account);
+        $eligible = $this->eligibility->count($account, periodStart: $start);
         // The first, partial month of a plan that starts after the 1st: the only one that is prorated.
         $proration = $subscription->starts_on->greaterThanOrEqualTo($start) ? Proration::startingOn($subscription->starts_on) : null;
         $quote = $this->quoter->quote($subscription, $eligible, $start, $proration !== null);

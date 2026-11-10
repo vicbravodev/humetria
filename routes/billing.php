@@ -10,6 +10,7 @@ use App\Modules\Billing\Http\Controllers\PaymentConsoleController;
 use App\Modules\Billing\Http\Controllers\StatementConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionPreviewController;
+use App\Modules\Billing\Http\Controllers\TransferConsoleController;
 use Illuminate\Support\Facades\Route;
 
 // Who pays what, for the staff only: support reads it, the superadmin changes it (each controller checks its gate).
@@ -49,6 +50,17 @@ Route::post('admin/billing/companies/{company}/subscription/preview', Subscripti
     ->middleware(['auth', 'verified', 'throttle:billing-preview'])
     ->whereUuid('company')
     ->name('billing.subscriptions.preview');
+
+// Moving a company between payers, from a cut, with the reason: it never gives or takes access.
+Route::post('admin/billing/companies/{company}/transfer/preview', [TransferConsoleController::class, 'preview'])
+    ->middleware(['auth', 'verified', 'throttle:billing-preview'])
+    ->whereUuid('company')
+    ->name('billing.transfers.preview');
+
+Route::post('admin/billing/companies/{company}/transfer', [TransferConsoleController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('company')
+    ->name('billing.transfers.store');
 
 Route::post('admin/billing/companies/{company}/charges', [ChargeConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
