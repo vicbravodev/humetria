@@ -28,6 +28,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'complaints:purge' => '15 3 * * *',
         'attendance:close-days' => '15 0 * * *',
         'leave:grant-entitlements' => '30 0 * * *',
+        'leave:route-requests' => '40 0 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
@@ -53,6 +54,14 @@ it('closes the working days of the day before yesterday at 00:15 display time, o
 
 it('grants the vacation periods of the day at 00:30 display time, once and without overlapping', function (): void {
     $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'leave:grant-entitlements'));
+
+    expect($event->timezone)->toBe('America/Mexico_City')
+        ->and($event->onOneServer)->toBeTrue()
+        ->and($event->withoutOverlapping)->toBeTrue();
+});
+
+it('routes the vacation requests at 00:40 display time, after the grant, once and without overlapping', function (): void {
+    $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'leave:route-requests'));
 
     expect($event->timezone)->toBe('America/Mexico_City')
         ->and($event->onOneServer)->toBeTrue()

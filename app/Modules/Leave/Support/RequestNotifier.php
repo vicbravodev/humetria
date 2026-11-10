@@ -13,6 +13,7 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
 use Closure;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
 
@@ -80,10 +81,13 @@ final readonly class RequestNotifier
      */
     private static function quietly(Closure $send): void
     {
-        try {
-            $send();
-        } catch (Throwable $failure) {
-            report($failure);
-        }
+        // Once what it tells about is saved for good; right away when no transaction is open.
+        DB::afterCommit(function () use ($send): void {
+            try {
+                $send();
+            } catch (Throwable $failure) {
+                report($failure);
+            }
+        });
     }
 }

@@ -11,6 +11,7 @@ use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
+use App\Modules\Leave\Actions\RouteRequests;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -85,6 +86,11 @@ Artisan::command('leave:grant-entitlements', function (GrantEntitlements $grant)
     $this->info('Periodos otorgados: '.$grant->handle());
 })->purpose('Grant each active person the vacation period of every anniversary they reached since their company started using Vacaciones');
 
+Artisan::command('leave:route-requests', function (RouteRequests $route): void {
+    $done = $route->handle();
+    $this->info("Solicitudes disfrutadas: {$done['taken']}, reasignadas: {$done['reassigned']}, escaladas a RH: {$done['escalated']}");
+})->purpose('Mark the vacations that ended as taken, give each waiting request to the manager the person has today, and pass to RH the ones no manager answered in time');
+
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
 Schedule::command('campaigns:remind-next-evaluations')->dailyAt('08:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
@@ -105,6 +111,8 @@ Schedule::command('attendance:close-days')->dailyAt('00:15')->timezone(config()-
 // After local midnight, so the anniversary of the day is granted on its day; a run again grants nothing twice and a day
 // it did not run is made up the next one.
 Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// After the grant: what ended yesterday becomes taken, and a request nobody answered reaches RH first thing in the day.
+Schedule::command('leave:route-requests')->dailyAt('00:40')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
