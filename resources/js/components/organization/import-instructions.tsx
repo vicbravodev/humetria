@@ -22,6 +22,7 @@ const OPTIONAL_COLUMNS = [
     ['Fecha de ingreso', 'fecha_de_ingreso'],
     ['Grupo', 'grupo'],
     ['Estado', 'estado'],
+    ['Jefe directo', 'jefe'],
 ];
 
 /** How to fill the CSV: its columns and the rules of each, with the work centers it can name. */
@@ -85,6 +86,11 @@ export default function ImportInstructions({
                     Categoría y nivel van juntos. Fecha de ingreso: AAAA-MM-DD o
                     DD/MM/AAAA. Grupo: Sindicalizado o Confianza. Si el archivo
                     no trae una de estas columnas, ese dato no se cambia.
+                </li>
+                <li>
+                    Jefe: su número de empleado o, si no tiene, su correo; puede
+                    ser otra fila del archivo, en cualquier orden. Vacío, la
+                    persona queda sin jefe.
                 </li>
                 <li>
                     Quien ya esté (por número de empleado o, si no tiene, por

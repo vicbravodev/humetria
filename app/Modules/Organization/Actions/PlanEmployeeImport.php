@@ -12,6 +12,7 @@ use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\EmployeeCsv;
+use App\Modules\Organization\Support\ImportManagers;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
@@ -22,7 +23,8 @@ use Illuminate\Support\Str;
 /**
  * Checks every row of an import against the same rules as the form, the company's work centers and its employees,
  * and against the file's other rows, without writing anything. A row with a number updates the employee with that
- * number; a row without one, the employee with that email; any other row adds someone.
+ * number; a row without one, the employee with that email; any other row adds someone. A second pass, once every
+ * row is known, finds the manager each one names (see ImportManagers).
  */
 final class PlanEmployeeImport
 {
@@ -37,6 +39,9 @@ final class PlanEmployeeImport
 
     /** @var array<string, string> employee id by lowercase number */
     private array $byNumber = [];
+
+    /** @var array<string, array{number: string|null, email: string|null, manager: string|null, active: bool}> the company's people by id */
+    private array $existing = [];
 
     /** @var array<string, int> the spreadsheet row where each email, then each number, first appears */
     private array $seen = [];
@@ -60,13 +65,53 @@ final class PlanEmployeeImport
             [$result, $messages] = $this->union ? $this->checkUnion($row, $line) : $this->check($row, $line);
 
             if ($result !== null) {
-                $valid[] = $result;
+                $valid[$line] = $result;
             } else {
-                $errors[] = ['row' => $line, 'messages' => $messages];
+                $errors[$line] = ['row' => $line, 'messages' => $messages];
             }
         }
 
-        return new EmployeeImportPlan(count($rows), $valid, $errors);
+        // A union's roster carries no hierarchy, and a file without the column leaves everybody's manager as it is.
+        if (! $this->union && array_key_exists('jefe', $rows[0] ?? [])) {
+            [$valid, $errors] = $this->withManagers($valid, $errors, array_column($rows, 'jefe'));
+        }
+
+        return new EmployeeImportPlan(count($rows), array_values($valid), array_values($errors));
+    }
+
+    /**
+     * The second pass: each valid row under the manager its cell names, or among the errors when it cannot be.
+     *
+     * @param  array<int, EmployeeImportRow>  $valid  by spreadsheet row
+     * @param  array<int, array{row: int, messages: list<string>}>  $errors  by spreadsheet row
+     * @param  list<string>  $cells  the «jefe» column, from the first row of data
+     * @return array{0: array<int, EmployeeImportRow>, 1: array<int, array{row: int, messages: list<string>}>}
+     */
+    private function withManagers(array $valid, array $errors, array $cells): array
+    {
+        $people = [];
+
+        foreach ($valid as $line => $row) {
+            $people[] = ['row' => $line, 'key' => $row->existingId ?? "row:{$line}", 'number' => $row->data->employeeNumber, 'email' => $row->data->email, 'managerText' => $cells[$line - 2] ?? ''];
+        }
+
+        $resolved = ImportManagers::resolve($people, $this->existing);
+        $valid = array_diff_key($valid, $resolved['errors']);
+        $places = array_flip(array_keys($valid));
+
+        foreach ($valid as $line => $row) {
+            $manager = $resolved['managers'][$line] ?? null;
+            $managerLine = $manager !== null && str_starts_with($manager, 'row:') ? (int) substr($manager, 4) : null;
+            $valid[$line] = new EmployeeImportRow($row->data, $row->existingId, $row->absent, $managerLine === null ? $manager : null, $managerLine === null ? null : ($places[$managerLine] ?? null));
+        }
+
+        foreach ($resolved['errors'] as $line => $message) {
+            $errors[$line] = ['row' => $line, 'messages' => [$message]];
+        }
+
+        ksort($errors);
+
+        return [$valid, $errors];
     }
 
     private function load(): void
@@ -84,7 +129,9 @@ final class PlanEmployeeImport
             $this->states[self::fold($code)] = $code;
         }
 
-        foreach (Employee::query()->get(['id', 'email', 'employee_number']) as $employee) {
+        foreach (Employee::query()->get(['id', 'email', 'employee_number', 'manager_id', 'deactivated_at']) as $employee) {
+            $this->existing[$employee->id] = ['number' => $employee->employee_number, 'email' => $employee->email, 'manager' => $employee->manager_id, 'active' => $employee->deactivated_at === null];
+
             if ($employee->email !== null) {
                 $this->byEmail[$employee->email] = $employee->id;
             }
@@ -149,7 +196,7 @@ final class PlanEmployeeImport
             hiredOn: $payScale['hiredOn'],
             staffGroup: $payScale['group'],
             state: self::text($payScale['input'], 'state') ?: null,
-        ), $existingId, $payScale['absent']), []];
+        ), $existingId, [...$payScale['absent'], ...(array_key_exists('jefe', $row) ? [] : ['manager_id'])]), []];
     }
 
     /**
@@ -188,6 +235,7 @@ final class PlanEmployeeImport
             state: self::text($payScale['input'], 'state') ?: null,
         ), $this->byNumber[mb_strtolower($number)] ?? null, [
             ...$payScale['absent'],
+            'manager_id',
             ...array_keys(array_filter([
                 'name' => ! array_key_exists('nombre', $row),
                 'area_id' => ! array_key_exists('area', $row),
