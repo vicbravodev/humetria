@@ -10,6 +10,7 @@ use App\Modules\Organization\Actions\PlanEmployeeImport;
 use App\Modules\Organization\Http\Requests\ImportEmployeesRequest;
 use App\Modules\Organization\Support\EmployeeCsv;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +26,7 @@ use Inertia\Response;
  */
 final class EmployeeImportController extends Controller
 {
-    public function __construct(private readonly WorkCenters $workCenters, private readonly Companies $companies) {}
+    public function __construct(private readonly WorkCenters $workCenters, private readonly Companies $companies, private readonly CompanyLimits $limits) {}
 
     public function create(): Response
     {
@@ -63,6 +64,11 @@ final class EmployeeImportController extends Controller
         $plan = $planImport->handle($read['rows']);
 
         if (! $plan->isValid() || ! $request->confirmed()) {
+            // Said before it is confirmed: the file is not worth fixing row by row if it does not fit the plan.
+            if ($plan->isValid()) {
+                $this->limits->ensureRoom(CompanyLimits::SEATS, $plan->created(), 'file');
+            }
+
             Inertia::flash('import', $plan->summary());
 
             return back();
