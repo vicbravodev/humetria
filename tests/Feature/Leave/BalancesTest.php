@@ -28,7 +28,7 @@ function periodOf(Employee $person, array $attributes = []): LeaveEntitlement
     return LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id, ...$attributes]);
 }
 
-function advance(Employee $person, int $days): LeaveEntry
+function leaveAdvance(Employee $person, int $days): LeaveEntry
 {
     return LeaveEntry::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'leave_entitlement_id' => null, 'kind' => EntryKind::Taken, 'days' => -$days]);
 }
@@ -91,9 +91,9 @@ it('keeps apart the days given in advance, as a balance below zero', function ()
     $beto = Employee::factory()->create(['tenant_id' => $this->tenant->id]);
     $period = periodOf($this->ana);
     LeaveEntry::factory()->of($period)->taken(12)->create();
-    advance($this->ana, 2);
-    advance($this->ana, 1);
-    advance($beto, 4);
+    leaveAdvance($this->ana, 2);
+    leaveAdvance($this->ana, 1);
+    leaveAdvance($beto, 4);
 
     expect(Balances::advanced([$this->ana->id]))->toBe([$this->ana->id => -3])
         ->and(Balances::advanced([$this->ana->id, $beto->id]))->toBe([$this->ana->id => -3, $beto->id => -4])
@@ -110,7 +110,7 @@ it('does not count the entries of a period as days in advance', function (): voi
 
 it('does not read the periods or the ledger of another company', function (): void {
     $period = periodOf($this->ana);
-    advance($this->ana, 2);
+    leaveAdvance($this->ana, 2);
 
     workIn(Tenant::factory()->create());
     expect(Balances::of([$this->ana->id]))->toBe([])
