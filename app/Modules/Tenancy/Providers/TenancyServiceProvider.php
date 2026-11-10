@@ -6,12 +6,14 @@ namespace App\Modules\Tenancy\Providers;
 
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyDirectory;
+use App\Modules\Tenancy\Support\CompanyLimitCounters;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyModuleAccess;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
@@ -41,6 +43,7 @@ final class TenancyServiceProvider extends ServiceProvider
         // One instance per request, so the modules of a company are read once; whoever changes them drops the memo.
         $this->app->scoped(ModuleStates::class);
         $this->app->bind(CompanyModules::class, CompanyModuleAccess::class);
+        $this->app->bind(CompanyLimits::class, CompanyLimitCounters::class);
     }
 
     public function boot(): void

@@ -15,6 +15,7 @@ use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\SubscriptionCharge;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,8 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     Statement::class => 'read across companies by the billing console',
     // What a company has of each module is read from inside it (menu, routes) and from the console across companies.
     TenantModule::class => 'read across companies by the console and by the module gate',
+    // The counters of people and centers are read across companies by the console and the nightly reconciliation.
+    TenantLimit::class => 'read across companies by the console and the reconciliation',
     // Who paid a company before and why it moved is read across companies, from both accounts' pages.
     CompanyTransfer::class => 'read across companies by the billing console',
 ];
