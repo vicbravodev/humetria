@@ -9,6 +9,7 @@ use App\Modules\Organization\Data\OrgFilters;
 use App\Modules\Organization\Data\OrgNode;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Support\OrgIndicators;
 use App\Modules\Organization\Support\OrgTree;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ use Inertia\Response;
  */
 final class OrgChartController extends Controller
 {
-    public function index(Request $request, OrgTree $tree, WorkCenters $workCenters): Response
+    public function index(Request $request, OrgTree $tree, WorkCenters $workCenters, OrgIndicators $indicators): Response
     {
         Gate::authorize('view-org-chart');
 
@@ -49,6 +50,7 @@ final class OrgChartController extends Controller
             // Of the whole company: the filters narrow the tree, never the sentence above it.
             'total_people' => $counts->total ?? 0,
             'with_manager' => $counts->with_manager ?? 0,
+            'indicators' => $indicators->handle(),
             'can_manage' => Gate::allows('manage-org-chart'),
         ]);
     }

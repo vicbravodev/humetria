@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    indicatorStats,
     moreText,
     orgChartHeadline,
     orgChartQuery,
@@ -9,6 +10,44 @@ import {
 } from '@/lib/org-chart/labels';
 
 describe('org chart labels', () => {
+    it('tells the three indicators, the median with one decimal', () => {
+        expect(
+            indicatorStats({
+                levels: 4,
+                median_direct_reports: 6.5,
+                managers: 12,
+                to_review: 3,
+            }),
+        ).toEqual([
+            { label: 'Niveles', value: '4' },
+            { label: 'Mediana de reportes directos', value: '6.5' },
+            {
+                label: 'Jefes por revisar',
+                value: '3',
+                hint: 'Con 1–2 o más de 15 reportes directos. Es una señal, no una regla.',
+            },
+        ]);
+        expect(
+            indicatorStats({
+                levels: 3,
+                median_direct_reports: 2,
+                managers: 3,
+                to_review: 0,
+            })[1]?.value,
+        ).toBe('2.0');
+    });
+
+    it('leaves a dash for the median where nobody leads anyone', () => {
+        expect(
+            indicatorStats({
+                levels: 1,
+                median_direct_reports: null,
+                managers: 0,
+                to_review: 0,
+            })[1]?.value,
+        ).toBe('—');
+    });
+
     it('says how many people the company has and how many have a manager', () => {
         expect(orgChartHeadline(0, 0)).toBe('Nadie activo por ahora.');
         expect(orgChartHeadline(1, 0)).toBe(

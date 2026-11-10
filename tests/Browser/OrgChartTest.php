@@ -51,6 +51,10 @@ it('shows who is at the top, and their reports when they are opened', function (
         ->assertSee('Diana Torres')
         ->assertSee('Directora general')
         ->assertSee('2 directos · 4 en total')
+        ->assertSeeIn('section[aria-label="Indicadores"]', 'Niveles')
+        ->assertSeeIn('section[aria-label="Indicadores"]', 'Mediana de reportes directos')
+        ->assertSeeIn('section[aria-label="Indicadores"]', '2.0')
+        ->assertSeeIn('section[aria-label="Indicadores"]', 'Es una señal, no una regla.')
         ->assertDontSee('Gerardo Paz')
         ->click('[aria-label="Ver los reportes de Diana Torres"]')
         ->assertSee('Gerardo Paz')
@@ -70,6 +74,7 @@ it('invites a company where nobody has a manager to assign them', function (bool
         ->assertSee('Todavía nadie tiene jefe asignado.')
         ->assertSee('Ir a Empleados')
         ->assertSee('Importar CSV')
+        ->assertDontSee('Jefes por revisar')
         ->assertSee('Diana Torres')
         ->click('Ir a Empleados')
         ->assertPathIs('/admin/acme/employees');

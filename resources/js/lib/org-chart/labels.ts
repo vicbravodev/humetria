@@ -1,5 +1,5 @@
 import { countOf } from '@/lib/plural';
-import type { OrgChartFilters, OrgNode } from '@/types';
+import type { OrgChartFilters, OrgIndicators, OrgNode } from '@/types';
 
 /** "120 personas activas, 87 con jefe directo." */
 export function orgChartHeadline(total: number, withManager: number): string {
@@ -47,4 +47,22 @@ export function orgChartQuery(
         ...(filters.area === null ? {} : { area: filters.area.value }),
         ...(focus === undefined ? {} : { focus }),
     };
+}
+
+/** The three cards above the tree: the median with one decimal, a dash where nobody leads anyone. */
+export function indicatorStats(
+    indicators: OrgIndicators,
+): { label: string; value: string; hint?: string }[] {
+    return [
+        { label: 'Niveles', value: String(indicators.levels) },
+        {
+            label: 'Mediana de reportes directos',
+            value: indicators.median_direct_reports?.toFixed(1) ?? '—',
+        },
+        {
+            label: 'Jefes por revisar',
+            value: String(indicators.to_review),
+            hint: 'Con 1–2 o más de 15 reportes directos. Es una señal, no una regla.',
+        },
+    ];
 }

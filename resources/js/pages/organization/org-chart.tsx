@@ -6,10 +6,16 @@ import Pagination from '@/components/humetria/pagination';
 import OrgChartBreadcrumbs from '@/components/organization/org-chart-breadcrumbs';
 import OrgChartEmpty from '@/components/organization/org-chart-empty';
 import OrgChartToolbar from '@/components/organization/org-chart-toolbar';
+import OrgIndicators from '@/components/organization/org-indicators';
 import OrgTree from '@/components/organization/org-tree';
 import { orgChartHeadline, orgChartQuery } from '@/lib/org-chart/labels';
 import { chartView } from '@/lib/org-chart/tree-state';
-import type { OrgChartFilters, OrgNode, Paginated } from '@/types';
+import type {
+    OrgChartFilters,
+    OrgIndicators as Indicators,
+    OrgNode,
+    Paginated,
+} from '@/types';
 
 export default function OrgChart({
     roots,
@@ -18,6 +24,7 @@ export default function OrgChart({
     filters,
     total_people,
     with_manager,
+    indicators,
     can_manage,
 }: {
     roots: Paginated<OrgNode>;
@@ -26,6 +33,7 @@ export default function OrgChart({
     filters: OrgChartFilters;
     total_people: number;
     with_manager: number;
+    indicators: Indicators;
     can_manage: boolean;
 }) {
     const view = chartView(roots, chain, focus);
@@ -39,7 +47,11 @@ export default function OrgChart({
                     description={orgChartHeadline(total_people, with_manager)}
                 />
                 <OrgChartToolbar filters={filters} person={chain.at(-1)} />
-                {with_manager === 0 && <OrgChartEmpty canManage={can_manage} />}
+                {with_manager === 0 ? (
+                    <OrgChartEmpty canManage={can_manage} />
+                ) : (
+                    <OrgIndicators indicators={indicators} />
+                )}
                 {focus !== null && (
                     <OrgChartBreadcrumbs chain={chain} filters={filters} />
                 )}

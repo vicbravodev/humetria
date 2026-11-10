@@ -13,9 +13,10 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(OrgChartController::class, OrgChartPeopleController::class);
 
-// 8 of every page of the panel (company, membership, roles, shared props) and 10 of the org chart: the counts, the
-// roots (3), the chain (2) and the reports of the focus (3), each with the work centers, and the name of the filter.
-const ORG_CHART_PAGE_QUERIES = 18;
+// 8 of every page of the panel (company, membership, roles, shared props) and 12 of the org chart: the counts, the
+// indicators (2), the roots (3), the chain (2) and the reports of the focus (3), each with the work centers, and the
+// name of the filter.
+const ORG_CHART_PAGE_QUERIES = 20;
 // 5 of every request of the panel, the person, and their reports (3).
 const ORG_CHART_REPORTS_QUERIES = 9;
 

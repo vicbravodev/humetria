@@ -74,6 +74,16 @@ export type OrgNode = {
     manager_inactive: boolean;
 };
 
+/** The shape of the company: its levels, and how many people a manager leads. */
+export type OrgIndicators = {
+    levels: number;
+    /** Among whoever leads at least one person; null where nobody does. */
+    median_direct_reports: number | null;
+    managers: number;
+    /** Managers with 1–2 or more than 15 direct reports. */
+    to_review: number;
+};
+
 /** Each chosen filter of the org chart with its name. */
 export type OrgChartFilters = {
     work_center: { value: string; label: string } | null;
