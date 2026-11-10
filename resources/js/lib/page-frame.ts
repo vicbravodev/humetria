@@ -5,6 +5,8 @@ const STANDALONE_NAMES = new Set([
     'campaigns/survey',
     // The climate and pulse survey of the person's emailed link: the same frame, no account.
     'engagement/survey',
+    // The feedback a manager reads in their portal: their own link, no account.
+    'engagement/portal-feedback',
     'seating/portal',
     // «Nos dijeron / Haremos» in the person's portal: their own link, no account.
     'engagement/portal-climate',

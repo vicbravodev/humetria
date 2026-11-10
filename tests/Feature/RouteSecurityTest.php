@@ -48,6 +48,7 @@ function publicRouteNames(): array
         'portal.seating.inputs.store', // guest: la persona envía su calzado y sus molestias, de forma voluntaria y tras aceptar el aviso; el token del portal es la credencial; throttled
         'portal.seating.acknowledgments.store', // guest: la persona confirma, una sola vez, que le informaron de su evaluación; el token del portal es la credencial; solo la suya; throttled
         'portal.seating.reports.store', // guest: la persona reporta un asiento dañado sin que se guarde quién; el token del portal es la credencial; throttled
+        'portal.feedback.show', // guest: la persona con equipo a cargo ve el resultado agregado de su grupo; el token del portal es la credencial; nunca respuestas ni textos de nadie; throttled
         'portal.team.show', // guest: la persona ve a su jefe, sus compañeros y sus reportes; el token del portal es la credencial; solo nombre, puesto y área; un enlace no válido da 404 sin decir nada más; throttled
         'portal.vacations.show', // guest: la persona ve sus días de vacaciones por periodo y sus solicitudes; el token del portal es la credencial; solo ve lo suyo, sin importes; un enlace no válido o una empresa que no usa Vacaciones da 404 sin decir nada más; throttled
         'portal.vacations.preview', // guest: la persona ve cuántos días laborables serían sus fechas y si los tiene, sin guardar nada; el token del portal es la credencial; solo su saldo; throttled

@@ -6,6 +6,7 @@ describe('isStandalone', () => {
         'landing',
         'campaigns/survey',
         'engagement/survey',
+        'engagement/portal-feedback',
         'seating/portal',
         'organization/portal-team',
         'leave/portal',
