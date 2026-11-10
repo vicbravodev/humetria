@@ -89,3 +89,25 @@ export type OrgChartFilters = {
     work_center: { value: string; label: string } | null;
     area: { value: string; label: string } | null;
 };
+
+/** A gap of the reporting line, with how many people it holds. */
+export type ReportingIssue = {
+    value: 'without_manager' | 'roots' | 'inactive_manager';
+    label: string;
+    /** What its list holds, said to whoever will fix it. */
+    hint: string;
+    count: number;
+    /** Whether that many people are something to fix: one person at the top is not. */
+    pending: boolean;
+};
+
+/** A person in a list of «Calidad de datos». Never contact data. */
+export type QualityPerson = {
+    id: string;
+    name: string;
+    job_title: string;
+    area: string;
+    work_center: string;
+    /** Their manager as it is saved, who may have left. */
+    manager: ChoiceOption | null;
+};

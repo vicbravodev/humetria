@@ -6,7 +6,7 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { orgChartQuery } from '@/lib/org-chart/labels';
 import { serverSource } from '@/lib/server-options';
 import { options as areaOptions } from '@/routes/tenant/areas';
-import { index } from '@/routes/tenant/org-chart';
+import { index, quality } from '@/routes/tenant/org-chart';
 import { search } from '@/routes/tenant/org-chart/people';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type { OrgChartFilters, OrgNode } from '@/types';
@@ -97,6 +97,9 @@ export default function OrgChartToolbar({
                         <Link href={index(tenantSlug)}>Limpiar</Link>
                     </Button>
                 )}
+                <Button variant="ghost" asChild>
+                    <Link href={quality(tenantSlug)}>Calidad de datos</Link>
+                </Button>
                 <PrintButton variant="outline" label="Imprimir" />
             </div>
         </div>

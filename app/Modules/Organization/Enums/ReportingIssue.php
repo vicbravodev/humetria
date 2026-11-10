@@ -25,12 +25,21 @@ enum ReportingIssue: string
         };
     }
 
-    public function hint(): string
+    /** What the list holds, said to whoever will fix it. One person at the top is how it should be. */
+    public function hint(int $count): string
     {
-        return match ($this) {
-            self::WithoutManager => 'Personas activas sin jefe directo y sin nadie que les reporte.',
-            self::ExtraRoot => 'Personas sin jefe directo a quienes alguien les reporta. Normalmente solo hay una.',
-            self::InactiveManager => 'Personas activas cuyo jefe directo fue dado de baja.',
+        return match (true) {
+            $this === self::WithoutManager => 'Personas activas sin jefe directo y sin nadie que les reporte.',
+            $this === self::InactiveManager => 'Personas activas cuyo jefe directo fue dado de baja.',
+            $count === 0 => 'Nadie tiene a alguien que le reporte todavía.',
+            $count === 1 => 'Una sola raíz: así debe ser.',
+            default => "Hay {$count} personas hasta arriba. Normalmente solo hay una.",
         };
+    }
+
+    /** Whether that many people are something to fix: any, except at the top, where one is expected. */
+    public function pending(int $count): bool
+    {
+        return $count > ($this === self::ExtraRoot ? 1 : 0);
     }
 }

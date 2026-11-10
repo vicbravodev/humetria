@@ -20,6 +20,18 @@ describe('toolNavItems', () => {
         ]);
     });
 
+    it('lists the pages of the org chart under it', () => {
+        expect(
+            toolNavItems(acme())[0]?.children?.map((item) => [
+                item.title,
+                toUrl(item.href),
+            ]),
+        ).toEqual([
+            ['Organigrama', '/admin/acme/org-chart'],
+            ['Calidad de datos', '/admin/acme/org-chart/quality'],
+        ]);
+    });
+
     it('offers a union Compensación and no org chart: its roster has no hierarchy', () => {
         expect(
             toolNavItems({ ...acme(), type: 'union' }).map((item) => [

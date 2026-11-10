@@ -2,7 +2,7 @@ import { Calculator, Network } from 'lucide-react';
 
 import type { NavTenant } from '@/lib/app-navigation';
 import { index as compensation } from '@/routes/tenant/compensation';
-import { index as orgChart } from '@/routes/tenant/org-chart';
+import { index as orgChart, quality } from '@/routes/tenant/org-chart';
 import type { NavItem } from '@/types';
 
 /**
@@ -19,6 +19,16 @@ export const toolNavItems = (tenant: NavTenant | null): NavItem[] =>
                             title: 'Organigrama',
                             href: orgChart(tenant.slug),
                             icon: Network,
+                            children: [
+                                {
+                                    title: 'Organigrama',
+                                    href: orgChart(tenant.slug),
+                                },
+                                {
+                                    title: 'Calidad de datos',
+                                    href: quality(tenant.slug),
+                                },
+                            ],
                         },
                     ]
                   : []),

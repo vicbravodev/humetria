@@ -34,15 +34,23 @@ function gapNames(ReportingIssue $issue): array
     return array_map(fn (Employee $employee): ?string => $employee->name, test()->gaps->page($issue)->items());
 }
 
-it('names each issue as the screen shows it', function (): void {
+it('names each issue as the screen shows it, and says what its list holds', function (): void {
     expect(array_map(fn (ReportingIssue $issue): array => [$issue->value, $issue->label()], ReportingIssue::cases()))->toBe([
         ['without_manager', 'Sin jefe'],
         ['roots', 'Raíces'],
         ['inactive_manager', 'Jefe dado de baja'],
     ])
-        ->and(ReportingIssue::WithoutManager->hint())->toBe('Personas activas sin jefe directo y sin nadie que les reporte.')
-        ->and(ReportingIssue::ExtraRoot->hint())->toBe('Personas sin jefe directo a quienes alguien les reporta. Normalmente solo hay una.')
-        ->and(ReportingIssue::InactiveManager->hint())->toBe('Personas activas cuyo jefe directo fue dado de baja.');
+        ->and(ReportingIssue::WithoutManager->hint(3))->toBe('Personas activas sin jefe directo y sin nadie que les reporte.')
+        ->and(ReportingIssue::InactiveManager->hint(1))->toBe('Personas activas cuyo jefe directo fue dado de baja.')
+        ->and(ReportingIssue::ExtraRoot->hint(0))->toBe('Nadie tiene a alguien que le reporte todavía.')
+        ->and(ReportingIssue::ExtraRoot->hint(1))->toBe('Una sola raíz: así debe ser.')
+        ->and(ReportingIssue::ExtraRoot->hint(2))->toBe('Hay 2 personas hasta arriba. Normalmente solo hay una.');
+});
+
+it('takes anyone as something to fix, except one person at the top', function (): void {
+    expect(array_map(fn (int $count): bool => ReportingIssue::WithoutManager->pending($count), [0, 1]))->toBe([false, true])
+        ->and(array_map(fn (int $count): bool => ReportingIssue::InactiveManager->pending($count), [0, 1]))->toBe([false, true])
+        ->and(array_map(fn (int $count): bool => ReportingIssue::ExtraRoot->pending($count), [0, 1, 2]))->toBe([false, false, true]);
 });
 
 it('counts the gaps of the reporting line', function (): void {
