@@ -94,7 +94,12 @@ export default function Account({
                         receivable={receivable}
                     />
                 )}
-                {payments.total > 0 && <AccountPayments payments={payments} />}
+                {payments.total > 0 && (
+                    <AccountPayments
+                        accountId={account.id}
+                        payments={payments}
+                    />
+                )}
             </div>
         </>
     );

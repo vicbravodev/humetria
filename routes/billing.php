@@ -97,6 +97,11 @@ Route::post('admin/billing/accounts/{account}/payments', [PaymentConsoleControll
     ->whereUuid('account')
     ->name('billing.payments.store');
 
+Route::post('admin/billing/payments/{payment}/allocations', [PaymentConsoleController::class, 'apply'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('payment')
+    ->name('billing.payments.apply');
+
 Route::post('admin/billing/payments/{payment}/reversal', [PaymentConsoleController::class, 'reverse'])
     ->middleware(['auth', 'verified'])
     ->whereUuid('payment')

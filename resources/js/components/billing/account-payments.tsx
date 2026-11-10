@@ -13,8 +13,10 @@ import type { Paginated, PaymentRow } from '@/types';
 
 /** The transfers recorded for the account, the latest first: a wrong one is reversed with a reason, never deleted. */
 export default function AccountPayments({
+    accountId,
     payments,
 }: {
+    accountId: string;
     payments: Paginated<PaymentRow>;
 }) {
     const { auth } = usePage().props;
@@ -48,6 +50,7 @@ export default function AccountPayments({
                     {payments.data.map((payment) => (
                         <AccountPaymentRowView
                             key={payment.id}
+                            accountId={accountId}
                             payment={payment}
                             canManage={auth.isSuperadmin}
                         />

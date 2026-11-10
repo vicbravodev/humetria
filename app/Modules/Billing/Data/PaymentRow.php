@@ -7,8 +7,7 @@ namespace App\Modules\Billing\Data;
 use Illuminate\Contracts\Support\Arrayable;
 
 /**
- * A payment as the account's page lists it: what came in, how much of it settled statements, what is still unapplied, and,
- * if it was reversed, why.
+ * A payment as the account's page lists it: what came in, how much of it settled statements, what is still unapplied (and so whether more can be applied), and, if it was reversed, why.
  *
  * @implements Arrayable<string, mixed>
  */
@@ -25,6 +24,7 @@ final readonly class PaymentRow implements Arrayable
         public string $recordedBy,
         public bool $reversed,
         public ?string $reversalReason,
+        public bool $canApply = false,
     ) {}
 
     /**
@@ -43,6 +43,7 @@ final readonly class PaymentRow implements Arrayable
             'recorded_by' => $this->recordedBy,
             'reversed' => $this->reversed,
             'reversal_reason' => $this->reversalReason,
+            'can_apply' => $this->canApply,
         ];
     }
 }

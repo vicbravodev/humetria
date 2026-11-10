@@ -57,6 +57,7 @@ final readonly class ListAccountPayments
             $names[$payment->recorded_by] ?? '',
             $payment->isReversed(),
             $payment->reversal_reason,
+            ! $payment->isReversed() && $payment->amount_cents > ($applied[$payment->id] ?? 0),
         ));
     }
 }

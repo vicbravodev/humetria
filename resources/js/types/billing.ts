@@ -169,6 +169,7 @@ export type PaymentRow = {
     recorded_by: string;
     reversed: boolean;
     reversal_reason: string | null;
+    can_apply: boolean;
 };
 
 /** What the account owes across its issued statements. */

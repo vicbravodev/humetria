@@ -1,3 +1,4 @@
+import ApplyPaymentDialog from '@/components/billing/apply-payment-dialog';
 import ReversePaymentDialog from '@/components/billing/reverse-payment-dialog';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -5,9 +6,11 @@ import type { PaymentRow } from '@/types';
 
 /** A payment of the account: its reference and day, how much came in, how much of it was applied, and who recorded it. */
 export default function AccountPaymentRowView({
+    accountId,
     payment,
     canManage,
 }: {
+    accountId: string;
     payment: PaymentRow;
     canManage: boolean;
 }) {
@@ -42,7 +45,17 @@ export default function AccountPaymentRowView({
                 {payment.reversed ? (
                     <Badge variant="outline">Revertido</Badge>
                 ) : (
-                    canManage && <ReversePaymentDialog payment={payment} />
+                    canManage && (
+                        <>
+                            {payment.can_apply && (
+                                <ApplyPaymentDialog
+                                    accountId={accountId}
+                                    payment={payment}
+                                />
+                            )}
+                            <ReversePaymentDialog payment={payment} />
+                        </>
+                    )
                 )}
             </TableCell>
         </TableRow>

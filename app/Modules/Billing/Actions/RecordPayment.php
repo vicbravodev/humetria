@@ -7,20 +7,17 @@ namespace App\Modules\Billing\Actions;
 use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Billing\Data\PaymentData;
-use App\Modules\Billing\Enums\StatementStatus;
 use App\Modules\Billing\Exceptions\InvalidPayment;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Payment;
-use App\Modules\Billing\Models\Statement;
-use App\Modules\Billing\Support\StatementBalances;
+use App\Modules\Billing\Support\PaymentAllocator;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 final readonly class RecordPayment
 {
-    public function __construct(private RecordAudit $recordAudit, private StatementBalances $balances) {}
+    public function __construct(private RecordAudit $recordAudit, private PaymentAllocator $allocator) {}
 
     /**
      * Records a transfer of the account and applies it to issued statements of that account, in whole or in part; what is not
@@ -63,17 +60,6 @@ final readonly class RecordPayment
 
     private function write(BillingAccount $account, PaymentData $data, string $reference, User $recorder): Payment
     {
-        $statements = $this->lockStatements($account, array_keys($data->allocations));
-        $paid = $this->balances->paid(array_keys($statements));
-
-        foreach ($data->allocations as $statementId => $cents) {
-            $statement = $statements[$statementId] ?? throw new InvalidPayment('allocations', 'Elige estados de cuenta emitidos de esta cuenta.');
-
-            if ($cents > $statement->total_cents - ($paid[$statementId] ?? 0)) {
-                throw new InvalidPayment('allocations', 'No se puede aplicar más que el saldo de un estado de cuenta.');
-            }
-        }
-
         $payment = Payment::query()->create([
             'billing_account_id' => $account->id,
             'amount_cents' => $data->amountCents,
@@ -83,8 +69,8 @@ final readonly class RecordPayment
             'recorded_by' => $recorder->id,
         ]);
 
-        foreach ($data->allocations as $statementId => $cents) {
-            $payment->allocations()->create(['statement_id' => $statementId, 'amount_cents' => $cents]);
+        if ($data->allocations !== []) {
+            $this->allocator->allocate($payment, $data->allocations);
         }
 
         $applied = array_sum($data->allocations);
@@ -97,23 +83,5 @@ final readonly class RecordPayment
         ]);
 
         return $payment;
-    }
-
-    /**
-     * The issued statements of the account among those ids, locked until the payment is written.
-     *
-     * @param  list<string>|list<int|string>  $ids
-     * @return array<string, Statement>
-     */
-    private function lockStatements(BillingAccount $account, array $ids): array
-    {
-        $uuids = array_values(array_filter(array_map(strval(...), $ids), Str::isUuid(...)));
-        $found = [];
-
-        foreach (Statement::query()->where('billing_account_id', $account->id)->where('status', StatementStatus::Issued)->whereIn('id', $uuids)->lockForUpdate()->get() as $statement) {
-            $found[$statement->id] = $statement;
-        }
-
-        return $found;
     }
 }

@@ -187,7 +187,9 @@ it('lists the payments of the account a page at a time, with what was applied an
             ->where('payments.data.0.note', 'Banorte')
             ->where('payments.data.0.recorded_by', 'Victor Bravo')
             ->where('payments.data.0.reversed', false)
+            ->where('payments.data.0.can_apply', true)
             ->where('payments.data.1.reversed', true)
+            ->where('payments.data.1.can_apply', false)
             ->where('payments.data.1.reversal_reason', 'Duplicado'));
 });
 
