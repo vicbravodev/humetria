@@ -33,6 +33,8 @@ const ability = (handle: boolean, manage: boolean): CurrentTenant['can'] => ({
     manage_org_chart: false,
     view_vacations: false,
     manage_vacations: false,
+    view_climate: false,
+    manage_climate: false,
 });
 const tenant = (
     role: CurrentTenant['role'],

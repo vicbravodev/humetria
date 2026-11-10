@@ -9,6 +9,7 @@ use App\Modules\Compensation\Providers\CompensationServiceProvider;
 use App\Modules\Complaints\Providers\ComplaintsServiceProvider;
 use App\Modules\Demos\Providers\DemosServiceProvider;
 use App\Modules\Disclosure\Providers\DisclosureServiceProvider;
+use App\Modules\Engagement\Providers\EngagementServiceProvider;
 use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
 use App\Modules\Interventions\Providers\InterventionsServiceProvider;
 use App\Modules\Leave\Providers\LeaveServiceProvider;
@@ -41,5 +42,6 @@ return [
     CompensationServiceProvider::class,
     ComplaintsServiceProvider::class,
     DisclosureServiceProvider::class,
+    EngagementServiceProvider::class,
     AssistantServiceProvider::class,
 ];

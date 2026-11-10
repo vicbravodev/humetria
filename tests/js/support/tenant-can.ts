@@ -24,4 +24,6 @@ export const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_org_chart: manage_organization,
     view_vacations: manage_organization,
     manage_vacations: manage_organization,
+    view_climate: manage_organization,
+    manage_climate: manage_organization,
 });
