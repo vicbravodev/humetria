@@ -6,6 +6,7 @@ use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
 use App\Modules\Billing\Actions\RenewSubscriptions;
+use App\Modules\Billing\Actions\SendBillingNotices;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
@@ -121,6 +122,11 @@ Artisan::command('billing:renew', function (RenewSubscriptions $renew): void {
 
 // The cut is the first of the month, Mexico City. Running it again changes nothing, so a retry or a late start is safe.
 Schedule::command('billing:renew')->monthlyOn(1, '02:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:notify', function (SendBillingNotices $notices): void {
+    $this->info('Avisos: '.$notices->handle());
+})->purpose('Email each account the next amount and the loss of the channel discount before the cut, and a balance past due; once each');
+
+Schedule::command('billing:notify')->dailyAt('09:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

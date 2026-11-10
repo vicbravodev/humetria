@@ -22,7 +22,7 @@ it('makes every notification of every module declare its mail bag', function ():
 });
 
 it('puts the emails that carry access, recovery, security or an accident in the free bag', function (): void {
-    $essential = ['InvitationEmail', 'PortalInvitation', 'EnrollmentInvitation', 'DeviceLinked', 'AccidentReported'];
+    $essential = ['InvitationEmail', 'PortalInvitation', 'EnrollmentInvitation', 'DeviceLinked', 'AccidentReported', 'NextAmountNotice', 'EligibilityLostNotice', 'OverdueBalanceNotice'];
 
     foreach (glob(__DIR__.'/../../app/Modules/*/Notifications/*.php') ?: [] as $file) {
         $name = basename($file, '.php');

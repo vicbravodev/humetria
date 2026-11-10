@@ -29,6 +29,10 @@ return [
     */
     'unplanned_quotas' => ['assistant_tokens' => 2_000_000, 'email_campaign' => 500, 'storage_bytes' => 5_368_709_120],
 
+    /* Días antes del corte en que se avisa el próximo importe y la pérdida del descuento; días después de emitido en que un saldo se da por vencido. */
+    'notice_days_before_cut' => 5,
+    'overdue_after_days' => 15,
+
     /* Los discos privados de los módulos que guardan archivos (claves de config/filesystems.php); su ruta es {tipo}/{empresa}/…. */
     'storage_disks' => ['telework_files', 'seating_files', 'intervention_files', 'disclosure_files'],
 
