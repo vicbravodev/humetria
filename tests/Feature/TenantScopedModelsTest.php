@@ -13,6 +13,10 @@ use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\StatementLine;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\SubscriptionCharge;
+use App\Modules\Billing\Models\UsageCounter;
+use App\Modules\Billing\Models\UsageEvent;
+use App\Modules\Billing\Models\UsageGrant;
+use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
@@ -40,6 +44,11 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     // What a company has of each module is read from inside it (menu, routes) and from the console across companies.
     TenantModule::class => 'read across companies by the console and by the module gate',
     // The counters of people and centers are read across companies by the console and the nightly reconciliation.
+    // The ledger of metered use is read across companies by the console and the expiry of holds, and by key from the caller's company.
+    UsageCounter::class => 'read across companies by the console and the expiry of holds',
+    UsageReservation::class => 'read across companies by the expiry of holds',
+    UsageEvent::class => 'read across companies by the console',
+    UsageGrant::class => 'read across companies by the console',
     TenantLimit::class => 'read across companies by the console and the reconciliation',
     // Who paid a company before and why it moved is read across companies, from both accounts' pages.
     CompanyTransfer::class => 'read across companies by the billing console',

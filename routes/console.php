@@ -99,6 +99,8 @@ Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->stri
 Schedule::command('attendance:close-days')->dailyAt('00:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // A restore, a manual fix or a bug can leave a counter of people or centers off: recount every night, after the day is closed.
 Schedule::command('humetria:reconcile-limits')->dailyAt('03:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// A call that died mid-answer leaves its hold on the quota: give it back every ten minutes.
+Schedule::command('billing:expire-usage-reservations')->everyTenMinutes()->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

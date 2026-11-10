@@ -10,11 +10,13 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\CompanyLimitCounters;
+use App\Modules\Tenancy\Support\LimitMessage;
+use App\Modules\Tenancy\Support\RealUsage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-mutates(CompanyLimitCounters::class, SyncCompanyLimits::class, ReconcileCompanyLimits::class);
+mutates(LimitMessage::class, RealUsage::class, CompanyLimitCounters::class, SyncCompanyLimits::class, ReconcileCompanyLimits::class);
 
 /** A company with a limit on a resource, working there. */
 function limitedCompany(string $resource, int $amount, int $used = 0): Tenant

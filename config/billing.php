@@ -23,6 +23,15 @@ return [
     /* La versión con la que se cotiza una suscripción nueva. */
     'current_version' => 'v1',
 
+    /*
+    | Lo que tiene una empresa sin suscripción (heredada o en prueba sin plan): la cuota del plan Integral, para no quitarle
+    | nada que ya usaba. Una vez que tiene plan manda la cuota de su plan en el catálogo.
+    */
+    'unplanned_quotas' => ['assistant_tokens' => 2_000_000],
+
+    /* Minutos que una reserva sin liquidar ni liberar se da por muerta (una respuesta de Humi dura menos de 6 minutos). */
+    'reservation_ttl_minutes' => 30,
+
     'versions' => [
 
         'v1' => [
