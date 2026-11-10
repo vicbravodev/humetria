@@ -9,6 +9,7 @@ use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Http\Controllers\CommitmentController;
 use App\Modules\Engagement\Http\Controllers\ExportController;
 use App\Modules\Engagement\Http\Controllers\PublishFeedbackController;
+use App\Modules\Engagement\Http\Controllers\ManagerResultsController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use App\Modules\Engagement\Http\Controllers\SurveyActionController;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
@@ -51,3 +52,6 @@ Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}', [Com
 Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}/status', [CommitmentController::class, 'status'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.status');
 // Publishes «Nos dijeron / Haremos» to the portal of the people of the company, once.
 Route::post('admin/{tenant:slug}/climate/{survey}/publish', [PublishFeedbackController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.publish');
+// The managers whose group of people is shown (never a ranking), and the feedback of each.
+Route::get('admin/{tenant:slug}/climate/{survey}/managers', [ManagerResultsController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.managers');
+Route::get('admin/{tenant:slug}/climate/{survey}/managers/{manager}', [ManagerResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->whereUuid('manager')->defaults('kind', 'climate')->name('tenant.climate.managers.show');

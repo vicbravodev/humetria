@@ -9,6 +9,7 @@ export type * from './engagement';
 export type * from './interventions';
 export type * from './engagement-commitments';
 export type * from './engagement-results';
+export type * from './engagement-feedback';
 export type * from './leave';
 export type * from './leave-policy';
 export type * from './demos';

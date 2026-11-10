@@ -276,6 +276,24 @@ it('sends each list of records as a paginator', function (string $component, Clo
         return route('tenant.org-chart.index', [$tenant, 'focus' => $boss->id]);
     }, ['roots', 'focus.children']],
     'org chart data quality' => ['organization/org-chart-quality', fn () => route('tenant.org-chart.quality', [listsCompany()[0], 'issue' => 'without_manager']), ['people']],
+    'the managers of a climate survey' => ['engagement/managers', function () {
+        [$tenant] = listsCompany();
+        workIn($tenant);
+        $boss = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+
+        return route('tenant.climate.managers', [$tenant, climateManagerSurvey($tenant, [$boss->id => [5, 4]])]);
+    }, ['managers']],
+    'the feedback of a manager' => ['engagement/manager', function () {
+        [$tenant] = listsCompany();
+        workIn($tenant);
+        $boss = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        $survey = climateManagerSurvey($tenant, [$boss->id => [5, 4]]);
+        foreach (range(1, 11) as $i) {
+            App\Modules\Engagement\Models\Comment::factory()->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'item_key' => 'manager.keep', 'comment_group_id' => $boss->id]);
+        }
+
+        return route('tenant.climate.managers.show', [$tenant, $survey, $boss->id]);
+    }, ['comments']],
     'benefits' => ['compensation/benefits', fn () => route('tenant.compensation.benefits.index', listsCompany()[0]), ['benefits']],
     'tabulator' => ['compensation/tabulator', fn () => route('tenant.compensation.tabulator.index', listsCompany()[0]), ['grades']],
     'salary overrides' => ['compensation/overrides', fn () => route('tenant.compensation.overrides.index', listsCompany()[0]), ['people']],
