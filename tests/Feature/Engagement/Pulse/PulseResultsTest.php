@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 use App\Modules\Engagement\Enums\Driver;
 use App\Modules\Engagement\Enums\PulseMode;
+use App\Modules\Engagement\Events\SurveyClosed;
+use App\Modules\Engagement\Jobs\SummarizeComments;
+use App\Modules\Engagement\Listeners\QueueCommentSummaries;
 use App\Modules\Engagement\Models\Response;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\PulseComposer;
+use App\Modules\Organization\Models\Employee;
+use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
@@ -20,7 +26,7 @@ beforeEach(function (): void {
  * A closed pulse of the company in `$mode` with `$count` responses; `$answer` is what each gives to every question that
  * is an agreement (the recommendation, 9).
  */
-function pulseResultsSurvey(Tenant $tenant, PulseMode $mode, int $count, int $answer = 5): Survey
+function pulseResultsSurvey(Tenant $tenant, PulseMode $mode, int $count, int $answer = 5, ?string $manager = null): Survey
 {
     $refs = PulseComposer::compose($mode, [Driver::Clarity], 0, true);
     $survey = Survey::factory()->closed()->pulse()->create(['tenant_id' => $tenant->id, 'pulse_mode' => $mode, 'items' => $refs, 'invited' => max($count, 12)]);
@@ -31,7 +37,7 @@ function pulseResultsSurvey(Tenant $tenant, PulseMode $mode, int $count, int $an
         $answers[$key] = $key === 'eng.recommend' ? 9 : $answer;
     }
 
-    Response::factory()->count($count)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'answers' => $answers]);
+    Response::factory()->count($count)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'manager_group_id' => $manager, 'answers' => $answers]);
 
     return $survey;
 }
@@ -95,4 +101,36 @@ it('shows only the drivers a pulse asked about', function (): void {
 
     $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
         ->has('drivers', 5)->where('drivers.0.key', 'clarity'));
+});
+
+it('gives the manager of a manager pulse only their two questions, with no strengths, opportunities or summary', function (): void {
+    $ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Sol']);
+    pulseResultsSurvey($this->tenant, PulseMode::Manager, 6, manager: $ana->id);
+
+    $this->get(route('portal.feedback.show', (string) resolve(IssuePortalLink::class)->handle($ana->id)))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('feedback.items', 2)
+            ->where('feedback.items.0.key', 'manager.priorities')
+            ->where('feedback.strengths', [])
+            ->where('feedback.opportunities', [])
+            ->where('feedback.summary', null));
+});
+
+it('keeps the last survey with all the questions about the manager when a pulse without them closes later', function (): void {
+    $ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Sol']);
+    $climate = climateManagerSurvey($this->tenant, [$ana->id => [6, 5]]);
+    $climate->update(['closed_at' => now()->subMonths(2)]);
+    pulseResultsSurvey($this->tenant, PulseMode::Tour, 6, manager: $ana->id);
+
+    $this->get(route('portal.feedback.show', (string) resolve(IssuePortalLink::class)->handle($ana->id)))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('survey.name', $climate->name)->has('feedback.items', 8));
+});
+
+it('does not queue any summary of comments when a pulse closes', function (): void {
+    Queue::fake();
+    $pulse = pulseResultsSurvey($this->tenant, PulseMode::Tour, 6);
+
+    resolve(QueueCommentSummaries::class)->handle(new SurveyClosed($pulse->id, $pulse->kind));
+
+    Queue::assertNotPushed(SummarizeComments::class);
 });

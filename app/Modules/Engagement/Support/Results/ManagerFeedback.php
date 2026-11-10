@@ -19,6 +19,9 @@ final class ManagerFeedback
     /** Strengths and opportunities a manager reads. */
     private const int HIGHLIGHTS = 2;
 
+    /** The questions about the manager that the climate survey asks; with fewer, strengths and opportunities are not told. */
+    private const int FULL = 8;
+
     /** `null` when the survey is not closed, the group is not shown or none of its questions reaches the minimum. */
     public static function for(Survey $survey, string $managerId): ?ManagerFeedbackData
     {
@@ -41,7 +44,8 @@ final class ManagerFeedback
             return null;
         }
 
-        $highlights = Highlights::pick($shown, self::HIGHLIGHTS);
+        // A wave that asked only some of the questions about the manager (a pulse) has no best or worst to pick.
+        $highlights = count($company) < self::FULL ? ['strengths' => [], 'opportunities' => []] : Highlights::pick($shown, self::HIGHLIGHTS);
         $present = fn (ItemResult $item): array => self::present($item, $company[$item->key] ?? null);
         $summary = CommentSummary::query()->where('survey_id', $survey->id)->where('manager_group_id', $managerId)->first();
 
