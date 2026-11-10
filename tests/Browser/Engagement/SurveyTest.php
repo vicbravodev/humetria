@@ -40,7 +40,7 @@ function engagementInvitee(): Invitation
  * A script that answers 4 to every closed question as a person would, by clicking, writes `$comment` in the first open
  * one and goes on with «Siguiente» until the screen that sends (or `$limit` screens), and says which came first.
  */
-function answerSurvey(string $comment = '', int $limit = 80): string
+function engagementAnswerScript(string $comment = '', int $limit = 80): string
 {
     return <<<JS
         async () => {
@@ -128,7 +128,7 @@ it('keeps the closed answers on the device across a reload and the comments nowh
         ->click('Anterior')
         ->assertScript('() => document.querySelector(\'input[type=radio][value="5"]\').checked', true);
 
-    $page->script(answerSurvey('ZZ-comentario-del-navegador', 30));
+    $page->script(engagementAnswerScript('ZZ-comentario-del-navegador', 30));
     $page->assertScript("() => Object.values(localStorage).join('|').includes('ZZ-comentario')", false);
 });
 
@@ -136,7 +136,7 @@ it('sends the whole survey once and says thanks, with the comment as the person 
     $invitation = engagementInvitee();
 
     $page = visitPage('engagement/survey', '/engagement/the-token', $dark, $mobile, fn ($page) => $page->click('Siguiente'));
-    $page->script(answerSurvey('Más claridad <b>por favor</b>'));
+    $page->script(engagementAnswerScript('Más claridad <b>por favor</b>'));
     $page->assertSee('Ya terminó la encuesta')
         ->click('Enviar mis respuestas')
         ->assertSee('Gracias. Sus respuestas ya se enviaron.')
