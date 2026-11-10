@@ -30,16 +30,16 @@ npm run poster:humi   # public/video/humi-chat.jpg (frame 280, primera respuesta
 
 Un frame suelto para revisar: `npx remotion still HeroLoop out/frame.png --frame=600`.
 
-## Jornada (HyperFrames)
+## Herramientas (HyperFrames)
 
-`hyperframes/attendance/` es el video del registro de jornada (24 s, 1440×1080), hecho con HTML y GSAP en vez de
-Remotion, para comparar los dos. Necesita Docker para renderizar (`--docker`; no hay ffmpeg local):
+`hyperframes/<herramienta>/` guarda el video de cada herramienta de la landing (24 s, 1600×900, cuatro capítulos de 6 s:
+la landing salta a 0, 6, 12 y 18 s), hecho con HTML y GSAP. Texto mínimo de 40 px: se muestran a ~900 px de ancho.
+Necesitan Docker para renderizar (no hay ffmpeg local). Revisar y renderizar uno:
 
 ```bash
-cd video/hyperframes/attendance
-npx hyperframes check
-npx hyperframes render --docker -q delivery -o out/humetria-attendance.mp4
-npx hyperframes render --docker --format webm --crf 32 -o out/humetria-attendance.webm
+cd video/hyperframes/attendance && npx hyperframes check
+video/hyperframes/render.sh attendance humetria-attendance 4   # carpeta, nombre en public/video, segundo del póster
 ```
 
-Los archivos van a `public/video/humetria-attendance.{mp4,webm,jpg}`; el póster es el cuadro de 5.8 s.
+Salen `public/video/humetria-*.{mp4,webm,jpg}`. El navegador solo puede saltar a un capítulo si el servidor da
+rangos de bytes (nginx sí; el servidor de PHP de desarrollo no: ahí el salto no funciona).

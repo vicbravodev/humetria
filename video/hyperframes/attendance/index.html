@@ -1,224 +1,180 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1440, height=1080" />
+    <meta name="viewport" content="width=1600, height=900" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
     <style>
       @font-face { font-family: Figtree; font-weight: 400; src: url("fonts/figtree-latin-400-normal.woff2") format("woff2"); }
       @font-face { font-family: Figtree; font-weight: 500; src: url("fonts/figtree-latin-500-normal.woff2") format("woff2"); }
       @font-face { font-family: Figtree; font-weight: 600; src: url("fonts/figtree-latin-600-normal.woff2") format("woff2"); }
-      /* Tokens del design system, tema oscuro (docs/design-system). */
+      /* Existing Humetría dark tokens. Secondary text clears 4.5:1 on every surface. */
       :root {
         --bg: #0f1716; --card: #141e1c; --muted: #1a2523; --accent: #213330; --border: #26332f;
         --fg: #f1faf8; --muted-fg: #9daeaa; --primary: #3ccfbd; --primary-fg: #0f1716;
         --warn: #d2ae62; --warn-bg: #33291a; --warn-fg: #e9c886;
       }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 1440px; height: 1080px; overflow: hidden; background: var(--bg); }
-      body { font-family: Figtree, sans-serif; color: var(--fg); }
-      #root { position: relative; width: 1440px; height: 1080px; }
-      .abs { position: absolute; }
-      .card { background: var(--card); border: 2px solid var(--border); border-radius: 20px; }
-      .muted { color: var(--muted-fg); }
-      .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 10px; background: var(--accent); color: var(--primary); font-size: 28px; font-weight: 500; }
-      .chip.warn { background: var(--warn-bg); color: var(--warn-fg); }
-      .scene { position: absolute; inset: 0; opacity: 0; }
-      h2 { position: absolute; left: 140px; top: 64px; width: 1160px; font-size: 52px; font-weight: 600; letter-spacing: -0.02em; opacity: 0; }
-      .sub { position: absolute; left: 140px; top: 134px; width: 1160px; font-size: 28px; color: var(--muted-fg); opacity: 0; }
-      .primary-btn { position: absolute; display: flex; align-items: center; justify-content: center; background: var(--primary); color: var(--primary-fg); font-size: 32px; font-weight: 600; border-radius: 16px; }
-      .row { position: absolute; left: 0; width: 1160px; height: 96px; display: flex; align-items: center; gap: 28px; padding: 0 36px; border-top: 2px solid var(--border); font-size: 30px; opacity: 0; }
-      .row .t { width: 130px; font-weight: 600; font-variant-numeric: tabular-nums; }
-      .row .k { width: 330px; }
-      .row .w { flex: 1; color: var(--muted-fg); font-size: 28px; }
-      .rail { position: absolute; top: 1010px; height: 8px; width: 270px; border-radius: 4px; background: var(--border); overflow: hidden; }
-      .rail i { display: block; width: 100%; height: 100%; background: var(--primary); transform: scaleX(0); transform-origin: left; }
+      html, body, #root { width: 1600px; height: 900px; overflow: hidden; background: var(--bg); }
+      body { font: 400 40px/1.3 Figtree, sans-serif; color: var(--fg); }
+      #root { position: relative; }
+      .scene { position: absolute; inset: 0; opacity: 0; background: var(--bg); }
+      #sc1 { opacity: 1; }
+      .scene-content { width: 100%; height: 100%; padding: 36px 80px 40px; display: flex; flex-direction: column; gap: 30px; }
+      .heading { flex: 0 0 144px; display: flex; flex-direction: column; gap: 12px; }
+      h2 { font-size: 60px; line-height: 1.1; font-weight: 600; letter-spacing: -.025em; }
+      .subtitle { font-size: 38px; line-height: 1.3; color: var(--muted-fg); }
+      .content { flex: 1; min-height: 0; display: grid; grid-template-columns: 600px 800px; gap: 40px; }
+      .content.reverse { grid-template-columns: 800px 600px; }
+      .panel { min-width: 0; height: 100%; padding: 38px; border: 2px solid var(--border); border-radius: 24px; background: var(--card); display: flex; flex-direction: column; gap: 26px; }
+      .panel.center { align-items: center; text-align: center; }
+      .phone { border-radius: 36px; }
+      .label { font-size: 40px; font-weight: 600; }
+      .muted, .axis { color: var(--muted-fg); }
+      .primary, .symbol { color: var(--primary); }
+      .metric, .clock { font-size: 66px; font-weight: 600; line-height: 1.12; letter-spacing: -.025em; font-variant-numeric: tabular-nums; }
+      .clock { font-size: 100px; }
+      .question { font-size: 44px; font-weight: 500; line-height: 1.3; }
+      .result { font-size: 46px; font-weight: 500; line-height: 1.3; }
+      .total { border-top: 2px solid var(--border); padding-top: 30px; color: var(--primary); font-size: 54px; font-weight: 600; }
+      .symbol { flex: 0 0 auto; width: 96px; height: 96px; margin: 12px 0; }
+      .switch { display: grid; flex: 1; min-height: 0; align-content: start; }
+      .switch > div { grid-area: 1 / 1; }
+      .stack { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+      .after { opacity: 0; }
+      .action { display: grid; margin-top: auto; flex: 0 0 112px; }
+      .button { grid-area: 1 / 1; display: flex; align-items: center; justify-content: center; padding: 8px 24px; border-radius: 16px; background: var(--primary); color: var(--primary-fg); font-size: 40px; font-weight: 600; text-align: center; line-height: 1.15; }
+      .success { background: var(--accent); color: var(--primary); }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 24px 0; border-bottom: 2px solid var(--border); }
+      .row span { color: var(--muted-fg); }
+      strong { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .choice { padding: 20px 24px; border: 2px solid var(--muted-fg); border-radius: 14px; }
+      .selected { background: var(--accent); color: var(--primary); border-color: var(--primary); }
+      .list-item { padding: 12px 0 20px; border-bottom: 2px solid var(--border); }
+      .warning { align-self: flex-start; background: var(--warn-bg); color: var(--warn-fg); border-radius: 12px; padding: 14px 18px; }
+      .qr { width: 300px; height: 300px; flex: 0 0 auto; background: var(--fg); fill: var(--bg); border-radius: 12px; margin: 6px 0; }
+      .document-lines { display: flex; flex-direction: column; gap: 22px; padding: 12px 0; }
+      .document-lines i { height: 14px; width: 100%; border-radius: 7px; background: var(--border); }
+      .document-lines i:nth-child(2) { width: 82%; }
+      .document-lines i:nth-child(3) { width: 92%; }
+      .document-lines i:nth-child(4) { width: 64%; }
+      .bars { display: flex; flex-direction: column; gap: 38px; margin: 12px 0; }
+      .bar-row { display: grid; grid-template-columns: 1fr 130px; gap: 18px 24px; }
+      .bar-row p { grid-column: 1 / -1; }
+      .bar-row strong { text-align: right; line-height: 1; }
+      .bar-track { height: 24px; align-self: center; background: var(--border); border-radius: 12px; overflow: hidden; }
+      .bar-track i { display: block; height: 100%; background: var(--primary); border-radius: 12px; }
+      .week-chart { display: flex; height: 236px; align-items: end; justify-content: space-around; border-bottom: 2px solid var(--muted-fg); }
+      .week-chart i { width: 60px; background: var(--primary); border-radius: 10px 10px 0 0; }
+      .week-chart .warning-bar { background: var(--warn); }
+      .axis { display: flex; justify-content: space-around; font-size: 40px; text-align: center; }
+      .projection { width: 100%; height: 260px; overflow: visible; stroke: var(--primary); fill: var(--primary); stroke-width: 6px; }
+      .projection path { fill: none; }
+      .projection .baseline { stroke: var(--muted-fg); stroke-width: 2px; }
+      .step { padding: 20px 0; border-bottom: 2px solid var(--border); }
+      .step.active { color: var(--primary); font-weight: 600; }
+      .date-range { display: flex; align-items: center; width: 100%; gap: 20px; padding: 50px 0; }
+      .date-range span { font-size: 76px; font-weight: 600; color: var(--primary); }
+      .date-range i { height: 4px; flex: 1; background: var(--primary); }
+      .schedule { display: flex; gap: 12px; padding: 30px 0; }
+      .schedule i { height: 64px; flex: 1; background: var(--primary); border-radius: 8px; }
+      .people-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 12px; padding: 12px 0; }
+      .people-grid i { width: 24px; height: 24px; border-radius: 50%; background: var(--muted-fg); }
+      .people-grid.picked i { background: var(--primary); }
+      .participation { width: 100%; height: 24px; background: var(--border); border-radius: 12px; margin-top: 20px; overflow: hidden; }
+      .participation i { display: block; width: 68.33%; height: 100%; background: var(--primary); }
+      .tree-node { padding: 20px 26px; border: 2px solid var(--border); border-radius: 14px; background: var(--muted); }
+      .tree-parent { align-self: center; padding: 22px 36px; border: 2px solid var(--primary); border-radius: 14px; background: var(--accent); color: var(--primary); }
+      .org-branches { width: 100%; height: 90px; stroke: var(--muted-fg); stroke-width: 3px; fill: none; }
+      .org-team { display: flex; gap: 16px; }
+      .org-team .tree-node { flex: 1; padding: 22px 8px; text-align: center; white-space: nowrap; }
+      #cur { position: absolute; left: 0; top: 0; opacity: 0; z-index: 50; width: 24px; height: 24px; pointer-events: none; }
+      #cur-a { display: block; width: 24px; height: 24px; transform-origin: 4px 3px; fill: var(--fg); stroke: var(--bg); }
+      #rip { position: absolute; left: -16px; top: -16px; width: 40px; height: 40px; border: 2px solid var(--primary); border-radius: 50%; opacity: 0; }
+
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="24" data-width="1440" data-height="1080">
-
-      <h2 id="h1" class="clip" data-start="0" data-duration="24" data-track-index="0">Marca desde su celular, sin contraseña</h2>
-      <p id="s1" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Con el desbloqueo del teléfono y dentro de la zona del centro de trabajo.</p>
-      <h2 id="h2" class="clip" data-start="0" data-duration="24" data-track-index="0">Un registro que no se puede alterar</h2>
-      <p id="s2" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Las correcciones se suman, con su motivo. La marca original se conserva.</p>
-      <h2 id="h3" class="clip" data-start="0" data-duration="24" data-track-index="0">Cada persona confirma su semana</h2>
-      <p id="s3" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Y RH ve los topes de jornada y de horas extra antes de rebasarlos.</p>
-      <h2 id="h4" class="clip" data-start="0" data-duration="24" data-track-index="0">El reporte para la autoridad, con un botón</h2>
-      <p id="s4" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Humetría ordena la evidencia para que RH la presente.</p>
-
-      <!-- Escena 1: la marca -->
-      <div id="sc1" class="scene clip" data-start="0" data-duration="24" data-track-index="1">
-        <div class="abs card" style="left:140px;top:240px;width:420px;height:720px;border-radius:48px;overflow:hidden">
-          <p class="abs muted" style="left:40px;top:44px;font-size:28px">Lunes 9 de noviembre</p>
-          <p class="abs" style="left:40px;top:88px;font-size:104px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">08:58</p>
-          <p class="abs" style="left:40px;top:228px;font-size:30px;font-weight:500">Ana López</p>
-          <p class="abs muted" style="left:40px;top:270px;font-size:28px">Planta Querétaro</p>
-          <div id="mark-btn" class="primary-btn" style="left:40px;top:380px;width:340px;height:104px">Marcar entrada</div>
-          <p class="abs muted" style="left:40px;top:510px;width:340px;font-size:28px;line-height:32px">Confirmas con tu huella o tu rostro. Sin correo ni contraseña.</p>
-          <div id="toast" class="abs" style="left:40px;top:380px;width:340px;height:104px;border-radius:16px;background:var(--accent);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;text-align:center;line-height:34px;opacity:0">Entrada 08:58<br />En zona</div>
-          <div id="sheet" class="abs" style="left:0;top:720px;width:420px;height:300px;background:var(--muted);border-top:2px solid var(--border);border-radius:36px 36px 0 0;display:flex;flex-direction:column;align-items:center;padding-top:36px;gap:20px">
-            <svg id="finger" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="#3ccfbd" stroke-width="4" stroke-linecap="round"><path d="M48 12c-17 0-30 12-30 30v10M78 52V42c0-8-3-15-8-20M30 80c4-6 6-14 6-22V42c0-8 5-13 12-13s12 5 12 13v14c0 10 3 19 8 26M48 82c-2-8-3-14-3-22V44M60 88c-4-7-7-14-8-22"/></svg>
-            <p style="font-size:28px;font-weight:500">Confirma que eres tú</p>
-            <svg id="check" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="#3ccfbd" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:36px;opacity:0"><circle cx="48" cy="48" r="38"/><path d="M30 50l13 13 24-28"/></svg>
-          </div>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="24" data-width="1600" data-height="900">
+      <!-- Marca: 0–6 seconds -->
+      <section id="sc1" class="scene clip" data-start="0" data-duration="24" data-track-index="1" data-chapter-label="Marca">
+        <div class="scene-content">
+          <header class="heading"><h2>Marca desde tu celular</h2><p class="subtitle">Valida el lugar con QR o geocerca y confirma con tu huella.</p></header>
+          <div class="content "><div class="panel center"><p class="label">Planta Querétaro</p><svg class="qr" viewBox="-2 -2 25 25" aria-hidden="true"><rect x="0" y="0" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="11" y="0" width="1" height="1"/><rect x="12" y="0" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="14" y="0" width="1" height="1"/><rect x="15" y="0" width="1" height="1"/><rect x="16" y="0" width="1" height="1"/><rect x="17" y="0" width="1" height="1"/><rect x="18" y="0" width="1" height="1"/><rect x="19" y="0" width="1" height="1"/><rect x="20" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="11" y="1" width="1" height="1"/><rect x="13" y="1" width="1" height="1"/><rect x="14" y="1" width="1" height="1"/><rect x="20" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="9" y="2" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="13" y="2" width="1" height="1"/><rect x="14" y="2" width="1" height="1"/><rect x="16" y="2" width="1" height="1"/><rect x="17" y="2" width="1" height="1"/><rect x="18" y="2" width="1" height="1"/><rect x="20" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="9" y="3" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/><rect x="14" y="3" width="1" height="1"/><rect x="16" y="3" width="1" height="1"/><rect x="17" y="3" width="1" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="20" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="11" y="4" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="14" y="4" width="1" height="1"/><rect x="16" y="4" width="1" height="1"/><rect x="17" y="4" width="1" height="1"/><rect x="18" y="4" width="1" height="1"/><rect x="20" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/><rect x="11" y="5" width="1" height="1"/><rect x="13" y="5" width="1" height="1"/><rect x="14" y="5" width="1" height="1"/><rect x="20" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="15" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="17" y="6" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="19" y="6" width="1" height="1"/><rect x="20" y="6" width="1" height="1"/><rect x="1" y="7" width="1" height="1"/><rect x="5" y="7" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/><rect x="10" y="7" width="1" height="1"/><rect x="11" y="7" width="1" height="1"/><rect x="12" y="7" width="1" height="1"/><rect x="13" y="7" width="1" height="1"/><rect x="14" y="7" width="1" height="1"/><rect x="19" y="7" width="1" height="1"/><rect x="20" y="7" width="1" height="1"/><rect x="1" y="8" width="1" height="1"/><rect x="5" y="8" width="1" height="1"/><rect x="9" y="8" width="1" height="1"/><rect x="13" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/><rect x="17" y="8" width="1" height="1"/><rect x="18" y="8" width="1" height="1"/><rect x="20" y="8" width="1" height="1"/><rect x="0" y="9" width="1" height="1"/><rect x="1" y="9" width="1" height="1"/><rect x="3" y="9" width="1" height="1"/><rect x="4" y="9" width="1" height="1"/><rect x="5" y="9" width="1" height="1"/><rect x="7" y="9" width="1" height="1"/><rect x="9" y="9" width="1" height="1"/><rect x="10" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="13" y="9" width="1" height="1"/><rect x="16" y="9" width="1" height="1"/><rect x="18" y="9" width="1" height="1"/><rect x="19" y="9" width="1" height="1"/><rect x="20" y="9" width="1" height="1"/><rect x="0" y="10" width="1" height="1"/><rect x="2" y="10" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/><rect x="11" y="10" width="1" height="1"/><rect x="12" y="10" width="1" height="1"/><rect x="13" y="10" width="1" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="16" y="10" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="6" y="11" width="1" height="1"/><rect x="7" y="11" width="1" height="1"/><rect x="12" y="11" width="1" height="1"/><rect x="14" y="11" width="1" height="1"/><rect x="15" y="11" width="1" height="1"/><rect x="16" y="11" width="1" height="1"/><rect x="18" y="11" width="1" height="1"/><rect x="19" y="11" width="1" height="1"/><rect x="0" y="12" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/><rect x="3" y="12" width="1" height="1"/><rect x="5" y="12" width="1" height="1"/><rect x="12" y="12" width="1" height="1"/><rect x="13" y="12" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/><rect x="2" y="13" width="1" height="1"/><rect x="4" y="13" width="1" height="1"/><rect x="7" y="13" width="1" height="1"/><rect x="10" y="13" width="1" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="13" y="13" width="1" height="1"/><rect x="14" y="13" width="1" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="17" y="13" width="1" height="1"/><rect x="19" y="13" width="1" height="1"/><rect x="20" y="13" width="1" height="1"/><rect x="0" y="14" width="1" height="1"/><rect x="1" y="14" width="1" height="1"/><rect x="2" y="14" width="1" height="1"/><rect x="3" y="14" width="1" height="1"/><rect x="4" y="14" width="1" height="1"/><rect x="5" y="14" width="1" height="1"/><rect x="6" y="14" width="1" height="1"/><rect x="7" y="14" width="1" height="1"/><rect x="8" y="14" width="1" height="1"/><rect x="10" y="14" width="1" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="13" y="14" width="1" height="1"/><rect x="18" y="14" width="1" height="1"/><rect x="20" y="14" width="1" height="1"/><rect x="0" y="15" width="1" height="1"/><rect x="6" y="15" width="1" height="1"/><rect x="7" y="15" width="1" height="1"/><rect x="8" y="15" width="1" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="12" y="15" width="1" height="1"/><rect x="17" y="15" width="1" height="1"/><rect x="18" y="15" width="1" height="1"/><rect x="20" y="15" width="1" height="1"/><rect x="0" y="16" width="1" height="1"/><rect x="2" y="16" width="1" height="1"/><rect x="3" y="16" width="1" height="1"/><rect x="4" y="16" width="1" height="1"/><rect x="6" y="16" width="1" height="1"/><rect x="10" y="16" width="1" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/><rect x="15" y="16" width="1" height="1"/><rect x="16" y="16" width="1" height="1"/><rect x="19" y="16" width="1" height="1"/><rect x="20" y="16" width="1" height="1"/><rect x="0" y="17" width="1" height="1"/><rect x="2" y="17" width="1" height="1"/><rect x="3" y="17" width="1" height="1"/><rect x="4" y="17" width="1" height="1"/><rect x="6" y="17" width="1" height="1"/><rect x="7" y="17" width="1" height="1"/><rect x="9" y="17" width="1" height="1"/><rect x="14" y="17" width="1" height="1"/><rect x="17" y="17" width="1" height="1"/><rect x="18" y="17" width="1" height="1"/><rect x="19" y="17" width="1" height="1"/><rect x="20" y="17" width="1" height="1"/><rect x="0" y="18" width="1" height="1"/><rect x="2" y="18" width="1" height="1"/><rect x="3" y="18" width="1" height="1"/><rect x="4" y="18" width="1" height="1"/><rect x="6" y="18" width="1" height="1"/><rect x="8" y="18" width="1" height="1"/><rect x="9" y="18" width="1" height="1"/><rect x="10" y="18" width="1" height="1"/><rect x="11" y="18" width="1" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="13" y="18" width="1" height="1"/><rect x="17" y="18" width="1" height="1"/><rect x="18" y="18" width="1" height="1"/><rect x="19" y="18" width="1" height="1"/><rect x="0" y="19" width="1" height="1"/><rect x="6" y="19" width="1" height="1"/><rect x="8" y="19" width="1" height="1"/><rect x="9" y="19" width="1" height="1"/><rect x="10" y="19" width="1" height="1"/><rect x="13" y="19" width="1" height="1"/><rect x="14" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="17" y="19" width="1" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="0" y="20" width="1" height="1"/><rect x="1" y="20" width="1" height="1"/><rect x="2" y="20" width="1" height="1"/><rect x="3" y="20" width="1" height="1"/><rect x="4" y="20" width="1" height="1"/><rect x="5" y="20" width="1" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="8" y="20" width="1" height="1"/><rect x="9" y="20" width="1" height="1"/><rect x="12" y="20" width="1" height="1"/><rect x="14" y="20" width="1" height="1"/><rect x="15" y="20" width="1" height="1"/><rect x="17" y="20" width="1" height="1"/><rect x="19" y="20" width="1" height="1"/></svg><p class="muted">Un código por centro</p></div><div class="panel phone"><p class="label">Ana López · Entrada</p><p class="clock">08:58</p><div class="switch"><div class="before stack"><svg class="symbol" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M48 12c-17 0-30 12-30 30v10M78 52V42c0-8-3-15-8-20M30 80c4-6 6-14 6-22V42c0-8 5-13 12-13s12 5 12 13v14c0 10 3 19 8 26M48 82c-2-8-3-14-3-22V44M60 88c-4-7-7-14-8-22"/></svg><p class="muted">Confirma con tu huella</p></div><div class="after stack"><svg class="symbol" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="48" cy="48" r="36"/><path d="M29 48l13 13 26-29"/></svg><p class="primary">Entrada registrada en zona</p></div></div><div class="action"><div class="button before">Marcar entrada</div><div class="button after success">Entrada confirmada</div></div></div></div>
         </div>
-        <div class="abs card" style="left:620px;top:240px;width:680px;height:720px;overflow:hidden;background-image:linear-gradient(var(--border) 2px,transparent 2px),linear-gradient(90deg,var(--border) 2px,transparent 2px);background-size:90px 90px;background-position:20px 30px">
-          <div id="zone" class="abs" style="left:190px;top:170px;width:360px;height:360px;border-radius:180px;border:4px dashed var(--primary);background:rgba(60,207,189,.12)"></div>
-          <div class="abs" style="left:300px;top:280px;width:140px;height:140px;border-radius:16px;background:var(--muted);border:2px solid var(--border)"></div>
-          <p class="abs" style="left:300px;top:332px;width:140px;text-align:center;font-size:28px;font-weight:500;color:var(--muted-fg)">Planta</p>
-          <span id="zone-pill" class="chip abs" style="left:190px;top:560px;opacity:0">Dentro de la zona · a 38 m</span>
-          <p class="abs muted" style="left:32px;top:32px;font-size:28px">Zona de 150 m</p>
-          <div id="dot" class="abs" style="left:70px;top:560px;width:64px;height:64px;border-radius:32px;background:var(--primary);color:var(--primary-fg);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600">AL</div>
+      </section>
+      <!-- Registro: 6–12 seconds -->
+      <section id="sc2" class="scene clip" data-start="0" data-duration="24" data-track-index="2" data-chapter-label="Registro">
+        <div class="scene-content">
+          <header class="heading"><h2>La marca original se conserva</h2><p class="subtitle">Las correcciones se agregan con su motivo, sin borrar el registro.</p></header>
+          <div class="content "><div class="panel "><p class="label">Ana López · Lunes</p><div class="row "><span>Entrada original</span><strong>08:58</strong></div><svg class="symbol" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="20" y="43" width="56" height="42" rx="9"/><path d="M30 43V29a18 18 0 0 1 36 0v14M48 58v12"/></svg><p class="muted">No se edita ni se borra</p></div><div class="panel "><p class="label">Corrección de entrada</p><p class="clock">08:50</p><p class="muted">Motivo: no alcanzó a marcar; lo confirmó su jefe.</p><div class="action"><div class="button before">Agregar corrección</div><div class="button after success">Corrección agregada</div></div></div></div>
         </div>
+      </section>
+      <!-- Semana: 12–18 seconds -->
+      <section id="sc3" class="scene clip" data-start="0" data-duration="24" data-track-index="3" data-chapter-label="Semana">
+        <div class="scene-content">
+          <header class="heading"><h2>Confirma tu semana con los topes a la vista</h2><p class="subtitle">Revisa la jornada y las horas extra antes de rebasar el límite.</p></header>
+          <div class="content "><div class="panel "><p class="label">Horas por día</p><div class="week-chart"><i style="height:76%"></i><i style="height:79%"></i><i class="warning-bar" style="height:87%"></i><i style="height:74%"></i><i style="height:63%"></i></div><div class="axis"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span></div><p class="warning">Miércoles: cerca del tope de 9 h</p></div><div class="panel "><p class="label">Horas extra de la semana</p><p class="metric">6.2 de 9 h</p><p class="muted">Puedes confirmar u objetar tu semana.</p><div class="action"><div class="button before">Confirmar mi semana</div><div class="button after success">Semana confirmada</div></div></div></div>
+        </div>
+      </section>
+      <!-- Reporte: 18–24 seconds -->
+      <section id="sc4" class="scene clip" data-start="0" data-duration="24" data-track-index="4" data-chapter-label="Reporte">
+        <div class="scene-content">
+          <header class="heading"><h2>Tu reporte de jornada, listo para presentar</h2><p class="subtitle">Reúne el registro y su evidencia en un documento.</p></header>
+          <div class="content "><div class="panel paper"><svg class="symbol" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M27 10h28l18 18v58H23V10h4M55 10v20h18M35 48h26M35 62h20"/></svg><p class="label">Reporte de jornada</p><p class="muted">Planta Querétaro · 2027</p><div class="document-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div><div class="panel "><p class="list-item">Entradas, pausas y salidas</p><p class="list-item">Correcciones y su motivo</p><p class="list-item">Confirmación de cada semana</p><p class="list-item">Horas extra y descansos</p><div class="action"><div class="button before">Generar reporte</div><div class="button after success">Reporte generado</div></div></div></div>
+        </div>
+      </section>
+      <div id="cur" class="clip" data-start="0" data-duration="24" data-track-index="9">
+        <i id="rip"></i>
+        <svg id="cur-a" viewBox="0 0 24 24"><path d="M4 3l16 7-7 2-2 7z" stroke-width="1.4" stroke-linejoin="round"/></svg>
       </div>
-
-      <!-- Escena 2: solo inserción -->
-      <div id="sc2" class="scene clip" data-start="0" data-duration="24" data-track-index="2">
-        <div class="abs card" style="left:140px;top:240px;width:1160px;height:720px;overflow:hidden">
-          <div class="abs" style="left:36px;top:30px;font-size:30px;font-weight:600">Marcas de Ana López · lunes</div>
-          <span id="lock" class="chip abs" style="right:36px;top:24px;opacity:0">Solo inserción</span>
-          <div id="r1" class="row" style="top:96px"><span class="t">08:58</span><span class="k">Entrada</span><span class="w">En zona · Planta Querétaro</span></div>
-          <div id="r2" class="row" style="top:192px"><span class="t">14:02</span><span class="k">Salida a comer</span><span class="w">En zona · Planta Querétaro</span></div>
-          <div id="r3" class="row" style="top:288px"><span class="t">14:47</span><span class="k">Regreso de comer</span><span class="w">En zona · Planta Querétaro</span></div>
-          <div id="r4" class="row" style="top:384px"><span class="t">18:07</span><span class="k">Salida</span><span class="w">En zona · Planta Querétaro</span></div>
-          <div id="r5" class="row" style="top:480px;background:var(--muted)"><span class="t">08:50</span><span class="k">Corrección de la entrada</span><span class="w">Motivo: no alcanzó a marcar; lo confirmó su jefe</span><span class="chip warn">Corrección</span></div>
-          <div id="keep" class="abs muted" style="left:36px;top:620px;font-size:28px;opacity:0">La entrada de las 08:58 sigue ahí: nadie la edita ni la borra.</div>
-        </div>
-      </div>
-
-      <!-- Escena 3: la semana -->
-      <div id="sc3" class="scene clip" data-start="0" data-duration="24" data-track-index="3">
-        <div class="abs card" style="left:140px;top:240px;width:740px;height:720px">
-          <p class="abs" style="left:36px;top:30px;font-size:30px;font-weight:600">Horas por día</p>
-          <div class="abs" style="left:36px;top:268px;width:668px;height:2px;background:var(--warn)"></div>
-          <p class="abs" style="left:36px;top:226px;font-size:28px;color:var(--warn-fg)">Tope de 9 h</p>
-          <div id="b1" class="abs" style="left:56px;bottom:112px;width:96px;height:302px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
-          <div id="b2" class="abs" style="left:182px;bottom:112px;width:96px;height:314px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
-          <div id="b3" class="abs" style="left:308px;bottom:112px;width:96px;height:348px;border-radius:12px 12px 0 0;background:var(--warn);transform-origin:bottom"></div>
-          <div id="b4" class="abs" style="left:434px;bottom:112px;width:96px;height:295px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
-          <div id="b5" class="abs" style="left:560px;bottom:112px;width:96px;height:250px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
-          <p class="abs muted" style="left:56px;bottom:56px;width:620px;font-size:28px;display:flex;justify-content:space-between"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span></p>
-        </div>
-        <div class="abs card" style="left:920px;top:240px;width:380px;height:340px;padding:32px">
-          <p style="font-size:28px;font-weight:600">Horas extra</p>
-          <p style="margin-top:12px;font-size:64px;font-weight:600;letter-spacing:-0.02em"><span id="ot">6.2</span><span class="muted" style="font-size:30px"> de 9 h</span></p>
-          <div style="margin-top:28px;height:14px;border-radius:7px;background:var(--border);overflow:hidden"><div id="ot-bar" style="width:100%;height:100%;border-radius:7px;background:var(--warn);transform:scaleX(0.69);transform-origin:left"></div></div>
-          <p class="muted" style="margin-top:20px;font-size:28px;line-height:30px">Te avisa antes de rebasar el tope semanal.</p>
-        </div>
-        <div class="abs card" style="left:920px;top:620px;width:380px;height:340px;padding:32px">
-          <p style="font-size:28px;font-weight:600">Tu semana</p>
-          <div id="confirm-btn" class="primary-btn" style="font-size:28px;left:32px;top:110px;width:316px;height:104px">Confirmar mi semana</div>
-          <div id="confirmed" class="abs" style="left:32px;top:110px;width:316px;height:104px;border-radius:16px;background:var(--accent);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;opacity:0">Semana confirmada</div>
-          <p class="muted" style="position:absolute;left:32px;top:240px;width:316px;font-size:28px;line-height:30px">Si no está de acuerdo, la objeta y RH la resuelve.</p>
-        </div>
-      </div>
-
-      <!-- Escena 4: el reporte -->
-      <div id="sc4" class="scene clip" data-start="0" data-duration="24" data-track-index="4">
-        <div class="abs card" style="left:140px;top:240px;width:560px;height:720px;padding:40px">
-          <p style="font-size:30px;font-weight:600">Reporte de jornada</p>
-          <p class="muted" style="margin-top:6px;font-size:28px">Planta Querétaro · 2027</p>
-          <div style="margin-top:34px;display:flex;flex-direction:column;gap:22px">
-            <div id="l1" style="height:18px;width:100%;border-radius:9px;background:var(--border)"></div>
-            <div id="l2" style="height:18px;width:86%;border-radius:9px;background:var(--border)"></div>
-            <div id="l3" style="height:18px;width:94%;border-radius:9px;background:var(--border)"></div>
-            <div id="l4" style="height:18px;width:70%;border-radius:9px;background:var(--border)"></div>
-            <div id="l5" style="height:18px;width:90%;border-radius:9px;background:var(--border)"></div>
-            <div id="l6" style="height:18px;width:60%;border-radius:9px;background:var(--border)"></div>
-          </div>
-          <span id="stamp" class="chip abs" style="left:40px;bottom:40px;font-size:28px;padding:10px 22px;opacity:0">Reporte generado</span>
-        </div>
-        <div class="abs card" style="left:740px;top:240px;width:560px;height:720px;padding:40px">
-          <p style="font-size:30px;font-weight:600">Qué incluye</p>
-          <div style="margin-top:28px;display:flex;flex-direction:column;gap:26px;font-size:30px">
-            <p id="i1" style="opacity:0">✓&nbsp; Entradas, pausas y salidas</p>
-            <p id="i2" style="opacity:0">✓&nbsp; Correcciones y su motivo</p>
-            <p id="i3" style="opacity:0">✓&nbsp; Confirmación de cada semana</p>
-            <p id="i4" style="opacity:0">✓&nbsp; Horas extra y descansos</p>
-          </div>
-          <div id="gen-btn" class="primary-btn" style="left:40px;bottom:40px;width:480px;height:104px">Generar reporte</div>
-        </div>
-      </div>
-
-      <i class="rail" style="left:140px"><i id="rail1"></i></i>
-      <i class="rail" style="left:440px"><i id="rail2"></i></i>
-      <i class="rail" style="left:740px"><i id="rail3"></i></i>
-      <i class="rail" style="left:1040px"><i id="rail4"></i></i>
     </div>
-
     <script>
       const tl = gsap.timeline({ paused: true });
-      const E = "power3.out";
-      const scenes = [
-        { id: "sc1", h: "h1", s: "s1", rail: "rail1", from: 0, to: 6.6 },
-        { id: "sc2", h: "h2", s: "s2", rail: "rail2", from: 6.6, to: 12.4 },
-        { id: "sc3", h: "h3", s: "s3", rail: "rail3", from: 12.4, to: 18.2 },
-        { id: "sc4", h: "h4", s: "s4", rail: "rail4", from: 18.2, to: 23.3 },
-      ];
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const go = (target, at) => {
+        const box = target.getBoundingClientRect();
+        const x = box.x + box.width * 0.66;
+        const y = box.y + box.height * 0.58;
+        tl.set("#cur", { x: x + (reducedMotion ? 0 : 90), y: y + (reducedMotion ? 0 : 70), opacity: 0 }, at);
+        tl.to("#cur", { opacity: 1, duration: 0.2 }, at);
+        tl.to("#cur", { x, y, duration: reducedMotion ? 0 : 0.7, ease: "power2.inOut" }, at);
+      };
+      const tap = (at) => {
+        tl.to("#cur-a", { scale: reducedMotion ? 1 : 0.88, duration: 0.1, yoyo: true, repeat: 1 }, at);
+        tl.fromTo("#rip", { scale: 0.6, opacity: 0.5 }, { scale: reducedMotion ? 0.6 : 1.3, opacity: 0, duration: 0.45, immediateRender: false }, at);
+      };
 
-      scenes.forEach((sc, i) => {
-        const inAt = i === 0 ? 0 : sc.from;
-        if (i === 0) {
-          tl.set(["#sc1", "#h1", "#s1"], { opacity: 1 }, 0);
-        } else {
-          tl.fromTo("#" + sc.id, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, inAt - 0.1);
-          tl.fromTo(["#" + sc.h, "#" + sc.s], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, inAt);
+      // One click per chapter. The result settles by +3.2 s and holds until the transition.
+      document.querySelectorAll(".scene").forEach((scene, index) => {
+        const start = index * 6;
+        const selector = "#" + scene.id;
+        tl.addLabel(scene.dataset.chapterLabel, start);
+        if (index > 0) {
+          // Incoming opaque scene covers the outgoing scene; no pre-transition empty frame.
+          tl.to(scene, { opacity: 1, duration: 0.3, ease: "power2.out" }, start);
+          tl.set("#sc" + index, { opacity: 0 }, start + 0.3);
+          tl.fromTo(selector + " .heading", { y: reducedMotion ? 0 : 10 }, { y: 0, duration: 0.4, ease: "power3.out", immediateRender: false }, start);
+          tl.fromTo(selector + " .panel", { y: reducedMotion ? 0 : 16 }, { y: 0, duration: 0.45, stagger: 0.06, ease: "power2.out", immediateRender: false }, start);
         }
-        tl.fromTo("#" + sc.rail, { scaleX: 0 }, { scaleX: 1, duration: sc.to - sc.from, ease: "none" }, sc.from);
-        tl.to(["#" + sc.id, "#" + sc.h, "#" + sc.s], { opacity: 0, duration: 0.4, ease: "power2.in" }, sc.to - 0.1 + (i === 3 ? 0 : 0));
+        const target = scene.querySelector(".action");
+        go(target, start + 1.5);
+        tap(start + 2.4);
+        tl.to(selector + " .before", { opacity: 0, duration: 0.15 }, start + 2.55);
+        tl.fromTo(selector + " .after", { opacity: 0, y: reducedMotion ? 0 : 8 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", immediateRender: false }, start + 2.75);
+        tl.to("#cur", { opacity: 0, duration: 0.25 }, start + 2.9);
       });
 
-      // Escena 1: ana entra a la zona, marca, confirma con su huella.
-      tl.fromTo("#dot", { x: 0, y: 0 }, { x: 250, y: -330, duration: 2.2, ease: "power2.inOut" }, 0.6);
-      tl.fromTo("#zone-pill", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 2.9);
-      tl.to("#mark-btn", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.3);
-      tl.fromTo("#sheet", { y: 0 }, { y: -300, duration: 0.5, ease: E }, 3.6);
-      tl.fromTo("#finger", { opacity: 1 }, { opacity: 0, duration: 0.2 }, 4.4);
-      tl.fromTo("#check", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, 4.5);
-      tl.fromTo("#sheet", { y: -300 }, { y: 0, duration: 0.4, ease: "power2.in", immediateRender: false }, 5.0);
-      tl.fromTo("#toast", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 5.1);
-      tl.to("#mark-btn", { opacity: 0, duration: 0.2 }, 5.1);
-
-      // Escena 2: las marcas llegan una a una; la corrección se suma debajo.
-      ["r1", "r2", "r3", "r4"].forEach((r, i) => {
-        tl.fromTo("#" + r, { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 6.7 + i * 0.5);
-      });
-      tl.fromTo("#lock", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 8.9);
-      tl.fromTo("#r5", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 9.6);
-      tl.fromTo("#keep", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 10.6);
-
-      // Escena 3: la semana y sus topes.
-      ["b1", "b2", "b3", "b4", "b5"].forEach((b, i) => {
-        tl.fromTo("#" + b, { scaleY: 0 }, { scaleY: 1, duration: 0.7, ease: E }, 12.6 + i * 0.2);
-      });
-      tl.fromTo("#ot-bar", { scaleX: 0 }, { scaleX: 0.69, duration: 1.1, ease: E }, 13.4);
-      tl.to("#confirm-btn", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1, ease: "power1.inOut" }, 15.6);
-      tl.fromTo("#confirmed", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.4, ease: E }, 16.0);
-      tl.to("#confirm-btn", { opacity: 0, duration: 0.2 }, 16.0);
-
-      // Escena 4: el reporte.
-      ["i1", "i2", "i3", "i4"].forEach((r, i) => {
-        tl.fromTo("#" + r, { opacity: 0, x: 16 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 18.6 + i * 0.4);
-      });
-      ["l1", "l2", "l3", "l4", "l5", "l6"].forEach((l, i) => {
-        tl.fromTo("#" + l, { scaleX: 0, transformOrigin: "left" }, { scaleX: 1, duration: 0.5, ease: E }, 18.8 + i * 0.15);
-      });
-      tl.to("#gen-btn", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1, ease: "power1.inOut" }, 21.0);
-      tl.fromTo("#stamp", { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 21.5);
-
-      // Vuelta al estado de reposo: el último cuadro es igual al primero.
-      const reset = 23.3;
-      tl.set(["#dot"], { x: 0, y: 0 }, reset);
-      tl.set(["#zone-pill", "#toast", "#check", "#stamp", "#lock", "#keep", "#confirmed", "#i1", "#i2", "#i3", "#i4", "#r1", "#r2", "#r3", "#r4", "#r5"], { opacity: 0 }, reset);
-      tl.set(["#mark-btn", "#finger", "#confirm-btn"], { opacity: 1 }, reset);
-      tl.set(["#rail1", "#rail2", "#rail3", "#rail4"], { scaleX: 0 }, reset);
-      tl.set("#sheet", { y: 0 }, reset);
-      tl.fromTo(["#sc1", "#h1", "#s1"], { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out", immediateRender: false }, reset);
-
+      // Return to the exact initial frame before the 24 s boundary, including every child state.
+      tl.to("#sc4", { opacity: 0, duration: 0.3 }, 23.0);
+      tl.set(".after", { opacity: 0, y: 0 }, 23.4);
+      tl.set(".before", { opacity: 1 }, 23.4);
+      tl.set(["#cur", "#rip"], { opacity: 0 }, 23.4);
+      tl.to("#sc1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 23.4);
       window.__timelines = window.__timelines || {};
-      window.__timelines["main"] = tl;
+      window.__timelines.main = tl;
       tl.seek(0);
+
     </script>
   </body>
 </html>
