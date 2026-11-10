@@ -6,15 +6,14 @@ namespace App\Modules\Engagement\Support;
 
 use App\Modules\Engagement\Actions\LaunchSurvey;
 use App\Modules\Engagement\Actions\SnapshotAudience;
-use App\Modules\Engagement\Enums\CommitmentStatus;
 use App\Modules\Engagement\Enums\ItemBlock;
 use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
-use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
+use App\Modules\Engagement\Support\Pulse\OpenCommitments;
 use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
 use App\Modules\Engagement\Support\Pulse\PulsePlanner;
 use App\Modules\Engagement\Support\Pulse\SchedulePage;
@@ -32,7 +31,7 @@ use Illuminate\Support\Collection;
  * @phpstan-type Unreachable array{id: string, name: string, area: string}
  * @phpstan-type Section array{title: string, items: list<array{text: string}>}
  * @phpstan-type Totals array{invited: int, answered: int, rate: int|null, pending: int, withoutLink: int, canRemind: bool, minGroup: int, cuts: list<array{key: string, title: string, groups: list<array{label: string, invited: int, answered: int}>}>}
- * @phpstan-type OpenCommitments array{count: int, next: list<array{id: string, will_do: string, owner_name: string, due_on: string}>, surveyId: string}
+ * @phpstan-type OpenCommitmentsProps array{count: int, next: list<array{id: string, will_do: string, owner_name: string, due_on: string}>, surveyId: string}
  * @phpstan-type HistoryRow array{id: string, name: string, closedOn: string|null, invited: int|null, answered: int, rate: int|null}
  */
 final readonly class SurveyPages
@@ -72,7 +71,7 @@ final readonly class SurveyPages
      * The survey in its state. A draft shows what RH reviews before launching; the rest is what each state adds. The
      * link to the results is the controller's to give, once the survey is closed.
      *
-     * @return array{survey: Card, canManage: bool, kind: string, draft: Draft|null, unreachable: LengthAwarePaginator<int, Unreachable>|null, sections: list<Section>, participation: Totals|null, resultsUrl: string|null, openCommitments: OpenCommitments|null}
+     * @return array{survey: Card, canManage: bool, kind: string, draft: Draft|null, unreachable: LengthAwarePaginator<int, Unreachable>|null, sections: list<Section>, participation: Totals|null, resultsUrl: string|null, openCommitments: OpenCommitmentsProps|null}
      */
     public function show(Survey $survey, bool $canManage, ?string $resultsUrl = null): array
     {
@@ -97,35 +96,7 @@ final readonly class SurveyPages
             'sections' => $draft ? self::sections($survey) : [],
             'participation' => $participation,
             'resultsUrl' => $resultsUrl,
-            'openCommitments' => $draft ? self::openCommitments($survey) : null,
-        ];
-    }
-
-    /**
-     * What the last closed climate survey left open (commitments are only made after a climate survey): shown before launching the next, never blocking it.
-     *
-     * @return OpenCommitments|null
-     */
-    private static function openCommitments(Survey $survey): ?array
-    {
-        $previous = Survey::query()->where('kind', SurveyKind::Climate)->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->first();
-
-        if ($previous === null) {
-            return null;
-        }
-
-        $open = Commitment::query()->where('survey_id', $previous->id)->whereIn('status', [CommitmentStatus::Open, CommitmentStatus::InProgress]);
-        $count = $open->count();
-
-        if ($count === 0) {
-            return null;
-        }
-
-        return [
-            'count' => $count,
-            'next' => array_values($open->orderBy('due_on')->orderBy('id')->limit(3)->get(['id', 'will_do', 'owner_name', 'due_on'])
-                ->map(fn (Commitment $commitment): array => ['id' => $commitment->id, 'will_do' => $commitment->will_do, 'owner_name' => $commitment->owner_name, 'due_on' => $commitment->due_on->toDateString()])->all()),
-            'surveyId' => $previous->id,
+            'openCommitments' => $draft ? OpenCommitments::latest() : null,
         ];
     }
 

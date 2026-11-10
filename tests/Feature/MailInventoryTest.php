@@ -68,6 +68,7 @@ function inventory(): array
         'disclosure digest' => [fn () => new DisclosureDigest($company, ['1 centro sin política.'], $url, ['confirmed' => 1, 'total' => 3, 'pending' => 2], $url), true],
         'policy to confirm' => [fn () => new PolicyToConfirm($url, 'Ana', $company), true],
         'climate feedback published' => [fn () => new App\Modules\Engagement\Notifications\FeedbackPublished($url, 'Ana', $company), true],
+        'pulse upcoming' => [fn () => new App\Modules\Engagement\Notifications\PulseUpcoming($company, CarbonImmutable::parse('2026-12-15'), 'Recorrido', 10, 2, $url), true],
         'program digest' => [fn () => new ProgramDigest($company, 'Olga', ['1 acción vencida.'], $url), true],
         'closing summary' => [fn () => new ClosingSummary($company, 'Planta', 8, 10, null, null, true, 0, $url), true],
         'referral follow-up' => [fn () => new ReferralFollowUp($company, $url), true],
