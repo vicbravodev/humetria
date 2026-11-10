@@ -155,13 +155,18 @@ it('purges every company by its own retention, and leaves the others\' cases alo
     expect(Complaint::query()->withoutGlobalScopes()->find($theirs->id)?->purged_on)->toBeNull();
 });
 
-it('purges even when the company may no longer be used: data does not outlive its time because of a bill', function (): void {
+it('purges even when the company may no longer be used: data does not outlive its time because of a bill', function (array $columns): void {
     $complaint = closedCase($this, '2023-01-01');
-    $this->tenant->forceFill(suspension())->save();
+    $this->tenant->forceFill($columns)->save();
 
     expect(purge())->toBe(1);
     expect(Complaint::query()->withoutGlobalScopes()->find($complaint->id)?->purged_on)->not->toBeNull();
-});
+})->with([
+    'read only' => [['restriction' => 'read_only', 'restriction_reason' => 'Prueba', 'restricted_at' => '2026-11-01 12:00:00+00']],
+    'suspended' => [['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => '2026-11-01 12:00:00+00']],
+    'archived' => [['restriction' => 'archived', 'restriction_reason' => 'Prueba', 'restricted_at' => '2026-11-01 12:00:00+00']],
+    'expired' => [['active_until' => '2026-11-01 12:00:00+00']],
+]);
 
 it('runs from the command, daily and once, and reports how many went', function (): void {
     closedCase($this, '2023-01-01');
