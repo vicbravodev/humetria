@@ -33,6 +33,7 @@ final readonly class GrantEntitlements
         private Seniority $seniority,
         private PolicyResolver $policies,
         private GrantEntitlement $grant,
+        private ExpireExtraDays $expire,
     ) {}
 
     /**
@@ -100,6 +101,8 @@ final readonly class GrantEntitlements
             }
         }
 
+        // After granting: the cap of each grant has already taken its part.
+        $this->expire->handle();
         $missing = count($active) - count($starts);
 
         if ($missing > 0) {

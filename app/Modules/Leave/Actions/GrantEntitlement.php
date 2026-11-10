@@ -8,7 +8,9 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\EmployeeLock;
+use App\Modules\Leave\Support\PeriodBalance;
 use App\Modules\Leave\Support\PeriodWindow;
 use App\Modules\Leave\Support\PolicyTerms;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -30,12 +32,15 @@ final readonly class GrantEntitlement
      */
     public function handle(string $employeeId, int $years, CarbonImmutable $anniversary, PolicyTerms $terms): ?LeaveEntitlement
     {
-        $period = DB::transaction(function () use ($employeeId, $years, $anniversary, $terms): ?LeaveEntitlement {
+        $capped = [];
+        $period = DB::transaction(function () use ($employeeId, $years, $anniversary, $terms, &$capped): ?LeaveEntitlement {
             EmployeeLock::of($employeeId);
 
             if (LeaveEntitlement::query()->where('employee_id', $employeeId)->where('years_of_service', $years)->exists()) {
                 return null;
             }
+
+            $capped = $terms->carryoverCap === null ? [] : $this->cap($employeeId, $terms->carryoverCap);
 
             $days = $terms->daysFor($years, $anniversary);
             $window = PeriodWindow::of($anniversary);
@@ -68,6 +73,10 @@ final readonly class GrantEntitlement
             return $period;
         });
 
+        foreach ($capped as $entitlementId => $days) {
+            Log::info('leave.extra_days_expired', ['entitlement_id' => $entitlementId, 'employee_id' => $employeeId, 'days' => $days]);
+        }
+
         if ($period !== null) {
             Log::info('leave.entitlement_granted', [
                 'entitlement_id' => $period->id, 'employee_id' => $employeeId, 'years_of_service' => $years,
@@ -76,5 +85,33 @@ final readonly class GrantEntitlement
         }
 
         return $period;
+    }
+
+    /**
+     * The policy's cap on the extra days that pass to the next period (criterio C-14): what the earlier periods have
+     * unused over it lapses, from the oldest period on. Before the new period exists, so its own days never count.
+     *
+     * @return array<string, int> the days taken off, by period
+     */
+    private function cap(string $employeeId, int $cap): array
+    {
+        $periods = Balances::of([$employeeId])[$employeeId] ?? [];
+        $excess = array_sum(array_map(fn (PeriodBalance $period): int => max(0, $period->extraLeft), $periods)) - $cap;
+        $taken = [];
+
+        foreach ($periods as $period) {
+            $days = min($excess, $period->extraLeft);
+
+            if ($days > 0) {
+                LeaveEntry::query()->create([
+                    'tenant_id' => $this->tenant->id(), 'employee_id' => $employeeId, 'leave_entitlement_id' => $period->entitlementId,
+                    'kind' => EntryKind::Expired, 'tranche' => Tranche::Extra, 'days' => -$days,
+                ]);
+                $taken[$period->entitlementId] = $days;
+                $excess -= $days;
+            }
+        }
+
+        return $taken;
     }
 }
