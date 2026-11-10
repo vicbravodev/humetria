@@ -77,7 +77,8 @@ it('describes the date of every status', function (Closure $company, string $sta
     'trial ended' => [fn () => Tenant::factory()->inTrial(CarbonImmutable::parse('2026-10-01 18:00', 'UTC')), 'trial_ended', 'Prueba terminó el 15 oct 2026', null, true],
     'active' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-31', 'America/Mexico_City')->endOfDay()), 'active', 'Activa hasta 31 dic 2026', '2026-12-31', false],
     'expired' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-09-30', 'America/Mexico_City')->endOfDay()), 'expired', 'Venció el 30 sep 2026', '2026-09-30', true],
-    'deactivated' => [fn () => Tenant::factory()->deactivated(), 'deactivated', 'Desactivada el 27 oct 2026', null, true],
+    'read only' => [fn () => Tenant::factory()->readOnly(), 'read_only', 'Solo lectura desde el 27 oct 2026', null, true],
+    'suspended' => [fn () => Tenant::factory()->suspended(), 'suspended', 'Suspendida el 27 oct 2026', null, true],
 ]);
 
 it('shows the newest companies first', function (): void {
@@ -190,7 +191,9 @@ it('shows one status at a time, counts each within the search, and keeps both in
     Tenant::factory()->inTrial(now()->subDays(3))->create(['trade_name' => 'Prueba']);
     Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Vencida']);
     Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS))->create(['trade_name' => 'Prueba terminada']);
-    Tenant::factory()->activeUntil(now()->addMonth())->deactivated()->create(['trade_name' => 'Desactivada']);
+    Tenant::factory()->activeUntil(now()->addMonth())->suspended()->create(['trade_name' => 'Suspendida']);
+    Tenant::factory()->activeUntil(now()->addMonth())->readOnly()->create(['trade_name' => 'Solo lectura']);
+    Tenant::factory()->activeUntil(now()->addMonth())->archived()->create(['trade_name' => 'Archivada']);
     Tenant::factory()->create(['trade_name' => 'Sin iniciar']);
 
     $view = fn (string $status): array => collect($this->actingAs(superadmin())
@@ -200,15 +203,31 @@ it('shows one status at a time, counts each within the search, and keeps both in
     expect($view('active'))->toBe(['Activa'])
         ->and($view('trial'))->toBe(['Prueba'])
         ->and($view('expired'))->toBe(['Prueba terminada', 'Vencida'])
-        ->and($view('deactivated'))->toBe(['Desactivada'])
-        ->and($view('anything'))->toHaveCount(6);
+        ->and($view('suspended'))->toBe(['Suspendida'])
+        ->and($view('read_only'))->toBe(['Solo lectura'])
+        ->and($view('archived'))->toBe(['Archivada'])
+        ->and($view('anything'))->toHaveCount(7)
+        ->and($view('all'))->not->toContain('Archivada');
 
     $this->actingAs(superadmin())
         ->get(route('companies.index', ['status' => 'trial', 'q' => 'prueba']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters', ['q' => 'prueba', 'status' => 'trial'])
-            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'deactivated' => 0])
+            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'read_only' => 0, 'suspended' => 0, 'archived' => 0])
             ->where('tenants.first_page_url', fn (string $url): bool => str_contains($url, 'status=trial') && str_contains($url, 'q=prueba')));
+});
+
+it('shows an archived company only in its own view, with its date', function (): void {
+    $this->travelTo('2026-10-27 18:00 UTC');
+    Tenant::factory()->archived()->create();
+
+    $this->actingAs(superadmin())->get(route('companies.index'))
+        ->assertInertia(fn (Assert $page) => $page->has('tenants.data', 0)->where('counts.all', 0)->where('counts.archived', 1));
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['status' => 'archived']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('tenants.data.0.status', 'archived')
+            ->where('tenants.data.0.status_date', 'Archivada el 27 oct 2026'));
 });
 
 it('counts the trials that end within the next seven days', function (): void {

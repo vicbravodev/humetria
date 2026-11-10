@@ -232,7 +232,7 @@ it('sends nothing when the person left before the job runs', function (): void {
 });
 
 it('sends nothing when the company may not be used by the time the job runs', function (): void {
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
 
     app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 

@@ -42,7 +42,7 @@ it('sends a person with one company to its panel', function (): void {
 it('lists the companies of a person with two, the blocked one flagged', function (): void {
     $user = User::factory()->create();
     // Created out of name order, so the ordering by trade name is what puts Acme first.
-    $blocked = Tenant::factory()->deactivated()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']);
+    $blocked = Tenant::factory()->suspended()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']);
     $open = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($blocked)->for($user)->create();
     TenantMembership::factory()->for($open)->for($user)->create();
@@ -59,7 +59,7 @@ it('lists the companies of a person with two, the blocked one flagged', function
             ->where('companies.data.0.status_label', 'Sin iniciar')
             ->where('companies.data.0.blocked', false)
             ->where('companies.data.1.slug', 'beta')
-            ->where('companies.data.1.status', 'deactivated')
+            ->where('companies.data.1.status', 'suspended')
             ->where('companies.data.1.blocked', true));
 });
 

@@ -172,7 +172,7 @@ it('counts an expiry only once: after the last digest it is no longer new', func
 });
 
 it('skips blocked companies and companies without an owner, and reaches the rest', function (): void {
-    $blocked = Tenant::factory()->create(['deactivated_at' => now()]);
+    $blocked = Tenant::factory()->suspended()->create();
     $blockedCenter = WorkCenter::factory()->for($blocked)->create();
     ownerOf($blocked);
     workIn($blocked);

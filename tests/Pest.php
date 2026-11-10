@@ -57,6 +57,16 @@ function superadmin(): User
     return $user;
 }
 
+/**
+ * The columns that suspend a company, for tests that write them straight to the table.
+ *
+ * @return array<string, mixed>
+ */
+function suspension(): array
+{
+    return ['restriction' => 'suspended', 'restriction_reason' => 'Suspendida', 'restricted_at' => now()];
+}
+
 function signInAsSuperadmin(): void
 {
     test()->actingAs(superadmin());

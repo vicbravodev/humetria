@@ -120,7 +120,7 @@ it('is a 404 that says nothing for a link that is not valid, from another compan
         return $test->token;
     }],
     'of a blocked company' => [function ($test) {
-        Tenant::query()->whereKey($test->tenant->id)->update(['deactivated_at' => now()]);
+        Tenant::query()->whereKey($test->tenant->id)->update(suspension());
 
         return $test->token;
     }],

@@ -126,7 +126,7 @@ it('says there is nothing left once every guide is answered', function (): void 
 
 it('says the evaluation is not available while the company is suspended', function (): void {
     $participant = surveyParticipant();
-    Tenant::query()->whereKey($participant->tenant_id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($participant->tenant_id)->update(suspension());
 
     $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('unavailable', 'suspended'));
 });

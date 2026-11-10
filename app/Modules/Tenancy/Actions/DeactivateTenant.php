@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
+use App\Modules\Tenancy\Enums\TenantRestriction;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,7 @@ final readonly class DeactivateTenant
     public function handle(Tenant $tenant): Tenant
     {
         return DB::transaction(function () use ($tenant): Tenant {
-            $tenant->update(['deactivated_at' => now()]);
+            $tenant->update(['restriction' => TenantRestriction::Suspended, 'restriction_reason' => 'Desactivada desde la consola', 'restricted_at' => now()]);
 
             Log::info('tenant.deactivated', ['tenant_id' => $tenant->id]);
             $this->recordAudit->handle('tenant.deactivated', $tenant);

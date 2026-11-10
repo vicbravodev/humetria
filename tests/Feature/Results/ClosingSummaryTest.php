@@ -170,7 +170,7 @@ it('sends it once the closing is committed, also when the last day closes it', f
 
 it('sends nothing to a blocked company', function (): void {
     $this->campaign->update(['status' => 'closed', 'closed_at' => now()]);
-    $this->tenant->update(['deactivated_at' => now()]);
+    $this->tenant->update(suspension());
 
     app(SendClosingSummary::class)->handle(new CampaignClosed($this->tenant->id, $this->campaign->id));
 

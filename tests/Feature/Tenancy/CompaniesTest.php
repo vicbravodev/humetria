@@ -25,7 +25,7 @@ it('enters a company by id, so its data is what the code reads', function (): vo
 
 it('reports a company that may not be used as blocked', function (): void {
     $tenant = Tenant::factory()->create();
-    $tenant->update(['deactivated_at' => now()]);
+    $tenant->update(['restriction' => 'suspended', 'restriction_reason' => 'Falta de pago', 'restricted_at' => now()]);
 
     expect(resolve(Companies::class)->enter($tenant->id)->blocked)->toBe($tenant->status()->isBlocked())->toBeTrue();
 });
@@ -44,7 +44,7 @@ it('enters a company by its slug, and gives nothing for a slug that is no compan
 });
 
 it('enters no company by the slug of one that may not be used', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     expect(resolve(Companies::class)->enterBySlug($tenant->slug))->toBeNull()
         ->and(fn () => resolve(CurrentTenant::class)->id())->toThrow(App\Modules\Tenancy\Exceptions\NoCurrentTenant::class);

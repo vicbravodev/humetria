@@ -110,7 +110,9 @@ final class TenantConsoleController extends Controller
             TenantStatus::TrialEnded => 'Prueba terminó el '.$this->day($tenant->trialEndsAt()),
             TenantStatus::Active => 'Activa hasta '.$this->day($tenant->active_until),
             TenantStatus::Expired => 'Venció el '.$this->day($tenant->active_until),
-            TenantStatus::Deactivated => 'Desactivada el '.$this->day($tenant->deactivated_at),
+            TenantStatus::ReadOnly => 'Solo lectura desde el '.$this->day($tenant->restricted_at),
+            TenantStatus::Suspended => 'Suspendida el '.$this->day($tenant->restricted_at),
+            TenantStatus::Archived => 'Archivada el '.$this->day($tenant->restricted_at),
         };
     }
 

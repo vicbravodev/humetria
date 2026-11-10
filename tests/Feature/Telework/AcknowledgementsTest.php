@@ -216,7 +216,7 @@ it('sends nothing when nothing is pending, the person left or the company is blo
     $ana->forceFill(['deactivated_at' => now()])->save();
     app()->call($job->handle(...));
     $ana->forceFill(['deactivated_at' => null])->save();
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
     app()->call($job->handle(...));
 
     Notification::assertNothingSent();

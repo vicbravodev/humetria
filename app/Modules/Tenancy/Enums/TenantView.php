@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Enums;
 
 /**
- * The views of the console's companies: all of them, or those in one status. Expired gathers a lapsed payment and an
- * ended trial: both are blocked until the superadmin activates them.
+ * The views of the console's companies: all of them but the archived, or those in one status. Expired gathers a lapsed
+ * payment and an ended trial: both are read only until the superadmin activates them.
  */
 enum TenantView: string
 {
@@ -14,5 +14,7 @@ enum TenantView: string
     case Active = 'active';
     case Trial = 'trial';
     case Expired = 'expired';
-    case Deactivated = 'deactivated';
+    case ReadOnly = 'read_only';
+    case Suspended = 'suspended';
+    case Archived = 'archived';
 }

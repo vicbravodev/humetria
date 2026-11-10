@@ -80,7 +80,7 @@ it('sends nothing when the person already confirmed, has no email, left, or the 
         'confirmed' => RiskAcknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'assessment_id' => $assessment->id]),
         'no email' => $this->ana->forceFill(['email' => null])->save(),
         'left' => $this->ana->forceFill(['deactivated_at' => now()])->save(),
-        'blocked' => Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]),
+        'blocked' => Tenant::query()->whereKey($this->tenant->id)->update(suspension()),
     };
 
     app()->call([new SendRisksToConfirm($this->tenant->id, $this->ana->id), 'handle']);

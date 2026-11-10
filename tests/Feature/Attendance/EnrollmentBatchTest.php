@@ -147,7 +147,7 @@ it('does nothing for a person who left, lost their email or is not the company\'
 });
 
 it('does nothing when the company may not be used by the time it runs', function (): void {
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
 
     app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));
 

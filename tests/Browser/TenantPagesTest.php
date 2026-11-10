@@ -27,7 +27,7 @@ it('tells a person without companies to contact the administrator, and lets them
 it('lists the companies of a person with several, the blocked one with its status', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
     // C2 of the rediseño v2: one card with a row per company, as the panel lists its centers.
@@ -142,7 +142,7 @@ it('folds the plain-text switcher without losing the name or overflowing', funct
 
 it('tells a person with one suspended company so, with no way to switch', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visitPage('tenancy/blocked', '/admin/acme', $dark, $mobile)
@@ -156,7 +156,7 @@ it('tells a person with one suspended company so, with no way to switch', functi
 
 it('offers a person with several companies to move to another', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
@@ -168,7 +168,7 @@ it('offers a person with several companies to move to another', function (bool $
 
 it('does not let Escape close the blocked modal', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visit('/admin/acme')
@@ -182,7 +182,7 @@ it('does not let Escape close the blocked modal', function (): void {
 
 it('takes a person with several companies from the blocked one to the list', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 

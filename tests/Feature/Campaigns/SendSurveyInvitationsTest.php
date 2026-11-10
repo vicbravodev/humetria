@@ -95,7 +95,7 @@ it('gives each person of its block a new link and emails it, once even when run 
 it('sends no link while the company is blocked, and marks who was waiting as failed so it can be sent again', function (): void {
     $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 20);
     [$job] = batchedJobs();
-    $this->tenant->update(['deactivated_at' => now()]);
+    $this->tenant->update(suspension());
 
     $job->handle();
 

@@ -131,7 +131,7 @@ it('goes through every usable company and skips the blocked ones', function (): 
     $other = Tenant::factory()->create();
     $otherCenter = WorkCenter::factory()->for($other)->create();
     ChecklistFactory::new()->published()->create(['tenant_id' => $other->id, 'work_center_id' => $otherCenter->id]);
-    $blocked = Tenant::factory()->create(['deactivated_at' => now()]);
+    $blocked = Tenant::factory()->suspended()->create();
     $blockedCenter = WorkCenter::factory()->for($blocked)->create();
     ChecklistFactory::new()->published()->create(['tenant_id' => $blocked->id, 'work_center_id' => $blockedCenter->id]);
     scheduledWorkplace('2026-01-15');

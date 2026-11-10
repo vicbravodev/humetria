@@ -157,7 +157,7 @@ it('purges every company by its own retention, and leaves the others\' cases alo
 
 it('purges even when the company may no longer be used: data does not outlive its time because of a bill', function (): void {
     $complaint = closedCase($this, '2023-01-01');
-    $this->tenant->forceFill(['deactivated_at' => now()])->save();
+    $this->tenant->forceFill(suspension())->save();
 
     expect(purge())->toBe(1);
     expect(Complaint::query()->withoutGlobalScopes()->find($complaint->id)?->purged_on)->not->toBeNull();

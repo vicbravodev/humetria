@@ -146,7 +146,7 @@ it('answers 404 to a member of another company and to a superadmin who is not a 
 });
 
 it('shows the blocked page for a suspended company', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.work-centers.index', $tenant))

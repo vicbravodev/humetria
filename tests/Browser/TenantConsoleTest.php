@@ -288,7 +288,7 @@ it('keeps the address prefix inside its field and outlines the whole field on fo
 
 it('offers to reactivate a blocked company', function (): void {
     signInAsSuperadmin();
-    Tenant::factory()->deactivated()->create();
+    Tenant::factory()->suspended()->create();
 
     visit('/admin/companies')
         ->click('@tenant-actions')->click('Reactivar')
@@ -327,11 +327,11 @@ it('deactivates an active company after confirming, and hides the button afterwa
         // The row's own "Desactivar" button shares the text, so the dialog's submit is picked by its place.
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Empresa desactivada.')
-        ->assertSee('Desactivada el')
+        ->assertSee('Suspendida el')
         ->assertDontSee('Desactivar')
         ->assertNoJavaScriptErrors();
 
-    expect(Tenant::query()->sole()->status()->value)->toBe('deactivated');
+    expect(Tenant::query()->sole()->status()->value)->toBe('suspended');
 });
 
 it('warns that a trial cannot be resumed once the company is deactivated', function (): void {
@@ -345,7 +345,7 @@ it('warns that a trial cannot be resumed once the company is deactivated', funct
 
 it('does not offer to deactivate a blocked company', function (): void {
     signInAsSuperadmin();
-    Tenant::factory()->deactivated()->create();
+    Tenant::factory()->suspended()->create();
 
     visit('/admin/companies')
         ->click('@tenant-actions')
@@ -525,11 +525,11 @@ it('does not undo a status tab clicked while a search waits to go out', function
     $page = visit('/admin/companies');
     $page->script(SLOW_REQUESTS);
     $page->type('input[type="search"]', 'Gru');
-    $page->click('a[href*="status=deactivated"]');
+    $page->click('a[href*="status=suspended"]');
     $page->wait(2);
 
     // The box says what the list is narrowed by: the search that never went out is dropped.
-    $page->assertQueryStringHas('status', 'deactivated')
+    $page->assertQueryStringHas('status', 'suspended')
         ->assertValue('input[type="search"]', '')
         ->assertSee('Ninguna empresa coincide')
         ->assertNoJavaScriptErrors();

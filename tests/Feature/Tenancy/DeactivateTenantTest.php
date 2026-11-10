@@ -24,7 +24,7 @@ it('sends guests to the login', function (): void {
 
     $this->post(route('companies.deactivate', $tenant))->assertRedirect(route('login'));
 
-    expect($tenant->refresh()->deactivated_at)->toBeNull();
+    expect($tenant->refresh()->restriction)->toBeNull();
 });
 
 it('deactivates a company that is not started, in trial or active', function (Closure $company): void {
@@ -39,8 +39,8 @@ it('deactivates a company that is not started, in trial or active', function (Cl
 
     $tenant->refresh();
 
-    expect($tenant->status())->toBe(TenantStatus::Deactivated)
-        ->and($tenant->deactivated_at?->toIso8601String())->toBe('2026-10-27T18:00:00+00:00');
+    expect($tenant->status())->toBe(TenantStatus::Suspended)
+        ->and($tenant->restricted_at?->toIso8601String())->toBe('2026-10-27T18:00:00+00:00');
 })->with([
     'not started' => [fn () => Tenant::factory()],
     'in trial' => [fn () => Tenant::factory()->inTrial(CarbonImmutable::parse('2026-10-20 18:00', 'UTC'))],
@@ -49,7 +49,7 @@ it('deactivates a company that is not started, in trial or active', function (Cl
 
 it('refuses to deactivate a company that is already blocked', function (Closure $company): void {
     $tenant = $company()->create();
-    $before = $tenant->deactivated_at;
+    $before = $tenant->restricted_at;
     Log::spy();
 
     expect($tenant->status()->isBlocked())->toBeTrue();
@@ -58,12 +58,12 @@ it('refuses to deactivate a company that is already blocked', function (Closure 
         ->post(route('companies.deactivate', $tenant))
         ->assertStatus(409);
 
-    expect($tenant->refresh()->deactivated_at?->toIso8601String())->toBe($before?->toIso8601String())
+    expect($tenant->refresh()->restricted_at?->toIso8601String())->toBe($before?->toIso8601String())
         ->and(AuditEntry::query()->count())->toBe(0);
 
     Log::shouldNotHaveReceived('info');
 })->with([
-    'deactivated' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-01', 'UTC'))->deactivated()],
+    'suspended' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-01', 'UTC'))->suspended()],
     'expired' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-09-30', 'UTC'))],
     'trial ended' => [fn () => Tenant::factory()->inTrial(CarbonImmutable::parse('2026-10-01 18:00', 'UTC'))],
 ]);
@@ -104,6 +104,6 @@ it('answers 404 to a non-superadmin and to an unknown company', function (): voi
         ->post(route('companies.deactivate', '0198c3a2-0000-4000-8000-000000000000'))
         ->assertNotFound();
 
-    expect($tenant->refresh()->deactivated_at)->toBeNull()
+    expect($tenant->refresh()->restriction)->toBeNull()
         ->and(AuditEntry::query()->count())->toBe(0);
 });

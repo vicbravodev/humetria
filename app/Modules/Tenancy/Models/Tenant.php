@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Models;
 
 use App\Concerns\SearchesText;
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRestriction;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantType;
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Query\Builder;
 
 /**
- * A company that uses the platform. Its status follows its trial and paid dates.
+ * A company that uses the platform. Its status follows its trial and paid dates, unless a person restricted it.
  *
  * @property string $id
  * @property string $legal_name
@@ -33,14 +34,16 @@ use Illuminate\Database\Query\Builder;
  * @property TenantType $type
  * @property CarbonImmutable|null $trial_started_at
  * @property CarbonImmutable|null $active_until
- * @property CarbonImmutable|null $deactivated_at
+ * @property TenantRestriction|null $restriction
+ * @property string|null $restriction_reason
+ * @property CarbonImmutable|null $restricted_at
  * @property string|null $logo_path
  * @property int|null $logo_width
  * @property int|null $logo_height
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'deactivated_at', 'logo_path', 'logo_width', 'logo_height'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'restriction', 'restriction_reason', 'restricted_at', 'logo_path', 'logo_width', 'logo_height'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantFactory::class)]
 final class Tenant extends Model
 {
@@ -56,8 +59,8 @@ final class Tenant extends Model
 
     public function status(): TenantStatus
     {
-        if ($this->deactivated_at !== null) {
-            return TenantStatus::Deactivated;
+        if ($this->restriction !== null) {
+            return $this->restriction->status();
         }
 
         if ($this->active_until !== null) {
@@ -83,11 +86,13 @@ final class Tenant extends Model
         $trialCutoff = now()->subDays(self::TRIAL_DAYS);
 
         match ($view) {
-            TenantView::All => null,
-            TenantView::Deactivated => $query->whereNotNull('deactivated_at'),
-            TenantView::Active => $query->whereNull('deactivated_at')->where('active_until', '>', now()),
-            TenantView::Trial => $query->whereNull('deactivated_at')->whereNull('active_until')->where('trial_started_at', '>', $trialCutoff),
-            TenantView::Expired => $query->whereNull('deactivated_at')->where(fn (EloquentBuilder $expired) => $expired
+            TenantView::All => $query->where(fn (EloquentBuilder $shown) => $shown->whereNull('restriction')->orWhere('restriction', '<>', TenantRestriction::Archived)),
+            TenantView::ReadOnly => $query->where('restriction', TenantRestriction::ReadOnly),
+            TenantView::Suspended => $query->where('restriction', TenantRestriction::Suspended),
+            TenantView::Archived => $query->where('restriction', TenantRestriction::Archived),
+            TenantView::Active => $query->whereNull('restriction')->where('active_until', '>', now()),
+            TenantView::Trial => $query->whereNull('restriction')->whereNull('active_until')->where('trial_started_at', '>', $trialCutoff),
+            TenantView::Expired => $query->whereNull('restriction')->where(fn (EloquentBuilder $expired) => $expired
                 ->where('active_until', '<=', now())
                 ->orWhere(fn (EloquentBuilder $ended) => $ended->whereNull('active_until')->where('trial_started_at', '<=', $trialCutoff))),
         };
@@ -159,7 +164,8 @@ final class Tenant extends Model
             'type' => TenantType::class,
             'trial_started_at' => 'immutable_datetime',
             'active_until' => 'immutable_datetime',
-            'deactivated_at' => 'immutable_datetime',
+            'restriction' => TenantRestriction::class,
+            'restricted_at' => 'immutable_datetime',
             'logo_width' => 'integer',
             'logo_height' => 'integer',
         ];

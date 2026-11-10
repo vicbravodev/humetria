@@ -209,7 +209,7 @@ it('is closed to whoever is not a member, to the committee, to a superadmin impe
     chat(['message' => 'Hola'], memberOf($this->b, TenantRole::Owner))->assertNotFound();
     chat(['message' => 'Hola'], memberOf($this->a, TenantRole::Committee))->assertForbidden();
 
-    $suspended = Tenant::factory()->deactivated()->create(['slug' => 'gamma']);
+    $suspended = Tenant::factory()->suspended()->create(['slug' => 'gamma']);
     chat(['message' => 'Hola'], ownerOf($suspended), $suspended)->assertStatus(423);
 
     ownerOf($this->a);

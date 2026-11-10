@@ -33,11 +33,13 @@ it('is active over a finished trial', function (): void {
     expect($tenant->status())->toBe(TenantStatus::Active);
 });
 
-it('is deactivated even with a future active_until', function (): void {
-    $tenant = Tenant::factory()->activeUntil(now()->addMonth())->deactivated()->make();
-
-    expect($tenant->status())->toBe(TenantStatus::Deactivated);
-});
+it('follows its restriction over any date', function (Closure $company, TenantStatus $status): void {
+    expect($company()->status())->toBe($status);
+})->with([
+    'read only' => [fn () => Tenant::factory()->activeUntil(now()->addMonth())->readOnly()->make(), TenantStatus::ReadOnly],
+    'suspended' => [fn () => Tenant::factory()->activeUntil(now()->addMonth())->suspended()->make(), TenantStatus::Suspended],
+    'archived' => [fn () => Tenant::factory()->inTrial(now())->archived()->make(), TenantStatus::Archived],
+]);
 
 it('ends the trial 14 days after it starts', function (): void {
     $startedAt = now()->subDays(3);
@@ -55,5 +57,7 @@ it('labels each status and says which ones block', function (TenantStatus $statu
     'active' => [TenantStatus::Active, 'Activa', false],
     'trial ended' => [TenantStatus::TrialEnded, 'Prueba terminada', true],
     'expired' => [TenantStatus::Expired, 'Vencida', true],
-    'deactivated' => [TenantStatus::Deactivated, 'Desactivada', true],
+    'read only' => [TenantStatus::ReadOnly, 'Solo lectura', true],
+    'suspended' => [TenantStatus::Suspended, 'Suspendida', true],
+    'archived' => [TenantStatus::Archived, 'Archivada', true],
 ]);

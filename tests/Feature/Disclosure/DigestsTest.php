@@ -98,7 +98,7 @@ it('does not tell a blocked company, one without an owner, and does not let one 
     workIn($blocked);
     WorkCenter::factory()->for($blocked)->create();
     resolve(IssuePageLink::class)->handle(ownerOf($blocked)->id);
-    Tenant::query()->whereKey($blocked->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($blocked->id)->update(suspension());
     $ownerless = Tenant::factory()->create();
     WorkCenter::factory()->for($ownerless)->create();
     DB::table('disclosure_page_links')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $ownerless->id, 'version' => 1, 'token_hash' => hash('sha256', 'x'), 'enabled_at' => now(), 'created_by' => $this->owner->id, 'created_at' => now(), 'updated_at' => now()]);

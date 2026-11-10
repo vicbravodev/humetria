@@ -7,7 +7,9 @@ const VARIANTS: Record<TenantRow['status'], BadgeVariant> = {
     not_started: 'outline',
     trial_ended: 'destructive',
     expired: 'destructive',
-    deactivated: 'destructive',
+    read_only: 'secondary',
+    suspended: 'destructive',
+    archived: 'outline',
 };
 
 export function tenantStatusVariant(status: TenantRow['status']): BadgeVariant {
@@ -38,7 +40,9 @@ const ACTIVATION: Record<TenantRow['status'], ActivationCopy> = {
     },
     trial_ended: REACTIVATE,
     expired: REACTIVATE,
-    deactivated: REACTIVATE,
+    read_only: REACTIVATE,
+    suspended: REACTIVATE,
+    archived: REACTIVATE,
 };
 
 export function activationCopy(status: TenantRow['status']): ActivationCopy {

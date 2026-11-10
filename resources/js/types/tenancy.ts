@@ -27,7 +27,9 @@ export type TenantRow = {
         | 'active'
         | 'trial_ended'
         | 'expired'
-        | 'deactivated';
+        | 'read_only'
+        | 'suspended'
+        | 'archived';
     status_label: string;
     status_date: string | null;
     /** Last paid day as Y-m-d in Mexico City time; null when never activated. */
@@ -66,7 +68,14 @@ export type InvitationPage = { token: string; passwordRules: string } & (
 );
 
 /** The views of the console's companies. */
-export type TenantView = 'all' | 'active' | 'trial' | 'expired' | 'deactivated';
+export type TenantView =
+    | 'all'
+    | 'active'
+    | 'trial'
+    | 'expired'
+    | 'read_only'
+    | 'suspended'
+    | 'archived';
 
 export type TenantFilters = { q: string; status: TenantView };
 

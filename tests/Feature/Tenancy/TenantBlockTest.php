@@ -16,7 +16,7 @@ mutates(BlockSuspendedTenant::class);
 $blocked = [
     'trial ended' => fn (): Tenant => Tenant::factory()->inTrial(now()->subDays(15))->create(),
     'expired' => fn (): Tenant => Tenant::factory()->activeUntil(now()->subDay())->create(),
-    'deactivated' => fn (): Tenant => Tenant::factory()->deactivated()->create(),
+    'deactivated' => fn (): Tenant => Tenant::factory()->suspended()->create(),
 ];
 
 $open = [
@@ -54,7 +54,7 @@ it('puts the blocked page, with no props of its own, where the panel would be', 
 })->with($blocked);
 
 it('carries nothing but the shared props to the blocked page', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $props = $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.dashboard', $tenant))
@@ -64,7 +64,7 @@ it('carries nothing but the shared props to the blocked page', function (): void
 });
 
 it('answers HEAD with the blocked page too', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->call('HEAD', route('tenant.dashboard', $tenant, absolute: false))
@@ -95,7 +95,7 @@ it('lets a company that is not blocked work as usual', function (Closure $make):
 })->with($open);
 
 it('lets an impersonated session see a blocked company, never change it', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
     $user = ownerOf($tenant);
 
     $this->actingAs($user)
@@ -106,7 +106,7 @@ it('lets an impersonated session see a blocked company, never change it', functi
 });
 
 it('still hides a blocked company from someone who is not a member', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf(Tenant::factory()->create()))
         ->get(route('tenant.dashboard', $tenant))
@@ -114,7 +114,7 @@ it('still hides a blocked company from someone who is not a member', function ()
 });
 
 it('keeps the other companies of the person reachable', function (): void {
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     $open = Tenant::factory()->create();
     $user = ownerOf($blocked);
     TenantMembership::factory()->for($open)->for($user)->create();

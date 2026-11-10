@@ -198,7 +198,7 @@ it('answers an unknown, revoked or deactivated-employee token with the same page
 });
 
 it('answers the same page for a company that may not be used', function (): void {
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
 
     expect(portalProps($this->token)['unavailable'])->toBeTrue()
         ->and(portalProps($this->token))->toBe(portalProps('not-a-token'));
