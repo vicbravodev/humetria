@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Actions;
 
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class ArchiveWorkCenter
 {
-    public function __construct(private OpenCampaigns $openCampaigns) {}
+    public function __construct(private OpenCampaigns $openCampaigns, private CompanyLimits $limits) {}
 
     /**
      * Takes the work center out of the list. Nothing is deleted: its evaluations stay as evidence (num. 10.4). One with
@@ -31,6 +32,8 @@ final readonly class ArchiveWorkCenter
             }
 
             $workCenter->update(['archived_at' => now()]);
+            // Its place is free for the plan; an archived center is not in use.
+            $this->limits->release(CompanyLimits::CENTERS, 1);
         });
 
         Log::info('work_center.archived', ['work_center_id' => $workCenter->id]);
