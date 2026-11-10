@@ -28,10 +28,10 @@ beforeEach(function (): void {
     $this->travelTo('2026-11-04 18:00:00');
     LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id, 'tracking_since' => '2025-01-01']);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
-    $this->boss = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Ruiz']);
-    $this->ana = Employee::factory()->reportingTo($this->boss)->create(['name' => 'Ana Solís']);
-    $this->caro = Employee::factory()->reportingTo($this->boss)->create(['name' => 'Caro Luz']);
-    $this->dan = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Dan Gil']);
+    $this->boss = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Ruiz', 'email' => 'beto@empresa.test']);
+    $this->ana = Employee::factory()->reportingTo($this->boss)->create(['name' => 'Ana Solís', 'email' => 'a.solis@empresa.test']);
+    $this->caro = Employee::factory()->reportingTo($this->boss)->create(['name' => 'Caro Luz', 'email' => 'caro@empresa.test']);
+    $this->dan = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Dan Gil', 'email' => 'dan@empresa.test']);
 });
 
 /**
