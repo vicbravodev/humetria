@@ -1,5 +1,5 @@
 import { countOf } from '@/lib/plural';
-import type { AccountFilters, AccountSummary } from '@/types';
+import type { AccountChargeRow, AccountFilters, AccountSummary } from '@/types';
 
 /** The console's line under "Cuentas": how many there are. */
 export function accountsSummary(total: number): string {
@@ -33,4 +33,37 @@ export function figureHints(summary: AccountSummary) {
                 : `${countOf(summary.requiring_quotation, 'empresa requiere', 'empresas requieren')} cotización`,
         total: summary.vat === null ? undefined : `${summary.vat} de IVA`,
     };
+}
+
+export type ChargeAction = {
+    kind: 'end' | 'remove';
+    button: string;
+    title: string;
+    description: string;
+    submit: string;
+};
+
+/** What the superadmin can do to an extra charge: end a recurring one that has no last day, remove a one-time one nobody billed; nothing otherwise. */
+export function chargeAction(charge: AccountChargeRow): ChargeAction | null {
+    if (charge.kind === 'recurring') {
+        return charge.ends_on !== null
+            ? null
+            : {
+                  kind: 'end',
+                  button: 'Terminar',
+                  title: 'Terminar el cargo',
+                  description: `«${charge.description}» se cobra hasta el mes de su último día. Queda en la bitácora.`,
+                  submit: 'Terminar cargo',
+              };
+    }
+
+    return charge.billed
+        ? null
+        : {
+              kind: 'remove',
+              button: 'Quitar',
+              title: 'Quitar el cargo',
+              description: `«${charge.description}» todavía no se factura; al quitarlo no se cobra. Queda en la bitácora.`,
+              submit: 'Quitar cargo',
+          };
 }

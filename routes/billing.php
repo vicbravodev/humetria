@@ -75,6 +75,17 @@ Route::post('admin/billing/companies/{company}/charges', [ChargeConsoleControlle
     ->whereUuid('company')
     ->name('billing.charges.store');
 
+// An extra charge ends (a recurring one) or is removed (a one-time one nobody billed), with the reason: the superadmin's.
+Route::put('admin/billing/charges/{charge}/end', [ChargeConsoleController::class, 'end'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('charge')
+    ->name('billing.charges.end');
+
+Route::delete('admin/billing/charges/{charge}', [ChargeConsoleController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('charge')
+    ->name('billing.charges.destroy');
+
 // Extra tokens of Humi for a company in the current month, with the reason: the superadmin's.
 Route::post('admin/billing/companies/{company}/usage-grants', [UsageGrantController::class, 'store'])
     ->middleware(['auth', 'verified'])

@@ -1,3 +1,5 @@
+import { usePage } from '@inertiajs/react';
+import ChargeDialog from '@/components/billing/charge-dialog';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { AccountChargeRow } from '@/types';
@@ -8,6 +10,8 @@ export default function AccountChargeRowView({
 }: {
     charge: AccountChargeRow;
 }) {
+    const { auth } = usePage().props;
+
     return (
         <TableRow>
             <TableCell className="min-w-56 whitespace-normal">
@@ -33,6 +37,12 @@ export default function AccountChargeRowView({
             <TableCell className="text-sm text-muted-foreground">
                 {charge.approved_by}
             </TableCell>
+            {/* Support reads the charges; only the superadmin ends or removes one. */}
+            {auth.isSuperadmin && (
+                <TableCell>
+                    <ChargeDialog charge={charge} />
+                </TableCell>
+            )}
         </TableRow>
     );
 }

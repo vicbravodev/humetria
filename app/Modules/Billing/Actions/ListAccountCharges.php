@@ -54,6 +54,7 @@ final readonly class ListAccountCharges
             ShortDate::format($charge->charge_on),
             $charge->ends_on === null ? null : ShortDate::format($charge->ends_on),
             $approvers[$charge->approved_by] ?? '',
+            $charge->billed_at !== null,
         ));
     }
 }

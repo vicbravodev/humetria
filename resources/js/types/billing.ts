@@ -138,6 +138,8 @@ export type AccountChargeRow = {
     /** The last day of a recurring charge that ends; null otherwise. */
     ends_on: string | null;
     approved_by: string;
+    /** A one-time charge a statement already billed: it stays. */
+    billed: boolean;
 };
 
 /** Where a statement stands: a draft, or an issued one by how much of it has been paid. */

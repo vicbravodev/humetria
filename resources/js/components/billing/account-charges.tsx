@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import AccountChargeRowView from '@/components/billing/account-charge-row';
 import Pagination from '@/components/humetria/pagination';
 import {
@@ -16,6 +17,8 @@ export default function AccountCharges({
 }: {
     charges: Paginated<AccountChargeRow>;
 }) {
+    const { auth } = usePage().props;
+
     return (
         <section aria-labelledby="account-charges" className="grid gap-4">
             <h2
@@ -37,6 +40,11 @@ export default function AccountCharges({
                         <TableHead>Importe</TableHead>
                         <TableHead>Fechas</TableHead>
                         <TableHead>Aprobó</TableHead>
+                        {auth.isSuperadmin && (
+                            <TableHead>
+                                <span className="sr-only">Acciones</span>
+                            </TableHead>
+                        )}
                     </TableRow>
                 </TableHeader>
                 <TableBody>

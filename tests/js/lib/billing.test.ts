@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { accountsQuery, accountsSummary, figureHints } from '@/lib/billing';
-import type { AccountSummary } from '@/types';
+import {
+    accountsQuery,
+    accountsSummary,
+    chargeAction,
+    figureHints,
+} from '@/lib/billing';
+import type { AccountChargeRow, AccountSummary } from '@/types';
 
 describe('accountsSummary', () => {
     it('says how many accounts there are, or that there are none', () => {
@@ -69,5 +74,39 @@ describe('figureHints', () => {
         expect(figureHints(summary({ requiring_quotation: 3 })).subtotal).toBe(
             '3 empresas requieren cotización',
         );
+    });
+});
+
+const charge: AccountChargeRow = {
+    id: 'c1',
+    company_id: 't1',
+    trade_name: 'Acme',
+    kind: 'recurring',
+    kind_label: 'Recurrente',
+    description: 'Acompañamiento',
+    scope: 'Toda la empresa',
+    amount: '$1,500',
+    charge_on: '1 nov 2026',
+    ends_on: null,
+    approved_by: 'Victor',
+    billed: false,
+};
+
+describe('chargeAction', () => {
+    it('ends a recurring charge that has no last day', () => {
+        expect(chargeAction(charge)?.kind).toBe('end');
+        expect(chargeAction(charge)?.button).toBe('Terminar');
+    });
+
+    it('offers nothing for a recurring charge that already ends', () => {
+        expect(chargeAction({ ...charge, ends_on: '31 dic 2026' })).toBeNull();
+    });
+
+    it('removes a one-time charge nobody billed, and offers nothing once it is billed', () => {
+        const once: AccountChargeRow = { ...charge, kind: 'one_time' };
+
+        expect(chargeAction(once)?.kind).toBe('remove');
+        expect(chargeAction(once)?.submit).toBe('Quitar cargo');
+        expect(chargeAction({ ...once, billed: true })).toBeNull();
     });
 });

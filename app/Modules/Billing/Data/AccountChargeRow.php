@@ -25,6 +25,7 @@ final readonly class AccountChargeRow implements Arrayable
         public string $chargeOn,
         public ?string $endsOn,
         public string $approvedBy,
+        public bool $billed,
     ) {}
 
     /**
@@ -44,6 +45,7 @@ final readonly class AccountChargeRow implements Arrayable
             'charge_on' => $this->chargeOn,
             'ends_on' => $this->endsOn,
             'approved_by' => $this->approvedBy,
+            'billed' => $this->billed,
         ];
     }
 }
