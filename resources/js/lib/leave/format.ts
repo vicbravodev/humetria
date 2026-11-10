@@ -1,6 +1,6 @@
 import { fromCalendarDate } from '@/lib/calendar-date';
-import { countOf } from '@/lib/plural';
-import type { LeaveRequestStatus } from '@/types';
+import { countOf, plural } from '@/lib/plural';
+import type { LeaveRequestStatus, TeamLeaveRequest } from '@/types';
 
 const day = new Intl.DateTimeFormat('es-MX', { day: 'numeric' });
 const dayAndMonth = new Intl.DateTimeFormat('es-MX', {
@@ -55,4 +55,35 @@ export function statusTone(
     status: LeaveRequestStatus,
 ): 'default' | 'success' | 'destructive' | 'secondary' {
     return TONES[status];
+}
+
+const list = new Intl.ListFormat('es', { type: 'conjunction' });
+
+/** What whoever approves reads about the days of a request: where they would come from, or how many are missing. */
+export function balanceLine(
+    request: Pick<
+        TeamLeaveRequest,
+        'type' | 'periods' | 'shortBy' | 'allowsAdvance'
+    >,
+): string {
+    if (request.type !== null) {
+        return 'Este permiso no usa días de vacaciones.';
+    }
+
+    const periods = list.format(
+        request.periods.map((period) => `${period.year} (${period.days})`),
+    );
+
+    if (request.shortBy === 0) {
+        return `Tiene días disponibles: del periodo ${periods}.`;
+    }
+
+    const missing = `${plural(request.shortBy, 'le falta', 'le faltan')} ${request.shortBy}`;
+    const advance = request.allowsAdvance
+        ? 'Su política permite adelantarlos: si aprueba, se le adelantan.'
+        : 'Su política no permite adelantar días, así que no se puede aprobar.';
+
+    return request.periods.length === 0
+        ? `No tiene días disponibles (${missing}). ${advance}`
+        : `Solo tiene días del periodo ${periods}: ${missing}. ${advance}`;
 }

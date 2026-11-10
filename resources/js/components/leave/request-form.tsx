@@ -82,6 +82,9 @@ export default function RequestForm({
                                 rows={2}
                                 maxLength={500}
                             />
+                            <p className="text-sm text-muted-foreground">
+                                La leerá quien responda su solicitud.
+                            </p>
                             <InputError message={errors['note']} />
                         </div>
                         <Button size="lg" disabled={processing}>

@@ -19,7 +19,7 @@ final class PortalVacationsPages
     public const int PER_PAGE = 10;
 
     /**
-     * @return array{today: string, periods: list<array{year: int, granted: int, available: int, enjoyBy: string, mayPrescribe: bool}>, advanced: int, requests: LengthAwarePaginator<int, array{id: string, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, rejectionReason: string|null, canCancel: bool}>, types: list<array{id: string, name: string}>}
+     * @return array{today: string, periods: list<array{year: int, granted: int, available: int, enjoyBy: string, mayPrescribe: bool}>, advanced: int, teamPending: int, requests: LengthAwarePaginator<int, array{id: string, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, rejectionReason: string|null, canCancel: bool}>, types: list<array{id: string, name: string}>}
      */
     public static function for(string $employeeId): array
     {
@@ -28,6 +28,7 @@ final class PortalVacationsPages
             'periods' => self::periods($employeeId),
             'advanced' => max(0, -(Balances::advanced([$employeeId])[$employeeId] ?? 0)),
             'requests' => self::requests($employeeId),
+            'teamPending' => PortalTeamPages::pendingFor($employeeId),
             'types' => array_values(LeaveType::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')->get(['id', 'name'])->map(fn (LeaveType $type): array => ['id' => $type->id, 'name' => $type->name])->all()),
         ];
     }

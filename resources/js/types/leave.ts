@@ -43,3 +43,22 @@ export type LeavePreview = {
     /** Whether to remind them of the twelve days in a row the law gives them. */
     continuousNotice: boolean;
 };
+
+/** A request that waits for the manager's answer, with where its days would come from today. */
+export type TeamLeaveRequest = {
+    id: string;
+    /** Who asked. */
+    name: string;
+    /** The name of the leave, which whoever approves does see; null for vacations. */
+    type: string | null;
+    startsOn: string;
+    endsOn: string;
+    workingDays: number;
+    note: string | null;
+    /** The days each period would give, from the oldest. */
+    periods: { year: number; days: number }[];
+    /** The days the person does not have. */
+    shortBy: number;
+    allowsAdvance: boolean;
+    canApprove: boolean;
+};

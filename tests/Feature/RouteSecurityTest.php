@@ -51,6 +51,9 @@ function publicRouteNames(): array
         'portal.vacations.preview', // guest: la persona ve cuántos días laborables serían sus fechas y si los tiene, sin guardar nada; el token del portal es la credencial; solo su saldo; throttled
         'portal.vacations.requests.store', // guest: la persona pide vacaciones o un permiso; el token del portal es la credencial y dice de quién es la solicitud, nunca lo enviado; throttled
         'portal.vacations.requests.cancel', // guest: la persona cancela una solicitud suya; el token del portal es la credencial; una ajena da 404; throttled
+        'portal.vacations.team.show', // guest: el jefe ve las solicitudes de su equipo que le toca responder; el token del portal es la credencial y dice quién es; solo las que esperan su respuesta; throttled
+        'portal.vacations.team.approve', // guest: el jefe aprueba una solicitud que le toca; el token del portal es la credencial; una que no le toca da 404; una sola respuesta gana; throttled
+        'portal.vacations.team.reject', // guest: el jefe rechaza, con motivo, una solicitud que le toca; el token del portal es la credencial; una que no le toca da 404; throttled
         'portal.policy.show', // guest: la persona lee la política vigente de su centro y su propio estado de acuse; el token del portal es la credencial; solo ve lo suyo y lo que la empresa publicó; un enlace no válido da 404 sin decir nada más; throttled
         'portal.support.show', // guest: la persona canalizada por aviso en su portal lee el mensaje de su empresa, en usted, con el destino propuesto; nada de la Guía I ni la nota de RH; el token del portal es la credencial; solo lo suyo; un enlace no válido o sin mensaje da 404; throttled
         'portal.policy.acknowledge', // guest: la persona confirma, una sola vez, que leyó la versión vigente de la política; el token del portal es la credencial; solo la suya; throttled

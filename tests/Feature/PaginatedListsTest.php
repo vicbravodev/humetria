@@ -219,6 +219,14 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.vacations.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['requests']],
+    'the requests a manager answers in the portal' => ['leave/portal-team', function () {
+        [$tenant] = listsCompany();
+        Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
+        $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        workIn($tenant);
+
+        return route('portal.vacations.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+    }, ['requests']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
     'the results for the people' => ['disclosure/results', function () {

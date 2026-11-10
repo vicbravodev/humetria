@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { dateSpan, statusTone, workingDaysOf } from '@/lib/leave/format';
+import {
+    balanceLine,
+    dateSpan,
+    statusTone,
+    workingDaysOf,
+} from '@/lib/leave/format';
 import type { LeaveRequestStatus } from '@/types';
 
 describe('dateSpan', () => {
@@ -42,5 +47,55 @@ describe('statusTone', () => {
         ['taken', 'secondary'],
     ])('paints %s as %s', (status, tone) => {
         expect(statusTone(status)).toBe(tone);
+    });
+});
+
+describe('balanceLine', () => {
+    const vacations = {
+        type: null,
+        periods: [],
+        shortBy: 0,
+        allowsAdvance: false,
+    };
+
+    it('says a leave uses no vacation days', () => {
+        expect(balanceLine({ ...vacations, type: 'Paternidad' })).toBe(
+            'Este permiso no usa días de vacaciones.',
+        );
+    });
+
+    it('names the periods the days would come from, the oldest first', () => {
+        expect(
+            balanceLine({
+                ...vacations,
+                periods: [
+                    { year: 2025, days: 3 },
+                    { year: 2026, days: 6 },
+                ],
+            }),
+        ).toBe('Tiene días disponibles: del periodo 2025 (3) y 2026 (6).');
+        expect(
+            balanceLine({ ...vacations, periods: [{ year: 2026, days: 1 }] }),
+        ).toBe('Tiene días disponibles: del periodo 2026 (1).');
+    });
+
+    it('says how many days are missing, and whether the policy gives them in advance', () => {
+        expect(balanceLine({ ...vacations, shortBy: 4 })).toBe(
+            'No tiene días disponibles (le faltan 4). Su política no permite adelantar días, así que no se puede aprobar.',
+        );
+        expect(
+            balanceLine({ ...vacations, shortBy: 1, allowsAdvance: true }),
+        ).toBe(
+            'No tiene días disponibles (le falta 1). Su política permite adelantarlos: si aprueba, se le adelantan.',
+        );
+        expect(
+            balanceLine({
+                ...vacations,
+                periods: [{ year: 2026, days: 5 }],
+                shortBy: 4,
+            }),
+        ).toBe(
+            'Solo tiene días del periodo 2026 (5): le faltan 4. Su política no permite adelantar días, así que no se puede aprobar.',
+        );
     });
 });

@@ -199,7 +199,7 @@ it('sends nothing of anybody else, no note and no amounts', function (): void {
     portalRequest($this->ana, 'requested', ['note' => 'Nota privada']);
 
     $props = $this->get(route('portal.vacations.show', $this->token))->assertOk()->inertiaProps();
-    $sent = (string) json_encode($props);
+    $sent = (string) json_encode($props, JSON_UNESCAPED_UNICODE);
 
     expect($props['periods'])->toHaveCount(2)
         ->and($sent)->not->toContain('Caro Luz', 'Nota de Caro', 'Nota privada', $this->caro->id, $this->boss->id, $this->ana->id, 'premium', 'amount', 'salary');
