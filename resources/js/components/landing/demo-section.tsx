@@ -8,7 +8,7 @@ export default function DemoSection() {
             aria-labelledby="agenda-una-demo-title"
             className="scroll-mt-16 border-t bg-sidebar"
         >
-            <div className="mx-auto flex max-w-[1240px] flex-wrap items-start gap-14 px-4 py-20 sm:px-6 lg:py-28">
+            <div className="mx-auto flex max-w-[1240px] flex-wrap items-start gap-14 px-4 py-20 sm:px-6">
                 <div className="flex flex-[1_1_320px] flex-col gap-10 lg:sticky lg:top-24">
                     <div className="flex flex-col gap-3.5">
                         <h2

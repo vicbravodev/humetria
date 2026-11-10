@@ -18,7 +18,7 @@ const steps = [
         text: 'Resultados por grupo, el plan de acción y la evidencia lista para presentar ante la STPS.',
         detail: 'Expediente listo',
     },
-] as const;
+];
 
 export default function HowItWorksSection() {
     return (
@@ -27,11 +27,11 @@ export default function HowItWorksSection() {
             aria-labelledby="como-funciona"
             className="border-y bg-sidebar"
         >
-            <div className="mx-auto flex max-w-[1240px] flex-col gap-14 px-4 py-20 sm:px-6 lg:py-28">
+            <div className="mx-auto flex max-w-[1240px] flex-col gap-10 px-4 py-20 sm:px-6">
                 <div className="flex flex-col gap-3">
                     <h2
                         id="como-funciona"
-                        className="scroll-mt-24 text-[32px] leading-[1.1] font-semibold tracking-[-0.025em] sm:text-5xl"
+                        className="scroll-mt-24 text-[32px] leading-[1.1] font-semibold tracking-[-0.025em] sm:text-[44px]"
                     >
                         Cómo funciona
                     </h2>

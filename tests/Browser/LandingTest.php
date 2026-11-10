@@ -144,7 +144,7 @@ it('presents Humetría as an HR platform with all its tools', function (): void 
         ->assertTitleContains('Herramientas de RH')
         ->assertSeeIn('#hero-title', 'Del celular de tu gente al expediente de la STPS')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => document.querySelector("[data-test=hero-tools]").textContent', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación · Registro de jornada · Vacaciones y permisos · Organigrama · Clima y pulso')
+        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-tools] li")].map((item) => item.textContent).join(" · ")', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación · Registro de jornada · Vacaciones y permisos · Organigrama · Clima y pulso')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
 
@@ -193,44 +193,85 @@ it('takes the header section links to how it works, confidentiality and Humi', f
     'Humi' => ['@header-humi', '#humi'],
 ]);
 
-it('details each of the nine tools', function (): void {
-    $cards = 'document.querySelectorAll("#herramientas [data-test=tool-card]")';
-    $page = visitPage('landing', '/')
-        ->assertScript("() => {$cards}.length", 9);
+it('shows one tool at a time on a large stage, and a tab switches it', function (string $tool, string $hint, string $text): void {
+    $panel = 'document.querySelector("#herramientas [data-test=tool-panel]")';
 
-    foreach ([
-        'Factores de riesgo psicosocial',
-        'Teletrabajo',
-        'Asientos y descansos',
-        'Quejas y denuncias',
-        'Revisión salarial y contractual',
-        'Reloj checador y registro de jornada',
-        'Vacaciones, permisos y saldos',
-        'Quién reporta a quién',
-        'Clima laboral y pulso',
-    ] as $index => $hint) {
-        $page->assertScript("() => {$cards}[{$index}].querySelector('[data-test=tool-hint]').textContent", $hint);
-    }
-
-    $page->assertScript("() => {$cards}[1].textContent.toLowerCase().includes('lista de verificación')")
-        ->assertScript("() => {$cards}[2].textContent.includes('reglamento interior')")
-        ->assertScript("() => {$cards}[3].textContent.includes('nunca a la persona señalada')")
-        ->assertScript("() => {$cards}[4].textContent.includes('sindicato')")
-        ->assertScript("() => {$cards}[5].textContent.includes('geocerca')")
-        ->assertScript("() => {$cards}[5].textContent.includes('1 de enero de 2027')")
-        ->assertScript("() => {$cards}[6].textContent.includes('saldo')")
-        ->assertScript("() => {$cards}[7].textContent.includes('organigrama')")
-        ->assertScript("() => {$cards}[8].textContent.includes('Nadie ve una respuesta individual')")
+    visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-panel]").length', 1)
+        ->assertScript('() => document.querySelectorAll("#herramientas [role=tab]").length', 9)
+        ->click("@tool-tab-{$tool}")
+        ->assertAttribute("@tool-tab-{$tool}", 'aria-selected', 'true')
+        ->assertScript('() => window.location.hash', "#herramienta-{$tool}")
+        ->assertScript("() => document.querySelector('[data-test=tool-tab-{$tool}] [data-test=tool-hint]').textContent", $hint)
+        ->assertScript("() => {$panel}.textContent.includes(".json_encode($text).')')
         ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
+})->with([
+    'NOM-035' => ['nom_035', 'Factores de riesgo psicosocial', 'numeral 7.7'],
+    'NOM-037' => ['nom_037', 'Teletrabajo', 'lista de verificación'],
+    'Ley Silla' => ['ley_silla', 'Asientos y descansos', 'reglamento interior'],
+    'complaints' => ['complaints', 'Quejas y denuncias', 'nunca a la persona señalada'],
+    'compensation' => ['compensation', 'Revisión salarial y contractual', 'sindicato'],
+    'attendance' => ['attendance', 'Reloj checador y registro de jornada', '1 de enero de 2027'],
+    'leave' => ['leave', 'Vacaciones, permisos y saldos', 'saldo'],
+    'org chart' => ['org_chart', 'Quién reporta a quién', 'organigrama'],
+    'engagement' => ['engagement', 'Clima laboral y pulso', 'Nadie ve una respuesta individual'],
+]);
+
+it('opens on the tool the link names', function (): void {
+    $page = visitPage('landing', '/');
+    $page->script('() => { window.location.hash = "herramienta-engagement"; }');
+
+    $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
+        ->assertSeeIn('[data-test=tool-panel]', 'Nadie ve una respuesta individual');
 });
 
-it('jumps from the tools index to each tool and marks the one being read', function (string $tool): void {
+it('keeps the selected tool visible in the phone strip when the hash changes', function (): void {
+    $page = visitPage('landing', '/', mobile: true);
+    $page->script('() => { window.location.hash = "herramienta-engagement"; }');
+
+    $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
+        ->assertScript('() => { const tab = document.getElementById("tool-tab-engagement").getBoundingClientRect(); const strip = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
+        ->keys('@tool-tab-engagement', 'Home')
+        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true')
+        ->assertScript('() => { const tab = document.getElementById("tool-tab-nom_035").getBoundingClientRect(); const strip = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
+        ->assertNoJavaScriptErrors();
+});
+
+it('fits every complete tool presentation below the laptop header', function (): void {
+    $page = resizeTo(visitPage('landing', '/'), 1512, 982);
+
+    foreach (['nom_035', 'nom_037', 'ley_silla', 'complaints', 'compensation', 'attendance', 'leave', 'org_chart', 'engagement'] as $tool) {
+        $page->click("@tool-tab-{$tool}");
+        $page->script('() => { document.getElementById("herramientas").scrollIntoView({ behavior: "instant", block: "start" }); }');
+        $page->assertScript('() => { const panel = document.getElementById("tool-panel").getBoundingClientRect(); const tabs = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return panel.top >= 64 && panel.bottom <= window.innerHeight && tabs.top >= 64 && tabs.bottom <= window.innerHeight; }');
+    }
+
+    $page->assertNoJavaScriptErrors();
+});
+
+it('keeps the phone playback controls inside the video and respects reduced motion', function (): void {
+    $page = resizeTo(visit('/', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812);
+    $video = 'document.querySelector("[data-test=tool-film] video")';
+
+    $page->assertScript("() => {$video}.paused && ! {$video}.autoplay")
+        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Reproducir video')
+        ->assertScript('() => { const video = document.querySelector("[data-test=tool-film] video").getBoundingClientRect(); const control = document.querySelector("[data-test=tool-film-toggle]").getBoundingClientRect(); return control.left >= video.left && control.right <= video.right && control.top >= video.top && control.bottom <= video.bottom && control.width >= 44 && control.height >= 44; }')
+        ->click('@tool-film-toggle')
+        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
+        ->click('@tool-film-toggle')
+        ->assertScript("() => {$video}.paused")
+        ->assertNoJavaScriptErrors();
+});
+
+it('moves between tabs with the arrow keys', function (): void {
     visitPage('landing', '/')
-        ->click("@tool-link-{$tool}")
-        ->assertScript('() => window.location.hash', "#herramienta-{$tool}")
-        // The mark follows the glide: wait for it.
-        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=tool-link-'.$tool.']").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })');
-})->with(['compensation', 'attendance', 'engagement']);
+        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true')
+        ->click('@tool-tab-nom_035')
+        ->keys('@tool-tab-nom_035', 'ArrowRight')
+        ->assertAttribute('@tool-tab-nom_037', 'aria-selected', 'true')
+        ->keys('@tool-tab-nom_037', 'ArrowLeft')
+        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true');
+});
 
 it('lists what an inspector would ask for, one line per tool', function (): void {
     $page = visitPage('landing', '/');
@@ -270,19 +311,47 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
         ->assertScript("() => {$video}.paused");
 });
 
-it('shows how the time clock works in a looping film, with its story for screen readers', function (): void {
-    $video = 'document.querySelector("[data-test=attendance-video] video")';
+it('shows each tool as a large film with chapters, and a chapter asks the film for its moment', function (string $tool, string $film): void {
+    $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
 
-    visitPage('landing', '/')
+    $page = visitPage('landing', '/');
+    $page->click("@tool-tab-{$tool}")
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-attendance.jpg')")
-        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-attendance.webm,humetria-attendance.mp4')
-        ->assertScript('() => document.querySelector("[data-test=attendance-video] figcaption").textContent.includes("Así se marca la jornada")')
-        ->assertScript('() => document.querySelector("[data-test=attendance-video] figcaption").textContent.includes("reporte para la autoridad")')
-        ->assertScript("() => new Promise((resolve) => { {$video}.scrollIntoView(); if (! {$video}.paused) { resolve(true); } {$video}.addEventListener('playing', () => resolve(true)); })")
-        ->assertAttribute('@attendance-video-toggle', 'aria-label', 'Pausar video')
-        ->click('@attendance-video-toggle')
+        ->assertScript("() => {$video}.poster.endsWith('/video/{$film}.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", "{$film}.webm,{$film}.mp4")
+        // Large enough to read what the film shows (at 1280 px the stage is wider than 700 px).
+        ->assertScript("() => {$video}.getBoundingClientRect().width > 700")
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=tool-chapter-]").length', 4)
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.length > 40');
+
+    // The test server (like PHP's own) serves no byte ranges, which a browser needs to seek: so the film's
+    // currentTime is stood in for by a recorder, and what is asserted is what the chapter asks for.
+    $page->script("() => { const video = {$video}; window.__asked = []; Object.defineProperty(video, 'currentTime', { configurable: true, get: () => window.__asked.at(-1) ?? 0, set: (second) => window.__asked.push(second) }); }");
+
+    $page->click('@tool-chapter-2')
+        ->assertScript('() => window.__asked.at(-1)', 12)
+        ->assertAttribute('@tool-chapter-2', 'aria-current', 'true')
+        ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
+        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
+        ->click('@tool-film-toggle')
         ->assertScript("() => {$video}.paused");
+})->with([
+    'NOM-035' => ['nom_035', 'humetria-nom-035'],
+    'NOM-037' => ['nom_037', 'humetria-nom-037'],
+    'Ley Silla' => ['ley_silla', 'humetria-ley-silla'],
+    'complaints' => ['complaints', 'humetria-complaints'],
+    'compensation' => ['compensation', 'humetria-compensation'],
+    'attendance' => ['attendance', 'humetria-attendance'],
+    'leave' => ['leave', 'humetria-leave'],
+    'org chart' => ['org_chart', 'humetria-org-chart'],
+    'engagement' => ['engagement', 'humetria-engagement'],
+]);
+
+it('keeps the film of the time clock on the QR and passkey flow', function (): void {
+    visitPage('landing', '/')
+        ->click('@tool-tab-attendance')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.includes("código QR")')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.includes("reporte para la autoridad")');
 });
 
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {

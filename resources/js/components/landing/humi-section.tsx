@@ -7,7 +7,7 @@ const facts = [
     'Explica las normas con los datos de tu empresa',
     'Cada respuesta dice de dónde sale',
     'Nunca ve respuestas individuales ni grupos de menos de 5',
-] as const;
+];
 
 export default function HumiSection() {
     return (
@@ -16,7 +16,7 @@ export default function HumiSection() {
             aria-labelledby="humi"
             className="border-y bg-sidebar"
         >
-            <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20 lg:py-28">
+            <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20">
                 <Reveal className="flex flex-col gap-6">
                     <LandingHumi />
                     <h2

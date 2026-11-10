@@ -1,7 +1,7 @@
 import { m, useReducedMotion } from 'motion/react';
 import { Pause, Play } from 'lucide-react';
-import { useRef, useState } from 'react';
 import { EASE_OUT } from '@/components/landing/landing-motion';
+import { useLoopVideo } from '@/hooks/use-loop-video';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -27,23 +27,7 @@ export default function LoopVideo({
     className,
 }: Props) {
     const still = useReducedMotion() === true;
-    const video = useRef<HTMLVideoElement>(null);
-    // What the button offers follows the video itself: autoplay can be refused, and then it stays paused.
-    const [playing, setPlaying] = useState(false);
-
-    const toggle = (): void => {
-        const element = video.current;
-
-        if (element === null) {
-            return;
-        }
-
-        if (element.paused) {
-            element.play().catch(() => setPlaying(false));
-        } else {
-            element.pause();
-        }
-    };
+    const { video, playing, toggle, onPlay, onPause } = useLoopVideo();
 
     return (
         <figure data-test={test} className="flex w-full flex-col gap-3">
@@ -63,8 +47,8 @@ export default function LoopVideo({
                     playsInline
                     preload="metadata"
                     poster={`/video/${name}.jpg`}
-                    onPlay={() => setPlaying(true)}
-                    onPause={() => setPlaying(false)}
+                    onPlay={onPlay}
+                    onPause={onPause}
                     className={cn('block w-full', className)}
                 >
                     <source src={`/video/${name}.webm`} type="video/webm" />
