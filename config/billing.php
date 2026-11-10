@@ -11,9 +11,8 @@ declare(strict_types=1);
 | nueva nunca cambia lo que ya se pactó. Todo importe va en centavos enteros de la moneda (nunca flotantes) y todo
 | porcentaje en enteros. Los precios negociados no viven aquí: van en la suscripción.
 |
-| Del handoff solo quedan los casos de la especificación, de ahí salen $49 (Cumplimiento) y $99 (Integral) por persona, el
-| mínimo de $1,990 de Jornada y el de $4,990 de Integral. Por confirmar con Victor: la tarifa de Jornada ($39) y el mínimo
-| de Cumplimiento ($1,990), que ningún caso fija.
+| Tarifas y mínimos del handoff de monetización v1.0: Jornada $39 (mínimo $1,990), Cumplimiento $49 (mínimo $2,990) e
+| Integral $99 (mínimo $4,990) por persona al mes.
 |
 */
 
@@ -55,7 +54,7 @@ return [
                 ],
                 'cumplimiento' => [
                     'rate_cents' => 4_900,
-                    'minimum_cents' => 199_000,
+                    'minimum_cents' => 299_000,
                     'included_centers' => 2,
                     'modules' => ['nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
                     'quotas' => ['assistant_tokens' => 500_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],

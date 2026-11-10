@@ -60,11 +60,15 @@ it('prices the boundaries of every profile', function (Plan $plan, Profile $prof
     expect($quote->subtotalCents)->toBe($expected)
         ->and($quote->requiresQuotation)->toBe($expected === null);
 })->with([
-    'direct 0: the minimum' => [Plan::Cumplimiento, Profile::Direct, 0, pesos(1990)],
-    'direct 1: the minimum' => [Plan::Cumplimiento, Profile::Direct, 1, pesos(1990)],
-    'direct 50: by rate' => [Plan::Cumplimiento, Profile::Direct, 50, pesos(2450)],
-    'direct 51: by rate' => [Plan::Cumplimiento, Profile::Direct, 51, pesos(2499)],
+    'direct 0: the minimum' => [Plan::Cumplimiento, Profile::Direct, 0, pesos(2990)],
+    'direct 1: the minimum' => [Plan::Cumplimiento, Profile::Direct, 1, pesos(2990)],
+    'direct 50: still the minimum' => [Plan::Cumplimiento, Profile::Direct, 50, pesos(2990)],
+    'direct 51: still the minimum' => [Plan::Cumplimiento, Profile::Direct, 51, pesos(2990)],
+    'direct 61: the last one under the minimum' => [Plan::Cumplimiento, Profile::Direct, 61, pesos(2990)],
+    'direct 62: by rate' => [Plan::Cumplimiento, Profile::Direct, 62, pesos(3038)],
     'direct 100: by rate' => [Plan::Cumplimiento, Profile::Direct, 100, pesos(4900)],
+    'direct Jornada 51: the minimum plus its extra center' => [Plan::Jornada, Profile::Direct, 51, pesos(1990 + 149)],
+    'direct Jornada 52: by rate plus its extra center' => [Plan::Jornada, Profile::Direct, 52, pesos(2028 + 149)],
     'direct 101: quotation' => [Plan::Cumplimiento, Profile::Direct, 101, null],
     'direct 250: quotation' => [Plan::Cumplimiento, Profile::Direct, 250, null],
     'direct Integral 50: still the minimum' => [Plan::Integral, Profile::Direct, 50, pesos(4990)],

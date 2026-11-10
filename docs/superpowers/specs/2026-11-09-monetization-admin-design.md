@@ -225,6 +225,7 @@ Centros de trabajo y empleados son base de todos los planes. `TenantType::Union`
 - Dinero en **centavos enteros** (`int`), moneda `MXN` explícita. Sin `float` en ningún importe.
 - Una función pura: `Quote::for(plan, profile, seats, centers, catalogVersion, eligibleIntegralCompanies)` → líneas.
   Es la única que calcula; la usan el cotizador, la vista previa y la emisión.
+- **Tarifas directas (por persona al mes / mínimo):** Jornada $39 / $1,990 · Cumplimiento $49 / $2,990 · Integral $99 / $4,990.
 - **Directo:** `max(mínimo, seats × tarifa)`. Más de 100 empleados → «requiere cotización» (sin importe), salvo precio
   negociado en la suscripción.
 - **Canal Cumplimiento:** banda completa por plantilla: 1–50 $2,490 · 51–100 $3,990 · 101–250 $7,990 · 251+ cotización.
