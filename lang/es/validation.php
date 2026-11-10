@@ -366,6 +366,7 @@ return [
         'code' => 'código',
         'message_id' => 'mensaje',
         'reason' => 'motivo',
+        'employees' => 'personas',
         'rating' => 'calificación',
         'pageContext' => 'pantalla',
         'conversationId' => 'conversación',

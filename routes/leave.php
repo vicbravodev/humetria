@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/vacations.
 // Every name starts with tenant.vacations.
 
+use App\Modules\Leave\Http\Controllers\BalanceController;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Http\Controllers\VacationsController;
 use Illuminate\Support\Facades\Route;
@@ -24,3 +25,7 @@ Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/cancel', [Req
 // RH records vacations or a leave for somebody, and looks the person up by name.
 Route::post('admin/{tenant:slug}/vacations/requests', [RequestController::class, 'store'])->where('tenant', $notReserved)->name('tenant.vacations.requests.store');
 Route::get('admin/{tenant:slug}/vacations/people/options', [RequestController::class, 'people'])->where('tenant', $notReserved)->name('tenant.vacations.people.options');
+
+// The days of everybody, and the link to their own vacations that RH sends to some of them.
+Route::get('admin/{tenant:slug}/vacations/balances', [BalanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.vacations.balances.index');
+Route::post('admin/{tenant:slug}/vacations/balances/links', [BalanceController::class, 'links'])->where('tenant', $notReserved)->name('tenant.vacations.balances.links');

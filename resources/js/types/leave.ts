@@ -153,3 +153,24 @@ export type LeaveQueueRequest = {
     canDecide: boolean;
     canCancel: boolean;
 };
+
+export type LeaveBalanceTab = 'all' | 'missing' | 'statements' | 'terminations';
+
+/** How the list of balances is narrowed, as the server sends it back. */
+export type LeaveBalanceFilters = { q: string; tab: LeaveBalanceTab };
+
+/** A person in the list of balances: days only, never an amount. */
+export type LeaveBalanceRow = {
+    id: string;
+    name: string;
+    /** False for who left. */
+    active: boolean;
+    /** The name of the policy their vacations follow; «Ley» when the company has none for them. */
+    policy: string;
+    /** What they can still ask for; below zero when they were given days in advance. */
+    available: number;
+    /** The days they were given in advance. */
+    advanced: number;
+    /** Y-m-d: when their next period starts; null while they have no start date. */
+    nextAnniversary: string | null;
+};
