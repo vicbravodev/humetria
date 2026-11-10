@@ -6,21 +6,25 @@ namespace App\Modules\Billing\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Billing\Data\SubscriptionData;
+use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Exceptions\InvalidSubscription;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\Catalog;
 use App\Modules\Billing\Support\SubscriptionGuard;
+use App\Modules\Tenancy\Contracts\CompanyModules;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final readonly class SetSubscription
 {
-    public function __construct(private RecordAudit $recordAudit) {}
+    public function __construct(private RecordAudit $recordAudit, private CompanyModules $modules) {}
 
     /**
      * Gives the company its plan, or changes the one it has: the plan, how it is priced, the people and centers it pays for.
      * A new one is quoted with the current catalog; a change keeps the catalog it was quoted with. It never touches the
-     * company's access: dates, restriction and modules are Tenancy's, and move on their own.
+     * company's dates or restriction. Its modules follow the plan through Tenancy's contract: a trial has them all, a plan only
+     * its own, from the current catalog (what a plan includes is not price-locked); what a plan adds is on at once and what it takes away ends the day the plan starts (never earlier than today).
      *
      * @throws InvalidSubscription
      */
@@ -52,6 +56,12 @@ final readonly class SetSubscription
             }
 
             $subscription->save();
+
+            $this->modules->syncPlan(
+                $tenantId,
+                $data->status === SubscriptionStatus::Trial ? Catalog::current()->allModules() : Catalog::current()->modules($data->plan),
+                $data->startsOn->greaterThan($today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay()) ? $data->startsOn : $today,
+            );
 
             Log::info('billing.subscription_set', ['tenant_id' => $tenantId, 'created' => $created]);
             $this->recordAudit->handle('billing.subscription_set', $subscription, [

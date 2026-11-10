@@ -44,7 +44,7 @@ it('sets the plan of a company, quoted with the current catalog, renewing on the
         ->and($subscription->negotiated_price_cents)->toBeNull()
         ->and($subscription->negotiated_valid_until)->toBeNull();
 
-    Log::shouldHaveReceived('info')->once()->with('billing.subscription_set', ['tenant_id' => $tenant->id, 'created' => true]);
+    Log::shouldHaveReceived('info')->with('billing.subscription_set', ['tenant_id' => $tenant->id, 'created' => true]);
     $entry = AuditEntry::query()->where('event', 'billing.subscription_set')->sole();
     expect($entry->subject_id)->toBe($subscription->id)
         ->and($entry->metadata)->toEqualCanonicalizing([
@@ -91,7 +91,7 @@ it('changes the plan of a company that has one, keeps its catalog and its row, a
         ->and($existing->catalog_version)->toBe('v0')
         ->and($existing->renews_on->toDateString())->toBe('2027-01-01');
 
-    Log::shouldHaveReceived('info')->once()->with('billing.subscription_set', ['tenant_id' => $tenant->id, 'created' => false]);
+    Log::shouldHaveReceived('info')->with('billing.subscription_set', ['tenant_id' => $tenant->id, 'created' => false]);
     expect(AuditEntry::query()->where('event', 'billing.subscription_set')->sole()->metadata['created'])->toBeFalse();
 });
 

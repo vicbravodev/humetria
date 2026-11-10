@@ -83,6 +83,16 @@ final readonly class Catalog
         return $this->strings("plans.{$plan->value}.modules");
     }
 
+    /**
+     * Every module any plan has: what a trial gets while it decides.
+     *
+     * @return list<string>
+     */
+    public function allModules(): array
+    {
+        return array_values(array_unique(array_merge(...array_map(fn (Plan $plan): array => $this->modules($plan), Plan::cases()))));
+    }
+
     public function quota(Plan $plan, string $resource): int
     {
         return $this->integer("plans.{$plan->value}.quotas.{$resource}");
