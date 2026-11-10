@@ -1,4 +1,6 @@
 import { useReducedMotion } from 'motion/react';
+import { useAppearance } from '@/hooks/use-appearance';
+import { show as showFilm } from '@/routes/films';
 import FilmChapters from '@/components/landing/film-chapters';
 import FilmControls from '@/components/landing/film-controls';
 import type { ToolFilm } from '@/components/landing/landing-tools';
@@ -12,6 +14,10 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
     const { video, playing, toggle, onPlay, onPause, time, jumpTo } =
         useFilmChapters();
     const { canFullscreen, fullscreen } = useVideoFullscreen(video);
+    // The film is drawn with the design tokens of each theme, so it sits in the page instead of being a dark block in it.
+    const { resolvedAppearance } = useAppearance();
+    const name =
+        resolvedAppearance === 'light' ? `${film.name}-light` : film.name;
 
     return (
         <figure
@@ -20,22 +26,26 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
         >
             <div className="relative">
                 <video
+                    key={name}
                     ref={video}
                     autoPlay={!still}
                     muted
                     loop
                     playsInline
                     preload="metadata"
-                    poster={`/video/${film.name}.jpg`}
+                    poster={`/video/${name}.jpg`}
                     onPlay={onPlay}
                     onPause={onPause}
                     className="block aspect-video w-full bg-muted object-contain"
                 >
                     <source
-                        src={`/video/${film.name}.webm`}
+                        src={showFilm.url({ film: `${name}.webm` })}
                         type="video/webm"
                     />
-                    <source src={`/video/${film.name}.mp4`} type="video/mp4" />
+                    <source
+                        src={showFilm.url({ film: `${name}.mp4` })}
+                        type="video/mp4"
+                    />
                 </video>
                 <FilmControls
                     playing={playing}
@@ -44,7 +54,7 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
                     onFullscreen={fullscreen}
                 />
             </div>
-            <figcaption>
+            <figcaption className="bg-card sm:pr-28">
                 <span className="sr-only">{film.description}</span>
                 <FilmChapters
                     labels={film.chapters}

@@ -17,7 +17,7 @@ export default function FilmControls({
     onFullscreen,
 }: Props) {
     return (
-        <div className="absolute right-2 bottom-2 flex items-center gap-1.5 sm:right-3 sm:bottom-3">
+        <div className="absolute right-2 bottom-2 z-1 flex items-center gap-1.5 sm:-bottom-12 sm:h-12 sm:pr-1">
             <button
                 type="button"
                 data-test="tool-film-toggle"

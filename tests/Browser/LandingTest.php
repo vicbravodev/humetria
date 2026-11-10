@@ -311,25 +311,21 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
         ->assertScript("() => {$video}.paused");
 });
 
-it('shows each tool as a large film with chapters, and a chapter asks the film for its moment', function (string $tool, string $film): void {
+it('shows each tool as a large film with chapters, and a chapter jumps to its moment', function (string $tool, string $film): void {
     $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
 
     $page = visitPage('landing', '/');
     $page->click("@tool-tab-{$tool}")
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.poster.endsWith('/video/{$film}.jpg')")
-        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", "{$film}.webm,{$film}.mp4")
+        ->assertScript("() => {$video}.poster.endsWith('/video/{$film}-light.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", "{$film}-light.webm,{$film}-light.mp4")
         // Large enough to read what the film shows (at 1280 px the stage is wider than 700 px).
         ->assertScript("() => {$video}.getBoundingClientRect().width > 700")
         ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=tool-chapter-]").length', 4)
         ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.length > 40');
 
-    // The test server (like PHP's own) serves no byte ranges, which a browser needs to seek: so the film's
-    // currentTime is stood in for by a recorder, and what is asserted is what the chapter asks for.
-    $page->script("() => { const video = {$video}; window.__asked = []; Object.defineProperty(video, 'currentTime', { configurable: true, get: () => window.__asked.at(-1) ?? 0, set: (second) => window.__asked.push(second) }); }");
-
     $page->click('@tool-chapter-2')
-        ->assertScript('() => window.__asked.at(-1)', 12)
+        ->assertScript("() => new Promise((resolve) => { const there = () => {$video}.currentTime >= 12 && {$video}.currentTime < 18 ? resolve(true) : requestAnimationFrame(there); there(); })")
         ->assertAttribute('@tool-chapter-2', 'aria-current', 'true')
         ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
         ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
@@ -346,6 +342,14 @@ it('shows each tool as a large film with chapters, and a chapter asks the film f
     'org chart' => ['org_chart', 'humetria-org-chart'],
     'engagement' => ['engagement', 'humetria-engagement'],
 ]);
+
+it('shows the film drawn with the dark tokens in the dark theme', function (): void {
+    $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
+
+    visitPage('landing', '/', dark: true)
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-nom-035.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-nom-035.webm,humetria-nom-035.mp4');
+});
 
 it('keeps the film of the time clock on the QR and passkey flow', function (): void {
     visitPage('landing', '/')

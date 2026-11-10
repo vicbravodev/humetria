@@ -17,6 +17,7 @@ function publicRouteNames(): array
 {
     return [
         'home', // landing page
+        'films.show', // guest: the films of the landing page, served with byte ranges so a chapter can jump inside one; only files named humetria-*.mp4|webm that exist in public/video, anything else is a 404
         'demo-requests.store', // landing demo form; throttled + honeypot
         'login', // guest: sign-in form
         'login.store', // guest: sign-in submit

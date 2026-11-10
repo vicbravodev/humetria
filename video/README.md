@@ -41,5 +41,7 @@ cd video/hyperframes/attendance && npx hyperframes check
 video/hyperframes/render.sh attendance humetria-attendance 4   # carpeta, nombre en public/video, segundo del póster
 ```
 
-Salen `public/video/humetria-*.{mp4,webm,jpg}`. El navegador solo puede saltar a un capítulo si el servidor da
-rangos de bytes (nginx sí; el servidor de PHP de desarrollo no: ahí el salto no funciona).
+Salen `public/video/humetria-*.{mp4,webm,jpg}`. Con `light` como cuarto argumento sale la variante de tema claro
+(`humetria-*-light.*`: la misma película con los tokens claros del design system); la landing elige según el tema.
+Las películas se sirven por `/media/films/{archivo}` (`ToolFilmController`) y no como archivos estáticos: el navegador
+solo puede saltar a un capítulo si el servidor responde rangos de bytes, y el servidor de PHP de desarrollo no lo hace.
