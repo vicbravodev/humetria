@@ -204,6 +204,13 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
     }, ['notices']],
+    'my team in the portal' => ['organization/portal-team', function () {
+        [$tenant] = listsCompany();
+        $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        workIn($tenant);
+
+        return route('portal.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+    }, ['peers', 'reports']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
     'the results for the people' => ['disclosure/results', function () {

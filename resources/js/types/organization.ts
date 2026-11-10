@@ -111,3 +111,13 @@ export type QualityPerson = {
     /** Their manager as it is saved, who may have left. */
     manager: ChoiceOption | null;
 };
+
+/** The person's manager as their portal names them. */
+export type PortalTeamManager = { name: string; job_title: string };
+
+/** Someone of the person's team in their portal: no contact data and no id. */
+export type PortalTeamPerson = {
+    name: string;
+    job_title: string;
+    area: string;
+};

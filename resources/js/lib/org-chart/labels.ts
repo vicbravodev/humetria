@@ -1,5 +1,10 @@
 import { countOf } from '@/lib/plural';
-import type { OrgChartFilters, OrgIndicators, OrgNode } from '@/types';
+import type {
+    OrgChartFilters,
+    OrgIndicators,
+    OrgNode,
+    PortalTeamPerson,
+} from '@/types';
 
 /** "120 personas activas, 87 con jefe directo." */
 export function orgChartHeadline(total: number, withManager: number): string {
@@ -65,4 +70,12 @@ export function indicatorStats(
             hint: 'Con 1–2 o más de 15 reportes directos. Es una señal, no una regla.',
         },
     ];
+}
+
+/** "Vendedor · Ventas", with what is known. */
+export function teamPersonText({
+    job_title,
+    area,
+}: Pick<PortalTeamPerson, 'job_title' | 'area'>): string {
+    return [job_title, area].filter((part) => part !== '').join(' · ');
 }

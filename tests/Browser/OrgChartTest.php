@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 
@@ -259,3 +260,75 @@ it('says the reporting line is complete, with the way back to the chart', functi
         ->assertPathIs('/admin/acme/org-chart/quality')
         ->assertNoJavaScriptErrors();
 })->with($looks);
+
+/** The address of the personal portal of one of the people of Acme's org chart. */
+function teamPortal(string $who, bool $lines = true): string
+{
+    $person = acmeOrgChart($lines)[$who];
+    workIn(Tenant::query()->findOrFail($person->tenant_id));
+
+    return '/portal/'.resolve(IssuePortalLink::class)->handle($person->id);
+}
+
+it('shows a person their team in their portal: their manager, their peers and whoever reports to them', function (bool $dark, bool $mobile): void {
+    visitPage('organization/portal-team', teamPortal('gerardo').'/team', $dark, $mobile)
+        ->assertSee('Mi equipo')
+        ->assertSeeIn('section[aria-labelledby="team-manager"]', 'Diana Torres')
+        ->assertSeeIn('section[aria-labelledby="team-manager"]', 'Directora general')
+        ->assertSeeIn('section[aria-labelledby="team-peers"]', 'Sofía Luna')
+        ->assertSeeIn('section[aria-labelledby="team-peers"]', 'Gerente de ventas · Producción')
+        ->assertSeeIn('section[aria-labelledby="team-reports"]', 'Ana López')
+        ->assertSeeIn('section[aria-labelledby="team-reports"]', 'Beto Díaz')
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('tells a person with nobody above what to do, without lists of nobody', function (bool $dark, bool $mobile): void {
+    visitPage('organization/portal-team', teamPortal('ana', lines: false).'/team', $dark, $mobile)
+        ->assertSee('No tiene un jefe directo registrado. Si esto no es correcto, avise a Recursos Humanos.')
+        ->assertNotPresent('#team-peers')
+        ->assertNotPresent('#team-reports')
+        ->assertNoAccessibilityIssues(1);
+})->with($looks);
+
+it('tells a person whose peers are nobody that nobody else reports to the same person', function (): void {
+    visitPage('organization/portal-team', teamPortal('dir').'/team')
+        ->assertSee('No tiene un jefe directo registrado.')
+        ->assertNotPresent('#team-peers')
+        ->assertSeeIn('section[aria-labelledby="team-reports"]', 'Gerardo Paz');
+
+    $people = Employee::query()->withoutGlobalScopes()->where('name', 'Sofía Luna')->sole();
+    $people->update(['deactivated_at' => now()]);
+
+    visit('/portal/'.resolve(IssuePortalLink::class)->handle(Employee::query()->where('name', 'Gerardo Paz')->sole()->id).'/team')
+        ->assertSee('Nadie más reporta a la misma persona.')
+        ->assertNoJavaScriptErrors();
+});
+
+it('reaches the team from the start of the portal, and comes back', function (): void {
+    $portal = teamPortal('gerardo');
+
+    visit($portal)
+        ->click('Mi equipo')
+        ->assertPathIs($portal.'/team')
+        ->assertSee('Su jefe directo')
+        ->click('Volver a mi portal')
+        ->assertPathIs($portal)
+        ->assertNoJavaScriptErrors();
+});
+
+it('turns the pages of the reports without moving the peers', function (): void {
+    $portal = teamPortal('gerardo');
+    $gerardo = Employee::query()->where('name', 'Gerardo Paz')->sole();
+    Employee::factory()->count(10)->reportingTo($gerardo)->create(['name' => 'Abel Primero', 'work_center_id' => $gerardo->work_center_id, 'area_id' => $gerardo->area_id]);
+
+    visit($portal.'/team')
+        ->assertSee('Abel Primero')
+        ->assertDontSee('Beto Díaz')
+        ->click('nav[aria-label="Quienes le reportan"] >> text=Siguientes')
+        ->assertQueryStringHas('reports', '2')
+        ->assertSee('Beto Díaz')
+        ->assertSee('Sofía Luna')
+        ->assertNoJavaScriptErrors();
+});

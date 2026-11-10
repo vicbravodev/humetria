@@ -6,6 +6,7 @@ import {
     orgChartHeadline,
     orgChartQuery,
     placeText,
+    teamPersonText,
     teamText,
 } from '@/lib/org-chart/labels';
 
@@ -56,6 +57,16 @@ describe('org chart labels', () => {
         expect(orgChartHeadline(120, 87)).toBe(
             '120 personas activas, 87 con jefe directo.',
         );
+    });
+
+    it('says the job title and the area of someone of the team, with what is known', () => {
+        expect(teamPersonText({ job_title: 'Vendedor', area: 'Ventas' })).toBe(
+            'Vendedor · Ventas',
+        );
+        expect(teamPersonText({ job_title: '', area: 'Ventas' })).toBe(
+            'Ventas',
+        );
+        expect(teamPersonText({ job_title: '', area: '' })).toBe('');
     });
 
     it('says the size of a team', () => {
