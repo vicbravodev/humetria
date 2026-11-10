@@ -4,6 +4,8 @@ const STANDALONE_NAMES = new Set([
     'landing',
     'campaigns/survey',
     'seating/portal',
+    // «Mi equipo» in the person's portal: their own link, no account.
+    'organization/portal-team',
     // The policy page of the person's portal: their own link, no account.
     'disclosure/portal-policy',
     // The support message of the person's portal, when RH channeled them through it: their own link, no account.

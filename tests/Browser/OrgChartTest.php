@@ -291,6 +291,8 @@ function teamPortal(string $who, bool $lines = true): string
 it('shows a person their team in their portal: their manager, their peers and whoever reports to them', function (bool $dark, bool $mobile): void {
     visitPage('organization/portal-team', teamPortal('gerardo').'/team', $dark, $mobile)
         ->assertSee('Mi equipo')
+        // The person's own frame, even in a browser signed in to the panel: no sidebar, no top bar.
+        ->assertNotPresent('[data-sidebar="sidebar"]')
         ->assertSeeIn('section[aria-labelledby="team-manager"]', 'Diana Torres')
         ->assertSeeIn('section[aria-labelledby="team-manager"]', 'Directora general')
         ->assertSeeIn('section[aria-labelledby="team-peers"]', 'Sofía Luna')
