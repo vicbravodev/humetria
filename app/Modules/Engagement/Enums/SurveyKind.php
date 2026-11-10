@@ -10,6 +10,14 @@ enum SurveyKind: string
     case Climate = 'climate';
     case Pulse = 'pulse';
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::Climate => 'Clima',
+            self::Pulse => 'Pulso',
+        };
+    }
+
     public function viewPermission(): string
     {
         return "view-{$this->value}";
