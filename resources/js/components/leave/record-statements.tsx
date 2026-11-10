@@ -1,5 +1,8 @@
+import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dateSpan } from '@/lib/leave/format';
+import { show } from '@/routes/tenant/vacations/statements';
 import type { LeaveRecordStatement } from '@/types';
 
 /** The annual statements (art. 81) of the person: when each was issued and whether they confirmed they received it. */
@@ -8,6 +11,8 @@ export default function RecordStatements({
 }: {
     statements: LeaveRecordStatement[];
 }) {
+    const tenantSlug = useTenantSlug();
+
     return (
         <ul className="flex flex-col divide-y card">
             {statements.map((statement) => (
@@ -16,9 +21,15 @@ export default function RecordStatements({
                     className="flex flex-wrap items-center justify-between gap-3 p-5"
                 >
                     <div>
-                        <p className="font-medium">
+                        <Link
+                            href={show.url({
+                                tenant: tenantSlug,
+                                statement: statement.id,
+                            })}
+                            className="font-medium text-primary hover:underline"
+                        >
                             Constancia del periodo {statement.year}
-                        </p>
+                        </Link>
                         <p className="text-meta text-muted-foreground">
                             Emitida el{' '}
                             {dateSpan(statement.issuedOn, statement.issuedOn)}

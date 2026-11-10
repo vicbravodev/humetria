@@ -13,6 +13,7 @@ use App\Modules\Leave\Http\Controllers\OpeningBalanceController;
 use App\Modules\Leave\Http\Controllers\PolicyController;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Http\Controllers\SettingsController;
+use App\Modules\Leave\Http\Controllers\StatementController;
 use App\Modules\Leave\Http\Controllers\VacationsController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,9 @@ Route::post('admin/{tenant:slug}/vacations/balances/links', [BalanceController::
 
 // The record of one person: periods, ledger, requests, statements and, if they left, what they are owed in days.
 Route::get('admin/{tenant:slug}/vacations/employees/{employee}', [EmployeeRecordController::class, 'show'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.vacations.employees.show');
+
+// The annual statement of a period, to print: it says whether the person confirmed they received it.
+Route::get('admin/{tenant:slug}/vacations/statements/{statement}', [StatementController::class, 'show'])->where('tenant', $notReserved)->whereUuid('statement')->name('tenant.vacations.statements.show');
 
 // RH corrects a tranche of a period with its note, and settles the days of a person who left. Owner and hr.
 Route::post('admin/{tenant:slug}/vacations/employees/{employee}/adjust', [EmployeeRecordController::class, 'adjust'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.vacations.employees.adjust');
