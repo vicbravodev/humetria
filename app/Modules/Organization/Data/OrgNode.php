@@ -8,6 +8,8 @@ use App\Modules\Organization\Enums\SpanFlag;
 
 /**
  * A person in the org chart: who they are, where, and the size of their team. Never contact data.
+ *
+ * @phpstan-type OrgNodeShape array{id: string, name: string, job_title: string, area: string, work_center: string, active: bool, direct_reports: int, total_reports: int, flag: array{value: string, label: string}|null, matches: bool, manager_inactive: bool}
  */
 final readonly class OrgNode
 {
@@ -32,7 +34,7 @@ final readonly class OrgNode
     ) {}
 
     /**
-     * @return array{id: string, name: string, job_title: string, area: string, work_center: string, active: bool, direct_reports: int, total_reports: int, flag: array{value: string, label: string}|null, matches: bool, manager_inactive: bool}
+     * @return OrgNodeShape
      */
     public function toArray(): array
     {

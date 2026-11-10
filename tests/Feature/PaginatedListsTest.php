@@ -226,6 +226,13 @@ it('sends each list of records as a paginator', function (string $component, Clo
         return route('workers.show', (string) resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(auth()->id() ?? 0)->token());
     }, ['centers']],
     'employees' => ['organization/employees', fn () => route('tenant.employees.index', listsCompany()[0]), ['employees']],
+    'org chart' => ['organization/org-chart', function () {
+        [$tenant] = listsCompany();
+        $boss = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
+        Database\Factories\Organization\EmployeeFactory::new()->reportingTo($boss)->create();
+
+        return route('tenant.org-chart.index', [$tenant, 'focus' => $boss->id]);
+    }, ['roots', 'focus.children']],
     'benefits' => ['compensation/benefits', fn () => route('tenant.compensation.benefits.index', listsCompany()[0]), ['benefits']],
     'tabulator' => ['compensation/tabulator', fn () => route('tenant.compensation.tabulator.index', listsCompany()[0]), ['grades']],
     'salary overrides' => ['compensation/overrides', fn () => route('tenant.compensation.overrides.index', listsCompany()[0]), ['people']],

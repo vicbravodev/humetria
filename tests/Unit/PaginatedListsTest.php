@@ -13,6 +13,7 @@ const ARRAY_PROPS = [
     'organization/employees:genders' => 'catálogo fijo: el enum Gender',
     'organization/employees:staff_groups' => 'catálogo fijo: sindicalizado o confianza',
     'organization/employees:states' => 'catálogo fijo: las 32 entidades',
+    'organization/org-chart:chain' => 'resumen corto: la cadena de mando de la persona enfocada, un nodo por nivel',
     'tenancy/work-centers:states' => 'catálogo fijo: las 32 entidades',
     'tenancy/members:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/invite-member:roles' => 'catálogo fijo: los roles que se pueden dar',

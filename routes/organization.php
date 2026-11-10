@@ -6,6 +6,7 @@ use App\Modules\Organization\Http\Controllers\AreaOptionsController;
 use App\Modules\Organization\Http\Controllers\EmployeeController;
 use App\Modules\Organization\Http\Controllers\EmployeeImportController;
 use App\Modules\Organization\Http\Controllers\JobGradeOptionsController;
+use App\Modules\Organization\Http\Controllers\OrgChartController;
 use App\Modules\Organization\Http\Controllers\OrgChartPeopleController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,3 +23,6 @@ Route::post('admin/{tenant:slug}/employees/import', [EmployeeImportController::c
 Route::get('admin/{tenant:slug}/areas/options', AreaOptionsController::class)->where('tenant', $notReserved)->name('tenant.areas.options');
 Route::get('admin/{tenant:slug}/job-grades/{field}/options', JobGradeOptionsController::class)->where('tenant', $notReserved)->whereIn('field', ['category', 'level'])->name('tenant.job-grades.options');
 Route::get('admin/{tenant:slug}/org-chart/people/options', [OrgChartPeopleController::class, 'options'])->where('tenant', $notReserved)->name('tenant.org-chart.people.options');
+Route::get('admin/{tenant:slug}/org-chart', [OrgChartController::class, 'index'])->where('tenant', $notReserved)->name('tenant.org-chart.index');
+Route::get('admin/{tenant:slug}/org-chart/people/search', [OrgChartPeopleController::class, 'search'])->where('tenant', $notReserved)->name('tenant.org-chart.people.search');
+Route::get('admin/{tenant:slug}/org-chart/people/{employee}/reports', [OrgChartController::class, 'reports'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.org-chart.reports');

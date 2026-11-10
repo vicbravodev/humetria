@@ -33,6 +33,27 @@ final class OrgChartPeopleController extends Controller
         // `keep_reports` leaves out the person alone: whoever reports to them may take their place when they leave.
         $excluded = Str::isUuid($except) ? [$except, ...($request->boolean('keep_reports') ? [] : $lines->subtreeIds($except))] : [];
 
+        return $this->people($search, $excluded);
+    }
+
+    /**
+     * The active people whose name or employee number has what was typed, to focus one in the org chart.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function search(Request $request): array
+    {
+        Gate::authorize('view-org-chart');
+
+        return $this->people($request->string('q')->trim()->limit(100, '')->toString(), []);
+    }
+
+    /**
+     * @param  list<string>  $excluded
+     * @return list<array{value: string, label: string}>
+     */
+    private function people(string $search, array $excluded): array
+    {
         return array_values(Employee::query()
             ->whereNull('deactivated_at')
             ->when($excluded !== [], fn ($query) => $query->whereKeyNot($excluded))

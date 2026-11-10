@@ -54,3 +54,28 @@ export type EmployeeChoices = {
     staffGroups: ChoiceOption[];
     states: ChoiceOption[];
 };
+
+/** A person in the org chart: who they are, where, and the size of their team. Never contact data. */
+export type OrgNode = {
+    id: string;
+    name: string;
+    job_title: string;
+    area: string;
+    work_center: string;
+    active: boolean;
+    /** Active people who report to them. */
+    direct_reports: number;
+    /** Active people below them, at any level. */
+    total_reports: number;
+    flag: { value: 'few' | 'many'; label: string } | null;
+    /** Whether the person is within the filters, or only on the way to someone who is. */
+    matches: boolean;
+    /** Their manager left and nobody took their place. */
+    manager_inactive: boolean;
+};
+
+/** Each chosen filter of the org chart with its name. */
+export type OrgChartFilters = {
+    work_center: { value: string; label: string } | null;
+    area: { value: string; label: string } | null;
+};
