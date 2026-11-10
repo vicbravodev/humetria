@@ -18,11 +18,13 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Organization/Actions/CountEmployees.php' => 'counts',
     'app/Modules/Organization/Actions/ListEmployees.php' => 'reads a paginated list',
     'app/Modules/Organization/Actions/PlanEmployeeImport.php' => 'checks the rows without writing; ImportEmployees logs the import',
+    'app/Modules/Leave/Actions/PlanOpeningBalances.php' => 'checks the rows without writing; ImportOpeningBalances logs the import',
     'app/Modules/Tenancy/Actions/ListTenants.php' => 'reads a paginated list',
     'app/Modules/Tenancy/Actions/ListUserTenants.php' => 'reads a list',
     'app/Modules/Tenancy/Actions/ListWorkCenters.php' => 'reads a paginated list',
     'app/Modules/Attendance/Actions/BuildAuthorityReport.php' => 'reads the report; AuditReport logs every view and download',
     'app/Modules/Campaigns/Actions/OpenSurvey.php' => 'reads the link; SubmitSurvey logs what changes',
+    'app/Modules/Engagement/Actions/OpenInvitation.php' => 'reads the link; SubmitResponse logs what changes',
     'app/Modules/Telework/Actions/OpenPortal.php' => 'reads the portal link; each portal action logs what changes',
     'app/Modules/Disclosure/Actions/OpenWorkersPage.php' => 'reads the link of the public page; by design nothing is recorded of who opens it (criterio C-55)',
     'app/Modules/Complaints/Actions/OpenFollowUp.php' => 'reads the case a reference and a key open; the actions that change it log (without the case, by design)',
@@ -30,7 +32,9 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',
+    'app/Modules/Engagement/Actions/CloseExpiredSurveys.php' => 'each close is logged by CloseSurvey',
     'app/Modules/Campaigns/Actions/QueueSurveyInvitations.php' => 'its callers (launch, resend, invite missing, replacements) log with the counts',
+    'app/Modules/Engagement/Actions/QueueInvitations.php' => 'its callers (launch, remind) log with the counts',
     'app/Modules/Tenancy/Actions/SendInvitationEmail.php' => 'only queues the email; InviteMember, InviteOwner and ResendInvitation log it',
     // The audit trail itself: every caller logs the same event beside it.
     'app/Actions/RecordAudit.php' => 'it is the audit trail; its callers log',

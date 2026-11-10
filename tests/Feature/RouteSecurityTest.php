@@ -33,6 +33,8 @@ function publicRouteNames(): array
         'invitations.accept', // guest: accepts the invitation; throttled, single-use token
         'survey.show', // guest: survey link from the email; the token is the credential; throttled
         'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
+        'engagement.survey.show', // guest: la persona abre la encuesta de clima o pulso desde su correo; el token del enlace es la credencial; no muestra nada de nadie; un enlace inválido, usado o cancelado no dice por qué; throttled
+        'engagement.survey.submit', // guest: envía la encuesta completa una sola vez, bajo candado; el token es la credencial; throttled
         'portal.show', // guest: la persona teletrabajadora no tiene cuenta; el token es la credencial; throttled
         'portal.checklist.show', // guest: la lista de verificación de la persona; el token del portal es la credencial; solo ve sus lugares; throttled
         'portal.checklist.store', // guest: envía la lista una sola vez, bajo candado; el token del portal es la credencial; throttled
@@ -46,7 +48,19 @@ function publicRouteNames(): array
         'portal.seating.inputs.store', // guest: la persona envía su calzado y sus molestias, de forma voluntaria y tras aceptar el aviso; el token del portal es la credencial; throttled
         'portal.seating.acknowledgments.store', // guest: la persona confirma, una sola vez, que le informaron de su evaluación; el token del portal es la credencial; solo la suya; throttled
         'portal.seating.reports.store', // guest: la persona reporta un asiento dañado sin que se guarde quién; el token del portal es la credencial; throttled
+        'portal.feedback.show', // guest: la persona con equipo a cargo ve el resultado agregado de su grupo; el token del portal es la credencial; nunca respuestas ni textos de nadie; throttled
+        'portal.team.show', // guest: la persona ve a su jefe, sus compañeros y sus reportes; el token del portal es la credencial; solo nombre, puesto y área; un enlace no válido da 404 sin decir nada más; throttled
+        'portal.vacations.show', // guest: la persona ve sus días de vacaciones por periodo y sus solicitudes; el token del portal es la credencial; solo ve lo suyo, sin importes; un enlace no válido o una empresa que no usa Vacaciones da 404 sin decir nada más; throttled
+        'portal.vacations.preview', // guest: la persona ve cuántos días laborables serían sus fechas y si los tiene, sin guardar nada; el token del portal es la credencial; solo su saldo; throttled
+        'portal.vacations.requests.store', // guest: la persona pide vacaciones o un permiso; el token del portal es la credencial y dice de quién es la solicitud, nunca lo enviado; throttled
+        'portal.vacations.requests.cancel', // guest: la persona cancela una solicitud suya; el token del portal es la credencial; una ajena da 404; throttled
+        'portal.vacations.team.show', // guest: el jefe ve las solicitudes de su equipo que le toca responder; el token del portal es la credencial y dice quién es; solo las que esperan su respuesta; throttled
+        'portal.vacations.team.approve', // guest: el jefe aprueba una solicitud que le toca; el token del portal es la credencial; una que no le toca da 404; una sola respuesta gana; throttled
+        'portal.vacations.team.reject', // guest: el jefe rechaza, con motivo, una solicitud que le toca; el token del portal es la credencial; una que no le toca da 404; throttled
+        'portal.vacations.statements.show', // guest: la persona lee su constancia anual de vacaciones (art. 81); el token del portal es la credencial; una ajena da 404; días y fechas, sin importes; throttled
+        'portal.vacations.statements.acknowledge', // guest: la persona confirma que recibió su constancia; el token del portal es la credencial; una ajena da 404; solo guarda el momento; throttled
         'portal.policy.show', // guest: la persona lee la política vigente de su centro y su propio estado de acuse; el token del portal es la credencial; solo ve lo suyo y lo que la empresa publicó; un enlace no válido da 404 sin decir nada más; throttled
+        'portal.climate.show', // guest: la persona lee lo que la empresa publicó tras la encuesta de clima: participación, índice y compromisos de la empresa y de sus propios grupos; el token del portal es la credencial; nada individual; 404 si no hay nada publicado; throttled
         'portal.support.show', // guest: la persona canalizada por aviso en su portal lee el mensaje de su empresa, en usted, con el destino propuesto; nada de la Guía I ni la nota de RH; el token del portal es la credencial; solo lo suyo; un enlace no válido o sin mensaje da 404; throttled
         'portal.policy.acknowledge', // guest: la persona confirma, una sola vez, que leyó la versión vigente de la política; el token del portal es la credencial; solo la suya; throttled
         'workers.show', // guest: las personas ven los centros de su empresa y lo que la empresa decidió que todos lean; el enlace permanente (derivado, rotable, desactivable, con vencimiento) es la credencial; sin sesión, sin cookies y sin rastro de quien la abre; el mismo 404 neutro por cualquier causa; throttled por dirección y por enlace

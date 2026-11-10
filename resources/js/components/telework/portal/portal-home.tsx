@@ -1,6 +1,7 @@
 import { PartyPopper } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PortalNoticesLink from '@/components/telework/portal/portal-notices-link';
+import PortalTeamLink from '@/components/telework/portal/portal-team-link';
 import PortalEquipmentSection from '@/components/telework/portal/portal-equipment-section';
 import PortalDocuments from '@/components/telework/portal/portal-documents';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
@@ -89,6 +90,7 @@ export default function PortalHome({
                 </section>
             )}
             {canNotify && <PortalNoticesLink token={token} />}
+            <PortalTeamLink token={token} />
             {pending.sent.length > 0 && (
                 <section aria-labelledby="portal-sent" className="grid gap-3">
                     <h2 id="portal-sent" className="text-xl font-semibold">

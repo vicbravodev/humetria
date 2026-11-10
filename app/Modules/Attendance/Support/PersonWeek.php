@@ -12,13 +12,15 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Leave\Contracts\Absences;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
 
 /**
  * What «Mi semana» shows a person of one of their weeks (criterio 8.1): their marks day by day (type, local time, whether
- * it falls on the next day and whether RH corrected it), the minutes of each day and of the week as criterio 2.9 splits
+ * it falls on the next day and whether RH corrected it), whether they were away that day with approved vacations or a
+ * leave (never its type), the minutes of each day and of the week as criterio 2.9 splits
  * them, the limits broken, a day left with no end (unless it is the one still open now), their answer, the version of the
  * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, or its
  * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time.
@@ -35,6 +37,7 @@ final class PersonWeek
         $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
         $latest = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['id'])?->id;
         $yesterday = CarbonImmutable::now($timezone)->subDay()->startOfDay();
+        $away = AbsentDays::of(resolve(Absences::class), $week, [$employeeId])[$employeeId] ?? [];
         $days = [];
         $hours = [];
 
@@ -52,6 +55,8 @@ final class PersonWeek
                 'scheduledMinutes' => $day->scheduledMinutes,
                 'restDay' => $day->restDay,
                 'missingEnd' => WorkedDay::missingEnd($marks) && ! $stillOpen,
+                // Approved vacations or a leave: the day is not one they missed. Its marks, if any, still count.
+                'absence' => $away[$offset] ?? null,
             ];
         }
 

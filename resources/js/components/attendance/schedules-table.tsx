@@ -1,5 +1,5 @@
 import { CalendarClock } from 'lucide-react';
-import ChooseBox from '@/components/attendance/choose-box';
+import ChooseBox from '@/components/humetria/choose-box';
 import ScheduleRow from '@/components/attendance/schedule-row';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';

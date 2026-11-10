@@ -19,6 +19,7 @@ import {
 import { options as areaOptions } from '@/routes/tenant/areas';
 import { create as importPage } from '@/routes/tenant/employees/import';
 import { options as jobGradeOptions } from '@/routes/tenant/job-grades';
+import { options as managerOptions } from '@/routes/tenant/org-chart/people';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
 import type {
     ChoiceOption,
@@ -49,6 +50,7 @@ export default function Employees({
     const choices = {
         workCentersUrl: workCenterOptions.url(tenantSlug),
         areasUrl: areaOptions.url(tenantSlug),
+        managersUrl: managerOptions.url(tenantSlug),
         jobCategoriesUrl: jobGradeOptions.url({
             tenant: tenantSlug,
             field: 'category',

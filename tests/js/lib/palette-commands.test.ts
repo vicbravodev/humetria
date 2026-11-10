@@ -3,6 +3,22 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 import { paletteCommands } from '@/lib/palette-commands';
 import { toUrl } from '@/lib/utils';
 
+import { can } from '../support/tenant-can';
+
+/** The tools beyond compliance, all off: the palette tests look at the compliance pages. */
+const noTools = {
+    view_attendance: false,
+    manage_attendance: false,
+    view_org_chart: false,
+    manage_org_chart: false,
+    view_vacations: false,
+    manage_vacations: false,
+    view_climate: false,
+    manage_climate: false,
+    view_pulse: false,
+    manage_pulse: false,
+};
+
 const actions = () => ({
     visit: vi.fn(),
     setTheme: vi.fn(),
@@ -18,26 +34,8 @@ describe('paletteCommands', () => {
                 slug: 'acme',
                 role: 'owner',
                 can: {
-                    manage_organization: true,
-                    manage_members: true,
-                    manage_campaigns: true,
-                    view_trauma_screenings: true,
-                    manage_telework: true,
-                    review_workplaces: true,
-                    view_seating: true,
-                    manage_seating: true,
-                    assess_seating: true,
-                    view_compensation: true,
-                    manage_compensation: true,
-                    view_interventions: true,
-                    manage_interventions: true,
-                    view_disclosure: true,
-                    manage_disclosure: true,
-                    use_assistant: true,
-                    manage_complaint_channel: true,
-                    handle_complaints: true,
-                    view_attendance: false,
-                    manage_attendance: false,
+                    ...can(true, true),
+                    ...noTools,
                 },
             },
             sidebarExpanded: true,
@@ -140,8 +138,7 @@ describe('paletteCommands inside a company', () => {
                         use_assistant: true,
                         manage_complaint_channel: manage,
                         handle_complaints: manage,
-                        view_attendance: false,
-                        manage_attendance: false,
+                        ...noTools,
                     },
                 },
                 sidebarExpanded: true,
@@ -214,8 +211,7 @@ describe('paletteCommands inside a union', () => {
                     use_assistant: true,
                     manage_complaint_channel: true,
                     handle_complaints: true,
-                    view_attendance: false,
-                    manage_attendance: false,
+                    ...noTools,
                 },
             },
             sidebarExpanded: true,
@@ -259,8 +255,7 @@ describe('paletteCommands for Compensación', () => {
                     use_assistant: true,
                     manage_complaint_channel: true,
                     handle_complaints: true,
-                    view_attendance: false,
-                    manage_attendance: false,
+                    ...noTools,
                 },
             },
             sidebarExpanded: true,

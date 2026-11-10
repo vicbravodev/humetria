@@ -20,6 +20,11 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{CampaignRecords,EvaluationSchedule}`,
 `Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Tenancy\Contracts\{Companies,Members,WorkCenters}`.
 
+**Lo que Assistant expone.** `Contracts\AiAccess` (`available()`, `redact()`, `record()`): otro módulo que llama al proveedor de IA
+(p. ej. `Engagement` al resumir comentarios) pregunta primero `available()` (Humi no apagado para la empresa y presupuesto
+del mes sin agotar), manda solo texto pasado por `redact()` y cuenta el uso con `record()` (fila de `ai_usage` sin persona
+ni conversación). Implementación: `Support/TenantAiAccess`.
+
 ## Reglas que no se rompen
 
 - **Empresa primero.** El `AssistantScope` viene del servidor y entra por constructor a cada herramienta; ningún esquema de

@@ -11,6 +11,7 @@ use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use LogicException;
 
 final class CompanyRoster implements Roster
@@ -68,6 +69,29 @@ final class CompanyRoster implements Roster
         return array_values($this->matching($query)->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all());
     }
 
+    public function idsByEmployeeNumber(array $numbers): array
+    {
+        if ($numbers === []) {
+            return [];
+        }
+
+        $byLower = [];
+
+        foreach (Employee::query()->whereIn(DB::raw('lower(employee_number)'), array_map(mb_strtolower(...), $numbers))->get(['id', 'employee_number']) as $employee) {
+            $byLower[mb_strtolower($employee->employee_number ?? '')] = $employee->id;
+        }
+
+        $ids = [];
+
+        foreach ($numbers as $number) {
+            if (isset($byLower[mb_strtolower($number)])) {
+                $ids[$number] = $byLower[mb_strtolower($number)];
+            }
+        }
+
+        return $ids;
+    }
+
     /**
      * @return Builder<Employee>
      */
@@ -123,6 +147,8 @@ final class CompanyRoster implements Roster
             $employee->deactivated_at === null,
             $employee->job_title,
             $employee->staff_group === StaffGroup::Trusted,
+            $employee->job_grade_id,
+            $employee->staff_group?->value,
         );
     }
 }

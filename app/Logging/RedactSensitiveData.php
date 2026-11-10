@@ -31,6 +31,9 @@ final class RedactSensitiveData implements ProcessorInterface
         $sensitiveKeys = [
             'answers',
             'authorization',
+            // Clima y pulso: what a person writes, the themes drawn from it, and what a company commits to answer it.
+            'comment',
+            'comments',
             'cookie',
             'current_password',
             // An email address identifies a person: never log one, whatever event carries it.
@@ -53,18 +56,22 @@ final class RedactSensitiveData implements ProcessorInterface
             'contact_phone',
             'description',
             'exterior_number',
+            'heard',
             'home_address',
             'interior_number',
             'ip',
             'marital_status',
             'note',
             'notes',
+            'owner_name',
             'refusal_reason',
             'responded_ip',
             'review_note',
             'risk_note',
             'special_needs',
             'street',
+            'themes',
+            'will_do',
             // NOM-037: that a person reported a severe traumatic event is health data.
             'traumatic_event',
             // Ley Silla: a person's footwear, discomfort, pain and the notes about their health are health data.
@@ -123,6 +130,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'assistant_message',
             'prompt',
             'user_message',
+            // Vacaciones: why a request was turned down is written by a person, about a person.
+            'rejection_reason',
         ];
 
         foreach ($data as $key => $value) {

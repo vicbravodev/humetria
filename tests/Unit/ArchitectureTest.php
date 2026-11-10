@@ -32,6 +32,15 @@ it('has the Attendance module registered in the architecture rules', function ()
     expect(modules())->toContain('Attendance');
 });
 
+it('has the Engagement module registered in the architecture rules', function (): void {
+    expect(modules())->toContain('Engagement');
+});
+
+// Humi never reads the comments of a climate survey: Engagement is not something Assistant may use.
+arch('Assistant does not use Engagement')
+    ->expect('App\Modules\Assistant')
+    ->not->toUse('App\Modules\Engagement');
+
 arch()->preset()->php();
 
 arch()->preset()->security();

@@ -39,6 +39,14 @@ it('ignores case and accents, and reaches the other norm', function (): void {
     expect($card['rows'][0])->toMatchArray(['norm' => 'NOM-037', 'id' => 'C-01']);
 });
 
+it('indexes the vacation criteria for Humi', function (): void {
+    $chunk = resolve(RegulationIndex::class)->search('prima vacacional', 1)[0];
+
+    expect($chunk->norm)->toBe('Vacaciones')
+        ->and($chunk->id)->toBe('C-08')
+        ->and($chunk->source)->toBe('Ley + Nuestro');
+});
+
 it('gives at most three criteria, each cut to a size the model can read', function (): void {
     $card = toolCard(SearchRegulations::class, $this->scope, ['query' => 'norma centro de trabajo personas']);
 

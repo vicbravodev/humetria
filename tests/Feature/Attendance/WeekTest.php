@@ -179,13 +179,13 @@ describe('reading the week', function (): void {
                     ['id' => $ids[2], 'type' => 'break_end', 'time' => '15:00', 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
                     ['id' => $ids[3], 'type' => 'end', 'time' => '19:00', 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
                 ],
-                'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false, 'overtimeMinutes' => 60,
+                'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false, 'absence' => null, 'overtimeMinutes' => 60,
             ])
             ->assertJsonPath('days.1.workedMinutes', 840)
             ->assertJsonPath('days.1.overtimeMinutes', 360)
             // The day on the person's rest day is all worked, none of it overtime (it is paid apart).
             ->assertJsonPath('days.6.overtimeMinutes', 0)
-            ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false, 'overtimeMinutes' => 0])
+            ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'missingEnd' => false, 'absence' => null, 'overtimeMinutes' => 0])
             ->assertJsonPath('days.6.marks.1', ['id' => $ids[7], 'type' => 'end', 'time' => '06:00', 'nextDay' => true, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'])
             ->assertJsonPath('days.6.restDay', true)
             ->assertJsonPath('summary', [

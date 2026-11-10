@@ -269,3 +269,16 @@ describe('weekMessage', () => {
         expect(weekMessage(reason)).toContain(text);
     });
 });
+
+describe('a day away in the week the server tells', () => {
+    const told = (absence: unknown) =>
+        weekView({ ...week, days: [{ ...week.days[0], absence }] })?.days[0]
+            ?.absence ?? null;
+
+    it('keeps vacations and leave, and nothing else', () => {
+        expect(told('vacation')).toBe('vacation');
+        expect(told('leave')).toBe('leave');
+        expect(told(null)).toBeNull();
+        expect(told('Maternidad')).toBeNull();
+    });
+});

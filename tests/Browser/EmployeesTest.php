@@ -127,6 +127,23 @@ it('adds an employee, creating their area as it is typed', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
+it('sets the direct manager of an employee from their panel', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->assertSee('Déjalo vacío si nadie está por encima.')
+        ->assertSee('Antigüedad reconocida')
+        ->click('#employee-manager_id')
+        ->type('[role="combobox"][aria-controls="employee-manager_id-options"]', 'carla')
+        ->assertSeeIn('#employee-manager_id-options', 'Carla Ruiz')
+        ->keys('[role="combobox"][aria-controls="employee-manager_id-options"]', 'Enter')
+        ->click('[data-slot="sheet-content"] button[type="submit"]')
+        ->assertSee('Empleado actualizado.')
+        ->assertSee('Reporta a Carla Ruiz')
+        ->assertNoJavaScriptErrors();
+});
+
 it('passes the checks with the employee panel open', function (bool $dark, bool $mobile): void {
     acmeWithEmployees();
 
@@ -148,6 +165,25 @@ it('deactivates an employee and reactivates them from the deactivated ones', fun
         ->assertSee('Ana López')
         ->click('[aria-label="Acciones de Ana López"]')->click('Reactivar')
         ->assertSee('Empleado reactivado.')
+        ->assertNoJavaScriptErrors();
+});
+
+it('asks who takes the reports of a manager before deactivating them', function (): void {
+    $tenant = acmeWithEmployees();
+    $ana = Employee::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Ana López')->sole();
+    Employee::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Beto Díaz')->update(['manager_id' => $ana->id]);
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Dar de baja')
+        ->assertSee('Ana López tiene 1 reporte directo. Elige a quién le reportarán.')
+        ->assertDisabled('[role="dialog"] button[type="submit"]')
+        ->click('#employee-reassign_to')
+        ->type('[role="combobox"][aria-controls="employee-reassign_to-options"]', 'carla')
+        ->assertSeeIn('#employee-reassign_to-options', 'Carla Ruiz')
+        ->keys('[role="combobox"][aria-controls="employee-reassign_to-options"]', 'Enter')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Empleado dado de baja.')
+        ->assertSee('Reporta a Carla Ruiz')
         ->assertNoJavaScriptErrors();
 });
 

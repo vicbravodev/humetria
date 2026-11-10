@@ -1,6 +1,7 @@
 import type { Auth } from '@/types/auth';
 import type { SalaryImportSummary } from '@/types/compensation';
 import type { InCourse } from '@/types/navigation';
+import type { LeaveImportSummary } from '@/types/leave-policy';
 import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
@@ -36,6 +37,8 @@ declare module '@inertiajs/core' {
             toast?: FlashToast;
             /** What a checked employees CSV would do, or its problems; see the import page. */
             import?: EmployeeImportSummary;
+            /** What a checked file of opening balances would load, and why each other row cannot; see the vacations import. */
+            leave_import?: LeaveImportSummary;
             /** The problems of a salaries CSV that was not imported, shown once; see the tabulator and the individual salaries. */
             salary_import?: SalaryImportSummary;
             /** A link to a report just opened, shown once: only its hash is kept. */

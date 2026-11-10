@@ -21,7 +21,8 @@ export async function loadServerOptions(
     signal: AbortSignal,
 ): Promise<Option[]> {
     const response = await fetch(
-        `${url}?${new URLSearchParams({ q: query }).toString()}`,
+        // A route that already carries a query (whom to leave out) keeps it.
+        `${url}${url.includes('?') ? '&' : '?'}${new URLSearchParams({ q: query }).toString()}`,
         { headers: { Accept: 'application/json' }, signal },
     );
 

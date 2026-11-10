@@ -613,3 +613,118 @@ function enrollmentUrl(string $employeeId, ?int $userId = null): string
 
     return is_string($url) ? $url : throw new LogicException('No enrollment email.');
 }
+
+/**
+ * Fails when the props of a page hold something one person of a climate or pulse survey wrote or gave: the id of a stored
+ * response or comment, the text of a comment, a map named `answers`, or a map from a question key to a number (a
+ * question's key may appear as a value, in a list of results, never as a key with its answer).
+ *
+ * @param  array<array-key, mixed>  $props
+ */
+function expectNoEngagementResponses(array $props): void
+{
+    $json = json_encode($props, JSON_THROW_ON_ERROR);
+
+    foreach (App\Modules\Engagement\Models\Response::query()->withoutGlobalScopes()->pluck('id') as $id) {
+        expect($json)->not->toContain($id);
+    }
+
+    foreach (App\Modules\Engagement\Models\Comment::query()->withoutGlobalScopes()->get(['id', 'body']) as $comment) {
+        expect($json)->not->toContain($comment->id)->not->toContain($comment->body);
+    }
+
+    expect(engagementAnswersIn($props))->toBe([]);
+}
+
+/**
+ * Where in `$value` an answer of one person shows, as dotted paths.
+ *
+ * @param  array<array-key, mixed>  $value
+ * @return list<string>
+ */
+function engagementAnswersIn(array $value, string $path = 'props'): array
+{
+    $keys = array_map(fn (App\Modules\Engagement\Data\BankItem $item): string => $item->key, App\Modules\Engagement\Support\Bank\ItemBank::all());
+    $found = [];
+
+    foreach ($value as $key => $item) {
+        if (($key === 'answers' && is_array($item)) || (in_array($key, $keys, true) && is_int($item))) {
+            $found[] = "{$path}.{$key}";
+        } elseif (is_array($item)) {
+            $found = [...$found, ...engagementAnswersIn($item, "{$path}.{$key}")];
+        }
+    }
+
+    return $found;
+}
+
+/**
+ * A closed climate survey of `$tenant` with `$count` anonymous responses. Every agreement question is answered 4 and the
+ * recommendation 9, unless `$answers` says otherwise for person `$i`; `$segment` is the coarse group they all belong to.
+ *
+ * @param  (Closure(int): array<string, int|null>)|null  $answers
+ * @param  array<string, string|null>  $segment  work_center_id, area_id, tenure_band, manager_group_id
+ */
+function climateResultsSurvey(Tenant $tenant, int $count, ?Closure $answers = null, array $segment = [], bool $closed = true): App\Modules\Engagement\Models\Survey
+{
+    $factory = App\Modules\Engagement\Models\Survey::factory();
+    $survey = ($closed ? $factory->closed() : $factory->active())->create(['tenant_id' => $tenant->id, 'invited' => max($count, 12)]);
+    $everyone = [];
+    foreach (App\Modules\Engagement\Support\Bank\ItemBank::all() as $item) {
+        if ($item->scale !== App\Modules\Engagement\Enums\ItemScale::Open) {
+            $everyone[$item->key] = $item->scale === App\Modules\Engagement\Enums\ItemScale::Recommend ? 9 : 4;
+        }
+    }
+
+    for ($i = 0; $i < $count; $i++) {
+        App\Modules\Engagement\Models\Response::factory()->create([...$segment, 'tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'answers' => $answers === null ? $everyone : $answers($i)]);
+    }
+
+    return $survey;
+}
+
+/**
+ * A closed pulse of the company in `$mode` with `$count` responses; `$answer` is what each gives to every question that
+ * is an agreement (the recommendation, 9).
+ */
+function pulseResultsSurvey(Tenant $tenant, App\Modules\Engagement\Enums\PulseMode $mode, int $count, int $answer = 5, ?string $manager = null): App\Modules\Engagement\Models\Survey
+{
+    $refs = App\Modules\Engagement\Support\Bank\PulseComposer::compose($mode, [App\Modules\Engagement\Enums\Driver::Clarity], 0, true);
+    $survey = App\Modules\Engagement\Models\Survey::factory()->closed()->pulse()->create(['tenant_id' => $tenant->id, 'pulse_mode' => $mode, 'items' => $refs, 'invited' => max($count, 12)]);
+    $answers = [];
+
+    foreach ($refs as $ref) {
+        $key = explode('@', $ref)[0];
+        $answers[$key] = $key === 'eng.recommend' ? 9 : $answer;
+    }
+
+    App\Modules\Engagement\Models\Response::factory()->count($count)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'manager_group_id' => $manager, 'answers' => $answers]);
+
+    return $survey;
+}
+
+/**
+ * A closed climate survey of `$tenant` whose responses belong to the groups of managers in `$groups`: the id of the manager
+ * (an employee) => [how many answered, the answer 1 to 5 each gives to the questions about their manager]. Everything else
+ * is answered 4 (the recommendation, 9).
+ *
+ * @param  array<string, array{int, int}>  $groups
+ */
+function climateManagerSurvey(Tenant $tenant, array $groups): App\Modules\Engagement\Models\Survey
+{
+    $survey = App\Modules\Engagement\Models\Survey::factory()->closed()->create(['tenant_id' => $tenant->id, 'invited' => 40]);
+
+    foreach ($groups as $manager => [$count, $level]) {
+        $answers = [];
+        foreach (App\Modules\Engagement\Support\Bank\ItemBank::all() as $item) {
+            if ($item->scale !== App\Modules\Engagement\Enums\ItemScale::Open) {
+                $manages = $item->block === App\Modules\Engagement\Enums\ItemBlock::Manager;
+                $answers[$item->key] = $item->scale === App\Modules\Engagement\Enums\ItemScale::Recommend ? 9 : ($manages ? $level : 4);
+            }
+        }
+
+        App\Modules\Engagement\Models\Response::factory()->count($count)->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'manager_group_id' => $manager, 'answers' => $answers]);
+    }
+
+    return $survey;
+}

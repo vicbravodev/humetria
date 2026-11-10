@@ -214,12 +214,22 @@ export function weekTotal(view: Pick<WeekView, 'days' | 'summary'>): {
     };
 }
 
-/** The days of the week as the bar draws them: minutes worked and, of them, the overtime. */
+/** The days of the week as the bar draws them: minutes worked and, of them, the overtime, and the days away. */
 export function ribbonDays(days: readonly WeekDay[]): RibbonDay[] {
     return days.map((day) => ({
         worked: day.workedMinutes,
         overtime: day.overtimeMinutes,
+        ...(absenceLabel(day.absence) !== null && { absent: true }),
     }));
+}
+
+/** A day away in a word: «Vacaciones» or «Permiso», never the type of the leave; null when the person was not away. */
+export function absenceLabel(absence: WeekDay['absence']): string | null {
+    if (absence === 'vacation') {
+        return 'Vacaciones';
+    }
+
+    return absence === 'leave' ? 'Permiso' : null;
 }
 
 const EVIDENCE: Record<string, { dots: number; text: string; rank: number }> = {

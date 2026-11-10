@@ -1,3 +1,4 @@
+import type { RibbonDay } from '@/lib/attendance/week-ribbon';
 import { duration } from '@/lib/attendance/week-text';
 
 export type OverviewFilters = {
@@ -91,4 +92,24 @@ export function weekNotes(person: {
     }
 
     return person.atRisk ? ['Cerca del tope de horas extra'] : [];
+}
+
+/** A person's week for the ribbon, with the days they were away marked. */
+export function overviewRibbon(person: {
+    days: readonly { worked: number; overtime: number }[];
+    absentDays: readonly number[];
+}): RibbonDay[] {
+    return person.days.map((day, index) => ({
+        ...day,
+        absent: person.absentDays.includes(index),
+    }));
+}
+
+/** «Ausente 2 días»: how many days of the week the person was away with vacations or a leave; null when none. */
+export function absentNote(absentDays: readonly number[]): string | null {
+    if (absentDays.length === 0) {
+        return null;
+    }
+
+    return `Ausente ${absentDays.length} ${absentDays.length === 1 ? 'día' : 'días'}`;
 }
