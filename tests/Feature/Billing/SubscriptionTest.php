@@ -128,6 +128,8 @@ it('lets a direct plan carry a negotiated price too', function (): void {
 });
 
 it('changes nothing about the access of the company, its dates, its restriction or its other data', function (): void {
+    // Frozen, so a write to the company row inside the same second cannot show up as a changed updated_at.
+    $this->freezeTime();
     [$tenant] = paidCompany();
     $tenant->update(['active_until' => '2026-12-31 00:00:00+00']);
     // Its modules do follow the plan now (through Tenancy's contract); the flag that tells pages to read them is only bookkeeping.

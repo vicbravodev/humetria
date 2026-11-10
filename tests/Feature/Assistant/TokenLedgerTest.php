@@ -27,9 +27,15 @@ function ledgerCounter(Tenant $tenant): ?UsageCounter
     return UsageCounter::query()->where('tenant_id', $tenant->id)->first();
 }
 
+/** A message to Humi from `$as` in `$in` (this file brings its own helper: it must run alone too). */
+function ledgerChat(string $message, object $as, Tenant $in): Illuminate\Testing\TestResponse
+{
+    return test()->actingAs($as)->postJson("/admin/{$in->slug}/assistant/chat", ['message' => $message]);
+}
+
 function sendToHumi(string $message = 'Hola'): Illuminate\Testing\TestResponse
 {
-    return chat(['message' => $message]);
+    return ledgerChat($message, test()->hr, test()->a);
 }
 
 it('reserves before the model is called and settles with the tokens the SDK reports, leaving nothing held', function (): void {
@@ -100,7 +106,7 @@ it('counts each company\'s messages on its own quota', function (): void {
     HumiAssistant::fake(['Uno.', 'Dos.']);
 
     sendToHumi()->streamedContent();
-    chat(['message' => 'Hola'], $user, $other)->streamedContent();
+    ledgerChat('Hola', $user, $other)->streamedContent();
 
     expect(UsageCounter::query()->where('tenant_id', $this->a->id)->count())->toBe(1)
         ->and(UsageCounter::query()->where('tenant_id', $other->id)->count())->toBe(1)
