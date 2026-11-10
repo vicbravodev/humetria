@@ -361,3 +361,6 @@ están cubiertos.
 - **2026-11-10 · v1 (propuesta).** Primera versión, escrita contra la LFT (reforma 14-05-2026) y el decreto del
   27-12-2022. Hallazgo al verificar: el decreto no trae un transitorio que conserve la tabla anterior (C-02 quedó como
   «Ley + Nuestro»). Sin cotejar: la jurisprudencia 2a./J. 1/97 (C-11) y la tabla publicada por la STPS (C-01).
+- **2026-11-10 · v1 (implementada).** Se construyó contra estos criterios: constancia anual como hoja imprimible con acuse
+  (C-10), sin importes; el motivo de un rechazo y las notas no llegan a logs ni a la bitácora (prueba
+  `tests/Feature/Leave/LogPrivacyTest.php`). Sin cambios a los criterios.
