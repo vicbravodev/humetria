@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Support;
 
+use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Notifications\RequestDecided;
 use App\Modules\Leave\Notifications\RequestEscalated;
 use App\Modules\Leave\Notifications\RequestToDecide;
 use App\Modules\Organization\Contracts\Roster;
@@ -53,6 +55,22 @@ final readonly class RequestNotifier
                 $company = $this->companies->current();
                 // ponytail: the path of RH's queue; route('tenant.vacations.requests.index') once that page names it.
                 Notification::route('mail', $owner)->notify(new RequestEscalated(url("admin/{$company->slug}/vacations/requests"), $company, $person->name, $request->escalation_reason, RequestSummary::of($request)));
+            }
+        });
+    }
+
+    /**
+     * Tells who asked what was answered, with the link of their own portal.
+     */
+    public function decided(LeaveRequest $request): void
+    {
+        self::quietly(function () use ($request): void {
+            $person = $this->roster->find($request->employee_id);
+
+            if ($person !== null && $person->email !== null) {
+                // ponytail: the path of «Mis vacaciones» in the portal; route('portal.vacations.show') once that page names it.
+                $url = url("portal/{$this->portal->token($person->id)}/vacations");
+                Notification::route('mail', $person->email)->notify(new RequestDecided($url, $this->companies->current(), $person->name, RequestSummary::of($request), $request->status === RequestStatus::Approved, $request->rejection_reason));
             }
         });
     }

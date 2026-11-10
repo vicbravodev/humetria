@@ -11,8 +11,11 @@ use RuntimeException;
  */
 final class RequestRefused extends RuntimeException
 {
+    /** What the person who approves reads, as "usted"; the other reasons are worded by the screen that asks. */
+    private const array MESSAGES = ['insufficient_balance' => 'No tiene días disponibles y su política no permite adelantar vacaciones.'];
+
     public function __construct(public readonly string $reason)
     {
-        parent::__construct("The request was refused: {$reason}.");
+        parent::__construct(self::MESSAGES[$reason] ?? "The request was refused: {$reason}.");
     }
 }
