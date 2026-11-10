@@ -36,7 +36,7 @@ it('lists the companies of a person with several, the blocked one with its statu
         ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Acme Industrial')
         ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Sin iniciar')
         ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Beta Foods')
-        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Desactivada')
+        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Suspendida')
         ->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="companies"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
 })->with($looks);
 
@@ -210,7 +210,7 @@ it('lets an impersonating superadmin close the block modal and use the panel', f
 
 it('offers an impersonating superadmin the way out of the impersonation, not the owner\'s sign-out', function (): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
@@ -225,7 +225,7 @@ it('offers an impersonating superadmin the way out of the impersonation, not the
 
 it('lets the closed block modal stay closed while moving through the panel', function (): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create())->create();
 
     visit('/admin/companies')

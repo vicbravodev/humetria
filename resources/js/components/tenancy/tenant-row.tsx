@@ -38,6 +38,11 @@ export default function TenantRowView({
                             {tenant.status_date}
                         </span>
                     )}
+                    {tenant.restriction_reason !== null && (
+                        <span className="max-w-64 text-caption text-muted-foreground">
+                            Motivo: {tenant.restriction_reason}
+                        </span>
+                    )}
                 </div>
             </TableCell>
             <TableCell className="whitespace-normal">

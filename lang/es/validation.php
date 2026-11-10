@@ -360,6 +360,7 @@ return [
         'code' => 'código',
         'message_id' => 'mensaje',
         'reason' => 'motivo',
+        'restriction' => 'estado',
         'rating' => 'calificación',
         'pageContext' => 'pantalla',
         'conversationId' => 'conversación',

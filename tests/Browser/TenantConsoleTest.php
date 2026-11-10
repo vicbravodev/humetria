@@ -63,9 +63,9 @@ it('keeps the actions of each row in one menu, so the table fits without scrolli
         ->assertScript('() => { const box = document.querySelector(\'[data-slot="table-container"]\'); return box.scrollWidth <= box.clientWidth; }')
         ->assertScript('() => document.querySelectorAll(\'[data-test="tenant-actions"]\').length', 1)
         ->click('[aria-label="Acciones de Grupo Ejemplo"]')
-        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Desactivar')
-        // Desactivar is apart from the rest and in the destructive color.
-        ->assertScript('() => document.querySelector(\'[role="menuitem"][data-variant="destructive"]\')?.textContent', 'Desactivar')
+        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Suspender, Archivar')
+        // Suspender is apart from the rest and in the destructive color (Solo lectura is the mild one).
+        ->assertScript('() => document.querySelector(\'[role="menuitem"][data-variant="destructive"]\')?.textContent', 'Suspender')
         ->assertScript('() => document.querySelector(\'[role="menu"] [role="separator"]\') !== null');
 });
 
@@ -286,22 +286,13 @@ it('keeps the address prefix inside its field and outlines the whole field on fo
         ->assertScript('() => getComputedStyle(document.querySelector("#tenant-slug").closest(\'[data-slot="input-group"]\')).outlineStyle', 'solid');
 });
 
-it('offers to reactivate a blocked company', function (): void {
-    signInAsSuperadmin();
-    Tenant::factory()->suspended()->create();
-
-    visit('/admin/companies')
-        ->click('@tenant-actions')->click('Reactivar')
-        ->assertSee('Reactivar empresa');
-});
-
 it('offers to change the end date of an active company instead of activating it again', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->activeUntil(now()->addMonths(2))->create();
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Logo de los correos, Asistente Humi, Desactivar')
+        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Suspender, Archivar')
         ->click('Cambiar vigencia')
         ->assertSee('Elige el último día')
         ->assertSeeIn('[role=dialog] button[type=submit]', 'Guardar');
@@ -314,49 +305,83 @@ it('passes the accessibility and CSP checks with the activation dialog open', fu
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Activar')->assertSee('Activar empresa'));
 })->with($looks);
 
-it('deactivates an active company after confirming, and hides the button afterwards', function (): void {
+it('suspends an active company after showing what changes and asking the reason, and offers to reactivate it afterwards', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->activeUntil(now()->addMonths(2))->create(['trade_name' => 'Grupo Ejemplo']);
 
     visit('/admin/companies')
         ->assertSee('Activa hasta')
-        ->click('@tenant-actions')->click('Desactivar')
-        ->assertSee('¿Desactivar Grupo Ejemplo?')
-        ->assertSee('Sus datos se conservan.')
-        ->assertDontSee('La prueba no se puede reanudar.')
-        // The row's own "Desactivar" button shares the text, so the dialog's submit is picked by its place.
+        ->click('@tenant-actions')->click('Suspender')
+        ->assertSee('Suspender a Grupo Ejemplo')
+        ->assertSee('Nadie de la empresa entra al panel')
+        ->assertSee('El saldo no cambia')
+        ->assertSee('Nunca se borran')
+        ->fill('reason', 'Falta de pago de octubre')
+        // The row's own menu shares the text, so the dialog's submit is picked by its place.
         ->click('[role=dialog] button[type=submit]')
-        ->assertSee('Empresa desactivada.')
+        ->assertSee('Empresa suspendida.')
         ->assertSee('Suspendida el')
-        ->assertDontSee('Desactivar')
+        ->assertSee('Motivo: Falta de pago de octubre')
+        ->click('@tenant-actions')
+        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Archivar')
         ->assertNoJavaScriptErrors();
 
-    expect(Tenant::query()->sole()->status()->value)->toBe('suspended');
+    $tenant = Tenant::query()->sole();
+
+    expect($tenant->status()->value)->toBe('suspended')
+        ->and($tenant->restriction_reason)->toBe('Falta de pago de octubre');
 });
 
-it('warns that a trial cannot be resumed once the company is deactivated', function (): void {
+it('does not suspend without a reason', function (): void {
     signInAsSuperadmin();
-    Tenant::factory()->inTrial(now())->create();
+    Tenant::factory()->activeUntil(now()->addMonths(2))->create();
 
     visit('/admin/companies')
-        ->click('@tenant-actions')->click('Desactivar')
-        ->assertSee('La prueba no se puede reanudar.');
+        ->click('@tenant-actions')->click('Suspender')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Suspender a')
+        ->assertNoJavaScriptErrors();
+
+    expect(Tenant::query()->sole()->restriction)->toBeNull();
 });
 
-it('does not offer to deactivate a blocked company', function (): void {
+it('reactivates a restricted company with a reason, keeping its dates', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->readOnly()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    visit('/admin/companies')
+        ->click('@tenant-actions')->click('Reactivar')
+        ->assertSee('Reactivar a Grupo Ejemplo')
+        ->assertSee('No reinicia la prueba ni la vigencia')
+        ->fill('reason', 'Regularizó su pago')
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Empresa reactivada.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Tenant::query()->sole()->restriction)->toBeNull();
+});
+
+it('does not offer the restriction a company already has', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->suspended()->create();
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo de los correos, Asistente Humi');
+        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Archivar');
 });
 
-it('passes the accessibility and CSP checks with the deactivation dialog open', function (bool $dark, bool $mobile): void {
+it('passes the accessibility and CSP checks with the restriction dialogs open', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     Tenant::factory()->create();
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Desactivar')->assertSee('Sus datos se conservan.'));
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Suspender')->assertSee('Nunca se borran'));
+})->with($looks);
+
+it('passes the accessibility and CSP checks with the reactivation dialog open', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->readOnly()->create();
+
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Reactivar')->assertSee('No reinicia la prueba'));
 })->with($looks);
 
 it('invites the owner from the console', function (): void {

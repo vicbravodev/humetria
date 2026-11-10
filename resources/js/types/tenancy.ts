@@ -32,6 +32,8 @@ export type TenantRow = {
         | 'archived';
     status_label: string;
     status_date: string | null;
+    /** Why a person restricted it (read only, suspended, archived); null otherwise. */
+    restriction_reason: string | null;
     /** Last paid day as Y-m-d in Mexico City time; null when never activated. */
     active_until: string | null;
     blocked: boolean;

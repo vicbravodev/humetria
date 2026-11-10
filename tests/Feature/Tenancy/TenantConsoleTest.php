@@ -53,6 +53,7 @@ it('lists each company with its status for the superadmin', function (): void {
                 'status' => 'trial',
                 'status_label' => 'En prueba',
                 'status_date' => 'Prueba hasta 3 nov 2026',
+                'restriction_reason' => null,
                 'active_until' => null,
                 'blocked' => false,
                 'owner' => null,
@@ -215,6 +216,15 @@ it('shows one status at a time, counts each within the search, and keeps both in
             ->where('filters', ['q' => 'prueba', 'status' => 'trial'])
             ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'read_only' => 0, 'suspended' => 0, 'archived' => 0])
             ->where('tenants.first_page_url', fn (string $url): bool => str_contains($url, 'status=trial') && str_contains($url, 'q=prueba')));
+});
+
+it('tells why a company was restricted, and nothing for one that was not', function (): void {
+    Tenant::factory()->suspended('Falta de pago de octubre')->create(['trade_name' => 'Restringida']);
+    Tenant::factory()->create(['trade_name' => 'Libre']);
+
+    $rows = $this->actingAs(superadmin())->get(route('companies.index'))->inertiaProps('tenants.data');
+
+    expect(collect($rows)->pluck('restriction_reason', 'trade_name')->all())->toEqual(['Restringida' => 'Falta de pago de octubre', 'Libre' => null]);
 });
 
 it('shows an archived company only in its own view, with its date', function (): void {

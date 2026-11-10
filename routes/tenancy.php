@@ -33,9 +33,13 @@ Route::post('admin/companies/{tenant}/activate', [TenantConsoleController::class
     ->middleware(['auth', 'verified'])
     ->name('companies.activate');
 
-Route::post('admin/companies/{tenant}/deactivate', [TenantConsoleController::class, 'deactivate'])
+Route::post('admin/companies/{tenant}/restriction', [TenantConsoleController::class, 'restrict'])
     ->middleware(['auth', 'verified'])
-    ->name('companies.deactivate');
+    ->name('companies.restrict');
+
+Route::post('admin/companies/{tenant}/reactivate', [TenantConsoleController::class, 'reactivate'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.reactivate');
 
 Route::post('admin/companies/{tenant}/impersonate', ImpersonateOwnerController::class)
     ->middleware(['auth', 'verified'])

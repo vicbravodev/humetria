@@ -7,12 +7,15 @@ namespace App\Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
-use App\Modules\Tenancy\Actions\DeactivateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
+use App\Modules\Tenancy\Actions\ReactivateTenant;
+use App\Modules\Tenancy\Actions\RestrictTenant;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantView;
 use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
+use App\Modules\Tenancy\Http\Requests\ReactivateTenantRequest;
+use App\Modules\Tenancy\Http\Requests\RestrictTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -53,6 +56,7 @@ final class TenantConsoleController extends Controller
                     'status' => $status->value,
                     'status_label' => $status->label(),
                     'status_date' => $this->statusDate($tenant, $status),
+                    'restriction_reason' => $tenant->restriction_reason,
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
                     'owner' => $this->owner($tenant),
@@ -90,14 +94,25 @@ final class TenantConsoleController extends Controller
         return redirect()->route('companies.index');
     }
 
-    public function deactivate(Tenant $tenant, DeactivateTenant $deactivateTenant): RedirectResponse
+    public function restrict(RestrictTenantRequest $request, Tenant $tenant, RestrictTenant $restrictTenant): RedirectResponse
     {
-        Gate::authorize('manage-tenants');
-        abort_if($tenant->status()->isBlocked(), 409);
+        $restriction = $request->restriction();
+        abort_if($tenant->restriction === $restriction, 409);
 
-        $deactivateTenant->handle($tenant);
+        $restrictTenant->handle($tenant, $restriction, $request->reason());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa desactivada.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => $restriction->confirmation()]);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function reactivate(ReactivateTenantRequest $request, Tenant $tenant, ReactivateTenant $reactivateTenant): RedirectResponse
+    {
+        abort_if($tenant->restriction === null, 409);
+
+        $reactivateTenant->handle($tenant, $request->reason());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa reactivada.']);
 
         return redirect()->route('companies.index');
     }
