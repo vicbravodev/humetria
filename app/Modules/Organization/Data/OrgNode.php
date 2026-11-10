@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Organization\Data;
+
+use App\Modules\Organization\Enums\SpanFlag;
+
+/**
+ * A person in the org chart: who they are, where, and the size of their team. Never contact data.
+ */
+final readonly class OrgNode
+{
+    /**
+     * @param  int  $directReports  Active people who report to them.
+     * @param  int  $totalReports  Active people below them, through active managers.
+     * @param  bool  $matches  Whether the person is within the filters, or only on the way to someone who is.
+     * @param  bool  $managerInactive  Their manager left and nobody took their place.
+     */
+    public function __construct(
+        public string $id,
+        public string $name,
+        public string $jobTitle,
+        public string $area,
+        public string $workCenter,
+        public bool $active,
+        public int $directReports,
+        public int $totalReports,
+        public ?SpanFlag $flag,
+        public bool $matches,
+        public bool $managerInactive,
+    ) {}
+
+    /**
+     * @return array{id: string, name: string, job_title: string, area: string, work_center: string, active: bool, direct_reports: int, total_reports: int, flag: array{value: string, label: string}|null, matches: bool, manager_inactive: bool}
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'job_title' => $this->jobTitle,
+            'area' => $this->area,
+            'work_center' => $this->workCenter,
+            'active' => $this->active,
+            'direct_reports' => $this->directReports,
+            'total_reports' => $this->totalReports,
+            'flag' => $this->flag === null ? null : ['value' => $this->flag->value, 'label' => $this->flag->label()],
+            'matches' => $this->matches,
+            'manager_inactive' => $this->managerInactive,
+        ];
+    }
+}
