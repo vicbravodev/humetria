@@ -270,6 +270,21 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
         ->assertScript("() => {$video}.paused");
 });
 
+it('shows how the time clock works in a looping film, with its story for screen readers', function (): void {
+    $video = 'document.querySelector("[data-test=attendance-video] video")';
+
+    visitPage('landing', '/')
+        ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-attendance.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-attendance.webm,humetria-attendance.mp4')
+        ->assertScript('() => document.querySelector("[data-test=attendance-video] figcaption").textContent.includes("Así se marca la jornada")')
+        ->assertScript('() => document.querySelector("[data-test=attendance-video] figcaption").textContent.includes("reporte para la autoridad")')
+        ->assertScript("() => new Promise((resolve) => { {$video}.scrollIntoView(); if (! {$video}.paused) { resolve(true); } {$video}.addEventListener('playing', () => resolve(true)); })")
+        ->assertAttribute('@attendance-video-toggle', 'aria-label', 'Pausar video')
+        ->click('@attendance-video-toggle')
+        ->assertScript("() => {$video}.paused");
+});
+
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {
     visitPage('landing', '/')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')

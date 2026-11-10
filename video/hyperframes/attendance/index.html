@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1440, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: Figtree; font-weight: 400; src: url("fonts/figtree-latin-400-normal.woff2") format("woff2"); }
+      @font-face { font-family: Figtree; font-weight: 500; src: url("fonts/figtree-latin-500-normal.woff2") format("woff2"); }
+      @font-face { font-family: Figtree; font-weight: 600; src: url("fonts/figtree-latin-600-normal.woff2") format("woff2"); }
+      /* Tokens del design system, tema oscuro (docs/design-system). */
+      :root {
+        --bg: #0f1716; --card: #141e1c; --muted: #1a2523; --accent: #213330; --border: #26332f;
+        --fg: #f1faf8; --muted-fg: #9daeaa; --primary: #3ccfbd; --primary-fg: #0f1716;
+        --warn: #d2ae62; --warn-bg: #33291a; --warn-fg: #e9c886;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1440px; height: 1080px; overflow: hidden; background: var(--bg); }
+      body { font-family: Figtree, sans-serif; color: var(--fg); }
+      #root { position: relative; width: 1440px; height: 1080px; }
+      .abs { position: absolute; }
+      .card { background: var(--card); border: 2px solid var(--border); border-radius: 20px; }
+      .muted { color: var(--muted-fg); }
+      .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 10px; background: var(--accent); color: var(--primary); font-size: 28px; font-weight: 500; }
+      .chip.warn { background: var(--warn-bg); color: var(--warn-fg); }
+      .scene { position: absolute; inset: 0; opacity: 0; }
+      h2 { position: absolute; left: 140px; top: 64px; width: 1160px; font-size: 52px; font-weight: 600; letter-spacing: -0.02em; opacity: 0; }
+      .sub { position: absolute; left: 140px; top: 134px; width: 1160px; font-size: 28px; color: var(--muted-fg); opacity: 0; }
+      .primary-btn { position: absolute; display: flex; align-items: center; justify-content: center; background: var(--primary); color: var(--primary-fg); font-size: 32px; font-weight: 600; border-radius: 16px; }
+      .row { position: absolute; left: 0; width: 1160px; height: 96px; display: flex; align-items: center; gap: 28px; padding: 0 36px; border-top: 2px solid var(--border); font-size: 30px; opacity: 0; }
+      .row .t { width: 130px; font-weight: 600; font-variant-numeric: tabular-nums; }
+      .row .k { width: 330px; }
+      .row .w { flex: 1; color: var(--muted-fg); font-size: 28px; }
+      .rail { position: absolute; top: 1010px; height: 8px; width: 270px; border-radius: 4px; background: var(--border); overflow: hidden; }
+      .rail i { display: block; width: 100%; height: 100%; background: var(--primary); transform: scaleX(0); transform-origin: left; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="24" data-width="1440" data-height="1080">
+
+      <h2 id="h1" class="clip" data-start="0" data-duration="24" data-track-index="0">Marca desde su celular, sin contraseña</h2>
+      <p id="s1" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Con el desbloqueo del teléfono y dentro de la zona del centro de trabajo.</p>
+      <h2 id="h2" class="clip" data-start="0" data-duration="24" data-track-index="0">Un registro que no se puede alterar</h2>
+      <p id="s2" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Las correcciones se suman, con su motivo. La marca original se conserva.</p>
+      <h2 id="h3" class="clip" data-start="0" data-duration="24" data-track-index="0">Cada persona confirma su semana</h2>
+      <p id="s3" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Y RH ve los topes de jornada y de horas extra antes de rebasarlos.</p>
+      <h2 id="h4" class="clip" data-start="0" data-duration="24" data-track-index="0">El reporte para la autoridad, con un botón</h2>
+      <p id="s4" class="sub clip" data-start="0" data-duration="24" data-track-index="0">Humetría ordena la evidencia para que RH la presente.</p>
+
+      <!-- Escena 1: la marca -->
+      <div id="sc1" class="scene clip" data-start="0" data-duration="24" data-track-index="1">
+        <div class="abs card" style="left:140px;top:240px;width:420px;height:720px;border-radius:48px;overflow:hidden">
+          <p class="abs muted" style="left:40px;top:44px;font-size:28px">Lunes 9 de noviembre</p>
+          <p class="abs" style="left:40px;top:88px;font-size:104px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">08:58</p>
+          <p class="abs" style="left:40px;top:228px;font-size:30px;font-weight:500">Ana López</p>
+          <p class="abs muted" style="left:40px;top:270px;font-size:28px">Planta Querétaro</p>
+          <div id="mark-btn" class="primary-btn" style="left:40px;top:380px;width:340px;height:104px">Marcar entrada</div>
+          <p class="abs muted" style="left:40px;top:510px;width:340px;font-size:28px;line-height:32px">Confirmas con tu huella o tu rostro. Sin correo ni contraseña.</p>
+          <div id="toast" class="abs" style="left:40px;top:380px;width:340px;height:104px;border-radius:16px;background:var(--accent);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;text-align:center;line-height:34px;opacity:0">Entrada 08:58<br />En zona</div>
+          <div id="sheet" class="abs" style="left:0;top:720px;width:420px;height:300px;background:var(--muted);border-top:2px solid var(--border);border-radius:36px 36px 0 0;display:flex;flex-direction:column;align-items:center;padding-top:36px;gap:20px">
+            <svg id="finger" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="#3ccfbd" stroke-width="4" stroke-linecap="round"><path d="M48 12c-17 0-30 12-30 30v10M78 52V42c0-8-3-15-8-20M30 80c4-6 6-14 6-22V42c0-8 5-13 12-13s12 5 12 13v14c0 10 3 19 8 26M48 82c-2-8-3-14-3-22V44M60 88c-4-7-7-14-8-22"/></svg>
+            <p style="font-size:28px;font-weight:500">Confirma que eres tú</p>
+            <svg id="check" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="#3ccfbd" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:36px;opacity:0"><circle cx="48" cy="48" r="38"/><path d="M30 50l13 13 24-28"/></svg>
+          </div>
+        </div>
+        <div class="abs card" style="left:620px;top:240px;width:680px;height:720px;overflow:hidden;background-image:linear-gradient(var(--border) 2px,transparent 2px),linear-gradient(90deg,var(--border) 2px,transparent 2px);background-size:90px 90px;background-position:20px 30px">
+          <div id="zone" class="abs" style="left:190px;top:170px;width:360px;height:360px;border-radius:180px;border:4px dashed var(--primary);background:rgba(60,207,189,.12)"></div>
+          <div class="abs" style="left:300px;top:280px;width:140px;height:140px;border-radius:16px;background:var(--muted);border:2px solid var(--border)"></div>
+          <p class="abs" style="left:300px;top:332px;width:140px;text-align:center;font-size:28px;font-weight:500;color:var(--muted-fg)">Planta</p>
+          <span id="zone-pill" class="chip abs" style="left:190px;top:560px;opacity:0">Dentro de la zona · a 38 m</span>
+          <p class="abs muted" style="left:32px;top:32px;font-size:28px">Zona de 150 m</p>
+          <div id="dot" class="abs" style="left:70px;top:560px;width:64px;height:64px;border-radius:32px;background:var(--primary);color:var(--primary-fg);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600">AL</div>
+        </div>
+      </div>
+
+      <!-- Escena 2: solo inserción -->
+      <div id="sc2" class="scene clip" data-start="0" data-duration="24" data-track-index="2">
+        <div class="abs card" style="left:140px;top:240px;width:1160px;height:720px;overflow:hidden">
+          <div class="abs" style="left:36px;top:30px;font-size:30px;font-weight:600">Marcas de Ana López · lunes</div>
+          <span id="lock" class="chip abs" style="right:36px;top:24px;opacity:0">Solo inserción</span>
+          <div id="r1" class="row" style="top:96px"><span class="t">08:58</span><span class="k">Entrada</span><span class="w">En zona · Planta Querétaro</span></div>
+          <div id="r2" class="row" style="top:192px"><span class="t">14:02</span><span class="k">Salida a comer</span><span class="w">En zona · Planta Querétaro</span></div>
+          <div id="r3" class="row" style="top:288px"><span class="t">14:47</span><span class="k">Regreso de comer</span><span class="w">En zona · Planta Querétaro</span></div>
+          <div id="r4" class="row" style="top:384px"><span class="t">18:07</span><span class="k">Salida</span><span class="w">En zona · Planta Querétaro</span></div>
+          <div id="r5" class="row" style="top:480px;background:var(--muted)"><span class="t">08:50</span><span class="k">Corrección de la entrada</span><span class="w">Motivo: no alcanzó a marcar; lo confirmó su jefe</span><span class="chip warn">Corrección</span></div>
+          <div id="keep" class="abs muted" style="left:36px;top:620px;font-size:28px;opacity:0">La entrada de las 08:58 sigue ahí: nadie la edita ni la borra.</div>
+        </div>
+      </div>
+
+      <!-- Escena 3: la semana -->
+      <div id="sc3" class="scene clip" data-start="0" data-duration="24" data-track-index="3">
+        <div class="abs card" style="left:140px;top:240px;width:740px;height:720px">
+          <p class="abs" style="left:36px;top:30px;font-size:30px;font-weight:600">Horas por día</p>
+          <div class="abs" style="left:36px;top:268px;width:668px;height:2px;background:var(--warn)"></div>
+          <p class="abs" style="left:36px;top:226px;font-size:28px;color:var(--warn-fg)">Tope de 9 h</p>
+          <div id="b1" class="abs" style="left:56px;bottom:112px;width:96px;height:302px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
+          <div id="b2" class="abs" style="left:182px;bottom:112px;width:96px;height:314px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
+          <div id="b3" class="abs" style="left:308px;bottom:112px;width:96px;height:348px;border-radius:12px 12px 0 0;background:var(--warn);transform-origin:bottom"></div>
+          <div id="b4" class="abs" style="left:434px;bottom:112px;width:96px;height:295px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
+          <div id="b5" class="abs" style="left:560px;bottom:112px;width:96px;height:250px;border-radius:12px 12px 0 0;background:var(--primary);transform-origin:bottom"></div>
+          <p class="abs muted" style="left:56px;bottom:56px;width:620px;font-size:28px;display:flex;justify-content:space-between"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span></p>
+        </div>
+        <div class="abs card" style="left:920px;top:240px;width:380px;height:340px;padding:32px">
+          <p style="font-size:28px;font-weight:600">Horas extra</p>
+          <p style="margin-top:12px;font-size:64px;font-weight:600;letter-spacing:-0.02em"><span id="ot">6.2</span><span class="muted" style="font-size:30px"> de 9 h</span></p>
+          <div style="margin-top:28px;height:14px;border-radius:7px;background:var(--border);overflow:hidden"><div id="ot-bar" style="width:100%;height:100%;border-radius:7px;background:var(--warn);transform:scaleX(0.69);transform-origin:left"></div></div>
+          <p class="muted" style="margin-top:20px;font-size:28px;line-height:30px">Te avisa antes de rebasar el tope semanal.</p>
+        </div>
+        <div class="abs card" style="left:920px;top:620px;width:380px;height:340px;padding:32px">
+          <p style="font-size:28px;font-weight:600">Tu semana</p>
+          <div id="confirm-btn" class="primary-btn" style="font-size:28px;left:32px;top:110px;width:316px;height:104px">Confirmar mi semana</div>
+          <div id="confirmed" class="abs" style="left:32px;top:110px;width:316px;height:104px;border-radius:16px;background:var(--accent);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;opacity:0">Semana confirmada</div>
+          <p class="muted" style="position:absolute;left:32px;top:240px;width:316px;font-size:28px;line-height:30px">Si no está de acuerdo, la objeta y RH la resuelve.</p>
+        </div>
+      </div>
+
+      <!-- Escena 4: el reporte -->
+      <div id="sc4" class="scene clip" data-start="0" data-duration="24" data-track-index="4">
+        <div class="abs card" style="left:140px;top:240px;width:560px;height:720px;padding:40px">
+          <p style="font-size:30px;font-weight:600">Reporte de jornada</p>
+          <p class="muted" style="margin-top:6px;font-size:28px">Planta Querétaro · 2027</p>
+          <div style="margin-top:34px;display:flex;flex-direction:column;gap:22px">
+            <div id="l1" style="height:18px;width:100%;border-radius:9px;background:var(--border)"></div>
+            <div id="l2" style="height:18px;width:86%;border-radius:9px;background:var(--border)"></div>
+            <div id="l3" style="height:18px;width:94%;border-radius:9px;background:var(--border)"></div>
+            <div id="l4" style="height:18px;width:70%;border-radius:9px;background:var(--border)"></div>
+            <div id="l5" style="height:18px;width:90%;border-radius:9px;background:var(--border)"></div>
+            <div id="l6" style="height:18px;width:60%;border-radius:9px;background:var(--border)"></div>
+          </div>
+          <span id="stamp" class="chip abs" style="left:40px;bottom:40px;font-size:28px;padding:10px 22px;opacity:0">Reporte generado</span>
+        </div>
+        <div class="abs card" style="left:740px;top:240px;width:560px;height:720px;padding:40px">
+          <p style="font-size:30px;font-weight:600">Qué incluye</p>
+          <div style="margin-top:28px;display:flex;flex-direction:column;gap:26px;font-size:30px">
+            <p id="i1" style="opacity:0">✓&nbsp; Entradas, pausas y salidas</p>
+            <p id="i2" style="opacity:0">✓&nbsp; Correcciones y su motivo</p>
+            <p id="i3" style="opacity:0">✓&nbsp; Confirmación de cada semana</p>
+            <p id="i4" style="opacity:0">✓&nbsp; Horas extra y descansos</p>
+          </div>
+          <div id="gen-btn" class="primary-btn" style="left:40px;bottom:40px;width:480px;height:104px">Generar reporte</div>
+        </div>
+      </div>
+
+      <i class="rail" style="left:140px"><i id="rail1"></i></i>
+      <i class="rail" style="left:440px"><i id="rail2"></i></i>
+      <i class="rail" style="left:740px"><i id="rail3"></i></i>
+      <i class="rail" style="left:1040px"><i id="rail4"></i></i>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const E = "power3.out";
+      const scenes = [
+        { id: "sc1", h: "h1", s: "s1", rail: "rail1", from: 0, to: 6.6 },
+        { id: "sc2", h: "h2", s: "s2", rail: "rail2", from: 6.6, to: 12.4 },
+        { id: "sc3", h: "h3", s: "s3", rail: "rail3", from: 12.4, to: 18.2 },
+        { id: "sc4", h: "h4", s: "s4", rail: "rail4", from: 18.2, to: 23.3 },
+      ];
+
+      scenes.forEach((sc, i) => {
+        const inAt = i === 0 ? 0 : sc.from;
+        if (i === 0) {
+          tl.set(["#sc1", "#h1", "#s1"], { opacity: 1 }, 0);
+        } else {
+          tl.fromTo("#" + sc.id, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, inAt - 0.1);
+          tl.fromTo(["#" + sc.h, "#" + sc.s], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, inAt);
+        }
+        tl.fromTo("#" + sc.rail, { scaleX: 0 }, { scaleX: 1, duration: sc.to - sc.from, ease: "none" }, sc.from);
+        tl.to(["#" + sc.id, "#" + sc.h, "#" + sc.s], { opacity: 0, duration: 0.4, ease: "power2.in" }, sc.to - 0.1 + (i === 3 ? 0 : 0));
+      });
+
+      // Escena 1: ana entra a la zona, marca, confirma con su huella.
+      tl.fromTo("#dot", { x: 0, y: 0 }, { x: 250, y: -330, duration: 2.2, ease: "power2.inOut" }, 0.6);
+      tl.fromTo("#zone-pill", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 2.9);
+      tl.to("#mark-btn", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.3);
+      tl.fromTo("#sheet", { y: 0 }, { y: -300, duration: 0.5, ease: E }, 3.6);
+      tl.fromTo("#finger", { opacity: 1 }, { opacity: 0, duration: 0.2 }, 4.4);
+      tl.fromTo("#check", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, 4.5);
+      tl.fromTo("#sheet", { y: -300 }, { y: 0, duration: 0.4, ease: "power2.in", immediateRender: false }, 5.0);
+      tl.fromTo("#toast", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 5.1);
+      tl.to("#mark-btn", { opacity: 0, duration: 0.2 }, 5.1);
+
+      // Escena 2: las marcas llegan una a una; la corrección se suma debajo.
+      ["r1", "r2", "r3", "r4"].forEach((r, i) => {
+        tl.fromTo("#" + r, { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 6.7 + i * 0.5);
+      });
+      tl.fromTo("#lock", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 8.9);
+      tl.fromTo("#r5", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 9.6);
+      tl.fromTo("#keep", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 10.6);
+
+      // Escena 3: la semana y sus topes.
+      ["b1", "b2", "b3", "b4", "b5"].forEach((b, i) => {
+        tl.fromTo("#" + b, { scaleY: 0 }, { scaleY: 1, duration: 0.7, ease: E }, 12.6 + i * 0.2);
+      });
+      tl.fromTo("#ot-bar", { scaleX: 0 }, { scaleX: 0.69, duration: 1.1, ease: E }, 13.4);
+      tl.to("#confirm-btn", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1, ease: "power1.inOut" }, 15.6);
+      tl.fromTo("#confirmed", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.4, ease: E }, 16.0);
+      tl.to("#confirm-btn", { opacity: 0, duration: 0.2 }, 16.0);
+
+      // Escena 4: el reporte.
+      ["i1", "i2", "i3", "i4"].forEach((r, i) => {
+        tl.fromTo("#" + r, { opacity: 0, x: 16 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 18.6 + i * 0.4);
+      });
+      ["l1", "l2", "l3", "l4", "l5", "l6"].forEach((l, i) => {
+        tl.fromTo("#" + l, { scaleX: 0, transformOrigin: "left" }, { scaleX: 1, duration: 0.5, ease: E }, 18.8 + i * 0.15);
+      });
+      tl.to("#gen-btn", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1, ease: "power1.inOut" }, 21.0);
+      tl.fromTo("#stamp", { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 21.5);
+
+      // Vuelta al estado de reposo: el último cuadro es igual al primero.
+      const reset = 23.3;
+      tl.set(["#dot"], { x: 0, y: 0 }, reset);
+      tl.set(["#zone-pill", "#toast", "#check", "#stamp", "#lock", "#keep", "#confirmed", "#i1", "#i2", "#i3", "#i4", "#r1", "#r2", "#r3", "#r4", "#r5"], { opacity: 0 }, reset);
+      tl.set(["#mark-btn", "#finger", "#confirm-btn"], { opacity: 1 }, reset);
+      tl.set(["#rail1", "#rail2", "#rail3", "#rail4"], { scaleX: 0 }, reset);
+      tl.set("#sheet", { y: 0 }, reset);
+      tl.fromTo(["#sc1", "#h1", "#s1"], { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out", immediateRender: false }, reset);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

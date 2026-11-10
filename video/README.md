@@ -29,3 +29,17 @@ npm run poster:humi   # public/video/humi-chat.jpg (frame 280, primera respuesta
 ```
 
 Un frame suelto para revisar: `npx remotion still HeroLoop out/frame.png --frame=600`.
+
+## Jornada (HyperFrames)
+
+`hyperframes/attendance/` es el video del registro de jornada (24 s, 1440×1080), hecho con HTML y GSAP en vez de
+Remotion, para comparar los dos. Necesita Docker para renderizar (`--docker`; no hay ffmpeg local):
+
+```bash
+cd video/hyperframes/attendance
+npx hyperframes check
+npx hyperframes render --docker -q delivery -o out/humetria-attendance.mp4
+npx hyperframes render --docker --format webm --crf 32 -o out/humetria-attendance.webm
+```
+
+Los archivos van a `public/video/humetria-attendance.{mp4,webm,jpg}`; el póster es el cuadro de 5.8 s.

@@ -10,20 +10,25 @@ import VisualNom035 from '@/components/landing/visual-nom-035';
 import VisualNom037 from '@/components/landing/visual-nom-037';
 import VisualOrgChart from '@/components/landing/visual-org-chart';
 
-const visuals: Readonly<Record<ToolKey, ComponentType>> = {
-    nom_035: VisualNom035,
-    nom_037: VisualNom037,
-    ley_silla: VisualLeySilla,
-    complaints: VisualComplaints,
-    compensation: VisualCompensation,
-    attendance: VisualAttendance,
-    leave: VisualLeave,
-    org_chart: VisualOrgChart,
-    engagement: VisualEngagement,
-};
+const visuals: Readonly<Record<Exclude<ToolKey, 'attendance'>, ComponentType>> =
+    {
+        nom_035: VisualNom035,
+        nom_037: VisualNom037,
+        ley_silla: VisualLeySilla,
+        complaints: VisualComplaints,
+        compensation: VisualCompensation,
+        leave: VisualLeave,
+        org_chart: VisualOrgChart,
+        engagement: VisualEngagement,
+    };
 
 /** A glimpse of the tool at work, with example data. */
 export default function ToolVisual({ tool }: { tool: ToolKey }) {
+    // The film brings its own figure and caption.
+    if (tool === 'attendance') {
+        return <VisualAttendance />;
+    }
+
     const Visual = visuals[tool];
 
     return (
