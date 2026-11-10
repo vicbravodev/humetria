@@ -16,4 +16,17 @@ final class Money
 
         return $sign.'$'.$pesos.($rest === 0 ? '' : '.'.str_pad((string) $rest, 2, '0', STR_PAD_LEFT));
     }
+
+    /**
+     * Pesos typed as "8000" or "149.50" as cents; null for anything else (a comma, a sign, a third decimal, an amount
+     * that does not fit). Done on the digits: a float would turn 149.05 into 14904.999...
+     */
+    public static function parse(string $pesos): ?int
+    {
+        if (preg_match('/\A(\d{1,12})(?:\.(\d{1,2}))?\z/', trim($pesos), $parts) !== 1) {
+            return null;
+        }
+
+        return (int) $parts[1] * 100 + (int) str_pad($parts[2] ?? '', 2, '0');
+    }
 }

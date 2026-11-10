@@ -227,6 +227,10 @@ return [
     ],
 
     'attributes' => [
+        'plan' => 'plan',
+        'seats' => 'personas contratadas',
+        'negotiated_price' => 'precio negociado',
+        'negotiated_valid_until' => 'vigencia del precio negociado',
         'tax_regime' => 'régimen fiscal',
         'cfdi_use' => 'uso de CFDI',
         'contact_name' => 'nombre del contacto',

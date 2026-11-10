@@ -215,3 +215,21 @@ it('writes money in pesos without decimals when there are none', function (int $
     [5, '$0.05'],
     [-198_000, '-$1,980'],
 ]);
+
+it('reads pesos typed in a form as cents, never through a float', function (string $typed, ?int $cents): void {
+    expect(Money::parse($typed))->toBe($cents);
+})->with([
+    'whole pesos' => ['8000', 800_000],
+    'one decimal' => ['149.5', 14_950],
+    'two decimals' => ['149.05', 14_905],
+    'zero' => ['0', 0],
+    'with spaces around' => [' 8000 ', 800_000],
+    'a comma for the decimals' => ['149,50', null],
+    'a thousands separator' => ['8,000', null],
+    'three decimals' => ['1.005', null],
+    'a sign' => ['-5', null],
+    'text' => ['mucho', null],
+    'empty' => ['', null],
+    'a dot with nothing after it' => ['5.', null],
+    'a huge amount' => ['99999999999999999999', null],
+]);

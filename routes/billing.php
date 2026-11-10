@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Billing\Http\Controllers\AccountCompaniesController;
 use App\Modules\Billing\Http\Controllers\AccountConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
+use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
 use Illuminate\Support\Facades\Route;
 
 // Who pays what, for the staff only: support reads it, the superadmin changes it (each controller checks its gate).
@@ -34,3 +35,8 @@ Route::post('admin/billing/accounts/{account}/companies', [AccountCompaniesContr
 Route::get('admin/billing/companies/search', LinkableCompaniesController::class)
     ->middleware(['auth', 'verified'])
     ->name('billing.companies.search');
+
+Route::put('admin/billing/companies/{company}/subscription', [SubscriptionConsoleController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('company')
+    ->name('billing.subscriptions.update');
