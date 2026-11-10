@@ -143,8 +143,8 @@ it('presents Humetría as an HR platform with all its tools', function (): void 
     visitPage('landing', '/')
         ->assertTitleContains('Herramientas de RH')
         ->assertSeeIn('#hero-title', 'Del celular de tu gente al expediente de la STPS')
-        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => document.querySelector("[data-test=hero-tools]").textContent', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación')
+        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
+        ->assertScript('() => document.querySelector("[data-test=hero-tools]").textContent', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación · Registro de jornada · Vacaciones y permisos · Organigrama · Clima y pulso')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
 
@@ -193,10 +193,10 @@ it('takes the header section links to how it works, confidentiality and Humi', f
     'Humi' => ['@header-humi', '#humi'],
 ]);
 
-it('details each of the five tools', function (): void {
+it('details each of the nine tools', function (): void {
     $cards = 'document.querySelectorAll("#herramientas [data-test=tool-card]")';
     $page = visitPage('landing', '/')
-        ->assertScript("() => {$cards}.length", 5);
+        ->assertScript("() => {$cards}.length", 9);
 
     foreach ([
         'Factores de riesgo psicosocial',
@@ -204,6 +204,10 @@ it('details each of the five tools', function (): void {
         'Asientos y descansos',
         'Quejas y denuncias',
         'Revisión salarial y contractual',
+        'Reloj checador y registro de jornada',
+        'Vacaciones, permisos y saldos',
+        'Quién reporta a quién',
+        'Clima laboral y pulso',
     ] as $index => $hint) {
         $page->assertScript("() => {$cards}[{$index}].querySelector('[data-test=tool-hint]').textContent", $hint);
     }
@@ -212,21 +216,26 @@ it('details each of the five tools', function (): void {
         ->assertScript("() => {$cards}[2].textContent.includes('reglamento interior')")
         ->assertScript("() => {$cards}[3].textContent.includes('nunca a la persona señalada')")
         ->assertScript("() => {$cards}[4].textContent.includes('sindicato')")
+        ->assertScript("() => {$cards}[5].textContent.includes('geocerca')")
+        ->assertScript("() => {$cards}[5].textContent.includes('1 de enero de 2027')")
+        ->assertScript("() => {$cards}[6].textContent.includes('saldo')")
+        ->assertScript("() => {$cards}[7].textContent.includes('organigrama')")
+        ->assertScript("() => {$cards}[8].textContent.includes('Nadie ve una respuesta individual')")
         ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
 });
 
-it('jumps from the tools index to each tool and marks the one being read', function (): void {
+it('jumps from the tools index to each tool and marks the one being read', function (string $tool): void {
     visitPage('landing', '/')
-        ->click('@tool-link-compensation')
-        ->assertScript('() => window.location.hash', '#herramienta-compensation')
+        ->click("@tool-link-{$tool}")
+        ->assertScript('() => window.location.hash', "#herramienta-{$tool}")
         // The mark follows the glide: wait for it.
-        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=tool-link-compensation]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })');
-});
+        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=tool-link-'.$tool.']").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })');
+})->with(['compensation', 'attendance', 'engagement']);
 
 it('lists what an inspector would ask for, one line per tool', function (): void {
     $page = visitPage('landing', '/');
 
-    foreach (['Informe del numeral 7.7', 'Listas de verificación', 'puestos de pie', 'Bitácora de cada queja'] as $item) {
+    foreach (['Informe del numeral 7.7', 'Listas de verificación', 'puestos de pie', 'Bitácora de cada queja', 'Reporte de jornada para la autoridad'] as $item) {
         $page->assertSeeIn('[data-test=inspection]', $item);
     }
 

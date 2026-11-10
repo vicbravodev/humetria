@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 const ids = TOOLS.map((tool) => `herramienta-${tool.key}`);
 
-/** The five tools as a list that stays in view beside them, marking the one being read. Wide screens only. */
+/** The tools as a list that stays in view beside them, marking the one being read. Wide screens only. */
 export default function ToolsIndex() {
     const active = useActiveSection(ids);
     const [hovered, setHovered] = useState<string | null>(null);

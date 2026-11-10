@@ -16,6 +16,10 @@ const items = [
         tool: 'Ley Silla',
     },
     { text: 'Bitácora de cada queja, con sus plazos', tool: 'Buzón de quejas' },
+    {
+        text: 'Reporte de jornada para la autoridad',
+        tool: 'Registro de jornada',
+    },
 ] as const;
 
 /** The moment the whole page leads to: an inspector asks, and the file is already there. */

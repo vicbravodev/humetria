@@ -13,7 +13,7 @@ export default function ToolsSection() {
             <div className="mx-auto flex max-w-[1240px] flex-col gap-12 px-4 py-20 sm:px-6 lg:py-28">
                 <SectionHeading
                     id="herramientas-title"
-                    title="Cinco herramientas, un solo lugar"
+                    title="Nueve herramientas, un solo lugar"
                 >
                     Cada una hace lo que pide la norma o la ley, numeral por
                     numeral. Y Humi te acompaña en todas.
