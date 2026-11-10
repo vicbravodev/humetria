@@ -8,6 +8,7 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\EmployeeLock;
 use App\Modules\Leave\Support\PeriodBalance;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * Grants the period of one year of service, whole, on its anniversary (criterio C-03): the period with the name and the
  * terms of the policy of that day (criterio C-15) and its window (criterios C-09 and C-11), and the entries that put its
- * days in the ledger. Never a second period for the same year of service (criterio C-21).
+ * days in the ledger, with its annual statement (criterio C-10). Never a second period for the same year of service
+ * (criterio C-21).
  */
 final readonly class GrantEntitlement
 {
@@ -69,6 +71,9 @@ final readonly class GrantEntitlement
                     ]);
                 }
             }
+
+            // The statement of art. 81 comes with the period (criterio C-10).
+            LeaveStatement::query()->create(['tenant_id' => $period->tenant_id, 'employee_id' => $employeeId, 'leave_entitlement_id' => $period->id, 'issued_at' => now()]);
 
             return $period;
         });
