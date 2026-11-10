@@ -49,6 +49,24 @@ it('shows RH the results of a closed survey and its cut by area', function (bool
     'dark, phone' => [true, true],
 ]);
 
+it('shows RH every question with its share and its five-step bar', function (bool $dark, bool $mobile): void {
+    [$url, $survey] = climateResultsPanel();
+
+    visitPage('engagement/items', "{$url}/climate/{$survey}/results/items", $dark, $mobile)
+        ->assertSee('Resultados por pregunta')
+        ->assertSee('Compromiso')
+        ->assertSee('Claridad y alineación')
+        ->assertSee('Conozco las principales metas que busca alcanzar esta empresa.')
+        ->assertSee('36 respuestas')
+        ->assertSee('Se reporta pregunta por pregunta.')
+        ->assertSee('Menos de 5 personas la contestaron.');
+})->with([
+    'light, desktop' => [false, false],
+    'dark, desktop' => [true, false],
+    'light, phone' => [false, true],
+    'dark, phone' => [true, true],
+]);
+
 it('tells RH the results wait for the survey to close while it is open', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();

@@ -87,3 +87,30 @@ export type EngagementResults = {
     groups: EngagementGroup[] | null;
     hasHidden: boolean;
 };
+
+export type EngagementItemDetail = {
+    key: string;
+    text: string;
+    shown: boolean;
+    answered: number | null;
+    favorable: number | null;
+    neutral: number | null;
+    unfavorable: number | null;
+    /** The share of each of the five options, from "Totalmente en desacuerdo" to "Totalmente de acuerdo". */
+    distribution: number[] | null;
+    delta: Delta | null;
+};
+
+export type EngagementItemSection = {
+    key: string;
+    label: string;
+    score: number | null;
+    note: string | null;
+    items: EngagementItemDetail[];
+};
+
+export type EngagementItems = {
+    survey: EngagementResults['survey'];
+    available: boolean;
+    sections: EngagementItemSection[];
+};

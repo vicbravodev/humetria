@@ -21,7 +21,11 @@ export default function Results(props: EngagementResults) {
         <>
             <Head title={`Resultados · ${survey.name}`} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <ResultsHeader survey={survey} />
+                <ResultsHeader
+                    tenantSlug={tenantSlug}
+                    survey={survey}
+                    available={participation !== null}
+                />
                 {participation === null ? (
                     <EmptyState
                         icon={Hourglass}

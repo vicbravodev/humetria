@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Support\Results;
 
+use App\Modules\Engagement\Data\BankItem;
 use App\Modules\Engagement\Enums\CutAttribute;
 use App\Modules\Engagement\Enums\Driver;
+use App\Modules\Engagement\Enums\ItemBlock;
+use App\Modules\Engagement\Enums\ItemScale;
 use App\Modules\Engagement\Enums\Priority;
 use App\Modules\Engagement\Enums\TenureBand;
 use App\Modules\Engagement\Support\Bank\ItemBank;
@@ -64,6 +67,64 @@ final readonly class ResultsPresenter
             'comparison' => $previous === null ? null : ['name' => $previous->survey()->name],
             'groups' => $groups === null ? null : $this->groups($cut, $groups['groups'], $company),
             'hasHidden' => $groups['hasHidden'] ?? false,
+        ];
+    }
+
+    /**
+     * The props of the page by question: every agreement question the survey asked about the company, by theme, with
+     * its shares, how many answered and how it moved since the previous survey.
+     *
+     * @return array<string, mixed>
+     */
+    public function itemsProps(SurveyResults $results): array
+    {
+        $survey = $results->survey();
+        $base = ['survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value], 'available' => $results->available()];
+
+        if (! $results->available()) {
+            return [...$base, 'sections' => []];
+        }
+
+        $byKey = $results->company()->byKey;
+        $previous = $results->previous();
+        $before = $previous?->company()->byKey ?? [];
+        $sections = [['key' => 'outcome', 'label' => 'Compromiso', 'score' => null, 'note' => null, 'keys' => array_map(fn (BankItem $item): string => $item->key, array_filter(ItemBank::all(), fn (BankItem $item): bool => $item->block === ItemBlock::Outcome && $item->scale === ItemScale::Agreement))]];
+        foreach ($results->company()->drivers as $driver) {
+            $sections[] = ['key' => $driver->driver->value, 'label' => $driver->driver->label(), 'score' => $driver->favorable, 'note' => $driver->descriptive ? 'Se reporta pregunta por pregunta.' : null, 'keys' => array_map(fn (ItemResult $item): string => $item->key, $driver->items)];
+        }
+        $sections[] = ['key' => 'loop', 'label' => 'Cerrar el ciclo', 'score' => null, 'note' => null, 'keys' => [ItemBank::LOOP]];
+
+        $out = [];
+        foreach ($sections as $section) {
+            $items = [];
+            foreach ($section['keys'] as $key) {
+                if (isset($byKey[$key])) {
+                    $items[] = $this->detail($byKey[$key], $before[$key] ?? null, $previous !== null && $results->sameWording($key, $previous));
+                }
+            }
+            if ($items !== []) {
+                $out[] = ['key' => $section['key'], 'label' => $section['label'], 'score' => $section['score'], 'note' => $section['note'], 'items' => $items];
+            }
+        }
+
+        return [...$base, 'sections' => $out];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function detail(ItemResult $item, ?ItemResult $before, bool $same): array
+    {
+        return [
+            'key' => $item->key,
+            'text' => ItemBank::find($item->key)->text,
+            'shown' => $item->shown,
+            'answered' => $item->answered,
+            'favorable' => $item->favorable,
+            'neutral' => $item->neutral,
+            'unfavorable' => $item->unfavorable,
+            'distribution' => $item->distribution,
+            'delta' => $this->delta($item, $before, $same),
         ];
     }
 

@@ -41,4 +41,21 @@ final class ResultsController extends Controller
 
         return Inertia::render('engagement/results', $presenter->props($results, $cut));
     }
+
+    /** Question by question: the same company-level figures and minimums, by theme. */
+    public function items(mixed $tenant, string $survey, SurveyKind $kind, ResultsPresenter $presenter): Response
+    {
+        $survey = Survey::query()->findOrFail($survey);
+        abort_unless($survey->kind === $kind, 404);
+        Gate::authorize('view', $survey);
+
+        $results = SurveyResults::for($survey);
+
+        if ($results->available()) {
+            Log::info('engagement.results_viewed', ['survey_id' => $survey->id, 'cut' => null]);
+            $this->audit->handle('engagement.results_viewed', $survey, ['cut' => null]);
+        }
+
+        return Inertia::render('engagement/items', $presenter->itemsProps($results));
+    }
 }

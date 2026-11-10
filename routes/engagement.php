@@ -11,3 +11,5 @@ use Illuminate\Support\Facades\Route;
 /** @var string $notReserved */
 // The results of a closed survey: the company, or one cut at a time (?cut=work_center|area|tenure|manager).
 Route::get('admin/{tenant:slug}/climate/{survey}/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results');
+// The same results question by question.
+Route::get('admin/{tenant:slug}/climate/{survey}/results/items', [ResultsController::class, 'items'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results.items');
