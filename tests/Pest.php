@@ -6,6 +6,11 @@ use App\Models\User;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\AssistantScopeFactory;
+use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\Profile;
+use App\Modules\Billing\Models\AccountCompany;
+use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -632,4 +637,51 @@ function enrollmentUrl(string $employeeId, ?int $userId = null): string
     });
 
     return is_string($url) ? $url : throw new LogicException('No enrollment email.');
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function subscriptionInput(array $overrides = []): array
+{
+    return [
+        'plan' => 'cumplimiento',
+        'profile' => 'direct',
+        'seats' => 100,
+        'centers' => 2,
+        'status' => 'active',
+        'starts_on' => '2026-12-01',
+        'negotiated_price' => '',
+        'negotiated_valid_until' => '',
+        ...$overrides,
+    ];
+}
+
+/**
+ * A company paid by a new account of that kind ('direct' or 'consultant').
+ *
+ * @return array{0: Tenant, 1: BillingAccount}
+ */
+function paidCompany(string $kind = 'direct'): array
+{
+    $account = $kind === 'consultant' ? BillingAccount::factory()->consultant()->create() : BillingAccount::factory()->create();
+    $tenant = Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
+
+    return [$tenant, $account];
+}
+
+/**
+ * A company that the account pays, with a plan.
+ *
+ * @param  array<string, mixed>  $attributes  of the Subscription; defaults to a paying channel Cumplimiento of 100 people and 2 centers
+ */
+function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenant = null): Tenant
+{
+    $tenant ??= Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 100, 'centers' => 2, ...$attributes]);
+
+    return $tenant;
 }

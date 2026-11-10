@@ -6,13 +6,10 @@ namespace App\Modules\Billing\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Billing\Data\SubscriptionData;
-use App\Modules\Billing\Enums\AccountKind;
-use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Exceptions\InvalidSubscription;
-use App\Modules\Billing\Models\AccountCompany;
-use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\Catalog;
+use App\Modules\Billing\Support\SubscriptionGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -29,7 +26,7 @@ final readonly class SetSubscription
      */
     public function handle(string $tenantId, SubscriptionData $data): Subscription
     {
-        $this->guard($tenantId, $data, Subscription::query()->where('tenant_id', $tenantId)->first());
+        SubscriptionGuard::check($tenantId, $data, Subscription::query()->where('tenant_id', $tenantId)->first());
 
         return DB::transaction(function () use ($tenantId, $data): Subscription {
             $subscription = Subscription::query()->where('tenant_id', $tenantId)->lockForUpdate()->first();
@@ -71,32 +68,5 @@ final readonly class SetSubscription
 
             return $subscription;
         });
-    }
-
-    /**
-     * @throws InvalidSubscription
-     */
-    private function guard(string $tenantId, SubscriptionData $data, ?Subscription $current): void
-    {
-        $link = AccountCompany::query()->current()->where('tenant_id', $tenantId)->first();
-
-        if ($link === null) {
-            throw new InvalidSubscription('plan', 'Vincula la empresa a una cuenta antes de asignarle un plan.');
-        }
-
-        $required = $data->profile->requiredPlan();
-
-        if ($required !== null && $required !== $data->plan) {
-            throw new InvalidSubscription('profile', "{$data->profile->label()} solo va con el plan {$required->label()}.");
-        }
-
-        if ($data->profile->isChannel() && BillingAccount::query()->findOrFail($link->billing_account_id)->kind !== AccountKind::Consultant) {
-            throw new InvalidSubscription('profile', 'Las tarifas de canal son solo para cuentas de consultor.');
-        }
-
-        // "Zero people does not activate a plan; one already active pays its minimum."
-        if ($data->status === SubscriptionStatus::Active && $current?->status !== SubscriptionStatus::Active && $data->seats < 1) {
-            throw new InvalidSubscription('seats', 'Para activar un plan hace falta al menos una persona.');
-        }
     }
 }

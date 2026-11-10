@@ -6,6 +6,7 @@ use App\Modules\Billing\Http\Controllers\AccountCompaniesController;
 use App\Modules\Billing\Http\Controllers\AccountConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
+use App\Modules\Billing\Http\Controllers\SubscriptionPreviewController;
 use Illuminate\Support\Facades\Route;
 
 // Who pays what, for the staff only: support reads it, the superadmin changes it (each controller checks its gate).
@@ -40,3 +41,8 @@ Route::put('admin/billing/companies/{company}/subscription', [SubscriptionConsol
     ->middleware(['auth', 'verified'])
     ->whereUuid('company')
     ->name('billing.subscriptions.update');
+
+Route::post('admin/billing/companies/{company}/subscription/preview', SubscriptionPreviewController::class)
+    ->middleware(['auth', 'verified', 'throttle:billing-preview'])
+    ->whereUuid('company')
+    ->name('billing.subscriptions.preview');

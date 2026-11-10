@@ -9,43 +9,12 @@ use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Http\Requests\SubscriptionRules;
 use App\Modules\Billing\Http\Requests\UpdateSubscriptionRequest;
-use App\Modules\Billing\Models\AccountCompany;
-use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 
 mutates(SetSubscription::class, SubscriptionRules::class, UpdateSubscriptionRequest::class);
-
-/**
- * @param  array<string, mixed>  $overrides
- * @return array<string, mixed>
- */
-function subscriptionInput(array $overrides = []): array
-{
-    return [
-        'plan' => 'cumplimiento',
-        'profile' => 'direct',
-        'seats' => 100,
-        'centers' => 2,
-        'status' => 'active',
-        'starts_on' => '2026-12-01',
-        'negotiated_price' => '',
-        'negotiated_valid_until' => '',
-        ...$overrides,
-    ];
-}
-
-/** A company paid by a new account of that kind. */
-function paidCompany(string $kind = 'direct'): array
-{
-    $account = $kind === 'consultant' ? BillingAccount::factory()->consultant()->create() : BillingAccount::factory()->create();
-    $tenant = Tenant::factory()->create();
-    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
-
-    return [$tenant, $account];
-}
 
 it('lives under /admin/billing/companies/{company}/subscription', function (): void {
     expect(route('billing.subscriptions.update', 'abc', absolute: false))->toBe('/admin/billing/companies/abc/subscription');

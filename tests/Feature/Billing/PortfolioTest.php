@@ -20,20 +20,6 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(SummarizeAccount::class, ListAccountCompanies::class, Eligibility::class, SubscriptionQuoter::class, QuoteView::class);
 
-/**
- * A company that the account pays, with a plan.
- *
- * @param  array<string, mixed>  $attributes  of the Subscription; defaults to a paying channel Cumplimiento of 100 people and 2 centers
- */
-function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenant = null): Tenant
-{
-    $tenant ??= Tenant::factory()->create();
-    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
-    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 100, 'centers' => 2, ...$attributes]);
-
-    return $tenant;
-}
-
 function summaryOf(BillingAccount $account): array
 {
     $page = test()->actingAs(superadmin())->get(route('billing.accounts.show', $account))->viewData('page');
