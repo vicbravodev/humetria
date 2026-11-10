@@ -11,6 +11,7 @@ use App\Modules\Billing\Http\Requests\SubscriptionRules;
 use App\Modules\Billing\Http\Requests\UpdateSubscriptionRequest;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 
@@ -129,11 +130,12 @@ it('lets a direct plan carry a negotiated price too', function (): void {
 it('changes nothing about the access of the company, its dates, its restriction or its other data', function (): void {
     [$tenant] = paidCompany();
     $tenant->update(['active_until' => '2026-12-31 00:00:00+00']);
-    $before = $tenant->refresh()->getAttributes();
+    // Its modules do follow the plan now (through Tenancy's contract); the flag that tells pages to read them is only bookkeeping.
+    $before = Arr::except($tenant->refresh()->getAttributes(), ['has_module_rows']);
 
     $this->actingAs(superadmin())->put(route('billing.subscriptions.update', $tenant->id), subscriptionInput())->assertSessionHasNoErrors();
 
-    expect($tenant->refresh()->getAttributes())->toBe($before)
+    expect(Arr::except($tenant->refresh()->getAttributes(), ['has_module_rows']))->toBe($before)
         ->and($tenant->active_until?->toDateString())->toBe('2026-12-31')
         ->and($tenant->restriction)->toBeNull();
 });
