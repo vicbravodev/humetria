@@ -59,4 +59,13 @@ interface Roster
      * @return list<string>
      */
     public function matchingIds(RosterQuery $query): array;
+
+    /**
+     * The id of whoever has each employee number, whatever its case, deactivated ones included; a number nobody of the
+     * company has is left out.
+     *
+     * @param  list<string>  $numbers
+     * @return array<string, string> employee id by number, as it was asked
+     */
+    public function idsByEmployeeNumber(array $numbers): array;
 }
