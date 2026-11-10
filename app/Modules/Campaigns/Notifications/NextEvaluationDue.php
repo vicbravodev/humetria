@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * «Se acerca tu próxima evaluación» (rediseño v2, docs/02 «Correos»): 60 days before the NOM-035 evaluation of one or more
  * centers turns 2 years old (num. 7.9), to the owner, with the way to schedule the next one.
  */
-final class NextEvaluationDue extends Notification implements ShouldQueue
+final class NextEvaluationDue extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -50,5 +51,10 @@ final class NextEvaluationDue extends Notification implements ShouldQueue
             ->greeting('Hola')
             ->line($line)
             ->action('Programar', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

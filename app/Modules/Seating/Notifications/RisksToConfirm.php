@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Seating\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * Tells a person, as "usted", that their company assessed their work standing and that they can read the result and confirm
  * it was explained to them. The link is theirs (made as the job runs, so the plain token never reaches the queue).
  */
-final class RisksToConfirm extends Notification
+final class RisksToConfirm extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -35,5 +36,10 @@ final class RisksToConfirm extends Notification
             ->line('Puede ver el resultado y confirmar que se lo explicaron desde su página personal.')
             ->action('Ver y confirmar', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

@@ -20,9 +20,16 @@ final class UsageQuota
     {
         $subscription = Subscription::query()->where('tenant_id', $tenantId)->first();
 
-        return $subscription === null
-            ? config()->integer("billing.unplanned_quotas.{$meter}")
-            : Catalog::current()->quota($subscription->plan, $meter);
+        if ($subscription === null) {
+            return config()->integer("billing.unplanned_quotas.{$meter}");
+        }
+
+        $catalog = Catalog::current();
+
+        // Campaign email is per seat of the plan, with a floor; the other meters are a flat amount of the plan.
+        return $meter === 'email_campaign'
+            ? max($catalog->quota($subscription->plan, 'email_per_seat') * $subscription->seats, $catalog->quota($subscription->plan, 'email_minimum'))
+            : $catalog->quota($subscription->plan, $meter);
     }
 
     public function granted(string $tenantId, string $meter, CarbonImmutable $period): int

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * page where they follow it up. No reference, no word of the case, no company's name. It is deliberately not queued: a queued
  * notice would leave the address in the queue's payload.
  */
-final class NewsOnYourCase extends Notification
+final class NewsOnYourCase extends Notification implements MailBag
 {
     public function __construct(private readonly string $url) {}
 
@@ -32,5 +33,10 @@ final class NewsOnYourCase extends Notification
             ->line('Hay novedades en el caso que usted presentó en el canal de quejas. Para leerlas necesitará la referencia y la clave que recibió al presentarlo.')
             ->line('Este aviso no dice nada del caso. Si no esperaba este correo, no necesita hacer nada.')
             ->action('Ver mi caso', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

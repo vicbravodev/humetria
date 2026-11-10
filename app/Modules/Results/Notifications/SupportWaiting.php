@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * is theirs (made as the job runs, so the notification is sent at once and never queued: the plain token must not reach the
  * queue).
  */
-final class SupportWaiting extends Notification
+final class SupportWaiting extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -36,5 +37,10 @@ final class SupportWaiting extends Notification
             ->line("{$this->company->tradeName} le dejó un mensaje confidencial en su página personal. Solo usted puede leerlo.")
             ->action('Leer el mensaje', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

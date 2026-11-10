@@ -27,7 +27,7 @@ return [
     | Lo que tiene una empresa sin suscripción (heredada o en prueba sin plan): la cuota del plan Integral, para no quitarle
     | nada que ya usaba. Una vez que tiene plan manda la cuota de su plan en el catálogo.
     */
-    'unplanned_quotas' => ['assistant_tokens' => 2_000_000],
+    'unplanned_quotas' => ['assistant_tokens' => 2_000_000, 'email_campaign' => 500, 'storage_bytes' => 5_368_709_120],
 
     /* Minutos que una reserva sin liquidar ni liberar se da por muerta (una respuesta de Humi dura menos de 6 minutos). */
     'reservation_ttl_minutes' => 30,

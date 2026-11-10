@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Telework\Data\PendingChecklist;
 use App\Modules\Telework\Data\PendingDocument;
 use App\Modules\Telework\Data\PendingEquipment;
@@ -18,7 +19,7 @@ use Illuminate\Notifications\Notification;
  * Tells an employee, as "usted", everything waiting in their portal, with their personal link (made as the job runs, so
  * the notification is sent at once and never queued: the plain token must not reach the queue).
  */
-final class PortalReminder extends Notification
+final class PortalReminder extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -66,5 +67,10 @@ final class PortalReminder extends Notification
         foreach ($items as $item) {
             $mail->line("- {$item}");
         }
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

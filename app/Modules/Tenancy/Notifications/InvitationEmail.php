@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use Carbon\CarbonImmutable;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
  * The email that carries the one-time link to join a company with a role. The plain token lives only here and in the link
  * (and in the queued job, encrypted, so neither Redis nor the Horizon dashboard shows it).
  */
-final class InvitationEmail extends Notification implements ShouldBeEncrypted, ShouldQueue
+final class InvitationEmail extends Notification implements MailBag, ShouldBeEncrypted, ShouldQueue
 {
     use Queueable;
 
@@ -78,5 +79,10 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
 
         return trans_choice('{1} :count centro de trabajo|[2,*] :count centros de trabajo', $this->workCenters)
             .' · '.trans_choice('{0} sin personas|{1} :count persona|[2,*] :count personas', $this->people);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }
