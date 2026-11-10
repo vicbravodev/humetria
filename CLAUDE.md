@@ -40,7 +40,8 @@ El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (a
 **Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
 `.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
 `composer mutate:critical -- --min=95`: todas las clases que los tests declaran en `mutates()`, menos controladores,
-FormRequests y notificaciones. Si el score baja de 95, el workflow falla y GitHub avisa por correo.
+FormRequests y notificaciones, **un módulo a la vez** (`scripts/mutate-critical.sh`; una sola corrida desborda el límite de
+argumentos del sistema, ver `docs/testing.md`) y con el 95 aplicado a cada módulo. Si el score baja de 95, el workflow falla y GitHub avisa por correo.
 
 - Una clase de lógica nueva entra sola: su test declara `mutates(Clase::class)` (la lista sale de
   `scripts/mutation-classes.php`; no hay una lista que mantener a mano). Para dejar una clase fuera, no se declara.
@@ -49,7 +50,7 @@ FormRequests y notificaciones. Si el score baja de 95, el workflow falla y GitHu
   El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y en `docs/testing.md`.
 - **No se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el usuario
   la pide, y acotada a las clases que tocaste: `composer mutate -- --class=…` (4 procesos, solo los tests con
-  `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (~6 min) y
+  `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (varios minutos) y
   `composer mutate:full` (las 293 clases, `--min=95`) son para medir, a petición del usuario. Ver `docs/testing.md`.
 - No corras la mutación al mismo tiempo que `composer test` en el mismo checkout: comparten su base de pruebas y los dos dan resultados falsos (otro worktree no estorba).
 - La cobertura (Unit/Feature) corre en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo,
