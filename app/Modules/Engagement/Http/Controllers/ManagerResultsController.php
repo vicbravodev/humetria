@@ -48,6 +48,7 @@ final class ManagerResultsController extends Controller
         $page = LengthAwarePaginator::resolveCurrentPage();
 
         return Inertia::render('engagement/managers', [
+            'kind' => $kind->value,
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
             'available' => $results->available(),
             // ponytail: one read of the names of every shown group; a company with thousands of managers wants a page query in Roster.
@@ -69,6 +70,7 @@ final class ManagerResultsController extends Controller
         $comments = $this->comments($survey, $manager);
 
         return Inertia::render('engagement/manager', [
+            'kind' => $kind->value,
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
             'manager' => ['id' => $manager, 'name' => $this->roster->find($manager)->name ?? 'Sin nombre'],
             'feedback' => [

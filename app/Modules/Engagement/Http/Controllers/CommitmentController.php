@@ -30,7 +30,7 @@ final class CommitmentController extends Controller
         $survey = $this->survey($survey, $kind);
         Gate::authorize('view', $survey);
 
-        return Inertia::render('engagement/commitments', $pages->props($survey, $request->status(), Gate::allows('manage', $survey)));
+        return Inertia::render('engagement/commitments', [...$pages->props($survey, $request->status(), Gate::allows('manage', $survey)), 'kind' => $kind->value]);
     }
 
     public function store(CommitmentRequest $request, mixed $tenant, string $survey, SurveyKind $kind, SaveCommitment $save): RedirectResponse
@@ -40,7 +40,7 @@ final class CommitmentController extends Controller
         $save->handle($request->commitment($survey->id, $request->user()->id ?? abort(403)));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Compromiso guardado.']);
 
-        return to_route('tenant.climate.commitments.index', [$tenant, $survey->id]);
+        return to_route("tenant.{$kind->value}.commitments.index", [$tenant, $survey->id]);
     }
 
     public function update(CommitmentRequest $request, mixed $tenant, string $survey, string $commitment, SurveyKind $kind, SaveCommitment $save): RedirectResponse
@@ -50,7 +50,7 @@ final class CommitmentController extends Controller
         $save->handle($request->commitment($survey->id, $request->user()->id ?? abort(403)), $this->commitment($survey, $commitment)->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Compromiso actualizado.']);
 
-        return to_route('tenant.climate.commitments.index', [$tenant, $survey->id]);
+        return to_route("tenant.{$kind->value}.commitments.index", [$tenant, $survey->id]);
     }
 
     public function status(CommitmentStatusRequest $request, mixed $tenant, string $survey, string $commitment, SurveyKind $kind, SetCommitmentStatus $set): RedirectResponse
@@ -59,7 +59,7 @@ final class CommitmentController extends Controller
         Gate::authorize('manage', $survey);
         $set->handle($this->commitment($survey, $commitment)->id, $request->status());
 
-        return to_route('tenant.climate.commitments.index', [$tenant, $survey->id]);
+        return to_route("tenant.{$kind->value}.commitments.index", [$tenant, $survey->id]);
     }
 
     private function survey(string $id, SurveyKind $kind): Survey

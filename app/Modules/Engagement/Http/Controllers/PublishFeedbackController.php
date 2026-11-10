@@ -24,6 +24,6 @@ final class PublishFeedbackController extends Controller
         $publish->handle($survey->id, $request->user()->id ?? abort(403));
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Publicado. Las personas recibirán un correo con su enlace.']);
 
-        return to_route('tenant.climate.commitments.index', [$tenant, $survey->id]);
+        return to_route("tenant.{$kind->value}.commitments.index", [$tenant, $survey->id]);
     }
 }

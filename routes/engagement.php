@@ -37,6 +37,23 @@ if (! function_exists('engagementRoutes')) {
         Route::post("{$prefix}/{survey}/launch", [SurveyActionController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.launch");
         Route::post("{$prefix}/{survey}/remind", [SurveyActionController::class, 'remind'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.remind");
         Route::post("{$prefix}/{survey}/close", [SurveyActionController::class, 'close'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.close");
+
+        // The results of a closed survey: the company, or one cut at a time (?cut=work_center|area|tenure|manager).
+        Route::get("{$prefix}/{survey}/results", [ResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.results");
+        // The same results question by question.
+        Route::get("{$prefix}/{survey}/results/items", [ResultsController::class, 'items'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.results.items");
+        // The same figures as a CSV, under the same minimums.
+        Route::get("{$prefix}/{survey}/export", [ExportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.export");
+        // What the company commits to do after a closed survey: everyone who views climate reads it, who manages it writes it.
+        Route::get("{$prefix}/{survey}/commitments", [CommitmentController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.commitments.index");
+        Route::post("{$prefix}/{survey}/commitments", [CommitmentController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.commitments.store");
+        Route::put("{$prefix}/{survey}/commitments/{commitment}", [CommitmentController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', $kind->value)->name("{$name}.commitments.update");
+        Route::put("{$prefix}/{survey}/commitments/{commitment}/status", [CommitmentController::class, 'status'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', $kind->value)->name("{$name}.commitments.status");
+        // Publishes «Nos dijeron / Haremos» to the portal of the people of the company, once.
+        Route::post("{$prefix}/{survey}/publish", [PublishFeedbackController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.publish");
+        // The managers whose group of people is shown (never a ranking), and the feedback of each.
+        Route::get("{$prefix}/{survey}/managers", [ManagerResultsController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.managers");
+        Route::get("{$prefix}/{survey}/managers/{manager}", [ManagerResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->whereUuid('manager')->defaults('kind', $kind->value)->name("{$name}.managers.show");
     }
 }
 
@@ -48,22 +65,6 @@ Route::get('admin/{tenant:slug}/pulse/trend', [TrendController::class, 'show'])-
 // When the pulse goes out by itself: one schedule per company.
 Route::put('admin/{tenant:slug}/pulse/schedule', [PulseScheduleController::class, 'update'])->where('tenant', $notReserved)->defaults('kind', 'pulse')->name('tenant.pulse.schedule.update');
 
-// The results of a closed survey: the company, or one cut at a time (?cut=work_center|area|tenure|manager).
-Route::get('admin/{tenant:slug}/climate/{survey}/results', [ResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results');
-// The same results question by question.
-Route::get('admin/{tenant:slug}/climate/{survey}/results/items', [ResultsController::class, 'items'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.results.items');
-// The same figures as a CSV, under the same minimums.
-Route::get('admin/{tenant:slug}/climate/{survey}/export', [ExportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.export');
-// What the company commits to do after a closed survey: everyone who views climate reads it, who manages it writes it.
-Route::get('admin/{tenant:slug}/climate/{survey}/commitments', [CommitmentController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.commitments.index');
-Route::post('admin/{tenant:slug}/climate/{survey}/commitments', [CommitmentController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.commitments.store');
-Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}', [CommitmentController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.update');
-Route::put('admin/{tenant:slug}/climate/{survey}/commitments/{commitment}/status', [CommitmentController::class, 'status'])->where('tenant', $notReserved)->whereUuid(['survey', 'commitment'])->defaults('kind', 'climate')->name('tenant.climate.commitments.status');
-// Publishes «Nos dijeron / Haremos» to the portal of the people of the company, once.
-Route::post('admin/{tenant:slug}/climate/{survey}/publish', [PublishFeedbackController::class, 'store'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.publish');
-// The managers whose group of people is shown (never a ranking), and the feedback of each.
-Route::get('admin/{tenant:slug}/climate/{survey}/managers', [ManagerResultsController::class, 'index'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.managers');
-Route::get('admin/{tenant:slug}/climate/{survey}/managers/{manager}', [ManagerResultsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->whereUuid('manager')->defaults('kind', 'climate')->name('tenant.climate.managers.show');
 // The comments about the company (?item=open.best|open.improve): the AI summary and, for who manages climate, the originals.
 Route::get('admin/{tenant:slug}/climate/{survey}/comments', [CommentsController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', 'climate')->name('tenant.climate.comments');
 // Tries again a summary that failed; one that is ready is never made twice.

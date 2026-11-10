@@ -39,7 +39,7 @@ final class ResultsController extends Controller
             $this->audit->handle('engagement.results_viewed', $survey, ['cut' => $cut?->value]);
         }
 
-        return Inertia::render('engagement/results', $presenter->props($results, $cut));
+        return Inertia::render('engagement/results', [...$presenter->props($results, $cut), 'kind' => $kind->value]);
     }
 
     /** Question by question: the same company-level figures and minimums, by theme. */
@@ -56,6 +56,6 @@ final class ResultsController extends Controller
             $this->audit->handle('engagement.results_viewed', $survey, ['cut' => null]);
         }
 
-        return Inertia::render('engagement/items', $presenter->itemsProps($results));
+        return Inertia::render('engagement/items', [...$presenter->itemsProps($results), 'kind' => $kind->value]);
     }
 }
