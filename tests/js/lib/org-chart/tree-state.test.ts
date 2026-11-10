@@ -23,6 +23,7 @@ const node = (id: string, extra: Partial<OrgNode> = {}): OrgNode => ({
     flag: null,
     matches: true,
     manager_inactive: false,
+    absent_today: false,
     ...extra,
 });
 

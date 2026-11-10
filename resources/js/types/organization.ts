@@ -72,6 +72,8 @@ export type OrgNode = {
     matches: boolean;
     /** Their manager left and nobody took their place. */
     manager_inactive: boolean;
+    /** Away today with approved vacations or a leave: only that, never why nor until when. */
+    absent_today: boolean;
 };
 
 /** The shape of the company: its levels, and how many people a manager leads. */

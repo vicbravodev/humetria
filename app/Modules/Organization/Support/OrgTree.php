@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Organization\Support;
 
+use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Data\OrgFilters;
 use App\Modules\Organization\Data\OrgNode;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,7 +17,8 @@ use stdClass;
 
 /**
  * The org chart as the screen reads it, a level at a time: who is at the top, who reports to a person and the chain
- * above one. The queries never grow with the number of people: one walk counts the team of every person of a page.
+ * above one. The queries never grow with the number of people: one walk counts the team of every person of a page,
+ * and one more says who of them is away today (only that: never why nor until when).
  *
  * The counts are the real size of a team (active people reached through active managers) and do not change with the
  * filters; with filters a person shows only when they or someone below them is within them.
@@ -83,7 +86,7 @@ final readonly class OrgTree
         ORDER BY c.position
         SQL;
 
-    public function __construct(private CurrentTenant $tenant, private WorkCenters $workCenters) {}
+    public function __construct(private CurrentTenant $tenant, private WorkCenters $workCenters, private Absences $absences) {}
 
     /**
      * @return LengthAwarePaginator<int, OrgNode>
@@ -157,8 +160,14 @@ final readonly class OrgTree
     private function nodes(array $rows): array
     {
         $centers = array_column($this->workCenters->all(), 'name', 'id');
+        $rows = array_values(array_filter($rows, fn (mixed $row): bool => $row instanceof stdClass));
+        // Who of the batch is away today, as people in Mexico live the day: one query, whatever its size.
+        $absent = $this->absences->absentOn(
+            CarbonImmutable::now(config()->string('app.display_timezone')),
+            array_values(array_filter(array_column($rows, 'id'), is_string(...))),
+        );
 
-        return array_values(array_map(function (stdClass $row) use ($centers): OrgNode {
+        return array_map(function (stdClass $row) use ($centers, $absent): OrgNode {
             $directReports = is_int($row->direct_reports) ? $row->direct_reports : 0;
             $name = $row->name ?? $row->employee_number;
             $center = is_string($row->work_center_id) ? $row->work_center_id : '';
@@ -175,7 +184,8 @@ final readonly class OrgTree
                 flag: SpanOfControl::flag($directReports),
                 matches: $row->matches === true,
                 managerInactive: $row->manager_inactive === true,
+                absentToday: in_array($row->id, $absent, true),
             );
-        }, array_filter($rows, fn (mixed $row): bool => $row instanceof stdClass)));
+        }, $rows);
     }
 }

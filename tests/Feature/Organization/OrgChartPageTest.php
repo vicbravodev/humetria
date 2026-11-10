@@ -13,12 +13,13 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(OrgChartController::class, OrgChartPeopleController::class);
 
-// 8 of every page of the panel (company, membership, roles, shared props) and 12 of the org chart: the counts, the
-// indicators (2), the roots (3), the chain (2) and the reports of the focus (3), each with the work centers, and the
-// name of the filter.
-const ORG_CHART_PAGE_QUERIES = 20;
-// 5 of every request of the panel, the person, and their reports (3).
-const ORG_CHART_REPORTS_QUERIES = 9;
+// 8 of every page of the panel (company, membership, roles, shared props) and 14 of the org chart: the counts, the
+// indicators (2), the roots (3), the chain (2) and the reports of the focus (3), each with the work centers, the
+// name of the filter, and who is away today of the roots and of the chain (1 each; the focus here leads nobody, and an
+// empty batch asks nothing).
+const ORG_CHART_PAGE_QUERIES = 22;
+// 5 of every request of the panel, the person, their reports (3) and who of them is away today.
+const ORG_CHART_REPORTS_QUERIES = 10;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

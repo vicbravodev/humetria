@@ -56,6 +56,7 @@ it('lists whoever has no manager, with the real size of their team', function ()
             'flag' => ['value' => 'few', 'label' => 'Revisar: pocos reportes'],
             'matches' => true,
             'manager_inactive' => false,
+            'absent_today' => false,
         ]);
 });
 
@@ -177,14 +178,15 @@ it('reads the second page where the first one ended', function (OrgFilters $filt
 ]);
 
 it('reads a page of the tree with the same queries whatever the size of the team', function (string $manager): void {
-    // The count, the page and the work centers.
-    $this->expectsDatabaseQueryCount(3);
+    // The count, the page and the work centers, and who of the page is away today.
+    $this->expectsDatabaseQueryCount(4);
 
     $this->tree->children($this->{$manager}->id, new OrgFilters);
 })->with(['two reports' => 'a', 'seventeen reports' => 'b']);
 
 it('reads the roots and the chain with a fixed number of queries', function (): void {
-    $this->expectsDatabaseQueryCount(5);
+    // 5 of the tree, and who is away today of each of the two batches.
+    $this->expectsDatabaseQueryCount(7);
 
     $this->tree->roots(new OrgFilters(areaId: $this->sales->id));
     $this->tree->chain($this->ana->id);

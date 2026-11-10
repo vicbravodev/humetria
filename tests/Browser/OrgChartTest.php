@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
 
 $looks = [
     'light desktop' => [false, false],
@@ -62,6 +64,19 @@ it('shows who is at the top, and their reports when they are opened', function (
         ->assertSee('Sofía Luna')
         ->assertSee('Revisar: pocos reportes')
         ->assertDontSee('Ana López')
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('says who is away today, and nothing more', function (bool $dark, bool $mobile): void {
+    $people = acmeOrgChart();
+    $today = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
+    LeaveRequest::factory()->approved()->create(['tenant_id' => $people['dir']->tenant_id, 'employee_id' => $people['dir']->id, 'starts_on' => $today, 'ends_on' => $today, 'working_days' => 1]);
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
+        ->assertSee('Diana Torres')
+        ->assertSee('Ausente hoy')
         ->assertNoAccessibilityIssues(1)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
