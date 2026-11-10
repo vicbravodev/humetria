@@ -81,6 +81,11 @@ Route::post('admin/billing/statements/{statement}/issue', [StatementConsoleContr
     ->whereUuid('statement')
     ->name('billing.statements.issue');
 
+Route::delete('admin/billing/statements/{statement}', [StatementConsoleController::class, 'destroy'])
+    ->middleware(['auth', 'verified'])
+    ->whereUuid('statement')
+    ->name('billing.statements.destroy');
+
 Route::post('admin/billing/statements/{statement}/adjustments', [StatementConsoleController::class, 'adjust'])
     ->middleware(['auth', 'verified'])
     ->whereUuid('statement')

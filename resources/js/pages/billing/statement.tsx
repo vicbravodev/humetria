@@ -1,6 +1,7 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Printer } from 'lucide-react';
 import AdjustStatementDialog from '@/components/billing/adjust-statement-dialog';
+import DiscardStatementDialog from '@/components/billing/discard-statement-dialog';
 import IssueStatementDialog from '@/components/billing/issue-statement-dialog';
 import StatementApplications from '@/components/billing/statement-applications';
 import StatementLines from '@/components/billing/statement-lines';
@@ -73,7 +74,10 @@ export default function Statement({
                         </a>
                     </Button>
                     {canManage && draft && (
-                        <IssueStatementDialog statement={statement} />
+                        <>
+                            <DiscardStatementDialog statement={statement} />
+                            <IssueStatementDialog statement={statement} />
+                        </>
                     )}
                     {canManage && !draft && !statement.is_adjustment && (
                         <AdjustStatementDialog statement={statement} />

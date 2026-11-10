@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Billing\Actions\AdjustStatement;
 use App\Modules\Billing\Actions\BuildStatement;
 use App\Modules\Billing\Actions\DescribeStatement;
+use App\Modules\Billing\Actions\DiscardStatement;
 use App\Modules\Billing\Actions\GenerateStatement;
 use App\Modules\Billing\Actions\IssueStatement;
 use App\Modules\Billing\Exceptions\InvalidStatement;
@@ -103,5 +104,21 @@ final class StatementConsoleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ajuste emitido.']);
 
         return redirect()->route('billing.statements.show', $statement);
+    }
+
+    /** A draft that should not exist goes away with its lines; what it billed once is billed again by the next one. */
+    public function destroy(Statement $statement, DiscardStatement $discard): RedirectResponse
+    {
+        Gate::authorize('manage-billing');
+
+        try {
+            $discard->handle($statement);
+        } catch (InvalidStatement $exception) {
+            return back()->withErrors([$exception->field => $exception->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Borrador descartado.']);
+
+        return redirect()->route('billing.accounts.show', $statement->billing_account_id);
     }
 }
