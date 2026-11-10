@@ -5,7 +5,7 @@ import type {
     SubscriptionPreview,
 } from '@/types';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
 }
 
@@ -37,7 +37,7 @@ function parseLines(value: unknown): QuoteLine[] | null {
     return lines.every((line) => line !== null) ? lines : null;
 }
 
-function parseQuote(value: unknown): Quote | null {
+export function parseQuote(value: unknown): Quote | null {
     if (!isRecord(value)) {
         return null;
     }
@@ -80,7 +80,7 @@ function parseNote(value: unknown): DiscountNote | null {
 }
 
 /** A part that may be null: null stays null, and anything else must parse, or it is undefined (not one). */
-function optional<T>(
+export function optional<T>(
     value: unknown,
     parse: (v: unknown) => T | null,
 ): T | null | undefined {

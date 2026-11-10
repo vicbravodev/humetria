@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Billing\Http\Controllers\AccountCompaniesController;
 use App\Modules\Billing\Http\Controllers\AccountConsoleController;
+use App\Modules\Billing\Http\Controllers\AccountOptionsController;
 use App\Modules\Billing\Http\Controllers\ChargeConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
 use App\Modules\Billing\Http\Controllers\PaymentConsoleController;
@@ -21,6 +22,10 @@ Route::get('admin/billing/accounts', [AccountConsoleController::class, 'index'])
 Route::post('admin/billing/accounts', [AccountConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('billing.accounts.store');
+
+Route::get('admin/billing/accounts/search', AccountOptionsController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('billing.accounts.search');
 
 Route::get('admin/billing/accounts/{account}', [AccountConsoleController::class, 'show'])
     ->middleware(['auth', 'verified'])

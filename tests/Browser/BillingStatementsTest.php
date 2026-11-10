@@ -168,3 +168,34 @@ it('records a payment applied to a statement, and reverses it', function (): voi
 
     expect(Payment::query()->sole()->isReversed())->toBeTrue();
 });
+
+it('applies the balance of a payment that was recorded without applying it all', function (): void {
+    signInAsSuperadmin();
+    [$account, $statement] = browserStatement();
+    $payment = Payment::factory()->create(['billing_account_id' => $account->id, 'amount_cents' => 100_000, 'reference' => 'SPEI-700']);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Aplicar saldo')
+        ->assertSee('Cliente Uno · dic 2026')
+        ->fill('[name^="allocations["]', '1000')
+        ->press('Aplicar pago')
+        ->assertSee('Saldo aplicado.');
+
+    expect(PaymentAllocation::query()->where('payment_id', $payment->id)->where('statement_id', $statement->id)->sole()->amount_cents)->toBe(100_000);
+});
+
+it('discards a draft after asking, and offers nothing of the kind for an issued one', function (): void {
+    signInAsSuperadmin();
+    [$account, $draft] = browserStatement(issue: false);
+
+    visitPage('billing/statement', "/admin/billing/statements/{$draft->id}")
+        ->click('Descartar borrador')
+        ->assertSee('Descartar el borrador de dic 2026')
+        ->press('Confirmar descarte')
+        ->assertSee('Borrador descartado.');
+
+    expect(Statement::query()->count())->toBe(0);
+
+    [, $issued] = browserStatement();
+    visitPage('billing/statement', "/admin/billing/statements/{$issued->id}")->assertDontSee('Descartar borrador');
+});

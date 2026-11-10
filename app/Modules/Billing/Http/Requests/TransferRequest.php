@@ -28,7 +28,8 @@ final class TransferRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'to_account' => ['nullable', 'uuid'],
+            'destination' => ['required', Rule::in(['account', 'none'])],
+            'to_account' => ['required_if:destination,account', 'nullable', 'uuid'],
             'effective_on' => ['required', 'date_format:Y-m-d'],
             'reason' => ['nullable', 'string', 'max:500'],
             'profile' => ['nullable', Rule::enum(Profile::class)],
@@ -40,13 +41,13 @@ final class TransferRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return ['to_account' => 'cuenta de destino', 'effective_on' => 'fecha efectiva', 'reason' => 'motivo', 'profile' => 'perfil de cobro'];
+        return ['destination' => 'destino', 'to_account' => 'cuenta de destino', 'effective_on' => 'fecha efectiva', 'reason' => 'motivo', 'profile' => 'perfil de cobro'];
     }
 
     public function toData(): TransferData
     {
         return new TransferData(
-            $this->filled('to_account') ? $this->string('to_account')->toString() : null,
+            $this->string('destination')->toString() === 'account' ? $this->string('to_account')->toString() : null,
             CarbonImmutable::parse($this->string('effective_on')->toString())->startOfDay(),
             $this->string('reason')->toString(),
             $this->filled('profile') ? Profile::from($this->string('profile')->toString()) : null,

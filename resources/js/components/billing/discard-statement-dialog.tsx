@@ -20,7 +20,7 @@ export default function DiscardStatementDialog({
             }
             title={`Descartar el borrador de ${statement.period}`}
             description="El borrador se borra con sus líneas. Los cargos de una sola vez que facturaba quedan libres para el siguiente borrador del mes. Un estado de cuenta emitido nunca se descarta."
-            confirmLabel="Descartar borrador"
+            confirmLabel="Confirmar descarte"
             form={destroy.form(statement.id)}
         />
     );

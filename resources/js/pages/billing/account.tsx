@@ -1,5 +1,6 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import AccountCharges from '@/components/billing/account-charges';
+import AccountTransfers from '@/components/billing/account-transfers';
 import AccountPayments from '@/components/billing/account-payments';
 import AccountStatements from '@/components/billing/account-statements';
 import AccountCompaniesEmpty from '@/components/billing/account-companies-empty';
@@ -20,6 +21,7 @@ import type {
     PaymentRow,
     Receivable,
     StatementRow,
+    TransferRow,
 } from '@/types';
 
 /** One payer account: who it is, and the companies it pays. */
@@ -30,6 +32,7 @@ export default function Account({
     statements,
     payments,
     receivable,
+    transfers,
     summary,
     today,
 }: {
@@ -39,6 +42,7 @@ export default function Account({
     statements: Paginated<StatementRow>;
     payments: Paginated<PaymentRow>;
     receivable: Receivable;
+    transfers: Paginated<TransferRow>;
     summary: AccountSummary;
     today: string;
 }) {
@@ -93,6 +97,9 @@ export default function Account({
                         statements={statements}
                         receivable={receivable}
                     />
+                )}
+                {transfers.total > 0 && (
+                    <AccountTransfers transfers={transfers} />
                 )}
                 {payments.total > 0 && (
                     <AccountPayments

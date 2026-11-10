@@ -31,7 +31,7 @@ export default function ApplyPaymentDialog({
                 title={`Aplicar saldo · ${payment.reference}`}
                 description={`Quedan ${payment.unapplied} sin aplicar de este pago. Aplicarlos no cambia el acceso de ninguna empresa.`}
                 form={apply.form(payment.id)}
-                submit="Aplicar saldo"
+                submit="Aplicar pago"
             >
                 {(errors) => (
                     <AllocationFields

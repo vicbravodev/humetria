@@ -68,6 +68,7 @@ describe('planDefaults', () => {
         people,
         linked_since: '1 dic 2026',
         subscription,
+        previous_payer: null,
     });
 
     it('starts a company without a plan from the people and centers it has, beginning today', () => {

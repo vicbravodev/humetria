@@ -281,3 +281,30 @@ it('does not offer a charge to a company with no plan', function (): void {
         ->assertSee('Asignar plan')
         ->assertDontSee('Agregar cargo');
 });
+
+it('moves a company to another account after showing what it would do, and keeps the history on both', function (): void {
+    signInAsSuperadmin();
+    [$tenant, $from] = paidCompany('consultant');
+    $tenant->update(['trade_name' => 'Cliente Movido']);
+    $to = BillingAccount::factory()->create(['legal_name' => 'Grupo Directo Destino S.A.', 'rfc' => 'GDD010101AB1']);
+
+    visitPage('billing/account', "/admin/billing/accounts/{$from->id}")
+        ->click('Trasladar')
+        ->assertSee('La empresa conserva su plan y su gente conserva su acceso')
+        ->click('#transfer-to_account')
+        ->type('[role="combobox"][aria-controls="transfer-to_account-options"]', 'destino')
+        ->assertSee('Grupo Directo Destino S.A. · GDD010101AB1')
+        ->keys('[role="combobox"][aria-controls="transfer-to_account-options"]', 'Enter')
+        ->fill('reason', 'Contrata directo')
+        ->assertSee('Pasa de')
+        ->assertSee('Trasladar una empresa no da ni quita acceso a nadie')
+        ->press('Trasladar empresa')
+        ->assertSee('Empresa trasladada.')
+        ->assertSee('Cliente Movido')
+        ->assertSee('Antes la pagaba');
+
+    visitPage('billing/account', "/admin/billing/accounts/{$from->id}")
+        ->assertSee('Traslados')
+        ->assertSee('Salió hacia Grupo Directo Destino S.A.')
+        ->assertSee('Contrata directo');
+});

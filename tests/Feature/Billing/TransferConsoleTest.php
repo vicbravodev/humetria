@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Billing\Actions\ListAccountTransfers;
+use App\Modules\Billing\Actions\SearchAccounts;
 use App\Modules\Billing\Http\Requests\TransferRequest;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
@@ -11,7 +12,7 @@ use App\Modules\Billing\Models\CompanyTransfer;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ListAccountTransfers::class, TransferRequest::class);
+mutates(ListAccountTransfers::class, TransferRequest::class, SearchAccounts::class);
 
 /**
  * @param  array<string, mixed>  $overrides
@@ -19,7 +20,7 @@ mutates(ListAccountTransfers::class, TransferRequest::class);
  */
 function transferInput(BillingAccount $to, array $overrides = []): array
 {
-    return ['to_account' => $to->id, 'effective_on' => '2027-01-01', 'reason' => 'El cliente contrata directo', ...$overrides];
+    return ['destination' => 'account', 'to_account' => $to->id, 'effective_on' => '2027-01-01', 'reason' => 'El cliente contrata directo', ...$overrides];
 }
 
 it('lives under /admin/billing', function (): void {
@@ -52,7 +53,7 @@ it('moves the company and goes to the account that receives it', function (): vo
     expect(AccountCompany::query()->current()->where('tenant_id', $tenant->id)->sole()->billing_account_id)->toBe($to->id);
 
     [$other, $payer] = paidCompany();
-    $this->post(route('billing.transfers.store', $other->id), transferInput($to, ['to_account' => '']))
+    $this->post(route('billing.transfers.store', $other->id), transferInput($to, ['destination' => 'none', 'to_account' => '']))
         ->assertRedirect(route('billing.accounts.show', $payer));
 });
 
@@ -70,6 +71,9 @@ it('shows the errors of the rules and of the form on their fields', function (ar
     'a date that is not one' => [['effective_on' => 'pronto'], 'effective_on'],
     'a day that is not a cut' => [['effective_on' => '2027-01-02'], 'effective_on'],
     'an account that is not an id' => [['to_account' => 'otra'], 'to_account'],
+    'no account chosen' => [['to_account' => ''], 'to_account'],
+    'no destination' => [['destination' => ''], 'destination'],
+    'a destination that is not one' => [['destination' => 'luna'], 'destination'],
     'a profile that does not exist' => [['profile' => 'gratis'], 'profile'],
 ]);
 
@@ -131,4 +135,16 @@ it('pages the moves 25 at a time', function (): void {
 
     $this->actingAs(superadmin())->get(route('billing.accounts.show', $from))
         ->assertInertia(fn (Assert $page) => $page->has('transfers.data', 25)->where('transfers.total', 26));
+});
+
+it('searches the accounts on the server for the destination field, by name or RFC', function (): void {
+    $match = BillingAccount::factory()->consultant()->create(['legal_name' => 'Asesores Ñandú SA', 'rfc' => 'AND010101AB1']);
+    BillingAccount::factory()->create(['legal_name' => 'Otra Cosa SA']);
+    BillingAccount::factory()->count(25)->create(['legal_name' => 'Asesores Masivos']);
+
+    $found = $this->actingAs(superadmin())->getJson(route('billing.accounts.search', ['q' => 'nandu']))->assertOk()->json();
+    expect($found)->toBe([['value' => $match->id, 'label' => 'Asesores Ñandú SA · AND010101AB1 · Consultor']]);
+
+    $this->getJson(route('billing.accounts.search', ['q' => 'asesores']))->assertOk()->assertJsonCount(20);
+    $this->actingAs(support())->getJson(route('billing.accounts.search', ['q' => 'a']))->assertNotFound();
 });

@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import AddChargeDialog from '@/components/billing/add-charge-dialog';
 import GenerateStatementDialog from '@/components/billing/generate-statement-dialog';
 import AccountCompanyPlan from '@/components/billing/account-company-plan';
+import TransferCompanyDialog from '@/components/billing/transfer-company-dialog';
 import SubscriptionDialog from '@/components/billing/subscription-dialog';
 import Initials from '@/components/humetria/initials';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,11 @@ export default function AccountCompanyRowView({
                         <span className="text-caption text-muted-foreground tabular-nums">
                             {company.rfc}
                         </span>
+                        {company.previous_payer !== null && (
+                            <span className="text-caption text-muted-foreground">
+                                Antes la pagaba {company.previous_payer}
+                            </span>
+                        )}
                     </div>
                 </div>
             </TableCell>
@@ -58,6 +64,10 @@ export default function AccountCompanyRowView({
                                 <AddChargeDialog company={company} />
                             </>
                         )}
+                        <TransferCompanyDialog
+                            company={company}
+                            today={today}
+                        />
                         <SubscriptionDialog
                             company={company}
                             accountKind={accountKind}
