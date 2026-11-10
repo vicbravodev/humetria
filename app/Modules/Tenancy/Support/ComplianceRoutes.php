@@ -29,6 +29,8 @@ final class ComplianceRoutes
             'tenant.attendance.*',
             'tenant.org-chart.*',
             'tenant.vacations.*',
+            'tenant.climate.*',
+            'tenant.pulse.*',
         ];
     }
 }
