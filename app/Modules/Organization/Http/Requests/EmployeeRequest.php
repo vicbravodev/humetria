@@ -8,6 +8,7 @@ use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Support\ManagerRules;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
@@ -100,6 +101,9 @@ final class EmployeeRequest extends FormRequest
      */
     public static function fieldRules(): array
     {
+        // Today as the company counts it: in Mexico City, not in UTC.
+        $day = ['nullable', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()];
+
         return [
             'name' => ['required', 'string', 'max:200', self::SINGLE_LINE],
             'email' => ['nullable', 'required_without:mobile', 'string', 'email', 'max:255'],
@@ -111,8 +115,9 @@ final class EmployeeRequest extends FormRequest
             'employee_number' => ['nullable', 'string', 'max:50', self::SINGLE_LINE],
             'job_category' => ['nullable', 'required_with:job_level', 'string', 'max:120', self::SINGLE_LINE],
             'job_level' => ['nullable', 'required_with:job_category', 'string', 'max:60', self::SINGLE_LINE],
-            // Today as the company counts it: in Mexico City, not in UTC.
-            'hired_on' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:'.CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString()],
+            'hired_on' => $day,
+            'seniority_on' => $day,
+            'manager_id' => ['nullable', 'uuid'],
             'staff_group' => ['nullable', 'string', Rule::in(array_column(StaffGroup::cases(), 'value'))],
             'state' => ['nullable', 'string', Rule::in(array_keys(resolve(WorkCenters::class)->states()))],
         ];
@@ -137,9 +142,9 @@ final class EmployeeRequest extends FormRequest
     /**
      * @return list<callable(Validator): void>
      */
-    public function after(WorkCenters $workCenters): array
+    public function after(WorkCenters $workCenters, ManagerRules $managers): array
     {
-        return [function (Validator $validator) use ($workCenters): void {
+        return [function (Validator $validator) use ($workCenters, $managers): void {
             $union = $this->union();
             $center = $this->string('work_center_id')->toString();
             $active = array_filter($workCenters->all(), fn (WorkCenterSummary $workCenter): bool => ! $workCenter->archived && $workCenter->id === $center);
@@ -154,6 +159,13 @@ final class EmployeeRequest extends FormRequest
                 if (! $validator->errors()->has($field)) {
                     $validator->errors()->add($field, $message);
                 }
+            }
+
+            $manager = $this->string('manager_id')->toString();
+            $violation = $union || $manager === '' || $validator->errors()->has('manager_id') ? null : $managers->violation(is_string($editing) ? $editing : null, $manager);
+
+            if ($violation !== null) {
+                $validator->errors()->add('manager_id', $violation);
             }
         }];
     }
@@ -179,6 +191,9 @@ final class EmployeeRequest extends FormRequest
             hiredOn: $this->date('hired_on', 'Y-m-d')?->toImmutable(),
             staffGroup: $this->filled('staff_group') ? StaffGroup::from($this->string('staff_group')->toString()) : null,
             state: $text('state'),
+            // A union's roster carries no hierarchy.
+            seniorityOn: $union ? null : $this->date('seniority_on', 'Y-m-d')?->toImmutable(),
+            managerId: $union ? null : $text('manager_id'),
         );
     }
 

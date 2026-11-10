@@ -11,7 +11,7 @@ namespace App\Modules\Organization\Data;
 final readonly class EmployeeImportRow
 {
     /**
-     * @param  list<string>  $absent  of job_grade_id, hired_on, staff_group and state; in a union's file also name, area_id and job_title.
+     * @param  list<string>  $absent  of job_grade_id, hired_on, staff_group and state, and always seniority_on; in a union's file also name, area_id and job_title.
      */
     public function __construct(
         public EmployeeData $data,

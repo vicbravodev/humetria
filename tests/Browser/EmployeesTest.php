@@ -127,6 +127,23 @@ it('adds an employee, creating their area as it is typed', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
+it('sets the direct manager of an employee from their panel', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->assertSee('Déjalo vacío si nadie está por encima.')
+        ->assertSee('Antigüedad reconocida')
+        ->click('#employee-manager_id')
+        ->type('[role="combobox"][aria-controls="employee-manager_id-options"]', 'carla')
+        ->assertSeeIn('#employee-manager_id-options', 'Carla Ruiz')
+        ->keys('[role="combobox"][aria-controls="employee-manager_id-options"]', 'Enter')
+        ->click('[data-slot="sheet-content"] button[type="submit"]')
+        ->assertSee('Empleado actualizado.')
+        ->assertSee('Reporta a Carla Ruiz')
+        ->assertNoJavaScriptErrors();
+});
+
 it('passes the checks with the employee panel open', function (bool $dark, bool $mobile): void {
     acmeWithEmployees();
 

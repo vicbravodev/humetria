@@ -21,6 +21,8 @@ final readonly class EmployeeData
      * @param  string|null  $area  The area's name: an area the company does not have yet is created.
      * @param  string|null  $jobCategory  With the level, a job grade of the pay scale: one the company does not have yet is created.
      * @param  string|null  $state  The code of the state where they work, for a person without a work center.
+     * @param  CarbonImmutable|null  $seniorityOn  The day their seniority counts from, when it is not the day they joined.
+     * @param  string|null  $managerId  Their direct manager, a person of the company.
      */
     public function __construct(
         public ?string $name,
@@ -36,5 +38,7 @@ final readonly class EmployeeData
         public ?CarbonImmutable $hiredOn,
         public ?StaffGroup $staffGroup,
         public ?string $state,
+        public ?CarbonImmutable $seniorityOn = null,
+        public ?string $managerId = null,
     ) {}
 }

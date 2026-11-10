@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 final readonly class UpdateEmployee
 {
-    public function __construct(private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade) {}
+    public function __construct(private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade, private SetManager $setManager) {}
 
     public function handle(Employee $employee, EmployeeData $data): Employee
     {
@@ -37,6 +37,9 @@ final readonly class UpdateEmployee
                 // Only the names of the fields: a person's data stays out of logs.
                 Log::info('employee.updated', ['employee_id' => $employee->id, 'changed' => $changed]);
             }
+
+            // Last: it saves on its own, with its own log and audit entry.
+            $this->setManager->handle($employee, $data->managerId);
 
             return $employee;
         });

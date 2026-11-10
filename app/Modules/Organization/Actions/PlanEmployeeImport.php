@@ -234,12 +234,13 @@ final class PlanEmployeeImport
             'messages' => $messages,
             'hiredOn' => $hiredOn === null ? null : CarbonImmutable::parse($hiredOn),
             'group' => $group,
-            'absent' => array_keys(array_filter([
+            // No column carries the recognized seniority: an import never touches it.
+            'absent' => ['seniority_on', ...array_keys(array_filter([
                 'job_grade_id' => ! array_key_exists('categoria', $row) && ! array_key_exists('nivel', $row),
                 'hired_on' => ! array_key_exists('fecha_de_ingreso', $row),
                 'staff_group' => ! array_key_exists('grupo', $row),
                 'state' => ! array_key_exists('estado', $row),
-            ])),
+            ]))],
         ];
     }
 

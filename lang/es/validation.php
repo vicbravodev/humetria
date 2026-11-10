@@ -167,6 +167,10 @@ return [
             'before_or_equal' => 'La fecha de ingreso no puede ser futura.',
             'date_format' => 'Escribe una fecha de ingreso válida.',
         ],
+        'seniority_on' => [
+            'before_or_equal' => 'La antigüedad reconocida no puede ser futura.',
+            'date_format' => 'Escribe una fecha de antigüedad válida.',
+        ],
         'staff_group' => [
             'in' => 'Elige un grupo de la lista.',
         ],
@@ -387,6 +391,8 @@ return [
         'job_category' => 'categoría',
         'job_level' => 'nivel',
         'hired_on' => 'fecha de ingreso',
+        'seniority_on' => 'antigüedad reconocida',
+        'manager_id' => 'jefe directo',
         'staff_group' => 'grupo',
         'kind' => 'tipo de solicitud',
         'legal_name' => 'razón social',

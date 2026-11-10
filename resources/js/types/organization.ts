@@ -24,6 +24,12 @@ export type EmployeeRow = {
     job_level: string;
     /** `AAAA-MM-DD`. */
     hired_on: string | null;
+    /** `AAAA-MM-DD`: the day their seniority counts from, when it is not the day they joined. */
+    seniority_on: string | null;
+    /** Their direct manager, as «Nombre · Puesto». */
+    manager: ChoiceOption | null;
+    /** How many active people report directly to them. */
+    direct_reports: number;
     staff_group: 'unionized' | 'trusted' | '';
     /** The state's code; empty when not given. */
     state: string;
@@ -35,12 +41,13 @@ export type EmployeeRow = {
 export type ChoiceOption = { value: string; label: string };
 
 /**
- * What the employee form chooses from: the routes that search work centers, areas and the pay scale's categories and
- * levels, and the fixed catalogs (genders, staff groups, states).
+ * What the employee form chooses from: the routes that search work centers, areas, managers and the pay scale's
+ * categories and levels, and the fixed catalogs (genders, staff groups, states).
  */
 export type EmployeeChoices = {
     workCentersUrl: string;
     areasUrl: string;
+    managersUrl: string;
     jobCategoriesUrl: string;
     jobLevelsUrl: string;
     genders: ChoiceOption[];

@@ -78,6 +78,12 @@ final class Employee extends Model
         return $this->hasMany(self::class, 'manager_id');
     }
 
+    /** How the person reads where one is picked: «Nombre · Puesto», with the company ID for a name a union left out. */
+    public function label(): string
+    {
+        return implode(' · ', array_filter([$this->name ?? $this->employee_number ?? '', $this->job_title ?? ''], fn (string $part): bool => $part !== ''));
+    }
+
     /**
      * @return array<string, string>
      */

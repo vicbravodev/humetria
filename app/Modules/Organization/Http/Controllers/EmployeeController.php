@@ -63,6 +63,9 @@ final class EmployeeController extends Controller
                 'staff_group' => $employee->staff_group->value ?? '',
                 'state' => $employee->state ?? '',
                 'deactivated_on' => $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'),
+                'seniority_on' => $employee->seniority_on?->toDateString(),
+                'manager' => $employee->manager === null ? null : ['value' => $employee->manager->id, 'label' => $employee->manager->label()],
+                'direct_reports' => $employee->getAttributeValue('direct_reports'),
             ]),
             // Each chosen filter with its name, for the fields that search them on the server.
             'filters' => [

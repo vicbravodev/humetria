@@ -40,10 +40,7 @@ final class OrgChartPeopleController extends Controller
             ->orderBy('id')
             ->limit(self::LIMIT)
             ->get(['id', 'name', 'employee_number', 'job_title'])
-            ->map(fn (Employee $employee): array => [
-                'value' => $employee->id,
-                'label' => implode(' · ', array_filter([$employee->name ?? $employee->employee_number ?? '', $employee->job_title ?? ''], fn (string $part): bool => $part !== '')),
-            ])
+            ->map(fn (Employee $employee): array => ['value' => $employee->id, 'label' => $employee->label()])
             ->all());
     }
 }
