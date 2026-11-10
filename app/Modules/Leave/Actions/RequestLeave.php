@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\EscalationReason;
 use App\Modules\Leave\Enums\RequestStatus;
@@ -44,7 +45,7 @@ final readonly class RequestLeave
     /** The longest a request may be, in calendar days. */
     private const int LONGEST = 366;
 
-    public function __construct(private CurrentTenant $tenant, private Roster $roster, private PolicyResolver $policies, private Approver $approver, private RequestNotifier $notifier) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private PolicyResolver $policies, private Approver $approver, private RequestNotifier $notifier, private RecordAudit $audit) {}
 
     /**
      * @param  int|null  $recordedBy  the user of RH who records it for the person; RH may record days already gone
@@ -90,6 +91,11 @@ final readonly class RequestLeave
 
         if ($request->escalation_reason !== null) {
             Log::info('leave.request_escalated', ['request_id' => $request->id, 'reason' => $request->escalation_reason->value]);
+        }
+
+        if ($recordedBy !== null) {
+            // RH wrote it for the person: who did it stays on record. The note and the type stay out of it.
+            $this->audit->handle('leave.request_recorded_by_hr', $request, ['employee_id' => $employeeId, 'working_days' => $request->working_days]);
         }
 
         if ($recordedBy === null) {

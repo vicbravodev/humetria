@@ -6,12 +6,17 @@ namespace App\Modules\Leave\Http\Controllers;
 
 use App\Modules\Leave\Actions\CancelRequest;
 use App\Modules\Leave\Actions\DecideRequest;
+use App\Modules\Leave\Actions\RequestLeave;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Http\Requests\DecisionRequest;
+use App\Modules\Leave\Http\Requests\RecordLeaveRequest;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\LeaveDefaults;
 use App\Modules\Leave\Support\RequestPages;
+use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +31,9 @@ use Inertia\Response;
  */
 final readonly class RequestController
 {
-    public function __construct(private WorkCenters $centers) {}
+    public const int OPTIONS_LIMIT = 20;
+
+    public function __construct(private WorkCenters $centers, private Roster $roster) {}
 
     public function index(Request $request, LeaveDefaults $defaults, RequestPages $pages): Response
     {
@@ -40,6 +47,52 @@ final readonly class RequestController
             $this->uuid($request, 'area', fn (): bool => true),
             Gate::allows('manage-vacations'),
         ));
+    }
+
+    /**
+     * RH records vacations or a leave for somebody, even days already gone, and may answer it in the same step. Nobody is
+     * emailed to answer what RH recorded: RH answers on the same screen.
+     */
+    public function store(RecordLeaveRequest $request, mixed $tenant, RequestLeave $ask, DecideRequest $decide): RedirectResponse
+    {
+        $employeeId = $request->string('employee_id')->toString();
+
+        try {
+            $recorded = $ask->handle($employeeId, $request->typeId(), $request->startsOn(), $request->endsOn(), $request->string('note')->toString(), $request->userId());
+        } catch (RequestRefused $refused) {
+            throw RecordLeaveRequest::refusal($refused);
+        }
+
+        $name = $this->roster->find($employeeId)->name ?? '';
+
+        if (! $request->boolean('approve')) {
+            Inertia::flash('toast', ['type' => 'success', 'message' => "Solicitud registrada a nombre de {$name}."]);
+
+            return back();
+        }
+
+        try {
+            $decide->handle($recorded->id, true, Decider::hr($request->userId()));
+            Inertia::flash('toast', ['type' => 'success', 'message' => "Solicitud registrada y aprobada a nombre de {$name}."]);
+        } catch (RequestRefused $refused) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'La solicitud quedó registrada, pero sin aprobar: '.self::refusalText($refused)]);
+        }
+
+        return back();
+    }
+
+    /**
+     * The active people whose name has what was typed, a few at a time, for the field that picks who a record is for.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function people(Request $request): array
+    {
+        Gate::authorize('manage-vacations');
+        $search = $request->string('q')->trim()->limit(100, '')->toString();
+        $found = $this->roster->page(new RosterQuery(search: $search), self::OPTIONS_LIMIT)->items();
+
+        return array_values(array_map(fn (RosterEntry $person): array => ['value' => $person->id, 'label' => $person->name], array_filter($found, fn (RosterEntry $person): bool => $person->active)));
     }
 
     public function approve(DecisionRequest $request, mixed $tenant, string $leaveRequest, DecideRequest $decide): RedirectResponse
@@ -78,10 +131,15 @@ final readonly class RequestController
         } catch (AlreadyDecided $refused) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $refused->getMessage()]);
         } catch (RequestRefused $refused) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => $refused->reason === 'insufficient_balance' ? 'La persona no tiene días disponibles y su política no permite adelantar vacaciones.' : $refused->getMessage()]);
+            Inertia::flash('toast', ['type' => 'error', 'message' => self::refusalText($refused)]);
         }
 
         return back();
+    }
+
+    private static function refusalText(RequestRefused $refused): string
+    {
+        return $refused->reason === 'insufficient_balance' ? 'La persona no tiene días disponibles y su política no permite adelantar vacaciones.' : $refused->getMessage();
     }
 
     /**

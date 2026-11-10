@@ -20,7 +20,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 mutates(RequestController::class, RequestPages::class);
 
 /** The queries of the queue, whatever the number of requests, people or filters (the session and the panel frame included). */
-const LEAVE_REQUESTS_QUERIES = 21;
+const LEAVE_REQUESTS_QUERIES = 22;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));
@@ -338,4 +338,137 @@ describe('answering and correcting', function (): void {
         $this->actingAs($this->hr)->post(route("tenant.vacations.requests.{$action}", [$this->tenant, $stranger->id]), $data)->assertNotFound();
         expect(LeaveRequest::query()->withoutGlobalScopes()->findOrFail($stranger->id)->status)->toBe(RequestStatus::Requested);
     })->with(['approve', 'reject', 'cancel']);
+});
+
+describe('recording on behalf of somebody', function (): void {
+    beforeEach(function (): void {
+        Notification::fake();
+        $this->period = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 1, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
+        $this->url = route('tenant.vacations.requests.store', $this->tenant);
+    });
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    function leaveRecorded(Employee $person, array $data = []): array
+    {
+        return ['employee_id' => $person->id, 'starts_on' => '2026-11-09', 'ends_on' => '2026-11-20', ...$data];
+    }
+
+    it('records under the vacations of the company', function (): void {
+        expect(route('tenant.vacations.requests.store', 'acme', absolute: false))->toBe('/admin/acme/vacations/requests')
+            ->and(route('tenant.vacations.people.options', 'acme', absolute: false))->toBe('/admin/acme/vacations/people/options');
+    });
+
+    it('records vacations for a person, waiting for an answer, without emailing anyone, and audits it', function (): void {
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->ana, ['note' => 'Lo pidió por teléfono']))
+            ->assertRedirect()
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud registrada a nombre de Ana Solís.']);
+
+        $request = LeaveRequest::query()->sole();
+
+        expect($request->only(['employee_id', 'leave_type_id', 'working_days', 'status', 'note', 'recorded_by']))->toBe([
+            'employee_id' => $this->ana->id, 'leave_type_id' => null, 'working_days' => 9, 'status' => RequestStatus::Requested, 'note' => 'Lo pidió por teléfono', 'recorded_by' => $this->hr->id,
+        ])->and(leaveQueueLeft($this->ana))->toBe(14)
+            ->and(AuditEntry::query()->where('event', 'leave.request_recorded_by_hr')->sole()->metadata)->toBe(['employee_id' => $this->ana->id, 'working_days' => 9]);
+        Notification::assertNothingSent();
+    });
+
+    it('may record days already gone, which the person cannot ask for', function (): void {
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->ana, ['starts_on' => '2026-10-26', 'ends_on' => '2026-10-30']))->assertSessionDoesntHaveErrors();
+
+        expect(LeaveRequest::query()->sole()->working_days)->toBe(5);
+    });
+
+    it('answers it in the same step when asked to, charging the ledger', function (): void {
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->ana, ['approve' => '1']))
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud registrada y aprobada a nombre de Ana Solís.']);
+
+        expect(LeaveRequest::query()->sole()->status)->toBe(RequestStatus::Approved)
+            ->and(leaveQueueLeft($this->ana))->toBe(14 - 9)
+            ->and(AuditEntry::query()->where('event', 'leave.request_decided_by_hr')->count())->toBe(1);
+    });
+
+    it('records a leave of the company, which uses no days, and approves it in the same step', function (): void {
+        $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Paternidad']);
+
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->caro, ['leave_type_id' => $type->id, 'approve' => '1']))->assertSessionDoesntHaveErrors();
+
+        expect(LeaveRequest::query()->sole()->only(['leave_type_id', 'status']))->toBe(['leave_type_id' => $type->id, 'status' => RequestStatus::Approved])
+            ->and(leaveQueueLeft($this->caro))->toBe(0);
+    });
+
+    it('keeps the record waiting and says so when the person has no days to approve it with', function (): void {
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->caro, ['approve' => '1']))
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'La solicitud quedó registrada, pero sin aprobar: La persona no tiene días disponibles y su política no permite adelantar vacaciones.']);
+
+        expect(LeaveRequest::query()->sole()->status)->toBe(RequestStatus::Requested);
+    });
+
+    it('says why it cannot be recorded, in tú', function (array $data, string $field, string $message): void {
+        LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2026-12-01', 'ends_on' => '2026-12-04']);
+
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->ana, $data))->assertSessionHasErrors([$field => $message]);
+
+        expect(LeaveRequest::query()->count())->toBe(1);
+    })->with([
+        'overlapping' => [['starts_on' => '2026-12-03', 'ends_on' => '2026-12-10'], 'starts_on', 'La persona ya tiene una solicitud en esas fechas.'],
+        'no working days' => [['starts_on' => '2026-11-14', 'ends_on' => '2026-11-15'], 'ends_on', 'Esas fechas no incluyen ningún día laborable.'],
+        'too long' => [['starts_on' => '2026-01-01', 'ends_on' => '2027-06-01'], 'ends_on', 'Una solicitud no puede durar más de un año. Divídela en varias.'],
+        'unknown type' => [['leave_type_id' => '019a0000-0000-7000-8000-000000000000'], 'leave_type_id', 'Ese tipo de permiso ya no está disponible.'],
+    ]);
+
+    it('refuses a person who is not active in the company, and does not tell a stranger from a former employee', function (): void {
+        $other = Tenant::factory()->create();
+        $stranger = Employee::factory()->create(['tenant_id' => $other->id]);
+        $this->caro->update(['deactivated_at' => now()]);
+
+        foreach ([$this->caro, $stranger] as $person) {
+            $this->actingAs($this->hr)->post($this->url, leaveRecorded($person))->assertSessionHasErrors(['employee_id' => 'La persona ya no está activa en la empresa.']);
+        }
+
+        expect(LeaveRequest::query()->withoutGlobalScopes()->count())->toBe(0);
+    });
+
+    it('asks for the person, the dates and a sensible note', function (): void {
+        $this->actingAs($this->hr)->post($this->url, [])->assertSessionHasErrors(['employee_id', 'starts_on', 'ends_on']);
+        $this->post($this->url, leaveRecorded($this->ana, ['ends_on' => '2026-11-01']))->assertSessionHasErrors(['ends_on']);
+        $this->post($this->url, leaveRecorded($this->ana, ['note' => str_repeat('a', 501)]))->assertSessionHasErrors(['note']);
+        $this->post($this->url, leaveRecorded($this->ana, ['employee_id' => 'nope']))->assertSessionHasErrors(['employee_id']);
+
+        expect(LeaveRequest::query()->count())->toBe(0);
+    });
+
+    it('is for owner and hr only', function (TenantRole $role, bool $allowed): void {
+        $response = $this->actingAs(memberOf($this->tenant, $role))->post($this->url, leaveRecorded($this->ana));
+
+        $allowed ? $response->assertRedirect() : $response->assertForbidden();
+        expect(LeaveRequest::query()->count())->toBe($allowed ? 1 : 0);
+    })->with([
+        'owner' => [TenantRole::Owner, true],
+        'hr' => [TenantRole::Hr, true],
+        'viewer' => [TenantRole::Viewer, false],
+    ]);
+
+    it('offers the active people whose name has what was typed, a few at a time, never another company\'s', function (): void {
+        $other = Tenant::factory()->create();
+        Employee::factory()->create(['tenant_id' => $other->id, 'name' => 'Ana Extraña']);
+        $this->dan->update(['deactivated_at' => now()]);
+        $options = route('tenant.vacations.people.options', [$this->tenant, 'q' => 'ANA']);
+
+        $this->actingAs($this->hr)->getJson($options)->assertOk()->assertExactJson([['value' => $this->ana->id, 'label' => 'Ana Solís']]);
+        $this->getJson(route('tenant.vacations.people.options', [$this->tenant, 'q' => 'gil']))->assertOk()->assertExactJson([]);
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->getJson($options)->assertForbidden();
+    });
+
+    it('offers the types of the company to record a leave', function (): void {
+        $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Paternidad']);
+        LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Vieja', 'archived_at' => now()]);
+
+        $types = $this->actingAs($this->hr)->get(route('tenant.vacations.requests.index', $this->tenant))->assertOk()->inertiaProps()['types'];
+
+        expect($types)->toContain(['id' => $type->id, 'name' => 'Paternidad'])
+            ->and(array_column($types, 'name'))->not->toContain('Vieja');
+    });
 });

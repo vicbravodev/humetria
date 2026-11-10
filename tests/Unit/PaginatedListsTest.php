@@ -50,6 +50,7 @@ const ARRAY_PROPS = [
     'seating/inspection:missing' => 'catálogo fijo: los requisitos que faltan (13 a lo más)',
     'seating/inspection:ready' => 'catálogo fijo: los requisitos que se pueden mostrar (13 a lo más)',
     'leave/portal:statements' => 'resumen corto: las constancias anuales que la persona aún no confirma, una por periodo',
+    'leave/requests:types' => 'catálogo corto: los tipos de permiso de la empresa, para registrar uno a nombre de alguien',
     'leave/portal:periods' => 'resumen corto: los periodos con saldo de una persona',
     'leave/portal:types' => 'catálogo corto: los tipos de permiso de la empresa',
     'telework/settings:presets' => 'catálogo fijo: los periodos predefinidos de la Sección II (cuatro)',

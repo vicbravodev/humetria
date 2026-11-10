@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 
@@ -112,4 +113,47 @@ it('lets RH correct a request by cancelling it', function (): void {
         ->assertSee('La solicitud quedó cancelada.');
 
     expect(LeaveRequest::query()->where('status', 'cancelled')->count())->toBe(1);
+});
+
+it('lets RH record vacations for somebody and approve them in the same step', function (bool $dark, bool $mobile): void {
+    $queue = leaveRequestsPanel();
+    $ana = LeaveRequest::query()->whereNotNull('escalated_at')->firstOrFail();
+    LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $queue['tenant']->id, 'employee_id' => $ana->employee_id, 'years_of_service' => 1, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
+
+    visitPage('leave/requests', "{$queue['url']}?tab=approved", $dark, $mobile)
+        ->press('Registrar a nombre de alguien')
+        ->click('#record-person')
+        ->type('[role="combobox"][aria-controls="record-person-options"]', 'ana')
+        ->click('[role="option"]:has-text("Ana Solís")')
+        ->click('#record-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-02"] button')
+        ->click('#record-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-03"] button')
+        ->type('#record-note', 'Lo pidió por teléfono')
+        ->click('#record-approve')
+        ->assertNoJavaScriptErrors()
+        ->click('[role=dialog] button[type=submit]')
+        ->assertSee('Solicitud registrada y aprobada a nombre de Ana Solís.')
+        ->assertSee('2 días laborables')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    $recorded = LeaveRequest::query()->where('note', 'Lo pidió por teléfono')->sole();
+
+    expect($recorded->status->value)->toBe('approved')
+        ->and($recorded->recorded_by)->not->toBeNull()
+        ->and($recorded->employee_id)->toBe($ana->employee_id);
+})->with($looks);
+
+it('does not offer a viewer to record, answer or correct', function (): void {
+    $queue = leaveRequestsPanel();
+    $viewer = memberOf($queue['tenant'], TenantRole::Viewer);
+    test()->actingAs($viewer);
+
+    visitPage('leave/requests', $queue['url'])
+        ->assertSee('Ana Solís')
+        ->assertDontSee('Registrar a nombre de alguien')
+        ->click('button[aria-label="Ver la solicitud de Ana Solís"]')
+        ->assertDontSee('Cancelar solicitud')
+        ->assertDontSee('Aprobar');
 });

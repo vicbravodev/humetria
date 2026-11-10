@@ -1,14 +1,18 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Inbox } from 'lucide-react';
+import { Inbox, Plus } from 'lucide-react';
+import { useState } from 'react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
+import RecordLeaveForm from '@/components/leave/record-leave-form';
 import RequestsTable from '@/components/leave/requests-table';
 import RequestsToolbar from '@/components/leave/requests-toolbar';
+import { Button } from '@/components/ui/button';
 import type {
     LeaveQueueFilters,
     LeaveQueueRequest,
     LeaveQueueTab,
+    LeaveTypeOption,
     Paginated,
 } from '@/types';
 
@@ -29,14 +33,19 @@ export default function LeaveRequests({
     tab,
     counts,
     filters,
+    canManage,
+    types,
     requests,
 }: {
     tab: LeaveQueueTab;
     counts: Record<LeaveQueueTab, number>;
     filters: Omit<LeaveQueueFilters, 'tab'>;
     canManage: boolean;
+    types: LeaveTypeOption[];
     requests: Paginated<LeaveQueueRequest>;
 }) {
+    const [recording, setRecording] = useState(false);
+
     setLayoutProps({
         breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Solicitudes' }],
     });
@@ -49,7 +58,24 @@ export default function LeaveRequests({
                     caption="Vacaciones"
                     title="Solicitudes"
                     description="Lo que llegó a RH, lo que espera a un jefe y lo que ya se respondió."
-                />
+                >
+                    {canManage && (
+                        <Button
+                            type="button"
+                            onClick={() => setRecording(true)}
+                        >
+                            <Plus aria-hidden />
+                            Registrar a nombre de alguien
+                        </Button>
+                    )}
+                </PageHeader>
+                {canManage && (
+                    <RecordLeaveForm
+                        open={recording}
+                        onOpenChange={setRecording}
+                        types={types}
+                    />
+                )}
                 <RequestsToolbar
                     filters={{ ...filters, tab }}
                     counts={counts}

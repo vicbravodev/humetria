@@ -20,3 +20,7 @@ Route::get('admin/{tenant:slug}/vacations/requests', [RequestController::class, 
 Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/approve', [RequestController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('leaveRequest')->name('tenant.vacations.requests.approve');
 Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/reject', [RequestController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('leaveRequest')->name('tenant.vacations.requests.reject');
 Route::post('admin/{tenant:slug}/vacations/requests/{leaveRequest}/cancel', [RequestController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('leaveRequest')->name('tenant.vacations.requests.cancel');
+
+// RH records vacations or a leave for somebody, and looks the person up by name.
+Route::post('admin/{tenant:slug}/vacations/requests', [RequestController::class, 'store'])->where('tenant', $notReserved)->name('tenant.vacations.requests.store');
+Route::get('admin/{tenant:slug}/vacations/people/options', [RequestController::class, 'people'])->where('tenant', $notReserved)->name('tenant.vacations.people.options');

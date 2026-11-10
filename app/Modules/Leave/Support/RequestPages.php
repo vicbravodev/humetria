@@ -34,7 +34,7 @@ final readonly class RequestPages
     public function __construct(private Roster $roster, private WorkCenters $centers, private Areas $areas) {}
 
     /**
-     * @return array{tab: string, counts: array{attend: int, waiting: int, approved: int, rejected: int, cancelled: int, taken: int}, filters: array{q: string, center: array{value: string, label: string}|null, area: array{value: string, label: string}|null}, canManage: bool, requests: LengthAwarePaginator<int, Row>}
+     * @return array{tab: string, counts: array{attend: int, waiting: int, approved: int, rejected: int, cancelled: int, taken: int}, filters: array{q: string, center: array{value: string, label: string}|null, area: array{value: string, label: string}|null}, canManage: bool, types: list<array{id: string, name: string}>, requests: LengthAwarePaginator<int, Row>}
      */
     public function index(string $tab, string $search, ?string $centerId, ?string $areaId, bool $canManage): array
     {
@@ -50,6 +50,7 @@ final readonly class RequestPages
                 'area' => $areaId === null ? null : ['value' => $areaId, 'label' => $this->areas->name($areaId) ?? ''],
             ],
             'canManage' => $canManage,
+            'types' => ! $canManage ? [] : array_values(LeaveType::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')->get(['id', 'name'])->map(fn (LeaveType $type): array => ['id' => $type->id, 'name' => $type->name])->all()),
             'requests' => $this->page($tab, $people, $canManage),
         ];
     }
