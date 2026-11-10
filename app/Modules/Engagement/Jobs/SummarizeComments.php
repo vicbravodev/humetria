@@ -11,12 +11,16 @@ use App\Modules\Engagement\Enums\SummaryStatus;
 use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\CommentSummary;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Notifications\SensitiveMentions;
 use App\Modules\Engagement\Support\Comments\CommentsBlock;
 use App\Modules\Engagement\Support\Comments\SummaryGuard;
 use App\Modules\Engagement\Support\Thresholds;
+use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\Members;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
@@ -104,7 +108,7 @@ final class SummarizeComments implements ShouldQueue
             return $comments;
         }
 
-        $survey->update(['sensitive_mentions' => true]);
+        $this->noteMentions($survey);
         $taken = array_flip($flagged);
         $offset = count($comments['valued']);
 
@@ -113,6 +117,23 @@ final class SummarizeComments implements ShouldQueue
             // The numbers run through both lists: the second one starts where the first ends.
             'change' => array_values(array_filter($comments['change'], fn (int $index): bool => ! isset($taken[$offset + $index]), ARRAY_FILTER_USE_KEY)),
         ];
+    }
+
+    /** The survey remembers there were mentions, and whoever manages the complaints channel is told the first time only. */
+    private function noteMentions(Survey $survey): void
+    {
+        if (Survey::query()->whereKey($survey->id)->where('sensitive_mentions', false)->update(['sensitive_mentions' => true]) === 0) {
+            return;
+        }
+
+        $company = resolve(Companies::class)->current();
+        $url = route('tenant.complaints.channel.show', $company->slug);
+
+        foreach (resolve(Members::class)->complaintManagers() as $manager) {
+            Notification::route('mail', $manager->email)->notify(new SensitiveMentions($company, $survey->name, $url));
+        }
+
+        Log::info('engagement.sensitive_mentions_noticed', ['survey_id' => $survey->id]);
     }
 
     /**

@@ -55,6 +55,7 @@ function inventory(): array
         'survey invitation' => [fn () => new SurveyInvitation(SurveyEmail::Invitation, 'tok', 'Ana', $company, null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15), true],
         'climate invitation' => [fn () => new App\Modules\Engagement\Notifications\SurveyInvitation(false, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-01'), App\Modules\Engagement\Enums\SurveyKind::Climate), true],
         'climate reminder' => [fn () => new App\Modules\Engagement\Notifications\SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-01'), App\Modules\Engagement\Enums\SurveyKind::Climate), true],
+        'climate sensitive mentions' => [fn () => new App\Modules\Engagement\Notifications\SensitiveMentions($company, 'Clima · noviembre 2026', $url), true],
         'progress digest' => [fn () => new ProgressDigest($company, 'Planta', 3, 10, 5, [], ['name' => 'Ventas', 'pending' => 7], 7, $url), true],
         'next evaluation due' => [fn () => new App\Modules\Campaigns\Notifications\NextEvaluationDue($company, ['Planta Norte', 'Planta Sur'], '4 ene 2027', $url), true],
         'complaint received' => [fn () => new ComplaintReceived($url, 3, 30), false],
