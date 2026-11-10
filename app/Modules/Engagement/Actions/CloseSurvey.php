@@ -9,6 +9,7 @@ use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Exceptions\SurveyStateChanged;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\Results\SurveyResults;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -27,7 +28,9 @@ final readonly class CloseSurvey
     {
         return DB::transaction(function () use ($surveyId, $userId): Survey {
             $survey = Survey::lockIn($surveyId, SurveyStatus::Active);
-            $survey->update(['status' => SurveyStatus::Closed, 'closed_at' => now(), 'priorities' => []]);
+            $survey->update(['status' => SurveyStatus::Closed, 'closed_at' => now()]);
+            // Once, with every answer in (the lock waited for the last one): the same list is what the results show.
+            $survey->update(['priorities' => SurveyResults::for($survey)->priorities()]);
 
             $automatic = $userId === null;
             Log::info('engagement.survey_closed', ['survey_id' => $survey->id, 'automatic' => $automatic]);

@@ -55,6 +55,16 @@ final class SurveyResults
     }
 
     /**
+     * The drivers to act on first, for the whole company.
+     *
+     * @return list<array{driver: string, level: string}>
+     */
+    public function priorities(): array
+    {
+        return Priorities::compute($this->rows(), $this->company()->byKey, $this->thresholds);
+    }
+
+    /**
      * The groups of the cut that may be shown, with their summaries, and whether any was left out.
      *
      * @return array{groups: array<string, GroupSummary>, hasHidden: bool}

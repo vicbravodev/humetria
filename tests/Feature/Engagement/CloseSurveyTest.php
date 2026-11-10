@@ -5,11 +5,13 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Engagement\Actions\CloseExpiredSurveys;
 use App\Modules\Engagement\Actions\CloseSurvey;
+use App\Modules\Engagement\Enums\Driver;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Exceptions\SurveyStateChanged;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -43,6 +45,23 @@ it('stores no priorities while nobody has answered', function (): void {
     $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
 
     expect(resolve(CloseSurvey::class)->handle($survey->id)->priorities)->toBe([]);
+});
+
+it('stores, on closing, the drivers to act on first, at company level and with no figure', function (): void {
+    // Everyone answers the engagement questions with their level (1 to 5); recognition follows it and comes out low, the
+    // rest answer 4 whatever they feel.
+    $survey = climateResultsSurvey($this->tenant, 40, function (int $i): array {
+        $level = 1 + $i % 5;
+        $answers = ['eng.pride' => $level, 'eng.motivation' => $level, 'eng.connection' => $level, 'eng.recommend' => 9, 'eng.stay' => 4];
+        foreach (ItemBank::closed() as $item) {
+            $answers[$item->key] ??= $item->driver === Driver::Recognition ? $level : 4;
+        }
+
+        return $answers;
+    }, closed: false);
+
+    expect(resolve(CloseSurvey::class)->handle($survey->id)->priorities)->toEqual([['driver' => 'recognition', 'level' => 'high']]);
+    expect($survey->refresh()->priorities)->toEqual([['driver' => 'recognition', 'level' => 'high']]);
 });
 
 it('does not close twice nor announce twice', function (): void {
