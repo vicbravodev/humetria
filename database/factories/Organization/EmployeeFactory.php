@@ -39,6 +39,12 @@ final class EmployeeFactory extends Factory
         ];
     }
 
+    /** A person of the manager's company who reports to them. */
+    public function reportingTo(Employee $manager): self
+    {
+        return $this->state(['tenant_id' => $manager->tenant_id, 'manager_id' => $manager->id]);
+    }
+
     public function deactivated(): self
     {
         return $this->state(['deactivated_at' => now()]);
