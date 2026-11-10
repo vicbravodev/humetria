@@ -110,3 +110,46 @@ export type LeaveSummaryRow = {
     startsOn: string;
     endsOn: string;
 };
+
+export type LeaveQueueTab =
+    | 'attend'
+    | 'waiting'
+    | 'approved'
+    | 'rejected'
+    | 'cancelled'
+    | 'taken';
+
+/** How RH's queue is narrowed, as the server sends it back: a chosen center or area comes with its name. */
+export type LeaveQueueFilters = {
+    q: string;
+    center: { value: string; label: string } | null;
+    area: { value: string; label: string } | null;
+    tab: LeaveQueueTab;
+};
+
+/** A request in RH's queue. The note, the reason of a rejection and which leave it was only reach whoever may change it. */
+export type LeaveQueueRequest = {
+    id: string;
+    name: string;
+    /** Whose it was to answer; null when nobody active was above the person. */
+    manager: string | null;
+    /** The name of the leave for whoever manages vacations, "Permiso" for a viewer; null for vacations. */
+    type: string | null;
+    startsOn: string;
+    endsOn: string;
+    workingDays: number;
+    status: LeaveRequestStatus;
+    statusLabel: string;
+    /** Whether they had the days when they asked; null for a leave. */
+    hadBalance: boolean | null;
+    shortBy: number;
+    /** The years of the periods its days are charged to. */
+    periods: number[];
+    /** Why it reached RH, while it waits. */
+    reason: string | null;
+    recordedByHr: boolean;
+    note: string | null;
+    rejectionReason: string | null;
+    canDecide: boolean;
+    canCancel: boolean;
+};
