@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
+import ModeBadge from '@/components/engagement/pulse/mode-badge';
 import SurveyStatusBadge from '@/components/engagement/survey-status-badge';
 import ProgressBar from '@/components/humetria/progress-bar';
 import { Button } from '@/components/ui/button';
@@ -27,10 +28,13 @@ export default function SurveyCard({ survey }: { survey: ClimateSurveyCard }) {
                         </p>
                     )}
                 </div>
-                <SurveyStatusBadge
-                    status={survey.status}
-                    label={survey.statusLabel}
-                />
+                <div className="flex items-center gap-2">
+                    <ModeBadge mode={survey.mode} />
+                    <SurveyStatusBadge
+                        status={survey.status}
+                        label={survey.statusLabel}
+                    />
+                </div>
             </header>
             {survey.invited === null || survey.answered === null ? (
                 <p className="text-sm text-muted-foreground">

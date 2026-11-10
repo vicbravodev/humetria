@@ -11,6 +11,7 @@ use App\Modules\Engagement\Http\Controllers\CommitmentController;
 use App\Modules\Engagement\Http\Controllers\ExportController;
 use App\Modules\Engagement\Http\Controllers\ManagerResultsController;
 use App\Modules\Engagement\Http\Controllers\PublishFeedbackController;
+use App\Modules\Engagement\Http\Controllers\PulseDraftController;
 use App\Modules\Engagement\Http\Controllers\ResultsController;
 use App\Modules\Engagement\Http\Controllers\SurveyActionController;
 use App\Modules\Engagement\Http\Controllers\SurveyController;
@@ -28,7 +29,7 @@ if (! function_exists('engagementRoutes')) {
         $name = "tenant.{$kind->value}";
 
         Route::get($prefix, [SurveyController::class, 'index'])->where('tenant', $notReserved)->defaults('kind', $kind->value)->name("{$name}.index");
-        Route::post($prefix, [SurveyController::class, 'store'])->where('tenant', $notReserved)->defaults('kind', $kind->value)->name("{$name}.store");
+        Route::post($prefix, $kind === SurveyKind::Pulse ? [PulseDraftController::class, 'store'] : [SurveyController::class, 'store'])->where('tenant', $notReserved)->defaults('kind', $kind->value)->name("{$name}.store");
         Route::get("{$prefix}/{survey}", [SurveyController::class, 'show'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.show");
         Route::delete("{$prefix}/{survey}", [SurveyController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.destroy");
         Route::post("{$prefix}/{survey}/launch", [SurveyActionController::class, 'launch'])->where('tenant', $notReserved)->whereUuid('survey')->defaults('kind', $kind->value)->name("{$name}.launch");

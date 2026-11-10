@@ -8,12 +8,15 @@ use App\Modules\Engagement\Actions\LaunchSurvey;
 use App\Modules\Engagement\Actions\SnapshotAudience;
 use App\Modules\Engagement\Enums\CommitmentStatus;
 use App\Modules\Engagement\Enums\ItemBlock;
+use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
+use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
+use App\Modules\Engagement\Support\Pulse\PulsePlanner;
 use App\Modules\Organization\Data\RosterEntry;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -23,7 +26,7 @@ use Illuminate\Support\Collection;
  * What the panel of Clima y pulso shows RH: the survey in progress, the history, and each survey in its state. Only
  * counts: nothing here says who answered, and nothing that follows an answer to a person.
  *
- * @phpstan-type Card array{id: string, name: string, status: string, statusLabel: string, closesOn: string|null, daysLeft: int|null, invited: int|null, answered: int|null, rate: int|null}
+ * @phpstan-type Card array{id: string, name: string, mode: array{value: string, label: string}|null, status: string, statusLabel: string, closesOn: string|null, daysLeft: int|null, invited: int|null, answered: int|null, rate: int|null}
  * @phpstan-type Draft array{people: int, withoutEmail: int, companyOnly: int, minGroup: int, canLaunch: bool, limits: array{min: string, suggested: string, max: string}}
  * @phpstan-type Unreachable array{id: string, name: string, area: string}
  * @phpstan-type Section array{title: string, items: list<array{text: string}>}
@@ -38,7 +41,7 @@ final readonly class SurveyPages
     public function __construct(private SnapshotAudience $snapshot, private Participation $participation) {}
 
     /**
-     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string}
+     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, modes: list<array{value: string, label: string}>|null}
      */
     public function index(SurveyKind $kind, bool $canManage): array
     {
@@ -58,6 +61,7 @@ final readonly class SurveyPages
             ]),
             'canManage' => $canManage,
             'kind' => $kind->value,
+            'modes' => $kind === SurveyKind::Pulse ? array_map(fn (PulseMode $mode): array => ['value' => $mode->value, 'label' => $mode->label()], PulsePlanner::available(PriorityDrivers::ofLatestClimate() !== [])) : null,
         ];
     }
 
@@ -193,6 +197,7 @@ final readonly class SurveyPages
         return [
             'id' => $survey->id,
             'name' => $survey->name,
+            'mode' => $survey->pulse_mode === null ? null : ['value' => $survey->pulse_mode->value, 'label' => $survey->pulse_mode->label()],
             'status' => $survey->status->value,
             'statusLabel' => $survey->status->label(),
             'closesOn' => $survey->closes_on?->toDateString(),

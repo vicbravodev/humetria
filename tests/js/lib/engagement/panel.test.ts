@@ -11,6 +11,7 @@ import type { ClimateSurveyCard } from '@/types';
 const card = (overrides: Partial<ClimateSurveyCard>): ClimateSurveyCard => ({
     id: 'id',
     name: 'Clima',
+    mode: null,
     status: 'active',
     statusLabel: 'En curso',
     closesOn: '2026-11-20',

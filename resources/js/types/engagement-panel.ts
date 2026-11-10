@@ -1,9 +1,14 @@
 export type ClimateSurveyStatus = 'draft' | 'active' | 'closed';
 
+/** What a pulse looks at this time (Seguimiento, Recorrido or Jefe). */
+export type PulseModeOption = { value: string; label: string };
+
 /** A survey as the panel shows it: only counts, never who answered. */
 export type ClimateSurveyCard = {
     id: string;
     name: string;
+    /** The mode of a pulse; null for a climate survey. */
+    mode: PulseModeOption | null;
     status: ClimateSurveyStatus;
     statusLabel: string;
     closesOn: string | null;

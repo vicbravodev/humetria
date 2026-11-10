@@ -1,5 +1,6 @@
 import { CalendarDays } from 'lucide-react';
 import SurveyHeaderActions from '@/components/engagement/survey-header-actions';
+import ModeBadge from '@/components/engagement/pulse/mode-badge';
 import SurveyStatusBadge from '@/components/engagement/survey-status-badge';
 import PageHeader from '@/components/humetria/page-header';
 import { deadlineText } from '@/lib/engagement/panel';
@@ -24,10 +25,13 @@ export default function SurveyHeader({
         <PageHeader
             title={survey.name}
             status={
-                <SurveyStatusBadge
-                    status={survey.status}
-                    label={survey.statusLabel}
-                />
+                <>
+                    <SurveyStatusBadge
+                        status={survey.status}
+                        label={survey.statusLabel}
+                    />
+                    <ModeBadge mode={survey.mode} />
+                </>
             }
             {...(deadline === undefined
                 ? {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Engagement\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Exceptions\SurveyStateChanged;
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $id
  * @property string $tenant_id
  * @property SurveyKind $kind
+ * @property PulseMode|null $pulse_mode
  * @property SurveyStatus $status
  * @property string $name
  * @property string $bank_version
@@ -41,7 +43,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'kind', 'status', 'name', 'bank_version', 'items', 'closes_on', 'launched_at', 'closed_at', 'invited', 'priorities', 'sensitive_mentions', 'results_published_at', 'created_by'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'kind', 'pulse_mode', 'status', 'name', 'bank_version', 'items', 'closes_on', 'launched_at', 'closed_at', 'invited', 'priorities', 'sensitive_mentions', 'results_published_at', 'created_by'])] // @pest-mutate-ignore: RemoveArrayItem
 #[Table('engagement_surveys')]
 #[UseFactory(SurveyFactory::class)]
 #[UsePolicy(SurveyPolicy::class)]
@@ -74,6 +76,7 @@ final class Survey extends Model
     {
         return [
             'kind' => SurveyKind::class,
+            'pulse_mode' => PulseMode::class,
             'status' => SurveyStatus::class,
             'items' => 'array',
             'priorities' => 'array',

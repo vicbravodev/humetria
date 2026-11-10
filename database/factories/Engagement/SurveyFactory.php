@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories\Engagement;
 
 use App\Models\User;
+use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Survey;
@@ -30,6 +31,7 @@ final class SurveyFactory extends Factory
         return [
             'tenant_id' => TenantFactory::new(),
             'kind' => SurveyKind::Climate,
+            'pulse_mode' => fn (array $attributes): ?PulseMode => $attributes['kind'] === SurveyKind::Pulse ? PulseMode::Tour : null,
             'status' => SurveyStatus::Draft,
             'name' => 'Clima · noviembre 2026',
             'bank_version' => ItemBank::VERSION,

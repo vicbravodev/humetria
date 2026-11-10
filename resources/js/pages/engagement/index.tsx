@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Gauge } from 'lucide-react';
+import ModePicker from '@/components/engagement/pulse/mode-picker';
 import CreateSurveyButton from '@/components/engagement/create-survey-button';
 import SurveyCard from '@/components/engagement/survey-card';
 import SurveyHistory from '@/components/engagement/survey-history';
@@ -11,6 +12,7 @@ import type {
     ClimateSurveyCard,
     ClimateSurveyHistoryRow,
     Paginated,
+    PulseModeOption,
 } from '@/types';
 
 /**
@@ -21,10 +23,12 @@ export default function EngagementIndex({
     current,
     surveys,
     canManage,
+    modes,
 }: {
     current: ClimateSurveyCard | null;
     surveys: Paginated<ClimateSurveyHistoryRow>;
     canManage: boolean;
+    modes: PulseModeOption[] | null;
 }) {
     const copy = homeCopy(useEngagementKind(), surveys.total);
 
@@ -43,11 +47,17 @@ export default function EngagementIndex({
                         title={copy.emptyTitle}
                         {...(canManage
                             ? {
-                                  action: (
-                                      <CreateSurveyButton
-                                          label={copy.createLabel}
-                                      />
-                                  ),
+                                  action:
+                                      modes === null ? (
+                                          <CreateSurveyButton
+                                              label={copy.createLabel}
+                                          />
+                                      ) : (
+                                          <ModePicker
+                                              modes={modes}
+                                              label={copy.createLabel}
+                                          />
+                                      ),
                               }
                             : {})}
                     >
