@@ -10,6 +10,7 @@ import { LeySillaFilm, leySilla, leySillaTimeline } from './presentations/ley-si
 import { ComplaintsFilm, complaints, complaintsTimeline } from './presentations/complaints';
 import { CompensationFilm, compensation, compensationTimeline } from './presentations/compensation';
 import { AttendanceFilm, attendance, attendanceTimeline } from './presentations/attendance';
+import { LeaveFilm, leave, leaveTimeline } from './presentations/leave';
 
 export const Root = () => (
     <>
@@ -29,5 +30,6 @@ export const Root = () => (
         <Composition id={complaints.id} component={ComplaintsFilm} durationInFrames={complaintsTimeline.total} fps={complaints.fps} width={complaints.width} height={complaints.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={compensation.id} component={CompensationFilm} durationInFrames={compensationTimeline.total} fps={compensation.fps} width={compensation.width} height={compensation.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={attendance.id} component={AttendanceFilm} durationInFrames={attendanceTimeline.total} fps={attendance.fps} width={attendance.width} height={attendance.height} defaultProps={{ theme: 'dark' as const }} />
+        <Composition id={leave.id} component={LeaveFilm} durationInFrames={leaveTimeline.total} fps={leave.fps} width={leave.width} height={leave.height} defaultProps={{ theme: 'dark' as const }} />
     </>
 );
