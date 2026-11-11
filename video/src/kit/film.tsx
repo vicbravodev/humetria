@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { Sequence, useCurrentFrame } from 'remotion';
 import { enter } from '../ease';
 import { Backdrop, Headline, PushIn } from './fx';
+import { useLayoutProbe } from './probe';
 import { Logo, Narration, Reveal, SceneFrame, Stage, Subtitle } from './primitives';
 import type { Presentation, SceneProps } from './schema';
 import type { PlacedScene, } from './timeline';
@@ -59,7 +60,9 @@ const Outro = () => {
     );
 };
 
-export const FilmView = ({ p, timeline, theme }: { p: Presentation; timeline: ReturnType<typeof layout>; theme: ThemeName }) => (
+export const FilmView = ({ p, timeline, theme, probe }: { p: Presentation; timeline: ReturnType<typeof layout>; theme: ThemeName; probe?: boolean | undefined }) => {
+    useLayoutProbe(probe === true);
+    return (
     <Stage theme={theme}>
         <Backdrop />
         {timeline.scenes.map((s) => {
@@ -81,4 +84,5 @@ export const FilmView = ({ p, timeline, theme }: { p: Presentation; timeline: Re
         ) : null}
         <Narration scenes={timeline.scenes} />
     </Stage>
-);
+    );
+};

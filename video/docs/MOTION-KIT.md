@@ -91,3 +91,18 @@ Fijado con NOM-035 (segunda iteración, 2026-11-10). Todas las películas de her
 - Datos de ejemplo siempre marcados como tales en la trazabilidad; cada escena declara su evidencia.
 
 **Peso:** cada película ronda 5–6 MB por tema (mp4/webm). Si una pasa de 8 MB, subir el `--crf` antes de recortar movimiento.
+
+## Revisión de desbordes: obligatoria antes de renderizar
+Un render completo (mp4 + webm + póster, oscuro y claro) tarda minutos y es caro. **Ningún render sale sin esta revisión en verde.**
+
+```bash
+node scripts/qa-layout.mjs <Composición> <id-de-presentación> dark   # p. ej.: OrgChart org-chart dark
+```
+
+- La sonda (`src/kit/probe.tsx`, activada con la prop `probe`) mide el DOM de fotogramas ya asentados de cada capítulo (80 % y 92 %) y falla con el detalle si algo se sale de su caja o del lienzo:
+  - `ANCHO` / `ALTO`: una caja contiene más de lo que le cabe (texto largo, botones que no entran en su tarjeta, contenido que rebasa el teléfono).
+  - `LIENZO`: un texto queda fuera de los márgenes de 1920×1080 (40 px a los lados, 20 arriba y abajo).
+- El layout es idéntico en claro y oscuro: basta correrla en `dark`.
+- Excepciones solo con `data-probe-ignore` y con razón (hoy, solo el titular, que usa una máscara a propósito).
+- Orden de trabajo de cada película: guion y voz → escenas → **`qa-layout` en verde** → stills de revisión visual → `render-film`.
+- Lo que la sonda no ve: solapes entre elementos hermanos y problemas de composición o de ritmo. Eso sigue siendo revisión visual de los stills.

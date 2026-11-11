@@ -26,4 +26,4 @@ export const leySilla: Presentation = {
 
 export const leySillaTimeline = prepare(leySilla);
 
-export const LeySillaFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={leySilla} timeline={leySillaTimeline} theme={theme} />;
+export const LeySillaFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={leySilla} timeline={leySillaTimeline} theme={theme} probe={probe} />;

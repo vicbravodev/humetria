@@ -26,4 +26,4 @@ export const nom037: Presentation = {
 
 export const nom037Timeline = prepare(nom037);
 
-export const Nom037Film = ({ theme }: { theme: ThemeName }) => <FilmView p={nom037} timeline={nom037Timeline} theme={theme} />;
+export const Nom037Film = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={nom037} timeline={nom037Timeline} theme={theme} probe={probe} />;

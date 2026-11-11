@@ -45,7 +45,7 @@ export const RosterScene = ({ f, audioAt }: SceneProps) => {
                             <div style={{ fontSize: 32, fontWeight: 600 }}>{p.name}</div>
                             <div style={{ fontSize: 24, color: c.mutedFg, marginTop: 2, whiteSpace: 'nowrap' }}>{p.note}</div>
                         </div>
-                        <div style={{ position: 'absolute', left: BAR.x, top: 46, width: BAR.w, height: 14, borderRadius: 99, background: c.track }}>
+                        <div data-probe-ignore style={{ position: 'absolute', left: BAR.x, top: 46, width: BAR.w, height: 14, borderRadius: 99, background: c.track }}>
                             <div style={{ height: '100%', borderRadius: 99, width: `${p.pct * fill}%`, background: over ? c.primary : c.mutedFg }} />
                             <div style={{ position: 'absolute', left: `${0.4 * BAR.w}px`, top: -12, width: 3, height: 38, borderRadius: 2, background: c.fg, opacity: 0.8 }} />
                             <div style={{ position: 'absolute', left: `${0.4 * BAR.w - 30}px`, top: -42, width: 63, textAlign: 'center', fontSize: 22, color: c.mutedFg }}>40 %</div>

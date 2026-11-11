@@ -41,11 +41,11 @@ export const Headline = ({ f, at, text }: { f: number; at: number; text: string 
     const c = useTheme();
     const words = text.split(' ');
     return (
-        <div style={{ position: 'absolute', left: 110, top: 134, display: 'flex', gap: 18, fontSize: 64, fontWeight: 600, letterSpacing: -1.6, lineHeight: 1.1 }}>
+        <div data-probe-ignore style={{ position: 'absolute', left: 110, top: 134, display: 'flex', gap: 18, fontSize: 64, fontWeight: 600, letterSpacing: -1.6, lineHeight: 1.1 }}>
             {words.map((w, i) => {
                 const t = tween(f, at + i * 4, 22);
                 return (
-                    <span key={`${w}-${i}`} style={{ display: 'inline-block', overflow: 'hidden', paddingBottom: 10, marginBottom: -10 }}>
+                    <span key={`${w}-${i}`} data-probe-ignore style={{ display: 'inline-block', overflow: 'hidden', paddingBottom: 10, marginBottom: -10 }}>
                         <span style={{ display: 'inline-block', transform: `translateY(${(1 - t) * 105}%)`, opacity: Math.min(1, t * 2), color: i === words.length - 1 ? c.primary : c.fg }}>{w}</span>
                     </span>
                 );

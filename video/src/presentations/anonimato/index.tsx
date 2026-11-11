@@ -25,4 +25,4 @@ export const anonimato: Presentation = {
 
 export const anonimatoTimeline = prepare(anonimato);
 
-export const AnonimatoFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={anonimato} timeline={anonimatoTimeline} theme={theme} />;
+export const AnonimatoFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={anonimato} timeline={anonimatoTimeline} theme={theme} probe={probe} />;

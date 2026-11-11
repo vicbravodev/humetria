@@ -26,4 +26,4 @@ export const orgChart: Presentation = {
 
 export const orgChartTimeline = prepare(orgChart);
 
-export const OrgChartFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={orgChart} timeline={orgChartTimeline} theme={theme} />;
+export const OrgChartFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={orgChart} timeline={orgChartTimeline} theme={theme} probe={probe} />;

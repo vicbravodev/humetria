@@ -26,4 +26,4 @@ export const complaints: Presentation = {
 
 export const complaintsTimeline = prepare(complaints);
 
-export const ComplaintsFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={complaints} timeline={complaintsTimeline} theme={theme} />;
+export const ComplaintsFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={complaints} timeline={complaintsTimeline} theme={theme} probe={probe} />;

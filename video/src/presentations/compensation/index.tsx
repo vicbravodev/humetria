@@ -26,4 +26,4 @@ export const compensation: Presentation = {
 
 export const compensationTimeline = prepare(compensation);
 
-export const CompensationFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={compensation} timeline={compensationTimeline} theme={theme} />;
+export const CompensationFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={compensation} timeline={compensationTimeline} theme={theme} probe={probe} />;

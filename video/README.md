@@ -55,3 +55,5 @@ Salen `public/video/humetria-*.{mp4,webm,jpg}`. Con `light` como cuarto argument
 (`humetria-*-light.*`: la misma película con los tokens claros del design system); la landing elige según el tema.
 Las películas se sirven por `/media/films/{archivo}` (`ToolFilmController`) y no como archivos estáticos: el navegador
 solo puede saltar a un capítulo si el servidor responde rangos de bytes, y el servidor de PHP de desarrollo no lo hace.
+
+Antes de renderizar cualquier película: `node scripts/qa-layout.mjs <Composición> <id> dark` (ver `docs/MOTION-KIT.md`, «Revisión de desbordes»).

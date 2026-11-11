@@ -16,7 +16,11 @@ export const Stage = ({ theme, children }: { theme: ThemeName; children: ReactNo
 
 const StageInner = ({ children }: { children: ReactNode }) => {
     const c = useTheme();
-    return <AbsoluteFill style={{ background: c.bg, fontFamily: 'Figtree, sans-serif', fontVariantNumeric: 'tabular-nums', color: c.fg }}>{children}</AbsoluteFill>;
+    return (
+        <AbsoluteFill data-probe-scope style={{ background: c.bg, fontFamily: 'Figtree, sans-serif', fontVariantNumeric: 'tabular-nums', color: c.fg }}>
+            {children}
+        </AbsoluteFill>
+    );
 };
 
 /** Envuelve una escena: entra y sale solo con fundido (sin desplazar contenedores). La última escena no sale: se queda. */

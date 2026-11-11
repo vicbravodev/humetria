@@ -274,13 +274,13 @@ export const PortalScene = ({ f, audioAt }: SceneProps) => {
                     {['Diana U.', 'Mariana L.'].map((n, i) => (
                         <div key={n} style={{ marginTop: 6, height: 50, borderRadius: radius.control, background: c.muted, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', padding: '0 16px', fontSize: 27, fontWeight: 500, ...enter(f, audioAt + 12 + i * 6, { dur: dur.enter, y: 8 }) }}>{n}</div>
                     ))}
-                    <div style={{ marginTop: 14, borderRadius: radius.control, background: c.accent, border: `1px solid ${ok > 0.5 ? c.primary : c.border}`, padding: '12px 16px', height: 140, boxSizing: 'border-box', ...pop(f, audioAt + 40) }}>
+                    <div style={{ marginTop: 14, borderRadius: radius.control, background: c.accent, border: `1px solid ${ok > 0.5 ? c.primary : c.border}`, padding: '12px 12px', height: 140, boxSizing: 'border-box', ...pop(f, audioAt + 40) }}>
                         <div style={{ fontSize: 26, fontWeight: 600 }}>Mariana L.</div>
                         <div style={{ fontSize: 24, color: c.mutedFg }}>11 al 15 de enero</div>
                         <div style={{ position: 'relative', marginTop: 14, height: 52 }}>
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: 10, opacity: 1 - tween(f, CLICK + 2, 6) }}>
-                                <div style={{ height: 52, padding: '0 22px', display: 'flex', alignItems: 'center', borderRadius: radius.control, background: c.primary, color: c.primaryFg, fontSize: 26, fontWeight: 600, transform: `scale(${1 - 0.06 * press})` }}>Aprobar</div>
-                                <div style={{ height: 52, padding: '0 18px', display: 'flex', alignItems: 'center', borderRadius: radius.control, border: `1px solid ${c.border}`, fontSize: 26, fontWeight: 600 }}>Rechazar</div>
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: 8, opacity: 1 - tween(f, CLICK + 2, 6) }}>
+                                <div style={{ height: 52, padding: '0 16px', display: 'flex', alignItems: 'center', borderRadius: radius.control, background: c.primary, color: c.primaryFg, fontSize: 26, fontWeight: 600, transform: `scale(${1 - 0.06 * press})` }}>Aprobar</div>
+                                <div style={{ height: 52, padding: '0 12px', display: 'flex', alignItems: 'center', borderRadius: radius.control, border: `1px solid ${c.border}`, fontSize: 26, fontWeight: 600 }}>Rechazar</div>
                             </div>
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', gap: 12, fontSize: 28, fontWeight: 600, opacity: tween(f, CLICK + 8, 8) }}>
                                 <CheckBadge size={36} /> Aprobada

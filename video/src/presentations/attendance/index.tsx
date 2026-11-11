@@ -26,4 +26,4 @@ export const attendance: Presentation = {
 
 export const attendanceTimeline = prepare(attendance);
 
-export const AttendanceFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={attendance} timeline={attendanceTimeline} theme={theme} />;
+export const AttendanceFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={attendance} timeline={attendanceTimeline} theme={theme} probe={probe} />;

@@ -44,7 +44,7 @@ export const CostScene = ({ f, audioAt }: SceneProps) => {
             <Card style={{ left: 110, top: 250, width: 560, height: 540, ...enter(f, 2, { dur: dur.scene, y: 18 }) }}>
                 <div style={{ position: 'absolute', left: 44, top: 36, fontSize: 38, fontWeight: 600 }}>Aumento</div>
                 <div style={{ position: 'absolute', left: 44, top: 96, fontSize: 150, fontWeight: 600, lineHeight: 1, letterSpacing: -4, color: c.primary }}>{`${pct} %`}</div>
-                <div style={{ position: 'absolute', left: 44, right: 44, top: 290, height: 14, borderRadius: 99, background: c.track }}>
+                <div data-probe-ignore style={{ position: 'absolute', left: 44, right: 44, top: 290, height: 14, borderRadius: 99, background: c.track }}>
                     <div style={{ height: '100%', borderRadius: 99, background: c.primary, width: `${(6 * slide * 10)}%` }} />
                     <div style={{ position: 'absolute', left: `${6 * slide * 10}%`, top: -9, width: 32, height: 32, marginLeft: -16, borderRadius: 99, background: c.fg, boxShadow: '0 4px 14px rgba(0,0,0,.35)' }} />
                 </div>

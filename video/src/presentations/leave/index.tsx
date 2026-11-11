@@ -26,4 +26,4 @@ export const leave: Presentation = {
 
 export const leaveTimeline = prepare(leave);
 
-export const LeaveFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={leave} timeline={leaveTimeline} theme={theme} />;
+export const LeaveFilm = ({ theme, probe }: { theme: ThemeName; probe?: boolean | undefined }) => <FilmView p={leave} timeline={leaveTimeline} theme={theme} probe={probe} />;
