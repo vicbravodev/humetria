@@ -32,7 +32,7 @@ export default function LoopVideo({
     className,
 }: Props) {
     const still = useReducedMotion() === true;
-    const { video, playing, toggle, muted, toggleSound, onPlay, onPause } =
+    const { attach, playing, toggle, muted, toggleSound, onPlay, onPause } =
         useLoopVideo();
     const { resolvedAppearance } = useAppearance();
     const film = resolvedAppearance === 'light' ? `${name}-light` : name;
@@ -49,7 +49,7 @@ export default function LoopVideo({
             >
                 <video
                     key={film}
-                    ref={video}
+                    ref={attach}
                     autoPlay={!still}
                     muted
                     loop

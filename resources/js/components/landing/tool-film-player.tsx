@@ -13,6 +13,7 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
     const still = useReducedMotion() === true;
     const {
         video,
+        attach,
         playing,
         toggle,
         muted,
@@ -20,6 +21,7 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
         onPlay,
         onPause,
         time,
+        onTimeUpdate,
         jumpTo,
     } = useFilmChapters(film.timing);
     const { canFullscreen, fullscreen } = useVideoFullscreen(video);
@@ -36,13 +38,14 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
             <div className="relative">
                 <video
                     key={name}
-                    ref={video}
+                    ref={attach}
                     autoPlay={!still}
                     muted
                     loop
                     playsInline
                     preload="metadata"
                     poster={`/video/${name}.jpg`}
+                    onTimeUpdate={onTimeUpdate}
                     onPlay={onPlay}
                     onPause={onPause}
                     className="block aspect-video w-full bg-muted object-contain"

@@ -153,6 +153,8 @@ it('plays the hero film muted and in a loop, and lets the visitor pause it', fun
 
     visitPage('landing', '/')
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
+        // The attribute, not only the property: axe's no-autoplay-audio rule reads it and otherwise waits for the narrated film to play.
+        ->assertScript("() => {$video}.hasAttribute('muted')")
         ->assertScript("() => {$video}.poster.endsWith('/video/humetria-hero-light.jpg')")
         ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.type).join()", 'video/webm,video/mp4')
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Pausar video')
@@ -303,6 +305,7 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
     visitPage('landing', '/')
         ->assertSeeIn('#humi', 'Pregúntale a Humi')
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
+        ->assertScript("() => {$video}.hasAttribute('muted')")
         ->assertScript("() => {$video}.poster.endsWith('/video/humetria-humi-light.jpg')")
         ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-humi-light.webm,humetria-humi-light.mp4')
         ->assertSeeIn('[data-test=humi-video] figcaption', 'Conversación de ejemplo')
@@ -323,6 +326,7 @@ it('shows each tool as a narrated film with chapters, and a chapter jumps to the
     $page = visitPage('landing', '/');
     $page->click("@tool-tab-{$tool}")
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
+        ->assertScript("() => {$video}.hasAttribute('muted')")
         ->assertScript("() => {$video}.poster.endsWith('/video/{$film}-light.jpg')")
         ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", "{$film}-light.webm,{$film}-light.mp4")
         // Large enough to read what the film shows (at 1280 px the stage is wider than 700 px).

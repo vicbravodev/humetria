@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 /**
  * A looping video and the state of its play/pause and sound buttons. It starts muted (autoplay needs it); the visitor
@@ -8,6 +8,15 @@ export function useLoopVideo() {
     const video = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
     const [muted, setMuted] = useState(true);
+
+    /**
+     * The video's ref. React only sets the `muted` property, and axe's no-autoplay-audio rule reads the attribute: without
+     * it axe waits for a narrated film to play and times out, so the attribute is set here as the element mounts.
+     */
+    const attach = useCallback((element: HTMLVideoElement | null): void => {
+        video.current = element;
+        element?.setAttribute('muted', '');
+    }, []);
 
     const toggle = (): void => {
         const element = video.current;
@@ -48,6 +57,7 @@ export function useLoopVideo() {
 
     return {
         video,
+        attach,
         seek,
         playing,
         toggle,
