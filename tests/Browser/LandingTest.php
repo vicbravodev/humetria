@@ -186,6 +186,20 @@ it('plays the hero film muted and in a loop, and lets the visitor pause it', fun
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Reproducir video');
 });
 
+it('plays the hero and Humi films again from the start', function (string $film): void {
+    $video = "document.querySelector('[data-test={$film}] video')";
+
+    $page = visitPage('landing', '/');
+    // Halfway through and paused, the way a visitor leaves it.
+    $page->script("() => new Promise((resolve) => { const video = {$video}; video.scrollIntoView(); video.pause(); video.addEventListener('seeked', () => resolve(true), { once: true }); video.currentTime = 12; })");
+
+    $page->assertAttribute("@{$film}-restart", 'aria-label', 'Ver desde el inicio')
+        ->click("@{$film}-restart")
+        ->assertScript("() => {$video}.currentTime < 2")
+        ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
+        ->assertAttribute("@{$film}-toggle", 'aria-label', 'Pausar video');
+})->with(['hero' => 'hero-video', 'Humi' => 'humi-video']);
+
 it('keeps the hero film still when the visitor asks for reduced motion', function (): void {
     visit('/', ['reducedMotion' => 'reduce'])
         ->assertScript('() => document.querySelector("[data-test=hero-video] video").autoplay', false)

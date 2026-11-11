@@ -1,6 +1,6 @@
 import { m, useReducedMotion } from 'motion/react';
-import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { EASE_OUT } from '@/components/landing/landing-motion';
+import LoopVideoControls from '@/components/landing/loop-video-controls';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useLoopVideo } from '@/hooks/use-loop-video';
 import { cn } from '@/lib/utils';
@@ -16,12 +16,9 @@ type Props = {
     className?: string;
 };
 
-const control =
-    'flex size-11 shrink-0 items-center justify-center rounded-full border bg-card text-foreground transition-transform duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.94]';
-
 /**
- * A narrated film rendered with Remotion: it starts muted, loops and plays inline, with a button to pause it (WCAG 2.2.2)
- * and another to turn the voice on. WebM first for
+ * A narrated film rendered with Remotion: it starts muted, loops and plays inline, with a button to pause it (WCAG 2.2.2),
+ * another to turn the voice on and one to watch it again from the start. WebM first for
  * Chromium, MP4 for Safari. With reduced motion it stays on its poster until the visitor plays it.
  */
 export default function LoopVideo({
@@ -32,8 +29,16 @@ export default function LoopVideo({
     className,
 }: Props) {
     const still = useReducedMotion() === true;
-    const { attach, playing, toggle, muted, toggleSound, onPlay, onPause } =
-        useLoopVideo();
+    const {
+        attach,
+        seek,
+        playing,
+        toggle,
+        muted,
+        toggleSound,
+        onPlay,
+        onPause,
+    } = useLoopVideo();
     const { resolvedAppearance } = useAppearance();
     const film = resolvedAppearance === 'light' ? `${name}-light` : name;
 
@@ -69,42 +74,14 @@ export default function LoopVideo({
                     {caption}
                     <span className="sr-only">: {description}</span>
                 </span>
-                <div className="flex shrink-0 items-center gap-2">
-                    <button
-                        type="button"
-                        data-test={`${test}-sound`}
-                        aria-label={
-                            muted ? 'Activar sonido' : 'Silenciar video'
-                        }
-                        aria-pressed={!muted}
-                        onClick={toggleSound}
-                        className={control}
-                    >
-                        {muted ? (
-                            <VolumeX aria-hidden className="size-4" />
-                        ) : (
-                            <Volume2 aria-hidden className="size-4" />
-                        )}
-                    </button>
-                    <button
-                        type="button"
-                        data-test={`${test}-toggle`}
-                        aria-label={
-                            playing ? 'Pausar video' : 'Reproducir video'
-                        }
-                        onClick={toggle}
-                        className={control}
-                    >
-                        {playing ? (
-                            <Pause aria-hidden className="size-4" />
-                        ) : (
-                            <Play
-                                aria-hidden
-                                className="size-4 translate-x-px"
-                            />
-                        )}
-                    </button>
-                </div>
+                <LoopVideoControls
+                    test={test}
+                    playing={playing}
+                    muted={muted}
+                    onRestart={() => seek(0)}
+                    onToggle={toggle}
+                    onToggleSound={toggleSound}
+                />
             </figcaption>
         </figure>
     );
