@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Ley Silla",
+    "chapters": ["Puestos", "Encuesta", "Reglamento", "Plan"],
+    "headlines": ["Cada puesto, su asiento", "Pregunta sin señalar a nadie", "Un borrador para tu reglamento", "De la medida a la evidencia"]
+  },
+  "lines": [
+    { "id": "positions", "text": "Registra qué puestos se hacen de pie, y la plataforma te dice dónde va su asiento." },
+    { "id": "survey", "text": "Pregunta al personal desde su celular, de forma confidencial: tú solo ves porcentajes por grupo." },
+    { "id": "regulation", "text": "Con un clic, la plataforma propone el texto de tu reglamento interior, para que tu abogado lo revise." },
+    { "id": "plan", "text": "Arma el plan de acción, y sube la evidencia de cada medida que cumples." }
+  ]
+}
