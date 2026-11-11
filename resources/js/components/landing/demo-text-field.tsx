@@ -20,6 +20,7 @@ export default function DemoTextField({ name, label, error, ...input }: Props) {
                 {...input}
                 id={id}
                 name={name}
+                className="h-13 bg-background text-base"
                 aria-invalid={error === undefined ? undefined : true}
                 aria-describedby={error === undefined ? undefined : errorId}
             />

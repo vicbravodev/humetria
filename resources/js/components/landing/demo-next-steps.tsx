@@ -7,35 +7,43 @@ const steps = [
     'Si te convence, arrancas la prueba con tu gente.',
 ] as const;
 
-/** What happens after the form, so nobody sends it wondering. */
+/** What happens after the form, so nobody sends it wondering: three steps joined by a line. */
 export default function DemoNextSteps() {
     return (
-        <div data-test="demo-next-steps" className="flex flex-col gap-4">
-            <h3 className="font-semibold">Qué sigue</h3>
+        <div data-test="demo-next-steps" className="mt-3 flex flex-col gap-4">
+            <h3 className="text-xl leading-tight font-semibold tracking-[-0.02em]">
+                Qué sigue
+            </h3>
             <ol className="flex flex-col">
                 {steps.map((step, index) => (
                     <m.li
                         key={step}
-                        initial={{ opacity: 0, transform: 'translateY(8px)' }}
+                        initial={{ opacity: 0, transform: 'translateX(-8px)' }}
                         whileInView={{
                             opacity: 1,
-                            transform: 'translateY(0px)',
+                            transform: 'translateX(0px)',
                         }}
                         viewport={ONCE}
-                        transition={{ ...ENTER, delay: 0.1 + index * 0.1 }}
-                        className="flex gap-4 border-t py-4"
+                        transition={{ ...ENTER, delay: 0.1 + index * 0.08 }}
+                        className="relative grid grid-cols-[36px_minmax(0,1fr)] gap-3.5 pb-[22px] last:pb-0"
                     >
                         <span
                             aria-hidden
-                            className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-primary text-sm font-semibold text-primary tabular-nums"
+                            className="relative z-1 flex size-9 items-center justify-center rounded-full bg-accent font-semibold text-primary tabular-nums"
                         >
                             {index + 1}
                         </span>
-                        <span className="pt-1">{step}</span>
+                        {index < steps.length - 1 && (
+                            <span
+                                aria-hidden
+                                className="absolute top-9 bottom-0 left-[17px] w-0.5 bg-border"
+                            />
+                        )}
+                        <span className="pt-1.5 leading-snug">{step}</span>
                     </m.li>
                 ))}
             </ol>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-1 max-w-[52ch] border-l-2 pl-3.5 text-meta text-muted-foreground">
                 Humetría no tiene registro abierto: se entra por demo.
             </p>
         </div>

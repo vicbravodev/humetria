@@ -1,35 +1,52 @@
+import FamilyTabs from '@/components/landing/family-tabs';
+import { familyOf } from '@/components/landing/landing-families';
+import {
+    LEAD,
+    SECTION,
+    TITLE,
+    WRAP,
+} from '@/components/landing/landing-layout';
 import { TOOLS } from '@/components/landing/landing-tools';
+import Reveal from '@/components/landing/reveal';
 import ToolStage from '@/components/landing/tool-stage';
 import ToolTabs from '@/components/landing/tool-tabs';
 import { useHashTab } from '@/hooks/use-hash-tab';
+import { cn } from '@/lib/utils';
 
 const KEYS = TOOLS.map((tool) => tool.key);
 
+/** Nine tools as three families: pick a family, then a tool, and its film plays on the stage. */
 export default function ToolsSection() {
     const [selected, select] = useHashTab('nom_035', KEYS, 'herramienta-');
+    const family = familyOf(selected);
     const tool = TOOLS.find((candidate) => candidate.key === selected);
 
     return (
         <section
             id="herramientas"
             aria-labelledby="herramientas-title"
-            className="scroll-mt-16"
+            className={cn('scroll-mt-16 bg-sidebar', SECTION)}
         >
-            <div className="mx-auto flex max-w-[1240px] flex-col gap-6 px-4 py-12 sm:px-6 lg:pt-8 lg:pb-12">
-                <div className="flex flex-col gap-2">
-                    <h2
-                        id="herramientas-title"
-                        className="text-[32px] leading-[1.1] font-semibold tracking-[-0.025em] text-balance sm:text-[40px]"
-                    >
+            <div className={cn(WRAP, 'flex flex-col gap-5')}>
+                <Reveal className="mb-3 flex max-w-[760px] flex-col gap-4 lg:mb-9">
+                    <h2 id="herramientas-title" className={TITLE}>
                         Nueve herramientas, un solo lugar
                     </h2>
-                    <p className="max-w-[75ch] text-base leading-6 text-muted-foreground">
-                        Elige una herramienta y mira cómo funciona. Humi te
-                        acompaña en todas.
+                    <p className={LEAD}>
+                        Elige una familia y luego una herramienta para ver cómo
+                        funciona. Humi te acompaña en todas.
                     </p>
-                </div>
-                <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-                    <ToolTabs selected={selected} onSelect={select} />
+                </Reveal>
+                <FamilyTabs
+                    selected={family}
+                    onSelect={(next) => select(next.tools[0])}
+                />
+                <div className="grid gap-4 min-[1400px]:grid-cols-[300px_minmax(0,1fr)] lg:grid-cols-[272px_minmax(0,1fr)] lg:items-start lg:gap-6">
+                    <ToolTabs
+                        family={family}
+                        selected={selected}
+                        onSelect={select}
+                    />
                     {tool !== undefined && <ToolStage tool={tool} />}
                 </div>
             </div>
