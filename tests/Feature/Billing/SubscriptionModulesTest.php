@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Billing\Actions\ApplyScheduledChanges;
 use App\Modules\Billing\Actions\SetSubscription;
 use App\Modules\Billing\Data\SubscriptionData;
 use App\Modules\Billing\Enums\Plan;
@@ -63,11 +64,13 @@ it('enables what a bigger plan adds at once, and keeps what a smaller one takes 
     $set->handle($tenant->id, planOnDay(Plan::Integral, '2026-12-01'));
     expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']);
 
-    // Down to Jornada from the 1st of January: until then it still has everything it had.
+    // Down to Jornada is a reduction: it waits for the cut of the 1st of January and until then it still has everything it had.
     $set->handle($tenant->id, planOnDay(Plan::Jornada, '2027-01-01'));
     expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']);
 
     $this->travelTo('2027-01-01 12:00:00');
+    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']);
+    resolve(ApplyScheduledChanges::class)->handle();
     expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart']);
 
     // And back up: the modules return at once, with their data.

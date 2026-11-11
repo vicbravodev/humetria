@@ -198,8 +198,9 @@ it('does not activate with zero people, but lets an active plan be cut to zero t
     expect(Subscription::query()->sole()->status)->toBe(SubscriptionStatus::Trial);
 
     $this->put(route('billing.subscriptions.update', $tenant->id), subscriptionInput(['seats' => 5]))->assertSessionHasNoErrors();
+    // Cutting an active plan to zero is a reduction: it waits for the cut and the company pays its minimum from then.
     $this->put(route('billing.subscriptions.update', $tenant->id), subscriptionInput(['seats' => 0]))->assertSessionHasNoErrors();
-    expect(Subscription::query()->sole())->seats->toBe(0)->status->toBe(SubscriptionStatus::Active);
+    expect(Subscription::query()->sole())->seats->toBe(5)->pending_seats->toBe(0)->status->toBe(SubscriptionStatus::Active);
 });
 
 it('refuses what the form must not let through', function (array $overrides, string $field): void {

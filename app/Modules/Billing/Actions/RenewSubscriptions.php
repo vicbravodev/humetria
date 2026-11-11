@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class RenewSubscriptions
 {
-    public function __construct(private GenerateStatement $generate, private RecordAudit $recordAudit) {}
+    public function __construct(private GenerateStatement $generate, private RecordAudit $recordAudit, private ApplyScheduledChanges $applyChanges) {}
 
     public function handle(?CarbonImmutable $on = null): RenewalSummary
     {
@@ -28,6 +28,9 @@ final readonly class RenewSubscriptions
         $start = CarbonImmutable::parse(($on ?? CarbonImmutable::now())->setTimezone(config()->string('app.display_timezone'))->startOfMonth()->toDateString());
         $period = $start->format('Y-m');
         [$drafted, $already, $ended, $skipped, $accounts] = [0, 0, 0, [], []];
+
+        // First what waited for the cut (reductions), so the month is drafted at the plan the company has from today.
+        $this->applyChanges->handle($on);
 
         foreach (Subscription::query()->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::PastDue, SubscriptionStatus::CancelScheduled])->orderBy('id')->get() as $subscription) {
             if ($subscription->status === SubscriptionStatus::CancelScheduled && $subscription->renews_on->lessThanOrEqualTo($start)) {

@@ -33,8 +33,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable $renews_on
  * @property int|null $negotiated_price_cents
  * @property CarbonImmutable|null $negotiated_valid_until
+ * @property Plan|null $pending_plan
+ * @property Profile|null $pending_profile
+ * @property int|null $pending_seats
+ * @property int|null $pending_centers
+ * @property CarbonImmutable|null $pending_effective_on
  */
-#[Fillable(['tenant_id', 'plan', 'profile', 'catalog_version', 'status', 'seats', 'centers', 'starts_on', 'renews_on', 'negotiated_price_cents', 'negotiated_valid_until'])]
+#[Fillable(['tenant_id', 'plan', 'profile', 'catalog_version', 'status', 'seats', 'centers', 'starts_on', 'renews_on', 'negotiated_price_cents', 'negotiated_valid_until', 'pending_plan', 'pending_profile', 'pending_seats', 'pending_centers', 'pending_effective_on'])]
 #[UseFactory(SubscriptionFactory::class)]
 final class Subscription extends Model
 {
@@ -73,6 +78,9 @@ final class Subscription extends Model
             'starts_on' => 'immutable_date',
             'renews_on' => 'immutable_date',
             'negotiated_valid_until' => 'immutable_date',
+            'pending_plan' => Plan::class,
+            'pending_profile' => Profile::class,
+            'pending_effective_on' => 'immutable_date',
         ];
     }
 }
