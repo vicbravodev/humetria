@@ -20,7 +20,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(SummarizeAccount::class, ListAccountCompanies::class, Eligibility::class, SubscriptionQuoter::class, QuoteView::class);
 
-function summaryOf(BillingAccount $account): array
+function portfolioSummaryOf(BillingAccount $account): array
 {
     $page = test()->actingAs(superadmin())->get(route('billing.accounts.show', $account))->viewData('page');
 
@@ -111,7 +111,7 @@ it('shows no discount reason for an account that has no channel Integral plans',
     $account = BillingAccount::factory()->consultant()->create();
     planFor($account);
 
-    expect(summaryOf($account)['discount'])->toBeNull();
+    expect(portfolioSummaryOf($account)['discount'])->toBeNull();
 });
 
 it('counts for the discount only the companies that pay Integral now: not trials, not the ones past due, ended, suspended or archived, not other plans or other accounts', function (): void {
@@ -158,7 +158,7 @@ it('leaves out of the totals the companies that need a quotation, and counts the
     planFor($account, ['profile' => Profile::Direct, 'seats' => 101]);
     planFor($account, ['profile' => Profile::Direct, 'seats' => 250]);
 
-    $summary = summaryOf($account);
+    $summary = portfolioSummaryOf($account);
 
     expect($summary['subtotal'])->toBe('$4,900')
         ->and($summary['requiring_quotation'])->toBe(2)
@@ -170,7 +170,7 @@ it('counts the companies without a plan and prices none of them', function (): v
     AccountCompany::factory()->for($account, 'account')->count(2)->create();
     planFor($account, ['profile' => Profile::Direct]);
 
-    $summary = summaryOf($account);
+    $summary = portfolioSummaryOf($account);
 
     expect($summary['companies'])->toBe(3)
         ->and($summary['with_plan'])->toBe(1)
@@ -184,7 +184,7 @@ it('has nothing to total for an account that pays no company, or no company with
     AccountCompany::factory()->for($unpriced, 'account')->create();
 
     foreach ([$empty, $unpriced] as $account) {
-        $summary = summaryOf($account);
+        $summary = portfolioSummaryOf($account);
         expect($summary['subtotal'])->toBeNull()->and($summary['vat'])->toBeNull()->and($summary['total'])->toBeNull()->and($summary['next_renewal'])->toBeNull();
     }
 });
@@ -195,7 +195,7 @@ it('says when the next renewal is: the soonest of its companies', function (): v
     planFor($account, ['profile' => Profile::Direct, 'renews_on' => '2027-01-01']);
     planFor($account, ['profile' => Profile::Direct, 'renews_on' => '2027-02-01', 'starts_on' => '2027-01-01']);
 
-    expect(summaryOf($account)['next_renewal'])->toBe('1 ene 2027');
+    expect(portfolioSummaryOf($account)['next_renewal'])->toBe('1 ene 2027');
 });
 
 it('keeps the totals of all the companies, though the list shows a page of them', function (): void {
