@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Seating\Actions;
 
+use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Jobs\SendRisksToConfirm;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class RequestAcknowledgmentsForCenter
 {
-    public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private MailQuota $mail) {}
 
     /**
      * @return array{queued: int, withoutEmail: int}
@@ -33,7 +34,7 @@ final readonly class RequestAcknowledgmentsForCenter
 
         $confirmed = RiskAcknowledgment::query()->whereIn('assessment_id', array_values($current))->pluck('assessment_id')->all();
         $pending = array_keys(array_filter($current, fn (string $assessmentId): bool => ! in_array($assessmentId, $confirmed, true)));
-        $queued = 0;
+        $reachable = [];
         $withoutEmail = 0;
 
         foreach ($this->roster->findMany($pending) as $person) {
@@ -47,9 +48,17 @@ final readonly class RequestAcknowledgmentsForCenter
                 continue;
             }
 
-            SendRisksToConfirm::dispatch($this->tenant->id(), $person->id);
-            $queued++;
+            $reachable[] = $person->id;
         }
+
+        // All of them or none: held before the first one is queued.
+        $this->mail->reserve(count($reachable));
+
+        foreach ($reachable as $employeeId) {
+            SendRisksToConfirm::dispatch($this->tenant->id(), $employeeId);
+        }
+
+        $queued = count($reachable);
 
         Log::info('seating.acknowledgments_requested', ['work_center_id' => $workCenterId, 'queued' => $queued, 'without_email' => $withoutEmail]);
 

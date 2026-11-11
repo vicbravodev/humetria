@@ -179,3 +179,24 @@ it('refuses in the database a second confirmation of the same assessment', funct
     expect(fn () => DB::transaction(fn () => RiskAcknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'assessment_id' => $assessment->id])))
         ->toThrow(QueryException::class, 'risk_acknowledgments_assessment_unique');
 });
+
+it('holds the mail of the whole center before queueing: what does not fit queues nothing and says how many are missing', function (): void {
+    Queue::fake();
+    signedFor($this->ana->id);
+    withMailQuota($this->tenant, 0);
+
+    expect(fn () => resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))
+        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+
+    Queue::assertNothingPushed();
+});
+
+it('queues the mail of the center when it fits the quota exactly', function (): void {
+    Queue::fake();
+    signedFor($this->ana->id);
+    withMailQuota($this->tenant, 1);
+
+    expect(resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))->toBe(['queued' => 1, 'withoutEmail' => 0]);
+
+    Queue::assertPushed(SendRisksToConfirm::class, 1);
+});

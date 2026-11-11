@@ -686,6 +686,16 @@ function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenan
     return $tenant;
 }
 
+/**
+ * Puts the company on a plan whose campaign email quota for the month is exactly `$quota` (the floor, with nothing per seat).
+ */
+function withMailQuota(Tenant $tenant, int $quota): void
+{
+    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    [, $account] = paidCompany();
+    planFor($account, [], $tenant);
+}
+
 function statementMonth(): Carbon\CarbonImmutable
 {
     return Carbon\CarbonImmutable::parse('2026-12-01');
