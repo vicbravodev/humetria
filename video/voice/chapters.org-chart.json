@@ -1,0 +1,22 @@
+{
+  "id": "org-chart",
+  "durationSec": 26.07,
+  "chapters": [
+    {
+      "label": "Organigrama",
+      "at": 0
+    },
+    {
+      "label": "Cargar archivo",
+      "at": 5.83
+    },
+    {
+      "label": "Baja de jefe",
+      "at": 11.67
+    },
+    {
+      "label": "Solo su gente",
+      "at": 17.33
+    }
+  ]
+}

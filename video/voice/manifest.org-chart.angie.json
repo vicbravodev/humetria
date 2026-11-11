@@ -1,0 +1,47 @@
+{
+  "presentation": "org-chart",
+  "voice": "angie",
+  "masteredAt": "2026-11-11T02:32:25.004Z",
+  "lines": [
+    {
+      "id": "chart",
+      "file": "audio/org-chart/angie/l1.mp3",
+      "durationSec": 4.754286,
+      "fingerprint": "9ecb766e7284",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "import",
+      "file": "audio/org-chart/angie/l2.mp3",
+      "durationSec": 4.754286,
+      "fingerprint": "7b6d2a13270f",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "leave",
+      "file": "audio/org-chart/angie/l3.mp3",
+      "durationSec": 4.597551,
+      "fingerprint": "94608aeecb60",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "portal",
+      "file": "audio/org-chart/angie/l4.mp3",
+      "durationSec": 5.146122,
+      "fingerprint": "8332c0213577",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}

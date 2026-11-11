@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Organigrama",
+    "chapters": ["Organigrama", "Cargar archivo", "Baja de jefe", "Solo su gente"],
+    "headlines": ["Quién reporta a quién", "Cárgalo desde tu archivo", "Sin equipos huérfanos", "Cada jefe ve a su gente"]
+  },
+  "lines": [
+    { "id": "chart", "text": "Dices quién reporta a quién, y el organigrama se dibuja a partir de ahí." },
+    { "id": "import", "text": "O cargas la línea de reporte desde tu archivo de personal, con la columna jefe." },
+    { "id": "leave", "text": "Si das de baja a un jefe, la plataforma te pide reasignar a su equipo." },
+    { "id": "portal", "text": "Y cada jefe ve en su portal solo a su gente, y aprueba sus solicitudes." }
+  ]
+}
