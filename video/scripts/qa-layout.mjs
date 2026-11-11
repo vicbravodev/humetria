@@ -32,7 +32,7 @@ for (const [label, frame] of frames) {
         out = `${e.stdout ?? ''}${e.stderr ?? ''}`;
     }
     // Sin desbordes, el fotograma se renderiza y el comando termina bien; con desbordes, la sonda cancela con un error [layout].
-    const issues = [...out.matchAll(/((?:ANCHO|ALTO|LIENZO): [^\n]*)/g)].map((m) => m[1]);
+    const issues = [...out.matchAll(/((?:ANCHO|ALTO|LIENZO|PEGADO): [^\n]*)/g)].map((m) => m[1]);
     const ran = ok || out.includes('[layout]');
     if (!ran) {
         console.log(`✗ ${label} (fotograma ${frame}): la sonda no corrió`);

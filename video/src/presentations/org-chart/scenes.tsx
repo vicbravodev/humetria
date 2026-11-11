@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { easeInOut, enter, lerp, tween } from '../../ease';
-import { Cursor, FlyDot, easeBack, pop, type Pt } from '../../kit/fx';
+import { Cursor, FlyDot, easeBack, pop, type Pt, swapIn, swapOut } from '../../kit/fx';
 import type { SceneProps } from '../../kit/schema';
 import { useTheme } from '../../kit/themes';
 import { dur, radius } from '../../kit/tokens';
@@ -16,7 +16,7 @@ const OrgNode = ({ at, name, role, w = 236, h = 92, state = 'normal', style }: {
     const c = useTheme();
     const hot = state === 'hot';
     return (
-        <div style={{ position: 'absolute', left: at.x - w / 2, top: at.y - h / 2, width: w, height: h, boxSizing: 'border-box', borderRadius: radius.control, background: hot ? c.accent : c.muted, border: `${hot ? 2 : 1}px solid ${hot ? c.primary : c.border}`, padding: '12px 18px', opacity: state === 'dim' ? 0.4 : 1, ...style }}>
+        <div style={{ position: 'absolute', left: at.x - w / 2, top: at.y - h / 2, width: w, height: h, boxSizing: 'border-box', borderRadius: radius.control, background: hot ? c.accent : c.muted, border: `${hot ? 2 : 1}px solid ${hot ? c.primary : c.border}`, padding: '0 18px', display: 'flex', flexDirection: 'column', justifyContent: 'center', opacity: state === 'dim' ? 0.4 : 1, ...style }}>
             <div style={{ fontSize: 28, fontWeight: 600, whiteSpace: 'nowrap' }}>{name}</div>
             <div style={{ fontSize: 24, color: c.mutedFg, whiteSpace: 'nowrap' }}>{role}</div>
         </div>
@@ -202,10 +202,10 @@ export const LeaveScene = ({ f, audioAt }: SceneProps) => {
                 <div style={{ position: 'absolute', left: 44, right: 44, top: 204, height: 76, boxSizing: 'border-box', borderRadius: radius.control, background: c.muted, border: `1px solid ${c.primary}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', fontSize: 30, fontWeight: 600, ...enter(f, audioAt + 20, { dur: dur.enter, y: 8 }) }}>
                     <span>Sofía M. · Dirección General</span>
                 </div>
-                <div style={{ position: 'absolute', left: 44, bottom: 40, opacity: 1 - done }}>
+                <div style={{ position: 'absolute', left: 44, bottom: 40, opacity: swapOut(done) }}>
                     <Button label="Dar de baja" pressed={press} />
                 </div>
-                <div style={{ position: 'absolute', left: 44, bottom: 40, display: 'flex', alignItems: 'center', gap: 14, height: 64, padding: '0 22px', borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 28, fontWeight: 600, opacity: done, transform: `scale(${lerp(0.9, 1, done)})`, transformOrigin: 'left center' }}>
+                <div style={{ position: 'absolute', left: 44, bottom: 40, display: 'flex', alignItems: 'center', gap: 14, height: 64, padding: '0 22px', borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 28, fontWeight: 600, opacity: swapIn(done), transform: `scale(${lerp(0.9, 1, done)})`, transformOrigin: 'left center' }}>
                     <CheckBadge size={34} /> Equipo reasignado
                 </div>
             </Card>
@@ -261,7 +261,7 @@ export const PortalScene = ({ f, audioAt }: SceneProps) => {
     const ok = tween(f, CLICK + 6, dur.morph, easeBack);
     const focus = tween(f, audioAt + 52, dur.morph, easeInOut);
     const NW2 = 200;
-    const NH2 = 76;
+    const NH2 = 84;
     const stateOf = (mine: boolean): 'hot' | 'dim' | 'normal' => (mine ? 'hot' : focus > 0.5 ? 'dim' : 'normal');
     return (
         <>
@@ -274,13 +274,13 @@ export const PortalScene = ({ f, audioAt }: SceneProps) => {
                     {['Diana U.', 'Mariana L.'].map((n, i) => (
                         <div key={n} style={{ marginTop: 6, height: 50, borderRadius: radius.control, background: c.muted, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', padding: '0 16px', fontSize: 27, fontWeight: 500, ...enter(f, audioAt + 12 + i * 6, { dur: dur.enter, y: 8 }) }}>{n}</div>
                     ))}
-                    <div style={{ marginTop: 14, borderRadius: radius.control, background: c.accent, border: `1px solid ${ok > 0.5 ? c.primary : c.border}`, padding: '12px 12px', height: 140, boxSizing: 'border-box', ...pop(f, audioAt + 40) }}>
+                    <div style={{ marginTop: 14, borderRadius: radius.control, background: c.accent, border: `1px solid ${ok > 0.5 ? c.primary : c.border}`, padding: '12px 14px', height: 164, boxSizing: 'border-box', ...pop(f, audioAt + 40) }}>
                         <div style={{ fontSize: 26, fontWeight: 600 }}>Mariana L.</div>
                         <div style={{ fontSize: 24, color: c.mutedFg }}>11 al 15 de enero</div>
                         <div style={{ position: 'relative', marginTop: 14, height: 52 }}>
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: 8, opacity: 1 - tween(f, CLICK + 2, 6) }}>
-                                <div style={{ height: 52, padding: '0 16px', display: 'flex', alignItems: 'center', borderRadius: radius.control, background: c.primary, color: c.primaryFg, fontSize: 26, fontWeight: 600, transform: `scale(${1 - 0.06 * press})` }}>Aprobar</div>
-                                <div style={{ height: 52, padding: '0 12px', display: 'flex', alignItems: 'center', borderRadius: radius.control, border: `1px solid ${c.border}`, fontSize: 26, fontWeight: 600 }}>Rechazar</div>
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: 10, opacity: 1 - tween(f, CLICK + 2, 6) }}>
+                                <div style={{ flex: 1, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: radius.control, background: c.primary, color: c.primaryFg, fontSize: 26, fontWeight: 600, transform: `scale(${1 - 0.06 * press})` }}>Aprobar</div>
+                                <div style={{ flex: 1, height: 52, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: radius.control, border: `2px solid color-mix(in srgb, ${c.fg} 38%, transparent)`, fontSize: 26, fontWeight: 600 }}>Rechazar</div>
                             </div>
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', gap: 12, fontSize: 28, fontWeight: 600, opacity: tween(f, CLICK + 8, 8) }}>
                                 <CheckBadge size={36} /> Aprobada

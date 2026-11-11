@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { easeInOut, enter, lerp, tween } from '../../ease';
-import { Cursor, FlyDot, easeBack, pop, type Pt } from '../../kit/fx';
+import { Cursor, FlyDot, easeBack, pop, type Pt, swapIn, swapOut } from '../../kit/fx';
 import type { SceneProps } from '../../kit/schema';
 import { useTheme } from '../../kit/themes';
 import { dur, radius, stagger } from '../../kit/tokens';
@@ -43,7 +43,7 @@ export const ScanScene = ({ f, audioAt }: SceneProps) => {
             </Card>
             {beam > 0 && beam < 1 ? <div style={{ position: 'absolute', left: QRBOX.x, top: QRBOX.y + 10 + sweep * (QRBOX.s - 24), width: QRBOX.s, height: 4, borderRadius: 4, background: c.primary, boxShadow: `0 0 22px ${c.primary}` }} /> : null}
             <Phone style={{ left: PHONE.left, top: PHONE.top, width: PHONE.w, height: PHONE.h, ...enter(f, 12, { dur: dur.scene, y: 18 }) }}>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 66, opacity: form * (1 - sent) }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 66, opacity: form * swapOut(sent) }}>
                     <div style={{ fontSize: 24, color: c.mutedFg }}>Quejas y denuncias</div>
                     <div style={{ marginTop: 10, fontSize: 30, fontWeight: 600, lineHeight: 1.2 }}>¿Cómo quiere presentarla?</div>
                     {IDENTITIES.map((o, i) => {
@@ -56,7 +56,7 @@ export const ScanScene = ({ f, audioAt }: SceneProps) => {
                         );
                     })}
                 </div>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 110, opacity: sent, textAlign: 'center' }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 110, opacity: swapIn(sent), textAlign: 'center' }}>
                     <CheckBadge size={84} style={{ margin: '0 auto', transform: `scale(${lerp(0.7, 1, sent)})` }} />
                     <div style={{ marginTop: 22, fontSize: 30, fontWeight: 600 }}>Queja enviada</div>
                     <div style={{ marginTop: 16, fontSize: 24, color: c.mutedFg }}>Su referencia</div>

@@ -102,7 +102,14 @@ node scripts/qa-layout.mjs <Composición> <id-de-presentación> dark   # p. ej.:
 - La sonda (`src/kit/probe.tsx`, activada con la prop `probe`) mide el DOM de fotogramas ya asentados de cada capítulo (80 % y 92 %) y falla con el detalle si algo se sale de su caja o del lienzo:
   - `ANCHO` / `ALTO`: una caja contiene más de lo que le cabe (texto largo, botones que no entran en su tarjeta, contenido que rebasa el teléfono).
   - `LIENZO`: un texto queda fuera de los márgenes de 1920×1080 (40 px a los lados, 20 arriba y abajo).
+  - `PEGADO`: el contenido de una caja pintada (tarjeta, fila, botón, píldora) queda a menos de 8 px de su borde. Un botón sin aire en el borde inferior o un texto pegado al contorno es un defecto aunque no «se salga».
 - El layout es idéntico en claro y oscuro: basta correrla en `dark`.
 - Excepciones solo con `data-probe-ignore` y con razón (hoy, solo el titular, que usa una máscara a propósito).
 - Orden de trabajo de cada película: guion y voz → escenas → **`qa-layout` en verde** → stills de revisión visual → `render-film`.
 - Lo que la sonda no ve: solapes entre elementos hermanos y problemas de composición o de ritmo. Eso sigue siendo revisión visual de los stills.
+
+### Reglas de componentes que salieron de errores reales
+- **Botones lado a lado en una tarjeta o teléfono:** del mismo ancho (`flex: 1`), con contorno visible (≥ 2 px al 38 % del color de texto) y texto centrado. Nunca un botón sin borde junto a uno con relleno.
+- **Una tarjeta con altura fija se dimensiona sumando su contenido:** relleno arriba + contenido + relleno abajo (≥ 12 px). No se «ajusta a ojo».
+- **Cambios de estado sin superposición** (botón → «Aprobada», pendiente → «Validado», formulario → «Enviada»): usar `swapOut(t)` para lo que sale y `swapIn(t)` para lo que entra (`kit/fx.tsx`). Nunca `1 - t` y `t` a la vez: durante unos fotogramas se leerían los dos textos encimados.
+- **Revisión visual ampliada:** antes del render, mirar a 2× los componentes pequeños (botones, píldoras, tarjetas del teléfono): `npx remotion still … --scale=2` y recortar con `sips -c`. A 1× un contorno ausente o un borde apretado pasa desapercibido.

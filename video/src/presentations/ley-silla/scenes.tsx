@@ -1,5 +1,5 @@
 import { easeInOut, enter, lerp, tween } from '../../ease';
-import { Cursor, FlyDot, easeBack, pop, type Pt } from '../../kit/fx';
+import { Cursor, FlyDot, easeBack, pop, type Pt, swapIn, swapOut } from '../../kit/fx';
 import type { SceneProps } from '../../kit/schema';
 import { useTheme } from '../../kit/themes';
 import { dur, radius, stagger } from '../../kit/tokens';
@@ -98,7 +98,7 @@ export const SurveyScene = ({ f, audioAt }: SceneProps) => {
     return (
         <>
             <Phone style={{ left: PHONE_BOX.left, top: PHONE_BOX.top, width: PHONE_BOX.w, height: PHONE_BOX.h, ...enter(f, 2, { dur: dur.scene, x: -30, y: 0 }) }}>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 66, opacity: 1 - sent }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 66, opacity: swapOut(sent) }}>
                     <div style={{ fontSize: 24, color: c.mutedFg }}>Asientos y descansos</div>
                     <div style={{ marginTop: 10, fontSize: 28, fontWeight: 600, lineHeight: 1.25 }}>¿Puede sentarse cuando lo necesita, sin que le llamen la atención ni se vea afectado en su trabajo?</div>
                     {OPTIONS.map((o, i) => {
@@ -110,7 +110,7 @@ export const SurveyScene = ({ f, audioAt }: SceneProps) => {
                         );
                     })}
                 </div>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 150, opacity: sent, textAlign: 'center' }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 150, opacity: swapIn(sent), textAlign: 'center' }}>
                     <CheckBadge size={96} style={{ margin: '0 auto', transform: `scale(${lerp(0.7, 1, sent)})` }} />
                     <div style={{ marginTop: 26, fontSize: 30, fontWeight: 600, lineHeight: 1.2 }}>Gracias. Su respuesta es anónima.</div>
                     <div style={{ marginTop: 14, fontSize: 24, lineHeight: 1.3, color: c.mutedFg }}>Nadie de su empresa sabrá qué contestó.</div>
@@ -131,14 +131,14 @@ export const SurveyScene = ({ f, audioAt }: SceneProps) => {
                     <div key={g.name} style={{ position: 'absolute', left: 824, top: GROW(i), width: 942, height: 96, borderRadius: radius.control, boxSizing: 'border-box', background: c.muted, border: `1px solid ${c.border}`, ...enter(f, audioAt + 14 + i * stagger, { dur: dur.enter, y: 12 }) }}>
                         <div style={{ position: 'absolute', left: 26, top: 14 }}>
                             <div style={{ fontSize: 32, fontWeight: 600 }}>{g.name}</div>
-                            <div style={{ fontSize: 24, color: c.mutedFg, opacity: 1 - hidden }}>{`${people} respuestas`}</div>
+                            <div style={{ fontSize: 24, color: c.mutedFg, opacity: swapOut(hidden) }}>{`${people} respuestas`}</div>
                         </div>
-                        <div style={{ position: 'absolute', left: 330, top: 41, width: 420, height: 14, borderRadius: 99, background: c.track, opacity: 1 - hidden }}>
+                        <div style={{ position: 'absolute', left: 330, top: 41, width: 420, height: 14, borderRadius: 99, background: c.track, opacity: swapOut(hidden) }}>
                             <div style={{ height: '100%', borderRadius: 99, background: c.primary, width: i === 2 ? `${(people / 12) * 100}%` : `${n}%` }} />
                         </div>
                         {i < 2 ? <div style={{ position: 'absolute', right: 28, top: 24, fontSize: 44, fontWeight: 600 }}>{`${n} %`}</div> : null}
                         {i === 2 ? (
-                            <div style={{ position: 'absolute', left: 330, top: 26, display: 'flex', alignItems: 'center', gap: 14, fontSize: 30, color: c.mutedFg, opacity: hidden }}>
+                            <div style={{ position: 'absolute', left: 330, top: 26, display: 'flex', alignItems: 'center', gap: 14, fontSize: 30, color: c.mutedFg, opacity: swapIn(hidden) }}>
                                 <Icon name="lock" size={34} color={c.primary} /> Oculto: menos de 5 respuestas
                             </div>
                         ) : null}

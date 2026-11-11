@@ -100,10 +100,10 @@ export const Phone = ({ style, time = '10:24', children }: { style?: CSSProperti
     const side = (top: number, h: number, left: boolean): CSSProperties => ({ position: 'absolute', [left ? 'left' : 'right']: -4, top, width: 4, height: h, borderRadius: 2, background: '#242c2a' });
     return (
         <div style={{ position: 'absolute', width: PHONE.w, height: PHONE.h, borderRadius: 60, background: '#070a09', border: '2px solid #2b3532', boxSizing: 'border-box', padding: 9, boxShadow: '0 28px 60px rgba(0,0,0,.30), inset 0 0 0 1px rgba(255,255,255,.06)', ...style }}>
-            <div style={side(130, 34, true)} />
-            <div style={side(190, 62, true)} />
-            <div style={side(266, 62, true)} />
-            <div style={side(212, 96, false)} />
+            <div data-probe-ignore style={side(130, 34, true)} />
+            <div data-probe-ignore style={side(190, 62, true)} />
+            <div data-probe-ignore style={side(266, 62, true)} />
+            <div data-probe-ignore style={side(212, 96, false)} />
             <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 50, background: c.bg, overflow: 'hidden' }}>
                 {children}
                 <StatusBar time={time} />
@@ -111,7 +111,7 @@ export const Phone = ({ style, time = '10:24', children }: { style?: CSSProperti
                     <div style={{ position: 'absolute', right: 13, top: 10, width: 12, height: 12, borderRadius: 99, background: 'radial-gradient(circle at 35% 35%, #1d2b3a, #05080b 70%)' }} />
                 </div>
                 <div style={{ position: 'absolute', bottom: 9, left: '50%', width: 124, height: 5, marginLeft: -62, borderRadius: 99, background: c.fg, opacity: 0.85 }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 32%)', pointerEvents: 'none' }} />
+                <div data-probe-ignore style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 32%)', pointerEvents: 'none' }} />
             </div>
         </div>
     );

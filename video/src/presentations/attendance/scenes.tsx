@@ -1,5 +1,5 @@
 import { easeInOut, enter, lerp, tween } from '../../ease';
-import { Cursor, FlyDot, easeBack, pop } from '../../kit/fx';
+import { Cursor, FlyDot, easeBack, pop, swapIn, swapOut } from '../../kit/fx';
 import { QrCode } from '../../kit/qr';
 import type { SceneProps } from '../../kit/schema';
 import { useTheme } from '../../kit/themes';
@@ -28,7 +28,7 @@ export const MarkScene = ({ f, audioAt }: SceneProps) => {
     const sweep = beam > 0 && beam < 1 ? Math.abs(Math.sin(beam * Math.PI * 1.5)) : 0;
     const TAP = audioAt + 70;
     const press = tween(f, TAP, 6) * (1 - tween(f, TAP + 6, 6));
-    const scan = tween(f, TAP + 10, dur.enter);
+    const scan = tween(f, TAP + 16, dur.enter);
     const done = tween(f, audioAt + 130, 14, easeInOut);
     const read = tween(f, TAP + 14, 46);
     const ready = 1 - tween(f, TAP + 8, 8);
@@ -221,10 +221,10 @@ export const WeekScene = ({ f, audioAt }: SceneProps) => {
                     </div>
                 ))}
                 <div style={{ position: 'absolute', left: 36, right: 36, bottom: 24, height: 64 }}>
-                    <div style={{ position: 'absolute', inset: 0, opacity: 1 - confirmed }}>
+                    <div style={{ position: 'absolute', inset: 0, opacity: swapOut(confirmed) }}>
                         <Button label="Confirmar mi semana" pressed={press} style={{ width: '100%', justifyContent: 'center', boxSizing: 'border-box' }} />
                     </div>
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 28, fontWeight: 600, opacity: confirmed, transform: `scale(${lerp(0.9, 1, confirmed)})` }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 28, fontWeight: 600, opacity: swapIn(confirmed), transform: `scale(${lerp(0.9, 1, confirmed)})` }}>
                         <CheckBadge size={36} /> Semana confirmada
                     </div>
                 </div>

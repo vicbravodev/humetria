@@ -1,5 +1,5 @@
 import { easeInOut, enter, lerp, tween } from '../../ease';
-import { Cursor, FlyDot, Toast, easeBack, pop, type Pt } from '../../kit/fx';
+import { Cursor, FlyDot, Toast, easeBack, pop, type Pt, swapIn, swapOut } from '../../kit/fx';
 import type { SceneProps } from '../../kit/schema';
 import { useTheme } from '../../kit/themes';
 import { dur, radius, stagger } from '../../kit/tokens';
@@ -100,7 +100,7 @@ export const ChecklistScene = ({ f, audioAt }: SceneProps) => {
     return (
         <>
             <Phone style={{ left: PHONE_BOX.left, top: PHONE_BOX.top, width: PHONE_BOX.w, height: PHONE_BOX.h, ...enter(f, 2, { dur: dur.scene, x: -30, y: 0 }) }}>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 66, opacity: 1 - sent }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 66, opacity: swapOut(sent) }}>
                     <div style={{ fontSize: 24, color: c.mutedFg }}>Casa de Mariana L.</div>
                     <div style={{ marginTop: 10, fontSize: 28, fontWeight: 600, lineHeight: 1.25 }}>¿El lugar que usted pudiera tener en mente como lugar de trabajo para realizar Teletrabajo es privado?</div>
                     {OPTIONS.map((o, i) => {
@@ -112,7 +112,7 @@ export const ChecklistScene = ({ f, audioAt }: SceneProps) => {
                         );
                     })}
                 </div>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 130, opacity: sent, textAlign: 'center' }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 130, opacity: swapIn(sent), textAlign: 'center' }}>
                     <CheckBadge size={96} style={{ margin: '0 auto', transform: `scale(${lerp(0.7, 1, sent)})` }} />
                     <div style={{ marginTop: 26, fontSize: 30, fontWeight: 600, lineHeight: 1.2 }}>Tu lista fue enviada a la Comisión</div>
                     <div style={{ marginTop: 14, fontSize: 24, lineHeight: 1.3, color: c.mutedFg }}>Contestar no te hace responsable del lugar.</div>
@@ -128,8 +128,8 @@ export const ChecklistScene = ({ f, audioAt }: SceneProps) => {
                         <div style={{ fontSize: 24, color: c.mutedFg }}>{received > 0.5 ? 'Lista recibida' : 'Esperando la lista'}</div>
                     </div>
                     <div style={{ position: 'relative', width: 300, height: 48 }}>
-                        <div style={{ position: 'absolute', right: 0, height: 44, padding: '0 16px', display: 'flex', alignItems: 'center', borderRadius: radius.control, background: c.warnBg, color: c.warnFg, fontSize: 26, fontWeight: 500, opacity: 1 - valid }}>Pendiente de validar</div>
-                        <div style={{ position: 'absolute', right: 0, display: 'flex', alignItems: 'center', gap: 10, height: 44, padding: '0 16px', borderRadius: radius.control, background: c.primary, color: c.primaryFg, fontSize: 26, fontWeight: 600, opacity: valid, transform: `scale(${lerp(0.8, 1, valid)})` }}>
+                        <div style={{ position: 'absolute', right: 0, height: 44, padding: '0 16px', display: 'flex', alignItems: 'center', borderRadius: radius.control, background: c.warnBg, color: c.warnFg, fontSize: 26, fontWeight: 500, opacity: swapOut(valid) }}>Pendiente de validar</div>
+                        <div style={{ position: 'absolute', right: 0, display: 'flex', alignItems: 'center', gap: 10, height: 44, padding: '0 16px', borderRadius: radius.control, background: c.primary, color: c.primaryFg, fontSize: 26, fontWeight: 600, opacity: swapIn(valid), transform: `scale(${lerp(0.8, 1, valid)})` }}>
                             <Icon name="check" size={26} color={c.primaryFg} stroke={3} /> Validado
                         </div>
                     </div>
@@ -137,7 +137,7 @@ export const ChecklistScene = ({ f, audioAt }: SceneProps) => {
                 {DECISIONS.map((d, i) => {
                     const on = i === 0 ? valid : 0;
                     return (
-                        <div key={d.label} style={{ position: 'absolute', left: 44, right: 44, top: 244 + i * 90, height: 80, borderRadius: radius.control, border: `1px solid ${on > 0.5 ? c.primary : c.border}`, background: on > 0.5 ? c.accent : c.card, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 20, padding: '0 24px', ...enter(f, audioAt + 40 + i * stagger, { dur: dur.enter, y: 8 }) }}>
+                        <div key={d.label} style={{ position: 'absolute', left: 44, right: 44, top: 232 + i * 98, height: 90, borderRadius: radius.control, border: `1px solid ${on > 0.5 ? c.primary : c.border}`, background: on > 0.5 ? c.accent : c.card, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 20, padding: '0 24px', ...enter(f, audioAt + 40 + i * stagger, { dur: dur.enter, y: 8 }) }}>
                             <div style={{ width: 30, height: 30, borderRadius: 99, flexShrink: 0, border: `2px solid ${on > 0.5 ? c.primary : c.mutedFg}`, background: `color-mix(in srgb, ${c.primary} ${on * 100}%, transparent)` }} />
                             <div>
                                 <div style={{ fontSize: 30, fontWeight: 600 }}>{d.label}</div>

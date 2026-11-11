@@ -59,7 +59,7 @@ export const GuidesScene = ({ f, audioAt }: SceneProps) => {
     const count = (j: number): number => dots.filter((d) => d.j === j && arrival(d.k) <= f).length;
     return (
         <>
-            <div style={{ position: 'absolute', left: SOURCE.x - 190, top: SOURCE.y - 26, width: 380, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 999, background: c.accent, border: `1px solid ${c.border}`, fontSize: 28, fontWeight: 500, ...pop(f, audioAt - 4) }}>
+            <div style={{ position: 'absolute', left: SOURCE.x - 225, top: SOURCE.y - 28, width: 450, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 999, background: c.accent, border: `1px solid ${c.border}`, fontSize: 28, fontWeight: 500, ...pop(f, audioAt - 4) }}>
                 <Icon name="listCheck" size={28} color={c.primary} /> Tu plantilla · 102 personas
             </div>
             {CENTERS.map((ctr, j) => {

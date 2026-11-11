@@ -111,3 +111,7 @@ export const pop = (f: number, at: number): CSSProperties => {
     const t = tween(f, at, dur.enter + 4, easeBack);
     return { opacity: Math.min(1, tween(f, at, 8)), transform: `scale(${lerp(0.6, 1, t)})` };
 };
+
+/** Cambio de estado sin superposición: lo que sale se apaga en la primera mitad del cambio (`t` de 0 a 1) y lo que entra aparece en la segunda. */
+export const swapOut = (t: number): number => Math.max(0, 1 - t * 2.2);
+export const swapIn = (t: number): number => Math.max(0, Math.min(1, (t - 0.45) * 2.2));

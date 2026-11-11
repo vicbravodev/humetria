@@ -1,5 +1,5 @@
 import { easeInOut, enter, lerp, tween } from '../../ease';
-import { Cursor, FlyDot, easeBack, pop } from '../../kit/fx';
+import { Cursor, FlyDot, easeBack, pop, swapIn, swapOut } from '../../kit/fx';
 import type { SceneProps } from '../../kit/schema';
 import { useTheme } from '../../kit/themes';
 import { dur, radius, stagger } from '../../kit/tokens';
@@ -94,7 +94,7 @@ export const RequestScene = ({ f, audioAt }: SceneProps) => {
     return (
         <>
             <Phone style={{ left: PHONE.left, top: PHONE.top, width: PHONE.w, height: PHONE.h, ...enter(f, 2, { dur: dur.scene, x: -30, y: 0 }) }}>
-                <div style={{ position: 'absolute', left: 22, right: 22, top: 62, opacity: 1 - sent }}>
+                <div style={{ position: 'absolute', left: 22, right: 22, top: 62, opacity: swapOut(sent) }}>
                     <div style={{ fontSize: 28, fontWeight: 600 }}>Enero de 2027</div>
                     <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontSize: 24, color: c.mutedFg }}>
                         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
@@ -112,7 +112,7 @@ export const RequestScene = ({ f, audioAt }: SceneProps) => {
                     <div style={{ marginTop: 14, fontSize: 28, fontWeight: 600, opacity: tween(f, audioAt + 58, dur.enter) }}>5 días laborables</div>
                     <Button label="Enviar solicitud" pressed={press} style={{ marginTop: 14, width: '100%', justifyContent: 'center', boxSizing: 'border-box', opacity: tween(f, audioAt + 60, dur.enter) }} />
                 </div>
-                <div style={{ position: 'absolute', left: 26, right: 26, top: 150, opacity: sent, textAlign: 'center' }}>
+                <div style={{ position: 'absolute', left: 26, right: 26, top: 150, opacity: swapIn(sent), textAlign: 'center' }}>
                     <CheckBadge size={96} style={{ margin: '0 auto', transform: `scale(${lerp(0.7, 1, sent)})` }} />
                     <div style={{ marginTop: 24, fontSize: 30, fontWeight: 600 }}>Solicitud enviada</div>
                     <div style={{ marginTop: 8, fontSize: 26, color: c.mutedFg }}>11 al 15 de enero</div>
@@ -175,14 +175,14 @@ export const ApproveScene = ({ f, audioAt }: SceneProps) => {
                     <Label>5 días laborables · Vacaciones</Label>
                 </div>
                 <div style={{ position: 'absolute', left: 44, top: 224, display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <div style={{ opacity: 1 - ok }}>
+                    <div style={{ opacity: swapOut(ok) }}>
                         <div style={{ display: 'flex', gap: 16 }}>
                             <Button label="Aprobar" pressed={press} />
                             <div style={{ height: 64, padding: '0 28px', display: 'flex', alignItems: 'center', borderRadius: radius.control, border: `1px solid ${c.border}`, fontSize: 28, fontWeight: 600 }}>Rechazar</div>
                         </div>
                     </div>
                 </div>
-                <div style={{ position: 'absolute', left: 44, top: 224, display: 'flex', alignItems: 'center', gap: 14, height: 64, padding: '0 24px', borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 30, fontWeight: 600, opacity: ok, transform: `scale(${lerp(0.9, 1, ok)})`, transformOrigin: 'left center' }}>
+                <div style={{ position: 'absolute', left: 44, top: 224, display: 'flex', alignItems: 'center', gap: 14, height: 64, padding: '0 24px', borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 30, fontWeight: 600, opacity: swapIn(ok), transform: `scale(${lerp(0.9, 1, ok)})`, transformOrigin: 'left center' }}>
                     <CheckBadge size={38} /> Aprobada
                 </div>
                 <div style={{ position: 'absolute', left: 44, right: 44, bottom: 40, fontSize: 26, lineHeight: 1.35, color: c.mutedFg }}>Si el jefe no responde en 3 días hábiles, le llega a RH.</div>
@@ -248,10 +248,10 @@ export const EvidenceScene = ({ f, audioAt }: SceneProps) => {
                     </div>
                 ))}
                 <div style={{ position: 'absolute', left: 44, bottom: 36, fontSize: 26, color: c.mutedFg }}>Léala y confirme que la recibió.</div>
-                <div style={{ position: 'absolute', right: 44, bottom: 24, opacity: 1 - ack }}>
+                <div style={{ position: 'absolute', right: 44, bottom: 24, opacity: swapOut(ack) }}>
                     <Button label="Ya la recibí" pressed={press} />
                 </div>
-                <div style={{ position: 'absolute', right: 44, bottom: 24, display: 'flex', alignItems: 'center', gap: 12, height: 64, padding: '0 22px', borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 28, fontWeight: 600, opacity: ack, transform: `scale(${lerp(0.9, 1, ack)})`, transformOrigin: 'right center' }}>
+                <div style={{ position: 'absolute', right: 44, bottom: 24, display: 'flex', alignItems: 'center', gap: 12, height: 64, padding: '0 22px', borderRadius: radius.control, background: c.accent, border: `1px solid ${c.primary}`, fontSize: 28, fontWeight: 600, opacity: swapIn(ack), transform: `scale(${lerp(0.9, 1, ack)})`, transformOrigin: 'right center' }}>
                     <CheckBadge size={34} /> Recibida
                 </div>
             </Card>
