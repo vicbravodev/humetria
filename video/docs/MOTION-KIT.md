@@ -3,7 +3,7 @@
 Extiende `video/` (Remotion 4.0.538, ya existente) con piezas narradas. No agrega dependencias ni toca la app.
 
 ## Decisiones
-- **Remotion**, no HyperFrames: ya está en el repo, es React (reusa `components.tsx` y `theme.ts`) y es determinista. HyperFrames queda para prototipar.
+- **Remotion**: ya está en el repo, es React (reusa `components.tsx` para los íconos y `theme.ts` para los tokens) y es determinista.
 - **Sin zod**: la validación es `kit/schema.ts#validate` (cero dependencias; la regla del proyecto exige aprobar las nuevas).
 - **Un audio por línea del guion**: la duración real (ffprobe) manda la línea de tiempo, no los caracteres; regenerar una escena no toca las demás.
 - **Video prerenderizado** para la landing (estable y barato); React interactivo solo si el visitante debe actuar.

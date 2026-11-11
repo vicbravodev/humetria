@@ -1,14 +1,10 @@
 {
-  "name": "humetria-hero-video",
+  "name": "humetria-motion-kit",
   "private": true,
   "type": "module",
   "scripts": {
     "studio": "remotion studio",
     "types:check": "tsc --noEmit",
-    "render": "remotion render HeroLoop ../public/video/humetria-hero.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render HeroLoop ../public/video/humetria-hero.webm --codec=vp9 --crf=32",
-    "poster": "remotion still HeroLoop ../public/video/humetria-hero.jpg --frame=880 --image-format=jpeg --jpeg-quality=85",
-    "render:humi": "remotion render HumiChat ../public/video/humi-chat.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render HumiChat ../public/video/humi-chat.webm --codec=vp9 --crf=32",
-    "poster:humi": "remotion still HumiChat ../public/video/humi-chat.jpg --frame=280 --image-format=jpeg --jpeg-quality=85",
     "check:film": "node scripts/check.mjs anonimato angie",
     "voice:master": "node scripts/voice-master.mjs anonimato angie",
     "render:anonimato": "remotion render Anonimato ../public/video/humetria-anonimato.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render Anonimato ../public/video/humetria-anonimato.webm --codec=vp9 --crf=32",

@@ -1,13 +1,12 @@
-# Videos de la landing (Remotion)
+# Películas del landing (Remotion)
 
-Dos loops: `HeroLoop` (39 s, 1180 frames, 30 fps, 1280×960) para el hero y `HumiChat` (25 s, 750 frames,
-30 fps, 1080×1080) para la sección de Humi. Proyecto aparte de la app:
-su propio `package.json`, `node_modules` y `tsconfig.json`. La raíz lo ignora (`vite.config.ts`, `.gitignore`).
+Humetría Motion Kit: las 11 películas del landing (nueve herramientas, el hero «Cómo funciona» y Humi) y la pieza de
+Anonimato, todas narradas, en tema oscuro y claro, a 1920×1080 y 30 fps. Proyecto aparte de la app: su propio `package.json`,
+`node_modules` y `tsconfig.json`. La raíz lo ignora (`vite.config.ts`, `.gitignore`).
 
-- `src/HeroLoop.tsx`: rótulo, riel de avance y orden de escenas.
-- `src/scenes/`: una escena por archivo. `src/theme.ts`: tokens y línea de tiempo. `src/ease.ts`: curvas.
-- `src/HumiChat.tsx` y `src/humi/`: panel de Humi, piezas del chat, Humi animado (`HumiLive.tsx`) y su línea de tiempo (`timeline.ts`).
-- En los dos, el último frame debe quedar igual que el frame 0 (estado de reposo): si cambias el inicio, cambia también el cierre (`Dossier.tsx` en el hero, `HC.calmIn` en HumiChat).
+El sistema (estándar visual, voz, receta de una pieza nueva, revisión de desbordes, trazabilidad e integración al landing)
+está en `docs/MOTION-KIT.md`. Cada película vive en `src/presentations/<id>/` (`script.json`, `scenes.tsx`, `index.tsx`) y
+se registra en `src/Root.tsx`; las piezas comunes están en `src/kit/`.
 
 ## Ver
 
@@ -17,43 +16,26 @@ npm install
 npx remotion studio
 ```
 
-## Volver a generar
+## Volver a generar una película
 
 ```bash
 cd video
 npm run types:check
-npm run render   # public/video/humetria-hero.mp4 (H.264, Safari) y .webm (VP9, Chromium)
-npm run poster   # public/video/humetria-hero.jpg (frame 880)
-npm run render:humi   # public/video/humi-chat.mp4 y .webm
-npm run poster:humi   # public/video/humi-chat.jpg (frame 280, primera respuesta completa)
+node scripts/qa-layout.mjs <Composición> <id> dark                  # obligatorio antes de renderizar
+node scripts/render-film.mjs <Composición> <nombre> <fotograma>     # mp4, webm y póster, oscuro y claro, en ../public/video/
 ```
 
-Un frame suelto para revisar: `npx remotion still HeroLoop out/frame.png --frame=600`.
+`<nombre>` es el archivo en `public/video` (`humetria-nom-035`); el tema claro sale como `humetria-nom-035-light.*` y el
+landing elige según el tema. Las películas se sirven por `/media/films/{archivo}` (`ToolFilmController`) y no como archivos
+estáticos: el navegador solo puede saltar a un capítulo si el servidor responde rangos de bytes.
 
-## Piezas narradas (Motion Kit)
+## Voz
 
-`Anonimato` (1920×1080, 41 s, con voz) y las películas de herramienta (referencia: `nom-035`, con cierre de logo): ver `docs/MOTION-KIT.md` (sistema, voz, receta, trazabilidad, pendientes).
+`node scripts/voice-master.mjs <id> angie` masteriza las tomas crudas de `public/audio/<id>/angie/raw/` y anota sus duraciones;
+`node scripts/chapters.mjs <id>` calcula dónde empieza cada capítulo (`voice/chapters.<id>.json`, que se copia a `timing` en
+`resources/js/components/landing/landing-tools.ts`).
 
-```bash
-npm run check:film && npm run types:check
-npm run render:anonimato   # public/video/humetria-anonimato.mp4 y .webm
-npm run poster:anonimato
-```
-
-## Herramientas (HyperFrames)
-
-`hyperframes/<herramienta>/` guarda el video de cada herramienta de la landing (24 s, 1600×900, cuatro capítulos de 6 s:
-la landing salta a 0, 6, 12 y 18 s), hecho con HTML y GSAP. Texto mínimo de 40 px: se muestran a ~900 px de ancho.
-Necesitan Docker para renderizar (no hay ffmpeg local). Revisar y renderizar uno:
-
-```bash
-cd video/hyperframes/attendance && npx hyperframes check
-video/hyperframes/render.sh attendance humetria-attendance 4   # carpeta, nombre en public/video, segundo del póster
-```
-
-Salen `public/video/humetria-*.{mp4,webm,jpg}`. Con `light` como cuarto argumento sale la variante de tema claro
-(`humetria-*-light.*`: la misma película con los tokens claros del design system); la landing elige según el tema.
-Las películas se sirven por `/media/films/{archivo}` (`ToolFilmController`) y no como archivos estáticos: el navegador
-solo puede saltar a un capítulo si el servidor responde rangos de bytes, y el servidor de PHP de desarrollo no lo hace.
-
-Antes de renderizar cualquier película: `node scripts/qa-layout.mjs <Composición> <id> dark` (ver `docs/MOTION-KIT.md`, «Revisión de desbordes»).
+## Decisiones
+- **Remotion**: ya está en el repo, es React y es determinista.
+- **Sin zod**: la validación es `kit/schema.ts#validate` (cero dependencias; la regla del proyecto exige aprobar las nuevas).
+- **Un audio por línea del guion**: la duración real (ffprobe) manda la línea de tiempo, no los caracteres; regenerar una escena no toca las demás.
