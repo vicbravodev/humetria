@@ -1,0 +1,31 @@
+{
+  "lines": [
+    {
+      "id": "guides",
+      "text": "Elige un centro de trabajo y Humetría te marca qué guías le tocan, según su tamaño.",
+      "speech": "Elige un centro de trabajo y Umetría te marca qué guías le tocan, según su tamaño."
+    },
+    {
+      "id": "sample",
+      "text": "Con más de cincuenta personas, sortea la muestra de forma aleatoria y proporcional por género."
+    },
+    {
+      "id": "invites",
+      "text": "Cada persona recibe su invitación. A quien falta, un recordatorio, sin ver qué contestó nadie."
+    },
+    {
+      "id": "report",
+      "text": "Y al final, genera el informe del numeral 7.7, con resultados y acciones de intervención."
+    }
+  ],
+  "frame": {
+    "tool": "NOM-035",
+    "chapters": [
+      "Guías",
+      "Muestra",
+      "Invitaciones",
+      "Informe"
+    ]
+  },
+  "hold": 24
+}

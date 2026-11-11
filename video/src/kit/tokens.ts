@@ -2,7 +2,9 @@
 // Ninguna composición pone duraciones o curvas a mano: se toman de aquí.
 export { c, radius, risk, floatShadow } from '../theme';
 
-export const FPS = 30;
+import pacingJson from './pacing.json';
+
+export const FPS = pacingJson.fps;
 export const FORMAT_16x9 = { width: 1920, height: 1080 } as const;
 
 /** Duraciones en frames a 30 fps. */
@@ -18,4 +20,4 @@ export const dur = {
 export const stagger = 5;
 
 /** Ritmo de la narración: aire antes y después de cada línea, y cierre. */
-export const pacing = { lead: 12, tail: 20, outro: 60 } as const;
+export const pacing = { lead: pacingJson.lead, tail: pacingJson.tail, outro: pacingJson.outro } as const;

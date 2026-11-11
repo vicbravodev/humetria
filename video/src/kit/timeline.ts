@@ -14,7 +14,7 @@ export const layout = (p: Presentation): { scenes: PlacedScene[]; total: number 
         const take = p.manifest.find((m) => m.id === s.lineId);
         const audioDur = Math.ceil((take?.durationSec ?? 0) * p.fps);
         const last = index === p.scenes.length - 1;
-        const dur = pacing.lead + audioDur + (last ? pacing.outro : pacing.tail);
+        const dur = pacing.lead + audioDur + (last ? (p.hold ?? pacing.outro) : pacing.tail);
         const placed = { id: s.id, index, from: cursor, dur, audioAt: pacing.lead, audioDur, file: take?.file ?? '' };
         cursor += dur;
         return placed;

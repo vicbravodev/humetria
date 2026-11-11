@@ -3,7 +3,8 @@ import type { ComponentType } from 'react';
 /** Lo que recibe cada escena: su frame local y los tiempos de su narración, todos en frames. */
 export type SceneProps = { f: number; dur: number; audioAt: number; audioDur: number };
 
-export type ScriptLine = { id: string; text: string };
+/** `text` se muestra; `speech`, si existe, es lo que se le dice a la voz (p. ej. «Umetría» para la marca). */
+export type ScriptLine = { id: string; text: string; speech?: string };
 
 /** Registro de una toma masterizada (lo escribe scripts/voice-master.mjs). */
 export type ManifestLine = {
@@ -31,6 +32,10 @@ export type Presentation = {
     width: number;
     height: number;
     fps: number;
+    /** Marco de película de herramienta: nombre y un rótulo por escena (capítulo). */
+    frame?: { tool: string; chapters: readonly string[] };
+    /** Frames que se queda la última escena (por defecto, el cierre de una pieza suelta). */
+    hold?: number;
     lines: readonly ScriptLine[];
     manifest: readonly ManifestLine[];
     scenes: readonly SceneSpec[];
@@ -41,6 +46,9 @@ export const validate = (p: Presentation): string[] => {
     const errors: string[] = [];
     const lineIds = new Set(p.lines.map((l) => l.id));
     const seen = new Set<string>();
+    if (p.frame && p.frame.chapters.length !== p.scenes.length) {
+        errors.push('El marco declara un rótulo de capítulo por escena');
+    }
     if (p.scenes.length === 0) {
         errors.push('Sin escenas');
     }

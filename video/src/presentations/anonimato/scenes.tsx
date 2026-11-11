@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { CheckBadge, Icon, Phone, Tag } from '../../components';
 import { easeInOut, enter, lerp, tween } from '../../ease';
 import { Logo, Reveal } from '../../kit/primitives';
+import { useTheme, type Palette } from '../../kit/themes';
+import { CheckBadge, Icon, Phone, Tag, cardStyle } from '../../kit/ui';
 import type { SceneProps } from '../../kit/schema';
-import { c, dur, radius, stagger } from '../../kit/tokens';
+import { dur, radius, stagger } from '../../kit/tokens';
 
-const card: CSSProperties = { position: 'absolute', boxSizing: 'border-box', borderRadius: radius.card, background: c.card, border: `1px solid ${c.border}` };
 const Center = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', ...style }}>{children}</div>
 );
@@ -13,6 +13,8 @@ const Center = ({ children, style }: { children: ReactNode; style?: CSSPropertie
 // 1. La necesidad: una respuesta, y el miedo a que lleve nombre.
 const OPTIONS = ['Siempre', 'Casi siempre', 'Algunas veces', 'Casi nunca', 'Nunca'] as const;
 export const NeedScene = ({ f, audioAt }: SceneProps) => {
+    const c = useTheme();
+    const card = cardStyle(c);
     const pick = tween(f, audioAt + 40, dur.micro + 4);
     const gone = tween(f, audioAt + 74, dur.morph, easeInOut);
     return (
@@ -76,6 +78,8 @@ export const NeedScene = ({ f, audioAt }: SceneProps) => {
 
 // 2. El enlace: único por persona, de un solo uso, desde el celular.
 export const LinkScene = ({ f, audioAt, audioDur }: SceneProps) => {
+    const c = useTheme();
+    const card = cardStyle(c);
     const used = tween(f, audioAt + audioDur - 40, dur.morph, easeInOut);
     return (
         <>
@@ -127,26 +131,32 @@ const INVITES = [
     { name: 'Jorge R.', initials: 'JR', done: false },
     { name: 'Lucía H.', initials: 'LH', done: false },
 ] as const;
-const rowStyle: CSSProperties = { height: ROW.h, marginTop: ROW.gap, borderRadius: radius.control, background: c.muted, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px', boxSizing: 'border-box' };
+const rowStyle = (c: Palette): CSSProperties => ({ height: ROW.h, marginTop: ROW.gap, borderRadius: radius.control, background: c.muted, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px', boxSizing: 'border-box' });
 
 /** El punto sale de la invitación de Mariana y llega a la primera respuesta: nada lleva su nombre. */
-const Traveler = ({ dot }: { dot: number }) => (
+const Traveler = ({ dot }: { dot: number }) => {
+    const c = useTheme();
+    return (
     <div style={{ position: 'absolute', left: lerp(720, 1170, dot) - 11, top: PANEL.top + 40 + 36 + 24 + ROW.h / 2 - 11 + 0, width: 22, height: 22, borderRadius: 99, background: c.primary, opacity: tween(dot, 0, 0.1) * (1 - tween(dot, 0.88, 0.12)) }} />
-);
+    );
+};
 
 // 3. La respuesta se guarda sin llave hacia la persona; la invitación solo marca «ya contestó».
 export const SplitScene = ({ f, audioAt, audioDur }: SceneProps) => {
+    const c = useTheme();
+    const card = cardStyle(c);
     const send = audioAt + 36;
     const store = (i: number): number => tween(f, send + 40 + i * 14, dur.enter);
     const dot = tween(f, send, 44, easeInOut);
     const answered = tween(f, audioAt + audioDur - 70, dur.enter);
+    const row = rowStyle(c);
     const panel: CSSProperties = { ...card, top: PANEL.top, width: 640, height: PANEL.h, padding: 40, overflow: 'hidden' };
     return (
         <>
             <div style={{ ...panel, left: 170, ...enter(f, 2, { dur: dur.scene, y: 0 }) }}>
                 <div style={{ fontSize: 30, color: c.mutedFg }}>Invitaciones</div>
                 {INVITES.map((p, i) => (
-                    <div key={p.name} style={{ ...rowStyle, marginTop: i === 0 ? 24 : ROW.gap }}>
+                    <div key={p.name} style={{ ...row, marginTop: i === 0 ? 24 : ROW.gap }}>
                         <div style={{ width: 44, height: 44, borderRadius: 99, background: c.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 600 }}>{p.initials}</div>
                         <div style={{ fontSize: 30, fontWeight: 500, flex: 1 }}>{p.name}</div>
                         {p.done ? (
@@ -162,7 +172,7 @@ export const SplitScene = ({ f, audioAt, audioDur }: SceneProps) => {
             <div style={{ ...panel, left: 1110, ...enter(f, 8, { dur: dur.scene, y: 0 }) }}>
                 <div style={{ fontSize: 30, color: c.mutedFg }}>Respuestas</div>
                 {[0, 1, 2].map((i) => (
-                    <div key={i} style={{ ...rowStyle, marginTop: i === 0 ? 24 : ROW.gap, opacity: store(i) }}>
+                    <div key={i} style={{ ...row, marginTop: i === 0 ? 24 : ROW.gap, opacity: store(i) }}>
                         <Icon name="listCheck" size={30} color={c.primary} />
                         <div style={{ fontSize: 28, color: c.mutedFg }}>Respuesta anónima</div>
                     </div>
@@ -186,6 +196,8 @@ const GROUPS = [
     { name: 'Almacén', total: 4 },
 ] as const;
 export const GroupsScene = ({ f, audioAt, audioDur }: SceneProps) => {
+    const c = useTheme();
+    const card = cardStyle(c);
     const lockAt = audioAt + Math.round(audioDur * 0.55);
     return (
         <div style={{ position: 'absolute', left: 360, top: 170, width: 1200 }}>
@@ -219,7 +231,9 @@ export const GroupsScene = ({ f, audioAt, audioDur }: SceneProps) => {
 };
 
 // 5. Beneficio y cierre.
-export const CloseScene = ({ f, audioAt }: SceneProps) => (
+export const CloseScene = ({ f, audioAt }: SceneProps) => {
+    const c = useTheme();
+    return (
     <Center style={{ flexDirection: 'column', gap: 36 }}>
         <Reveal f={f} at={audioAt} calm>
             <Logo height={88} />
@@ -231,4 +245,5 @@ export const CloseScene = ({ f, audioAt }: SceneProps) => (
             Datos para decidir.
         </Reveal>
     </Center>
-);
+    );
+};

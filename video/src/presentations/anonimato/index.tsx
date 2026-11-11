@@ -1,7 +1,6 @@
-import { Sequence } from 'remotion';
-import { Narration, SceneFrame, Stage, Subtitle } from '../../kit/primitives';
-import { validate, type Presentation } from '../../kit/schema';
-import { layout } from '../../kit/timeline';
+import { FilmView, prepare } from '../../kit/film';
+import type { Presentation } from '../../kit/schema';
+import type { ThemeName } from '../../kit/themes';
 import { FORMAT_16x9, FPS } from '../../kit/tokens';
 import manifest from '../../../voice/manifest.anonimato.angie.json';
 import script from './script.json';
@@ -24,42 +23,6 @@ export const anonimato: Presentation = {
     ],
 };
 
-export const anonimatoTimeline = layout(anonimato);
-const errors = validate(anonimato);
-if (errors.length > 0) {
-    throw new Error(errors.join('\n'));
-}
+export const anonimatoTimeline = prepare(anonimato);
 
-export const AnonimatoFilm = () => (
-    <Stage>
-        {anonimatoTimeline.scenes.map((s) => {
-            const spec = anonimato.scenes[s.index];
-            const line = anonimato.lines.find((l) => l.id === spec?.lineId);
-            if (!spec || !line) {
-                return null;
-            }
-            const Scene = spec.component;
-            return (
-                <Sequence key={s.id} from={s.from} durationInFrames={s.dur} layout="none">
-                    <SceneInner s={s} text={line.text} Scene={Scene} />
-                </Sequence>
-            );
-        })}
-        <Narration scenes={anonimatoTimeline.scenes} />
-    </Stage>
-);
-
-import { useCurrentFrame } from 'remotion';
-import type { ComponentType } from 'react';
-import type { SceneProps } from '../../kit/schema';
-import type { PlacedScene } from '../../kit/timeline';
-
-const SceneInner = ({ s, text, Scene }: { s: PlacedScene; text: string; Scene: ComponentType<SceneProps> }) => {
-    const f = useCurrentFrame();
-    return (
-        <SceneFrame f={f} total={s.dur} last={s.index === anonimato.scenes.length - 1}>
-            <Scene f={f} dur={s.dur} audioAt={s.audioAt} audioDur={s.audioDur} />
-            <Subtitle f={f} text={text} audioAt={s.audioAt} audioDur={s.audioDur} />
-        </SceneFrame>
-    );
-};
+export const AnonimatoFilm = ({ theme }: { theme: ThemeName }) => <FilmView p={anonimato} timeline={anonimatoTimeline} theme={theme} />;
