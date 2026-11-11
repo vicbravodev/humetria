@@ -15,19 +15,19 @@ type Props = {
     onSelect: (key: ToolKey) => void;
 };
 
-/** The tools of the chosen family: a strip that scrolls sideways on a phone, a column that stays in view on a wide screen. */
+/** The tools of the chosen family in one row: it scrolls sideways on a phone and shares the width on a wide screen. */
 export default function ToolTabs({ family, selected, onSelect }: Props) {
     const move = useToolTabs(family.tools, selected, onSelect);
     const tools = familyTools(family);
 
     return (
-        <div className="relative -mx-5 min-w-0 sm:-mx-8 lg:sticky lg:top-26 lg:mx-0">
+        <div className="relative -mx-5 min-w-0 sm:-mx-8 lg:mx-0">
             <div
                 role="tablist"
                 id="tool-rail"
                 data-test="tool-rail"
                 aria-label={`Herramientas de ${family.name}`}
-                className="flex scroll-px-5 gap-2 overflow-x-auto overscroll-x-contain px-5 py-1 sm:px-8 lg:flex-col lg:overflow-visible lg:p-0"
+                className="flex scroll-px-5 gap-2 overflow-x-auto overscroll-x-contain px-5 py-1 sm:px-8 lg:overflow-visible lg:p-0"
             >
                 {tools.map((tool, index) => {
                     const current = selected === tool.key;
@@ -46,7 +46,7 @@ export default function ToolTabs({ family, selected, onSelect }: Props) {
                             onClick={() => onSelect(tool.key)}
                             onKeyDown={(event) => move(event, index)}
                             className={cn(
-                                'relative grid min-h-16 w-44 shrink-0 grid-cols-[36px_minmax(0,1fr)] items-center gap-x-2.5 rounded-xl border py-2.5 pr-3.5 pl-2.5 text-left transition-[border-color,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.98] lg:min-h-18 lg:w-full',
+                                'relative grid min-h-16 w-44 shrink-0 grid-cols-[36px_minmax(0,1fr)] items-center gap-x-2.5 rounded-xl border py-2.5 pr-3.5 pl-2.5 text-left transition-[border-color,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.98] lg:min-h-18 lg:w-auto lg:flex-1',
                                 current
                                     ? 'border-transparent'
                                     : 'bg-card hover:border-input',

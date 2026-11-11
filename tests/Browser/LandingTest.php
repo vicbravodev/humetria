@@ -280,7 +280,7 @@ it('keeps the selected tool visible in the phone strip when the hash changes', f
         ->assertNoJavaScriptErrors();
 });
 
-it('fits every complete tool presentation below the laptop header, next to its tools', function (): void {
+it('fits every complete tool presentation below the laptop header, under its tools', function (): void {
     $page = resizeTo(visitPage('landing', '/'), 1512, 982);
 
     foreach (LANDING_FAMILIES as $family => $tools) {
@@ -288,9 +288,9 @@ it('fits every complete tool presentation below the laptop header, next to its t
 
         foreach ($tools as $tool) {
             $page->click("@tool-tab-{$tool}");
-            // The stage just under the 64 px header, the way a visitor scrolls to it.
-            $page->script('() => { window.scrollTo({ top: document.getElementById("tool-panel").getBoundingClientRect().top + window.scrollY - 80, behavior: "instant" }); }');
-            $page->assertScript('() => { const panel = document.getElementById("tool-panel").getBoundingClientRect(); const rail = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return panel.top >= 64 && panel.bottom <= window.innerHeight && rail.top >= 64 && rail.bottom <= window.innerHeight; }');
+            // The family's tools just under the 64 px header, the way a visitor scrolls to them: the stage fits below them.
+            $page->script('() => { window.scrollTo({ top: document.querySelector("[data-test=tool-rail]").getBoundingClientRect().top + window.scrollY - 80, behavior: "instant" }); }');
+            $page->assertScript('() => { const panel = document.getElementById("tool-panel").getBoundingClientRect(); const rail = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return rail.top >= 64 && rail.bottom <= panel.top && panel.bottom <= window.innerHeight; }');
         }
     }
 

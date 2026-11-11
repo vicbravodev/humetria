@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 const KEYS = TOOLS.map((tool) => tool.key);
 
-/** Nine tools as three families: pick a family, then a tool, and its film plays on the stage. */
+/** Nine tools as three families: pick a family, then one of its tools, and its film plays on the stage below. */
 export default function ToolsSection() {
     const [selected, select] = useHashTab('nom_035', KEYS, 'herramienta-');
     const family = familyOf(selected);
@@ -41,14 +41,12 @@ export default function ToolsSection() {
                     selected={family}
                     onSelect={(next) => select(next.tools[0])}
                 />
-                <div className="grid gap-4 min-[1400px]:grid-cols-[300px_minmax(0,1fr)] lg:grid-cols-[272px_minmax(0,1fr)] lg:items-start lg:gap-6">
-                    <ToolTabs
-                        family={family}
-                        selected={selected}
-                        onSelect={select}
-                    />
-                    {tool !== undefined && <ToolStage tool={tool} />}
-                </div>
+                <ToolTabs
+                    family={family}
+                    selected={selected}
+                    onSelect={select}
+                />
+                {tool !== undefined && <ToolStage tool={tool} />}
             </div>
         </section>
     );

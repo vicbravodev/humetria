@@ -36,7 +36,7 @@ export default function FamilyTabs({ selected, onSelect }: Props) {
         <div
             role="tablist"
             aria-label="Familias de herramientas"
-            className="grid grid-cols-3 gap-1 rounded-2xl border bg-card p-1 lg:max-w-[720px]"
+            className="grid grid-cols-3 gap-1 rounded-2xl border bg-card p-1"
         >
             {FAMILIES.map((family, index) => {
                 const current = family.key === selected.key;
