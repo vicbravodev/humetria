@@ -1,0 +1,26 @@
+{
+  "id": "hero",
+  "durationSec": 41.47,
+  "chapters": [
+    {
+      "label": "Tu gente",
+      "at": 0
+    },
+    {
+      "label": "Herramientas",
+      "at": 6.4
+    },
+    {
+      "label": "Invitación",
+      "at": 15.47
+    },
+    {
+      "label": "Sin nombres",
+      "at": 23.23
+    },
+    {
+      "label": "Expediente",
+      "at": 30.5
+    }
+  ]
+}
