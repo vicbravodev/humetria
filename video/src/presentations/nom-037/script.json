@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "NOM-037",
+    "chapters": ["Listado", "Lista", "Política", "Verificación"],
+    "headlines": ["Entra quien pasa del 40\u00a0%", "Cada lugar, validado", "Tu política, en 8 preguntas", "Nada vence sin aviso"]
+  },
+  "lines": [
+    { "id": "roster", "text": "Agrega al listado a quien teletrabaja más del cuarenta por ciento de su jornada." },
+    { "id": "checklist", "text": "Cada persona contesta desde su celular la lista de verificación de su lugar de trabajo." },
+    { "id": "policy", "text": "Arma tu política contestando preguntas, y publícala para que cada persona confirme que la recibió." },
+    { "id": "review", "text": "Elige cada cuánto se verifica, y recibe un aviso cuando un lugar está por vencer." }
+  ]
+}

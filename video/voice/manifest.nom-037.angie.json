@@ -1,0 +1,47 @@
+{
+  "presentation": "nom-037",
+  "voice": "angie",
+  "masteredAt": "2026-11-11T01:16:27.688Z",
+  "lines": [
+    {
+      "id": "roster",
+      "file": "audio/nom-037/angie/l1.mp3",
+      "durationSec": 4.91102,
+      "fingerprint": "fcdba9b55791",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "checklist",
+      "file": "audio/nom-037/angie/l2.mp3",
+      "durationSec": 5.32898,
+      "fingerprint": "77ab016dade4",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "policy",
+      "file": "audio/nom-037/angie/l3.mp3",
+      "durationSec": 6.426122,
+      "fingerprint": "9f9df643fb23",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "review",
+      "file": "audio/nom-037/angie/l4.mp3",
+      "durationSec": 5.564082,
+      "fingerprint": "5f9e6c02f71c",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}

@@ -15,6 +15,10 @@ export type Palette = {
     primary: string;
     primaryFg: string;
     track: string;
+    /** Advertencia (riesgo medio del design system): sólido, fondo y texto. */
+    warn: string;
+    warnBg: string;
+    warnFg: string;
     /** Fondo de los subtítulos. */
     scrim: string;
     /** Logo horizontal de la marca para este fondo (en public/). */
@@ -23,7 +27,7 @@ export type Palette = {
 
 // Oscuro: tokens de ../theme. Claro: los de resources/css/app.css (:root), los mismos que usa video/hyperframes/render.sh.
 export const palettes: Record<ThemeName, Palette> = {
-    dark: { ...dark, scrim: 'rgba(15,23,22,.82)', logo: 'brand/humetria-horizontal-color-oscuro.svg' },
+    dark: { ...dark, warn: '#D2AE62', warnBg: '#33291A', warnFg: '#E9C886', scrim: 'rgba(15,23,22,.82)', logo: 'brand/humetria-horizontal-color-oscuro.svg' },
     light: {
         bg: '#fbfdfc',
         card: '#ffffff',
@@ -36,6 +40,9 @@ export const palettes: Record<ThemeName, Palette> = {
         primary: '#0b7a6f',
         primaryFg: '#ffffff',
         track: '#dce5e2',
+        warn: '#a47f2c',
+        warnBg: '#f6eedc',
+        warnFg: '#7a5714',
         scrim: 'rgba(251,253,252,.9)',
         logo: 'brand/humetria-horizontal-color.svg',
     },

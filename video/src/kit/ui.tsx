@@ -73,7 +73,7 @@ export const PHONE = { w: 360, h: 700 } as const;
 export const Phone = ({ style, children }: { style?: CSSProperties; children?: ReactNode }) => {
     const c = useTheme();
     return (
-        <div style={{ position: 'absolute', width: PHONE.w, height: PHONE.h, borderRadius: 54, background: c.card, border: `1px solid ${c.border}`, boxSizing: 'border-box', padding: 10, ...style }}>
+        <div style={{ position: 'absolute', width: PHONE.w, height: PHONE.h, borderRadius: 54, background: c.card, border: `1px solid ${c.border}`, boxSizing: 'border-box', padding: 10, boxShadow: '0 20px 44px rgba(0,0,0,.16)', ...style }}>
             <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 44, background: c.bg, overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 14, left: '50%', width: 96, height: 28, marginLeft: -48, borderRadius: 99, background: c.card }} />
                 {children}
