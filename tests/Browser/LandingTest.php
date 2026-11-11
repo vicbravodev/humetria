@@ -153,9 +153,12 @@ it('plays the hero film muted and in a loop, and lets the visitor pause it', fun
 
     visitPage('landing', '/')
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-hero.jpg')")
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-hero-light.jpg')")
         ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.type).join()", 'video/webm,video/mp4')
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Pausar video')
+        ->assertAttribute('@hero-video-sound', 'aria-label', 'Activar sonido')
+        ->click('@hero-video-sound')
+        ->assertScript("() => ! {$video}.muted")
         ->click('@hero-video-toggle')
         ->assertScript("() => {$video}.paused")
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Reproducir video');
@@ -300,18 +303,21 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
     visitPage('landing', '/')
         ->assertSeeIn('#humi', 'Pregúntale a Humi')
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.poster.endsWith('/video/humi-chat.jpg')")
-        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humi-chat.webm,humi-chat.mp4')
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-humi-light.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-humi-light.webm,humetria-humi-light.mp4')
         ->assertSeeIn('[data-test=humi-video] figcaption', 'Conversación de ejemplo')
         ->assertScript('() => document.querySelector("[data-test=humi-video] figcaption").textContent.includes("¿Qué me falta para estar al día en Planta Querétaro?")')
         // Once it scrolls into view it plays by itself; the button pauses it.
         ->assertScript("() => new Promise((resolve) => { {$video}.scrollIntoView(); if (! {$video}.paused) { resolve(true); } {$video}.addEventListener('playing', () => resolve(true)); })")
         ->assertAttribute('@humi-video-toggle', 'aria-label', 'Pausar video')
+        ->assertAttribute('@humi-video-sound', 'aria-label', 'Activar sonido')
+        ->click('@humi-video-sound')
+        ->assertScript("() => ! {$video}.muted")
         ->click('@humi-video-toggle')
         ->assertScript("() => {$video}.paused");
 });
 
-it('shows each tool as a large film with chapters, and a chapter jumps to its moment', function (string $tool, string $film): void {
+it('shows each tool as a narrated film with chapters, and a chapter jumps to the moment its narration starts', function (string $tool, string $film, float $third, float $fourth): void {
     $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
 
     $page = visitPage('landing', '/');
@@ -325,22 +331,29 @@ it('shows each tool as a large film with chapters, and a chapter jumps to its mo
         ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.length > 40');
 
     $page->click('@tool-chapter-2')
-        ->assertScript("() => new Promise((resolve) => { const there = () => {$video}.currentTime >= 12 && {$video}.currentTime < 18 ? resolve(true) : requestAnimationFrame(there); there(); })")
+        ->assertScript("() => new Promise((resolve) => { const there = () => {$video}.currentTime >= {$third} && {$video}.currentTime < {$fourth} ? resolve(true) : requestAnimationFrame(there); there(); })")
         ->assertAttribute('@tool-chapter-2', 'aria-current', 'true')
         ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
         ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
+        // It starts muted; the visitor turns the narration on and off.
+        ->assertAttribute('@tool-film-sound', 'aria-label', 'Activar sonido')
+        ->click('@tool-film-sound')
+        ->assertScript("() => ! {$video}.muted")
+        ->assertAttribute('@tool-film-sound', 'aria-label', 'Silenciar video')
+        ->click('@tool-film-sound')
+        ->assertScript("() => {$video}.muted")
         ->click('@tool-film-toggle')
         ->assertScript("() => {$video}.paused");
 })->with([
-    'NOM-035' => ['nom_035', 'humetria-nom-035'],
-    'NOM-037' => ['nom_037', 'humetria-nom-037'],
-    'Ley Silla' => ['ley_silla', 'humetria-ley-silla'],
-    'complaints' => ['complaints', 'humetria-complaints'],
-    'compensation' => ['compensation', 'humetria-compensation'],
-    'attendance' => ['attendance', 'humetria-attendance'],
-    'leave' => ['leave', 'humetria-leave'],
-    'org chart' => ['org_chart', 'humetria-org-chart'],
-    'engagement' => ['engagement', 'humetria-engagement'],
+    'NOM-035' => ['nom_035', 'humetria-nom-035', 13.77, 21.47],
+    'NOM-037' => ['nom_037', 'humetria-nom-037', 12.4, 19.9],
+    'Ley Silla' => ['ley_silla', 'humetria-ley-silla', 14.2, 21.23],
+    'complaints' => ['complaints', 'humetria-complaints', 13.6, 19.93],
+    'compensation' => ['compensation', 'humetria-compensation', 15.8, 21.63],
+    'attendance' => ['attendance', 'humetria-attendance', 14.33, 20.97],
+    'leave' => ['leave', 'humetria-leave', 11.8, 17.33],
+    'org chart' => ['org_chart', 'humetria-org-chart', 11.67, 17.33],
+    'engagement' => ['engagement', 'humetria-engagement', 14.37, 21.57],
 ]);
 
 it('shows the film drawn with the dark tokens in the dark theme', function (): void {

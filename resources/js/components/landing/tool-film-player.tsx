@@ -11,8 +11,17 @@ import { activeChapter } from '@/lib/film-chapters';
 /** A framed screen with chapter navigation; reduced motion waits for an explicit play. */
 export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
     const still = useReducedMotion() === true;
-    const { video, playing, toggle, onPlay, onPause, time, jumpTo } =
-        useFilmChapters();
+    const {
+        video,
+        playing,
+        toggle,
+        muted,
+        toggleSound,
+        onPlay,
+        onPause,
+        time,
+        jumpTo,
+    } = useFilmChapters(film.timing);
     const { canFullscreen, fullscreen } = useVideoFullscreen(video);
     // The film is drawn with the design tokens of each theme, so it sits in the page instead of being a dark block in it.
     const { resolvedAppearance } = useAppearance();
@@ -50,15 +59,18 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
                 <FilmControls
                     playing={playing}
                     onToggle={toggle}
+                    muted={muted}
+                    onToggleSound={toggleSound}
                     canFullscreen={canFullscreen}
                     onFullscreen={fullscreen}
                 />
             </div>
-            <figcaption className="bg-card sm:pr-28">
+            <figcaption className="bg-card sm:pr-40">
                 <span className="sr-only">{film.description}</span>
                 <FilmChapters
                     labels={film.chapters}
-                    active={activeChapter(time, film.chapters.length)}
+                    timing={film.timing}
+                    active={activeChapter(film.timing, time)}
                     time={time}
                     onJump={jumpTo}
                 />

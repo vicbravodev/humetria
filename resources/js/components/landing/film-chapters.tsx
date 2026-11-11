@@ -1,15 +1,23 @@
 import { chapterProgress } from '@/lib/film-chapters';
+import type { FilmTiming } from '@/lib/film-chapters';
 import { cn } from '@/lib/utils';
 
 type Props = {
     labels: readonly string[];
+    timing: FilmTiming;
     active: number;
     time: number;
     onJump: (chapter: number) => void;
 };
 
 /** Chapter navigation follows the film: the current chapter fills a thin line along its foot as it plays. */
-export default function FilmChapters({ labels, active, time, onJump }: Props) {
+export default function FilmChapters({
+    labels,
+    timing,
+    active,
+    time,
+    onJump,
+}: Props) {
     return (
         <ol
             aria-label="Capítulos del video"
@@ -38,7 +46,7 @@ export default function FilmChapters({ labels, active, time, onJump }: Props) {
                                 aria-hidden
                                 className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary-foreground/70 transition-transform duration-300 ease-linear motion-reduce:transition-none"
                                 style={{
-                                    transform: `scaleX(${chapterProgress(index, time)})`,
+                                    transform: `scaleX(${chapterProgress(timing, index, time)})`,
                                 }}
                             />
                         )}

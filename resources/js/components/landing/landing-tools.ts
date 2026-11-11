@@ -1,3 +1,5 @@
+import type { FilmTiming } from '@/lib/film-chapters';
+
 /** The tools Humetría offers, keyed as the demo form sends them (App\Modules\Demos\Enums\Tool). */
 export type ToolKey =
     | 'nom_035'
@@ -10,9 +12,11 @@ export type ToolKey =
     | 'org_chart'
     | 'engagement';
 
-/** A tool's film in public/video (`{name}.webm`, `.mp4`, `.jpg`): four chapters of CHAPTER_SECONDS, one per label. */
+/** A tool's narrated film in public/video (`{name}.webm`, `.mp4`, `.jpg`, and `-light` for the light theme): one chapter per label. */
 export type ToolFilm = {
     name: string;
+    /** When each chapter starts (the voice sets it) and how long the film runs; from video/voice/chapters.<id>.json. */
+    timing: FilmTiming;
     chapters: readonly string[];
     /** What the film shows, for screen readers. */
     description: string;
@@ -33,6 +37,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'nom_035',
         film: {
             name: 'humetria-nom-035',
+            timing: { starts: [0, 6.73, 13.77, 21.47], duration: 31.8 },
             chapters: ['Guías', 'Muestra', 'Invitaciones', 'Informe'],
             description:
                 'RH elige un centro y la plataforma marca qué guías le tocan según su tamaño, sortea la muestra por género, envía un recordatorio a quien falta sin ver qué contestó nadie y genera el informe del numeral 7.7, con la canalización de la Guía I solo para personas autorizadas.',
@@ -52,6 +57,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'nom_037',
         film: {
             name: 'humetria-nom-037',
+            timing: { starts: [0, 6, 12.4, 19.9], duration: 29.03 },
             chapters: ['Listado', 'Lista', 'Política', 'Verificación'],
             description:
                 'RH agrega a una persona al listado de teletrabajo según su porcentaje de jornada, la persona contesta desde el celular la lista de verificación de su lugar de trabajo, RH arma y publica la política contestando preguntas y elige cada cuánto se verifica, con un aviso cuando un lugar está por vencer.',
@@ -70,6 +76,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'ley_silla',
         film: {
             name: 'humetria-ley-silla',
+            timing: { starts: [0, 6.5, 14.2, 21.23], duration: 29.5 },
             chapters: ['Puestos', 'Encuesta', 'Reglamento', 'Plan'],
             description:
                 'RH registra un puesto que se hace de pie y dónde va su asiento, la persona contesta la encuesta confidencial desde su celular mientras RH solo ve porcentajes por grupo, un botón arma el texto propuesto del reglamento interior y RH sube la evidencia de una medida del plan de acción.',
@@ -88,6 +95,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'complaints',
         film: {
             name: 'humetria-complaints',
+            timing: { starts: [0, 7.7, 13.6, 19.93], duration: 28.43 },
             chapters: [
                 'QR y anónima',
                 'A quien toca',
@@ -111,6 +119,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'compensation',
         film: {
             name: 'humetria-compensation',
+            timing: { starts: [0, 9.07, 15.8, 21.63], duration: 30.77 },
             chapters: ['Costea', 'Compara', 'Proyecta', 'Reporte'],
             description:
                 'La persona elige un aumento del 6 % y lo costea con salario, prestaciones, IMSS, Infonavit e impuesto sobre nómina, compara la propuesta de la empresa con la del sindicato y la distancia entre ellas, proyecta el costo del primer año a cinco años y comparte el reporte con un enlace de solo lectura, todo con cifras de ejemplo.',
@@ -129,6 +138,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'attendance',
         film: {
             name: 'humetria-attendance',
+            timing: { starts: [0, 7.13, 14.33, 20.97], duration: 28.4 },
             chapters: ['Marca', 'Registro', 'Semana', 'Reporte'],
             description:
                 'la persona escanea el código QR del centro o llega a la zona, marca desde su celular y confirma con su huella; el registro no se puede alterar y las correcciones se suman con su motivo; confirma su semana con los topes a la vista y RH genera con un botón el reporte para la autoridad.',
@@ -148,6 +158,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'leave',
         film: {
             name: 'humetria-leave',
+            timing: { starts: [0, 6.5, 11.8, 17.33], duration: 26.4 },
             chapters: [
                 'Saldo por ley',
                 'Solicitar',
@@ -171,6 +182,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'org_chart',
         film: {
             name: 'humetria-org-chart',
+            timing: { starts: [0, 5.83, 11.67, 17.33], duration: 26.07 },
             chapters: [
                 'Organigrama',
                 'Cargar archivo',
@@ -194,6 +206,7 @@ export const TOOLS: readonly LandingTool[] = [
         key: 'engagement',
         film: {
             name: 'humetria-engagement',
+            timing: { starts: [0, 6.87, 14.37, 21.57], duration: 31.43 },
             chapters: ['Encuesta', 'Pulsos', 'Grupos ocultos', 'Comparar'],
             description:
                 'La persona contesta la encuesta de clima y un pulso corto desde su enlace, y RH ve qué temas atender primero, los resultados por área con los grupos de menos de 5 respuestas ocultos y la comparación de una ola con la anterior y de un centro con otro, sin ninguna respuesta individual.',

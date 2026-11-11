@@ -56,9 +56,9 @@ export default function LandingHero() {
             <LoopVideo
                 name="humetria-hero"
                 test="hero-video"
-                caption="Así funciona, en 40 segundos"
-                description="cargas a tu gente, cada persona contesta desde su celular, los resultados se agrupan sin nombres y el expediente queda listo para la STPS."
-                className="aspect-[4/3]"
+                caption="Así funciona, en 45 segundos. Con voz"
+                description="cargas a tu gente una sola vez, eliges entre nueve herramientas cuáles aplicar, cada persona contesta desde su celular con un enlace de un solo uso, los resultados llegan por grupos sin nombres y todo queda en un expediente."
+                className="aspect-video"
             />
         </section>
     );

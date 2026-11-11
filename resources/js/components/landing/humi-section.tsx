@@ -44,11 +44,11 @@ export default function HumiSection() {
                     </ul>
                 </Reveal>
                 <LoopVideo
-                    name="humi-chat"
+                    name="humetria-humi"
                     test="humi-video"
                     caption="Humi en el panel. Conversación de ejemplo"
-                    description="preguntas «¿Qué me falta para estar al día en Planta Querétaro?» y Humi consulta el avance y responde que faltan 31 respuestas de NOM-035 y 3 listas de verificación por validar en NOM-037, con sus fuentes. Luego preguntas cuánto cuesta el escenario de 5.5 % y responde que el punto medio cuesta 5.6 millones el primer año."
-                    className="aspect-square"
+                    description="preguntas «¿Qué me falta para estar al día en Planta Querétaro?» y Humi consulta el avance y responde que faltan 31 respuestas de NOM-035 y 3 listas de verificación por validar en NOM-037, con sus fuentes. Luego preguntas cuánto cuesta el escenario de 5.5 % y responde que el punto medio cuesta 5.6 millones el primer año, con un botón que abre el escenario. Al final, Humi solo lee y explica: no cambia datos, no ve respuestas individuales y solo habla de tu empresa."
+                    className="aspect-video"
                 />
             </div>
         </section>

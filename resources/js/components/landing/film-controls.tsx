@@ -1,7 +1,9 @@
-import { Maximize, Pause, Play } from 'lucide-react';
+import { Maximize, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 
 type Props = {
     playing: boolean;
+    muted: boolean;
+    onToggleSound: () => void;
     canFullscreen: boolean;
     onToggle: () => void;
     onFullscreen: () => void;
@@ -12,6 +14,8 @@ const button =
 
 export default function FilmControls({
     playing,
+    muted,
+    onToggleSound,
     canFullscreen,
     onToggle,
     onFullscreen,
@@ -29,6 +33,20 @@ export default function FilmControls({
                     <Pause aria-hidden className="size-4" />
                 ) : (
                     <Play aria-hidden className="size-4" />
+                )}
+            </button>
+            <button
+                type="button"
+                data-test="tool-film-sound"
+                aria-label={muted ? 'Activar sonido' : 'Silenciar video'}
+                aria-pressed={!muted}
+                onClick={onToggleSound}
+                className={button}
+            >
+                {muted ? (
+                    <VolumeX aria-hidden className="size-4" />
+                ) : (
+                    <Volume2 aria-hidden className="size-4" />
                 )}
             </button>
             {canFullscreen && (

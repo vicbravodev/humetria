@@ -113,3 +113,12 @@ node scripts/qa-layout.mjs <Composición> <id-de-presentación> dark   # p. ej.:
 - **Una tarjeta con altura fija se dimensiona sumando su contenido:** relleno arriba + contenido + relleno abajo (≥ 12 px). No se «ajusta a ojo».
 - **Cambios de estado sin superposición** (botón → «Aprobada», pendiente → «Validado», formulario → «Enviada»): usar `swapOut(t)` para lo que sale y `swapIn(t)` para lo que entra (`kit/fx.tsx`). Nunca `1 - t` y `t` a la vez: durante unos fotogramas se leerían los dos textos encimados.
 - **Revisión visual ampliada:** antes del render, mirar a 2× los componentes pequeños (botones, píldoras, tarjetas del teléfono): `npx remotion still … --scale=2` y recortar con `sips -c`. A 1× un contorno ausente o un borde apretado pasa desapercibido.
+
+## Integración al landing
+
+- Las películas viven en `public/video/humetria-<id>[-light].{mp4,webm,jpg}`; el landing elige `-light` según el tema.
+- Los capítulos arrancan donde empieza cada línea de voz: los segundos salen de `voice/chapters.<id>.json` y se copian a `timing`
+  de cada herramienta en `resources/js/components/landing/landing-tools.ts` (`starts` y `duration` de la película, logo de cierre incluido).
+  Si se regenera la voz o cambia el guion, se corre `node scripts/chapters.mjs <id>`, se vuelve a renderizar y se actualiza `timing`.
+- El video arranca en silencio (el navegador lo exige para reproducir solo); el botón de sonido enciende la narración.
+- El hero (`humetria-hero`) y Humi (`humetria-humi`) usan `LoopVideo`; las nueve herramientas, `ToolFilmPlayer` con capítulos.
