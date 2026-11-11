@@ -36,7 +36,9 @@ function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
     $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page);
 
-    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()));
+    // The test goes on once the screen of Marcar is really there, not while the browser is still settling the navigation.
+    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+        ->waitForText('Marcar su jornada');
 }
 
 it('opens the screen of Marcar for a device not known yet: every step, why the position is asked, and how to link', function (bool $dark, bool $mobile): void {
