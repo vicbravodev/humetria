@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import { Sequence, useCurrentFrame } from 'remotion';
 import { enter } from '../ease';
 import { Backdrop, Headline, PushIn } from './fx';
-import { Logo, Narration, SceneFrame, Stage, Subtitle } from './primitives';
+import { Logo, Narration, Reveal, SceneFrame, Stage, Subtitle } from './primitives';
 import type { Presentation, SceneProps } from './schema';
 import type { PlacedScene, } from './timeline';
 import { layout } from './timeline';
@@ -36,7 +36,7 @@ const ChapterHeader = ({ f, tool, label, n }: { f: number; tool: string; label: 
 const SceneInner = ({ p, s, text, Scene }: { p: Presentation; s: PlacedScene; text: string; Scene: ComponentType<SceneProps> }) => {
     const f = useCurrentFrame();
     return (
-        <SceneFrame f={f} total={s.dur} last={s.index === p.scenes.length - 1}>
+        <SceneFrame f={f} total={s.dur} last={s.index === p.scenes.length - 1 && !p.outro}>
             {p.frame ? <ChapterHeader f={f} tool={p.frame.tool} label={p.frame.chapters[s.index] ?? ''} n={s.index + 1} /> : null}
             <PushIn f={f} total={s.dur} still={p.scenes[s.index]?.camera === false}>
                 {p.frame?.headlines?.[s.index] ? <Headline f={f} at={4} text={p.frame.headlines[s.index] ?? ''} /> : null}
@@ -44,6 +44,18 @@ const SceneInner = ({ p, s, text, Scene }: { p: Presentation; s: PlacedScene; te
             </PushIn>
             <Subtitle f={f} text={text} audioAt={s.audioAt} audioDur={s.audioDur} />
         </SceneFrame>
+    );
+};
+
+/** Cierre: el logo solo, quieto, unos segundos. Sin voz, subtítulo ni lema. */
+const Outro = () => {
+    const f = useCurrentFrame();
+    return (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Reveal f={f} at={6} calm>
+                <Logo height={110} />
+            </Reveal>
+        </div>
     );
 };
 
@@ -62,6 +74,11 @@ export const FilmView = ({ p, timeline, theme }: { p: Presentation; timeline: Re
                 </Sequence>
             );
         })}
+        {timeline.outro > 0 ? (
+            <Sequence from={timeline.total - timeline.outro} durationInFrames={timeline.outro}>
+                <Outro />
+            </Sequence>
+        ) : null}
         <Narration scenes={timeline.scenes} />
     </Stage>
 );

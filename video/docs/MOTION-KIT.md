@@ -57,3 +57,32 @@ Pendiente: confirmar a oído que ya dice «umetría» (no pude escucharlo), medi
 
 ## Integración web (propuesta, sin implementar)
 Un componente `NarratedVideo` hermano de `loop-video.tsx`: `<video controls preload="none" poster>` con MP4/WebM, sonido activado solo por el visitante, subtítulos como `<track>` WebVTT (hoy van incrustados; generar el .vtt desde `script.json` + manifiesto antes de integrar), sin autoplay (siempre, y más con `prefers-reduced-motion`). Se insertaría en la sección de confidencialidad de la landing. No se tocó la landing.
+
+## Estándar visual de las películas de herramienta (obligatorio)
+Fijado con NOM-035 (segunda iteración, 2026-11-10). Todas las películas de herramienta, el hero y Humi lo siguen; `src/presentations/nom-035/` es la referencia.
+
+**Estructura**
+- 1920×1080, 30 fps, una escena por capítulo (4). Cada capítulo dura lo que dura su línea de voz (`lead 12 + audio + tail 20` frames), no 6 s fijos; `scripts/chapters.mjs` escribe sus tiempos en `voice/chapters.<id>.json` para la landing.
+- Marco fijo (`kit/film.tsx`): número y nombre del capítulo arriba a la izquierda, logo arriba a la derecha, subtítulo abajo. Nunca se mueven.
+- **Cierre (outro):** al terminar el último capítulo, 75 frames (2.5 s) con el logo horizontal de la marca centrado, quieto, sin voz, sin subtítulo y sin lema (`outro: 75` en `script.json`). Entra con fundido (`Reveal calm`), nada de escala ni desenfoque. El lema («Confianza para responder…») es de la pieza *Anonimato*, no de las películas de herramienta.
+- Los dos temas (`dark`, `light`) salen de la misma composición con `--props={"theme":…}`; `scripts/render-film.mjs` renderiza ambos (mp4, webm y póster).
+
+**Composición**
+- Nada se recorta ni se acerca de más: el contenido cabe completo con ≥ 80 px de margen, sin zoom sobre la interfaz.
+- Texto ≥ 26 px (en la landing el video se ve a ~900 px). Tarjetas grandes con lo esencial de la pantalla real, no la interfaz densa a escala.
+- Espacio: titular a y=134; contenido de y=250 a y=790; subtítulo desde y≈890. Todo elemento entra y sale dentro de su contenedor; nada asoma por encima ni se desborda (si una fila no cabe, se achica la fila, no se sale del panel). Sin huecos sin función: una tarjeta se dimensiona a su contenido.
+
+**Movimiento (todo desde `kit/fx.tsx` y `kit/tokens.ts`; sin valores sueltos)**
+- **Titular cinético** por capítulo (`frame.headlines`): palabras que suben desde una máscara, la última en el color de acento.
+- **Puntos que viajan** (`FlyDot`): las personas salen de su origen en arco y llenan el avance de su destino (barra o arco) mientras el número cuenta. Así se cuenta el flujo de datos; es la firma de la marca desde el hero.
+- **Cursor** (`Cursor`) que se mueve, hace clic con onda y dispara el efecto (recordatorios que salen del botón, filas que cambian).
+- **Estados que se ganan**: chips e insignias entran con rebote ≤ 4 % (`pop`), bordes y resplandores del acento al completarse.
+- **Profundidad**: fondo con dos resplandores del acento que derivan (`Backdrop`), empuje lento de cámara en cada capítulo (`PushIn`, ≈ 2 %). Se apaga (`camera: false`) en escenas con logo.
+- Transiciones entre capítulos: solo fundido. Entradas con `easeOut`, salidas con `easeInOut`; sin deslizar contenedores al salir.
+- Los logos y el texto final no vibran: solo fundido, sin escala, desplazamiento ni desenfoque.
+
+**Voz y texto**
+- Una línea de ~15 palabras por capítulo, tuteo, sin promesas legales; Angie con `eleven_v4`. La marca se dice «Umetría» (`speech`) y se escribe «Humetría» (`text`).
+- Datos de ejemplo siempre marcados como tales en la trazabilidad; cada escena declara su evidencia.
+
+**Peso:** cada película ronda 5–6 MB por tema (mp4/webm). Si una pasa de 8 MB, subir el `--crf` antes de recortar movimiento.

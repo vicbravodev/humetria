@@ -10,7 +10,7 @@ let frame = 0;
 const chapters = script.lines.map((line, i) => {
     const take = manifest.lines.find((m) => m.id === line.id);
     const at = frame / pacing.fps;
-    frame += pacing.lead + Math.ceil(take.durationSec * pacing.fps) + (i === script.lines.length - 1 ? script.hold ?? pacing.outro : pacing.tail);
+    frame += pacing.lead + Math.ceil(take.durationSec * pacing.fps) + pacing.tail + (i === script.lines.length - 1 ? script.outro ?? 0 : 0);
     return { label: script.frame.chapters[i], at: Math.round(at * 100) / 100 };
 });
 const out = { id, durationSec: Math.round((frame / pacing.fps) * 100) / 100, chapters };

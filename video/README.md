@@ -32,7 +32,7 @@ Un frame suelto para revisar: `npx remotion still HeroLoop out/frame.png --frame
 
 ## Piezas narradas (Motion Kit)
 
-`Anonimato` (1920×1080, 41 s, con voz): ver `docs/MOTION-KIT.md` (sistema, voz, receta, trazabilidad, pendientes).
+`Anonimato` (1920×1080, 41 s, con voz) y las películas de herramienta (referencia: `nom-035`, con cierre de logo): ver `docs/MOTION-KIT.md` (sistema, voz, receta, trazabilidad, pendientes).
 
 ```bash
 npm run check:film && npm run types:check

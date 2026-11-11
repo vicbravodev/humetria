@@ -12,7 +12,7 @@ export const nom035: Presentation = {
     goal: 'RH ve cómo la plataforma decide las guías, sortea la muestra, recuerda a quien falta sin ver respuestas y arma el informe.',
     ...FORMAT_16x9,
     fps: FPS,
-    hold: 24,
+    outro: script.outro,
     frame: script.frame,
     lines: script.lines,
     manifest: manifest.lines,

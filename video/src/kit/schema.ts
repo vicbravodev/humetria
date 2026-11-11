@@ -38,6 +38,8 @@ export type Presentation = {
     frame?: { tool: string; chapters: readonly string[]; headlines?: readonly string[] };
     /** Frames que se queda la última escena (por defecto, el cierre de una pieza suelta). */
     hold?: number;
+    /** Frames de cierre con el logo (sin voz, subtítulo ni lema) tras la última escena. Las películas de herramienta lo llevan. */
+    outro?: number;
     lines: readonly ScriptLine[];
     manifest: readonly ManifestLine[];
     scenes: readonly SceneSpec[];
