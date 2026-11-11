@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { activeChild, complianceNavItems } from '@/lib/app-navigation';
+import { activeChild } from '@/lib/app-navigation';
+import { operationsNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
 import { can } from '../support/tenant-can';
 
@@ -15,22 +16,22 @@ const acme = (manage: boolean, view = true) => ({
 });
 
 const vacations = (manage: boolean, view = true) =>
-    complianceNavItems(acme(manage, view)).find(
+    operationsNavItems(acme(manage, view)).find(
         (item) => item.title === 'Vacaciones',
     );
 
 describe('the vacations in the sidebar', () => {
-    it('offers them after the registro de jornada, with their five pages, to whoever may view them', () => {
+    it('opens Ordena tu operación with their five pages, for whoever may view them', () => {
         const tenant = acme(false);
-        const items = complianceNavItems({
+        const items = operationsNavItems({
             ...tenant,
-            can: { ...tenant.can, view_attendance: true },
+            can: { ...tenant.can, view_org_chart: true },
         });
         const entry = items.find((item) => item.title === 'Vacaciones');
 
-        expect(items.map((item) => item.title).slice(-2)).toEqual([
-            'Asistencia',
+        expect(items.map((item) => item.title)).toEqual([
             'Vacaciones',
+            'Organigrama',
         ]);
         expect(toUrl(entry?.href ?? '')).toBe('/admin/acme/vacations');
         expect(

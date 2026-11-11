@@ -33,7 +33,7 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
     return (
         <figure
             data-test="tool-film"
-            className="m-2 mb-0 overflow-hidden rounded-xl border border-input bg-muted shadow-raised sm:m-3 sm:mb-0"
+            className="overflow-hidden rounded-2xl border border-input bg-muted"
         >
             <div className="relative">
                 <video

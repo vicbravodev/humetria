@@ -28,13 +28,8 @@ import { index as teleworkNotices } from '@/routes/tenant/telework/notices';
 import { edit as teleworkSettings } from '@/routes/tenant/telework/settings';
 import { index as teleworkTrainings } from '@/routes/tenant/telework/trainings';
 import { index as workCenters } from '@/routes/tenant/work-centers';
-import {
-    complaintCasesItems,
-    complaints,
-    handlesOrManagesComplaints,
-} from '@/lib/complaints-navigation';
+import { complaintCasesItems } from '@/lib/complaints-navigation';
 import { attendance } from '@/lib/attendance-navigation';
-import { vacationsNavItems } from '@/lib/leave-navigation';
 import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, InCourse, NavItem, NavTenant } from '@/types';
 
@@ -157,8 +152,9 @@ const nom035 = (tenant: NavTenant, inCourse: number): NavItem => {
 };
 
 /**
- * The compliance tools of the current company, for every role: who may change them is the page's to say. The committee
- * sees only NOM-037 and Ley Silla; the outside handler of complaints has its cases in the main section instead.
+ * "Cumple la norma": the official standards of the current company, for every role (who may change them is the page's
+ * to say). The committee sees only NOM-037 and Ley Silla; the outside handler of complaints has its cases in the main
+ * section instead.
  */
 export const complianceNavItems = (
     tenant: NavTenant | null,
@@ -173,8 +169,6 @@ export const complianceNavItems = (
         telework(tenant),
         ...(tenant.can.view_seating ? [seating(tenant)] : []),
         ...(tenant.can.view_attendance ? [attendance(tenant)] : []),
-        ...vacationsNavItems(tenant),
-        ...(handlesOrManagesComplaints(tenant) ? [complaints(tenant)] : []),
     ];
 };
 
@@ -221,7 +215,19 @@ export const settingsNavItems = (impersonating: boolean): NavItem[] =>
 export const settingsEntryHref = (impersonating: boolean): NavItem['href'] =>
     impersonating ? editAppearance() : editProfile();
 
-export type NavSection = { label: string; items: NavItem[] };
+/** The sidebar's groups: the company's own pages (no heading), the three families of tools and the platform. */
+export type NavSectionKey =
+    | 'main'
+    | 'compliance'
+    | 'listening'
+    | 'operations'
+    | 'platform';
+
+export type NavSection = {
+    key?: NavSectionKey;
+    label: string;
+    items: NavItem[];
+};
 
 /**
  * The top bar's trail when a page sets none: on a sidebar page, its section and its name ("Cumplimiento › NOM-035");

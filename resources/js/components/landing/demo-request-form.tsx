@@ -49,11 +49,11 @@ export default function DemoRequestForm() {
 
                 return message === null;
             }}
-            className="relative grid gap-5 rounded-lg border bg-card p-5 sm:p-7"
+            className="relative grid gap-[18px] rounded-3xl border bg-card p-5 shadow-raised sm:p-8"
         >
             {({ processing, errors }) => (
                 <>
-                    <div className="grid gap-3.5 sm:grid-cols-2">
+                    <div className="grid gap-[18px] sm:grid-cols-2">
                         <DemoTextField
                             name="name"
                             label="Nombre"
@@ -103,20 +103,20 @@ export default function DemoRequestForm() {
                         legend="¿Cuántas personas trabajan en la empresa?"
                         options={WORKFORCE}
                         error={errors['workforce']}
-                        className="grid-cols-2 sm:grid-cols-3"
                     />
                     <DemoMessageField error={errors['message']} />
                     <DemoHoneypot />
                     <Button
                         type="submit"
                         size="lg"
+                        className="h-13 text-base"
                         disabled={processing}
                         data-test="demo-request-submit"
                     >
                         {processing && <Spinner />}
                         Agendar demo
                     </Button>
-                    <p className="text-caption text-muted-foreground">
+                    <p className="text-center text-caption text-muted-foreground">
                         Usamos tus datos solo para contactarte.
                     </p>
                 </>

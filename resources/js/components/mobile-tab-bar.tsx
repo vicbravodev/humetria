@@ -30,8 +30,8 @@ const TAB =
     'flex min-h-14 flex-col items-center justify-center gap-0.5 text-caption font-medium text-muted-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring aria-[current=page]:text-primary data-[state=open]:text-primary';
 
 /**
- * The phone's menu (board 40, V4-Menu-Roles): a bar at the bottom with Panel, Cumplimiento, Quejas and Más, as the role's
- * sidebar has them. Cumplimiento opens its standards; Más opens the whole menu.
+ * The phone's menu (board 40, V4-Menu-Roles): a bar at the bottom with Panel, Normas, Quejas and Más, as the role's
+ * sidebar has them. Normas opens the standards of "Cumple la norma"; Más opens the whole menu.
  */
 export function MobileTabBar() {
     const { auth, tenant, inCourse } = usePage().props;

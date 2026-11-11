@@ -11,14 +11,8 @@ import {
     Upload,
 } from 'lucide-react';
 import type { Appearance } from '@/hooks/use-appearance';
-import {
-    complianceNavItems,
-    mainNavItems,
-    type NavTenant,
-    settingsEntryHref,
-    superadminNavItems,
-} from '@/lib/app-navigation';
-import { toolNavItems } from '@/lib/tool-navigation';
+import { type NavTenant, settingsEntryHref } from '@/lib/app-navigation';
+import { navSections } from '@/lib/nav-sections';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
 import { index as campaigns } from '@/routes/tenant/campaigns';
@@ -90,12 +84,9 @@ export function paletteCommands({
     impersonating,
     actions,
 }: Options): PaletteCommand[] {
-    const pages = [
-        ...mainNavItems(tenant, isSuperadmin),
-        ...complianceNavItems(tenant),
-        ...toolNavItems(tenant),
-        ...(isSuperadmin ? superadminNavItems : []),
-    ];
+    const pages = navSections({ tenant, isSuperadmin }).flatMap(
+        (section) => section.items,
+    );
 
     return [
         ...companyActions(tenant, actions.visit),

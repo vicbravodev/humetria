@@ -1,4 +1,5 @@
 import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import { listeningNavItems } from '@/lib/tool-navigation';
 import type { NavItem, NavTenant } from '@/types';
 
 export type MobileTab =
@@ -7,7 +8,7 @@ export type MobileTab =
     | { key: 'more'; title: string };
 
 /**
- * The phone's bottom bar (board 40, V4-Menu-Roles): Panel, Cumplimiento (the standards the role sees), Quejas and Más,
+ * The phone's bottom bar (board 40, V4-Menu-Roles): Panel, Normas (the sidebar's "Cumple la norma"), Quejas and Más,
  * which opens the whole menu. Each tab appears only when the sidebar of that role has it, so it is role-aware the same way.
  */
 export function mobileTabs(
@@ -19,9 +20,8 @@ export function mobileTabs(
     const compliance = complianceNavItems(tenant, inCourse);
     const panel = main.find((item) => item.title === 'Panel');
     const complaints =
-        compliance.find((item) => item.title === 'Quejas') ??
+        listeningNavItems(tenant).find((item) => item.title === 'Quejas') ??
         (tenant?.role === 'complaints' ? main[0] : undefined);
-    const standards = compliance.filter((item) => item.title !== 'Quejas');
 
     const tabs: MobileTab[] = [];
 
@@ -29,11 +29,11 @@ export function mobileTabs(
         tabs.push({ key: 'panel', title: 'Panel', item: panel });
     }
 
-    if (standards.length > 0) {
+    if (compliance.length > 0) {
         tabs.push({
             key: 'compliance',
-            title: 'Cumplimiento',
-            items: standards,
+            title: 'Normas',
+            items: compliance,
         });
     }
 

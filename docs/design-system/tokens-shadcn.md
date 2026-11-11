@@ -128,6 +128,7 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --chart-4: #A08A70;
   --chart-5: #5C5248;
   --sidebar: #F2F6F5;
+  --band: #EAF2EF; /* secciones alternas de la landing */
   --sidebar-foreground: #14211F;
   --sidebar-primary: #0B7A6F;
   --sidebar-primary-foreground: #FFFFFF;
@@ -183,6 +184,7 @@ Figtree se carga desde Google Fonts (`wght@400;500;600`) o con `next/font/google
   --chart-4: #C2AE94;
   --chart-5: #8A7E70;
   --sidebar: #0B1211;
+  --band: #172422;
   --sidebar-foreground: #F1FAF8;
   --sidebar-primary: #3CCFBD;
   --sidebar-primary-foreground: #0F1716;
