@@ -81,6 +81,11 @@ Fijado con NOM-035 (segunda iteración, 2026-11-10). Todas las películas de her
 - Transiciones entre capítulos: solo fundido. Entradas con `easeOut`, salidas con `easeInOut`; sin deslizar contenedores al salir.
 - Los logos y el texto final no vibran: solo fundido, sin escala, desplazamiento ni desenfoque.
 
+**Teléfono (`kit/ui.tsx` → `Phone`)**
+- Todo celular en pantalla usa este componente: cuerpo negro con bisel, isla dinámica con cámara, barra de estado (hora, señal, wifi, batería), botones laterales, indicador de inicio y un reflejo de cristal leve. Sin logos, marcas ni nombres de dispositivo. La pantalla toma el tema (claro u oscuro); el cuerpo es negro en ambos.
+- Tamaño 360×700 por defecto; se puede reducir con `style` (`width`, `height`) si el capítulo lo pide. Contenido útil desde y≈66 (bajo la isla); las posiciones del contenido son absolutas dentro de la pantalla.
+- Los chips, campos y botones dentro del teléfono respetan el mismo mínimo de 26 px.
+
 **Voz y texto**
 - Una línea de ~15 palabras por capítulo, tuteo, sin promesas legales; Angie con `eleven_v4`. La marca se dice «Umetría» (`speech`) y se escribe «Humetría» (`text`).
 - Datos de ejemplo siempre marcados como tales en la trazabilidad; cada escena declara su evidencia.
