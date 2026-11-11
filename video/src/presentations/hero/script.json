@@ -2,8 +2,20 @@
   "outro": 75,
   "frame": {
     "tool": "Cómo funciona",
-    "chapters": ["Tu gente", "Herramientas", "Invitación", "Sin nombres", "Expediente"],
-    "headlines": ["Carga a tu gente una vez", "Elige qué aplicar", "Cada quien, desde su celular", "Resultados sin nombres", "Todo en un expediente"]
+    "chapters": [
+      "Tu gente",
+      "Herramientas",
+      "Invitación",
+      "Sin nombres",
+      "Expediente"
+    ],
+    "headlines": [
+      "Carga a tu gente una vez",
+      "Elige qué aplicar",
+      "Cada quien, desde su celular",
+      "Resultados sin nombres",
+      "Todo en un expediente"
+    ]
   },
   "lines": [
     {
@@ -13,12 +25,11 @@
     },
     {
       "id": "tools",
-      "text": "Eliges qué aplicar: normas como la NOM-035, o herramientas del día a día, como vacaciones o clima.",
-      "speech": "Eliges qué aplicar: normas como la NOM treinta y cinco, o herramientas del día a día, como vacaciones o clima."
+      "text": "Eliges qué aplicar entre nueve herramientas: normas oficiales, quejas, jornada, vacaciones, organigrama, clima y más."
     },
     {
       "id": "invite",
-      "text": "Cada persona recibe su enlace y contesta desde el celular. Tú ves el avance, no lo que contestó."
+      "text": "Cada persona recibe su enlace y contesta desde el celular. Tú ves el avance de cada herramienta, no lo que contestó."
     },
     {
       "id": "groups",
@@ -26,7 +37,7 @@
     },
     {
       "id": "dossier",
-      "text": "Y todo queda en un expediente: informes, evidencia y plan de acción, listos cuando la autoridad los pida."
+      "text": "Y todo queda en un expediente: informes, políticas, registros y evidencia, listos cuando la autoridad los pida."
     }
   ]
 }

@@ -90,14 +90,18 @@ const tileAt = (i: number): { x: number; y: number } => ({ x: 110 + (i % 3) * (T
 export const ToolsScene = ({ f, audioAt }: SceneProps) => {
     const c = useTheme();
     const picks: readonly { i: number; at: number }[] = [
-        { i: 0, at: audioAt + 66 },
-        { i: 6, at: audioAt + 176 },
-        { i: 8, at: audioAt + 208 },
+        { i: 1, at: audioAt + 112 },
+        { i: 3, at: audioAt + 152 },
+        { i: 5, at: audioAt + 180 },
+        { i: 6, at: audioAt + 210 },
+        { i: 7, at: audioAt + 238 },
+        { i: 8, at: audioAt + 262 },
     ];
     const center = (i: number): { x: number; y: number } => ({ x: tileAt(i).x + 300, y: tileAt(i).y + 95 });
-    const a = center(0);
-    const b = center(6);
-    const d = center(8);
+    const route = picks.flatMap((p) => [
+        { at: p.at - 6, x: center(p.i).x, y: center(p.i).y },
+        { at: p.at + 3, x: center(p.i).x, y: center(p.i).y },
+    ]);
     return (
         <>
             {TOOLS.map((t, i) => {
@@ -114,28 +118,17 @@ export const ToolsScene = ({ f, audioAt }: SceneProps) => {
                     </div>
                 );
             })}
-            <Cursor
-                f={f}
-                path={[
-                    { at: audioAt + 34, x: 960, y: 560 },
-                    { at: audioAt + 62, x: a.x, y: a.y },
-                    { at: audioAt + 104, x: a.x, y: a.y },
-                    { at: audioAt + 172, x: b.x, y: b.y },
-                    { at: audioAt + 180, x: b.x, y: b.y },
-                    { at: audioAt + 204, x: d.x, y: d.y },
-                ]}
-                clicks={picks.map((p) => p.at)}
-            />
+            <Cursor f={f} path={[{ at: audioAt + 50, x: 960, y: 560 }, ...route]} clicks={picks.map((p) => p.at)} />
         </>
     );
 };
 
 // ───────────────────────── 3. Cada quien, desde su celular ─────────────────────────
 const PB = { left: 300, top: 236, w: 360, h: 574 } as const;
-const AREAS = [
-    { name: 'Producción', total: 60, done: 48 },
-    { name: 'Administración', total: 36, done: 30 },
-    { name: 'Almacén', total: 24, done: 18 },
+const PROGRESS = [
+    { name: 'Clima y pulso', total: 60, done: 48 },
+    { name: 'Ley Silla', total: 36, done: 30 },
+    { name: 'NOM-037', total: 24, done: 18 },
 ] as const;
 
 export const InviteScene = ({ f, audioAt }: SceneProps) => {
@@ -169,12 +162,12 @@ export const InviteScene = ({ f, audioAt }: SceneProps) => {
                 </div>
             </Phone>
             <Card style={{ left: 780, top: 250, width: 1030, height: 540, ...enter(f, 8, { dur: dur.scene, y: 18 }) }}>
-                <Title>Avance de la campaña</Title>
+                <Title>Avance por herramienta</Title>
                 <div style={{ position: 'absolute', right: 44, top: 40, fontSize: 30, fontWeight: 600, color: c.primary }}>{`${Math.round(96 * total)} de 120`}</div>
                 <div style={{ position: 'absolute', left: 44, right: 44, top: 104, height: 20, borderRadius: 99, background: c.track }}>
                     <div style={{ height: '100%', borderRadius: 99, background: c.primary, width: `${80 * total}%` }} />
                 </div>
-                {AREAS.map((a, i) => {
+                {PROGRESS.map((a, i) => {
                     const g = tween(f, fillStart + 30 + i * 8, 70, easeInOut);
                     return (
                         <div key={a.name} style={{ position: 'absolute', left: 44, right: 44, top: 152 + i * 76, height: 64, boxSizing: 'border-box', borderRadius: radius.control, background: c.muted, border: `1px solid ${c.border}`, ...enter(f, audioAt + 30 + i * stagger, { dur: dur.enter, y: 10 }) }}>
@@ -264,7 +257,7 @@ export const GroupsScene = ({ f, audioAt }: SceneProps) => {
 };
 
 // ───────────────────────── 5. Todo en un expediente ─────────────────────────
-const DOCS = ['Informe del numeral 7.7', 'Lista de verificación NOM-037', 'Evaluación Ley Silla', 'Plan de acción con evidencia'] as const;
+const DOCS = ['Informe de riesgo psicosocial', 'Política de teletrabajo', 'Registro de jornada', 'Organigrama vigente'] as const;
 
 export const DossierScene = ({ f, audioAt }: SceneProps) => {
     const c = useTheme();

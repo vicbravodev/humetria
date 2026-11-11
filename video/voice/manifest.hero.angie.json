@@ -1,7 +1,7 @@
 {
   "presentation": "hero",
   "voice": "angie",
-  "masteredAt": "2026-11-11T03:49:03.787Z",
+  "masteredAt": "2026-11-11T04:00:52.590Z",
   "lines": [
     {
       "id": "people",
@@ -16,8 +16,8 @@
     {
       "id": "tools",
       "file": "audio/hero/angie/l2.mp3",
-      "durationSec": 7.967347,
-      "fingerprint": "7a47f5df2c25",
+      "durationSec": 9.325714,
+      "fingerprint": "0704d260b1fb",
       "generatedWith": {
         "voiceId": "eeTcHFmLuUzCOHvnwvdr",
         "modelId": "eleven_v4"
@@ -26,8 +26,8 @@
     {
       "id": "invite",
       "file": "audio/hero/angie/l3.mp3",
-      "durationSec": 6.687347,
-      "fingerprint": "81719f1f04ed",
+      "durationSec": 7.706122,
+      "fingerprint": "2214c8f1258d",
       "generatedWith": {
         "voiceId": "eeTcHFmLuUzCOHvnwvdr",
         "modelId": "eleven_v4"
@@ -46,8 +46,8 @@
     {
       "id": "dossier",
       "file": "audio/hero/angie/l5.mp3",
-      "durationSec": 7.392653,
-      "fingerprint": "a83eb7f5fa4a",
+      "durationSec": 7.967347,
+      "fingerprint": "14d8967382e7",
       "generatedWith": {
         "voiceId": "eeTcHFmLuUzCOHvnwvdr",
         "modelId": "eleven_v4"
