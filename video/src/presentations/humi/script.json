@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Humi, el asistente",
+    "chapters": ["Pregunta", "Consulta", "Escenarios", "Límites"],
+    "headlines": ["Pregúntale con tus palabras", "Responde con datos y fuentes", "Explica escenarios", "Solo lee y explica"]
+  },
+  "lines": [
+    { "id": "ask", "text": "Humi vive dentro del panel. Le preguntas con tus palabras qué te falta para estar al día." },
+    { "id": "answer", "text": "Consulta el avance y los resultados agrupados de tu empresa, y te muestra de dónde sale cada cifra." },
+    { "id": "scenarios", "text": "También explica los escenarios de Compensación y te lleva a la pantalla donde se resuelve." },
+    { "id": "limits", "text": "Solo lee y explica: no cambia datos, no ve respuestas individuales y solo habla de tu empresa." }
+  ]
+}

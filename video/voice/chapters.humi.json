@@ -1,0 +1,22 @@
+{
+  "id": "humi",
+  "durationSec": 31.4,
+  "chapters": [
+    {
+      "label": "Pregunta",
+      "at": 0
+    },
+    {
+      "label": "Consulta",
+      "at": 6.73
+    },
+    {
+      "label": "Escenarios",
+      "at": 14.33
+    },
+    {
+      "label": "Límites",
+      "at": 20.73
+    }
+  ]
+}
