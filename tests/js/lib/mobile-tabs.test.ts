@@ -19,13 +19,10 @@ const shape = (tabs: ReturnType<typeof mobileTabs>) =>
     );
 
 describe('mobileTabs', () => {
-    it('folds the menu of whoever runs the company into Panel, Cumplimiento, Quejas and Más (board 40)', () => {
+    it('folds the menu of whoever runs the company into Panel, Normas, Quejas and Más (board 40, named after the sidebar families)', () => {
         expect(shape(mobileTabs(acme('owner'), false))).toEqual([
             'Panel',
-            [
-                'Cumplimiento',
-                ['NOM-035', 'NOM-037', 'Ley Silla', 'Asistencia', 'Vacaciones'],
-            ],
+            ['Normas', ['NOM-035', 'NOM-037', 'Ley Silla', 'Asistencia']],
             'Quejas',
             'Más',
         ]);
@@ -34,14 +31,14 @@ describe('mobileTabs', () => {
     it('leaves Quejas out for whoever neither handles complaints nor manages the channel', () => {
         expect(shape(mobileTabs(acme('viewer', false), false))).toEqual([
             'Panel',
-            ['Cumplimiento', ['NOM-035', 'NOM-037', 'Ley Silla']],
+            ['Normas', ['NOM-035', 'NOM-037', 'Ley Silla']],
             'Más',
         ]);
     });
 
     it('gives the Comisión its two standards and the outside handler its cases, as their menus do', () => {
         expect(shape(mobileTabs(acme('committee', false), false))).toEqual([
-            ['Cumplimiento', ['NOM-037', 'Ley Silla']],
+            ['Normas', ['NOM-037', 'Ley Silla']],
             'Más',
         ]);
         expect(shape(mobileTabs(acme('complaints'), false))).toEqual([

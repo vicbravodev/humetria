@@ -2,13 +2,8 @@ import { Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import { Fragment } from 'react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import {
-    complianceNavItems,
-    mainNavItems,
-    navTrail,
-    superadminNavItems,
-} from '@/lib/app-navigation';
-import { toolNavItems } from '@/lib/tool-navigation';
+import { navTrail } from '@/lib/app-navigation';
+import { navSections } from '@/lib/nav-sections';
 import type { BreadcrumbItem } from '@/types';
 
 /**
@@ -22,24 +17,11 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
         items.length > 0
             ? items
             : navTrail(
-                  [
-                      {
-                          label: tenant?.trade_name ?? 'Humetría',
-                          items: mainNavItems(tenant, auth.isSuperadmin),
-                      },
-                      {
-                          label: 'Cumplimiento',
-                          items: complianceNavItems(tenant),
-                      },
-                      {
-                          label: 'Herramientas',
-                          items: toolNavItems(tenant),
-                      },
-                      {
-                          label: 'Plataforma',
-                          items: auth.isSuperadmin ? superadminNavItems : [],
-                      },
-                  ],
+                  navSections({
+                      tenant,
+                      isSuperadmin: auth.isSuperadmin,
+                      home: tenant?.trade_name ?? 'Humetría',
+                  }),
                   currentUrl,
               );
 
