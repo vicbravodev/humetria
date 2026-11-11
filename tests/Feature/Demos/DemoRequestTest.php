@@ -249,7 +249,7 @@ it('stores each profile and workforce range', function (string $profile, string 
 ]);
 
 it('stores a request for every tool Humetría offers', function (): void {
-    $tools = ['nom_035', 'nom_037', 'ley_silla', 'complaints', 'compensation'];
+    $tools = ['nom_035', 'nom_037', 'ley_silla', 'complaints', 'compensation', 'attendance', 'leave', 'org_chart', 'engagement'];
 
     $this->post(route('demo-requests.store'), demoRequest(['tools' => $tools]))
         ->assertSessionHasNoErrors();

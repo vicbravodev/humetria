@@ -14,6 +14,10 @@ enum Tool: string
     case LeySilla = 'ley_silla';
     case Complaints = 'complaints';
     case Compensation = 'compensation';
+    case Attendance = 'attendance';
+    case Leave = 'leave';
+    case OrgChart = 'org_chart';
+    case Engagement = 'engagement';
 
     public function label(): string
     {
@@ -23,6 +27,10 @@ enum Tool: string
             self::LeySilla => 'Ley Silla',
             self::Complaints => 'Buzón de quejas',
             self::Compensation => 'Compensación',
+            self::Attendance => 'Registro de jornada',
+            self::Leave => 'Vacaciones y permisos',
+            self::OrgChart => 'Organigrama',
+            self::Engagement => 'Clima y pulso',
         };
     }
 }

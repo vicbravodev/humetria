@@ -48,3 +48,5 @@ yarn-error.log
 /coverage.xml
 /video/node_modules
 /video/out
+/video/hyperframes/*/out
+/video/hyperframes/*/.hyperframes
