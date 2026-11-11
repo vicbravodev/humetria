@@ -6,6 +6,7 @@ use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Response;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -91,7 +92,7 @@ it('explains a link that does not work, naming no company', function (bool $dark
 
 it('says the survey is closed once its last day passed', function (bool $dark, bool $mobile): void {
     engagementInvitee();
-    Survey::query()->withoutGlobalScopes()->update(['closes_on' => now()->subDay()->toDateString()]);
+    Survey::query()->withoutGlobalScopes()->update(['closes_on' => SurveyClock::day()->subDay()->toDateString()]);
 
     visitPage('engagement/survey', '/engagement/the-token', $dark, $mobile)->assertSee('Esta encuesta ya cerró');
 })->with($looks);
