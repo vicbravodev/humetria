@@ -65,7 +65,7 @@ it('offers a template that Excel opens with its accents', function (): void {
 
     expect($response->headers->get('Content-Type'))->toContain('text/csv')
         ->and($response->headers->get('Content-Disposition'))->toContain('plantilla-empleados.csv')
-        ->and($response->getContent())->toStartWith("\u{FEFF}".CSV_HEADER."\n")
+        ->and($response->getContent())->toStartWith("\u{FEFF}".CSV_HEADER.",fecha_de_ingreso,jefe\n")
         ->and($response->getContent())->toContain('Planta Querétaro');
 });
 

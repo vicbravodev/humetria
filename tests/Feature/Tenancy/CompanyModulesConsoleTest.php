@@ -57,7 +57,7 @@ it('shows the staff the company with each module, whether it has it and where it
             ->where('modules.5.reason', 'Piloto')
             ->where('modules.5.ends_on', '1 feb 2027')
             ->where('modules.0.enabled', false)
-            ->where('modules.7.exists_in_code', false));
+            ->where('modules.7.exists_in_code', true));
     }
 });
 
@@ -121,7 +121,7 @@ it('takes a module away by hand with a reason, from a company that has no plan o
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Módulo quitado.']]);
     $this->post(route('companies.modules.revoke', $planned), ['module' => 'seating', 'reason' => 'Falta de pago'])->assertSessionHasNoErrors();
 
-    expect(consoleModules($legacy))->toBe(['attendance', 'nom035', 'nom037', 'complaints'])
+    expect(consoleModules($legacy))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate'])
         ->and(consoleModules($planned))->toBe(['nom035']);
     Log::shouldHaveReceived('info')->with('tenant.module_revoked', ['tenant_id' => $legacy->id, 'module' => 'seating']);
     expect(AuditEntry::query()->where('event', 'tenant.module_revoked')->where('metadata->tenant_id', $legacy->id)->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $legacy->id, 'module' => 'seating', 'reason' => 'Pidió pausar Ley Silla']);

@@ -17,7 +17,7 @@ export default function LandingHero() {
         <section
             id="inicio"
             aria-labelledby="hero-title"
-            className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 lg:pt-20 lg:pb-28"
+            className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 lg:pt-20"
         >
             <div className="flex flex-col gap-7">
                 <HeroHeadline />
@@ -40,20 +40,25 @@ export default function LandingHero() {
                         <a href="#como-funciona">Ver cómo funciona</a>
                     </Button>
                 </m.div>
-                <m.p
+                <m.ul
                     {...after(0.75)}
                     data-test="hero-tools"
-                    className="text-sm text-muted-foreground"
+                    aria-label="Herramientas disponibles"
+                    className="flex max-w-[50ch] flex-wrap gap-x-4 gap-y-2 text-sm leading-5 text-muted-foreground"
                 >
-                    {TOOLS.map((tool) => tool.name).join(' · ')}
-                </m.p>
+                    {TOOLS.map((tool) => (
+                        <li key={tool.key} className="whitespace-nowrap">
+                            {tool.name}
+                        </li>
+                    ))}
+                </m.ul>
             </div>
             <LoopVideo
                 name="humetria-hero"
                 test="hero-video"
-                caption="Así funciona, en 40 segundos"
-                description="cargas a tu gente, cada persona contesta desde su celular, los resultados se agrupan sin nombres y el expediente queda listo para la STPS."
-                className="aspect-[4/3]"
+                caption="Así funciona, en 45 segundos. Con voz"
+                description="cargas a tu gente una sola vez, eliges entre nueve herramientas cuáles aplicar, cada persona contesta desde su celular con un enlace de un solo uso, los resultados llegan por grupos sin nombres y todo queda en un expediente."
+                className="aspect-video"
             />
         </section>
     );

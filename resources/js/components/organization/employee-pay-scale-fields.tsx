@@ -2,6 +2,7 @@ import FormField from '@/components/form-field';
 import EmployeeGradeFields from '@/components/organization/employee-grade-fields';
 import EmployeeChoiceField from '@/components/organization/employee-choice-field';
 import EmployeeFormSection from '@/components/organization/employee-form-section';
+import EmployeeSeniorityField from '@/components/organization/employee-seniority-field';
 import { useIsUnion } from '@/hooks/use-is-union';
 import { catalogOption, clearableOptions } from '@/lib/employee-form';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
@@ -54,6 +55,10 @@ export default function EmployeePayScaleFields({
                     error={errors['staff_group']}
                 />
             </div>
+            <EmployeeSeniorityField
+                error={errors['seniority_on']}
+                defaultValue={employee?.seniority_on ?? undefined}
+            />
             <EmployeeChoiceField
                 name="state"
                 label="Estado"

@@ -1,0 +1,1 @@
+RH agrega a una persona al listado de teletrabajo según su porcentaje de jornada, la persona contesta desde el celular la lista de verificación de su lugar de trabajo, RH arma y publica la política contestando preguntas y elige cada cuánto se verifica, con un aviso cuando un lugar está por vencer.

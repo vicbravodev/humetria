@@ -9,6 +9,7 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekPeriod;
+use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -61,6 +62,7 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
     linkThePhone($page);
 
     return $page->navigate('/a/acme')
+        ->waitForText('Mi semana')
         ->click('Mi semana')
         ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
@@ -97,6 +99,19 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
         ->assertNoAccessibilityIssues(1);
 
     expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Confirmed);
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('shows Ana a day of approved vacations as vacations, not as a day without marks', function (bool $dark): void {
+    $wednesday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->addDays(2)->toDateString();
+    LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => $wednesday, 'ends_on' => $wednesday, 'working_days' => 1]);
+
+    anaSeesHerWeek($dark)
+        ->assertSee('Vacaciones')
+        ->assertSee('Vacaciones o permiso')
+        ->assertPresent('[role="img"][aria-label*="miércoles ausente"]')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertNoAccessibilityIssues(1);
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('lets Ana say what is not right, with her reason', function (): void {
@@ -162,6 +177,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->toDateString();
     $page->navigate("/a/acme/week/{$monday}")
+        ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
         ->waitForText('Su respuesta')
         ->assertSee('Sin confirmar')
@@ -181,6 +197,7 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
 
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/a/acme')
+        ->waitForText('Marcar entrada')
         ->press('Marcar entrada')
         ->waitForText('Pedir una corrección')
         ->press('Pedir una corrección')

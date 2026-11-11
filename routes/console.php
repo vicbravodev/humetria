@@ -14,7 +14,13 @@ use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
+use App\Modules\Engagement\Actions\AnnounceUpcomingPulses;
+use App\Modules\Engagement\Actions\CloseExpiredSurveys;
+use App\Modules\Engagement\Actions\LaunchScheduledPulses;
+use App\Modules\Engagement\Support\Results\ItemStatisticsReport;
 use App\Modules\Interventions\Actions\SendProgramDigests;
+use App\Modules\Leave\Actions\GrantEntitlements;
+use App\Modules\Leave\Actions\RouteRequests;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -24,6 +30,22 @@ use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+
+Artisan::command('engagement:item-stats {survey}', function (string $survey, ItemStatisticsReport $report): int {
+    $lines = $report->lines($survey);
+
+    if ($lines === null) {
+        $this->error('No hay una encuesta con ese id.');
+
+        return 1;
+    }
+
+    foreach ($lines as $line) {
+        $this->line($line);
+    }
+
+    return 0;
+})->purpose('Print, per question of a survey, how many were shown it, answered and skipped it (for the pilot)');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
@@ -85,6 +107,27 @@ Artisan::command('attendance:close-days', function (CloseDays $closeDays): void 
     $this->info('Días cerrados: '.$closeDays->handle());
 })->purpose('Close the day before yesterday for every active person with a mark that day or a working day by their schedule (the registro de jornada)');
 
+Artisan::command('leave:grant-entitlements', function (GrantEntitlements $grant): void {
+    $this->info('Periodos otorgados: '.$grant->handle());
+})->purpose('Grant each active person the vacation period of every anniversary they reached since their company started using Vacaciones');
+
+Artisan::command('engagement:close-expired', function (CloseExpiredSurveys $closeExpired): void {
+    $this->info('Encuestas cerradas: '.$closeExpired->handle());
+})->purpose('Close the climate and pulse surveys whose last day is over');
+
+Artisan::command('engagement:launch-pulses', function (LaunchScheduledPulses $launch): void {
+    $this->info('Pulsos lanzados: '.$launch->handle());
+})->purpose('Launch the pulse of every company whose schedule is due today, and move its next date ahead');
+
+Artisan::command('engagement:announce-pulses', function (AnnounceUpcomingPulses $announce): void {
+    $this->info('Avisos enviados: '.$announce->handle());
+})->purpose('Tell owner and hr, three days before, that the scheduled pulse goes out, with the commitments still open');
+
+Artisan::command('leave:route-requests', function (RouteRequests $route): void {
+    $done = $route->handle();
+    $this->info("Solicitudes disfrutadas: {$done['taken']}, reasignadas: {$done['reassigned']}, escaladas a RH: {$done['escalated']}");
+})->purpose('Mark the vacations that ended as taken, give each waiting request to the manager the person has today, and pass to RH the ones no manager answered in time');
+
 Schedule::command('campaigns:close-expired')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('campaigns:send-digests')->weeklyOn(1, '9:00')->timezone(config()->string('app.display_timezone'))->onOneServer();
 Schedule::command('campaigns:remind-next-evaluations')->dailyAt('08:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
@@ -134,6 +177,16 @@ Artisan::command('billing:release-mail-holds', function (ReleaseMailHolds $relea
 
 // After the day's mail has gone out: what a send held and no mail took (people without an address) goes back to the quota.
 Schedule::command('billing:release-mail-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// After local midnight, so the anniversary of the day is granted on its day; a run again grants nothing twice and a day
+// it did not run is made up the next one.
+Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// After the grant: what ended yesterday becomes taken, and a request nobody answered reaches RH first thing in the day.
+Schedule::command('leave:route-requests')->dailyAt('00:40')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('engagement:close-expired')->hourly()->onOneServer()->withoutOverlapping();
+// First thing in the local morning, so a pulse goes out at the start of the working day; a run again launches nothing twice.
+Schedule::command('engagement:launch-pulses')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// Ten minutes later, and three days ahead of the run: the date of a heads-up is the day the launch command will find due.
+Schedule::command('engagement:announce-pulses')->dailyAt('08:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');

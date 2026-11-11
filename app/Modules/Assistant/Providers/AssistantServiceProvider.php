@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Assistant\Providers;
 
 use App\Modules\Assistant\Console\EvaluateAssistant;
+use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
+use App\Modules\Assistant\Support\TenantAiAccess;
 use App\Modules\Assistant\Support\ToolRegistry;
 use App\Modules\Assistant\Tools\GetCampaignProgress;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
@@ -29,6 +31,8 @@ final class AssistantServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(AiAccess::class, TenantAiAccess::class);
+
         // One reader per norm, in the order Humi tells them: a new norm (Ley Silla, violencia laboral…) is one more here.
         $this->app->singleton(ComplianceReaders::class, fn (Application $app): ComplianceReaders => new ComplianceReaders([
             $app->make(Nom035Reader::class),

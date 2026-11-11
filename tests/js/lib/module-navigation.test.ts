@@ -40,8 +40,13 @@ describe('the menu of a company with only some modules', () => {
             'NOM-037',
             'Ley Silla',
             'Asistencia',
+            'Vacaciones',
             'Quejas',
         ]);
+    });
+
+    it('lists Vacaciones for a company that has the vacations module', () => {
+        expect(compliance(['vacations'])).toEqual(['Vacaciones']);
     });
 
     it('leaves the outside handler of complaints with no menu when the company has no complaints module', () => {

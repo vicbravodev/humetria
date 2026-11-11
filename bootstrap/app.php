@@ -54,7 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Survey answers never go back into the session, even from a submission that fails validation (criterio C-22).
-        $exceptions->dontFlash(['answers']);
+        $exceptions->dontFlash(['answers', 'comments']);
 
         // A failed query's message embeds its bindings (emails, phones, answers…). Report it without them.
         $exceptions->report(function (QueryException $exception): false {
@@ -97,7 +97,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // The survey speaks "usted" to the person answering it; the panel, "tú".
-            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs('survey.*')
+            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs('survey.*', 'engagement.survey.*')
                 ? 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.'
                 : 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
 
@@ -107,13 +107,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // A survey left open longer than the session expires its page: back to the survey instead of the panel's 419,
         // with a word in "usted". The answers wait on the person's device, so sending again is all it takes.
         $exceptions->render(function (HttpException $exception, Request $request): ?RedirectResponse {
-            if ($exception->getStatusCode() !== 419 || ! $request->routeIs('survey.*')) {
+            if ($exception->getStatusCode() !== 419 || ! $request->routeIs('survey.*', 'engagement.survey.*')) {
                 return null;
             }
 
             Inertia::flash('toast', ['type' => 'info', 'message' => 'La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.']);
 
-            return redirect()->route('survey.show', Arr::only($request->route()?->parameters() ?? [], 'token'));
+            return redirect()->route($request->routeIs('engagement.survey.*') ? 'engagement.survey.show' : 'survey.show', Arr::only($request->route()?->parameters() ?? [], 'token'));
         });
 
         $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request, $exception));

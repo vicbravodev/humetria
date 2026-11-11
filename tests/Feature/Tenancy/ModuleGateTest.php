@@ -23,6 +23,10 @@ const MODULE_PAGES = [
     'nom037' => 'tenant.telework.index',
     'seating' => 'tenant.seating.index',
     'complaints' => 'tenant.complaints.index',
+    'vacations' => 'tenant.vacations.index',
+    'org_chart' => 'tenant.org-chart.index',
+    'pulse' => 'tenant.pulse.index',
+    'climate' => 'tenant.climate.index',
 ];
 
 /** Pages that answer 404 on their own until something exists, so they cannot prove the module is what opens them. */
@@ -90,13 +94,18 @@ it('answers 404 to a company of another account, whatever it has', function (str
 
 it('closes every route of a disabled module that opens without ids, and leaves them open while it is enabled', function (): void {
     $enabled = companyWithOnly(array_keys(MODULE_PAGES));
-    $disabled = companyWithOnly(['pulse']);
+    // A plan has at least one module: two companies with one each, so that every module is missing from one of them.
+    $withAttendance = companyWithOnly(['attendance']);
+    $withNom035 = companyWithOnly(['nom035']);
     $ownerOn = ownerOf($enabled);
-    $ownerOff = ownerOf($disabled);
+    $owners = [$withAttendance->id => ownerOf($withAttendance), $withNom035->id => ownerOf($withNom035)];
     $checked = 0;
     $closedAnyway = [];
 
-    foreach (ModuleRoutes::patterns() as $patterns) {
+    foreach (ModuleRoutes::patterns() as $module => $patterns) {
+        $disabled = $module === 'attendance' ? $withNom035 : $withAttendance;
+        $ownerOff = $owners[$disabled->id];
+
         foreach (Route::getRoutes()->getRoutes() as $route) {
             if (! Str::is($patterns, (string) $route->getName()) || ! in_array('GET', $route->methods(), true) || preg_match('/\{(?!tenant)/', $route->uri()) === 1) {
                 continue;
@@ -142,7 +151,7 @@ it('shares the modules the company has so the menu hides the rest', function ():
 
     $legacy = Tenant::factory()->create();
     $this->actingAs(ownerOf($legacy))->get(route('tenant.dashboard', $legacy))
-        ->assertInertia(fn (Assert $page) => $page->where('tenant.modules', ['attendance', 'nom035', 'nom037', 'seating', 'complaints']));
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.modules', ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']));
 });
 
 it('costs a company with no module rows no query for its modules, and one with rows a single one', function (): void {

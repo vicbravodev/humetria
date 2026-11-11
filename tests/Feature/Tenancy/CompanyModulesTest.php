@@ -27,7 +27,7 @@ function enabledModulesOf(Tenant $tenant): array
     return resolve(CompanyModules::class)->enabledKeys($tenant->id);
 }
 
-const EXISTING_MODULES = ['attendance', 'nom035', 'nom037', 'seating', 'complaints'];
+const EXISTING_MODULES = ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'];
 
 it('keeps every module a company can use today when it has no plan: nothing is lost by default', function (): void {
     $legacy = Tenant::factory()->create();
@@ -38,9 +38,6 @@ it('keeps every module a company can use today when it has no plan: nothing is l
     foreach (EXISTING_MODULES as $module) {
         expect(resolve(CompanyModules::class)->enabled($legacy->id, $module))->toBeTrue();
     }
-
-    // The modules that do not exist in code yet are only names: nobody has them before a plan says so.
-    expect(resolve(CompanyModules::class)->enabled($legacy->id, 'vacations'))->toBeFalse();
 });
 
 it('limits a company with a plan to that plan\'s modules', function (): void {
@@ -59,7 +56,7 @@ it('keeps the modules a plan takes away until the day the change takes effect, t
 
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2027-01-01'));
 
-    expect(enabledModulesOf($tenant))->toBe(['attendance', 'nom035', 'nom037', 'seating', 'complaints']);
+    expect(enabledModulesOf($tenant))->toBe(EXISTING_MODULES);
 
     $this->travelTo('2027-01-01 08:00:00');
 
@@ -102,8 +99,8 @@ it('logs and audits what the plan switched on and off', function (): void {
 
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['seating'], CarbonImmutable::now());
 
-    Log::shouldHaveReceived('info')->with('tenant.modules_synced', ['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'nom035', 'nom037', 'complaints']]);
-    expect(AuditEntry::query()->where('event', 'tenant.modules_synced')->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'nom035', 'nom037', 'complaints']]);
+    Log::shouldHaveReceived('info')->with('tenant.modules_synced', ['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate']]);
+    expect(AuditEntry::query()->where('event', 'tenant.modules_synced')->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate']]);
 });
 
 it('refuses a plan with no modules or with one that is not a module', function (array $modules): void {
@@ -128,11 +125,11 @@ it('lists every module with whether the company has it and where it comes from',
     $legacyRows = $byKey($legacy);
     expect(array_keys($legacyRows))->toBe(array_map(fn (Module $module): string => $module->value, Module::cases()))
         ->and($legacyRows['nom035'])->toMatchArray(['enabled' => true, 'source' => 'legacy', 'exists' => true])
-        ->and($legacyRows['vacations'])->toMatchArray(['enabled' => false, 'source' => null, 'exists' => false]);
+        ->and($legacyRows['vacations'])->toMatchArray(['enabled' => true, 'source' => 'legacy', 'exists' => true]);
 
     $plannedRows = $byKey($planned);
     expect($plannedRows['nom035'])->toMatchArray(['enabled' => true, 'source' => 'plan', 'ends_on' => null])
-        ->and($plannedRows['pulse'])->toMatchArray(['enabled' => true, 'source' => 'plan', 'exists' => false])
+        ->and($plannedRows['pulse'])->toMatchArray(['enabled' => true, 'source' => 'plan', 'exists' => true])
         // Still on until the cut, and it says until when.
         ->and($plannedRows['nom037'])->toMatchArray(['enabled' => true, 'source' => 'legacy', 'ends_on' => '1 ene 2027'])
         ->and($plannedRows['seating']['ends_on'])->toBe('1 ene 2027');

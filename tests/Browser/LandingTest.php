@@ -143,8 +143,8 @@ it('presents Humetría as an HR platform with all its tools', function (): void 
     visitPage('landing', '/')
         ->assertTitleContains('Herramientas de RH')
         ->assertSeeIn('#hero-title', 'Del celular de tu gente al expediente de la STPS')
-        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => document.querySelector("[data-test=hero-tools]").textContent', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación')
+        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
+        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-tools] li")].map((item) => item.textContent).join(" · ")', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación · Registro de jornada · Vacaciones y permisos · Organigrama · Clima y pulso')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
 
@@ -153,9 +153,14 @@ it('plays the hero film muted and in a loop, and lets the visitor pause it', fun
 
     visitPage('landing', '/')
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-hero.jpg')")
+        // The attribute, not only the property: axe's no-autoplay-audio rule reads it and otherwise waits for the narrated film to play.
+        ->assertScript("() => {$video}.hasAttribute('muted')")
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-hero-light.jpg')")
         ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.type).join()", 'video/webm,video/mp4')
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Pausar video')
+        ->assertAttribute('@hero-video-sound', 'aria-label', 'Activar sonido')
+        ->click('@hero-video-sound')
+        ->assertScript("() => ! {$video}.muted")
         ->click('@hero-video-toggle')
         ->assertScript("() => {$video}.paused")
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Reproducir video');
@@ -193,40 +198,90 @@ it('takes the header section links to how it works, confidentiality and Humi', f
     'Humi' => ['@header-humi', '#humi'],
 ]);
 
-it('details each of the five tools', function (): void {
-    $cards = 'document.querySelectorAll("#herramientas [data-test=tool-card]")';
-    $page = visitPage('landing', '/')
-        ->assertScript("() => {$cards}.length", 5);
+it('shows one tool at a time on a large stage, and a tab switches it', function (string $tool, string $hint, string $text): void {
+    $panel = 'document.querySelector("#herramientas [data-test=tool-panel]")';
 
-    foreach ([
-        'Factores de riesgo psicosocial',
-        'Teletrabajo',
-        'Asientos y descansos',
-        'Quejas y denuncias',
-        'Revisión salarial y contractual',
-    ] as $index => $hint) {
-        $page->assertScript("() => {$cards}[{$index}].querySelector('[data-test=tool-hint]').textContent", $hint);
-    }
-
-    $page->assertScript("() => {$cards}[1].textContent.toLowerCase().includes('lista de verificación')")
-        ->assertScript("() => {$cards}[2].textContent.includes('reglamento interior')")
-        ->assertScript("() => {$cards}[3].textContent.includes('nunca a la persona señalada')")
-        ->assertScript("() => {$cards}[4].textContent.includes('sindicato')")
+    visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-panel]").length', 1)
+        ->assertScript('() => document.querySelectorAll("#herramientas [role=tab]").length', 9)
+        ->click("@tool-tab-{$tool}")
+        ->assertAttribute("@tool-tab-{$tool}", 'aria-selected', 'true')
+        ->assertScript('() => window.location.hash', "#herramienta-{$tool}")
+        ->assertScript("() => document.querySelector('[data-test=tool-tab-{$tool}] [data-test=tool-hint]').textContent", $hint)
+        ->assertScript("() => {$panel}.textContent.includes(".json_encode($text).')')
         ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
+})->with([
+    'NOM-035' => ['nom_035', 'Factores de riesgo psicosocial', 'numeral 7.7'],
+    'NOM-037' => ['nom_037', 'Teletrabajo', 'lista de verificación'],
+    'Ley Silla' => ['ley_silla', 'Asientos y descansos', 'reglamento interior'],
+    'complaints' => ['complaints', 'Quejas y denuncias', 'nunca a la persona señalada'],
+    'compensation' => ['compensation', 'Revisión salarial y contractual', 'sindicato'],
+    'attendance' => ['attendance', 'Reloj checador y registro de jornada', '1 de enero de 2027'],
+    'leave' => ['leave', 'Vacaciones, permisos y saldos', 'saldo'],
+    'org chart' => ['org_chart', 'Quién reporta a quién', 'organigrama'],
+    'engagement' => ['engagement', 'Clima laboral y pulso', 'Nadie ve una respuesta individual'],
+]);
+
+it('opens on the tool the link names', function (): void {
+    $page = visitPage('landing', '/');
+    $page->script('() => { window.location.hash = "herramienta-engagement"; }');
+
+    $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
+        ->assertSeeIn('[data-test=tool-panel]', 'Nadie ve una respuesta individual');
 });
 
-it('jumps from the tools index to each tool and marks the one being read', function (): void {
+it('keeps the selected tool visible in the phone strip when the hash changes', function (): void {
+    $page = visitPage('landing', '/', mobile: true);
+    $page->script('() => { window.location.hash = "herramienta-engagement"; }');
+
+    $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
+        ->assertScript('() => { const tab = document.getElementById("tool-tab-engagement").getBoundingClientRect(); const strip = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
+        ->keys('@tool-tab-engagement', 'Home')
+        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true')
+        ->assertScript('() => { const tab = document.getElementById("tool-tab-nom_035").getBoundingClientRect(); const strip = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
+        ->assertNoJavaScriptErrors();
+});
+
+it('fits every complete tool presentation below the laptop header', function (): void {
+    $page = resizeTo(visitPage('landing', '/'), 1512, 982);
+
+    foreach (['nom_035', 'nom_037', 'ley_silla', 'complaints', 'compensation', 'attendance', 'leave', 'org_chart', 'engagement'] as $tool) {
+        $page->click("@tool-tab-{$tool}");
+        $page->script('() => { document.getElementById("herramientas").scrollIntoView({ behavior: "instant", block: "start" }); }');
+        $page->assertScript('() => { const panel = document.getElementById("tool-panel").getBoundingClientRect(); const tabs = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return panel.top >= 64 && panel.bottom <= window.innerHeight && tabs.top >= 64 && tabs.bottom <= window.innerHeight; }');
+    }
+
+    $page->assertNoJavaScriptErrors();
+});
+
+it('keeps the phone playback controls inside the video and respects reduced motion', function (): void {
+    $page = resizeTo(visit('/', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812);
+    $video = 'document.querySelector("[data-test=tool-film] video")';
+
+    $page->assertScript("() => {$video}.paused && ! {$video}.autoplay")
+        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Reproducir video')
+        ->assertScript('() => { const video = document.querySelector("[data-test=tool-film] video").getBoundingClientRect(); const control = document.querySelector("[data-test=tool-film-toggle]").getBoundingClientRect(); return control.left >= video.left && control.right <= video.right && control.top >= video.top && control.bottom <= video.bottom && control.width >= 44 && control.height >= 44; }')
+        ->click('@tool-film-toggle')
+        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
+        ->click('@tool-film-toggle')
+        ->assertScript("() => {$video}.paused")
+        ->assertNoJavaScriptErrors();
+});
+
+it('moves between tabs with the arrow keys', function (): void {
     visitPage('landing', '/')
-        ->click('@tool-link-compensation')
-        ->assertScript('() => window.location.hash', '#herramienta-compensation')
-        // The mark follows the glide: wait for it.
-        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=tool-link-compensation]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })');
+        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true')
+        ->click('@tool-tab-nom_035')
+        ->keys('@tool-tab-nom_035', 'ArrowRight')
+        ->assertAttribute('@tool-tab-nom_037', 'aria-selected', 'true')
+        ->keys('@tool-tab-nom_037', 'ArrowLeft')
+        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true');
 });
 
 it('lists what an inspector would ask for, one line per tool', function (): void {
     $page = visitPage('landing', '/');
 
-    foreach (['Informe del numeral 7.7', 'Listas de verificación', 'puestos de pie', 'Bitácora de cada queja'] as $item) {
+    foreach (['Informe del numeral 7.7', 'Listas de verificación', 'puestos de pie', 'Bitácora de cada queja', 'Reporte de jornada para la autoridad'] as $item) {
         $page->assertSeeIn('[data-test=inspection]', $item);
     }
 
@@ -250,15 +305,74 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
     visitPage('landing', '/')
         ->assertSeeIn('#humi', 'Pregúntale a Humi')
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.poster.endsWith('/video/humi-chat.jpg')")
-        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humi-chat.webm,humi-chat.mp4')
+        ->assertScript("() => {$video}.hasAttribute('muted')")
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-humi-light.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-humi-light.webm,humetria-humi-light.mp4')
         ->assertSeeIn('[data-test=humi-video] figcaption', 'Conversación de ejemplo')
         ->assertScript('() => document.querySelector("[data-test=humi-video] figcaption").textContent.includes("¿Qué me falta para estar al día en Planta Querétaro?")')
         // Once it scrolls into view it plays by itself; the button pauses it.
         ->assertScript("() => new Promise((resolve) => { {$video}.scrollIntoView(); if (! {$video}.paused) { resolve(true); } {$video}.addEventListener('playing', () => resolve(true)); })")
         ->assertAttribute('@humi-video-toggle', 'aria-label', 'Pausar video')
+        ->assertAttribute('@humi-video-sound', 'aria-label', 'Activar sonido')
+        ->click('@humi-video-sound')
+        ->assertScript("() => ! {$video}.muted")
         ->click('@humi-video-toggle')
         ->assertScript("() => {$video}.paused");
+});
+
+it('shows each tool as a narrated film with chapters, and a chapter jumps to the moment its narration starts', function (string $tool, string $film, float $third, float $fourth): void {
+    $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
+
+    $page = visitPage('landing', '/');
+    $page->click("@tool-tab-{$tool}")
+        ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
+        ->assertScript("() => {$video}.hasAttribute('muted')")
+        ->assertScript("() => {$video}.poster.endsWith('/video/{$film}-light.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", "{$film}-light.webm,{$film}-light.mp4")
+        // Large enough to read what the film shows (at 1280 px the stage is wider than 700 px).
+        ->assertScript("() => {$video}.getBoundingClientRect().width > 700")
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=tool-chapter-]").length', 4)
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.length > 40');
+
+    $page->click('@tool-chapter-2')
+        ->assertScript("() => new Promise((resolve) => { const there = () => {$video}.currentTime >= {$third} && {$video}.currentTime < {$fourth} ? resolve(true) : requestAnimationFrame(there); there(); })")
+        ->assertAttribute('@tool-chapter-2', 'aria-current', 'true')
+        ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
+        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
+        // It starts muted; the visitor turns the narration on and off.
+        ->assertAttribute('@tool-film-sound', 'aria-label', 'Activar sonido')
+        ->click('@tool-film-sound')
+        ->assertScript("() => ! {$video}.muted")
+        ->assertAttribute('@tool-film-sound', 'aria-label', 'Silenciar video')
+        ->click('@tool-film-sound')
+        ->assertScript("() => {$video}.muted")
+        ->click('@tool-film-toggle')
+        ->assertScript("() => {$video}.paused");
+})->with([
+    'NOM-035' => ['nom_035', 'humetria-nom-035', 13.77, 21.47],
+    'NOM-037' => ['nom_037', 'humetria-nom-037', 12.4, 19.9],
+    'Ley Silla' => ['ley_silla', 'humetria-ley-silla', 14.2, 21.23],
+    'complaints' => ['complaints', 'humetria-complaints', 13.6, 19.93],
+    'compensation' => ['compensation', 'humetria-compensation', 15.8, 21.63],
+    'attendance' => ['attendance', 'humetria-attendance', 14.33, 20.97],
+    'leave' => ['leave', 'humetria-leave', 11.8, 17.33],
+    'org chart' => ['org_chart', 'humetria-org-chart', 11.67, 17.33],
+    'engagement' => ['engagement', 'humetria-engagement', 14.37, 21.57],
+]);
+
+it('shows the film drawn with the dark tokens in the dark theme', function (): void {
+    $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
+
+    visitPage('landing', '/', dark: true)
+        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-nom-035.jpg')")
+        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-nom-035.webm,humetria-nom-035.mp4');
+});
+
+it('keeps the film of the time clock on the QR and passkey flow', function (): void {
+    visitPage('landing', '/')
+        ->click('@tool-tab-attendance')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.includes("código QR")')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.includes("reporte para la autoridad")');
 });
 
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {

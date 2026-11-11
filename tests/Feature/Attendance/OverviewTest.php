@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(AttendanceController::class, AttendancePages::class, PanelScope::class);
 
-/** The queries of the overview, whatever the number of people, centers or marks (34: the page's schedules, for «Sin horario», and the road to the first mark). */
-const OVERVIEW_QUERIES = 34;
+/** The queries of the overview, whatever the number of people, centers or marks (35: the page's schedules, for «Sin horario», the road to the first mark, and one for the absences of the page's people). */
+const OVERVIEW_QUERIES = 35;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City: the last week that ended is 2 to 8 November.
@@ -92,18 +92,20 @@ describe('the summary', function (): void {
                 'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte',
                 'ordinaryMinutes' => 480, 'overtimeMinutes' => 120, 'flags' => [], 'status' => 'confirmed', 'atRisk' => false, 'hasSchedule' => false,
                 'days' => [['worked' => 0, 'overtime' => 0], ['worked' => 600, 'overtime' => 120], ...array_fill(0, 5, ['worked' => 0, 'overtime' => 0])],
+                'absentDays' => [],
             ])
             ->where('people.data.1.status', 'disputed')
             ->where('people.data.2', [
                 'id' => $this->carla->id, 'name' => 'Carla Ruiz', 'jobTitle' => 'Analista', 'center' => 'Oficinas',
                 'ordinaryMinutes' => 480, 'overtimeMinutes' => 300, 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'], 'status' => 'pending', 'atRisk' => true, 'hasSchedule' => false,
                 'days' => [['worked' => 0, 'overtime' => 0], ['worked' => 780, 'overtime' => 300], ...array_fill(0, 5, ['worked' => 0, 'overtime' => 0])],
+                'absentDays' => [],
             ])
             // Dan has no marks and a week still pending.
             ->where('people.data.3', [
                 'id' => $this->dan->id, 'name' => 'Dan Soto', 'jobTitle' => 'Contador', 'center' => 'Oficinas',
                 'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'flags' => [], 'status' => 'pending', 'atRisk' => false, 'hasSchedule' => true,
-                'days' => array_fill(0, 7, ['worked' => 0, 'overtime' => 0]),
+                'days' => array_fill(0, 7, ['worked' => 0, 'overtime' => 0]), 'absentDays' => [],
             ])
             ->where('centers.total', 2)
             ->where('centers.data.0', ['id' => $this->office->id, 'name' => 'Oficinas', 'people' => 2, 'zones' => 0, 'screens' => 0])

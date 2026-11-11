@@ -84,6 +84,10 @@ it('labels every profile and headcount range', function (DemoProfile|Workforce|T
     [Tool::LeySilla, 'Ley Silla'],
     [Tool::Complaints, 'Buzón de quejas'],
     [Tool::Compensation, 'Compensación'],
+    [Tool::Attendance, 'Registro de jornada'],
+    [Tool::Leave, 'Vacaciones y permisos'],
+    [Tool::OrgChart, 'Organigrama'],
+    [Tool::Engagement, 'Clima y pulso'],
 ]);
 
 it('shows the newest requests first', function (): void {

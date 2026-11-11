@@ -182,7 +182,7 @@ it('keeps the company template and the company columns as they were', function (
     $owner = ownerOf($company);
 
     $template = $this->actingAs($owner)->get(route('tenant.employees.import.template', $company))->assertOk()->getContent();
-    expect($template)->toStartWith("\u{FEFF}nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado\n");
+    expect($template)->toStartWith("\u{FEFF}nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado,fecha_de_ingreso,jefe\n");
 
     $this->actingAs($owner)
         ->post(route('tenant.employees.import.store', $company), ['confirm' => '1', 'file' => unionFile(['E-001,Ana'], 'numero_de_empleado,nombre')])

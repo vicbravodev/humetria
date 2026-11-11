@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Enums;
 
 /**
- * What a company can have on or off: the keys of the catalog's modules (config/billing.php). Four of them are only names so far,
- * because their tools are not built (vacations, org chart, pulse, climate): they have no routes and no jobs to switch.
+ * What a company can have on or off: the keys of the catalog's modules (config/billing.php).
  */
 enum Module: string
 {
@@ -38,9 +37,7 @@ enum Module: string
     /** Whether the tool exists in the code today, so a company without a plan keeps it. */
     public function existsInCode(): bool
     {
-        return match ($this) {
-            self::Attendance, self::Nom035, self::Nom037, self::Seating, self::Complaints => true,
-            self::Vacations, self::OrgChart, self::Pulse, self::Climate => false,
-        };
+        // Every module of the catalog is built now: a company without a plan keeps all of them.
+        return true;
     }
 }

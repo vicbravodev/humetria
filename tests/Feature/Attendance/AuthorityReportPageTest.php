@@ -99,6 +99,11 @@ function spyOnRosterReads(): ArrayObject
         {
             return $this->roster->matchingIds($query);
         }
+
+        public function idsByEmployeeNumber(array $numbers): array
+        {
+            return $this->roster->idsByEmployeeNumber($numbers);
+        }
     });
 
     return $reads;

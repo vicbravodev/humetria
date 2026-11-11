@@ -8,8 +8,8 @@ import { duration } from '@/lib/attendance/week-text';
 /** What a bar's top stands for, in minutes. */
 export const RIBBON_CAP_MINUTES = 12 * 60;
 
-/** One day: all the minutes worked and, of them, the overtime. */
-export type RibbonDay = { worked: number; overtime: number };
+/** One day: all the minutes worked and, of them, the overtime; `absent` when the person was away with vacations or a leave. */
+export type RibbonDay = { worked: number; overtime: number; absent?: boolean };
 
 /** One bar: its ordinary and overtime parts as a percentage of the cap, and whether the day passed 12 h. */
 export type RibbonBar = {
@@ -53,12 +53,21 @@ export function ribbonBars(days: readonly RibbonDay[]): RibbonBar[] {
     });
 }
 
-/** What a screen reader says of the ribbon: «Horas por día: lunes 8 h, martes sin horas, …». */
+/** Which of the seven days are drawn as away: vacations or a leave and no hours (a day worked draws its hours). */
+export function ribbonAway(days: readonly RibbonDay[]): boolean[] {
+    return DAYS.map(
+        (_, index) =>
+            days[index]?.absent === true && (days[index]?.worked ?? 0) === 0,
+    );
+}
+
+/** What a screen reader says of the ribbon: «Horas por día: lunes 8 h, martes sin horas, miércoles ausente, …». */
 export function ribbonLabel(days: readonly RibbonDay[]): string {
     const each = DAYS.map((name, index) => {
         const worked = days[index]?.worked ?? 0;
+        const empty = days[index]?.absent === true ? 'ausente' : 'sin horas';
 
-        return `${name} ${worked === 0 ? 'sin horas' : duration(worked)}`;
+        return `${name} ${worked === 0 ? empty : duration(worked)}`;
     });
 
     return `Horas por día: ${each.join(', ')}`;

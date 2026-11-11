@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { CARD, CARD_PAD, HEADER_H, c, floatShadow, radius, risk, type Risk } from './theme';
 
-const icons = {
+export const icons = {
     file: (
         <>
             <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />

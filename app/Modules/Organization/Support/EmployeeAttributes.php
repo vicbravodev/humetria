@@ -40,13 +40,14 @@ final class EmployeeAttributes
      * What the pay scale uses, apart because an import file may not carry it and then leaves it as it is.
      *
      * @param  list<string>  $absent  the columns to leave out, which an update then leaves as they are.
-     * @return array{job_grade_id?: string|null, hired_on?: CarbonImmutable|null, staff_group?: StaffGroup|null, state?: string|null}
+     * @return array{job_grade_id?: string|null, hired_on?: CarbonImmutable|null, seniority_on?: CarbonImmutable|null, staff_group?: StaffGroup|null, state?: string|null}
      */
     public static function payScale(EmployeeData $data, ?JobGrade $jobGrade, array $absent = []): array
     {
         return [
             ...(in_array('job_grade_id', $absent, true) ? [] : ['job_grade_id' => $jobGrade?->id]),
             ...(in_array('hired_on', $absent, true) ? [] : ['hired_on' => $data->hiredOn]),
+            ...(in_array('seniority_on', $absent, true) ? [] : ['seniority_on' => $data->seniorityOn]),
             ...(in_array('staff_group', $absent, true) ? [] : ['staff_group' => $data->staffGroup]),
             ...(in_array('state', $absent, true) ? [] : ['state' => $data->state]),
         ];

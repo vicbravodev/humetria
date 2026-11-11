@@ -1,0 +1,22 @@
+{
+  "id": "leave",
+  "durationSec": 26.4,
+  "chapters": [
+    {
+      "label": "Saldo por ley",
+      "at": 0
+    },
+    {
+      "label": "Solicitar",
+      "at": 6.5
+    },
+    {
+      "label": "Jefe aprueba",
+      "at": 11.8
+    },
+    {
+      "label": "Evidencia",
+      "at": 17.33
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Buzón de quejas",
+    "chapters": ["QR y anónima", "A quien toca", "Aviso discreto", "Seguimiento"],
+    "headlines": ["Escanea y presenta tu queja", "Llega a quien le toca", "Avisos sin contenido", "Seguimiento con referencia"]
+  },
+  "lines": [
+    { "id": "scan", "text": "Con el cartel QR de cada centro, cualquiera presenta su queja desde el celular, y puede ser anónima." },
+    { "id": "route", "text": "La queja llega solo a quien le toca, y nunca a la persona señalada." },
+    { "id": "notice", "text": "Los avisos por correo traen solo conteos: nunca el contenido de la queja." },
+    { "id": "follow", "text": "Quien atiende el caso lo revisa, y la persona ve su avance con su referencia." }
+  ]
+}

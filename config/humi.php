@@ -53,6 +53,7 @@ return [
     'regulations' => [
         'NOM-035' => 'docs/normas/nom-035/criterios.md',
         'NOM-037' => 'docs/normas/nom-037/criterios.md',
+        'Vacaciones' => 'docs/normas/vacaciones/criterios.md',
     ],
 
 ];

@@ -13,6 +13,7 @@ export default function EmployeeChoiceField({
     error,
     allowNew = false,
     placeholder,
+    onChange,
 }: {
     name: string;
     label: string;
@@ -22,6 +23,8 @@ export default function EmployeeChoiceField({
     allowNew?: boolean;
     /** What shows while nothing is chosen; by default it asks to choose, or to type when `allowNew`. */
     placeholder?: string;
+    /** Called with each choice, for whoever needs to know it before the form is sent. */
+    onChange?: (option: ChoiceOption) => void;
 }) {
     const id = `employee-${name}`;
 
@@ -39,6 +42,7 @@ export default function EmployeeChoiceField({
                 }
                 invalid={error !== undefined}
                 describedBy={error === undefined ? undefined : `${id}-error`}
+                {...(onChange === undefined ? {} : { onChange })}
             />
             <InputError id={`${id}-error`} message={error} />
         </div>

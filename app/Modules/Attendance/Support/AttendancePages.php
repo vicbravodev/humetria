@@ -13,6 +13,7 @@ use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
@@ -27,7 +28,8 @@ use Illuminate\Support\Facades\Gate;
  * never one to come) of the people active in the company's centers in use, or in one of them. How many are al día,
  * objetadas, sin confirmar and near the year's limits, the correction requests waiting and the centers with no zone;
  * then the people of one state, 25 at a time, searched by name, with their hours and the limits they broke, and the
- * centers 25 at a time. Never a position, a coordinate or a device.
+ * centers 25 at a time. Which days a person was away with vacations or a leave, never which of the two. Never a position,
+ * a coordinate or a device.
  */
 final readonly class AttendancePages
 {
@@ -36,7 +38,7 @@ final readonly class AttendancePages
     /** The tabs of the list: every person, each answer, and the weeks at risk. */
     private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk'];
 
-    public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup) {}
+    public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup, private Absences $absences) {}
 
     /**
      * @return array<string, mixed>
@@ -67,6 +69,8 @@ final readonly class AttendancePages
         $scheduled = array_flip(AttendanceSchedule::query()
             ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
             ->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
+        // The days each person of the page was away with vacations or a leave: not days they missed. One query.
+        $away = AbsentDays::of($this->absences, $period, array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())));
 
         return [
             'week' => [
@@ -100,6 +104,7 @@ final readonly class AttendancePages
                 'atRisk' => in_array($person->id, $atRisk, true),
                 'hasSchedule' => isset($scheduled[$person->id]),
                 'days' => $this->ribbon($worked[$person->id] ?? [], $summaries[$person->id]->overtimeByDay ?? [], $period),
+                'absentDays' => array_keys($away[$person->id] ?? []),
             ]),
             'centers' => $this->centers($panel->byCenter, $zones),
             'setup' => $this->setup->of($names, $panel->byCenter),

@@ -32,7 +32,7 @@ function planOnDay(Plan $plan, string $startsOn, SubscriptionStatus $status = Su
 it('keeps a company that has an account but no plan with every module it can use today', function (): void {
     [$tenant] = paidCompany();
 
-    expect(companyModulesNow($tenant))->toBe(['attendance', 'nom035', 'nom037', 'seating', 'complaints']);
+    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']);
 });
 
 it('limits a company to the modules of the plan it is given, on the day the plan starts', function (): void {
@@ -83,7 +83,7 @@ it('moves the modules of the company through the console too, and no other compa
     $this->actingAs(superadmin())->put(route('billing.subscriptions.update', $tenant->id), subscriptionInput(['plan' => 'jornada', 'starts_on' => '2026-12-01']))->assertSessionHasNoErrors();
 
     expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart'])
-        ->and(companyModulesNow($other))->toBe(['attendance', 'nom035', 'nom037', 'seating', 'complaints']);
+        ->and(companyModulesNow($other))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']);
 });
 
 it('only names modules the catalog and Tenancy agree on', function (): void {

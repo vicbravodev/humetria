@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    absenceLabel,
     dayEvidence,
     ribbonDays,
     weekActions,
@@ -121,6 +122,29 @@ describe('ribbonDays', () => {
             { worked: 540, overtime: 60 },
             { worked: 0, overtime: 0 },
         ]);
+    });
+});
+
+describe('a day away', () => {
+    it('marks on the bar of the week the days of vacations or leave', () => {
+        expect(
+            ribbonDays([
+                { ...day, workedMinutes: 0, absence: 'vacation' },
+                { ...day, workedMinutes: 240, absence: 'leave' },
+                { ...day, absence: null },
+            ]),
+        ).toEqual([
+            { worked: 0, overtime: 0, absent: true },
+            { worked: 240, overtime: 0, absent: true },
+            { worked: 480, overtime: 0 },
+        ]);
+    });
+
+    it('names the absence in a word, never more than vacations or leave', () => {
+        expect(absenceLabel('vacation')).toBe('Vacaciones');
+        expect(absenceLabel('leave')).toBe('Permiso');
+        expect(absenceLabel(null)).toBeNull();
+        expect(absenceLabel(undefined)).toBeNull();
     });
 });
 

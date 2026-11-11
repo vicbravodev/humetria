@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class CreateEmployee
 {
-    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade, private CompanyLimits $limits) {}
+    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade, private SetManager $setManager, private CompanyLimits $limits) {}
 
     /**
      * @throws ValidationException when the plan has no seat left.
@@ -35,6 +35,9 @@ final readonly class CreateEmployee
 
             // Only the id: a person's name and contact data stay out of logs.
             Log::info('employee.created', ['employee_id' => $employee->id]);
+
+            // Apart from the rest, so the manager is in the audit trail from the first day.
+            $this->setManager->handle($employee, $data->managerId);
 
             // A union's people have no work center, which the evaluations need to count them.
             if ($data->workCenterId !== null) {

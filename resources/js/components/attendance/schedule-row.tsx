@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ChooseBox from '@/components/attendance/choose-box';
+import ChooseBox from '@/components/humetria/choose-box';
 import ScheduleDialog from '@/components/attendance/schedule-dialog';
 import ScheduleHoursCell from '@/components/attendance/schedule-hours-cell';
 import ScheduleWeekCell from '@/components/attendance/schedule-week-cell';

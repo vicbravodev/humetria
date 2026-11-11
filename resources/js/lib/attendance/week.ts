@@ -27,6 +27,8 @@ export type WeekDay = {
     overtimeMinutes: number;
     restDay: boolean;
     missingEnd: boolean;
+    /** Away that day with approved vacations or a leave (never its type): not a day they missed. Its marks still count. */
+    absence?: 'vacation' | 'leave' | null;
 };
 
 export type WeekSummary = {
@@ -91,6 +93,11 @@ function mark(json: unknown): WeekMark[] {
         : [];
 }
 
+/** Only vacations or leave: anything else is not an absence. */
+function away(absence: unknown): Pick<WeekDay, 'absence'> {
+    return absence === 'vacation' || absence === 'leave' ? { absence } : {};
+}
+
 function day(json: unknown): WeekDay[] {
     return isJson(json) &&
         typeof json['date'] === 'string' &&
@@ -107,6 +114,7 @@ function day(json: unknown): WeekDay[] {
                   overtimeMinutes: json['overtimeMinutes'],
                   restDay: json['restDay'] === true,
                   missingEnd: json['missingEnd'] === true,
+                  ...away(json['absence']),
               },
           ]
         : [];

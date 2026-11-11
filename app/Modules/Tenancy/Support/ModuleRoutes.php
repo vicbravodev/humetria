@@ -7,7 +7,6 @@ namespace App\Modules\Tenancy\Support;
 /**
  * The route names of each module, so one middleware can close them for a company that does not have it. The list is the
  * registry: ModuleGateTest fails with the name of any tenant.* route that is in none of them and not in `always()`.
- * Four modules of the catalog (vacations, org chart, pulse, climate) have no routes yet and are not here.
  */
 final class ModuleRoutes
 {
@@ -22,6 +21,10 @@ final class ModuleRoutes
             'nom037' => ['tenant.telework.*'],
             'seating' => ['tenant.seating.*'],
             'complaints' => ['tenant.complaints.*'],
+            'vacations' => ['tenant.vacations.*'],
+            'org_chart' => ['tenant.org-chart.*'],
+            'pulse' => ['tenant.pulse.*'],
+            'climate' => ['tenant.climate.*'],
         ];
     }
 

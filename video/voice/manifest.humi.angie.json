@@ -1,0 +1,47 @@
+{
+  "presentation": "humi",
+  "voice": "angie",
+  "masteredAt": "2026-11-11T04:11:08.814Z",
+  "lines": [
+    {
+      "id": "ask",
+      "file": "audio/humi/angie/l1.mp3",
+      "durationSec": 5.642449,
+      "fingerprint": "d455c6bf2cab",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "answer",
+      "file": "audio/humi/angie/l2.mp3",
+      "durationSec": 6.530612,
+      "fingerprint": "1a269056352b",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "scenarios",
+      "file": "audio/humi/angie/l3.mp3",
+      "durationSec": 5.32898,
+      "fingerprint": "007407d64865",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "limits",
+      "file": "audio/humi/angie/l4.mp3",
+      "durationSec": 7.079184,
+      "fingerprint": "a23e5ca65323",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}
