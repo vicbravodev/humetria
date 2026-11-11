@@ -32,7 +32,8 @@ it('shows a company with its modules and where each comes from', function (bool 
         ->assertSee('Motivo: Piloto de tres semanas')
         ->assertSee('Registro de jornada')
         ->assertSee('No habilitado')
-        ->assertSee('Aún no está disponible')
+        // Every module of the catalog is built now: none is offered as «not available yet».
+        ->assertDontSee('Aún no está disponible')
         ->assertSee('Conceder')
         ->assertSee('Quitar');
 })->with($looks);
