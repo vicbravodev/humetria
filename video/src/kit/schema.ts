@@ -21,6 +21,8 @@ export type SceneSpec = {
     lineId: string;
     /** Evidencia en el repositorio de lo que la escena afirma (ruta o documento). */
     evidence: readonly string[];
+    /** `false` desactiva el empuje de cámara (logos y cierres deben quedarse quietos). */
+    camera?: boolean;
     component: ComponentType<SceneProps>;
 };
 
@@ -33,7 +35,7 @@ export type Presentation = {
     height: number;
     fps: number;
     /** Marco de película de herramienta: nombre y un rótulo por escena (capítulo). */
-    frame?: { tool: string; chapters: readonly string[] };
+    frame?: { tool: string; chapters: readonly string[]; headlines?: readonly string[] };
     /** Frames que se queda la última escena (por defecto, el cierre de una pieza suelta). */
     hold?: number;
     lines: readonly ScriptLine[];

@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { Sequence, useCurrentFrame } from 'remotion';
 import { enter } from '../ease';
+import { Backdrop, Headline, PushIn } from './fx';
 import { Logo, Narration, SceneFrame, Stage, Subtitle } from './primitives';
 import type { Presentation, SceneProps } from './schema';
 import type { PlacedScene, } from './timeline';
@@ -37,7 +38,10 @@ const SceneInner = ({ p, s, text, Scene }: { p: Presentation; s: PlacedScene; te
     return (
         <SceneFrame f={f} total={s.dur} last={s.index === p.scenes.length - 1}>
             {p.frame ? <ChapterHeader f={f} tool={p.frame.tool} label={p.frame.chapters[s.index] ?? ''} n={s.index + 1} /> : null}
-            <Scene f={f} dur={s.dur} audioAt={s.audioAt} audioDur={s.audioDur} />
+            <PushIn f={f} total={s.dur} still={p.scenes[s.index]?.camera === false}>
+                {p.frame?.headlines?.[s.index] ? <Headline f={f} at={4} text={p.frame.headlines[s.index] ?? ''} /> : null}
+                <Scene f={f} dur={s.dur} audioAt={s.audioAt} audioDur={s.audioDur} />
+            </PushIn>
             <Subtitle f={f} text={text} audioAt={s.audioAt} audioDur={s.audioDur} />
         </SceneFrame>
     );
@@ -45,6 +49,7 @@ const SceneInner = ({ p, s, text, Scene }: { p: Presentation; s: PlacedScene; te
 
 export const FilmView = ({ p, timeline, theme }: { p: Presentation; timeline: ReturnType<typeof layout>; theme: ThemeName }) => (
     <Stage theme={theme}>
+        <Backdrop />
         {timeline.scenes.map((s) => {
             const spec = p.scenes[s.index];
             const line = p.lines.find((l) => l.id === spec?.lineId);

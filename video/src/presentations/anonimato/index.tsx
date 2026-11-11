@@ -19,7 +19,7 @@ export const anonimato: Presentation = {
         { id: 'link', lineId: 'link', evidence: ['CLAUDE.md#Privacidad (enlace de un solo uso)', 'resources/js/components/landing/landing-tools.ts (respuesta desde el celular)'], component: LinkScene },
         { id: 'split', lineId: 'split', evidence: ['CLAUDE.md#Privacidad (tablas sin llave hacia empleado o invitación; la invitación solo registra «ya contestó»)'], component: SplitScene },
         { id: 'groups', lineId: 'groups', evidence: ['CLAUDE.md#Privacidad (mínimo de respondentes por grupo, default 5, configurable)'], component: GroupsScene },
-        { id: 'close', lineId: 'close', evidence: ['CLAUDE.md#Privacidad (resumen)'], component: CloseScene },
+        { id: 'close', lineId: 'close', evidence: ['CLAUDE.md#Privacidad (resumen)'], camera: false, component: CloseScene },
     ],
 };
 
