@@ -25,7 +25,7 @@ export default function ToolsSection() {
         <section
             id="herramientas"
             aria-labelledby="herramientas-title"
-            className={cn('scroll-mt-16 bg-sidebar', SECTION)}
+            className={cn('scroll-mt-16 border-y bg-band', SECTION)}
         >
             <div className={cn(WRAP, 'flex flex-col gap-5')}>
                 <Reveal className="mb-3 flex max-w-[760px] flex-col gap-4 lg:mb-9">

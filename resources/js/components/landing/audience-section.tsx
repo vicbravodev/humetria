@@ -31,7 +31,7 @@ export default function AudienceSection() {
     return (
         <section
             aria-labelledby="para-quien"
-            className={cn('bg-sidebar', SECTION)}
+            className={cn('border-y bg-band', SECTION)}
         >
             <div className={cn(WRAP, 'flex flex-col gap-8 lg:gap-14')}>
                 <h2 id="para-quien" className={TITLE}>

@@ -34,7 +34,7 @@ export default function ComplianceSection() {
         <section
             id="seccion-confidencialidad"
             aria-labelledby="confidencialidad"
-            className={cn('bg-sidebar', SECTION)}
+            className={cn('border-y bg-band', SECTION)}
         >
             <div
                 className={cn(
