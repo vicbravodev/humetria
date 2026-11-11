@@ -20,6 +20,7 @@ const answer = (overrides: Record<string, unknown> = {}) => ({
     current: quote('$2,490'),
     first_period: null,
     eligibility: null,
+    scheduled: null,
     ...overrides,
 });
 
@@ -45,6 +46,14 @@ describe('parseSubscriptionPreview', () => {
             applies: true,
             reason: 'Porque sí',
         });
+    });
+
+    it('reads the day a reduction waits for', () => {
+        const parsed = parseSubscriptionPreview(
+            answer({ scheduled: { effective_on: '1 dic 2026' } }),
+        );
+
+        expect(parsed?.scheduled).toEqual({ effective_on: '1 dic 2026' });
     });
 
     it.each([
@@ -91,6 +100,10 @@ describe('parseSubscriptionPreview', () => {
         ['a current that is not a quote', answer({ current: 'x' })],
         ['a first period that is not a quote', answer({ first_period: 'x' })],
         ['a note that is not one', answer({ eligibility: { applies: 'sí' } })],
+        [
+            'a schedule that is not one',
+            answer({ scheduled: { effective_on: 1 } }),
+        ],
     ])('refuses %s', (_name, value) => {
         expect(parseSubscriptionPreview(value)).toBeNull();
     });
@@ -103,6 +116,7 @@ describe('priceChange', () => {
             current: current === null ? null : quote(current),
             first_period: null,
             eligibility: null,
+            scheduled: null,
         }) satisfies SubscriptionPreview;
 
     it('says from what to what when the price moves', () => {

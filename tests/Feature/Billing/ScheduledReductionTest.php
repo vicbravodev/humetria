@@ -161,3 +161,20 @@ it('applies a company\'s whole plan at once while it is in trial: nobody is bill
     $subscription = Subscription::query()->where('tenant_id', $tenant->id)->sole();
     expect([$subscription->plan, $subscription->seats])->toBe([Plan::Jornada, 10])->and($subscription->pending_effective_on)->toBeNull();
 });
+
+it('shows the account\'s page what waits for the cut: what it will be and from when', function (): void {
+    $tenant = reductionCompany();
+    resolve(SetSubscription::class)->handle($tenant->id, reductionWish(Plan::Jornada, 30, 1));
+    $link = App\Modules\Billing\Models\AccountCompany::query()->where('tenant_id', $tenant->id)->sole();
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $link->billing_account_id))->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page
+        ->where('companies.data.0.subscription.scheduled', ['effective_on' => '1 dic 2026', 'summary' => 'Plan Jornada · 30 personas · 1 centro']));
+});
+
+it('shows nothing scheduled when nothing waits', function (): void {
+    $tenant = reductionCompany();
+    $link = App\Modules\Billing\Models\AccountCompany::query()->where('tenant_id', $tenant->id)->sole();
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $link->billing_account_id))->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page
+        ->where('companies.data.0.subscription.scheduled', null));
+});

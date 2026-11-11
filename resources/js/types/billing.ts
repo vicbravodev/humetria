@@ -100,6 +100,8 @@ export type SubscriptionView = {
     negotiated_price: string;
     negotiated_valid_until: string;
     quote: Quote;
+    /** What waits for the next cut (a reduction) and from when; null when nothing does. */
+    scheduled: { effective_on: string; summary: string } | null;
 };
 
 /** The server's answer while a plan is being typed: its price, what the company pays now and why a discount applies or not. */
@@ -108,6 +110,8 @@ export type SubscriptionPreview = {
     current: Quote | null;
     first_period: Quote | null;
     eligibility: DiscountNote | null;
+    /** When a reduction in the plan being typed takes effect (the next cut); null when everything applies at once. */
+    scheduled: { effective_on: string } | null;
 };
 
 /** What an account adds up to across its companies. */

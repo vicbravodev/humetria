@@ -176,3 +176,21 @@ it('is throttled, so a form that is typed fast cannot flood the server', functio
 it('keeps the preview out of reach while impersonating', function (): void {
     expect(App\Http\Middleware\ForbidWhileImpersonating::guards('billing.subscriptions.preview'))->toBeTrue();
 });
+
+it('says a reduction waits for the next cut, and that an increase or an unchanged plan waits for nothing', function (): void {
+    $this->travelTo('2026-11-26 15:00:00');
+    [$tenant] = paidCompany('consultant');
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 50, 'centers' => 2, 'status' => 'active']);
+
+    $preview = fn (array $overrides) => $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), previewInput($overrides))->assertOk();
+
+    $preview(['seats' => 40])->assertJsonPath('scheduled.effective_on', '1 dic 2026');
+    $preview(['seats' => 51])->assertJsonPath('scheduled', null);
+    $preview([])->assertJsonPath('scheduled', null);
+});
+
+it('has nothing scheduled for a company without a plan', function (): void {
+    [$tenant] = paidCompany('consultant');
+
+    $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), previewInput())->assertOk()->assertJsonPath('scheduled', null);
+});

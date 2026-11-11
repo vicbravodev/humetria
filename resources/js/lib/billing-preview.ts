@@ -79,6 +79,12 @@ function parseNote(value: unknown): DiscountNote | null {
         : null;
 }
 
+function parseSchedule(value: unknown): { effective_on: string } | null {
+    return isRecord(value) && typeof value['effective_on'] === 'string'
+        ? { effective_on: value['effective_on'] }
+        : null;
+}
+
 /** A part that may be null: null stays null, and anything else must parse, or it is undefined (not one). */
 export function optional<T>(
     value: unknown,
@@ -99,13 +105,15 @@ export function parseSubscriptionPreview(
     const current = optional(value['current'], parseQuote);
     const first = optional(value['first_period'], parseQuote);
     const note = optional(value['eligibility'], parseNote);
+    const scheduled = optional(value['scheduled'], parseSchedule);
 
     return quote === null ||
         current === undefined ||
         first === undefined ||
-        note === undefined
+        note === undefined ||
+        scheduled === undefined
         ? null
-        : { quote, current, first_period: first, eligibility: note };
+        : { quote, current, first_period: first, eligibility: note, scheduled };
 }
 
 /** "De $2,490 a $3,990": what the company pays now against what the plan being typed would cost; null when it is the same or either needs a quotation. */

@@ -44,6 +44,15 @@ export default function AccountCompanyPlan({
                         {subscription.profile_label}
                     </span>
                     <Badge variant="outline">{subscription.status_label}</Badge>
+                    {subscription.scheduled !== null && (
+                        <span
+                            data-test="plan-scheduled"
+                            className="text-caption text-muted-foreground"
+                        >
+                            El {subscription.scheduled.effective_on}:{' '}
+                            {subscription.scheduled.summary}
+                        </span>
+                    )}
                 </div>
             </TableCell>
             <TableCell className="text-sm whitespace-normal tabular-nums">

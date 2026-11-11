@@ -106,6 +106,7 @@ describe('planDefaults', () => {
             catalog_version: 'v1',
             negotiated_price: '8149.50',
             negotiated_valid_until: '2027-06-30',
+            scheduled: null,
             quote: {
                 requires_quotation: false,
                 explanation: '',
