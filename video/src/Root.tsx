@@ -7,6 +7,7 @@ import { AnonimatoFilm, anonimato, anonimatoTimeline } from './presentations/ano
 import { Nom035Film, nom035, nom035Timeline } from './presentations/nom-035';
 import { Nom037Film, nom037, nom037Timeline } from './presentations/nom-037';
 import { LeySillaFilm, leySilla, leySillaTimeline } from './presentations/ley-silla';
+import { ComplaintsFilm, complaints, complaintsTimeline } from './presentations/complaints';
 
 export const Root = () => (
     <>
@@ -23,5 +24,6 @@ export const Root = () => (
         <Composition id={nom035.id} component={Nom035Film} durationInFrames={nom035Timeline.total} fps={nom035.fps} width={nom035.width} height={nom035.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={nom037.id} component={Nom037Film} durationInFrames={nom037Timeline.total} fps={nom037.fps} width={nom037.width} height={nom037.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={leySilla.id} component={LeySillaFilm} durationInFrames={leySillaTimeline.total} fps={leySilla.fps} width={leySilla.width} height={leySilla.height} defaultProps={{ theme: 'dark' as const }} />
+        <Composition id={complaints.id} component={ComplaintsFilm} durationInFrames={complaintsTimeline.total} fps={complaints.fps} width={complaints.width} height={complaints.height} defaultProps={{ theme: 'dark' as const }} />
     </>
 );
