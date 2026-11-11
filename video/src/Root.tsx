@@ -12,6 +12,7 @@ import { CompensationFilm, compensation, compensationTimeline } from './presenta
 import { AttendanceFilm, attendance, attendanceTimeline } from './presentations/attendance';
 import { LeaveFilm, leave, leaveTimeline } from './presentations/leave';
 import { OrgChartFilm, orgChart, orgChartTimeline } from './presentations/org-chart';
+import { EngagementFilm, engagement, engagementTimeline } from './presentations/engagement';
 
 export const Root = () => (
     <>
@@ -33,5 +34,6 @@ export const Root = () => (
         <Composition id={attendance.id} component={AttendanceFilm} durationInFrames={attendanceTimeline.total} fps={attendance.fps} width={attendance.width} height={attendance.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={leave.id} component={LeaveFilm} durationInFrames={leaveTimeline.total} fps={leave.fps} width={leave.width} height={leave.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={orgChart.id} component={OrgChartFilm} durationInFrames={orgChartTimeline.total} fps={orgChart.fps} width={orgChart.width} height={orgChart.height} defaultProps={{ theme: 'dark' as const }} />
+        <Composition id={engagement.id} component={EngagementFilm} durationInFrames={engagementTimeline.total} fps={engagement.fps} width={engagement.width} height={engagement.height} defaultProps={{ theme: 'dark' as const }} />
     </>
 );

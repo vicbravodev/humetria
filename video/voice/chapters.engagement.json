@@ -1,0 +1,22 @@
+{
+  "id": "engagement",
+  "durationSec": 31.43,
+  "chapters": [
+    {
+      "label": "Encuesta",
+      "at": 0
+    },
+    {
+      "label": "Pulsos",
+      "at": 6.87
+    },
+    {
+      "label": "Grupos ocultos",
+      "at": 14.37
+    },
+    {
+      "label": "Comparar",
+      "at": 21.57
+    }
+  ]
+}
