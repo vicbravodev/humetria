@@ -10,6 +10,7 @@ use App\Modules\Engagement\Enums\CommitmentGroup;
 use App\Modules\Engagement\Enums\CommitmentStatus;
 use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
@@ -109,10 +110,10 @@ it('only takes commitments on a closed survey', function (): void {
 });
 
 it('does not accept a due date before today when creating, and allows today', function (): void {
-    expect(fn () => resolve(SaveCommitment::class)->handle(commitmentData($this->survey, $this->hr->id, dueOn: CarbonImmutable::now()->subDay())))->toThrow(ValidationException::class);
+    expect(fn () => resolve(SaveCommitment::class)->handle(commitmentData($this->survey, $this->hr->id, dueOn: SurveyClock::day()->subDay())))->toThrow(ValidationException::class);
 
-    $today = resolve(SaveCommitment::class)->handle(commitmentData($this->survey, $this->hr->id, dueOn: App\Modules\Engagement\Support\SurveyClock::day()));
-    expect($today->due_on->toDateString())->toBe(App\Modules\Engagement\Support\SurveyClock::day()->toDateString());
+    $today = resolve(SaveCommitment::class)->handle(commitmentData($this->survey, $this->hr->id, dueOn: SurveyClock::day()));
+    expect($today->due_on->toDateString())->toBe(SurveyClock::day()->toDateString());
 });
 
 it('edits the texts, owner and date of a commitment but never its group, and may keep a date already past', function (): void {

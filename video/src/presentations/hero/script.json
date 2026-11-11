@@ -1,0 +1,43 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Cómo funciona",
+    "chapters": [
+      "Tu gente",
+      "Herramientas",
+      "Invitación",
+      "Sin nombres",
+      "Expediente"
+    ],
+    "headlines": [
+      "Carga a tu gente una vez",
+      "Elige qué aplicar",
+      "Cada quien, desde su celular",
+      "Resultados sin nombres",
+      "Todo en un expediente"
+    ]
+  },
+  "lines": [
+    {
+      "id": "people",
+      "text": "Con Humetría cargas a tu gente una sola vez, con su centro de trabajo y su área.",
+      "speech": "Con Umetría cargas a tu gente una sola vez, con su centro de trabajo y su área."
+    },
+    {
+      "id": "tools",
+      "text": "Eliges qué aplicar entre nueve herramientas: normas oficiales, quejas, jornada, vacaciones, organigrama, clima y más."
+    },
+    {
+      "id": "invite",
+      "text": "Cada persona recibe su enlace y contesta desde el celular. Tú ves el avance de cada herramienta, no lo que contestó."
+    },
+    {
+      "id": "groups",
+      "text": "Los resultados llegan por grupos, sin nombres, y los grupos muy pequeños quedan ocultos."
+    },
+    {
+      "id": "dossier",
+      "text": "Y todo queda en un expediente: informes, políticas, registros y evidencia, listos cuando la autoridad los pida."
+    }
+  ]
+}

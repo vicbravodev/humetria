@@ -1,0 +1,22 @@
+{
+  "id": "ley-silla",
+  "durationSec": 29.5,
+  "chapters": [
+    {
+      "label": "Puestos",
+      "at": 0
+    },
+    {
+      "label": "Encuesta",
+      "at": 6.5
+    },
+    {
+      "label": "Reglamento",
+      "at": 14.2
+    },
+    {
+      "label": "Plan",
+      "at": 21.23
+    }
+  ]
+}

@@ -7,7 +7,7 @@ const facts = [
     'Explica las normas con los datos de tu empresa',
     'Cada respuesta dice de dónde sale',
     'Nunca ve respuestas individuales ni grupos de menos de 5',
-] as const;
+];
 
 export default function HumiSection() {
     return (
@@ -16,7 +16,7 @@ export default function HumiSection() {
             aria-labelledby="humi"
             className="border-y bg-sidebar"
         >
-            <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20 lg:py-28">
+            <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20">
                 <Reveal className="flex flex-col gap-6">
                     <LandingHumi />
                     <h2
@@ -44,11 +44,11 @@ export default function HumiSection() {
                     </ul>
                 </Reveal>
                 <LoopVideo
-                    name="humi-chat"
+                    name="humetria-humi"
                     test="humi-video"
                     caption="Humi en el panel. Conversación de ejemplo"
-                    description="preguntas «¿Qué me falta para estar al día en Planta Querétaro?» y Humi consulta el avance y responde que faltan 31 respuestas de NOM-035 y 3 listas de verificación por validar en NOM-037, con sus fuentes. Luego preguntas cuánto cuesta el escenario de 5.5 % y responde que el punto medio cuesta 5.6 millones el primer año."
-                    className="aspect-square"
+                    description="preguntas «¿Qué me falta para estar al día en Planta Querétaro?» y Humi consulta el avance y responde que faltan 31 respuestas de NOM-035 y 3 listas de verificación por validar en NOM-037, con sus fuentes. Luego preguntas cuánto cuesta el escenario de 5.5 % y responde que el punto medio cuesta 5.6 millones el primer año, con un botón que abre el escenario. Al final, Humi solo lee y explica: no cambia datos, no ve respuestas individuales y solo habla de tu empresa."
+                    className="aspect-video"
                 />
             </div>
         </section>

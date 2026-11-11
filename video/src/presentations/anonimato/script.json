@@ -1,0 +1,25 @@
+{
+  "lines": [
+    {
+      "id": "need",
+      "text": "Cuando una persona responde sobre su trabajo, necesita saber que nadie verá qué contestó."
+    },
+    {
+      "id": "link",
+      "text": "En Humetría, cada persona recibe su propio enlace. Sirve una sola vez, y se abre desde el celular.",
+      "speech": "En Umetría, cada persona recibe su propio enlace. Sirve una sola vez, y se abre desde el celular."
+    },
+    {
+      "id": "split",
+      "text": "Al enviar, la respuesta se guarda sin nombre y sin ninguna llave que la ligue con quien la dio. La invitación solo registra que ya contestó."
+    },
+    {
+      "id": "groups",
+      "text": "Para recursos humanos, los resultados llegan por grupos. Si un grupo es demasiado pequeño, queda oculto."
+    },
+    {
+      "id": "close",
+      "text": "Así la gente contesta con confianza, y recursos humanos decide con datos reales."
+    }
+  ]
+}

@@ -22,7 +22,7 @@ export default function Landing() {
                 <Head title="Herramientas de RH para cumplir con la STPS">
                     <meta
                         name="description"
-                        content="Humetría reúne NOM-035, NOM-037, Ley Silla, buzón de quejas y Compensación: invita a tu gente, recolecta con la confidencialidad que requiere cada herramienta y te entrega el diagnóstico, el plan y la evidencia para la STPS."
+                        content="Humetría reúne NOM-035, NOM-037, Ley Silla, buzón de quejas, Compensación, registro de jornada, Vacaciones, Organigrama y Clima y pulso: invita a tu gente, recolecta con la confidencialidad que requiere cada herramienta y te entrega el diagnóstico, el plan y la evidencia para la STPS."
                     />
                 </Head>
                 <LandingHeader />

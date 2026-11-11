@@ -12,8 +12,11 @@ export default function PrivacyDemo() {
     const area = PRIVACY_AREAS.find((candidate) => candidate.key === chosen);
 
     return (
-        <div data-test="privacy-demo" className="card rounded-2xl shadow-float">
-            <div className="flex flex-col gap-3 border-b p-5">
+        <div
+            data-test="privacy-demo"
+            className="card rounded-2xl shadow-raised"
+        >
+            <div className="flex flex-col gap-3 rounded-t-2xl border-b bg-accent p-5">
                 <p className="text-sm text-muted-foreground">
                     Pruébalo: filtra los resultados de Planta Querétaro
                 </p>

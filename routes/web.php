@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\StopImpersonationController;
+use App\Http\Controllers\ToolFilmController;
 use App\Modules\Tenancy\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
 Route::get('/', fn (): Response => Inertia::render('landing'))->name('home');
+Route::get('/media/films/{film}', ToolFilmController::class)->name('films.show');
 
 require __DIR__.'/demos.php';
 require __DIR__.'/tenancy.php';

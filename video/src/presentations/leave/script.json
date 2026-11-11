@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Vacaciones y permisos",
+    "chapters": ["Saldo por ley", "Solicitar", "Jefe aprueba", "Evidencia"],
+    "headlines": ["Tu saldo, por ley", "Solicita desde el portal", "Aprobada y a la vista", "Todo en el expediente"]
+  },
+  "lines": [
+    { "id": "balance", "text": "Cada persona ve su saldo de vacaciones, conforme a la ley y a la política de tu empresa." },
+    { "id": "request", "text": "La persona elige sus días en su portal y envía su solicitud." },
+    { "id": "approve", "text": "Su jefe aprueba, y la ausencia aparece en el calendario del equipo." },
+    { "id": "evidence", "text": "Y el expediente guarda la solicitud y la constancia anual, listas para mostrarse." }
+  ]
+}

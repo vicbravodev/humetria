@@ -1,0 +1,47 @@
+{
+  "presentation": "engagement",
+  "voice": "angie",
+  "masteredAt": "2026-11-11T03:28:21.438Z",
+  "lines": [
+    {
+      "id": "survey",
+      "file": "audio/engagement/angie/l1.mp3",
+      "durationSec": 5.799184,
+      "fingerprint": "d4c5b2582d25",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "pulse",
+      "file": "audio/engagement/angie/l2.mp3",
+      "durationSec": 6.426122,
+      "fingerprint": "b724da764d56",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "hidden",
+      "file": "audio/engagement/angie/l3.mp3",
+      "durationSec": 6.112653,
+      "fingerprint": "e695bad32d29",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "compare",
+      "file": "audio/engagement/angie/l4.mp3",
+      "durationSec": 6.269388,
+      "fingerprint": "75f7a8f2b510",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}

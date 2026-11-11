@@ -1,0 +1,47 @@
+{
+  "presentation": "ley-silla",
+  "voice": "angie",
+  "masteredAt": "2026-11-11T01:39:28.604Z",
+  "lines": [
+    {
+      "id": "positions",
+      "file": "audio/ley-silla/angie/l1.mp3",
+      "durationSec": 5.407347,
+      "fingerprint": "4a5725483688",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "survey",
+      "file": "audio/ley-silla/angie/l2.mp3",
+      "durationSec": 6.60898,
+      "fingerprint": "9e5ee24996f7",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "regulation",
+      "file": "audio/ley-silla/angie/l3.mp3",
+      "durationSec": 5.955918,
+      "fingerprint": "b3092ccf279c",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "plan",
+      "file": "audio/ley-silla/angie/l4.mp3",
+      "durationSec": 4.675918,
+      "fingerprint": "f82b47a43c3c",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}

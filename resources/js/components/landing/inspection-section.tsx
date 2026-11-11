@@ -16,7 +16,11 @@ const items = [
         tool: 'Ley Silla',
     },
     { text: 'Bitácora de cada queja, con sus plazos', tool: 'Buzón de quejas' },
-] as const;
+    {
+        text: 'Reporte de jornada para la autoridad',
+        tool: 'Registro de jornada',
+    },
+];
 
 /** The moment the whole page leads to: an inspector asks, and the file is already there. */
 export default function InspectionSection() {
@@ -24,22 +28,22 @@ export default function InspectionSection() {
         <section
             data-test="inspection"
             aria-labelledby="inspeccion-title"
-            className="bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground"
+            className="border-y bg-sidebar text-foreground"
         >
-            <div className="mx-auto grid max-w-[1240px] gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-20 lg:py-28">
+            <div className="mx-auto grid max-w-[1240px] gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-20">
                 <Reveal className="flex flex-col gap-5">
                     <h2
                         id="inspeccion-title"
-                        className="text-[34px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance sm:text-[52px]"
+                        className="text-[34px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance sm:text-[44px]"
                     >
                         Si mañana llega un inspector, ya sabes qué enseñarle
                     </h2>
-                    <p className="max-w-[44ch] text-lg leading-7">
+                    <p className="max-w-[44ch] text-lg leading-7 text-muted-foreground">
                         Humetría arma el expediente de cada centro mientras
                         trabajas y te dice qué falta antes de que alguien lo
                         pregunte.
                     </p>
-                    <p className="max-w-[44ch] text-sm leading-5">
+                    <p className="max-w-[44ch] text-sm leading-5 text-muted-foreground">
                         Humetría ordena la evidencia para que RH la presente. No
                         certifica el cumplimiento de ninguna norma.
                     </p>

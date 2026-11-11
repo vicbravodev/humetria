@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Registro de jornada",
+    "chapters": ["Marca", "Registro", "Semana", "Reporte"],
+    "headlines": ["Marca en un toque", "Un registro que no se altera", "Topes a la vista", "Reporte con un botón"]
+  },
+  "lines": [
+    { "id": "mark", "text": "Cada persona marca desde su celular, y confirma con su huella: sin correo ni contraseña." },
+    { "id": "record", "text": "El registro no se puede alterar: las correcciones se suman, cada una con su motivo." },
+    { "id": "week", "text": "Cada persona confirma su semana, con los topes de jornada y de horas extra a la vista." },
+    { "id": "report", "text": "Y cuando la autoridad lo pida, armas el reporte con un botón." }
+  ]
+}

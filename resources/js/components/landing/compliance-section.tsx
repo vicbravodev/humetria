@@ -8,7 +8,7 @@ export default function ComplianceSection() {
             id="seccion-confidencialidad"
             aria-labelledby="confidencialidad"
         >
-            <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:py-28">
+            <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-20">
                 <Reveal className="flex flex-col gap-5">
                     <div
                         data-test="compliance-privacy"

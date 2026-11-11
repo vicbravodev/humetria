@@ -13,13 +13,13 @@ const audiences = [
         title: 'Consultores',
         text: 'Atiende a varias empresas, cada una con sus datos aparte y tu logo en los informes.',
     },
-] as const;
+];
 
 export default function AudienceSection() {
     return (
         <section
             aria-labelledby="para-quien"
-            className="mx-auto flex max-w-[1240px] flex-col gap-10 px-4 py-20 sm:px-6 lg:py-28"
+            className="mx-auto flex max-w-[1240px] flex-col gap-10 px-4 py-20 sm:px-6"
         >
             <h2
                 id="para-quien"

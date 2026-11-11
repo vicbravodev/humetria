@@ -29,3 +29,31 @@ npm run poster:humi   # public/video/humi-chat.jpg (frame 280, primera respuesta
 ```
 
 Un frame suelto para revisar: `npx remotion still HeroLoop out/frame.png --frame=600`.
+
+## Piezas narradas (Motion Kit)
+
+`Anonimato` (1920×1080, 41 s, con voz) y las películas de herramienta (referencia: `nom-035`, con cierre de logo): ver `docs/MOTION-KIT.md` (sistema, voz, receta, trazabilidad, pendientes).
+
+```bash
+npm run check:film && npm run types:check
+npm run render:anonimato   # public/video/humetria-anonimato.mp4 y .webm
+npm run poster:anonimato
+```
+
+## Herramientas (HyperFrames)
+
+`hyperframes/<herramienta>/` guarda el video de cada herramienta de la landing (24 s, 1600×900, cuatro capítulos de 6 s:
+la landing salta a 0, 6, 12 y 18 s), hecho con HTML y GSAP. Texto mínimo de 40 px: se muestran a ~900 px de ancho.
+Necesitan Docker para renderizar (no hay ffmpeg local). Revisar y renderizar uno:
+
+```bash
+cd video/hyperframes/attendance && npx hyperframes check
+video/hyperframes/render.sh attendance humetria-attendance 4   # carpeta, nombre en public/video, segundo del póster
+```
+
+Salen `public/video/humetria-*.{mp4,webm,jpg}`. Con `light` como cuarto argumento sale la variante de tema claro
+(`humetria-*-light.*`: la misma película con los tokens claros del design system); la landing elige según el tema.
+Las películas se sirven por `/media/films/{archivo}` (`ToolFilmController`) y no como archivos estáticos: el navegador
+solo puede saltar a un capítulo si el servidor responde rangos de bytes, y el servidor de PHP de desarrollo no lo hace.
+
+Antes de renderizar cualquier película: `node scripts/qa-layout.mjs <Composición> <id> dark` (ver `docs/MOTION-KIT.md`, «Revisión de desbordes»).

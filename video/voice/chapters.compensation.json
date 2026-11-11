@@ -1,0 +1,22 @@
+{
+  "id": "compensation",
+  "durationSec": 30.77,
+  "chapters": [
+    {
+      "label": "Costea",
+      "at": 0
+    },
+    {
+      "label": "Compara",
+      "at": 9.07
+    },
+    {
+      "label": "Proyecta",
+      "at": 15.8
+    },
+    {
+      "label": "Reporte",
+      "at": 21.63
+    }
+  ]
+}

@@ -284,8 +284,9 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
     $page->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
-        // (endless ones, like the OTP caret blink, never finish and are left alone).
-        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished)).then(() => true)');
+        // (endless ones, like the OTP caret blink, never finish and are left alone). An animation the page cancels while we wait (the
+        // kiosk restarts its countdown) rejects `finished` with an AbortError: that one is over too, so it is not a failure.
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)');
 
     if ($mobile) {
         $page->assertScript(smallTouchTargets(), '');

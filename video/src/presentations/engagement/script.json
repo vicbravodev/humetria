@@ -1,0 +1,14 @@
+{
+  "outro": 75,
+  "frame": {
+    "tool": "Clima y pulso",
+    "chapters": ["Encuesta", "Pulsos", "Grupos ocultos", "Comparar"],
+    "headlines": ["Una encuesta, un enlace", "Pulsos que dicen si funciona", "Grupos pequeños, ocultos", "De una ola a la siguiente"]
+  },
+  "lines": [
+    { "id": "survey", "text": "Cada persona contesta la encuesta de clima desde su enlace, y puede omitir cualquier pregunta." },
+    { "id": "pulse", "text": "Después, pulsos cortos cada mes o cada trimestre te dicen si tus acciones están funcionando." },
+    { "id": "hidden", "text": "Tú ves qué atender primero, por área, y los grupos de menos de cinco respuestas se ocultan." },
+    { "id": "compare", "text": "Y comparas una ola con la anterior, y un centro con otro, sin ver una respuesta individual." }
+  ]
+}

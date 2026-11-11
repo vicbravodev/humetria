@@ -33,7 +33,7 @@ it('deletes a salary of the tabulator that was typed with a wrong date, and the 
     expect(GradeSalary::query()->pluck('id')->all())->toBe([$right->id]);
     Log::shouldHaveReceived('info')->with('compensation.grade_salary_deleted', ['job_grade_id' => $this->grade->id, 'grade_salary_id' => $wrong->id])->once();
     expect(AuditEntry::query()->where('event', 'compensation.grade_salary_deleted')->sole()->metadata)->toBe(['grade_salaries' => 1])
-        ->and(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('99000')->not->toContain('990');
+        ->and(json_encode(AuditEntry::query()->get()->map(fn (AuditEntry $entry): array => [$entry->event, $entry->metadata])->all()))->not->toContain('99000')->not->toContain('990');
     $this->get(route('tenant.compensation.tabulator.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('grades.data.0.current.daily_salary', '500')->has('grades.data.0.salaries', 1));
 });

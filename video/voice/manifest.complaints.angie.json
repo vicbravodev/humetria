@@ -1,0 +1,47 @@
+{
+  "presentation": "complaints",
+  "voice": "angie",
+  "masteredAt": "2026-11-11T01:48:34.089Z",
+  "lines": [
+    {
+      "id": "scan",
+      "file": "audio/complaints/angie/l1.mp3",
+      "durationSec": 6.60898,
+      "fingerprint": "7574bd023c16",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "route",
+      "file": "audio/complaints/angie/l2.mp3",
+      "durationSec": 4.832653,
+      "fingerprint": "b3474f3bb473",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "notice",
+      "file": "audio/complaints/angie/l3.mp3",
+      "durationSec": 5.250612,
+      "fingerprint": "b543fb4db06f",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "follow",
+      "file": "audio/complaints/angie/l4.mp3",
+      "durationSec": 4.91102,
+      "fingerprint": "7965ee8c0e82",
+      "generatedWith": {
+        "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}

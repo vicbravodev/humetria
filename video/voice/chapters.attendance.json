@@ -1,0 +1,22 @@
+{
+  "id": "attendance",
+  "durationSec": 28.4,
+  "chapters": [
+    {
+      "label": "Marca",
+      "at": 0
+    },
+    {
+      "label": "Registro",
+      "at": 7.13
+    },
+    {
+      "label": "Semana",
+      "at": 14.33
+    },
+    {
+      "label": "Reporte",
+      "at": 20.97
+    }
+  ]
+}

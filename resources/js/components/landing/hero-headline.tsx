@@ -8,7 +8,7 @@ export default function HeroHeadline() {
     return (
         <h1
             id="hero-title"
-            className="max-w-[11ch] text-[44px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance sm:text-[64px] lg:text-[76px]"
+            className="max-w-[15ch] text-[44px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance sm:text-[60px] lg:text-[64px]"
         >
             {WORDS.map((word, index) => (
                 <m.span
