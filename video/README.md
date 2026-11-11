@@ -29,3 +29,13 @@ npm run poster:humi   # public/video/humi-chat.jpg (frame 280, primera respuesta
 ```
 
 Un frame suelto para revisar: `npx remotion still HeroLoop out/frame.png --frame=600`.
+
+## Piezas narradas (Motion Kit)
+
+`Anonimato` (1920×1080, 41 s, con voz): ver `docs/MOTION-KIT.md` (sistema, voz, receta, trazabilidad, pendientes).
+
+```bash
+npm run check:film && npm run types:check
+npm run render:anonimato   # public/video/humetria-anonimato.mp4 y .webm
+npm run poster:anonimato
+```

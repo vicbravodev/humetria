@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "name": "Humetría — narradora maestra",
+  "provider": "elevenlabs",
+  "modelId": "eleven_v4",
+  "settings": "eleven_v4 no expone stability/similarity/speed; el ritmo se dirige con puntuación y [pause]. Sin etiquetas de emoción por defecto.",
+  "mastering": {
+    "integratedLufs": -16,
+    "truePeakDb": -1.5,
+    "loudnessRange": 11,
+    "format": "mp3 128k mono 44.1 kHz"
+  },
+  "policy": {
+    "changeVoiceOnlyWithJustification": true,
+    "regenerate": "Solo si cambia el texto, la voz o el modelo (la huella del manifiesto lo detecta). Estimar antes con estimate_only."
+  },
+  "voices": {
+    "angie": {
+      "voiceId": "eeTcHFmLuUzCOHvnwvdr",
+      "name": "Angie (es-mexican, library, professional)"
+    }
+  },
+  "defaultVoice": "angie",
+  "discarded": {
+    "tamara": "Probada y descartada por el propietario (2026-11-10): Angie es la voz de Humetria."
+  }
+}

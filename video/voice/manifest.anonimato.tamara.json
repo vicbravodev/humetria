@@ -1,0 +1,57 @@
+{
+  "presentation": "anonimato",
+  "voice": "tamara",
+  "masteredAt": "2026-11-11T00:28:37.424Z",
+  "lines": [
+    {
+      "id": "need",
+      "file": "audio/anonimato/tamara/l1.mp3",
+      "durationSec": 5.146122,
+      "fingerprint": "8940cc8227f1",
+      "generatedWith": {
+        "voiceId": "45awEU2ZYXZdWPFsUd43",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "link",
+      "file": "audio/anonimato/tamara/l2.mp3",
+      "durationSec": 6.530612,
+      "fingerprint": "31b36861f41f",
+      "generatedWith": {
+        "voiceId": "45awEU2ZYXZdWPFsUd43",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "split",
+      "file": "audio/anonimato/tamara/l3.mp3",
+      "durationSec": 8.045714,
+      "fingerprint": "b3aedcec8e0c",
+      "generatedWith": {
+        "voiceId": "45awEU2ZYXZdWPFsUd43",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "groups",
+      "file": "audio/anonimato/tamara/l4.mp3",
+      "durationSec": 6.426122,
+      "fingerprint": "63ddc0f58587",
+      "generatedWith": {
+        "voiceId": "45awEU2ZYXZdWPFsUd43",
+        "modelId": "eleven_v4"
+      }
+    },
+    {
+      "id": "close",
+      "file": "audio/anonimato/tamara/l5.mp3",
+      "durationSec": 5.485714,
+      "fingerprint": "e5e36f5124a2",
+      "generatedWith": {
+        "voiceId": "45awEU2ZYXZdWPFsUd43",
+        "modelId": "eleven_v4"
+      }
+    }
+  ]
+}
