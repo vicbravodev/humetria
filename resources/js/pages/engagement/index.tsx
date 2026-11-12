@@ -6,10 +6,27 @@ import {
     useEngagementName,
     useEngagementTrail,
 } from '@/hooks/use-engagement-routes';
-import type { EngagementHome } from '@/types';
+import type {
+    ClimateLatest,
+    ClimateSurveyCard,
+    ClimateSurveyHistoryRow,
+    Paginated,
+    PulseModeOption,
+    PulseSchedule,
+    TrendPoint,
+} from '@/types';
 
 /** The home of Clima or Pulso: only counts, RH never sees who answered. */
-export default function EngagementIndex(props: EngagementHome) {
+export default function EngagementIndex(props: {
+    current: ClimateSurveyCard | null;
+    surveys: Paginated<ClimateSurveyHistoryRow>;
+    canManage: boolean;
+    modes: PulseModeOption[] | null;
+    schedule: PulseSchedule | null;
+    frequencies: PulseModeOption[] | null;
+    latest: ClimateLatest | null;
+    howWeAre: TrendPoint[] | null;
+}) {
     const name = useEngagementName();
 
     setLayoutProps({ breadcrumbs: useEngagementTrail() });
