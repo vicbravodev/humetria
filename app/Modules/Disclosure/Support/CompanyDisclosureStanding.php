@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Disclosure\Support;
 
 use App\Modules\Disclosure\Contracts\DisclosureStanding;
+use App\Modules\Disclosure\Enums\PageLinkStatus;
+use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
 
 final readonly class CompanyDisclosureStanding implements DisclosureStanding
 {
-    public function __construct(private PolicyStanding $policies) {}
+    public function __construct(private PolicyStanding $policies, private DeliveryStanding $delivery) {}
 
     public function withPolicy(array $workCenterIds): array
     {
@@ -24,7 +26,17 @@ final readonly class CompanyDisclosureStanding implements DisclosureStanding
             return [];
         }
 
-        $shared = ResultPublication::query()->whereIn('campaign_id', $campaignIds)->whereNull('withdrawn_at')->pluck('campaign_id')->all();
+        // Published is not enough: the people have to be able to see them, as in any inciso of 5.7 (C-52).
+        $pageActive = PageLink::query()->first()?->status() === PageLinkStatus::Active;
+        $shared = [];
+        $publications = ResultPublication::query()->whereIn('campaign_id', $campaignIds)->whereNull('withdrawn_at')->get(['campaign_id', 'work_center_id']);
+        $recorded = $pageActive ? [] : $this->delivery->recordedItems(array_values(array_unique($publications->map(fn (ResultPublication $publication): string => $publication->work_center_id)->all())));
+
+        foreach ($publications as $publication) {
+            if ($pageActive || in_array('e', $recorded[$publication->work_center_id] ?? [], true)) {
+                $shared[] = $publication->campaign_id;
+            }
+        }
 
         return array_values(array_filter($campaignIds, fn (string $id): bool => in_array($id, $shared, true)));
     }

@@ -399,6 +399,21 @@ it('shows the evaluations RH can publish to the people', function (bool $dark, b
         ->assertSee('Publicar');
 })->with($looks);
 
+it('warns before publishing results that the people have no page to read them on yet', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    [$campaign] = closedEvaluationInAreas($tenant, ['Producción' => 6, 'Ventas' => 6]);
+    $campaign->update(['work_center_id' => $plant->id]);
+
+    visit("{$url}/disclosure/results")
+        ->click('main button:has-text("Publicar")')
+        ->assertSee('Aún no tienen dónde verlos')
+        ->assertSee('Crear el enlace')
+        ->assertNoJavaScriptErrors();
+});
+
 it('publishes results and the people read them on their page, of the whole center', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();

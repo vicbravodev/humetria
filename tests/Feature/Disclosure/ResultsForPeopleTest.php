@@ -231,6 +231,19 @@ it('titles the results by the guide: the work environment is evaluated only abov
     $this->get(route('workers.center', [$token, $big->id]))->assertInertia(fn (Assert $page) => $page->where('results.title', 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional'));
 });
 
+it('says whether the page of the people is active, so publishing warns they have nowhere to read the results yet', function (): void {
+    disclosureResultsEvaluation($this);
+    $page = fn () => $this->actingAs($this->hr)->get(route('tenant.disclosure.results', $this->tenant));
+
+    $page()->assertInertia(fn (Assert $page) => $page->where('pageActive', false));
+
+    $link = resolve(IssuePageLink::class)->handle($this->hr->id);
+    $page()->assertInertia(fn (Assert $page) => $page->where('pageActive', true));
+
+    $link->update(['disabled_at' => now()]);
+    $page()->assertInertia(fn (Assert $page) => $page->where('pageActive', false));
+});
+
 it('asks the evaluations closed, a page at a time, and lets only whoever manages publish and withdraw', function (): void {
     $campaign = disclosureResultsEvaluation($this);
     $closed = fn () => $this->actingAs($this->hr)->get(route('tenant.disclosure.results', $this->tenant));
