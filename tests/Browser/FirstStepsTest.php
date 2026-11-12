@@ -166,3 +166,20 @@ it('shows a centered bubble when the control is not on the page', function (): v
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('points the panel card at the button instead of repeating the third step', function (): void {
+    signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['nom035'], Carbon\CarbonImmutable::now());
+    App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $tenant->id]);
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('Ahora no')
+        ->assertSee('En tus primeros pasos')
+        ->assertDontSee('Continuar')
+        ->click('Ver mis pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertSee('Lanza tu primera evaluación NOM-035')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
