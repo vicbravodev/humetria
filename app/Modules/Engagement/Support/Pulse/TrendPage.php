@@ -32,11 +32,11 @@ final readonly class TrendPage
     public function __construct(private Thresholds $thresholds) {}
 
     /**
-     * @return list<Wave> the closed surveys, the most recent twelve, oldest first
+     * @return list<Wave> the closed surveys, the most recent `$limit`, oldest first
      */
-    public function waves(): array
+    public function waves(int $limit = Trend::MAX_WAVES): array
     {
-        $surveys = Survey::query()->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->limit(Trend::MAX_WAVES)->get();
+        $surveys = Survey::query()->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->limit($limit)->get();
 
         return array_values(array_reverse(array_map(function (Survey $survey): Wave {
             $company = SurveyResults::for($survey)->company();
@@ -61,7 +61,7 @@ final readonly class TrendPage
         }
 
         $series = [
-            ['key' => 'index', 'title' => 'Índice de compromiso', 'hint' => 'Promedio de las tres preguntas de orgullo, motivación y deseo de aportar.', 'kind' => 'percent', 'points' => $this->points(Trend::index($waves, $this->thresholds))],
+            ['key' => 'index', 'title' => 'Índice de compromiso', 'hint' => 'Promedio de las tres preguntas de orgullo, motivación y deseo de aportar.', 'kind' => 'percent', 'points' => $this->index($waves)],
             ['key' => 'recommendation', 'title' => 'Índice de recomendación', 'hint' => 'De −100 a 100; solo con 30 respuestas o más en la ola.', 'kind' => 'index', 'points' => $this->points(Trend::recommendation($waves))],
             $this->item($waves, ItemBank::LOOP, 'Mejoras vistas'),
         ];
@@ -71,6 +71,17 @@ final readonly class TrendPage
         }
 
         return ['hasWaves' => true, 'series' => $series, ...$around];
+    }
+
+    /**
+     * The engagement index across `$waves`, under the same minimums as the trend: the line of the home of the pulse.
+     *
+     * @param  list<Wave>  $waves
+     * @return list<Point>
+     */
+    public function index(array $waves): array
+    {
+        return $this->points(Trend::index($waves, $this->thresholds));
     }
 
     /**

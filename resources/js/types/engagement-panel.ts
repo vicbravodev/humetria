@@ -35,6 +35,8 @@ export type ClimateSurveyCard = {
 export type ClimateSurveyHistoryRow = {
     id: string;
     name: string;
+    /** What a pulse looked at («Recorrido»); nothing for climate. */
+    mode: string | null;
     closedOn: string | null;
     invited: number | null;
     answered: number;
