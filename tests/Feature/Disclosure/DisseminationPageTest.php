@@ -31,7 +31,7 @@ beforeEach(function (): void {
 /** A person asked for `$policy`; confirmed on `$channel` when given. */
 function askedAndMaybeConfirmed(object $test, string $name, ?string $channel = null, ?Document $policy = null, bool $active = true): Employee
 {
-    $person = Employee::factory()->create(['tenant_id' => $test->tenant->id, 'work_center_id' => $test->plant->id, 'name' => $name, 'email' => $name === 'Sin Correo' ? null : fake()->unique()->safeEmail()]);
+    $person = Employee::factory()->create(['tenant_id' => $test->tenant->id, 'work_center_id' => $test->plant->id, 'name' => $name, 'email' => $name === 'Sin Correo' ? null : 'p'.fake()->unique()->numberBetween(1, 99999).'@example.com']);
     Acknowledgment::factory()->create(['tenant_id' => $test->tenant->id, 'document_id' => ($policy ?? $test->policy)->id, 'employee_id' => $person->id, 'channel' => $channel, 'acknowledged_at' => $channel === null ? null : '2026-11-12 10:00:00', ...($channel === 'manual' ? ['note' => 'Hoja 1', 'recorded_by' => $test->hr->id] : [])]);
 
     if (! $active) {
