@@ -1,14 +1,12 @@
 import { router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { bubblesOf } from '@/lib/first-steps/steps';
 import { rememberTour, takeTour } from '@/lib/first-steps/tour-session';
-import { driverSteps } from '@/lib/first-steps/tour';
+import { createTourRunner, driverSteps } from '@/lib/first-steps/tour';
 import type { FirstStep } from '@/types/first-steps';
 
-type Tour = { destroy: () => void };
-
 /** Runs the spotlight tour of a step; driver.js loads only when a tour starts. */
-async function drive(step: FirstStep): Promise<Tour> {
+async function drive(step: FirstStep): Promise<{ destroy: () => void }> {
     const { driver } = await import('driver.js');
     const steps = driverSteps(
         bubblesOf(step),
@@ -35,43 +33,39 @@ async function drive(step: FirstStep): Promise<Tour> {
 /** The spotlight tours of the first steps: `start` runs one here or carries it to the page where its controls are. */
 export function useFirstStepsTour(): { start: (step: FirstStep) => void } {
     const { url, props } = usePage();
-    const steps = props.firstSteps?.steps;
-    const current = useRef<Tour | null>(null);
-
-    const run = useCallback((step: FirstStep) => {
-        current.current?.destroy();
-        void drive(step).then((tour) => {
-            current.current = tour;
-        });
-    }, []);
+    const steps = useRef(props.firstSteps?.steps);
+    const [runner] = useState(() => createTourRunner(drive));
+    const run = runner.run;
 
     useEffect(() => {
+        steps.current = props.firstSteps?.steps;
+    });
+
+    // Only a new page asks for the remembered tour; a reloaded prop must not end the one that runs.
+    useEffect(() => {
         const key = takeTour();
-        const step =
+        const found =
             key === null
                 ? undefined
-                : steps?.find((candidate) => candidate.key === key);
+                : steps.current?.find((candidate) => candidate.key === key);
 
-        if (step !== undefined) {
-            run(step);
+        if (found !== undefined) {
+            run(found);
         }
 
-        return () => {
-            current.current?.destroy();
-            current.current = null;
-        };
-    }, [url, steps, run]);
+        return runner.cancel;
+    }, [url, run, runner]);
 
     const start = useCallback(
-        (step: FirstStep) => {
-            if (step.href !== null && step.href !== url) {
-                rememberTour(step.key);
-                router.visit(step.href);
+        (next: FirstStep) => {
+            if (next.href !== null && next.href !== url) {
+                rememberTour(next.key);
+                router.visit(next.href);
 
                 return;
             }
 
-            run(step);
+            run(next);
         },
         [url, run],
     );

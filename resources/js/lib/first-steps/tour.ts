@@ -17,3 +17,42 @@ export function driverSteps(
         return exists(selector) ? { element: selector, popover } : { popover };
     });
 }
+
+type Destroyable = { destroy: () => void };
+
+/**
+ * The life of one tour at a time. `run` supersedes whatever is running or still loading; `cancel` ends it,
+ * and a tour that finishes loading after that destroys itself. A failed load is ignored: the tour is only a help.
+ */
+export function createTourRunner<Input>(
+    load: (input: Input) => Promise<Destroyable>,
+): {
+    run: (input: Input) => void;
+    cancel: () => void;
+} {
+    let current: Destroyable | null = null;
+    let token = 0;
+
+    const cancel = (): void => {
+        token += 1;
+        current?.destroy();
+        current = null;
+    };
+
+    const run = (input: Input): void => {
+        cancel();
+        const mine = token;
+
+        load(input)
+            .then((tour) => {
+                if (mine === token) {
+                    current = tour;
+                } else {
+                    tour.destroy();
+                }
+            })
+            .catch(() => undefined);
+    };
+
+    return { run, cancel };
+}
