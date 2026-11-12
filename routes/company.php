@@ -63,5 +63,6 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     require __DIR__.'/results.php';
     require __DIR__.'/interventions.php';
     require __DIR__.'/disclosure.php';
+    require __DIR__.'/first_steps.php';
     require __DIR__.'/assistant.php';
 });
