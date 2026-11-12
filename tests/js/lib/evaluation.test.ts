@@ -15,6 +15,7 @@ import {
     peopleText,
     pendingTotal,
     remindable,
+    reminderNote,
     percent,
     staffBand,
     visibleStandings,
@@ -272,5 +273,25 @@ describe('pendingTotal', () => {
             ]),
         ).toBe(5);
         expect(pendingTotal(null)).toBe(0);
+    });
+});
+
+describe('reminderNote', () => {
+    it('says no reminder went out yet', () => {
+        expect(reminderNote(null, null)).toBe(
+            'Aún no has enviado ningún recordatorio.',
+        );
+    });
+
+    it('gives the day of the last one, and the hours left when another waits', () => {
+        expect(reminderNote(null, '2 nov 2026')).toBe(
+            'Último recordatorio: 2 nov 2026.',
+        );
+        expect(reminderNote(10, '2 nov 2026')).toBe(
+            'Último recordatorio: 2 nov 2026. Podrás enviar otro en 10 horas.',
+        );
+        expect(reminderNote(1, '2 nov 2026')).toBe(
+            'Último recordatorio: 2 nov 2026. Podrás enviar otro en 1 hora.',
+        );
     });
 });

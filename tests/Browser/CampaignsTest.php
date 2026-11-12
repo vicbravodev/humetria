@@ -207,6 +207,26 @@ it('keeps the evaluation a draft until the launch is confirmed', function (): vo
     Illuminate\Support\Facades\Notification::assertNothingSent();
 });
 
+it('holds a second reminder back and says when the last one went out', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Recordar a 20')
+        ->assertSee('Aún no has enviado ningún recordatorio.')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Enlace reenviado a 20 personas.')
+        ->click('Recordar a 20')
+        ->assertSee('Podrás enviar otro en 12 horas.')
+        ->assertScript("document.querySelector('[role=\"dialog\"] button[type=\"submit\"]').disabled", true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('follows a launched evaluation: answers per guide, the sample and who answered', function (bool $dark, bool $mobile): void {
     $tenant = campaignsCompany();
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);

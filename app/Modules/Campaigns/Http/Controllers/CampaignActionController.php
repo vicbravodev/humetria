@@ -17,6 +17,7 @@ use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Enums\Standing;
+use App\Modules\Campaigns\Exceptions\ReminderTooSoon;
 use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
 use App\Modules\Campaigns\Http\Requests\ReplacementsRequest;
 use App\Modules\Campaigns\Models\Participant;
@@ -25,6 +26,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 /**
@@ -66,7 +68,12 @@ final class CampaignActionController extends Controller
         $filter = CampaignController::peopleFilter($request, $active);
         $standing = $filter->standing === Standing::Failed ? Standing::Failed : Standing::Pending;
         $pending = new PeopleFilter($standing, $request->has('guide') ? $filter->guide : null, $filter->areaId, $filter->search);
-        $sent = $resendInvitations->handle($active, $people->employeeIds($active, $pending));
+        try {
+            // The retry of failed links is not a reminder, so the wait does not hold it back.
+            $sent = $resendInvitations->handle($active, $people->employeeIds($active, $pending), reminder: $standing === Standing::Pending);
+        } catch (ReminderTooSoon $tooSoon) {
+            throw ValidationException::withMessages(['resend' => 'Ya enviaste un recordatorio hoy. Podrás enviar otro en '.($tooSoon->hoursLeft === 1 ? '1 hora' : "{$tooSoon->hoursLeft} horas").'.']);
+        }
 
         return $this->done($sent, 'No hay a quién reenviar: nadie con correo tiene guías pendientes.', 'Enlace reenviado a 1 persona.', "Enlace reenviado a {$sent} personas.");
     }

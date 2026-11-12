@@ -164,11 +164,22 @@ final readonly class CampaignPages
             'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
                 ? $this->replacementPool($campaign)
                 : null,
+            // The day of the last reminder, and the hours left before another can go out; null while it can.
+            'lastResentOn' => $canManage && $campaign->last_resent_at !== null ? CampaignClock::day($campaign->last_resent_at) : null,
+            'reminderWait' => $canManage && $campaign->status === CampaignStatus::Active ? $this->reminderWait($campaign) : null,
             // How many people «Invitar a quien falte» brings up to date now, and how many of them get a link.
             'missing' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->kind === CampaignKind::Nom035Evaluation
                 ? $this->inviteMissing->count($campaign)
                 : null,
         ];
+    }
+
+    /** The hours left before another reminder can go out, rounded up; null when none is held back. */
+    private function reminderWait(Campaign $campaign): ?int
+    {
+        $next = $campaign->last_resent_at?->addHours(config()->integer('campaigns.resend_cooldown_hours'));
+
+        return $next === null || ! $next->isFuture() ? null : (int) ceil(now()->diffInMinutes($next, absolute: true) / 60);
     }
 
     /**
