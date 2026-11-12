@@ -106,3 +106,12 @@ it('lays out every email the same way: one button and the seal', function (Closu
         expect($html)->toContain('alt="Humetría"')->not->toContain('<span class="company-name"');
     }
 })->with(inventory());
+
+// H-13: the link spelled out sat against its sentence in the plain-text email («navegador:https://…»).
+it('keeps a space between the sentence and the link spelled out under the button', function (Closure $make): void {
+    $html = (string) $make()->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->toMatch('#navegador: <br><a href="https?://[^"]+"#')->not->toContain('navegador:<br>');
+})->with([
+    'survey invitation reminder' => [fn () => new SurveyInvitation(SurveyEmail::Reminder, 'tok', 'Ana', inventoryCompany(), null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15)],
+]);
