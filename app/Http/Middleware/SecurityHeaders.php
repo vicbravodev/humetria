@@ -28,6 +28,12 @@ final class SecurityHeaders
     private const string SONNER_STYLES = "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='";
 
     /**
+     * The map of a zone (Asistencia, zone-picker-map.tsx) paints OpenStreetMap's raster tiles: images only, from this
+     * one origin. Address search goes through our own server (PlaceController), so connect-src stays 'self'.
+     */
+    private const string MAP_TILES = 'https://tile.openstreetmap.org';
+
+    /**
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
@@ -83,7 +89,7 @@ final class SecurityHeaders
             "default-src 'self'",
             "script-src 'self' 'nonce-{$nonce}'{$devServer}",
             "style-src 'self' 'nonce-{$nonce}' ".self::SONNER_STYLES.$devServer,
-            "img-src 'self' data:{$devServer}",
+            "img-src 'self' data: ".self::MAP_TILES.$devServer,
             "font-src 'self'{$devServer}",
             "connect-src 'self'{$devServer}{$socket}",
             "object-src 'none'",

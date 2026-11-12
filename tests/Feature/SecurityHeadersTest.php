@@ -18,8 +18,9 @@ function cspFor(string $nonce, string $devServer = '', string $devSocket = ''): 
     // Sonner injects its stylesheet without a nonce: an empty <style> first, then its CSS.
     $sonner = "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='";
 
+    // The map of a zone (Asistencia) paints OpenStreetMap's tiles: images only, from that one origin.
     return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'{$hot}; style-src 'self' 'nonce-{$nonce}' {$sonner}{$hot}; "
-        ."img-src 'self' data:{$hot}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}; object-src 'none'; "
+        ."img-src 'self' data: https://tile.openstreetmap.org{$hot}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}; object-src 'none'; "
         ."base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 }
 

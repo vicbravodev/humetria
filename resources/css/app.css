@@ -679,3 +679,40 @@ html:has([data-smooth-scroll]) {
         break-inside: avoid;
     }
 }
+
+/*
+ * The map of a zone (zone-picker-map.tsx): Leaflet's own controls in the design system's colors, and OpenStreetMap's
+ * light tiles turned dark in the dark theme (there is no dark style of them).
+ */
+.zone-picker-map.leaflet-container {
+    background-color: var(--color-muted);
+    font: inherit;
+}
+
+.zone-picker-map .leaflet-bar {
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+}
+
+.zone-picker-map .leaflet-bar a {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-color: var(--color-border);
+    background-color: var(--color-card);
+    color: var(--color-foreground);
+}
+
+.zone-picker-map .leaflet-bar a:hover {
+    background-color: var(--color-muted);
+}
+
+.zone-picker-map .leaflet-control-attribution {
+    background-color: color-mix(in oklab, var(--color-card) 85%, transparent);
+    color: var(--color-muted-foreground);
+}
+
+.dark .zone-picker-map .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9)
+        saturate(0.6);
+}
