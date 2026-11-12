@@ -45,6 +45,13 @@ async function drive(
         overlayColor: 'var(--first-steps-scrim)',
         overlayOpacity: 0.48,
         showProgress: steps.length > 1,
+        // A tour of one bubble has nothing before it: no disabled «Anterior».
+        showButtons:
+            steps.length > 1
+                ? ['next', 'previous', 'close']
+                : ['next', 'close'],
+        // The spotlight follows the shape it points at: Humi's launcher is a circle, the rest are buttons.
+        stageRadius: step.key === 'humi' ? 34 : 8,
         progressText: '{{current}} de {{total}}',
         nextBtnText: 'Siguiente',
         prevBtnText: 'Anterior',

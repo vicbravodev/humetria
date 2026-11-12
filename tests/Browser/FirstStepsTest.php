@@ -201,3 +201,21 @@ it('opens Humi with the example question written', function (): void {
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('offers «Anterior» only in a tour with more than one bubble', function (): void {
+    signInToPanel();
+    $shown = 'document.querySelector(".driver-popover-prev-btn") !== null && getComputedStyle(document.querySelector(".driver-popover-prev-btn")).display !== "none"';
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('Empezar')
+        ->click('li:has-text("Conoce a Humi") button')
+        ->assertSee('Este es Humi')
+        ->assertScript($shown, false)
+        ->keys('.driver-popover-close-btn', 'Escape')
+        ->click(FIRST_STEPS_BUTTON)
+        ->click('li:has-text("Carga a tu gente") button')
+        ->assertSee('Importa tu plantilla')
+        ->assertScript($shown, true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});

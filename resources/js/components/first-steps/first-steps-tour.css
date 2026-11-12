@@ -28,6 +28,12 @@
 
 .driver-popover.first-steps-tour .driver-popover-close-btn {
     color: var(--muted-foreground);
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    line-height: 1.75rem;
+    border-radius: var(--radius-md);
 }
 
 .driver-popover.first-steps-tour
