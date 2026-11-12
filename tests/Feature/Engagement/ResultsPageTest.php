@@ -235,10 +235,27 @@ it('reads in a constant number of queries however many responses and groups ther
     expect($queries)->toBe($small);
 });
 
+it('says the day the survey closed, by the calendar of the company, and how many commitments it has', function (): void {
+    $survey = climateResultsSurvey($this->tenant, 6);
+    $survey->update(['closed_at' => '2026-06-23 03:00:00']);
+    App\Modules\Engagement\Models\Commitment::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'survey_id' => $survey->id]);
+
+    $this->actingAs($this->hr)->get(climateResultsUrl($this->tenant, $survey))->assertInertia(fn (Assert $page) => $page
+        ->where('survey.closedOn', '2026-06-22')->where('commitments', 2));
+});
+
+it('has no commitments to count on a survey still open', function (): void {
+    $survey = climateResultsSurvey($this->tenant, 6, closed: false);
+
+    $this->actingAs($this->hr)->get(climateResultsUrl($this->tenant, $survey))->assertInertia(fn (Assert $page) => $page
+        ->where('survey.closedOn', null)->where('commitments', 0));
+});
+
 it('reads the company results in a fixed number of queries', function (): void {
     $survey = climateResultsSurvey($this->tenant, 12);
     $this->actingAs($this->hr);
-    $this->expectsDatabaseQueryCount(15);
+    // The session, the company and the panel frame, the survey, its responses, the previous survey and its commitments.
+    $this->expectsDatabaseQueryCount(16);
 
     $this->get(climateResultsUrl($this->tenant, $survey))->assertOk();
 });

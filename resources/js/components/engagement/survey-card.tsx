@@ -1,68 +1,53 @@
-import { Link } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
 import ModeBadge from '@/components/engagement/pulse/mode-badge';
+import SurveyCardActions from '@/components/engagement/survey-card-actions';
 import SurveyStatusBadge from '@/components/engagement/survey-status-badge';
-import ProgressBar from '@/components/humetria/progress-bar';
-import { Button } from '@/components/ui/button';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import ArcMeter from '@/components/humetria/arc-meter';
 import { answeredText, deadlineText } from '@/lib/engagement/panel';
 import type { ClimateSurveyCard } from '@/types';
 
-/** The survey in progress (pantalla NOM035, CampaignCard): its state, how far it is and the one thing to do next. */
-export default function SurveyCard({ survey }: { survey: ClimateSurveyCard }) {
-    const tenantSlug = useTenantSlug();
-    const routes = useEngagementRoutes();
-    const deadline = deadlineText(survey);
+/**
+ * The survey in progress as the protagonist of the home (pantalla Clima · Inicio): its share inside the arch with the
+ * count below, its last day, «Ver avance» as the primary action and, for who manages it, the reminder.
+ */
+export default function SurveyCard({
+    survey,
+    canManage = false,
+}: {
+    survey: ClimateSurveyCard;
+    canManage?: boolean;
+}) {
+    const answered = answeredText(survey);
 
     return (
-        <article className="flex max-w-[640px] flex-col gap-5 card p-6 shadow-xs">
-            <header className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-lg leading-7 font-semibold">
+        <article className="flex flex-col gap-6 card p-5 sm:flex-row sm:items-center sm:gap-10 sm:p-7">
+            {survey.invited !== null && survey.answered !== null && (
+                <div className="flex flex-col items-center gap-1 self-center">
+                    <ArcMeter
+                        value={survey.answered}
+                        max={survey.invited}
+                        label={answered}
+                        showPercent
+                    />
+                    <p className="text-sm text-muted-foreground">{answered}</p>
+                </div>
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl leading-7 font-semibold">
                         {survey.name}
                     </h2>
-                    {deadline !== undefined && (
-                        <p className="text-sm text-muted-foreground">
-                            {deadline}
-                        </p>
-                    )}
-                </div>
-                <div className="flex items-center gap-2">
-                    <ModeBadge mode={survey.mode} />
                     <SurveyStatusBadge
                         status={survey.status}
                         label={survey.statusLabel}
                     />
+                    <ModeBadge mode={survey.mode} />
                 </div>
-            </header>
-            {survey.invited === null || survey.answered === null ? (
-                <p className="text-sm text-muted-foreground">
-                    {answeredText(survey)} Revisa el borrador y lánzalo para
-                    invitar a las personas.
+                <p className="text-muted-foreground">
+                    {deadlineText(survey) ??
+                        `${answered} Revisa el borrador y lánzalo para invitar a las personas.`}
                 </p>
-            ) : (
-                <div className="flex flex-col gap-2">
-                    <p className="text-2xl leading-8 font-semibold tabular-nums">
-                        {answeredText(survey)}
-                    </p>
-                    <ProgressBar
-                        value={survey.answered}
-                        max={survey.invited}
-                        label={`Avance de ${survey.name}`}
-                    />
-                </div>
-            )}
-            <footer className="flex justify-end border-t pt-4">
-                <Button variant="outline" asChild>
-                    <Link href={routes.show([tenantSlug, survey.id])}>
-                        {survey.status === 'draft'
-                            ? 'Continuar borrador'
-                            : 'Ver avance'}
-                        <ArrowRight aria-hidden="true" />
-                    </Link>
-                </Button>
-            </footer>
+                <SurveyCardActions survey={survey} canManage={canManage} />
+            </div>
         </article>
     );
 }

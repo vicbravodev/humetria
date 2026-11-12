@@ -8,9 +8,12 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 export default function RemindDialog({
     surveyId,
     pending,
+    outline = false,
 }: {
     surveyId: string;
     pending: number;
+    /** Beside another primary action (the home), the reminder is the secondary one. */
+    outline?: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
@@ -18,7 +21,7 @@ export default function RemindDialog({
     return (
         <ConfirmDialog
             trigger={
-                <Button>
+                <Button variant={outline ? 'outline' : 'default'}>
                     <Send aria-hidden="true" />
                     Recordar a {pending}
                 </Button>

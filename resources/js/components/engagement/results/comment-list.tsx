@@ -15,7 +15,7 @@ export default function CommentList({
     return (
         <section
             aria-labelledby="comment-list"
-            className="flex flex-col gap-4 card p-5 sm:p-6"
+            className="flex max-w-[760px] flex-col gap-4 card p-5 sm:p-6"
         >
             <h2 id="comment-list" className="text-xl font-semibold">
                 {heading}
@@ -25,9 +25,11 @@ export default function CommentList({
                     <li
                         // The text is all there is of a comment: its place in the page tells them apart.
                         key={`${comments.current_page}-${position}`}
-                        className="py-3 text-pretty first:pt-0 last:pb-0"
+                        className="py-4 text-pretty first:pt-0 last:pb-0"
                     >
-                        {comment.body}
+                        <blockquote className="border-l-2 border-primary pl-4 leading-relaxed">
+                            {comment.body}
+                        </blockquote>
                     </li>
                 ))}
             </ul>

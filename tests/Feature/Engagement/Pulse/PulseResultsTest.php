@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Engagement\Enums\Driver;
 use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Jobs\SummarizeComments;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
+use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -109,4 +111,34 @@ it('does not queue any summary of comments when a pulse closes', function (): vo
     resolve(QueueCommentSummaries::class)->handle(new SurveyClosed($pulse->id, $pulse->kind));
 
     Queue::assertNotPushed(SummarizeComments::class);
+});
+
+it('gives a theme the pulse asked only in part question by question: the figure the trend draws, not a hidden one', function (): void {
+    $pulse = pulseResultsSurvey($this->tenant, PulseMode::Tour, 6);
+    $anchor = ItemBank::anchor(Driver::Clarity)->key;
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->where('drivers.0.key', 'clarity')->where('drivers.0.partial', true)->where('drivers.0.favorable', null)
+        ->where('drivers.0.items', [['key' => $anchor, 'text' => ItemBank::find($anchor)->text, 'favorable' => 100]]));
+    $this->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('series.3.key', $anchor)->where('series.3.points.0.surveyId', $pulse->id)->where('series.3.points.0.value', 100));
+});
+
+it('hides an anchor under five answers in the results and in the trend alike', function (): void {
+    $pulse = pulseResultsSurvey($this->tenant, PulseMode::Tour, 4);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->where('drivers.0.partial', true)->where('drivers.0.favorable', null)->where('drivers.0.items.0.favorable', null));
+    $this->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->has('series.3.points', 0));
+});
+
+it('says a theme was asked in part without any count of answers nor how many are missing', function (): void {
+    $pulse = pulseResultsSurvey($this->tenant, PulseMode::Tour, 4);
+    $this->actingAs($this->hr);
+
+    $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
+        ->has('drivers.0', fn (Assert $driver) => $driver->hasAll(['key', 'label', 'descriptive', 'partial', 'favorable', 'score', 'delta'])
+            ->has('items', 1, fn (Assert $item) => $item->hasAll(['key', 'text', 'favorable']))));
 });

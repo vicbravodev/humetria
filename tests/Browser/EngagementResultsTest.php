@@ -27,20 +27,25 @@ it('shows RH the results of a closed survey and its cut by area', function (bool
     [$url, $survey] = climateResultsPanel();
 
     visitPage('engagement/results', "{$url}/climate/{$survey}/results?cut=area", $dark, $mobile)
-        ->assertSee('Resultados de clima')
-        ->assertSee('Índice de compromiso')
+        ->assertSee('Grupos de 5 o más')
         ->assertSee('36 de 40 contestaron')
+        ->assertSee('Escribir compromisos')
+        ->assertSee('Resumen')
+        ->assertSee('Donde más puedes mover la aguja es Reconocimiento.')
+        ->assertSee('Índice de compromiso')
+        ->assertSee('respuestas favorables')
         ->assertSee('Índice de recomendación')
+        ->assertSee('en una escala de −100 a 100')
         ->assertSee('Dónde actuar primero')
-        ->assertSee('Reconocimiento')
-        ->assertSee('Alta')
-        ->assertSee('Qué mueve el compromiso')
-        ->assertSee('Se reporta pregunta por pregunta.')
+        ->assertSee('Prioridad alta')
+        ->assertSee('Prioridad es asociación con el compromiso, no causa.')
         ->assertSee('Fortalezas')
         ->assertSee('Oportunidades')
         ->assertSee('Por grupo')
+        ->assertSee('Toda la empresa')
         ->assertSee('Ventas')
         ->assertSee('Bodega')
+        ->assertSee('Protegido')
         ->assertDontSee('Net Promoter');
 })->with([
     'light, desktop' => [false, false],
@@ -53,13 +58,18 @@ it('shows RH every question with its share and its five-step bar', function (boo
     [$url, $survey] = climateResultsPanel();
 
     visitPage('engagement/items', "{$url}/climate/{$survey}/results/items", $dark, $mobile)
-        ->assertSee('Resultados por pregunta')
+        ->assertSee('Por pregunta')
         ->assertSee('Compromiso')
-        ->assertSee('Claridad y alineación')
+        ->assertSee('De acuerdo')
+        ->assertSee('Ni de acuerdo ni en desacuerdo')
+        ->click('nav[aria-label="Temas"] button:has-text("Claridad y alineación")')
         ->assertSee('Conozco las principales metas que busca alcanzar esta empresa.')
         ->assertSee('36 respuestas')
+        ->assertSee('De menor a mayor. La marca vertical es el tema')
+        ->click('Todas las preguntas')
         ->assertSee('Se reporta pregunta por pregunta.')
-        ->assertSee('Menos de 5 personas la contestaron.');
+        ->assertSee('Menos de 5 respuestas: no se muestra.')
+        ->assertNoJavaScriptErrors();
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -74,6 +84,21 @@ it('tells RH the results wait for the survey to close while it is open', functio
     $survey = climateResultsSurvey($tenant, 6, closed: false);
 
     visitPage('engagement/results', "{$url}/climate/{$survey->id}/results")
-        ->assertSee('Los resultados estarán disponibles al cerrar la encuesta')
+        ->assertSee('Los resultados se abren al cerrar la encuesta')
+        ->assertSee('Ver avance')
         ->assertDontSee('Índice de compromiso');
+});
+
+it('shows no result of a survey that closed with fewer than five answers, nor how many are missing', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $survey = climateResultsSurvey($tenant, 3);
+
+    visitPage('engagement/results', "{$url}/climate/{$survey->id}/results")
+        ->assertSee('Todavía no hay suficientes respuestas para mostrar resultados')
+        ->assertSee('Se muestran a partir de 5 respuestas')
+        ->assertDontSee('Índice de compromiso')
+        ->assertDontSee('respuestas favorables')
+        ->assertDontSee('faltan');
 });
