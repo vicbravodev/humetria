@@ -10,6 +10,7 @@ use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -36,6 +37,8 @@ final class SecurityHeaders
      */
     private const string MAP_TILES = 'https://tile.openstreetmap.org';
 
+    private const string HORIZON_FONTS = 'https://fonts.bunny.net';
+
     /**
      * @param  Closure(Request): (Response)  $next
      */
@@ -47,7 +50,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $headers = [
-            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request)),
+            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request)),
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
@@ -88,17 +91,30 @@ final class SecurityHeaders
         return $request->user() !== null && $request->is('admin', 'admin/*');
     }
 
-    private function policy(string $nonce, string $devServer, bool $maps): string
+    /**
+     * Horizon compiles its Vue templates with `new Function` and ships no build without eval, and its stylesheet
+     * imports a font from Bunny. The exception lives only on its path, and only for the superadmin: anyone else gets the strict policy.
+     */
+    private function isHorizon(Request $request): bool
     {
+        $path = Config::string('horizon.path');
+
+        return $request->is($path, $path.'/*') && Gate::allows('viewHorizon');
+    }
+
+    private function policy(string $nonce, string $devServer, bool $maps, bool $horizon): string
+    {
+        $eval = $horizon ? " 'unsafe-eval'" : '';
+        $bunny = $horizon ? ' '.self::HORIZON_FONTS : '';
         $socket = $devServer === '' ? '' : ' '.preg_replace('/^http/', 'ws', $devServer);
         $devServer = $devServer === '' ? '' : ' '.$devServer;
 
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'{$devServer}",
-            "style-src 'self' 'nonce-{$nonce}' ".self::SONNER_STYLES.$devServer,
+            "script-src 'self' 'nonce-{$nonce}'{$eval}{$devServer}",
+            "style-src 'self' 'nonce-{$nonce}' ".self::SONNER_STYLES.$bunny.$devServer,
             "img-src 'self' data:".($maps ? ' '.self::MAP_TILES : '').$devServer,
-            "font-src 'self'{$devServer}",
+            "font-src 'self'{$bunny}{$devServer}",
             "connect-src 'self'{$devServer}{$socket}",
             "object-src 'none'",
             "base-uri 'self'",
