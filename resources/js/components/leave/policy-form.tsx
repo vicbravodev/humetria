@@ -1,13 +1,18 @@
-import { Form, Link } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
+import { useState } from 'react';
 import PolicyBasics from '@/components/leave/policy-basics';
+import PolicyPreview from '@/components/leave/policy-preview';
 import PolicyRowsEditor from '@/components/leave/policy-rows-editor';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import PolicySaveBar from '@/components/leave/policy-save-bar';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index, store, update } from '@/routes/tenant/vacations/policies';
+import { draftsOf } from '@/lib/leave/policy';
+import { store, update } from '@/routes/tenant/vacations/policies';
 import type { LeavePolicyData } from '@/types';
 
-/** The form of a policy, new or being changed. A viewer sees it filled in and cannot send it. */
+/**
+ * The form of a policy, new or being changed: its sections on the left, what the days become on the right as they are
+ * typed, and the bar of saving always in view. A viewer sees it filled in and cannot send it.
+ */
 export default function PolicyForm({
     policy,
     floors,
@@ -18,48 +23,35 @@ export default function PolicyForm({
     canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
+    const [rows, setRows] = useState(() => draftsOf(policy?.rows ?? []));
     const form =
         policy === null
             ? store.form(tenantSlug)
             : update.form({ tenant: tenantSlug, policy: policy.id });
 
     return (
-        <Form
-            {...form}
-            options={{ preserveScroll: true }}
-            noValidate
-            className="grid gap-8"
-        >
-            {({ processing, errors }) => (
-                <fieldset
-                    disabled={!canManage}
-                    className="grid gap-8 disabled:opacity-90"
-                >
-                    <PolicyBasics policy={policy} errors={errors} />
-                    <PolicyRowsEditor
-                        initial={policy?.rows ?? []}
-                        floors={floors}
-                        errors={errors}
-                    />
-                    <div className="flex flex-wrap items-center justify-end gap-3 border-t pt-4">
-                        <p className="mr-auto text-sm text-muted-foreground">
-                            Los periodos ya otorgados conservan los términos con
-                            que se otorgaron.
-                        </p>
-                        <Button variant="outline" asChild>
-                            <Link href={index(tenantSlug)}>
-                                {canManage ? 'Cancelar' : 'Volver'}
-                            </Link>
-                        </Button>
-                        {canManage && (
-                            <Button type="submit" disabled={processing}>
-                                {processing && <Spinner />}
-                                {policy === null
-                                    ? 'Crear política'
-                                    : 'Guardar política'}
-                            </Button>
-                        )}
+        <Form {...form} options={{ preserveScroll: true }} noValidate>
+            {({ processing, errors, isDirty }) => (
+                <fieldset disabled={!canManage} className="disabled:opacity-90">
+                    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                        <div className="grid gap-8">
+                            <PolicyBasics policy={policy} errors={errors} />
+                            <PolicyRowsEditor
+                                rows={rows}
+                                setRows={setRows}
+                                floors={floors}
+                                errors={errors}
+                            />
+                        </div>
+                        <PolicyPreview rows={rows} floors={floors} />
                     </div>
+                    <PolicySaveBar
+                        dirty={isDirty}
+                        errors={Object.keys(errors).length}
+                        processing={processing}
+                        isNew={policy === null}
+                        canManage={canManage}
+                    />
                 </fieldset>
             )}
         </Form>

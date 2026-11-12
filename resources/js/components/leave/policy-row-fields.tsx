@@ -32,7 +32,7 @@ export default function PolicyRowFields({
     return (
         <li className="grid gap-3 rounded-lg border bg-card p-4">
             <input type="hidden" name={at('kind')} value={row.kind} />
-            <div className="grid items-start gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+            <div className="grid items-start gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,1.3fr)_auto]">
                 {tier ? (
                     <>
                         <RowField
@@ -73,6 +73,12 @@ export default function PolicyRowFields({
                     error={error('days')}
                     onChange={(days) => onChange({ days })}
                 />
+                {tier && (
+                    <p className="text-caption text-muted-foreground sm:mt-[30px]">
+                        {floorText(floors, row.yearTo) ||
+                            'Escribe el último año para ver el mínimo de la ley.'}
+                    </p>
+                )}
                 <Button
                     type="button"
                     variant="ghost"
@@ -84,12 +90,6 @@ export default function PolicyRowFields({
                     <Trash2 />
                 </Button>
             </div>
-            {tier && (
-                <p className="text-caption text-muted-foreground">
-                    {floorText(floors, row.yearTo) ||
-                        'Escribe el último año del rango para ver el mínimo de la ley.'}
-                </p>
-            )}
         </li>
     );
 }
