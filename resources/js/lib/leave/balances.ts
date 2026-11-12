@@ -1,14 +1,15 @@
+import { daysUntil } from '@/lib/leave/overview';
 import { countOf } from '@/lib/plural';
 import type { LeaveBalanceFilters, LeaveBalanceRow } from '@/types';
 
-/** The query string of the list of balances: only what narrows it, so the first tab with no search has a plain address. */
+/** The query string of the list of balances: the tab, always (the list opens on what asks for action, not on everybody), and the search. */
 export function balancesQuery(
     filters: LeaveBalanceFilters,
 ): Partial<Record<keyof LeaveBalanceFilters, string>> {
     const q = filters.q.trim();
 
     return {
-        ...(filters.tab === 'all' ? {} : { tab: filters.tab }),
+        tab: filters.tab,
         ...(q === '' ? {} : { q }),
     };
 }
@@ -26,4 +27,37 @@ export function balanceNote(
     }
 
     return row.available === 0 ? 'Sin días' : 'Al corriente';
+}
+
+/** The days left as a percentage of the days given, for the bar; null when the days given are not known. */
+export function availablePercent(
+    available: number,
+    granted: number | null,
+): number | null {
+    if (granted === null || granted <= 0) {
+        return null;
+    }
+
+    return Math.min(100, Math.max(0, Math.round((available / granted) * 100)));
+}
+
+/** «Nuevo periodo en 20 días» when the next one starts within a month; nothing otherwise. */
+export function newPeriodSoon(
+    nextAnniversary: string | null,
+    today: string,
+): string | null {
+    const days =
+        nextAnniversary === null ? null : daysUntil(nextAnniversary, today);
+
+    if (days === null || days < 0 || days > 30) {
+        return null;
+    }
+
+    if (days === 0) {
+        return 'Nuevo periodo hoy';
+    }
+
+    return days === 1
+        ? 'Nuevo periodo mañana'
+        : `Nuevo periodo en ${days} días`;
 }

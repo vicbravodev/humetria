@@ -193,6 +193,8 @@ export type LeaveBalanceRow = {
     available: number;
     /** The days they were given in advance. */
     advanced: number;
+    /** The days given in the periods that still hold days: the whole the bar measures; null when not known. */
+    granted: number | null;
     /** Y-m-d: when their next period starts; null while they have no start date. */
     nextAnniversary: string | null;
 };

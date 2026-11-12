@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Support;
 
 use App\Modules\Leave\Actions\GrantEntitlements;
+use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Models\LeaveTermination;
 use App\Modules\Organization\Contracts\Roster;
@@ -32,7 +33,7 @@ final readonly class BalancePages
     public function __construct(private Roster $roster, private Seniority $seniority, private PolicyResolver $policies, private GrantEntitlements $grants) {}
 
     /**
-     * @return array{tab: string, q: string, today: string, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>}
+     * @return array{tab: string, q: string, today: string, owedDays: int, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>}
      */
     public function index(string $tab, string $search): array
     {
@@ -50,6 +51,7 @@ final readonly class BalancePages
             'tab' => $tab,
             'q' => $search,
             'today' => PeriodWindow::today()->toDateString(),
+            'owedDays' => (int) LeaveEntry::query()->whereNotNull('leave_entitlement_id')->sum('days'),
             'counts' => $counts,
             'people' => $this->page(new RosterQuery(employeeIds: $ids[$tab] ?? null, search: $search)),
         ];

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Notification;
 mutates(BalanceController::class, BalancePages::class);
 
 /** The queries of the list of balances, whatever the number of people on the page (the session and the panel frame included). */
-const LEAVE_BALANCES_QUERIES = 29;
+const LEAVE_BALANCES_QUERIES = 30;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));

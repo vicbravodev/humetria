@@ -92,3 +92,12 @@ it('lists ten people per page, as the screen shows them', function (): void {
         ->and($props['people']['data'])->toHaveCount(10)
         ->and($props['people']['total'])->toBe(12);
 });
+
+it('says how many days are still owed in all, for the head of the page', function (): void {
+    LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 1, 'anniversary_on' => '2025-03-15', 'statutory_days' => 12, 'extra_days' => 3]);
+    $other = Tenant::factory()->create();
+    $stranger = Employee::factory()->create(['tenant_id' => $other->id]);
+    LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $other->id, 'employee_id' => $stranger->id, 'years_of_service' => 1, 'anniversary_on' => '2025-03-15', 'statutory_days' => 20]);
+
+    expect(triageProps()['owedDays'])->toBe(15);
+});
