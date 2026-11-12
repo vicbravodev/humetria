@@ -114,7 +114,7 @@ it('closes every route of a disabled module that opens without ids, and leaves t
             $uri = fn (Tenant $tenant): string => '/'.str_replace(['{tenant:slug}', '{tenant}'], $tenant->slug, $route->uri());
 
             $this->actingAs($ownerOff)->get($uri($disabled))->assertNotFound();
-            if (! array_key_exists((string) $route->getName(), POSTERS_THAT_WAIT_FOR_THEIR_CONTENT) && $this->actingAs($ownerOn)->get($uri($enabled))->status() === 404) {
+            if (! array_key_exists((string) $route->getName(), POSTERS_THAT_WAIT_FOR_THEIR_CONTENT) && $this->actingAs($ownerOn)->get($uri($enabled))->getStatusCode() === 404) {
                 $closedAnyway[] = (string) $route->getName();
             }
 
