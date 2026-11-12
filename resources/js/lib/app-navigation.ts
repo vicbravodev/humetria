@@ -111,7 +111,19 @@ export const settingsNavItems = (impersonating: boolean): NavItem[] =>
 export const settingsEntryHref = (impersonating: boolean): NavItem['href'] =>
     impersonating ? editAppearance() : editProfile();
 
-export type NavSection = { label: string; items: NavItem[] };
+/** The sidebar's groups: the company's own pages (no heading), the three families of tools and the platform. */
+export type NavSectionKey =
+    | 'main'
+    | 'compliance'
+    | 'listening'
+    | 'operations'
+    | 'platform';
+
+export type NavSection = {
+    key?: NavSectionKey;
+    label: string;
+    items: NavItem[];
+};
 
 /**
  * The top bar's trail when a page sets none: on a sidebar page, its section and its name ("Cumplimiento › NOM-035");

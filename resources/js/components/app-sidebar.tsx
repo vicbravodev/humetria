@@ -12,17 +12,17 @@ import {
     SidebarMenu,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
-import { superadminNavItems } from '@/lib/staff-navigation';
-import { toolNavItems } from '@/lib/tool-navigation';
+import { navSections } from '@/lib/nav-sections';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
-    const mainItems = mainNavItems(tenant, auth.isStaff);
-    const complianceItems = complianceNavItems(tenant, inCourse?.count);
-    const toolItems = toolNavItems(tenant);
+    const sections = navSections({
+        tenant,
+        isStaff: auth.isStaff,
+        inCourse: inCourse?.count ?? 0,
+    });
 
     return (
         <Sidebar variant="inset" collapsible="icon">
@@ -57,15 +57,17 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="gap-4 px-1">
-                {mainItems.length > 0 && <NavMain items={mainItems} />}
-                {complianceItems.length > 0 && (
-                    <NavMain label="Cumplimiento" items={complianceItems} />
-                )}
-                {toolItems.length > 0 && (
-                    <NavMain label="Herramientas" items={toolItems} />
-                )}
-                {auth.isStaff && (
-                    <NavMain label="Plataforma" items={superadminNavItems} />
+                {/* The company's own pages go without a heading; each family of tools under its name. */}
+                {sections.map((section) =>
+                    section.key === 'main' ? (
+                        <NavMain key={section.label} items={section.items} />
+                    ) : (
+                        <NavMain
+                            key={section.label}
+                            label={section.label}
+                            items={section.items}
+                        />
+                    ),
                 )}
             </SidebarContent>
 

@@ -1,51 +1,57 @@
 import { m } from 'motion/react';
+import { Check, CircleAlert } from 'lucide-react';
 import { EASE_OUT, ONCE } from '@/components/landing/landing-motion';
+import { cn } from '@/lib/utils';
 
-/** One piece of the file: its check draws itself, one line after the other. */
-export default function InspectionLine({
-    text,
-    tool,
-    index,
-}: {
+type Props = {
     text: string;
     tool: string;
+    done: boolean;
     index: number;
-}) {
-    const delay = 0.2 + index * 0.18;
+};
 
+/** One piece of the file: ready, or what it still lacks, with the tool it comes from. */
+export default function InspectionLine({ text, tool, done, index }: Props) {
     return (
         <m.li
-            initial={{ opacity: 0, transform: 'translateY(10px)' }}
-            whileInView={{ opacity: 1, transform: 'translateY(0px)' }}
+            initial={{ opacity: 0, transform: 'translateX(-10px)' }}
+            whileInView={{ opacity: 1, transform: 'translateX(0px)' }}
             viewport={ONCE}
-            transition={{ duration: 0.5, ease: EASE_OUT, delay }}
-            className="flex items-center gap-4 border-t border-border py-4 last:border-b"
+            transition={{ duration: 0.4, ease: EASE_OUT, delay: index * 0.08 }}
+            className={cn(
+                'grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3 border-b px-5 py-3.5 last:border-b-0',
+                !done && 'bg-risk-medio-bg/55',
+            )}
         >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
-                <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-                    <m.path
-                        d="M5 12.5l4.5 4.5L19 7.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        initial={{ pathLength: 0 }}
-                        whileInView={{ pathLength: 1 }}
-                        viewport={ONCE}
-                        transition={{
-                            duration: 0.4,
-                            ease: EASE_OUT,
-                            delay: delay + 0.25,
-                        }}
-                    />
-                </svg>
+            <span
+                className={cn(
+                    'mt-px flex size-6 items-center justify-center rounded-full',
+                    done
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border-[1.5px] border-risk-medio bg-risk-medio-bg text-risk-medio-fg',
+                )}
+            >
+                {done ? (
+                    <Check aria-hidden className="size-3.5" />
+                ) : (
+                    <CircleAlert aria-hidden className="size-3.5" />
+                )}
+                <span className="sr-only">
+                    {done ? 'Listo:' : 'Pendiente:'}
+                </span>
             </span>
-            <span className="min-w-0 flex-1 text-base leading-6 font-medium">
-                {text}
-            </span>
-            <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">
-                {tool}
+            <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="text-meta leading-snug">{text}</span>
+                <span
+                    className={cn(
+                        'shrink-0 rounded-full px-2 py-1 text-xs leading-none font-medium',
+                        done
+                            ? 'bg-accent text-primary'
+                            : 'bg-risk-medio-bg text-risk-medio-fg',
+                    )}
+                >
+                    {tool}
+                </span>
             </span>
         </m.li>
     );

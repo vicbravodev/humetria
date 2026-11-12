@@ -10,6 +10,7 @@ import LandingFooter from '@/components/landing/landing-footer';
 import LandingHeader from '@/components/landing/landing-header';
 import LandingHero from '@/components/landing/landing-hero';
 import ToolsSection from '@/components/landing/tools-section';
+import TrustStrip from '@/components/landing/trust-strip';
 import { cspNonce } from '@/lib/csp-nonce';
 
 export default function Landing() {
@@ -28,6 +29,7 @@ export default function Landing() {
                 <LandingHeader />
                 <main data-smooth-scroll>
                     <LandingHero />
+                    <TrustStrip />
                     <HowItWorksSection />
                     <ToolsSection />
                     <InspectionSection />

@@ -296,5 +296,5 @@ it('labels no sidebar group after a single tool', function (): void {
 
     visit('/admin')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].every((label) => !label.textContent.includes("NOM-035"))')
-        ->assertDontSeeIn('[data-sidebar="sidebar"]', 'Cumplimiento');
+        ->assertDontSeeIn('[data-sidebar="sidebar"]', 'Cumple la norma');
 });

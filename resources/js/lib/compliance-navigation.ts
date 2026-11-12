@@ -1,10 +1,5 @@
 import { Armchair, ClipboardCheck, Laptop } from 'lucide-react';
 import { attendance } from '@/lib/attendance-navigation';
-import {
-    complaints,
-    handlesOrManagesComplaints,
-} from '@/lib/complaints-navigation';
-import { vacationsNavItems } from '@/lib/leave-navigation';
 import { hasModule } from '@/lib/modules';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as disclosure } from '@/routes/tenant/disclosure';
@@ -81,7 +76,7 @@ const nom035 = (tenant: NavTenant, inCourse: number): NavItem => {
 /**
  * The compliance tools of the current company, for every role: who may change them is the page's to say. Only those whose
  * module the company has. The committee sees only NOM-037 and Ley Silla; the outside handler of complaints has its cases in the
- * main section instead.
+ * main section instead (Quejas, with Clima and Pulso, is in the family «Escucha a tu gente»).
  */
 export const complianceNavItems = (
     tenant: NavTenant | null,
@@ -108,12 +103,6 @@ export const complianceNavItems = (
                 'attendance',
                 tenant.can.view_attendance,
                 () => [attendance(tenant)],
-            ],
-            ['vacations', true, () => vacationsNavItems(tenant)],
-            [
-                'complaints',
-                handlesOrManagesComplaints(tenant),
-                () => [complaints(tenant)],
             ],
         ];
 

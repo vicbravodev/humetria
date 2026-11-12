@@ -1,10 +1,12 @@
 import InputError from '@/components/humetria/input-error';
-import { TOOLS } from '@/components/landing/landing-tools';
+import DemoPill from '@/components/landing/demo-pill';
+import { FAMILIES, familyTools } from '@/components/landing/landing-families';
 
 type Props = {
     error?: string | undefined;
 };
 
+/** The tools to show in the demo, grouped by family as the tools section shows them. */
 export default function DemoToolsField({ error }: Props) {
     return (
         <fieldset
@@ -15,23 +17,30 @@ export default function DemoToolsField({ error }: Props) {
             data-test="tools-group"
             className="grid gap-2"
         >
-            <legend className="mb-2 text-sm font-medium">
-                ¿Qué herramientas te interesan? (elige al menos una)
+            <legend className="mb-2.5 text-meta leading-snug font-medium">
+                ¿Qué herramientas te interesan?{' '}
+                <span className="font-normal text-muted-foreground">
+                    (elige al menos una)
+                </span>
             </legend>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {TOOLS.map((tool) => (
-                    <label
-                        key={tool.key}
-                        className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-3 py-2 text-base transition-[color,box-shadow] has-checked:border-primary has-checked:ring-1 has-checked:ring-primary"
-                    >
-                        <input
-                            type="checkbox"
-                            name="tools[]"
-                            value={tool.key}
-                            className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                        />
-                        <span className="font-medium">{tool.name}</span>
-                    </label>
+            <div className="grid gap-3.5">
+                {FAMILIES.map((family) => (
+                    <div key={family.key} className="grid gap-2">
+                        <p className="text-caption text-muted-foreground">
+                            {family.name}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {familyTools(family).map((tool) => (
+                                <DemoPill
+                                    key={tool.key}
+                                    type="checkbox"
+                                    name="tools[]"
+                                    value={tool.key}
+                                    label={tool.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 ))}
             </div>
             <InputError id="demo-tools-error" message={error} />

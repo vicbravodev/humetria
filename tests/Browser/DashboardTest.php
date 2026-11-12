@@ -155,17 +155,24 @@ it('fills the width up to 1440 px and centers the page beyond it', function (boo
     resizeTo($page, 2400)->assertScript($width, '1440 centered');
 })->with(['light' => false, 'dark' => true]);
 
-// Board 40 (V4-Menu-Roles): on a phone the menu becomes a bar at the bottom with Panel, Cumplimiento, Quejas and Más.
+// Board 40 (V4-Menu-Roles): on a phone the menu becomes a bar at the bottom with Panel, Normas, Quejas and Más.
 it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', function (): void {
     $page = visit(panelCompany())->on()->mobile();
 
     $page->assertSeeIn('nav[aria-label="Menú principal"]', 'Panel')
         ->assertSeeIn('nav[aria-label="Menú principal"]', 'Quejas')
-        ->click('Cumplimiento')
+        ->click('Normas')
         ->click('[role="menu"] a[href$="/seating"]')
         ->assertPathIs('/admin/acme/seating')
         ->click('Más')
         ->assertSeeIn('[data-mobile="true"]', 'Centros de trabajo')
+        ->assertNoJavaScriptErrors();
+});
+
+it('groups the sidebar by the families of tools the landing offers', function (): void {
+    visit(panelCompany())
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Ordena tu operación')
+        ->assertSeeIn('[data-sidebar="sidebar"]', 'Ley Silla')
         ->assertNoJavaScriptErrors();
 });
 
