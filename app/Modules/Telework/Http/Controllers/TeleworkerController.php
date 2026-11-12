@@ -14,6 +14,7 @@ use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Actions\RetireWorkplace;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Http\Requests\RegisterAspirantRequest;
 use App\Modules\Telework\Http\Requests\WorkplaceRequest;
 use App\Modules\Telework\Models\Checklist;
@@ -149,6 +150,7 @@ final class TeleworkerController extends Controller
         $zone = config()->string('app.display_timezone');
         // The lists the Comisión already decided, read once for all the workplaces: the person's page and the portal say the same.
         $reviewed = WorkplaceReview::query()->whereIn('workplace_id', $teleworker->workplaces->modelKeys())->whereNotNull('application_id')->get(['application_id'])->map(fn (WorkplaceReview $review): ?string => $review->application_id)->values()->all();
+        $workplaces = $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended, $reviewed))->all();
 
         return [
             'id' => $teleworker->id,
@@ -166,7 +168,8 @@ final class TeleworkerController extends Controller
             'endNote' => $teleworker->end_note,
             'equipment' => $this->equipment($teleworker, $zone),
             'notices' => $this->notices($teleworker, $zone),
-            'workplaces' => $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended, $reviewed))->all(),
+            'workplaces' => $workplaces,
+            'homeDefault' => $this->homeDefault($teleworker, $workplaces),
         ];
     }
 
@@ -210,6 +213,29 @@ final class TeleworkerController extends Controller
                 'status' => $notice->reviewed_at === null ? 'Recibido' : 'Revisado',
                 'reviewedOn' => $notice->reviewed_at?->setTimezone($zone)->toDateString(),
             ])->all());
+    }
+
+    /**
+     * The address of the first workplace validated, to offer it as the person's home when they join the roster (the
+     * data stay two: a person may not live where they telework).
+     *
+     * @param  array<int, array<string, mixed>>  $workplaces  as `workplace()` gave them
+     * @return array{street: string, exterior_number: string, interior_number: string|null, neighborhood: string, postal_code: string, municipality: string, state: string}|null
+     */
+    private function homeDefault(Teleworker $teleworker, array $workplaces): ?array
+    {
+        $valid = array_column(array_filter($workplaces, fn (array $row): bool => in_array($row['status'], [WorkplaceStatus::Valid->value, WorkplaceStatus::ValidWithPlan->value], true)), 'id');
+        $place = $teleworker->workplaces->first(fn (Workplace $workplace): bool => in_array($workplace->id, $valid, true));
+
+        return $place === null ? null : [
+            'street' => $place->street,
+            'exterior_number' => $place->exterior_number,
+            'interior_number' => $place->interior_number,
+            'neighborhood' => $place->neighborhood,
+            'postal_code' => $place->postal_code,
+            'municipality' => $place->municipality,
+            'state' => $place->state,
+        ];
     }
 
     /**

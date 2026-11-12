@@ -2,6 +2,7 @@ import { describeDate } from '@/lib/calendar-date';
 import type { Option } from '@/lib/option-search';
 import type {
     EndReasonValue,
+    HomeAddress,
     TeleworkerStatus,
     WorkplaceStatusValue,
 } from '@/types';
@@ -51,4 +52,11 @@ export function rosterHint(
     return canJoin
         ? 'Tiene un lugar validado y vigente: ya puedes pasarla al padrón.'
         : 'Necesita al menos un lugar validado y vigente.';
+}
+
+/** The home as the form sends it when it is the workplace itself: field by field, leaving out the interior number nobody has. */
+export function homeEntries(home: HomeAddress): [string, string][] {
+    return Object.entries(home).flatMap(([name, value]): [string, string][] =>
+        value === null ? [] : [[name, value]],
+    );
 }

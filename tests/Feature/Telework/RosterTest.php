@@ -456,6 +456,25 @@ it('labels a cancelled checklist as cancelled, not as pending', function (): voi
         ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'Cancelada'));
 });
 
+// F2 (C-21): the home of the person starts from the first workplace validated; the two data stay apart.
+it('offers the address of the first validated workplace as the home, and none while no place is validated', function (): void {
+    $url = route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.homeDefault', null));
+
+    rosterReview();
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.homeDefault', [
+        'street' => $this->workplace->street,
+        'exterior_number' => $this->workplace->exterior_number,
+        'interior_number' => $this->workplace->interior_number,
+        'neighborhood' => $this->workplace->neighborhood,
+        'postal_code' => $this->workplace->postal_code,
+        'municipality' => $this->workplace->municipality,
+        'state' => $this->workplace->state,
+    ]));
+});
+
 // F2 (C-07): the page of the person says what the portal says once the Comisión decided the list.
 it('labels a checklist the Comisión already decided as reviewed, not as in review', function (): void {
     $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);

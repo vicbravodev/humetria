@@ -561,6 +561,8 @@ it('moves an aspirant into the roster and then ends their telework', function ()
         ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
         ->fill('#roster-activities', 'Atención de clientes.')
         ->fill('#roster-phone', '4421234567')
+        // The home starts from the validated workplace; here it is another one.
+        ->click('#roster-home-same')
         ->fill('#workplace-new-street', 'Calle Reforma')
         ->fill('#workplace-new-exterior_number', '12')
         ->fill('#workplace-new-neighborhood', 'Centro')
@@ -583,6 +585,24 @@ it('moves an aspirant into the roster and then ends their telework', function ()
         ->assertSee('Prueba.')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('takes the home from the validated workplace when the person says it is the same', function (): void {
+    [$url, , $teleworker] = validatedAspirant();
+
+    visit("{$url}/telework/teleworkers/{$teleworker->id}")
+        ->press('Pasar al padrón')
+        ->assertSee('Es el mismo que su lugar de trabajo')
+        ->assertMissing('#workplace-new-street')
+        ->click('#roster-marital')
+        ->type('[role="combobox"][aria-controls="roster-marital-options"]', 'solt')
+        ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
+        ->fill('#roster-activities', 'Atención de clientes.')
+        ->fill('#roster-phone', '4421234567')
+        ->fill('#roster-no_equipment_reason', 'Usa su propio equipo.')
+        ->press('Guardar y pasar al padrón')
+        ->assertSee('En el padrón de teletrabajo')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows an ended period as history, without the actions that no longer work', function (): void {
