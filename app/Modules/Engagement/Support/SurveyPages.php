@@ -6,10 +6,12 @@ namespace App\Modules\Engagement\Support;
 
 use App\Modules\Engagement\Actions\LaunchSurvey;
 use App\Modules\Engagement\Actions\SnapshotAudience;
+use App\Modules\Engagement\Enums\CommitmentStatus;
 use App\Modules\Engagement\Enums\ItemBlock;
 use App\Modules\Engagement\Enums\PulseMode;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
+use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
@@ -18,6 +20,7 @@ use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
 use App\Modules\Engagement\Support\Pulse\PulsePlanner;
 use App\Modules\Engagement\Support\Pulse\SchedulePage;
 use App\Modules\Engagement\Support\Pulse\TrendPage;
+use App\Modules\Engagement\Support\Results\SurveyResults;
 use App\Modules\Organization\Data\RosterEntry;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -45,7 +48,7 @@ final readonly class SurveyPages
     public function __construct(private SnapshotAudience $snapshot, private Participation $participation, private TrendPage $trend) {}
 
     /**
-     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, howWeAre: list<array{surveyId: string, label: string, value: int, direction: string|null}>|null, modes: list<array{value: string, label: string}>|null, schedule: array<string, mixed>|null, frequencies: list<array{value: string, label: string}>|null}
+     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, latest: array{id: string, name: string, index: int|null, recommendation: int|null, commitments: array{open: int, in_progress: int, done: int}}|null, howWeAre: list<array{surveyId: string, label: string, value: int, direction: string|null}>|null, modes: list<array{value: string, label: string}>|null, schedule: array<string, mixed>|null, frequencies: list<array{value: string, label: string}>|null}
      */
     public function index(SurveyKind $kind, bool $canManage): array
     {
@@ -66,6 +69,7 @@ final readonly class SurveyPages
             ]),
             'canManage' => $canManage,
             'kind' => $kind->value,
+            'latest' => $kind === SurveyKind::Climate ? self::latest() : null,
             'howWeAre' => $kind === SurveyKind::Pulse ? $this->trend->index($this->trend->waves(self::HOME_WAVES)) : null,
             'schedule' => $kind === SurveyKind::Pulse ? SchedulePage::props() : null,
             'frequencies' => $kind === SurveyKind::Pulse ? SchedulePage::frequencies() : null,
@@ -103,6 +107,33 @@ final readonly class SurveyPages
             'participation' => $participation,
             'resultsUrl' => $resultsUrl,
             'openCommitments' => $draft ? OpenCommitments::latest() : null,
+        ];
+    }
+
+    /**
+     * The latest closed climate as the home closes the cycle with it: its two indices under the minimums of its results,
+     * and its commitments by state (the dropped ones are not a step of the cycle).
+     *
+     * @return array{id: string, name: string, index: int|null, recommendation: int|null, commitments: array{open: int, in_progress: int, done: int}}|null
+     */
+    private static function latest(): ?array
+    {
+        $survey = Survey::query()->where('kind', SurveyKind::Climate)->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->first();
+
+        if ($survey === null) {
+            return null;
+        }
+
+        $company = SurveyResults::for($survey)->company();
+        $byStatus = Commitment::query()->toBase()->where('survey_id', $survey->id)->select('status')->selectRaw('count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $count = fn (CommitmentStatus $status): int => is_int($total = $byStatus->get($status->value)) ? $total : 0;
+
+        return [
+            'id' => $survey->id,
+            'name' => $survey->name,
+            'index' => $company->index,
+            'recommendation' => $company->recommendation->index,
+            'commitments' => ['open' => $count(CommitmentStatus::Open), 'in_progress' => $count(CommitmentStatus::InProgress), 'done' => $count(CommitmentStatus::Done)],
         ];
     }
 

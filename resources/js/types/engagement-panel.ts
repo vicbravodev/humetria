@@ -104,6 +104,15 @@ export type TrendPoint = {
     direction: TrendDirection;
 };
 
+/** The latest closed climate: its indices under the minimums of its results and its commitments by state. */
+export type ClimateLatest = {
+    id: string;
+    name: string;
+    index: number | null;
+    recommendation: number | null;
+    commitments: { open: number; in_progress: number; done: number };
+};
+
 /** The props of the home of Clima or Pulso. */
 export type EngagementHome = {
     current: ClimateSurveyCard | null;
@@ -112,6 +121,8 @@ export type EngagementHome = {
     modes: PulseModeOption[] | null;
     schedule: PulseSchedule | null;
     frequencies: PulseModeOption[] | null;
+    /** The latest closed climate, to close the cycle on the home of Clima; null on Pulso. */
+    latest: ClimateLatest | null;
     /** The engagement index of the latest waves (Pulso only). */
     howWeAre: TrendPoint[] | null;
 };
