@@ -179,6 +179,8 @@ it('points the panel card at the button instead of repeating the third step', fu
     visitPage('dashboard', '/admin/acme')
         ->click('Ahora no')
         ->assertSee('En tus primeros pasos')
+        ->assertSee('Es tu siguiente paso. Síguelo desde el botón Primeros pasos.')
+        ->assertDontSee('abajo a la derecha')
         ->assertDontSee('Continuar')
         ->click('Ver mis pasos')
         ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')

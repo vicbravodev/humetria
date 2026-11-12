@@ -16,8 +16,7 @@ export default function DashboardFirstStep({
             meta="En tus primeros pasos"
             action={<Button onClick={openFirstSteps}>Ver mis pasos</Button>}
         >
-            Es tu siguiente paso. Síguelo desde el botón Primeros pasos, abajo a
-            la derecha.
+            Es tu siguiente paso. Síguelo desde el botón Primeros pasos.
         </NextStepCard>
     );
 }
