@@ -6,8 +6,12 @@ namespace App\Modules\Organization\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Contracts\ReportingLines;
+use App\Modules\Organization\Enums\ReportingIssue;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Support\ReportingGaps;
+use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -46,6 +50,29 @@ final class OrgChartPeopleController extends Controller
         Gate::authorize('view-org-chart');
 
         return $this->people($request->string('q')->trim()->limit(100, '')->toString(), []);
+    }
+
+    /**
+     * The active people with no manager who lead nobody, the ones the chart does not draw yet, a page at a time and
+     * by name, for whoever edits the structure to hang them from their manager. Name, job title, area and work
+     * center only: never contact data.
+     *
+     * @return LengthAwarePaginator<int, array{id: string, name: string, job_title: string, area: string, work_center: string}>
+     */
+    public function unassigned(Request $request, ReportingGaps $gaps, WorkCenters $workCenters): LengthAwarePaginator
+    {
+        Gate::authorize('manage-org-chart');
+
+        $centers = array_column($workCenters->all(), 'name', 'id');
+        $search = $request->string('q')->trim()->limit(100, '')->toString();
+
+        return $gaps->page(ReportingIssue::WithoutManager, search: $search)->through(fn (Employee $employee): array => [
+            'id' => $employee->id,
+            'name' => $employee->name ?? $employee->employee_number ?? '',
+            'job_title' => $employee->job_title ?? '',
+            'area' => $employee->area->name ?? '',
+            'work_center' => $centers[$employee->work_center_id ?? ''] ?? '',
+        ]);
     }
 
     /**

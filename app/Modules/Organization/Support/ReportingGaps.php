@@ -34,13 +34,14 @@ final readonly class ReportingGaps
     }
 
     /**
-     * The people of an issue by name, each with their area and their manager.
+     * The people of an issue by name, each with their area and their manager; only those whose name or employee
+     * number has what was typed, when something was.
      *
      * @return LengthAwarePaginator<int, Employee>
      */
-    public function page(ReportingIssue $issue, int $perPage = 25): LengthAwarePaginator
+    public function page(ReportingIssue $issue, int $perPage = 25, string $search = ''): LengthAwarePaginator
     {
-        $query = $this->active();
+        $query = $this->active()->matching(['name', 'employee_number'], $search);
 
         match ($issue) {
             ReportingIssue::WithoutManager => $query->whereNull('manager_id')->whereRaw('NOT '.self::HAS_REPORTS),
