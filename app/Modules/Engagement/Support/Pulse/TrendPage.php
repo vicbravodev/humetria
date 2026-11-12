@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Engagement\Support\Pulse;
 
 use App\Modules\Engagement\Enums\Driver;
+use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
+use App\Modules\Engagement\Models\PulseSchedule;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Engagement\Support\Results\SurveyResults;
@@ -45,12 +47,17 @@ final readonly class TrendPage
 
     /**
      * @param  list<Wave>  $waves
-     * @return array{hasWaves: bool, series: list<Series>}
+     * @return array{hasWaves: bool, series: list<Series>, latestPulseId: string|null, nextPulseOn: string|null}
      */
     public function props(array $waves): array
     {
+        // With fewer than two waves there is nothing to compare yet: the page says when the next pulse goes out.
+        $next = count($waves) < 2 ? PulseSchedule::query()->first()?->next_run_on->toDateString() : null;
+        $pulses = array_values(array_filter($waves, fn (Wave $wave): bool => $wave->kind === SurveyKind::Pulse));
+        $around = ['latestPulseId' => $pulses === [] ? null : $pulses[array_key_last($pulses)]->surveyId, 'nextPulseOn' => $next];
+
         if ($waves === []) {
-            return ['hasWaves' => false, 'series' => []];
+            return ['hasWaves' => false, 'series' => [], ...$around];
         }
 
         $series = [
@@ -63,7 +70,7 @@ final readonly class TrendPage
             $series[] = $this->item($waves, ItemBank::anchor($driver)->key, $driver->label());
         }
 
-        return ['hasWaves' => true, 'series' => $series];
+        return ['hasWaves' => true, 'series' => $series, ...$around];
     }
 
     /**
