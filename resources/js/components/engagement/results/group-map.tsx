@@ -1,4 +1,5 @@
 import GroupMapLegend from '@/components/engagement/results/group-map-legend';
+import GroupMapList from '@/components/engagement/results/group-map-list';
 import GroupMapTable from '@/components/engagement/results/group-map-table';
 import CountTabs from '@/components/humetria/count-tabs';
 import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
@@ -14,6 +15,7 @@ export default function GroupMap({ results }: { results: EngagementResults }) {
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
     const at: [string, string] = [tenantSlug, results.survey.id];
+    const columns = mapColumns(results.drivers, results.priorities);
 
     return (
         <section
@@ -46,11 +48,13 @@ export default function GroupMap({ results }: { results: EngagementResults }) {
                 </p>
             ) : (
                 <>
+                    <GroupMapList
+                        columns={columns}
+                        groups={results.groups}
+                        hasHidden={results.hasHidden}
+                    />
                     <GroupMapTable
-                        columns={mapColumns(
-                            results.drivers,
-                            results.priorities,
-                        )}
+                        columns={columns}
                         groups={results.groups}
                         hasHidden={results.hasHidden}
                     />

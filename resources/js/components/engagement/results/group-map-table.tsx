@@ -28,7 +28,7 @@ export default function GroupMapTable({
         group.drivers.find((driver) => driver.key === key)?.score ?? null;
 
     return (
-        <div className="overflow-x-auto card p-2 sm:p-3">
+        <div data-group-table className="hidden card p-2 sm:block sm:p-3">
             <Table className="min-w-[640px] table-fixed">
                 <TableCaption className="sr-only">
                     Respuestas favorables por grupo y tema

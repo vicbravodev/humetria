@@ -54,6 +54,17 @@ it('shows RH the results of a closed survey and its cut by area', function (bool
     'dark, phone' => [true, true],
 ]);
 
+it('lists the groups as cards on a phone and as a table on a desktop', function (bool $mobile): void {
+    [$url, $survey] = climateResultsPanel();
+
+    $page = visitPage('engagement/results', "{$url}/climate/{$survey}/results?cut=area", false, $mobile);
+
+    [$shown, $hidden] = $mobile ? ['list', 'table'] : ['table', 'list'];
+
+    $page->assertVisible("[data-group-{$shown}]")
+        ->assertScript("getComputedStyle(document.querySelector('[data-group-{$hidden}]')).display", 'none');
+})->with(['desktop' => [false], 'phone' => [true]]);
+
 it('shows RH every question with its share and its five-step bar', function (bool $dark, bool $mobile): void {
     [$url, $survey] = climateResultsPanel();
 
