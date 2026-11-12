@@ -1,20 +1,25 @@
-import { Link } from '@inertiajs/react';
+import SurveyHistoryRow from '@/components/engagement/survey-history-row';
 import Pagination from '@/components/humetria/pagination';
+import StackedTable from '@/components/humetria/stacked-table';
 import {
-    Table,
     TableBody,
     TableCaption,
-    TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
+import {
+    useEngagementKind,
+    useEngagementRoutes,
+} from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { describeDate } from '@/lib/calendar-date';
+import { averageRate } from '@/lib/engagement/panel';
 import type { ClimateSurveyHistoryRow, Paginated } from '@/types';
 
-/** "Historial" (pantalla NOM035): the closed surveys, a page at a time, with how many answered each. */
+/**
+ * «Historial»: the closed surveys, the latest first and a page at a time, each row a link to the survey, with its
+ * participation against the average of the page.
+ */
 export default function SurveyHistory({
     surveys,
 }: {
@@ -22,66 +27,49 @@ export default function SurveyHistory({
 }) {
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
+    const withMode = useEngagementKind() === 'pulse';
+    const average = averageRate(surveys.data);
 
     if (surveys.total === 0) {
         return null;
     }
 
     return (
-        <section aria-labelledby="history" className="flex flex-col gap-3.5">
-            <h2 id="history" className="text-lg leading-[26px] font-semibold">
-                Historial
-            </h2>
-            <Table>
+        <section aria-labelledby="history" className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <h2 id="history" className="text-xl font-semibold">
+                    Historial
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                    Del más reciente al más antiguo.
+                    {average !== null &&
+                        ` La marca vertical es el promedio de participación: ${average} %.`}
+                </p>
+            </div>
+            <StackedTable>
                 <TableCaption className="sr-only">
                     Encuestas cerradas
                 </TableCaption>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Encuesta</TableHead>
+                        {withMode && <TableHead>Modo</TableHead>}
                         <TableHead>Cerró</TableHead>
-                        <TableHead className="text-right">
-                            Contestaron
-                        </TableHead>
-                        <TableHead>
-                            <span className="sr-only">Ver</span>
-                        </TableHead>
+                        <TableHead>Participación</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {surveys.data.map((survey) => (
-                        <TableRow key={survey.id}>
-                            <TableCell className="font-medium">
-                                {survey.name}
-                            </TableCell>
-                            <TableCell>
-                                {survey.closedOn === null
-                                    ? '—'
-                                    : (describeDate(survey.closedOn) ??
-                                      survey.closedOn)}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">
-                                {survey.invited === null
-                                    ? '—'
-                                    : `${survey.answered} de ${survey.invited}`}
-                                {survey.rate !== null && ` · ${survey.rate} %`}
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <Link
-                                    href={routes.show([tenantSlug, survey.id])}
-                                    className="touch-hit text-sm font-medium text-primary underline-offset-4 hover:underline"
-                                >
-                                    Ver
-                                    <span className="sr-only">
-                                        {' '}
-                                        {survey.name}
-                                    </span>
-                                </Link>
-                            </TableCell>
-                        </TableRow>
+                        <SurveyHistoryRow
+                            key={survey.id}
+                            survey={survey}
+                            href={routes.results.url([tenantSlug, survey.id])}
+                            withMode={withMode}
+                            average={average}
+                        />
                     ))}
                 </TableBody>
-            </Table>
+            </StackedTable>
             <Pagination
                 previous="Ver más recientes"
                 next="Ver más antiguas"

@@ -44,6 +44,16 @@ it('leaves a wave under the minimum out of how the engagement moved', function (
     $this->actingAs($this->hr)->get(route('tenant.pulse.index', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('howWeAre', []));
 });
 
+it('says in how many days the next pulse goes out, counted in the time of the company', function (string $next, int $days): void {
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'next_run_on' => $next]);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.index', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('schedule.daysUntil', $days));
+})->with([
+    'in four days' => ['2026-11-15', 4],
+    'today' => ['2026-11-11', 0],
+    'tomorrow' => ['2026-11-12', 1],
+]);
+
 it('reads no wave of another company', function (): void {
     $other = Tenant::factory()->create();
     workIn($other);
