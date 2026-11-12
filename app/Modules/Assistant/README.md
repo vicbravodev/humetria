@@ -25,6 +25,9 @@ Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{
 (p. ej. `Engagement` al resumir comentarios) pregunta primero `available()` (Humi no apagado para la empresa y presupuesto
 del mes sin agotar), manda solo texto pasado por `redact()` y cuenta el uso con `record()` (fila de `ai_usage` sin persona
 ni conversación). Implementación: `Support/TenantAiAccess`.
+`Contracts\HumiActivity` (`hasAsked($userId)`): si la persona ya le escribió a Humi en la empresa actual (Primeros pasos lo usa
+para marcar el paso). Se lee de `ai_usage` y no de las conversaciones, porque la persona puede borrarlas; nunca expone qué
+preguntó. Implementación: `Support/TenantHumiActivity`.
 
 ## Reglas que no se rompen
 
