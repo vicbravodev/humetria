@@ -767,6 +767,21 @@ it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out 
     }
 });
 
+// H-10: the figures count up on screen, but paper must never carry a frame in the middle of the count.
+it('prints the final figures of the report, not a frame of their count', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/results")
+        // The frames of the count come a minute apart, so it has not moved from 0 when the print starts.
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->click('Informe 7.7')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial')
+        ->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.textContent).join()", "0\u{00a0}%,0\u{00a0}%,0\u{00a0}%")
+        ->assertScript("(async () => { window.dispatchEvent(new Event('beforeprint')); await new Promise((resolve) => setTimeout(resolve, 300)); return [...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.textContent).join(); })()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
+});
+
 // Rediseño v2 (C7): a list with nobody in its view says why, and «Nadie coincide» is kept for a search that found nobody.
 it('tells an empty view of the people of an evaluation apart from a search that found nobody', function (): void {
     $tenant = campaignsCompany();
