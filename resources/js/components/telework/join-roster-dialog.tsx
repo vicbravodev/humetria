@@ -53,6 +53,7 @@ export default function JoinRosterDialog({
                         <>
                             <RosterFields
                                 jobTitle={teleworker.jobTitle}
+                                home={teleworker.homeDefault}
                                 states={states}
                                 errors={errors}
                             />

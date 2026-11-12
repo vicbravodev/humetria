@@ -1,20 +1,24 @@
 import Combobox from '@/components/humetria/combobox';
 import InputError from '@/components/humetria/input-error';
 import RosterArea from '@/components/telework/roster-area';
-import WorkplaceFields from '@/components/telework/workplace-fields';
+import RosterHome from '@/components/telework/roster-home';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MARITAL_STATUSES } from '@/lib/telework/roster';
+import type { HomeAddress } from '@/types';
 
 type Errors = Partial<Record<string, string>>;
 
 /** The data of numeral 5.1 that RH gives to move an aspirant into the roster; the job profile is the employee's own job title. */
 export default function RosterFields({
     jobTitle,
+    home,
     states,
     errors,
 }: {
     jobTitle: string;
+    /** The first workplace validated: the home starts from it. */
+    home: HomeAddress | null;
     states: Record<string, string>;
     errors: Errors;
 }) {
@@ -63,12 +67,7 @@ export default function RosterFields({
                     message={errors['contact_phone']}
                 />
             </div>
-            <fieldset className="grid gap-4 rounded-xl border p-4">
-                <legend className="px-1 font-medium">
-                    Domicilio de la persona
-                </legend>
-                <WorkplaceFields index={null} states={states} errors={errors} />
-            </fieldset>
+            <RosterHome home={home} states={states} errors={errors} />
             <RosterArea
                 name="no_equipment_reason"
                 label="Equipo entregado"

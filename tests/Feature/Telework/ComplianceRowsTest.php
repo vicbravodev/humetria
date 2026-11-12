@@ -471,10 +471,10 @@ it('describes each row in words in a center with documents and a list but nobody
     ]);
 });
 
-it('words the policy in the singular while nobody works in the center yet', function (): void {
+it('says there is nobody to ask for the confirmation of the policy while nobody works in the center yet', function (): void {
     rowDocument(DocumentKind::Policy, DocumentKind::Policy->coverableItems());
 
-    expect(rowWords()['5.2'])->toBe('done: Versión 1. 0 de 1 persona confirmó que la leyó.');
+    expect(rowWords()['5.2'])->toBe('done: Versión 1. Aún no hay a quién pedirle que confirme.');
 });
 
 it('words the rows that have nothing to count yet', function (): void {

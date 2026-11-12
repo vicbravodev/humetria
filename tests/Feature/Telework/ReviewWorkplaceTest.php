@@ -9,6 +9,8 @@ use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\ReviewMethod;
 use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Http\Controllers\ReviewController;
+use App\Modules\Telework\Models\Checklist;
+use App\Modules\Telework\Models\ChecklistAnswer;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\Workplace;
@@ -94,6 +96,34 @@ it('requires a plan and due date for valid_with_plan and notes for not_valid', f
         ->and(reviewRejected(fn () => decideReview(ReviewDecision::NotValid)))->toHaveKey('notes')
         ->and(reviewRejected(fn () => decideReview(ReviewDecision::NotValid, '  ')))->toHaveKey('notes')
         ->and(WorkplaceReview::query()->count())->toBe(0);
+});
+
+// F2 (C-06): the Comisión records its observation when it validates a place whose list has unfavorable answers.
+it('asks for an observation when validating a list with unfavorable answers, and counts them', function (): void {
+    $checklist = Checklist::query()->findOrFail($this->application->checklist_id);
+
+    foreach ([['yes', 'no'], ['yes', 'no'], ['no', 'yes'], ['yes', 'yes'], ['no', 'no'], ['yes', 'not_applicable']] as $index => [$favorable, $answer]) {
+        $question = addQuestion($checklist, 90 + $index, $favorable);
+        ChecklistAnswer::query()->create(['tenant_id' => $this->tenant->id, 'application_id' => $this->application->id, 'question_id' => $question->id, 'answer' => $answer]);
+    }
+
+    expect(reviewRejected(fn () => decideReview(ReviewDecision::Valid)))->toBe(['notes' => 'Escribe una observación: la lista tiene 3 respuestas desfavorables.'])
+        ->and(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan, plan: 'Cambiar la silla.', due: '2030-01-01')))->toHaveKey('notes')
+        ->and(WorkplaceReview::query()->count())->toBe(0);
+
+    expect(decideReview(ReviewDecision::Valid, 'Lo vimos por video: se corrigió.')->decision)->toBe(ReviewDecision::Valid);
+});
+
+it('says «respuesta desfavorable» for a single one, and validates without notes a list with none', function (): void {
+    $checklist = Checklist::query()->findOrFail($this->application->checklist_id);
+    $question = addQuestion($checklist, 90, 'yes');
+    ChecklistAnswer::query()->create(['tenant_id' => $this->tenant->id, 'application_id' => $this->application->id, 'question_id' => $question->id, 'answer' => 'no']);
+
+    expect(reviewRejected(fn () => decideReview(ReviewDecision::Valid)))->toBe(['notes' => 'Escribe una observación: la lista tiene 1 respuesta desfavorable.']);
+
+    ChecklistAnswer::query()->update(['answer' => 'yes']);
+
+    expect(decideReview(ReviewDecision::Valid)->notes)->toBe('');
 });
 
 it('accepts a due date of today and rejects yesterday, counted in Mexico City', function (): void {

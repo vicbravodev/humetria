@@ -41,11 +41,25 @@ it('splits the requirements into what is missing, in the order of the route, and
     seatingInspection()->assertInertia(fn (Assert $page) => $page->component('seating/inspection')
         ->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Querétaro'])
         ->where('applicable', 13)
-        ->where('ready', fn ($ready): bool => collect($ready)->pluck('numeral')->all() === ['R1', 'R5', 'R6', 'R3', 'R8', 'R9', 'R7', 'R11'])
+        ->where('ready', fn ($ready): bool => collect($ready)->pluck('numeral')->all() === ['R1', 'R5', 'R11'])
         ->where('ready.0', fn ($row): bool => $row['title'] === 'Los puestos de pie, con su Figura 1' && $row['action'] === 'Ver puestos' && $row['href'] === route('tenant.seating.center', [$this->tenant, $this->center->id]))
-        ->where('missing', fn ($missing): bool => collect($missing)->pluck('numeral')->all() === ['R4', 'R2', 'R10', 'R12', 'R13'])
+        ->where('missing', fn ($missing): bool => collect($missing)->pluck('numeral')->all() === ['R4', 'R6', 'R2', 'R3', 'R8', 'R9', 'R7', 'R10', 'R12', 'R13'])
         ->where('missing.0', fn ($row): bool => $row['detail'] === '1 puesto sin asiento' && $row['action'] === 'Registrar asientos')
         ->where('dossierHref', route('tenant.seating.dossier', [$this->tenant, $this->center->id])));
+});
+
+it('keeps what has nothing registered out of «Lo puedes mostrar», with what is missing to register', function (): void {
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    seatingInspection()->assertInertia(fn (Assert $page) => $page
+        ->where('ready', fn ($ready): bool => collect($ready)->doesntContain(fn (array $row): bool => $row['state'] === 'pending'))
+        ->where('missing', fn ($missing): bool => collect($missing)->where('state', 'pending')->pluck('detail', 'numeral')->all() === [
+            'R6' => 'Aún no hay asientos registrados',
+            'R3' => 'Aún no hay evaluaciones firmadas',
+            'R8' => 'Aún no hay evaluaciones firmadas',
+            'R9' => 'Aún no hay evaluaciones firmadas',
+            'R7' => 'Aún no hay evaluaciones firmadas',
+        ]));
 });
 
 it('shows a viewer what is missing without the ways to fix it nor the dossier', function (): void {

@@ -115,6 +115,17 @@ export type EndReasonValue =
     | 'transfer'
     | 'other';
 
+/** The address of a workplace, as the roster form asks for the home (the same fields, by their names). */
+export type HomeAddress = {
+    street: string;
+    exterior_number: string;
+    interior_number: string | null;
+    neighborhood: string;
+    postal_code: string;
+    municipality: string;
+    state: string;
+};
+
 export type TeleworkerSummary = {
     id: string;
     name: string;
@@ -135,6 +146,8 @@ export type TeleworkerSummary = {
     endedOn: string | null;
     endNote: string | null;
     workplaces: TeleworkerWorkplace[];
+    /** The first workplace validated, offered as their home; null while none is. */
+    homeDefault: HomeAddress | null;
 };
 
 /** A question as the person sees it in their portal. */

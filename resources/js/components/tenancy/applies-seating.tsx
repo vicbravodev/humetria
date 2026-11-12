@@ -38,7 +38,7 @@ export default function AppliesSeating({
             <div className="flex flex-col gap-6">
                 <ChoiceField
                     name="standing"
-                    legend="¿Alguien trabaja de pie la mayor parte de su jornada?"
+                    legend="¿Alguien hace su trabajo de pie, aunque sea parte de su jornada?"
                     options={STANDING}
                     value={
                         form.standing === null

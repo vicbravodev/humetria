@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     figureOne,
+    missingInStep,
     POSITION_STEPS,
     stepWithError,
+    textValues,
+    withMissing,
 } from '@/lib/seating/position-steps';
 
 describe('figureOne', () => {
@@ -75,5 +78,58 @@ describe('stepWithError', () => {
         expect(stepWithError({ default_surface: 'x' })).toBe(4);
         expect(stepWithError({ name: 'x' })).toBe(1);
         expect(stepWithError({})).toBeNull();
+    });
+});
+
+describe('missingInStep', () => {
+    it('lists the questions of Figura 1 nobody answered, even the «No» that is "0"', () => {
+        expect(missingInStep(2, {})).toEqual([
+            'can_work_seated',
+            'has_space_for_seat',
+            'needs_to_be_nearby',
+        ]);
+        expect(
+            missingInStep(2, {
+                can_work_seated: '0',
+                has_space_for_seat: '1',
+            }),
+        ).toEqual(['needs_to_be_nearby']);
+        expect(
+            missingInStep(2, {
+                can_work_seated: '0',
+                has_space_for_seat: '0',
+                needs_to_be_nearby: '1',
+            }),
+        ).toEqual([]);
+    });
+
+    it('asks nothing of the other steps', () => {
+        expect(missingInStep(1, {})).toEqual([]);
+        expect(missingInStep(3, {})).toEqual([]);
+        expect(missingInStep(4, {})).toEqual([]);
+    });
+});
+
+describe('textValues', () => {
+    it('keeps the text the form holds, and leaves out files', () => {
+        const data = new FormData();
+        data.append('name', 'Cajera');
+        data.append('file', new Blob(['x']), 'x.txt');
+
+        expect(textValues(data)).toEqual({ name: 'Cajera' });
+    });
+});
+
+describe('withMissing', () => {
+    it('marks the empty fields as required and lets what the server said win', () => {
+        expect(
+            withMissing({ tasks: 'El campo tasks es obligatorio.' }, [
+                'name',
+                'tasks',
+            ]),
+        ).toEqual({
+            name: 'Este dato es obligatorio.',
+            tasks: 'El campo tasks es obligatorio.',
+        });
     });
 });

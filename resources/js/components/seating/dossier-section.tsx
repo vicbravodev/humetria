@@ -6,6 +6,7 @@ const VARIANT = {
     met: 'success',
     warning: 'warning',
     missing: 'destructive',
+    pending: 'secondary',
 } as const;
 
 /** One requirement as a section of the dossier: its number, state and what exists with its date. It never splits across pages. */

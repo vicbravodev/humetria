@@ -207,7 +207,7 @@ it('r5: does not count a rest seat out of service, and leaves out the nature tha
     expect(row($this, 'r5')->state)->toBe(RowState::Missing);
 
     StandingPosition::query()->update(['nature_allows' => false, 'nature_reason' => 'Línea de soldadura.', 'placement' => null]);
-    expect(row($this, 'r5')->state)->toBe(RowState::Met);
+    expect(row($this, 'r5')->state)->toBe(RowState::Pending);
 });
 
 it('r6: wants every seat away from the workstation signposted', function (): void {
@@ -345,4 +345,38 @@ it('counts the rows of this center only', function (): void {
     $other = WorkCenter::factory()->for($this->tenant)->create();
 
     expect(collect(resolve(ComplianceRows::class)->for($other->id))->firstWhere('key', 'r1')?->state)->toBe(RowState::Missing);
+});
+
+it('does not call met what has no assessment to look at', function (): void {
+    expect(row($this, 'r2')->state)->toBe(RowState::Missing);
+
+    foreach (['r3', 'r7', 'r8', 'r9'] as $key) {
+        expect(row($this, $key)->state)->toBe(RowState::Pending)->and(row($this, $key)->count)->toBe(0);
+    }
+});
+
+it('keeps them met once an assessment is signed', function (): void {
+    assess($this);
+
+    foreach (['r3', 'r7', 'r8', 'r9'] as $key) {
+        expect(row($this, $key)->state)->toBe(RowState::Met);
+    }
+});
+
+it('waits for a Figura 1 placement before judging measures and pauses', function (): void {
+    StandingPosition::query()->update(['nature_allows' => false, 'nature_reason' => 'Línea de soldadura.', 'placement' => null]);
+    expect(row($this, 'r5')->state)->toBe(RowState::Pending)->and(row($this, 'r11')->state)->toBe(RowState::Pending);
+
+    StandingPosition::factory()->create($this->where);
+    expect(row($this, 'r5')->state)->toBe(RowState::Met)->and(row($this, 'r11')->state)->toBe(RowState::Met);
+});
+
+it('waits for a seat before judging seats', function (): void {
+    Seat::query()->delete();
+
+    expect(row($this, 'r6')->state)->toBe(RowState::Pending);
+});
+
+it('labels the pending state «Sin registros»', function (): void {
+    expect(RowState::Pending->label())->toBe('Sin registros');
 });

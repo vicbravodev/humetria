@@ -8,7 +8,7 @@ export function requirementCount(
 ): string | null {
     const { state, count } = requirement;
 
-    if (state === 'met' || count === 0) {
+    if (state === 'met' || state === 'pending' || count === 0) {
         return null;
     }
 
@@ -34,13 +34,16 @@ export function summaryText(summary: {
     met: number;
     warning: number;
     missing: number;
+    pending: number;
 }): string {
-    const total = summary.met + summary.warning + summary.missing;
+    const total =
+        summary.met + summary.warning + summary.missing + summary.pending;
     const rest = [
         summary.warning > 0
             ? `${summary.warning} con ${plural(summary.warning, 'aviso', 'avisos')}`
             : null,
         summary.missing > 0 ? `${summary.missing} por resolver` : null,
+        summary.pending > 0 ? `${summary.pending} sin registros` : null,
     ].filter((part): part is string => part !== null);
 
     return [`${summary.met} de ${total} cumplen`, ...rest].join(' · ');

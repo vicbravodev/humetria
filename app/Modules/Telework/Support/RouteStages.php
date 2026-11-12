@@ -70,9 +70,12 @@ final class RouteStages
 
         $stages = array_map(fn (array $numerals): bool => array_all($numerals, fn (string $numeral): bool => $done[$numeral] ?? false), self::STAGES);
 
-        // Declared, but nobody registered yet: the people, their places and their equipment are all ahead.
+        // Nobody in the padrón (declared but empty, or only aspirants): the people, their places and their equipment are all
+        // ahead; rows that do not apply because nobody is there do not make them done.
+        $unregistered = array_any($rows, fn (ComplianceRow $row): bool => $row->numeral === '5.1' && in_array($row->state, [RowState::Missing, RowState::NotApplicable], true));
+
         foreach ([1, 2, 3] as $stage) {
-            $stages[$stage] = $stages[$stage] && ! $nobody;
+            $stages[$stage] = $stages[$stage] && ! $unregistered;
         }
         $left = array_search(false, $stages, true);
         $status = match (true) {

@@ -16,7 +16,7 @@ use App\Modules\Seating\Models\StandingPosition;
 
 /**
  * The board of a work center: its thirteen requirements with their words, state and count, a summary of how many are met,
- * with a warning or missing, and how many records each part of the center holds. Counts only: no name, no answer.
+ * with a warning, missing or pending («Sin registros», never counted as met), and how many records each part of the center holds. Counts only: no name, no answer.
  */
 final readonly class CenterBoard
 {
@@ -40,7 +40,7 @@ final readonly class CenterBoard
     public function __construct(private ComplianceRows $rows) {}
 
     /**
-     * @return array{requirements: list<array{key: string, number: string, label: string, tab: string|null, state: string, stateLabel: string, count: int, since: string|null}>, summary: array{met: int, warning: int, missing: int}}
+     * @return array{requirements: list<array{key: string, number: string, label: string, tab: string|null, state: string, stateLabel: string, count: int, since: string|null}>, summary: array{met: int, warning: int, missing: int, pending: int}}
      */
     public function for(string $workCenterId): array
     {
@@ -58,7 +58,7 @@ final readonly class CenterBoard
                 'count' => $row->count,
                 'since' => $row->since?->toDateString(),
             ], $rows),
-            'summary' => ['met' => $inState(RowState::Met), 'warning' => $inState(RowState::Warning), 'missing' => $inState(RowState::Missing)],
+            'summary' => ['met' => $inState(RowState::Met), 'warning' => $inState(RowState::Warning), 'missing' => $inState(RowState::Missing), 'pending' => $inState(RowState::Pending)],
         ];
     }
 
