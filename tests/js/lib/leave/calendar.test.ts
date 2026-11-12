@@ -173,7 +173,12 @@ describe('weekPeople', () => {
         expect(weekPeople(people, week)).toEqual([
             { id: 'Alonso', name: 'Alonso', text: '17–18', pending: false },
             { id: 'Iván', name: 'Iván', text: '18–20', pending: true },
-            { id: 'Desde antes', name: 'Desde antes', text: '16–17', pending: false },
+            {
+                id: 'Desde antes',
+                name: 'Desde antes',
+                text: '16–17',
+                pending: false,
+            },
         ]);
     });
 });
