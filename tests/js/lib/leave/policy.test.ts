@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { blankRow, draftsOf, floorFor, floorText } from '@/lib/leave/policy';
+import {
+    blankRow,
+    draftsOf,
+    fixedDaysLine,
+    floorFor,
+    floorText,
+} from '@/lib/leave/policy';
 
 const FLOORS = [12, 14, 16, 18, 20, 22];
 
@@ -87,5 +93,12 @@ describe('draftsOf', () => {
                 days: '1',
             },
         ]);
+    });
+});
+
+describe('fixedDaysLine', () => {
+    it('says «1 día fijo» in the singular and «3 días fijos» in the plural', () => {
+        expect(fixedDaysLine(1)).toBe('1 día fijo cada año');
+        expect(fixedDaysLine(3)).toBe('3 días fijos cada año');
     });
 });

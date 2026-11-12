@@ -40,7 +40,7 @@ it('shows RH the sheet with its acknowledgment', function (bool $dark, bool $mob
         ->assertSee('Constancia de vacaciones')
         ->assertSee('Ana Solís')
         ->assertSee('14 días')
-        ->assertSee('25% sobre los días de vacaciones')
+        ->assertSee('25 % sobre los días de vacaciones')
         ->assertSee('Recibida por la persona el 16 de marzo de 2026')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');

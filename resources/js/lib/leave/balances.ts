@@ -15,13 +15,15 @@ export function balancesQuery(
 
 /** What RH reads under the days of a person: those given in advance, or that they have no start date. */
 export function balanceNote(
-    row: Pick<LeaveBalanceRow, 'advanced' | 'nextAnniversary'>,
+    row: Pick<LeaveBalanceRow, 'advanced' | 'available' | 'nextAnniversary'>,
 ): string {
     if (row.nextAnniversary === null) {
         return 'Sin fecha de ingreso';
     }
 
-    return row.advanced > 0
-        ? `${countOf(row.advanced, 'día adelantado', 'días adelantados')}`
-        : 'Al corriente';
+    if (row.advanced > 0) {
+        return countOf(row.advanced, 'día adelantado', 'días adelantados');
+    }
+
+    return row.available === 0 ? 'Sin días' : 'Al corriente';
 }

@@ -4,6 +4,7 @@ import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { fixedDaysLine } from '@/lib/leave/policy';
 import { countOf } from '@/lib/plural';
 import { archive, edit } from '@/routes/tenant/vacations/policies';
 import type { LeavePolicyCard } from '@/types';
@@ -41,7 +42,7 @@ export default function PolicyCard({
                 {countOf(policy.firstYearDays, 'día', 'días')} el primer año ·
                 prima {policy.premiumPercent} %
                 {policy.fixedDays > 0 &&
-                    ` · ${countOf(policy.fixedDays, 'día', 'días')} fijos cada año`}
+                    ` · ${fixedDaysLine(policy.fixedDays)}`}
             </p>
             {!policy.archived && (
                 <div className="mt-auto flex flex-wrap items-center gap-2">

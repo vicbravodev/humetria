@@ -65,3 +65,8 @@ export function draftsOf(rows: LeavePolicyRowData[]): PolicyRowDraft[] {
         days: String(row.days),
     }));
 }
+
+/** «1 día fijo cada año», «3 días fijos cada año»: days that come every year whatever the seniority. */
+export function fixedDaysLine(days: number): string {
+    return `${days} ${days === 1 ? 'día fijo' : 'días fijos'} cada año`;
+}

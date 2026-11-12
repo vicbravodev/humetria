@@ -16,23 +16,45 @@ describe('balancesQuery', () => {
 
 describe('balanceNote', () => {
     it('says a person with no start date has none', () => {
-        expect(balanceNote({ advanced: 0, nextAnniversary: null })).toBe(
-            'Sin fecha de ingreso',
-        );
+        expect(
+            balanceNote({ advanced: 0, available: 20, nextAnniversary: null }),
+        ).toBe('Sin fecha de ingreso');
     });
 
     it('counts the days given in advance, in the right number', () => {
         expect(
-            balanceNote({ advanced: 1, nextAnniversary: '2027-01-15' }),
+            balanceNote({
+                advanced: 1,
+                available: -1,
+                nextAnniversary: '2027-01-15',
+            }),
         ).toBe('1 día adelantado');
         expect(
-            balanceNote({ advanced: 3, nextAnniversary: '2027-01-15' }),
+            balanceNote({
+                advanced: 3,
+                available: -3,
+                nextAnniversary: '2027-01-15',
+            }),
         ).toBe('3 días adelantados');
     });
 
     it('says a person with no advanced days is up to date', () => {
         expect(
-            balanceNote({ advanced: 0, nextAnniversary: '2027-01-15' }),
+            balanceNote({
+                advanced: 0,
+                available: 12,
+                nextAnniversary: '2027-01-15',
+            }),
         ).toBe('Al corriente');
+    });
+
+    it('does not call «Al corriente» a person with no days left', () => {
+        expect(
+            balanceNote({
+                advanced: 0,
+                available: 0,
+                nextAnniversary: '2027-01-15',
+            }),
+        ).toBe('Sin días');
     });
 });

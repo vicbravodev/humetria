@@ -39,20 +39,22 @@ export default function LeaveStatement({
                     </Button>
                     <PrintButton />
                 </div>
-                <p className="flex items-center gap-2 font-medium text-primary print:hidden">
-                    {sheet.acknowledgedOn === null ? (
-                        <>
-                            <CircleDashed aria-hidden className="size-5" />
-                            Sin acuse
-                        </>
-                    ) : (
-                        <>
-                            <CircleCheck aria-hidden className="size-5" />
-                            Recibida por la persona el {sheet.acknowledgedOn}
-                        </>
-                    )}
-                </p>
-                <StatementSheet sheet={sheet} />
+                <StatementSheet sheet={sheet}>
+                    <p className="flex items-center gap-2 font-medium text-primary">
+                        {sheet.acknowledgedOn === null ? (
+                            <>
+                                <CircleDashed aria-hidden className="size-5" />
+                                Sin acuse
+                            </>
+                        ) : (
+                            <>
+                                <CircleCheck aria-hidden className="size-5" />
+                                Recibida por la persona el{' '}
+                                {sheet.acknowledgedOn}
+                            </>
+                        )}
+                    </p>
+                </StatementSheet>
             </div>
         </>
     );
