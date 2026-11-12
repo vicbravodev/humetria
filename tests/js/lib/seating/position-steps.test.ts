@@ -82,14 +82,6 @@ describe('stepWithError', () => {
 });
 
 describe('missingInStep', () => {
-    const basics = {
-        name: 'Cajera',
-        tasks: 'Cobra de pie.',
-        bipedestation_type: 'prolonged',
-        continuous_minutes: '240',
-        max_people_at_once: '2',
-    };
-
     it('lists the questions of Figura 1 nobody answered, even the «No» that is "0"', () => {
         expect(missingInStep(2, {})).toEqual([
             'can_work_seated',
@@ -111,14 +103,8 @@ describe('missingInStep', () => {
         ).toEqual([]);
     });
 
-    it('lists the empty boxes of the position, blank ones included', () => {
-        expect(missingInStep(1, { ...basics, tasks: '   ', name: '' })).toEqual(
-            ['name', 'tasks'],
-        );
-        expect(missingInStep(1, basics)).toEqual([]);
-    });
-
-    it('asks nothing of the steps whose fields are optional', () => {
+    it('asks nothing of the other steps', () => {
+        expect(missingInStep(1, {})).toEqual([]);
         expect(missingInStep(3, {})).toEqual([]);
         expect(missingInStep(4, {})).toEqual([]);
     });

@@ -15,13 +15,6 @@ export const POSITION_STEPS = [
     { number: 5, title: 'Quién lo ocupa', next: '' },
 ] as const;
 
-const BASICS = [
-    'name',
-    'tasks',
-    'bipedestation_type',
-    'continuous_minutes',
-    'max_people_at_once',
-];
 const FIGURE_ONE = [
     'can_work_seated',
     'has_space_for_seat',
@@ -89,14 +82,14 @@ export function textValues(data: FormData): Record<string, string> {
 }
 
 /**
- * The required fields of a step still empty, so «Siguiente» does not move on over them: the position, and the three
- * questions of Figura 1 (the server asks for the same, PositionRequest).
+ * The required fields of a step still empty, so «Siguiente» does not move on over them: the three questions of Figura 1
+ * (the server asks for the same, PositionRequest). The other steps ask nothing here.
  */
 export function missingInStep(
     step: number,
     values: Record<string, string>,
 ): string[] {
-    const asked = step === 1 ? BASICS : step === 2 ? FIGURE_ONE : [];
+    const asked = step === 2 ? FIGURE_ONE : [];
 
     return asked.filter((field) => (values[field] ?? '').trim() === '');
 }
