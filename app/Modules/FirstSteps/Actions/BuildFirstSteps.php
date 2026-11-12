@@ -59,7 +59,8 @@ final readonly class BuildFirstSteps
             new FirstStep('people', $this->headcount->ofCompany($tenantId) >= 1, $link('tenant.employees.index')),
         ];
 
-        $have = array_values(array_filter(array_keys(self::TOOLS), fn (string $tool): bool => in_array($tool, $this->modules->enabledKeys($tenantId), true)));
+        $enabled = $this->modules->enabledKeys($tenantId);
+        $have = array_values(array_filter(array_keys(self::TOOLS), fn (string $tool): bool => in_array($tool, $enabled, true)));
         if ($have !== []) {
             $steps[] = $this->evaluation($have[0], $tenantId, $centers, $link);
         }

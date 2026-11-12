@@ -188,3 +188,13 @@ it('never reads another company', function (): void {
 
     expect(array_filter(doneOf(stepsOf($this->tenant, $this->owner))))->toBe([]);
 });
+
+it('reads the modules of the company once, however many tools it checks', function (): void {
+    $modules = Mockery::spy(CompanyModules::class);
+    $modules->shouldReceive('enabledKeys')->andReturn(['nom035', 'nom037', 'seating', 'attendance']);
+    app()->instance(CompanyModules::class, $modules);
+
+    stepsOf($this->tenant, $this->owner);
+
+    $modules->shouldHaveReceived('enabledKeys')->once();
+});
