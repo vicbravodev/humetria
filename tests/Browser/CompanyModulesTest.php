@@ -19,7 +19,7 @@ $looks = [
 it('shows a company with its modules and where each comes from', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create(['trade_name' => 'Autopartes del Norte']);
-    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'nom037', 'pulse'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'nom037', 'pulse'], CarbonImmutable::now(config('app.display_timezone')));
     TenantModule::factory()->for($tenant)->create(['module' => 'seating', 'source' => 'grant', 'reason' => 'Piloto de tres semanas']);
 
     visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)

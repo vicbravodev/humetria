@@ -37,7 +37,7 @@ it('says a company is stopped for a module when it is blocked or does not have i
 it('hands out the modules of the company when it is entered, and nothing restricts one that has no plan', function (): void {
     $legacy = Tenant::factory()->create();
     $planned = Tenant::factory()->create();
-    resolve(CompanyModules::class)->syncPlan($planned->id, ['nom035', 'seating'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($planned->id, ['nom035', 'seating'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(resolve(Companies::class)->enter($legacy->id)->modules)->toBeNull()
         ->and(resolve(Companies::class)->enter($planned->id)->modules)->toBe(['nom035', 'seating'])
@@ -58,7 +58,7 @@ it('sends the digest of a module only to the companies that have it', function (
         StandingPositionFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
     }
 
-    resolve(CompanyModules::class)->syncPlan($without->id, ['nom035'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($without->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
     workIn($with);
 
     resolve(SendSeatingDigests::class)->handle();
@@ -69,7 +69,7 @@ it('sends the digest of a module only to the companies that have it', function (
 
 it('stops the time-clock devices of a company without the attendance module with the same 404 as an unknown company', function (): void {
     $without = Tenant::factory()->create();
-    resolve(CompanyModules::class)->syncPlan($without->id, ['seating'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($without->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
     $with = Tenant::factory()->create();
 
     $this->get("a/{$without->slug}/probe")->assertNotFound();
@@ -78,7 +78,7 @@ it('stops the time-clock devices of a company without the attendance module with
 
 it('does not leave the id of a company without the attendance module in the context of the request that gets the 404', function (): void {
     $without = Tenant::factory()->create();
-    resolve(CompanyModules::class)->syncPlan($without->id, ['seating'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($without->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
     $this->get("a/{$without->slug}/probe")->assertNotFound();
 

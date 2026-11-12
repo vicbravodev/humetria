@@ -22,7 +22,7 @@ mutates(GrantModule::class, RevokeModule::class, GrantModuleRequest::class, Revo
 function consolePlanned(array $modules = ['nom035']): Tenant
 {
     $tenant = Tenant::factory()->create();
-    resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now(config('app.display_timezone')));
 
     return $tenant;
 }
@@ -136,7 +136,7 @@ it('keeps a hand-made revocation when the plan changes, and takes back a grant t
     $admin = superadmin();
     $this->actingAs($admin)->post(route('companies.modules.revoke', $tenant), ['module' => 'seating', 'reason' => 'Pausa'])->assertSessionHasNoErrors();
 
-    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'seating', 'nom037'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'seating', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
     expect(consoleModules($tenant))->toBe(['nom035', 'nom037']);
 
     $this->post(route('companies.modules.grant', $tenant), ['module' => 'seating', 'reason' => 'Se reanuda'])->assertSessionHasNoErrors();

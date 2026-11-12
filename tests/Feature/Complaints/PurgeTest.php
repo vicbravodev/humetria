@@ -54,7 +54,7 @@ function purge(): int
 }
 
 it('purges the cases of a company that does not have the module too: retention outlives the plan', function (): void {
-    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom037'], \Carbon\CarbonImmutable::now());
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom037'], \Carbon\CarbonImmutable::now(config('app.display_timezone')));
     closedCase($this, '2024-11-19');
 
     expect(purge())->toBe(1);

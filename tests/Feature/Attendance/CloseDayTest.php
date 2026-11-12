@@ -167,7 +167,7 @@ describe('every night', function (): void {
     it('closes nothing for a company whose plan has no Attendance: it records no marks, so there is nothing new to close', function (): void {
         Event::fake([DayClosed::class]);
         closeMark($this->ana, MarkType::Start, '2026-11-09 09:00');
-        resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], CarbonImmutable::now());
+        resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
 
         expect(resolve(CloseDays::class)->handle())->toBe(0);
     });

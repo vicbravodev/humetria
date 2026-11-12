@@ -43,7 +43,7 @@ it('keeps every module a company can use today when it has no plan: nothing is l
 it('limits a company with a plan to that plan\'s modules', function (): void {
     $tenant = Tenant::factory()->create();
 
-    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(enabledModulesOf($tenant))->toBe(['nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'])
         ->and(resolve(CompanyModules::class)->enabled($tenant->id, 'attendance'))->toBeFalse()
@@ -87,7 +87,7 @@ it('enables what a plan adds at once and enables again what was lost, so its dat
 it('does the same for one company and no other', function (): void {
     [$one, $other] = [Tenant::factory()->create(), Tenant::factory()->create()];
 
-    resolve(CompanyModules::class)->syncPlan($one->id, ['seating'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($one->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(enabledModulesOf($one))->toBe(['seating'])
         ->and(enabledModulesOf($other))->toBe(EXISTING_MODULES);
@@ -97,7 +97,7 @@ it('logs and audits what the plan switched on and off', function (): void {
     Log::spy();
     $tenant = Tenant::factory()->create();
 
-    resolve(CompanyModules::class)->syncPlan($tenant->id, ['seating'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
     Log::shouldHaveReceived('info')->with('tenant.modules_synced', ['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate']]);
     expect(AuditEntry::query()->where('event', 'tenant.modules_synced')->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate']]);
@@ -106,7 +106,7 @@ it('logs and audits what the plan switched on and off', function (): void {
 it('refuses a plan with no modules or with one that is not a module', function (array $modules): void {
     $tenant = Tenant::factory()->create();
 
-    expect(fn () => resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now()))->toThrow(InvalidArgumentException::class)
+    expect(fn () => resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now(config('app.display_timezone'))))->toThrow(InvalidArgumentException::class)
         ->and(TenantModule::query()->count())->toBe(0);
 })->with([[[]], [['nom035', 'inventado']]]);
 

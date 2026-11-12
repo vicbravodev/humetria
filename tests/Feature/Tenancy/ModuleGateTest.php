@@ -39,7 +39,7 @@ const POSTERS_THAT_WAIT_FOR_THEIR_CONTENT = [
 function companyWithOnly(array $modules): Tenant
 {
     $tenant = Tenant::factory()->create();
-    resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now(config('app.display_timezone')));
 
     return $tenant;
 }
@@ -127,7 +127,7 @@ it('closes every route of a disabled module that opens without ids, and leaves t
 
 it('leaves a read-only company reading the modules it has, and still hides the ones it does not', function (): void {
     $tenant = Tenant::factory()->readOnly()->create();
-    resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
     $owner = ownerOf($tenant);
 
     $this->actingAs($owner)->get(route('tenant.attendance.index', $tenant))->assertOk();
