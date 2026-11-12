@@ -41,6 +41,8 @@ export type ViewNode = {
     width: number;
     height: number;
     data: ChartNodeData;
+    /** The manager whose column of people who lead nobody this card hangs in; null for a card laid out as a tree. */
+    stack: string | null;
 };
 
 export type ViewEdge = {
@@ -48,6 +50,8 @@ export type ViewEdge = {
     source: string;
     target: string;
     highlighted: boolean;
+    /** The edge goes to a card of a column: it leaves the manager at the left and enters the card from its left. */
+    stacked: boolean;
 };
 
 export type ViewOptions = {
@@ -103,6 +107,7 @@ type Context = {
 
 function personView(
     person: OrgNode,
+    stack: string | null,
     { state, options, lit }: Context,
 ): ViewNode {
     const branch = state.branches.get(person.id);
@@ -112,6 +117,7 @@ function personView(
         id: person.id,
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
+        stack,
         data: {
             kind: 'person',
             node: person,
@@ -126,7 +132,7 @@ function personView(
 function moreView(
     person: OrgNode,
     branch: Branch,
-    { options }: Context,
+    { options, stacked }: Context & { stacked: boolean },
 ): ViewNode {
     const left = person.direct_reports - branch.ids.length;
 
@@ -134,6 +140,7 @@ function moreView(
         id: moreId(person.id),
         width: CARD_WIDTH,
         height: MORE_HEIGHT,
+        stack: stacked ? person.id : null,
         data: {
             kind: 'more',
             parentId: person.id,
@@ -146,11 +153,13 @@ function moreView(
 function link(
     { graph, lit }: Context,
     [source, target]: [string, string],
+    stacked = false,
 ): void {
     graph.edges.push({
         id: `${source}>${target}`,
         source,
         target,
+        stacked,
         highlighted:
             lit !== null &&
             lit.path.has(target) &&
@@ -158,8 +167,22 @@ function link(
     });
 }
 
+/** Two or more people who lead nobody hang in a column under their manager: a tree a company of hundreds can read. */
+function columnOf(state: ChartState, branch: Branch): boolean {
+    return (
+        branch.ids.length >= 2 &&
+        branch.ids.every(
+            (child) => (state.people.get(child)?.direct_reports ?? 0) === 0,
+        )
+    );
+}
+
 /** A person, and below them whoever is open, in reading order; a branch with more pages ends in a card that asks for them. */
-function visit(context: Context, id: string): void {
+function visit(
+    context: Context,
+    id: string,
+    stack: string | null = null,
+): void {
     const person = context.state.people.get(id);
 
     if (person === undefined || context.seen.has(id)) {
@@ -167,7 +190,7 @@ function visit(context: Context, id: string): void {
     }
 
     context.seen.add(id);
-    const view = personView(person, context);
+    const view = personView(person, stack, context);
     const branch = context.state.branches.get(id);
     context.graph.nodes.push(view);
 
@@ -179,14 +202,18 @@ function visit(context: Context, id: string): void {
         return;
     }
 
+    const stacked = columnOf(context.state, branch);
+
     for (const child of branch.ids) {
-        link(context, [id, child]);
-        visit(context, child);
+        link(context, [id, child], stacked);
+        visit(context, child, stacked ? id : null);
     }
 
     if (branch.nextPage !== null) {
-        context.graph.nodes.push(moreView(person, branch, context));
-        link({ ...context, lit: null }, [id, moreId(id)]);
+        context.graph.nodes.push(
+            moreView(person, branch, { ...context, stacked }),
+        );
+        link({ ...context, lit: null }, [id, moreId(id)], stacked);
     }
 }
 
@@ -213,6 +240,7 @@ export function chartGraph(state: ChartState, options: ViewOptions): Graph {
             id: COMPANY_ID,
             width: CARD_WIDTH,
             height: CARD_HEIGHT,
+            stack: null,
             data: {
                 kind: 'company',
                 name: options.company,

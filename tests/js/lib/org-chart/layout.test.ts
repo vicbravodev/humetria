@@ -1,12 +1,23 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { layoutGraph, RANK_GAP } from '@/lib/org-chart/layout';
+import {
+    layoutGraph,
+    RANK_GAP,
+    SIBLING_GAP,
+    STACK_GAP,
+    STACK_INDENT,
+} from '@/lib/org-chart/layout';
 import type { ViewEdge, ViewNode } from '@/lib/org-chart/chart-view';
 
-const card = (id: string, height = 72): ViewNode => ({
+const card = (
+    id: string,
+    height = 72,
+    stack: string | null = null,
+): ViewNode => ({
     id,
     width: 216,
     height,
+    stack,
     data: { kind: 'company', name: id, people: 0 },
 });
 
@@ -15,6 +26,7 @@ const edge = (source: string, target: string): ViewEdge => ({
     source,
     target,
     highlighted: false,
+    stacked: false,
 });
 
 describe('layoutGraph', () => {
@@ -51,7 +63,7 @@ describe('layoutGraph', () => {
 
         expect(Math.abs(where('top').x - middle)).toBeLessThan(1);
         expect(Math.abs(where('a').x - where('b').x)).toBeGreaterThanOrEqual(
-            216 + 24,
+            216 + SIBLING_GAP,
         );
     });
 
@@ -66,5 +78,54 @@ describe('layoutGraph', () => {
         );
 
         expect(small.get('more')?.y).toBe(72 + RANK_GAP);
+    });
+});
+
+describe('layoutGraph, stacks', () => {
+    const nodes = [
+        card('top'),
+        card('a'),
+        card('a1', 72, 'a'),
+        card('a2', 72, 'a'),
+        card('a3', 44, 'a'),
+        card('b'),
+        card('b1', 72, 'b'),
+        card('b2', 72, 'b'),
+    ];
+    const edges = [
+        edge('top', 'a'),
+        edge('top', 'b'),
+        { ...edge('a', 'a1'), stacked: true },
+        { ...edge('a', 'a2'), stacked: true },
+        { ...edge('a', 'a3'), stacked: true },
+        { ...edge('b', 'b1'), stacked: true },
+        { ...edge('b', 'b2'), stacked: true },
+    ];
+    const at = layoutGraph(nodes, edges);
+    const where = (id: string) => {
+        const place = at.get(id);
+
+        if (place === undefined) {
+            throw new Error(`no place for ${id}`);
+        }
+
+        return place;
+    };
+
+    it('hangs the stacked people in a column, indented under their manager, one under the other', () => {
+        expect(where('a1').x).toBe(where('a').x + STACK_INDENT);
+        expect(where('a2').x).toBe(where('a1').x);
+        expect(where('a2').y).toBe(where('a1').y + 72 + STACK_GAP);
+        expect(where('a3').y).toBe(where('a2').y + 72 + STACK_GAP);
+        expect(where('a1').y).toBe(where('a').y + 72 + RANK_GAP);
+    });
+
+    it('reserves the whole column of each manager, so two stacks side by side do not overlap', () => {
+        const [first, second] = [where('a1'), where('b1')].toSorted(
+            (left, right) => left.x - right.x,
+        );
+
+        expect((second?.x ?? 0) - (first?.x ?? 0)).toBeGreaterThanOrEqual(216);
+        expect(where('a').y).toBe(where('b').y);
     });
 });

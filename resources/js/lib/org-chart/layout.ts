@@ -4,32 +4,83 @@ import type { ViewEdge, ViewNode } from '@/lib/org-chart/chart-view';
 /** Space between one row of cards and the next: the «+4 · 30 en total» pill and the elbow of the connector live in it. */
 export const RANK_GAP = 72;
 /** Space between cards of the same row. */
-export const SIBLING_GAP = 28;
+export const SIBLING_GAP = 20;
 
-/** Where the top-left corner of each card goes, as dagre places the tree top-down with its manager over their reports. */
+/** How far a column of people who lead nobody hangs to the right of their manager's left edge. */
+export const STACK_INDENT = 40;
+/** Space between the cards of a column. */
+export const STACK_GAP = 12;
+/** What the layout reserves on each side of a column, so the columns of two neighbours never touch. */
+const STACK_MARGIN = 40;
+
+type Corner = { x: number; y: number };
+
+/** The height of a column of cards, one under the other. */
+const columnHeight = (cards: ViewNode[]): number =>
+    cards.reduce((sum, { height }) => sum + height, 0) +
+    STACK_GAP * Math.max(0, cards.length - 1);
+
+/**
+ * Where the top-left corner of each card goes, as dagre places the tree top-down with its manager over their reports.
+ * The people who lead nobody under one manager are not tree leaves but one column: dagre places it as a single block
+ * and the cards are then set one under the other, indented, so a team of 17 is tall instead of 4,000 px wide.
+ */
 export function layoutGraph(
     nodes: ViewNode[],
     edges: ViewEdge[],
-): Map<string, { x: number; y: number }> {
+): Map<string, Corner> {
     const graph = new Graph();
-
-    graph.setGraph({
-        rankdir: 'TB',
-        nodesep: SIBLING_GAP,
-        ranksep: RANK_GAP,
-    });
-    graph.setDefaultEdgeLabel(() => ({}));
-    nodes.forEach(({ id, width, height }) =>
-        graph.setNode(id, { width, height }),
+    const columns = Map.groupBy(
+        nodes.filter(({ stack }) => stack !== null),
+        ({ stack }) => stack,
     );
-    edges.forEach(({ source, target }) => graph.setEdge(source, target));
+
+    graph.setGraph({ rankdir: 'TB', nodesep: SIBLING_GAP, ranksep: RANK_GAP });
+    graph.setDefaultEdgeLabel(() => ({}));
+    nodes
+        .filter(({ stack }) => stack === null)
+        .forEach(({ id, width, height }) =>
+            graph.setNode(id, { width, height }),
+        );
+    columns.forEach((cards, manager) => {
+        const width = Math.max(...cards.map((card) => card.width));
+
+        graph.setNode(`column:${manager}`, {
+            width: width + STACK_INDENT + 2 * STACK_MARGIN,
+            height: columnHeight(cards),
+        });
+        graph.setEdge(String(manager), `column:${manager}`);
+    });
+    edges
+        .filter(({ stacked }) => !stacked)
+        .forEach(({ source, target }) => graph.setEdge(source, target));
     layout(graph);
 
-    return new Map(
-        nodes.map(({ id, width, height }) => {
+    const places = new Map<string, Corner>();
+
+    for (const { id, width, height, stack } of nodes) {
+        if (stack === null) {
             const placed = graph.node(id);
 
-            return [id, { x: placed.x - width / 2, y: placed.y - height / 2 }];
-        }),
+            places.set(id, {
+                x: placed.x - width / 2,
+                y: placed.y - height / 2,
+            });
+        }
+    }
+
+    columns.forEach((cards, manager) => {
+        const left = places.get(String(manager))?.x ?? 0;
+        const column = graph.node(`column:${manager}`);
+        let y = column.y - column.height / 2;
+
+        for (const card of cards) {
+            places.set(card.id, { x: left + STACK_INDENT, y });
+            y += card.height + STACK_GAP;
+        }
+    });
+
+    return new Map(
+        nodes.map(({ id }) => [id, places.get(id) ?? { x: 0, y: 0 }]),
     );
 }

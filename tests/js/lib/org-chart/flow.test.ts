@@ -24,12 +24,14 @@ const nodes: ViewNode[] = [
         id: 'company',
         width: 216,
         height: 72,
+        stack: null,
         data: { kind: 'company', name: 'Acme', people: 3 },
     },
     {
         id: 'a',
         width: 216,
         height: 72,
+        stack: null,
         data: {
             kind: 'person',
             node: person,
@@ -43,12 +45,25 @@ const nodes: ViewNode[] = [
         id: 'more-a',
         width: 216,
         height: 44,
+        stack: null,
         data: { kind: 'more', parentId: 'a', left: 3, status: 'ready' },
     },
 ];
 const edges: ViewEdge[] = [
-    { id: 'company>a', source: 'company', target: 'a', highlighted: true },
-    { id: 'a>more-a', source: 'a', target: 'more-a', highlighted: false },
+    {
+        id: 'company>a',
+        source: 'company',
+        target: 'a',
+        highlighted: true,
+        stacked: false,
+    },
+    {
+        id: 'a>more-a',
+        source: 'a',
+        target: 'more-a',
+        highlighted: false,
+        stacked: false,
+    },
 ];
 const positions = new Map([
     ['company', { x: 10, y: 0 }],
@@ -123,5 +138,54 @@ describe('toFlow', () => {
                 { positions: new Map(), dragging: null, drop: null },
             ).nodes[1]?.position,
         ).toEqual({ x: 0, y: 0 });
+    });
+});
+
+describe('toFlow, columns', () => {
+    const flow = toFlow(
+        { nodes, edges },
+        { positions, dragging: null, drop: null },
+    );
+
+    it('sends a column from the left of its manager into the left of each card', () => {
+        const kid: ViewNode = {
+            id: 'k',
+            width: 216,
+            height: 72,
+            stack: 'a',
+            data: {
+                kind: 'person',
+                node: person,
+                open: undefined,
+                tone: 'normal',
+                attention: false,
+                status: undefined,
+            },
+        };
+        const column = toFlow(
+            {
+                nodes: [kid],
+                edges: [
+                    {
+                        id: 'a>k',
+                        source: 'a',
+                        target: 'k',
+                        highlighted: false,
+                        stacked: true,
+                    },
+                ],
+            },
+            { positions, dragging: null, drop: null },
+        );
+        const first = column.nodes[0];
+
+        expect(column.edges[0]?.sourceHandle).toBe('stack');
+        expect(first?.type === 'person' ? first.data.stacked : null).toBe(true);
+        expect(flow.edges[0]?.sourceHandle).toBeNull();
+        expect(
+            flow.nodes.map((node) =>
+                node.type === 'company' ? null : node.data.stacked,
+            ),
+        ).toEqual([null, false, false]);
     });
 });

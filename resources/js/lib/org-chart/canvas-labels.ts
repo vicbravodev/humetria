@@ -37,7 +37,7 @@ export function factTexts({
     people: number;
     levels: number;
     withManager: number;
-}): string[] {
+}): [string, string, string] {
     return [
         countOf(people, 'persona activa', 'personas activas'),
         countOf(levels, 'nivel', 'niveles'),
@@ -65,7 +65,11 @@ export function headsRibbon(heads: number, unplaced: number): string {
 /** How many levels «Mostrar» can open; the last is all of them. */
 export const DEPTHS = [1, 2, 3, 4, Infinity];
 
-export function depthLabel(levels: number): string {
+export function depthLabel(levels: number | null): string {
+    if (levels === null) {
+        return 'Mostrar: a tu gusto';
+    }
+
     return Number.isFinite(levels)
         ? `Mostrar: ${countOf(levels, 'nivel', 'niveles')}`
         : 'Mostrar: todos';

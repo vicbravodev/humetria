@@ -95,6 +95,7 @@ describe('depthLabel', () => {
         expect(depthLabel(1)).toBe('Mostrar: 1 nivel');
         expect(depthLabel(3)).toBe('Mostrar: 3 niveles');
         expect(depthLabel(Infinity)).toBe('Mostrar: todos');
+        expect(depthLabel(null)).toBe('Mostrar: a tu gusto');
     });
 });
 
