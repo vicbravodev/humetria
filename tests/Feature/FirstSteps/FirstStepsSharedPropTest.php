@@ -25,7 +25,7 @@ beforeEach(function (): void {
     $this->owner = ownerOf($this->tenant);
 });
 
-function queriesOf(User $user, string $url, bool $enabled): int
+function firstStepsQueriesOf(User $user, string $url, bool $enabled): int
 {
     config(['first_steps.enabled' => $enabled]);
     // The first request of a process warms the permission cache: measure the second.
@@ -54,7 +54,7 @@ it('shares null to hr and viewer, at no query', function (TenantRole $role): voi
 
     $this->actingAs($user)->get($url)->assertInertia(fn (Assert $page) => $page->where('firstSteps', null));
 
-    expect(queriesOf($user, $url, true))->toBe(queriesOf($user, $url, false));
+    expect(firstStepsQueriesOf($user, $url, true))->toBe(firstStepsQueriesOf($user, $url, false));
 })->with([TenantRole::Hr, TenantRole::Viewer]);
 
 it('shares null outside a company', function (): void {
@@ -111,10 +111,10 @@ it('never shares a name, an email or an answer', function (): void {
 it('costs the same queries with one work center and with thirty', function (): void {
     $url = route('tenant.members.index', $this->tenant);
     WorkCenter::factory()->create(['tenant_id' => $this->tenant->id]);
-    $one = queriesOf($this->owner, $url, true) - queriesOf($this->owner, $url, false);
+    $one = firstStepsQueriesOf($this->owner, $url, true) - firstStepsQueriesOf($this->owner, $url, false);
 
     WorkCenter::factory()->count(29)->create(['tenant_id' => $this->tenant->id]);
-    $thirty = queriesOf($this->owner, $url, true) - queriesOf($this->owner, $url, false);
+    $thirty = firstStepsQueriesOf($this->owner, $url, true) - firstStepsQueriesOf($this->owner, $url, false);
 
     expect($one)->toBe(FIRST_STEPS_QUERIES)->and($thirty)->toBe(FIRST_STEPS_QUERIES);
 });
