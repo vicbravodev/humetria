@@ -231,3 +231,22 @@ it('gives the day of the next evaluation as a date, besides how it is written', 
         ->and($standings[$center->id]->date)->toBe('2028-11-19')
         ->and($standings[$running->id]->date)->toBe('2026-11-30');
 });
+
+it('says whether any campaign was launched', function (): void {
+    $records = resolve(CampaignRecords::class);
+    workIn($this->tenant);
+    expect($records->anyLaunched())->toBeFalse();
+
+    Campaign::factory()->create(['tenant_id' => $this->tenant->id]);
+    expect($records->anyLaunched())->toBeFalse();
+
+    Campaign::factory()->active()->create(); // Another company's.
+    expect($records->anyLaunched())->toBeFalse();
+
+    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id]);
+    expect($records->anyLaunched())->toBeTrue();
+
+    $closed->delete();
+    Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id]);
+    expect($records->anyLaunched())->toBeTrue();
+});
