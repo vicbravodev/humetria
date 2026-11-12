@@ -17,6 +17,7 @@ use App\Modules\Assistant\Support\TenantHumiActivity;
 use App\Modules\Assistant\Support\ToolRegistry;
 use App\Modules\Assistant\Tools\GetCampaignProgress;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
+use App\Modules\Assistant\Tools\GetFirstSteps;
 use App\Modules\Assistant\Tools\GetRiskResults;
 use App\Modules\Assistant\Tools\ListPendingActions;
 use App\Modules\Assistant\Tools\SearchRegulations;
@@ -49,6 +50,7 @@ final class AssistantServiceProvider extends ServiceProvider
             GetRiskResults::class,
             ListPendingActions::class,
             SearchRegulations::class,
+            GetFirstSteps::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
             GetComplianceOverview::class => ['nom035', 'nom037'],
