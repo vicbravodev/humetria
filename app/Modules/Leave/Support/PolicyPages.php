@@ -11,6 +11,9 @@ use App\Modules\Leave\Models\LeavePolicy;
 use App\Modules\Leave\Models\LeavePolicyAssignment;
 use App\Modules\Leave\Models\LeavePolicyRow;
 use App\Modules\Organization\Contracts\JobGrades;
+use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Organization\Data\RosterQuery;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -18,11 +21,14 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * and a policy with its rows next to the floor of the law for each year. Days and percentages, never an amount.
  *
  * @phpstan-type GradeRow array{id: string, label: string, policyId: string}
- * @phpstan-type Card array{id: string, name: string, premiumPercent: int, firstYearDays: int, fixedDays: int, assigned: int, archived: bool}
+ * @phpstan-type Card array{id: string, name: string, premiumPercent: int, firstYearDays: int, fixedDays: int, assigned: int, people: int, byYear: list<int>, archived: bool}
  */
 final readonly class PolicyPages
 {
-    public function __construct(private JobGrades $jobGrades) {}
+    public function __construct(private JobGrades $jobGrades, private Roster $roster, private PolicyResolver $resolver) {}
+
+    /** The years of service the comparison draws (the sixth stands for 6 to 10). */
+    public const int COMPARED_YEARS = 6;
 
     public const int PER_PAGE = 12;
 
@@ -32,14 +38,18 @@ final readonly class PolicyPages
     public const int FLOOR_YEARS = 60;
 
     /**
-     * @return array{law: array{firstYearDays: int, premiumPercent: int}, policies: LengthAwarePaginator<int, Card>, assignments: array{default: string|null, unionized: string|null, trusted: string|null}, policyOptions: list<array{value: string, label: string}>, grades: LengthAwarePaginator<int, GradeRow>}
+     * @return array{law: array{firstYearDays: int, premiumPercent: int}, lawByYear: list<int>, lawPeople: int, policies: LengthAwarePaginator<int, Card>, assignments: array{default: string|null, unionized: string|null, trusted: string|null}, policyOptions: list<array{value: string, label: string}>, grades: LengthAwarePaginator<int, GradeRow>}
      */
     public function index(): array
     {
         $policies = LeavePolicy::query()->with(['rows', 'assignments'])->orderByRaw('archived_at is not null')->orderBy('name')->paginate(self::PER_PAGE)->withQueryString();
 
+        $people = $this->people();
+
         return [
             'law' => ['firstYearDays' => StatutoryDays::current(1), 'premiumPercent' => SavePolicy::PREMIUM_FLOOR],
+            'lawByYear' => array_map(StatutoryDays::current(...), range(1, self::COMPARED_YEARS)),
+            'lawPeople' => $people[''] ?? 0,
             'policies' => $policies->through(fn (LeavePolicy $policy): array => [
                 'id' => $policy->id,
                 'name' => $policy->name,
@@ -47,6 +57,8 @@ final readonly class PolicyPages
                 'firstYearDays' => self::firstYearDays($policy),
                 'fixedDays' => array_sum($policy->rows->where('kind', RowKind::Fixed)->map(fn (LeavePolicyRow $row): int => $row->days)->all()),
                 'assigned' => $policy->assignments->count(),
+                'people' => $people[$policy->id] ?? 0,
+                'byYear' => self::byYear($policy),
                 'archived' => $policy->archived_at !== null,
             ]),
             'assignments' => $this->assignments(),
@@ -75,6 +87,43 @@ final readonly class PolicyPages
             ],
             'floors' => array_map(StatutoryDays::current(...), range(1, self::FLOOR_YEARS)),
         ];
+    }
+
+    /**
+     * How many active people follow each policy, by the most specific assignment; the key «» is those who follow the law.
+     * ponytail: loads the active roster of the company (as the resolver does); count in SQL if companies reach tens of thousands.
+     *
+     * @return array<string, int>
+     */
+    private function people(): array
+    {
+        $active = array_keys(array_filter($this->roster->findMany($this->roster->matchingIds(new RosterQuery)), fn (RosterEntry $person): bool => $person->active));
+        $counts = [];
+
+        foreach ($this->resolver->for($active) as $terms) {
+            $key = $terms->policyId ?? '';
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        return $counts;
+    }
+
+    /**
+     * The days the policy gives in each of the years compared, by tranche added: what the law gives, what the tier of that
+     * year lifts over it and the fixed days on top.
+     *
+     * @return list<int>
+     */
+    private static function byYear(LeavePolicy $policy): array
+    {
+        $terms = PolicyResolver::termsOf($policy);
+        $today = PeriodWindow::today();
+
+        return array_map(function (int $year) use ($terms, $today): int {
+            $days = $terms->daysFor($year, $today);
+
+            return $days['statutory'] + $days['extra'];
+        }, range(1, self::COMPARED_YEARS));
     }
 
     /** What the policy gives in the first year: its tier for it, or the law when no tier reaches it. */

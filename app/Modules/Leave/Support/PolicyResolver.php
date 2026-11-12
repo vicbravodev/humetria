@@ -39,7 +39,7 @@ final readonly class PolicyResolver
 
         foreach (LeavePolicyAssignment::query()->with('policy.rows')->get() as $assignment) {
             // The foreign key makes the policy required; a missing one is broken data, never the law.
-            $terms = self::terms($assignment->policy ?? throw new LogicException("Assignment [{$assignment->id}] has no policy."));
+            $terms = self::termsOf($assignment->policy ?? throw new LogicException("Assignment [{$assignment->id}] has no policy."));
 
             match ($assignment->scope) {
                 PolicyScope::JobGrade => $byGrade[$assignment->job_grade_id ?? ''] = $terms,
@@ -57,7 +57,7 @@ final readonly class PolicyResolver
         return $resolved;
     }
 
-    private static function terms(LeavePolicy $policy): PolicyTerms
+    public static function termsOf(LeavePolicy $policy): PolicyTerms
     {
         $tiers = [];
         $fixedDays = 0;

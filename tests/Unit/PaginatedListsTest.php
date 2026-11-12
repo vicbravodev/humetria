@@ -49,6 +49,7 @@ const ARRAY_PROPS = [
     'seating/route:rows' => 'catálogo fijo: los trece requisitos del centro, cada uno en su etapa, solo conteos',
     'seating/inspection:missing' => 'catálogo fijo: los requisitos que faltan (13 a lo más)',
     'seating/inspection:ready' => 'catálogo fijo: los requisitos que se pueden mostrar (13 a lo más)',
+    'leave/policies:lawByYear' => 'catálogo fijo: los días de la ley del año 1 al 6, para la marca de referencia del comparador',
     'leave/index:toAnswer' => 'resumen corto: las cuatro solicitudes que esperan a RH, la que empieza primero arriba; el resto está a un clic en Solicitudes',
     'leave/index:next14' => 'resumen corto: cuántas personas están fuera cada uno de los próximos 14 días, un número por día',
     'leave/employee:periods' => 'resumen corto: los periodos de una persona, uno por aniversario',
