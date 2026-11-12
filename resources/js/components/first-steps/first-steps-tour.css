@@ -79,3 +79,33 @@
         transition: none;
     }
 }
+
+.driver-popover.first-steps-tour
+    .driver-popover-description
+    button[data-humi-question] {
+    display: block;
+    width: 100%;
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--foreground);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+
+.driver-popover.first-steps-tour
+    .driver-popover-description
+    button[data-humi-question]:hover {
+    border-color: var(--primary);
+}
+
+.driver-popover.first-steps-tour
+    .driver-popover-description
+    button[data-humi-question]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}

@@ -1,18 +1,44 @@
 import { router, usePage } from '@inertiajs/react';
+import type { Driver, PopoverDOM } from 'driver.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { bubblesOf } from '@/lib/first-steps/steps';
+import { openHumi } from '@/lib/assistant/open-humi';
+import { bubblesOf, humiQuestion } from '@/lib/first-steps/steps';
 import { rememberTour, takeTour } from '@/lib/first-steps/tour-session';
 import { createTourRunner, driverSteps } from '@/lib/first-steps/tour';
 import type { FirstStep } from '@/types/first-steps';
 
+/**
+ * The Humi step offers its example question as a button: it ends the tour and opens Humi with the question written, never
+ * sent. Built with the DOM, never as HTML: the question is text.
+ */
+function questionButton(
+    question: string,
+    end: () => void,
+): (popover: PopoverDOM) => void {
+    return ({ description }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('data-humi-question', '');
+        button.textContent = question;
+        button.addEventListener('click', () => {
+            end();
+            openHumi(question);
+        });
+        description.append(button);
+    };
+}
+
 /** Runs the spotlight tour of a step; driver.js loads only when a tour starts. */
-async function drive(step: FirstStep): Promise<{ destroy: () => void }> {
+async function drive(
+    step: FirstStep,
+    question: string,
+): Promise<{ destroy: () => void }> {
     const { driver } = await import('driver.js');
     const steps = driverSteps(
         bubblesOf(step),
         (selector) => document.querySelector(selector) !== null,
     );
-    const tour = driver({
+    const tour: Driver = driver({
         popoverClass: 'first-steps-tour',
         animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
         allowClose: true,
@@ -24,6 +50,9 @@ async function drive(step: FirstStep): Promise<{ destroy: () => void }> {
         prevBtnText: 'Anterior',
         doneBtnText: 'Entendido',
         steps,
+        ...(step.key === 'humi' && {
+            onPopoverRender: questionButton(question, () => tour.destroy()),
+        }),
     });
     tour.drive();
 
@@ -34,11 +63,20 @@ async function drive(step: FirstStep): Promise<{ destroy: () => void }> {
 export function useFirstStepsTour(): { start: (step: FirstStep) => void } {
     const { url, props } = usePage();
     const steps = useRef(props.firstSteps?.steps);
-    const [runner] = useState(() => createTourRunner(drive));
-    const run = runner.run;
+    const question = useRef(humiQuestion(props.tenant?.modules));
+    const [runner] = useState(() =>
+        createTourRunner(({ step, ask }: { step: FirstStep; ask: string }) =>
+            drive(step, ask),
+        ),
+    );
+    const run = useCallback(
+        (step: FirstStep) => runner.run({ step, ask: question.current }),
+        [runner],
+    );
 
     useEffect(() => {
         steps.current = props.firstSteps?.steps;
+        question.current = humiQuestion(props.tenant?.modules);
     });
 
     // Only a new page asks for the remembered tour; a reloaded prop must not end the one that runs.

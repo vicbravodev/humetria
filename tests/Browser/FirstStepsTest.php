@@ -183,3 +183,21 @@ it('points the panel card at the button instead of repeating the third step', fu
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('opens Humi with the example question written', function (): void {
+    signInToPanel();
+
+    $page = visitPage('dashboard', '/admin/acme')
+        ->click('Empezar')
+        ->click('li:has-text("Conoce a Humi") button')
+        ->assertSee('Este es Humi')
+        ->assertScript('document.querySelector(\'[data-tour="humi-launcher"]\')?.classList.contains("driver-active-element") === true', true)
+        ->assertScript('document.querySelector(".driver-popover button[data-humi-question]")?.textContent?.startsWith("¿Qué ") === true', true)
+        ->click('.driver-popover button[data-humi-question]')
+        ->assertDontSee('Este es Humi');
+
+    $page->assertScript('document.querySelector("textarea[aria-label=\'Pregúntale algo a Humi\']")?.value?.startsWith("¿Qué ") === true', true)
+        ->assertDontSee('Humi está respondiendo')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
