@@ -94,8 +94,9 @@ describe('keyFindings', () => {
             },
             {
                 tone: 'strength',
-                title: 'Relaciones es la fortaleza',
-                detail: 'Solo 15\u00a0% en alto o muy alto. Es la base para construir el programa.',
+                // Someone is in Alto or Muy alto there: it is the lowest risk, not a strength (H-10).
+                title: 'Relaciones es el dominio con menor riesgo',
+                detail: 'Solo 15\u00a0% en alto o muy alto: es el que menos riesgo concentra.',
             },
         ]);
     });
