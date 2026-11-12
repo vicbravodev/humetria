@@ -175,11 +175,22 @@ it('fills the width up to 1440 px and centers the page beyond it', function (boo
 it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', function (): void {
     $page = visit(panelCompany())->on()->mobile();
 
+    $chip = '() => document.querySelector(\'nav[aria-label="Menú principal"] [data-chip="current"]\')?.parentElement.textContent';
+
     $page->assertSeeIn('nav[aria-label="Menú principal"]', 'Panel')
         ->assertSeeIn('nav[aria-label="Menú principal"]', 'Quejas')
+        // «Más» opens the whole menu, so the top bar carries no second menu button.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).display', 'none')
+        // A bar of frosted glass over the page, with a chip under the tab of where the person is.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).backdropFilter.includes("blur")', true)
+        ->assertScript($chip, 'Panel')
+        // Moving to another page cross-fades only its content: the bar and Humi are their own layers, so the content never covers them.
+        ->assertScript('() => [getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).viewTransitionName, getComputedStyle(document.querySelector(\'button[aria-label="Abrir a Humi"]\')).viewTransitionName].join(" ")', 'tab-bar humi')
         ->click('Normas')
         ->click('[role="menu"] a[href$="/seating"]')
         ->assertPathIs('/admin/acme/seating')
+        // Ley Silla is one of the standards: the chip glides to Normas.
+        ->assertScript($chip, 'Normas')
         ->click('Más')
         ->assertSeeIn('[data-mobile="true"]', 'Centros de trabajo')
         ->assertNoJavaScriptErrors();
@@ -218,6 +229,13 @@ it('folds every family of tools until it is opened, and opens on arriving the on
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.getAttribute("aria-expanded")).join(" ")', 'true false false')
         ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", true)
         ->assertNoJavaScriptErrors();
+});
+
+it('keeps the sidebar and the top bar above the content while a new page cross-fades in', function (): void {
+    // The content's layer is painted above the page during the cross-fade; the frame around it has layers of its own, so a
+    // tall or wide page never covers the sidebar or the top bar on its way out.
+    visit(panelCompany())
+        ->assertScript('() => [getComputedStyle(document.querySelector(\'[data-sidebar="sidebar"]\').parentElement).viewTransitionName, getComputedStyle(document.querySelector(\'[data-slot="app-topbar"]\').parentElement).viewTransitionName].join(" ")', 'sidebar top-bar');
 });
 
 it('keeps the bottom bar off a wide screen', function (): void {

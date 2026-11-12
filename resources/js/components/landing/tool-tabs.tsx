@@ -1,4 +1,4 @@
-import GlideChips from '@/components/landing/glide-chips';
+import GlideChips from '@/components/humetria/glide-chips';
 import { ICON_BOX } from '@/components/landing/landing-layout';
 import {
     familyTools,

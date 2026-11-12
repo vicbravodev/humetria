@@ -42,18 +42,18 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
 
     visitPage('dashboard', $panel, $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
         if ($mobile) {
-            // On mobile the sidebar is an off-canvas sheet: open it and let it finish sliding in.
-            $page->click('[data-sidebar="trigger"]')
+            // On mobile the sidebar is an off-canvas sheet, opened from «Más»: open it and let it finish sliding in.
+            $page->click('nav[aria-label="Menú principal"] button:has-text("Más")')
                 ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => document.querySelector(\'[data-mobile="true"][data-state="open"]\') !== null)');
         }
     })->assertVisible(VISIBLE_LOGO);
 })->with($looks);
 
-it('gives the mobile menu button a 44 px touch target', function (bool $dark): void {
+it('gives every tab of the phone\'s menu, «Más» included, a 44 px touch target', function (bool $dark): void {
     $panel = signInToPanel();
 
     visitPage('dashboard', $panel, $dark, true)
-        ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
+        ->assertScript('() => [...document.querySelectorAll(\'nav[aria-label="Menú principal"] :is(a, button)\')].every((tab) => { const box = tab.getBoundingClientRect(); return box.width >= 44 && box.height >= 44; })');
 })->with(['light' => false, 'dark' => true]);
 
 // On a phone only the page's own name shows: the arrows go with the places before it.
@@ -129,7 +129,7 @@ it('opens an entry into its submenu as the sidebar design draws it', function (b
 
     visitPage('telework/index', '/admin/acme/telework', $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
         if ($mobile) {
-            $page->click('[data-sidebar="trigger"]')->assertScript(SETTLED);
+            $page->click('nav[aria-label="Menú principal"] button:has-text("Más")')->assertScript(SETTLED);
         }
     })->assertScript(SUBMENU);
 })->with($looks);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { mobileTabs } from '@/lib/mobile-tabs';
+import { currentTab, mobileTabs } from '@/lib/mobile-tabs';
+import { toUrl } from '@/lib/utils';
 import { can } from '../support/tenant-can';
 
 type Role = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
@@ -54,5 +55,44 @@ describe('mobileTabs', () => {
         ]);
         expect(shape(mobileTabs(null, false))).toEqual(['Panel', 'Más']);
         expect(shape(mobileTabs(null, true))).toEqual(['Más']);
+    });
+});
+
+describe('currentTab', () => {
+    const tabs = mobileTabs(acme('owner'), false);
+    // As useCurrentUrl answers: the exact page, or the page or one below it.
+    const at = (url: string) => ({
+        exact: (href: string) => href === url,
+        within: (href: string) => url === href || url.startsWith(`${href}/`),
+    });
+    const on = (url: string) => {
+        const { exact, within } = at(url);
+
+        return currentTab(tabs, exact, within);
+    };
+
+    it('marks Panel only on the panel itself, not on the pages below the company', () => {
+        expect(on('/admin/acme')).toBe('panel');
+        expect(on('/admin/acme/work-centers')).toBe('more');
+    });
+
+    it('marks Normas on any of its standards and on the pages below them', () => {
+        expect(on('/admin/acme/seating')).toBe('compliance');
+        expect(on('/admin/acme/attendance/devices')).toBe('compliance');
+    });
+
+    it('marks Quejas on its cases', () => {
+        const complaints = tabs.find((tab) => tab.key === 'complaints');
+        const href =
+            complaints !== undefined && 'item' in complaints
+                ? toUrl(complaints.item.href)
+                : '';
+
+        expect(on(href)).toBe('complaints');
+        expect(on(`${href}/42`)).toBe('complaints');
+    });
+
+    it('marks Más on everything else the whole menu holds', () => {
+        expect(on('/admin/acme/org-chart')).toBe('more');
     });
 });

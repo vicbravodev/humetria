@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react';
-import GlideChips from '@/components/landing/glide-chips';
+import GlideChips from '@/components/humetria/glide-chips';
 import {
     FAMILIES,
     type LandingFamily,

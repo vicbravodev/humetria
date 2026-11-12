@@ -43,7 +43,11 @@ export function AppSidebar() {
     });
 
     return (
-        <Sidebar variant="inset" collapsible="icon">
+        <Sidebar
+            variant="inset"
+            collapsible="icon"
+            className="[view-transition-name:sidebar]"
+        >
             <SidebarHeader className="px-3 pt-4 pb-4">
                 <Link
                     href={
