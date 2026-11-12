@@ -1,13 +1,27 @@
-# Primeros pasos guiados (módulo `Onboarding`): diseño
+# Primeros pasos guiados (módulo `FirstSteps`): diseño
 
 Fecha: 2026-11-12 · Estado: **borrador**, pendiente de aprobación de Victor.
 
 ## Para qué
 
-Hoy una empresa nueva entra al panel, contesta la primera vez de sus centros (`tenancy/onboarding`) y después queda sola
-frente a un menú con muchas herramientas. Queremos un acompañamiento **opcional** que la lleve de la mano por lo mínimo
+Hoy una empresa nueva entra al panel y queda sola frente a un menú con muchas herramientas. El panel ya recomienda un
+siguiente paso (`DashboardNextStep`), pero solo en el inicio y solo para las rutas de NOM-037 y Ley Silla. Queremos un acompañamiento **opcional** que la lleve de la mano por lo mínimo
 para sacarle valor a Humetria, que resalte en la pantalla lo que hay que tocar, que la acompañe hasta terminar y que
 luego desaparezca.
+
+## Relación con lo que ya existe
+
+- **`admin/{empresa}/work-centers/onboarding`** (`tenancy/onboarding`, tablero V3-Onboarding) **no es este onboarding**.
+  Son las dos preguntas por centro de NOM-037 y Ley Silla ("¿Te aplica?"). Se queda igual y se vuelve el **destino del
+  paso 3** cuando la herramienta principal es `nom037` o `seating`: el paso se palomea cuando un centro la contesta.
+- **Nombres:** para no confundirlo con esa página (`OnboardingController`, `use-onboarding`, `lib/onboarding.ts`,
+  `components/tenancy/onboarding-*`), todo lo nuevo se llama **`FirstSteps`** / `first-steps`: módulo, tabla, rutas,
+  componentes, hooks y lib. La palabra "onboarding" sigue siendo de la página que ya existe.
+- **`DashboardNextStep`** se queda: recomienda la siguiente etapa de cada ruta, también después de los primeros pasos.
+  Mientras los primeros pasos estén visibles, la tarjeta no repite lo mismo. Si su recomendación es el paso 3 pendiente,
+  la tarjeta remite al botón. El detalle se resuelve en el plan.
+- La página de la primera vez usa `SetupFrame`, sin el marco del panel. Ahí no aparece el botón de primeros pasos, pero sí
+  puede aparecer el spotlight de un recorrido.
 
 ## Decisiones (Victor, 2026-11-12)
 
@@ -65,7 +79,7 @@ Cada paso es una pregunta sobre los datos de la empresa:
 
 | # | Paso | Hecho cuando | Se lee con |
 |---|------|--------------|------------|
-| 1 | **Configura tus centros de trabajo** | todo centro activo tiene contestada su primera vez | `Tenancy\Contracts\WorkCenters` (+ método nuevo si hace falta) |
+| 1 | **Revisa tus centros de trabajo** (domicilio y datos que piden los informes) | todo centro activo tiene su ficha completa | `Tenancy\Contracts\WorkCenters` (+ método nuevo si hace falta) |
 | 2 | **Carga a tu gente** | la empresa tiene al menos 1 persona activa | `Organization\Contracts\Headcount::ofCompany()` |
 | 3 | **Lanza tu primera evaluación** (cambia según el plan) | la herramienta principal del plan tiene algo lanzado (ver abajo) | contrato del módulo de esa herramienta |
 | 4 | **Invita a alguien de tu equipo** | hay otro miembro o una invitación pendiente | `Tenancy\Contracts\Members` (+ invitaciones pendientes) |
@@ -76,8 +90,8 @@ Cada paso es una pregunta sobre los datos de la empresa:
 | Módulo | Texto del paso | Hecho cuando |
 |--------|----------------|--------------|
 | `nom035` | Lanza tu primera evaluación NOM-035 | hay una campaña en curso o cerrada (`CampaignRecords`) |
-| `nom037` | Arranca la ruta de teletrabajo (NOM-037) | algún centro ya declaró si tiene teletrabajo (`TeleworkApplicability`) |
-| `seating` | Arranca la ruta de Ley Silla | algún centro ya declaró (`SeatingApplicability`) |
+| `nom037` | Dinos a qué centros les aplica NOM-037 (lleva a la primera vez) | algún centro ya declaró si tiene teletrabajo (`TeleworkApplicability`) |
+| `seating` | Dinos a qué centros les aplica Ley Silla (lleva a la primera vez) | algún centro ya declaró (`SeatingApplicability`) |
 | `attendance` | Configura el registro de jornada | la asistencia está puesta en marcha (contrato a definir en el plan) |
 
 Si la empresa no tiene ninguno de estos módulos, el paso 3 no existe y el onboarding es de 4 pasos. Las otras herramientas
@@ -99,22 +113,22 @@ quedaría abierto todo ese tiempo.
 
 ## Arquitectura
 
-### Módulo `Onboarding`
+### Módulo `FirstSteps`
 
 ```
-app/Modules/Onboarding/
+app/Modules/FirstSteps/
   Contracts/FirstSteps.php        forUser(tenantId, userId): ?FirstStepsData (null = no se muestra)
   Data/FirstStepsData.php         pasos, estado de la bienvenida, oculto, otras herramientas
   Data/FirstStep.php              key, done, href (sin textos: los textos viven en el front)
   Actions/BuildFirstSteps.php     arma los pasos leyendo los contratos de otros módulos
   Actions/MarkWelcomed.php  Actions/HideFirstSteps.php  Actions/ShowFirstSteps.php  Actions/CompleteFirstSteps.php
-  Models/OnboardingState.php      BelongsToCurrentTenant
-  Http/Controllers/OnboardingStateController.php
+  Models/FirstStepsState.php      BelongsToCurrentTenant
+  Http/Controllers/FirstStepsStateController.php
   Policies/  Providers/
-routes/onboarding.php             POST welcome, hide, show bajo admin/{tenant}/onboarding/*
+routes/first_steps.php            POST welcome, hide, show bajo admin/{tenant}/first-steps/*
 ```
 
-- **Lo único que se guarda** es `onboarding_states`: `id` (uuid), `tenant_id`, `user_id`, `welcomed_at`, `hidden_at`,
+- **Lo único que se guarda** es `first_steps_states`: `id` (uuid), `tenant_id`, `user_id`, `welcomed_at`, `hidden_at`,
   `completed_at` (`timestampTz`), `unique(tenant_id, user_id)` y llaves foráneas. El avance **no se guarda**: se calcula
   de los datos en cada carga, así nunca se desincroniza.
 - `completed_at` se escribe la primera vez que todos los pasos aparecen hechos, para no volver a calcularlos después.
@@ -123,9 +137,9 @@ routes/onboarding.php             POST welcome, hide, show bajo admin/{tenant}/o
   de una empresa. El kernel depende del contrato, no de internos. Fuera de una empresa, o si no eres owner, vale `null`.
 - **Costo:** el número de consultas de `BuildFirstSteps` se fija en un test (`expectsDatabaseQueryCount`). Con
   `completed_at` puesto, cuesta 1 consulta.
-- **Logs:** `onboarding.welcomed`, `onboarding.hidden`, `onboarding.shown` y `onboarding.completed`, con `tenant_id` y
+- **Logs:** `first_steps.welcomed`, `first_steps.hidden`, `first_steps.shown` y `first_steps.completed`, con `tenant_id` y
   `user_id` en el contexto. No va a la bitácora: no es una acción sensible.
-- **Rutas:** las tres POST con nombre (`tenant.onboarding.*`), autenticación y una Policy que exige ser owner. Las de otra
+- **Rutas:** las tres POST con nombre (`tenant.first-steps.*`), autenticación y una Policy que exige ser owner. Las de otra
   empresa dan 404.
 
 ### Contratos nuevos en otros módulos
@@ -139,16 +153,16 @@ Se confirman en el plan, contra el código:
 ### Frontend
 
 ```
-components/onboarding/
+components/first-steps/
   first-steps-launcher.tsx    botón flotante con aro de avance (junto a Humi)
   first-steps-panel.tsx       popover con la lista, "también tienes" y ocultar
   first-step-item.tsx         un paso: estado, texto, Guíame
   first-steps-welcome.tsx     diálogo de bienvenida
   first-steps-done.tsx        cierre
 hooks/use-first-steps-tour.ts   arranca el spotlight al llegar a la página del paso
-lib/onboarding/steps.ts         textos, iconos y burbujas de cada paso (data-tour, título, cuerpo)
-lib/onboarding/tour-session.ts  qué recorrido está activo entre navegaciones (sessionStorage con try/catch)
-types/onboarding.ts
+lib/first-steps/steps.ts       textos, iconos y burbujas de cada paso (data-tour, título, cuerpo)
+lib/first-steps/tour-session.ts  qué recorrido está activo entre navegaciones (sessionStorage con try/catch)
+types/first-steps.ts
 ```
 
 - **driver.js** (MIT, unos 5 KB, sin dependencias) dibuja el spotlight y las burbujas. Su popover se viste con
@@ -173,9 +187,9 @@ types/onboarding.ts
 | Capa | Qué se prueba |
 |------|---------------|
 | Unit (Pest) | `BuildFirstSteps`: cada paso en hecho y en pendiente, paso 3 según cada combinación de módulos, sin módulos de evaluación (4 pasos), Humi apagado (sin paso 5); `mutates()` |
-| Feature | prop `firstSteps`: `null` para `hr` y `viewer`, `null` con todo hecho (y escribe `completed_at`), presente y por empresa (owner de 2 empresas: estados independientes); rutas de bienvenida, ocultar y mostrar (owner sí, otros 403, otra empresa 404); aislamiento de `OnboardingState` entre empresas; logs; número de consultas |
+| Feature | prop `firstSteps`: `null` para `hr` y `viewer`, `null` con todo hecho (y escribe `completed_at`), presente y por empresa (owner de 2 empresas: estados independientes); rutas de bienvenida, ocultar y mostrar (owner sí, otros 403, otra empresa 404); aislamiento de `FirstStepsState` entre empresas; logs; número de consultas |
 | Assistant | `GetFirstSteps` con scope de owner y de no owner; `ToolRegistryTest` sigue sin pedir empresa |
-| Vitest | `lib/onboarding/*`: el orden y los textos de los pasos según las llaves, la sesión del recorrido (y sin `sessionStorage`) |
+| Vitest | `lib/first-steps/*`: el orden y los textos de los pasos según las llaves, la sesión del recorrido (y sin `sessionStorage`) |
 | Browser | owner nuevo: bienvenida → Empezar → Guíame en "Carga a tu gente" → spotlight sobre el botón → cerrar; Ahora no → solo el botón; ocultar → retomar desde el menú; 375 px; sin errores de JS ni de CSP, con axe |
 
 ## Fuera de alcance
@@ -186,7 +200,7 @@ types/onboarding.ts
 
 ## Orden de construcción (un PR, commits atómicos)
 
-1. Módulo `Onboarding` con la tabla, el modelo, el contrato y `BuildFirstSteps` con sus pasos.
+1. Módulo `FirstSteps` con la tabla, el modelo, el contrato y `BuildFirstSteps` con sus pasos.
 2. Contratos nuevos en Tenancy, Organization, Assistant y Attendance que pidan los pasos.
 3. Prop compartida y rutas de bienvenida, ocultar y mostrar.
 4. `driver.js`, el botón, el panel, la bienvenida y el cierre.
