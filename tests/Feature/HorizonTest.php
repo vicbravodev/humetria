@@ -31,3 +31,21 @@ it('signs the dashboard inline styles and script with the nonce of the policy', 
     expect(substr_count((string) $response->getContent(), 'nonce="'.$match[1].'"'))->toBe(4)
         ->and((string) $response->getContent())->not->toMatch('/<(script|style)(?![^>]*nonce=)[^>]*>/');
 });
+
+it('lets Horizon compile its templates', function (): void {
+    $policy = (string) $this->actingAs(superadmin())->get('/horizon')->assertOk()->headers->get('Content-Security-Policy');
+
+    expect($policy)->toContain("'unsafe-eval'")->toContain('https://fonts.bunny.net');
+});
+
+it('keeps the strict policy everywhere else', function (string $url): void {
+    $policy = (string) $this->actingAs(superadmin())->get($url)->headers->get('Content-Security-Policy');
+
+    expect($policy)->not->toContain("'unsafe-eval'")->not->toContain('bunny');
+})->with(['/login', '/admin', '/horizonte']);
+
+it('still forbids Horizon to anyone but the superadmin, with the strict policy', function (): void {
+    $response = $this->actingAs(User::factory()->create())->get('/horizon')->assertForbidden();
+
+    expect((string) $response->headers->get('Content-Security-Policy'))->not->toContain("'unsafe-eval'");
+});
