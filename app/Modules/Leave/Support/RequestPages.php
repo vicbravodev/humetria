@@ -112,16 +112,16 @@ final readonly class RequestPages
     {
         $requests = LeaveRequest::query()->where('status', RequestStatus::Requested)->whereNotNull('escalated_at')->orderBy('starts_on')->orderBy('requested_on')->orderBy('id')->limit($limit)->get()->values()->all();
 
-        return array_values($this->present(array_values($requests), true));
+        return array_values($this->present(array_values($requests), true, withTeam: false));
     }
 
     /**
      * @param  list<LeaveRequest>  $items
      * @return array<string, Row> by request id
      */
-    private function present(array $items, bool $canManage): array
+    private function present(array $items, bool $canManage, bool $withTeam = true): array
     {
-        $context = $this->context->for($items, $canManage);
+        $context = $this->context->for($items, $canManage, $withTeam);
         $names = $this->roster->findMany(array_values(array_unique(array_filter(array_merge(...array_map(fn (LeaveRequest $request): array => [$request->employee_id, $request->approver_employee_id], $items))))));
         $types = LeaveType::query()->whereIn('id', array_filter(array_map(fn (LeaveRequest $request): ?string => $request->leave_type_id, $items)))->get(['id', 'name'])->mapWithKeys(fn (LeaveType $type): array => [$type->id => $type->name]);
         $years = LeaveEntitlement::query()->whereIn('id', array_merge(...array_map(fn (LeaveRequest $request): array => array_column($request->allocation, 'entitlement_id'), $items)))->get(['id', 'anniversary_on'])->mapWithKeys(fn (LeaveEntitlement $period): array => [$period->id => $period->anniversary_on->year]);

@@ -24,9 +24,9 @@ final readonly class DecisionContext
 
     /**
      * @param  list<LeaveRequest>  $requests
-     * @return array<string, array{coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}}> by request id, only for those that wait
+     * @return array<string, array{coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}> by request id, only for those that wait
      */
-    public function for(array $requests, bool $withCoverage): array
+    public function for(array $requests, bool $withCoverage, bool $withTeam = true): array
     {
         $waiting = array_values(array_filter($requests, fn (LeaveRequest $request): bool => $request->status === RequestStatus::Requested));
 
@@ -35,11 +35,11 @@ final readonly class DecisionContext
         }
 
         $coverage = $withCoverage ? $this->coverage($waiting) : [];
-        $team = $this->team($waiting);
+        $team = $withTeam ? $this->team($waiting) : [];
         $context = [];
 
         foreach ($waiting as $request) {
-            $context[$request->id] = ['coverage' => $coverage[$request->id] ?? null, 'team' => $team[$request->id]];
+            $context[$request->id] = ['coverage' => $coverage[$request->id] ?? null, 'team' => $team[$request->id] ?? null];
         }
 
         return $context;
