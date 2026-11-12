@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
-import FormDialog from '@/components/humetria/form-dialog';
-import InputError from '@/components/humetria/input-error';
+import ApproveButton from '@/components/leave/approve-button';
+import RejectForm from '@/components/leave/reject-form';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { SheetFooter } from '@/components/ui/sheet';
-import { Textarea } from '@/components/ui/textarea';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { approve, cancel, reject } from '@/routes/tenant/vacations/requests';
+import { cancel } from '@/routes/tenant/vacations/requests';
 import type { LeaveQueueRequest } from '@/types';
 
 /**
@@ -21,7 +19,6 @@ export default function RequestActions({
 }) {
     const tenantSlug = useTenantSlug();
     const [rejecting, setRejecting] = useState(false);
-    const route = { tenant: tenantSlug, leaveRequest: request.id };
 
     if (!request.canDecide && !request.canCancel) {
         return null;
@@ -38,7 +35,10 @@ export default function RequestActions({
                     description="Los días que haya usado regresan a su saldo. La solicitud queda en Canceladas."
                     confirmLabel="Sí, cancelar solicitud"
                     dismissLabel="Volver"
-                    form={cancel.form(route)}
+                    form={cancel.form({
+                        tenant: tenantSlug,
+                        leaveRequest: request.id,
+                    })}
                     preserveScroll
                 />
             )}
@@ -51,40 +51,13 @@ export default function RequestActions({
                     >
                         Rechazar
                     </Button>
-                    <ConfirmDialog
-                        trigger={<Button>Aprobar</Button>}
-                        title={`¿Aprobar la solicitud de ${request.name}?`}
-                        description="Se descuentan los días de su saldo y se le avisa por correo."
-                        confirmLabel="Sí, aprobar"
-                        dismissLabel="Volver"
-                        destructive={false}
-                        form={approve.form(route)}
-                        preserveScroll
-                    />
-                    <FormDialog
+                    <ApproveButton requestId={request.id} name={request.name} />
+                    <RejectForm
+                        requestId={request.id}
+                        name={request.name}
                         open={rejecting}
                         onOpenChange={setRejecting}
-                        title="Rechazar solicitud"
-                        description={`${request.name} leerá el motivo que escribas.`}
-                        form={reject.form(route)}
-                        submit="Rechazar solicitud"
-                        tone="destructive"
-                    >
-                        {(errors) => (
-                            <div className="grid gap-2">
-                                <Label htmlFor={`reject-${request.id}`}>
-                                    Motivo del rechazo
-                                </Label>
-                                <Textarea
-                                    id={`reject-${request.id}`}
-                                    name="reason"
-                                    rows={3}
-                                    maxLength={500}
-                                />
-                                <InputError message={errors['reason']} />
-                            </div>
-                        )}
-                    </FormDialog>
+                    />
                 </>
             )}
         </SheetFooter>

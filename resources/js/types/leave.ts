@@ -94,11 +94,27 @@ export type LeaveSummary = {
     /** Days still in the balance past their eighteen months: the company decides whether to oppose the prescription. */
     prescribableDays: number;
     liabilityDays: number;
+    /** Active people of the company. */
+    people: number;
+    /** Periods that still hold days. */
+    periods: number;
     missingStartDate: number;
     statementsUnacknowledged: number;
 };
 
 export type LeaveSummaryView = 'out' | 'windows' | 'prescribable';
+
+/** Whether the days cover a request and how many would be left (negative: how many are missing); RH only. */
+export type LeaveCoverage = { fits: boolean; leftAfter: number };
+
+/** The teammates of the same manager away on the days of a request: a count per day and their names, never why. */
+export type LeaveTeam = {
+    days: { date: string; away: number }[];
+    names: string[];
+};
+
+/** How many people are out on a day (Y-m-d), without names. */
+export type LeaveAheadDay = { date: string; away: number };
 
 /** A row of the detail under the summary: who is out, or whose period is about to close or past its eighteen months. */
 export type LeaveSummaryRow = {
@@ -152,6 +168,10 @@ export type LeaveQueueRequest = {
     rejectionReason: string | null;
     canDecide: boolean;
     canCancel: boolean;
+    /** Only for RH, for vacations that wait. */
+    coverage: LeaveCoverage | null;
+    /** Only for what waits. */
+    team: LeaveTeam | null;
 };
 
 export type LeaveBalanceTab = 'all' | 'missing' | 'statements' | 'terminations';
