@@ -7,6 +7,7 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
 use App\Modules\Interventions\Models\Program;
 use App\Modules\Responses\Models\TraumaScreening;
@@ -140,6 +141,7 @@ it('says how many people wait and opens the list where they are channeled', func
 it('reads the Programa where it stands, and the stages met with the way to see them', function (): void {
     DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
     ReportDetails::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
     Program::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
@@ -159,6 +161,16 @@ it('reads the Programa where it stands, and the stages met with the way to see t
             'action' => 'Armar el programa',
         ])
         ->where('rows.5.state', 'done'));
+});
+
+it('does not read 7.8 as done while the published results are not in front of the people (C-52)', function (): void {
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page->where('rows.3.state', 'missing'));
+
+    PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
+    nom035Route()->assertInertia(fn (Assert $page) => $page->where('rows.3.state', 'done'));
 });
 
 it('waits for the evaluation before what follows it, and asks a small center only for the Guía I', function (): void {

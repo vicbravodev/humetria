@@ -26,10 +26,15 @@ final readonly class CompanyDisclosureStanding implements DisclosureStanding
             return [];
         }
 
+        $publications = ResultPublication::query()->whereIn('campaign_id', $campaignIds)->whereNull('withdrawn_at')->get(['campaign_id', 'work_center_id']);
+
+        if ($publications->isEmpty()) {
+            return [];
+        }
+
         // Published is not enough: the people have to be able to see them, as in any inciso of 5.7 (C-52).
         $pageActive = PageLink::query()->first()?->status() === PageLinkStatus::Active;
         $shared = [];
-        $publications = ResultPublication::query()->whereIn('campaign_id', $campaignIds)->whereNull('withdrawn_at')->get(['campaign_id', 'work_center_id']);
         $recorded = $pageActive ? [] : $this->delivery->recordedItems(array_values(array_unique($publications->map(fn (ResultPublication $publication): string => $publication->work_center_id)->all())));
 
         foreach ($publications as $publication) {
