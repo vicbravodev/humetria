@@ -53,7 +53,7 @@ export default function AssignmentSelect({
             <SelectTrigger aria-label={label} className="w-full sm:w-64">
                 <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="item-aligned">
                 <SelectItem value={LAW}>Ley (sin política)</SelectItem>
                 {options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
