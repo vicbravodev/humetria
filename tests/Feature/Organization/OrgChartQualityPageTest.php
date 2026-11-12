@@ -55,8 +55,8 @@ it('shows the list of the reporting line to whoever may see the org chart', func
             ->where('filters', ['q' => '', 'work_center' => null])
             ->where('people.total', 2)
             ->where('people.data', [
-                ['id' => $this->dir->id, 'name' => 'Dir', 'job_title' => 'Directora', 'area' => 'Producción', 'work_center' => 'Planta', 'manager' => null, 'direct_reports' => 1],
-                ['id' => $this->alone->id, 'name' => 'Suelta', 'job_title' => 'Analista', 'area' => 'Producción', 'work_center' => 'Planta', 'manager' => null, 'direct_reports' => 0],
+                ['id' => $this->dir->id, 'name' => 'Dir', 'job_title' => 'Directora', 'area' => 'Producción', 'work_center' => 'Planta', 'manager' => null, 'manager_inactive' => false, 'direct_reports' => 1],
+                ['id' => $this->alone->id, 'name' => 'Suelta', 'job_title' => 'Analista', 'area' => 'Producción', 'work_center' => 'Planta', 'manager' => null, 'manager_inactive' => false, 'direct_reports' => 0],
             ]));
     }
 })->with([
@@ -126,7 +126,14 @@ it('opens the view asked for, each person with their manager as it is saved and 
             ->where('people.total', 1)
             ->where('people.data.0.id', $this->orphan->id)
             ->where('people.data.0.direct_reports', 0)
+            ->where('people.data.0.manager_inactive', true)
             ->where('people.data.0.manager', ['value' => $this->gone->id, 'label' => 'Se fue · Gerente']));
+
+    // A manager who is still here is not marked.
+    $this->get(route('tenant.org-chart.quality', [$this->tenant, 'issue' => 'all']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('people.data.2.name', 'Ana')
+            ->where('people.data.2.manager_inactive', false));
 
     Employee::factory()->count(16)->reportingTo($this->ana)->create($this->place);
     Employee::factory()->count(15)->reportingTo($this->dir)->create($this->place);
@@ -193,7 +200,7 @@ it('pages the people of a view, keeping it and the search in the links', functio
 it('never sends contact data of anyone', function (): void {
     $props = $this->actingAs($this->viewer)->get(route('tenant.org-chart.quality', [$this->tenant, 'issue' => 'inactive_manager']))->assertOk()->inertiaProps();
 
-    expect(array_keys($props['people']['data'][0]))->toBe(['id', 'name', 'job_title', 'area', 'work_center', 'manager', 'direct_reports'])
+    expect(array_keys($props['people']['data'][0]))->toBe(['id', 'name', 'job_title', 'area', 'work_center', 'manager', 'manager_inactive', 'direct_reports'])
         ->and(array_keys($props['people']['data'][0]['manager']))->toBe(['value', 'label'])
         ->and(json_encode($props))->not->toContain($this->orphan->email, (string) $this->orphan->mobile, $this->gone->email);
 });
@@ -202,7 +209,7 @@ it('names a person without a name by their company ID', function (): void {
     $this->alone->update(['name' => null, 'employee_number' => 'S-77', 'job_title' => null, 'area_id' => null, 'work_center_id' => null]);
 
     $this->actingAs($this->viewer)->get(route('tenant.org-chart.quality', [$this->tenant, 'issue' => 'no_manager', 'q' => 'S-77']))
-        ->assertInertia(fn (Assert $page) => $page->where('people.data.0', ['id' => $this->alone->id, 'name' => 'S-77', 'job_title' => '', 'area' => '', 'work_center' => '', 'manager' => null, 'direct_reports' => 0]));
+        ->assertInertia(fn (Assert $page) => $page->where('people.data.0', ['id' => $this->alone->id, 'name' => 'S-77', 'job_title' => '', 'area' => '', 'work_center' => '', 'manager' => null, 'manager_inactive' => false, 'direct_reports' => 0]));
 });
 
 it('does not list the people of another company', function (): void {

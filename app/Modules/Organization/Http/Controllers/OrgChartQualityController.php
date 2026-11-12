@@ -69,6 +69,7 @@ final class OrgChartQualityController extends Controller
                 'area' => $employee->area->name ?? '',
                 'work_center' => $centers[$employee->work_center_id ?? ''] ?? '',
                 'manager' => $employee->manager === null ? null : ['value' => $employee->manager->id, 'label' => $employee->manager->label()],
+                'manager_inactive' => $employee->manager?->deactivated_at !== null,
                 'direct_reports' => is_int($employee->getAttributeValue('direct_reports')) ? $employee->getAttributeValue('direct_reports') : 0,
             ]),
             'can_manage' => Gate::allows('manage-org-chart'),

@@ -65,7 +65,7 @@ final readonly class ReportingGaps
         };
 
         return $query
-            ->with(['area:id,name', 'manager:id,name,employee_number,job_title'])
+            ->with(['area:id,name', 'manager:id,name,employee_number,job_title,deactivated_at'])
             ->withCount(['reports as direct_reports' => fn (Builder $reports) => $reports->whereNull('deactivated_at')])
             ->orderBy('name')
             ->orderBy('id')
