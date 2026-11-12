@@ -4,6 +4,7 @@ import {
     evaluationStanding,
     guidesShort,
     guidesText,
+    peopleAction,
     staffText,
 } from '@/lib/work-centers';
 
@@ -30,6 +31,20 @@ describe('guidesShort', () => {
         expect(guidesShort(['I'])).toBe('I');
         expect(guidesShort(['I', 'II'])).toBe('I y II');
         expect(guidesShort(['I', 'III'])).toBe('I y III');
+    });
+});
+
+describe('peopleAction', () => {
+    it('offers to load people into a center with nobody, and to see them otherwise', () => {
+        expect(peopleAction(0)).toEqual({
+            label: 'Cargar personas',
+            load: true,
+        });
+        expect(peopleAction(1)).toEqual({ label: 'Ver personas', load: false });
+        expect(peopleAction(48)).toEqual({
+            label: 'Ver personas',
+            load: false,
+        });
     });
 });
 

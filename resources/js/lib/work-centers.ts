@@ -10,6 +10,16 @@ export function staffText(employees: number): string {
     return countOf(employees, 'persona', 'personas');
 }
 
+/** What a work center's card offers about its people: loading them when it has none, seeing them otherwise. */
+export function peopleAction(employees: number): {
+    label: string;
+    load: boolean;
+} {
+    return employees === 0
+        ? { label: 'Cargar personas', load: true }
+        : { label: 'Ver personas', load: false };
+}
+
 /** The NOM-035 guides that apply, written for display; null when none does (nobody works there yet). */
 export function guidesText(guides: string[]): string | null {
     if (guides.length === 0) {
