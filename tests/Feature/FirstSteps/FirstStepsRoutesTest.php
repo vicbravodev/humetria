@@ -103,3 +103,11 @@ it('logs first_steps.welcomed, first_steps.hidden and first_steps.shown with ten
     Log::shouldHaveReceived('info')->with('first_steps.hidden', $context)->once();
     Log::shouldHaveReceived('info')->with('first_steps.shown', $context)->once();
 });
+
+it('refuses the three posts while a superadmin works as the owner', function (string $name): void {
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant));
+
+    $this->post(route($name, $this->tenant))->assertNotFound();
+
+    expect(stateOf($this->tenant, $this->owner->id))->toBeNull();
+})->with(['tenant.first-steps.welcome', 'tenant.first-steps.hide', 'tenant.first-steps.show']);

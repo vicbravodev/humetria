@@ -37,6 +37,8 @@ final class ForbidWhileImpersonating
             'tenant.complaints.index', 'tenant.complaints.cases.*', 'tenant.complaints.procedure',
             // What is paid and by whom is the staff's, never the owner's: nothing of billing is reached while acting as one.
             'billing.*',
+            // The owner's own preferences about the guided tour: whoever works as them changes none of it.
+            'tenant.first-steps.*',
         ];
     }
 
