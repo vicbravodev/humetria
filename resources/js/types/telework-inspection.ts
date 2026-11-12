@@ -25,8 +25,14 @@ export type RouteAccidents = {
 
 /** Something that waits for the Comisión in one of its centers (board V2-Comision). */
 export type CommitteeTask = {
-    /** NOM-037: lists of places and notices; Ley Silla: assessments to sign and to record in the minutes. */
-    kind: 'lists' | 'notices' | 'signatures' | 'minutes';
+    /** NOM-037: checklist to publish, lists of places and notices; Ley Silla: assessments to sign, to record in the minutes and to start. */
+    kind:
+        | 'checklist'
+        | 'lists'
+        | 'notices'
+        | 'signatures'
+        | 'minutes'
+        | 'unassessed';
     workCenter: string;
     count: number;
     /** Whose lists or assessments wait, oldest first; empty for notices and minutes. */
