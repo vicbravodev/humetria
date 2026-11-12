@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     closedText,
+    lowestFirst,
+    sectionScore,
     mapColumns,
     participationText,
     resultsReading,
@@ -117,6 +119,52 @@ describe('subtractionText', () => {
             ),
         ).toBeNull();
         expect(subtractionText(null, null)).toBeNull();
+    });
+});
+
+const detail = (key: string, favorable: number | null) => ({
+    key,
+    text: key,
+    shown: favorable !== null,
+    answered: favorable === null ? null : 40,
+    favorable,
+    neutral: null,
+    unfavorable: null,
+    distribution: null,
+    delta: null,
+});
+
+describe('sectionScore', () => {
+    it('takes the score of the theme, or the simple average of its questions when it has none', () => {
+        expect(sectionScore({ score: 63, items: [detail('a', 10)] })).toBe(63);
+        expect(
+            sectionScore({
+                score: null,
+                items: [detail('a', 31), detail('b', 36)],
+            }),
+        ).toBe(34);
+    });
+
+    it('has none when a question is hidden or there are none', () => {
+        expect(
+            sectionScore({
+                score: null,
+                items: [detail('a', 31), detail('b', null)],
+            }),
+        ).toBeNull();
+        expect(sectionScore({ score: null, items: [] })).toBeNull();
+    });
+});
+
+describe('lowestFirst', () => {
+    it('orders the questions from the least favorable, the hidden ones last', () => {
+        expect(
+            lowestFirst([
+                detail('high', 52),
+                detail('hidden', null),
+                detail('low', 43),
+            ]).map((item) => item.key),
+        ).toEqual(['low', 'high', 'hidden']);
     });
 });
 

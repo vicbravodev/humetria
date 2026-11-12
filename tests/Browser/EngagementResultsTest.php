@@ -58,13 +58,18 @@ it('shows RH every question with its share and its five-step bar', function (boo
     [$url, $survey] = climateResultsPanel();
 
     visitPage('engagement/items', "{$url}/climate/{$survey}/results/items", $dark, $mobile)
-        ->assertSee('Resultados por pregunta')
+        ->assertSee('Por pregunta')
         ->assertSee('Compromiso')
-        ->assertSee('Claridad y alineación')
+        ->assertSee('De acuerdo')
+        ->assertSee('Ni de acuerdo ni en desacuerdo')
+        ->click('nav[aria-label="Temas"] button:has-text("Claridad y alineación")')
         ->assertSee('Conozco las principales metas que busca alcanzar esta empresa.')
         ->assertSee('36 respuestas')
+        ->assertSee('De menor a mayor. La marca vertical es el tema')
+        ->click('Todas las preguntas')
         ->assertSee('Se reporta pregunta por pregunta.')
-        ->assertSee('Menos de 5 personas la contestaron.');
+        ->assertSee('Menos de 5 respuestas: no se muestra.')
+        ->assertNoJavaScriptErrors();
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],

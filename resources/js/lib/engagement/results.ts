@@ -3,6 +3,7 @@ import { signedText } from '@/lib/engagement/trend';
 import type {
     EngagementBands,
     EngagementDriver,
+    EngagementItemDetail,
     EngagementParticipation,
     EngagementPriority,
 } from '@/types';
@@ -113,4 +114,41 @@ export function closedText(closedOn: string | null): string | null {
     return closedOn === null
         ? null
         : `Cerró el ${describeDate(closedOn) ?? closedOn}`;
+}
+
+/** The figure of a theme in the index of «Por pregunta»: its score or the simple average of its questions; none if one is hidden. */
+export function sectionScore({
+    score,
+    items,
+}: {
+    score: number | null;
+    items: EngagementItemDetail[];
+}): number | null {
+    if (score !== null) {
+        return score;
+    }
+
+    const shares = items.map((item) => item.favorable);
+
+    if (shares.length === 0 || shares.includes(null)) {
+        return null;
+    }
+
+    const sum = shares.reduce<number>(
+        (total, share) => total + (share ?? 0),
+        0,
+    );
+
+    return Math.round(sum / shares.length);
+}
+
+/** The questions from the least favorable, what asks for attention first; the hidden ones last. */
+export function lowestFirst(
+    items: EngagementItemDetail[],
+): EngagementItemDetail[] {
+    return [...items].sort(
+        (a, b) =>
+            (a.favorable ?? Number.POSITIVE_INFINITY) -
+            (b.favorable ?? Number.POSITIVE_INFINITY),
+    );
 }
