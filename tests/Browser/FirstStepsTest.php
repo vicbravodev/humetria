@@ -172,7 +172,8 @@ it('guides the owner to load their people', function (bool $dark, bool $mobile):
 it('shows a centered bubble when the control is not on the page', function (): void {
     signInToPanel();
 
-    $page = visitPage('dashboard', '/admin/acme');
+    // A remembered tour comes from «Guíame», which only an owner past the welcome can reach.
+    $page = visitPage('dashboard', '/admin/acme')->click('Ahora no');
     $page->script('sessionStorage.setItem("humetria:first-steps-tour", "acme:team")');
 
     $page->navigate('/admin/acme')
