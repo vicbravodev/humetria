@@ -90,6 +90,9 @@ it('does not open the welcome to a superadmin working as the owner', function ()
         ->assertSee('Estás viendo Humetría como Ana Pérez'))
         ->assertDontSee('Te acompañamos en tus primeros pasos')
         ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-label', 'Primeros pasos: 0 de 5 pasos')
+        ->click(FIRST_STEPS_BUTTON)
+        ->assertSee('0 de 5 pasos')
+        ->assertDontSee('Ocultar primeros pasos')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 

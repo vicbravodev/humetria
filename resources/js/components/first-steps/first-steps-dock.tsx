@@ -38,7 +38,9 @@ export default function FirstStepsDock() {
 
     const post = (url: string) =>
         router.post(url, {}, { preserveScroll: true, preserveState: true });
-    const seen = () => post(welcome.url(tenant.slug));
+    // Whoever works as the owner changes nothing of theirs.
+    const seen = () =>
+        impersonator === null ? post(welcome.url(tenant.slug)) : undefined;
 
     return (
         <>
@@ -74,10 +76,16 @@ export default function FirstStepsDock() {
                                     setOpen(false);
                                     start(step);
                                 }}
-                                onHide={() => {
-                                    setOpen(false);
-                                    router.post(hide.url(tenant.slug));
-                                }}
+                                onHide={
+                                    impersonator === null
+                                        ? () => {
+                                              setOpen(false);
+                                              router.post(
+                                                  hide.url(tenant.slug),
+                                              );
+                                          }
+                                        : undefined
+                                }
                             />
                         )}
                     </PopoverContent>

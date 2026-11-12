@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { otherToolLabel, progressText } from '@/lib/first-steps/steps';
 import type { FirstStep, FirstSteps } from '@/types/first-steps';
 
-/** The open panel: the steps with their progress, the other tools left for later and the way to hide it all. */
+/** The open panel: the steps with their progress, the other tools left for later and the way to hide it all, which whoever works as the owner does not get. */
 export default function FirstStepsPanel({
     firstSteps,
     onGuide,
@@ -12,7 +12,7 @@ export default function FirstStepsPanel({
 }: {
     firstSteps: FirstSteps;
     onGuide: (step: FirstStep) => void;
-    onHide: () => void;
+    onHide?: (() => void) | undefined;
 }) {
     return (
         <>
@@ -49,14 +49,16 @@ export default function FirstStepsPanel({
                         ))}
                     </p>
                 )}
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="-ml-2 text-muted-foreground"
-                    onClick={onHide}
-                >
-                    Ocultar primeros pasos
-                </Button>
+                {onHide !== undefined && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-2 text-muted-foreground"
+                        onClick={onHide}
+                    >
+                        Ocultar primeros pasos
+                    </Button>
+                )}
             </footer>
         </>
     );

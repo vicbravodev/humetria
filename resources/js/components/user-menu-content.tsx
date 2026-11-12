@@ -28,7 +28,11 @@ export function UserMenuContent({ user }: Props) {
     };
 
     const showFirstSteps = () => {
-        if (firstSteps?.hidden === true && tenant !== null) {
+        if (
+            firstSteps?.hidden === true &&
+            tenant !== null &&
+            impersonator === null
+        ) {
             router.post(
                 show.url(tenant.slug),
                 {},
