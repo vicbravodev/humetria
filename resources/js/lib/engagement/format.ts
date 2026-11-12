@@ -6,7 +6,9 @@ export type Delta = {
 
 /** A favorable share as the results write it: "72 %" (a non-breaking space keeps the sign with its number). */
 export function favorableText(value: number | null): string {
-    return value === null ? 'Menos de 5 respuestas: no se muestra' : `${value} %`;
+    return value === null
+        ? 'Menos de 5 respuestas: no se muestra'
+        : `${value} %`;
 }
 
 /** Signed points of difference: "+7 pts", "−3 pts" (a real minus), "0 pts". */

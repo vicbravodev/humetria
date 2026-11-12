@@ -1,25 +1,21 @@
 import { ArrowDown, ArrowUp, Equal } from 'lucide-react';
-import { arrowLabel } from '@/lib/engagement/trend';
-import type { TrendDirection } from '@/types';
+import { changeLabel } from '@/lib/engagement/trend';
+import type { TrendChange } from '@/lib/engagement/trend';
 
 const ICONS = { up: ArrowUp, down: ArrowDown, same: Equal } as const;
 
-/** What changed since the wave before, in words and with an icon (never the color alone); nothing without an arrow. */
-export default function TrendArrow({
-    direction,
-}: {
-    direction: TrendDirection;
-}) {
-    if (direction === null) {
+/** How a figure moved, in words and with an icon (never the color alone); nothing when it cannot be compared. */
+export default function TrendArrow({ change }: { change: TrendChange | null }) {
+    if (change === null) {
         return null;
     }
 
-    const Icon = ICONS[direction];
+    const Icon = ICONS[change.band];
 
     return (
         <span className="inline-flex items-center gap-1 text-sm font-medium">
             <Icon aria-hidden className="size-4" />
-            {arrowLabel(direction)}
+            {changeLabel(change)}
         </span>
     );
 }

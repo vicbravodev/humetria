@@ -1,5 +1,6 @@
 import TrendArrow from '@/components/engagement/pulse/trend-arrow';
 import TrendColumns from '@/components/engagement/pulse/trend-columns';
+import { changeSincePrevious } from '@/lib/engagement/trend';
 import type { TrendSeries } from '@/types';
 
 /** One figure across the waves: its name, what it measures, the columns and the arrow of the latest wave. */
@@ -17,7 +18,7 @@ export default function TrendCard({ series }: { series: TrendSeries }) {
                         </p>
                     )}
                 </div>
-                <TrendArrow direction={latest?.direction ?? null} />
+                <TrendArrow change={changeSincePrevious(series.points)} />
             </header>
             {latest === undefined ? (
                 <p className="text-sm text-muted-foreground">
