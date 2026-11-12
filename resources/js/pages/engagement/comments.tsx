@@ -1,12 +1,12 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Hourglass } from 'lucide-react';
+import { Hourglass, Lock } from 'lucide-react';
 import CommentList from '@/components/engagement/results/comment-list';
 import CommentTabs from '@/components/engagement/results/comment-tabs';
 import RetrySummaryButton from '@/components/engagement/results/retry-summary-button';
 import SummaryThemes from '@/components/engagement/results/summary-themes';
 import EmptyState from '@/components/humetria/empty-state';
 import Notice from '@/components/humetria/notice';
-import PageHeader from '@/components/humetria/page-header';
+import ResultsSubheader from '@/components/engagement/results/results-subheader';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import {
     useEngagementTrail,
@@ -53,11 +53,17 @@ export default function Comments({
         <>
             <Head title={`Comentarios · ${survey.name}`} />
             <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
-                <PageHeader
-                    caption="Resultados de clima"
-                    title="Comentarios sobre la empresa"
-                    description="Lo que escribieron las personas, sin quién lo escribió. Solo se muestran con al menos 10 comentarios."
+                <ResultsSubheader
+                    survey={survey}
+                    view="comments"
+                    privacy={{
+                        icon: Lock,
+                        text: 'Sin quién lo escribió · se muestran con 10 o más',
+                    }}
                 />
+                <h2 className="text-xl font-semibold">
+                    Comentarios sobre la empresa
+                </h2>
                 {sensitiveMentions && (
                     <Notice>
                         <strong>
@@ -103,8 +109,10 @@ export default function Comments({
                             />
                         )}
                         {commentsState === 'few' && (
-                            <p className="text-muted-foreground">
-                                No hay suficientes comentarios para mostrarlos.
+                            <p className="flex items-center gap-1.5 text-muted-foreground">
+                                <Lock aria-hidden className="size-4 shrink-0" />
+                                Hay menos de 10 comentarios: no se muestran para
+                                proteger a quien escribió.
                             </p>
                         )}
                     </>

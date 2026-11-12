@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     closedText,
+    mostMentions,
     lowestFirst,
     sectionScore,
     mapColumns,
@@ -180,5 +181,17 @@ describe('participationText', () => {
         expect(
             participationText({ invited: 212, responses: 168, percent: 79 }),
         ).toBe('168 de 212 contestaron · 79 %');
+    });
+});
+
+describe('mostMentions', () => {
+    it('takes the most mentioned theme of both lists, and one without themes', () => {
+        expect(
+            mostMentions({
+                valued: [{ theme: 'a', count: 31 }],
+                change: [{ theme: 'b', count: 27 }],
+            }),
+        ).toBe(31);
+        expect(mostMentions({ valued: [], change: [] })).toBe(1);
     });
 });

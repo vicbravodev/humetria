@@ -6,6 +6,7 @@ import type {
     EngagementItemDetail,
     EngagementParticipation,
     EngagementPriority,
+    SummaryTheme,
 } from '@/types';
 
 /** The sentence over the results: how many of every ten answers are favorable and, when there is one, where to act. */
@@ -150,5 +151,16 @@ export function lowestFirst(
         (a, b) =>
             (a.favorable ?? Number.POSITIVE_INFINITY) -
             (b.favorable ?? Number.POSITIVE_INFINITY),
+    );
+}
+
+/** The most mentions of any theme of a summary, so both of its lists share one scale; at least one. */
+export function mostMentions(themes: {
+    valued: SummaryTheme[];
+    change: SummaryTheme[];
+}): number {
+    return Math.max(
+        1,
+        ...[...themes.valued, ...themes.change].map((theme) => theme.count),
     );
 }
