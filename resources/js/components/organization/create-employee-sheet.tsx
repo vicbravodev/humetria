@@ -32,7 +32,7 @@ export default function CreateEmployeeSheet({
             choices={choices}
             trigger={
                 <SheetTrigger asChild>
-                    <Button>
+                    <Button data-tour="add-employee">
                         <UserPlus />
                         Dar de alta
                     </Button>

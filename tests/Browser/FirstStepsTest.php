@@ -138,3 +138,31 @@ function finishFirstSteps(Tenant $tenant): void
     App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
     memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
 }
+
+it('guides the owner to load their people', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme', $dark, $mobile)
+        ->click('Empezar')
+        ->click('li:has-text("Carga a tu gente") button')
+        ->assertPathIs('/admin/acme/employees')
+        ->assertSee('Importa tu plantilla')
+        ->assertScript('document.querySelector(\'[data-tour="import-employees"]\')?.classList.contains("driver-active-element") === true', true)
+        ->keys('.driver-popover-next-btn', 'Escape')
+        ->assertDontSee('Importa tu plantilla')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('shows a centered bubble when the control is not on the page', function (): void {
+    signInToPanel();
+
+    $page = visitPage('dashboard', '/admin/acme');
+    $page->script('sessionStorage.setItem("humetria:first-steps-tour", "team")');
+
+    $page->navigate('/admin/acme')
+        ->assertSee('Invita a tu equipo')
+        ->assertScript('document.querySelector(".driver-active-element")?.id === "driver-dummy-element"', true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
