@@ -10,7 +10,7 @@ use Illuminate\Testing\TestResponse;
 
 mutates(SecurityHeaders::class);
 
-function cspFor(string $nonce, string $devServer = '', string $devSocket = ''): string
+function cspFor(string $nonce, string $devServer = '', string $devSocket = '', bool $map = false): string
 {
     $hot = $devServer === '' ? '' : " {$devServer}";
     $socket = $devSocket === '' ? '' : " {$devSocket}";
@@ -18,9 +18,11 @@ function cspFor(string $nonce, string $devServer = '', string $devSocket = ''): 
     // Sonner injects its stylesheet without a nonce: an empty <style> first, then its CSS.
     $sonner = "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='";
 
-    // The map of a zone (Asistencia) paints OpenStreetMap's tiles: images only, from that one origin.
+    // The signed-in panel also paints OpenStreetMap's tiles, the map of a zone (Asistencia): images only, from that one origin.
+    $tiles = $map ? ' https://tile.openstreetmap.org' : '';
+
     return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'{$hot}; style-src 'self' 'nonce-{$nonce}' {$sonner}{$hot}; "
-        ."img-src 'self' data: https://tile.openstreetmap.org{$hot}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}; object-src 'none'; "
+        ."img-src 'self' data:{$tiles}{$hot}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}; object-src 'none'; "
         ."base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 }
 
@@ -32,15 +34,15 @@ function nonceOf(TestResponse $response): string
 }
 
 dataset('pages', [
-    'guest page' => [fn (): TestResponse => test()->get(route('login'))],
-    'authenticated page' => [fn (): TestResponse => test()->actingAs(User::factory()->create())->get(route('dashboard'))],
+    'guest page' => [fn (): TestResponse => test()->get(route('login')), false],
+    'authenticated page' => [fn (): TestResponse => test()->actingAs(User::factory()->create())->get(route('dashboard')), true],
 ]);
 
-it('sends the standard security headers', function (Closure $visit): void {
+it('sends the standard security headers', function (Closure $visit, bool $map): void {
     $response = $visit();
 
     $response->assertOk()
-        ->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)))
+        ->assertHeader('Content-Security-Policy', cspFor(nonceOf($response), map: $map))
         ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('X-Frame-Options', 'DENY')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -48,7 +50,7 @@ it('sends the standard security headers', function (Closure $visit): void {
         ->assertHeaderMissing('Strict-Transport-Security');
 })->with('pages');
 
-it('signs the inline script, the inline style and the vite tags with the nonce of the policy', function (Closure $visit): void {
+it('signs the inline script, the inline style and the vite tags with the nonce of the policy', function (Closure $visit, bool $map): void {
     $response = $visit();
     $nonce = nonceOf($response);
     $html = (string) $response->getContent();
@@ -59,6 +61,14 @@ it('signs the inline script, the inline style and the vite tags with the nonce o
         ->and(preg_match_all('/<style[^>]*>/', $html, $styles))->toBeGreaterThan(1)
         ->and($styles[0])->each->toContain("nonce=\"{$nonce}\"");
 })->with('pages');
+
+it('lets only the signed-in panel paint the map tiles: a signed-in person outside the panel gets none', function (): void {
+    Route::middleware('web')->get('/test/plain', fn (): string => 'ok');
+
+    $response = $this->actingAs(User::factory()->create())->get('/test/plain');
+
+    $response->assertOk()->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)));
+});
 
 it('uses a fresh nonce on every request', function (): void {
     $first = nonceOf($this->get(route('login')));
