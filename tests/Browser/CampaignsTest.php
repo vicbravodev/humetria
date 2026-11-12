@@ -177,6 +177,9 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
         ->assertSee('Último día para contestar')
         ->assertSee('Así le llega a cada persona')
         ->click('Lanzar e invitar a 20 personas')
+        ->assertSee('Se enviarán 20 correos hoy.')
+        ->assertSee('Solo recibe la evaluación quien está en Empleados')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación lanzada. Las invitaciones van en camino.')
         ->assertSee('En curso')
         ->assertSee('0 de 20')
@@ -184,6 +187,24 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
         ->assertNoJavaScriptErrors();
 
     Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 20);
+});
+
+it('keeps the evaluation a draft until the launch is confirmed', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Lanzar e invitar a 20 personas')
+        ->assertSee('¿Lanzar la evaluación?')
+        ->click('Cancelar')
+        ->assertNoJavaScriptErrors();
+
+    expect($campaign->refresh()->status->value)->toBe('draft');
+    Illuminate\Support\Facades\Notification::assertNothingSent();
 });
 
 it('follows a launched evaluation: answers per guide, the sample and who answered', function (bool $dark, bool $mobile): void {
