@@ -12,6 +12,8 @@ export type EngagementDriver = {
     label: string;
     /** A driver of two questions: reported question by question, with no score of its own. */
     descriptive: boolean;
+    /** The survey asked only some of its questions (a pulse asks the anchor): read question by question too. */
+    partial: boolean;
     favorable: number | null;
     delta: Delta | null;
     items: EngagementItem[];

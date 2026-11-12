@@ -15,24 +15,28 @@ export default function DriverRow({
     /** Its place in the list, so the bars grow one after another. */
     index: number;
 }) {
+    const byQuestion = driver.descriptive || driver.partial;
+
     return (
         <li className="flex flex-col gap-2">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <span className="font-medium">{driver.label}</span>
                 <span className="flex items-baseline gap-3">
                     <TrendBadge delta={driver.delta} />
-                    {!driver.descriptive && (
+                    {!byQuestion && (
                         <span className="font-semibold tabular-nums">
                             {favorableText(driver.favorable)}
                         </span>
                     )}
                 </span>
             </div>
-            {driver.descriptive ? (
+            {byQuestion ? (
                 <>
-                    <p className="text-caption text-muted-foreground">
-                        Se reporta pregunta por pregunta.
-                    </p>
+                    {driver.descriptive && (
+                        <p className="text-caption text-muted-foreground">
+                            Se reporta pregunta por pregunta.
+                        </p>
+                    )}
                     <ul className="flex flex-col gap-2">
                         {driver.items.map((item, position) => (
                             <li key={item.key} className="grid gap-1">

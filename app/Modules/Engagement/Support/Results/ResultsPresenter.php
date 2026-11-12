@@ -178,6 +178,9 @@ final readonly class ResultsPresenter
                 'key' => $driver->driver->value,
                 'label' => $driver->driver->label(),
                 'descriptive' => $driver->descriptive,
+                // A survey that asked only some of its questions (a pulse asks the anchor) has no score for the theme,
+                // which is not a hidden one: it is read question by question, each under its own minimum.
+                'partial' => count($driver->items) < count(ItemBank::ofDriver($driver->driver)),
                 'favorable' => $driver->favorable,
                 'delta' => $earlier === null ? null : $this->delta($this->score($driver), $this->score($earlier), $same),
                 'items' => array_map($this->item(...), $driver->items),
