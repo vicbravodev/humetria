@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  * how many it holds, narrowed by name, work center and area (the tabs count what the filters leave). Whoever may only view
  * reads who asked and when, never the note, the reason of a rejection nor which leave it was (criterio C-22).
  *
- * @phpstan-type Row array{id: string, name: string, manager: string|null, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, shortBy: int, periods: list<int>, reason: string|null, recordedByHr: bool, note: string|null, rejectionReason: string|null, canDecide: bool, canCancel: bool}
+ * @phpstan-type Row array{id: string, name: string, manager: string|null, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, shortBy: int, periods: list<int>, reason: string|null, recordedByHr: bool, note: string|null, rejectionReason: string|null, canDecide: bool, canCancel: bool, coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}
  */
 final readonly class RequestPages
 {
@@ -31,7 +31,7 @@ final readonly class RequestPages
     /** The tabs, the one RH opens on first. */
     public const array TABS = ['attend', 'waiting', 'approved', 'rejected', 'cancelled', 'taken'];
 
-    public function __construct(private Roster $roster, private WorkCenters $centers, private Areas $areas) {}
+    public function __construct(private Roster $roster, private WorkCenters $centers, private Areas $areas, private DecisionContext $context) {}
 
     /**
      * @return array{tab: string, counts: array{attend: int, waiting: int, approved: int, rejected: int, cancelled: int, taken: int}, filters: array{q: string, center: array{value: string, label: string}|null, area: array{value: string, label: string}|null}, canManage: bool, types: list<array{id: string, name: string}>, requests: LengthAwarePaginator<int, Row>}
@@ -92,18 +92,41 @@ final readonly class RequestPages
     {
         $requests = self::among($people);
         $requests = match ($tab) {
-            'attend' => $requests->where('status', RequestStatus::Requested)->whereNotNull('escalated_at')->orderBy('requested_on')->orderBy('starts_on'),
-            'waiting' => $requests->where('status', RequestStatus::Requested)->whereNull('escalated_at')->orderBy('requested_on')->orderBy('starts_on'),
+            'attend' => $requests->where('status', RequestStatus::Requested)->whereNotNull('escalated_at')->orderBy('starts_on')->orderBy('requested_on'),
+            'waiting' => $requests->where('status', RequestStatus::Requested)->whereNull('escalated_at')->orderBy('starts_on')->orderBy('requested_on'),
             default => $requests->where('status', RequestStatus::from($tab))->orderByDesc('starts_on'),
         };
         $page = $requests->orderBy('id')->paginate(self::PER_PAGE)->withQueryString();
+        $rows = $this->present(array_values($page->items()), $canManage);
 
-        $items = $page->items();
+        return $page->through(fn (LeaveRequest $request): array => $rows[$request->id]);
+    }
+
+    /**
+     * The requests RH has to answer first, those the manager did not answer in time or that have nobody above the person,
+     * the one that starts soonest first (the overview shows the first few).
+     *
+     * @return list<Row>
+     */
+    public function escalated(int $limit): array
+    {
+        $requests = LeaveRequest::query()->where('status', RequestStatus::Requested)->whereNotNull('escalated_at')->orderBy('starts_on')->orderBy('requested_on')->orderBy('id')->limit($limit)->get()->values()->all();
+
+        return array_values($this->present(array_values($requests), true));
+    }
+
+    /**
+     * @param  list<LeaveRequest>  $items
+     * @return array<string, Row> by request id
+     */
+    private function present(array $items, bool $canManage): array
+    {
+        $context = $this->context->for($items, $canManage);
         $names = $this->roster->findMany(array_values(array_unique(array_filter(array_merge(...array_map(fn (LeaveRequest $request): array => [$request->employee_id, $request->approver_employee_id], $items))))));
         $types = LeaveType::query()->whereIn('id', array_filter(array_map(fn (LeaveRequest $request): ?string => $request->leave_type_id, $items)))->get(['id', 'name'])->mapWithKeys(fn (LeaveType $type): array => [$type->id => $type->name]);
         $years = LeaveEntitlement::query()->whereIn('id', array_merge(...array_map(fn (LeaveRequest $request): array => array_column($request->allocation, 'entitlement_id'), $items)))->get(['id', 'anniversary_on'])->mapWithKeys(fn (LeaveEntitlement $period): array => [$period->id => $period->anniversary_on->year]);
 
-        return $page->through(fn (LeaveRequest $request): array => [
+        return array_column(array_map(fn (LeaveRequest $request): array => [
             'id' => $request->id,
             'name' => ($names[$request->employee_id] ?? null)->name ?? '',
             'manager' => ($names[$request->approver_employee_id ?? ''] ?? null)->name ?? null,
@@ -122,7 +145,9 @@ final readonly class RequestPages
             'rejectionReason' => $canManage ? $request->rejection_reason : null,
             'canDecide' => $canManage && $request->status === RequestStatus::Requested,
             'canCancel' => $canManage && in_array($request->status, RequestStatus::live(), true),
-        ]);
+            'coverage' => $context[$request->id]['coverage'] ?? null,
+            'team' => $context[$request->id]['team'] ?? null,
+        ], $items), null, 'id');
     }
 
     /**
