@@ -21,10 +21,13 @@ export default function RecordLeaveForm({
     open,
     onOpenChange,
     types,
+    person,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     types: LeaveTypeOption[];
+    /** Who it is for when the page already says (their record); without it the person is looked up by name. */
+    person?: { value: string; label: string };
 }) {
     const tenantSlug = useTenantSlug();
     const [typeId, setTypeId] = useState('');
@@ -43,13 +46,29 @@ export default function RecordLeaveForm({
                 <div className="grid gap-5">
                     <div className="grid gap-2">
                         <Label htmlFor="record-person">Persona</Label>
-                        <Combobox
-                            id="record-person"
-                            name="employee_id"
-                            source={serverSource(options.url(tenantSlug), [])}
-                            placeholder="Busca por nombre"
-                            invalid={errors['employee_id'] !== undefined}
-                        />
+                        {person === undefined ? (
+                            <Combobox
+                                id="record-person"
+                                name="employee_id"
+                                source={serverSource(
+                                    options.url(tenantSlug),
+                                    [],
+                                )}
+                                placeholder="Busca por nombre"
+                                invalid={errors['employee_id'] !== undefined}
+                            />
+                        ) : (
+                            <>
+                                <input
+                                    type="hidden"
+                                    name="employee_id"
+                                    value={person.value}
+                                />
+                                <p id="record-person" className="font-medium">
+                                    {person.label}
+                                </p>
+                            </>
+                        )}
                         <InputError message={errors['employee_id']} />
                     </div>
                     <RecordTypeField

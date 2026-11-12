@@ -220,6 +220,8 @@ export type LeaveLedgerEntry = {
     tranche: 'statutory' | 'extra';
     /** With its sign: below zero leaves the balance. */
     days: number;
+    /** The days the person could ask for right after this movement. */
+    balance: number;
     /** The year of the period it moved; null for days given in advance. */
     period: number | null;
     note: string | null;
