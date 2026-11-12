@@ -19,7 +19,7 @@ export default function OrgMiniPerson({
             type="button"
             onClick={() => onSelect(node.id)}
             data-slot="org-mini-person"
-            className="flex min-h-14 w-full items-center gap-3 rounded-xl border bg-card px-3 py-2 text-left transition-colors duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="flex min-h-14 w-full items-center gap-3 card px-3 py-2 text-left transition-colors duration-150 hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
             <Initials name={node.name} />
             <span className="flex min-w-0 flex-1 flex-col">

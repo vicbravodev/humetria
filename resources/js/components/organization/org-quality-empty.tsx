@@ -14,7 +14,7 @@ export default function OrgQualityEmpty({ people }: { people: number }) {
     return (
         <p
             role="status"
-            className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-card px-5 py-3.5 text-meta"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 card px-5 py-3.5 text-meta"
         >
             <CircleCheck aria-hidden className="size-5 text-primary" />
             <span>

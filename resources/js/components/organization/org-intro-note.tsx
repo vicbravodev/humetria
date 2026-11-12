@@ -15,7 +15,7 @@ export default function OrgIntroNote() {
     return (
         <aside
             aria-label="Para qué sirve el organigrama"
-            className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 print:hidden"
+            className="flex items-center gap-3 card px-4 py-3 print:hidden"
         >
             <Info aria-hidden className="size-5 shrink-0 text-primary" />
             <p className="min-w-0 flex-1 text-meta">

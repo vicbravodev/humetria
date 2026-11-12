@@ -18,7 +18,7 @@ export default function OrgQualityHelp() {
     return (
         <section
             aria-labelledby="org-quality-help"
-            className="relative rounded-xl border bg-card p-5 print:hidden"
+            className="relative card p-5 print:hidden"
         >
             <h2 id="org-quality-help" className="text-base font-semibold">
                 Cómo se completa

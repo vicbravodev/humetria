@@ -33,7 +33,7 @@ export default function OrgTrayPerson({
                 onStart(person);
             }}
             data-slot="org-tray-person"
-            className="flex cursor-grab items-center gap-2 rounded-xl border bg-card p-2 active:cursor-grabbing"
+            className="flex cursor-grab items-center gap-2 card p-2 active:cursor-grabbing"
         >
             <GripVertical
                 aria-hidden

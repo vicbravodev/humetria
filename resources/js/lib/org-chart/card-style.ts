@@ -4,7 +4,7 @@ import type { Tone } from '@/lib/org-chart/chart-view';
 export type DropTone = 'valid' | 'invalid';
 
 const BASE =
-    'flex h-[72px] w-full items-center gap-3 rounded-xl border bg-card p-3 text-left text-card-foreground transition-[border-color,opacity] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+    'flex h-[72px] w-full items-center gap-3 card p-3 text-left text-card-foreground transition-[border-color,opacity] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 const TONES: Record<Tone, string> = {
     normal: 'border-border hover:border-input',

@@ -26,7 +26,7 @@ export default function OrgQualityTable({
     canManage: boolean;
 }) {
     return (
-        <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="overflow-hidden card">
             <StackedTable>
                 <TableCaption className="sr-only">
                     Personas del organigrama, con su jefe directo

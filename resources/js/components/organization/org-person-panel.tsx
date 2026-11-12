@@ -38,7 +38,7 @@ export default function OrgPersonPanel({
     return (
         <aside
             aria-label={`Panel de ${node.name}`}
-            className="absolute inset-y-3 right-3 z-20 flex w-[360px] max-w-[calc(100%-1.5rem)] flex-col gap-5 overflow-y-auto rounded-xl border bg-card p-5 shadow-float"
+            className="absolute inset-y-3 right-3 z-20 flex w-[360px] max-w-[calc(100%-1.5rem)] flex-col gap-5 overflow-y-auto card p-5 shadow-float"
         >
             <header className="flex items-start gap-3">
                 <Initials name={node.name} className="size-12 text-base" />

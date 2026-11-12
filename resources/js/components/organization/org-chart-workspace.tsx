@@ -28,7 +28,7 @@ export default function OrgChartWorkspace({
 
     return (
         <section aria-label="Organigrama" className="grid gap-3">
-            <div className="overflow-hidden rounded-xl border bg-card">
+            <div className="overflow-hidden card">
                 {editor.editing && <OrgEditBand />}
                 <div className="flex flex-col md:flex-row">
                     {editor.editing && (
