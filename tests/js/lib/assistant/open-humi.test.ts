@@ -6,7 +6,7 @@ import {
     it,
     vi,
 } from 'vite-plus/test';
-import { OPEN_HUMI, openHumi } from '@/lib/assistant/open-humi';
+import { draftAfterOpen, OPEN_HUMI, openHumi } from '@/lib/assistant/open-humi';
 
 /** What a listener of `window` receives when Humi is asked to open. */
 let seen: unknown[];
@@ -34,4 +34,15 @@ describe('openHumi', () => {
 
         expect(seen).toEqual([{ draft: null }]);
     });
+});
+
+describe('draftAfterOpen', () => {
+    it('takes the new draft', () =>
+        expect(draftAfterOpen('old', 'new')).toBe('new'));
+
+    it('keeps the draft that is open when asked to open with none, so the box is not wiped', () =>
+        expect(draftAfterOpen('old', null)).toBe('old'));
+
+    it('stays empty when there was none and none comes', () =>
+        expect(draftAfterOpen(null, null)).toBeNull());
 });

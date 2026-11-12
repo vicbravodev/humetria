@@ -7,3 +7,11 @@ export function openHumi(draft?: string): void {
         new CustomEvent(OPEN_HUMI, { detail: { draft: draft ?? null } }),
     );
 }
+
+/** The draft Humi's box starts from after an open request: a request without one keeps the draft already open. */
+export function draftAfterOpen(
+    current: string | null,
+    requested: string | null,
+): string | null {
+    return requested ?? current;
+}

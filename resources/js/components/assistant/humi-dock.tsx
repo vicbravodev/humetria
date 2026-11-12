@@ -16,6 +16,7 @@ import {
 import { useHumiOpenRequest } from '@/hooks/use-humi-open-request';
 import { useHumiShortcut } from '@/hooks/use-humi-shortcut';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { draftAfterOpen } from '@/lib/assistant/open-humi';
 import { pageContextOf } from '@/lib/assistant/page-context';
 
 // The panel (and the AI SDK it brings) is fetched the first time Humi opens, not with every page.
@@ -33,7 +34,7 @@ export default function HumiDock() {
     const [open, setOpen] = useState(false);
     const [draft, setDraft] = useState<string | null>(null);
     const openNow = useCallback((written: string | null) => {
-        setDraft(written);
+        setDraft((current) => draftAfterOpen(current, written));
         setOpen(true);
     }, []);
     const [closedOnce, setClosedOnce] = useState(false);
