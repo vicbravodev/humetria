@@ -43,6 +43,7 @@
         <!-- Humi's defaults, whatever the local .env sets: the tests never reach a provider. -->
         <env name="HUMI_PROVIDER" value="anthropic" force="true"/>
         <env name="HUMI_MODEL" value="claude-sonnet-5-5" force="true"/>
+        <env name="FIRST_STEPS_ENABLED" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
