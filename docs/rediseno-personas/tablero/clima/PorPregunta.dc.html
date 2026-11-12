@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Clima · Por pregunta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm button.pp-t{padding:0 14px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-tab[aria-selected="true"],.hm .hm-tab[aria-current="page"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count,.hm-tab[aria-current="page"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.hm-cell--protegida{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.cb-field{display:inline-flex;align-items:center;gap:8px}
+.cb-select{min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);font:inherit;font-size:14px;line-height:20px}
+.cb-quote{display:flex;flex-direction:column;border-radius:10px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.cb-quote>li{padding:20px 24px;border-top:1px solid var(--border);font-size:18px;line-height:28px;text-wrap:pretty}
+.cb-quote>li:first-child{border-top:0}
+.cb-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.cb-pager-btns{display:flex;gap:8px}
+.cb-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:500;color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.pp-index{display:flex;flex-direction:column;gap:4px;padding:8px}
+.pp-t{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;width:100%;padding:0 14px;border-radius:8px;text-align:left;border:1px solid transparent;transition:background-color 150ms}
+.hm .pp-t:hover{background:var(--muted)}
+.hm .pp-t--sel{background:var(--accent);border-color:var(--primary)}
+.pp-t-val{font-weight:600}
+.pp-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
+.pp-switch{display:inline-flex;align-items:center;gap:12px;min-height:44px}
+.pp-track{display:inline-flex;align-items:center;justify-content:flex-start;width:44px;height:26px;padding:3px;border-radius:9999px;background:var(--track);border:1px solid var(--input);flex:none}
+.pp-track--on{justify-content:flex-end;background:var(--primary);border-color:var(--primary)}
+.pp-knob{width:18px;height:18px;border-radius:9999px;background:var(--input)}
+.pp-track--on .pp-knob{background:var(--primary-foreground)}
+.pp-legend{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;font-size:14px;line-height:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.pp-leg{display:inline-flex;align-items:center;gap:8px}
+.pp-chip{display:inline-block;width:24px;height:10px;border-radius:9999px;background:var(--track)}
+.pp-chip--n{background:repeating-linear-gradient(135deg,var(--track) 0 3px,var(--input) 3px 4px)}
+.pp-chip--f{background:var(--primary)}
+.pp-chip--ref{width:2px;height:16px;border-radius:1px;background:var(--foreground)}
+.pp-group{display:flex;flex-direction:column;gap:0}
+.pp-group+.pp-group{border-top:1px solid var(--border);margin-top:16px;padding-top:24px}
+.pp-ghead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;padding-top:16px}
+.pp-list{display:flex;flex-direction:column}
+.pp-q{display:flex;flex-direction:column;gap:12px;padding:20px 0;border-top:1px solid var(--border)}
+.pp-q:first-child{border-top:0}
+.pp-qtop{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 24px}
+.pp-qtext{flex:1 1 360px;min-width:0;max-width:640px}
+.pp-fig{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}
+.pp-strip{--p:0;--ref:0;position:relative;display:flex;gap:2px;height:12px}
+.pp-seg{display:block;height:100%}
+.pp-seg--d{flex:1 1 0;background:var(--track);border-radius:9999px 0 0 9999px}
+.pp-seg--n{flex:1 1 0;background:repeating-linear-gradient(135deg,var(--track) 0 3px,var(--input) 3px 4px)}
+.pp-seg--f{flex:none;width:calc(var(--p)*1% - 2px);background:var(--primary);border-radius:0 9999px 9999px 0}
+.pp-seg--bajo{background:var(--risk-alto)}
+.pp-strip::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc((100 - var(--ref))*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.pp-d{color:var(--muted-foreground)}
+.pp-d--bajo{color:var(--risk-alto-fg);font-weight:500}
+.pp-lock{display:flex;align-items:center;gap:12px;min-height:44px;padding:12px 16px;border:1px dashed var(--input);border-radius:8px;color:var(--muted-foreground)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="clima" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Escucha a tu gente › Clima › Clima · junio 2026 › Por pregunta" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Resultados por pregunta</h1><span class="hm-pill">Cerrada</span></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>Clima · junio 2026</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>168 de 212 contestaron · 79 %</span><span class="hm-fact" style="color:var(--primary)"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Grupos de 5 o más</span></div></div><div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="#exportar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Exportar CSV</a></div></header>
+<nav class="hm-tabs" aria-label="Secciones de los resultados"><a class="hm-tab" href="Resultados.dc.html">Resumen</a><a class="hm-tab" href="PorPregunta.dc.html" aria-current="page">Por pregunta</a><a class="hm-tab" href="Comentarios.dc.html">Comentarios<span class="hm-count">93</span></a><a class="hm-tab" href="Jefe.dc.html">Por jefe<span class="hm-count">13</span></a><a class="hm-tab" href="Compromisos.dc.html">Compromisos<span class="hm-count">3</span></a></nav>
+<p class="hm-lead">{{ lead }}</p>
+<div class="hm-split">
+  <aside class="hm-side" style="flex:1 1 280px;max-width:340px" aria-label="Temas">
+    <div class="hm-card" style="padding:16px 8px 8px"><h2 class="hm-caption hm-muted" style="padding:0 14px">Temas</h2>
+      <div class="pp-index"><sc-for list="{{ topics }}" as="t" hint-placeholder-count="11"><button type="button" class="{{ t.cls }}" aria-pressed="{{ t.pressed }}" onClick="{{ t.pick }}"><span class="hm-strong">{{ t.name }}</span><span class="pp-t-val">{{ t.val }}</span></button></sc-for></div>
+      <p class="hm-small hm-muted" style="padding:8px 14px 8px">Los temas sin cifra propia muestran el promedio de sus preguntas.</p></div>
+  </aside>
+  <div class="hm-main" style="flex:2 1 560px">
+      <div class="pp-controls">
+        <label class="cb-field hm-small" for="orden"><span class="hm-muted">Ordenar</span>
+          <select id="orden" class="cb-select" value="{{ order }}" onChange="{{ setOrder }}"><option value="asc">De menor a mayor</option><option value="desc">De mayor a menor</option></select></label>
+        <button type="button" class="pp-switch" role="switch" aria-checked="{{ allStr }}" onClick="{{ toggleAll }}"><span class="{{ trackCls }}"><span class="pp-knob"></span></span><span class="hm-strong">Todas las preguntas</span></button>
+      </div>
+      <div class="hm-card" style="padding-top:20px">
+        <div class="pp-legend"><span class="hm-strong">Cómo se reparten las respuestas</span>
+          <span class="pp-leg"><span class="pp-chip"></span>En desacuerdo</span>
+          <span class="pp-leg"><span class="pp-chip pp-chip--n"></span>Ni de acuerdo ni en desacuerdo</span>
+          <span class="pp-leg"><span class="pp-chip pp-chip--f"></span>De acuerdo</span>
+          <span class="pp-leg"><span class="pp-chip pp-chip--ref"></span>Favorable del tema</span></div>
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="1">
+          <section class="pp-group" aria-label="{{ g.name }}">
+            <div class="pp-ghead"><h2 class="hm-h3">{{ g.name }}</h2><span class="hm-small hm-muted">{{ g.headRight }}</span></div>
+            <ul class="pp-list">
+              <sc-for list="{{ g.rows }}" as="q" hint-placeholder-count="4">
+                <li class="pp-q">
+                  <sc-if value="{{ q.abierta }}" hint-placeholder-val="{{ true }}">
+                    <div class="pp-qtop"><p class="hm-strong pp-qtext">{{ q.text }}</p><span class="pp-fig"><span class="hm-kpi-2">{{ q.p }} %</span><span class="hm-small hm-muted">{{ q.n }} respuestas</span></span></div>
+                    <div class="pp-strip" style="--p:{{ q.p }};--ref:{{ q.ref }}" role="img" aria-label="{{ q.aria }}"><span class="pp-seg pp-seg--d"></span><span class="pp-seg pp-seg--n"></span><span class="{{ q.segCls }}"></span></div>
+                    <p class="{{ q.deltaCls }}">{{ q.delta }}</p>
+                  </sc-if>
+                  <sc-if value="{{ q.protegida }}" hint-placeholder-val="{{ false }}">
+                    <p class="hm-strong pp-qtext">{{ q.text }}</p>
+                    <div class="pp-lock hm-small"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Menos de 5 respuestas: no se muestra</div>
+                  </sc-if>
+                </li>
+              </sc-for>
+            </ul>
+          </section>
+        </sc-for>
+      </div>
+  </div>
+</div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["datos","protegida"],"default":"datos","section":"Estado"},"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const variant = this.props.variant ?? 'datos';
+
+    const T = [
+      { id: 'compromiso', name: 'Compromiso', tema: 62, avg: false, q: [['Me siento orgulloso(a) de trabajar en esta empresa.', 59, 166], ['Me siento motivado(a) para hacer bien mi trabajo.', 64, 163], ['Quiero aportar a que esta empresa mejore.', 64, 162], ['Me gustaría seguir trabajando en esta empresa durante el próximo año.', 63, 164]] },
+      { id: 'claridad', name: 'Claridad y alineación', tema: 63, avg: false, q: [['Conozco las principales metas que busca alcanzar esta empresa.', 65, 162], ['Sé cómo mi trabajo contribuye a los objetivos de la empresa.', 62, 163], ['Tengo claro qué es lo más importante de mi trabajo en este momento.', 62, 161]] },
+      { id: 'confianza', name: 'Confianza en la dirección', tema: 60, avg: false, q: [['Confío en las decisiones que toma la dirección de la empresa.', 59, 162], ['La dirección explica los motivos de sus decisiones importantes.', 68, 164], ['Lo que la dirección dice coincide con lo que hace.', 54, 164]] },
+      { id: 'comunicacion', name: 'Comunicación y cambios', tema: 47, avg: false, q: [['Me entero a tiempo de los cambios que afectan mi trabajo.', 52, 163], ['Sé a quién acudir cuando necesito información para mi trabajo.', 48, 158], ['Recibo de otras áreas la información que necesito para hacer mi trabajo.', 43, 164], ['Cuando cambia la forma de hacer mi trabajo, entiendo qué debo hacer diferente.', 45, 158]] },
+      { id: 'reconocimiento', name: 'Reconocimiento', tema: 34, avg: true, q: [['Cuando obtengo buenos resultados, me explican qué hice bien.', 31, 163], ['Conozco los criterios que se usan para reconocer un buen trabajo.', 36, 165]] },
+      { id: 'crecimiento', name: 'Crecimiento', tema: 45, avg: true, q: [['Puedo poner en práctica lo nuevo que aprendo para mejorar mi trabajo.', 48, 165], ['Veo oportunidades de crecer dentro de esta empresa.', 42, 160]] },
+      { id: 'autonomia', name: 'Autonomía', tema: 73, avg: true, q: [['Tengo margen para organizar mis tareas dentro de las reglas de mi puesto.', 72, 163], ['Puedo tomar las decisiones que mi puesto requiere sin pedir permiso para todo.', 74, 164]] },
+      { id: 'recursos', name: 'Recursos y procesos', tema: 62, avg: false, q: [['Las herramientas que uso para trabajar funcionan bien.', 65, 162], ['Los pasos que sigo para completar mis tareas están bien organizados.', 61, 166], ['En mi equipo tenemos suficientes personas para cumplir con las tareas.', 61, 167]] },
+      { id: 'equipo', name: 'Trabajo en equipo', tema: 84, avg: true, q: [['En mi equipo nos tratamos con respeto.', 81, 167], ['Puedo coordinar mis tareas con las personas de mi equipo.', 86, 162]] },
+      { id: 'voz', name: 'Voz y trato justo', tema: 64, avg: false, q: [['Puedo expresar desacuerdos sobre el trabajo sin que eso me perjudique.', 61, 163], ['Puedo proponer mejoras relacionadas con mi trabajo.', 67, 159], ['Siento que las reglas se aplican de forma justa en mi área.', 65, 162]] },
+      { id: 'compensacion', name: 'Compensación y prestaciones', tema: 68, avg: false, q: [['Considero que mi sueldo corresponde a las responsabilidades de mi puesto.', 69, 161], ['Conozco los criterios que se usan para dar aumentos de sueldo.', 64, 162], ['Las prestaciones que recibo me resultan útiles.', 71, 161]] }
+    ];
+    const st = this.state || {};
+    const sel = st.sel ?? 'comunicacion';
+    const all = st.all ?? false;
+    const order = st.order ?? 'asc';
+    const pts = (n) => (n < 0 ? '−' : '+') + Math.abs(n) + (Math.abs(n) === 1 ? ' pt' : ' pts');
+    const build = (t) => {
+      const base = t.q.map(([text, p, n]) => ({ text, p, n })).sort((a, b) => a.p - b.p);
+      const hide = variant === 'protegida' && t.id === 'comunicacion' ? base[Math.min(2, base.length - 1)].text : null;
+      const open = base.filter((r) => r.text !== hide);
+      if (order === 'desc') open.reverse();
+      const rows = open.concat(base.filter((r) => r.text === hide)).map((r) => {
+        const prot = r.text === hide;
+        const d = r.p - t.tema;
+        return {
+          text: r.text, p: r.p, n: r.n, ref: t.tema, protegida: prot, abierta: !prot,
+          delta: d === 0 ? 'Igual que el tema' : pts(d) + ' frente al tema',
+          deltaCls: d <= -3 ? 'hm-small pp-d pp-d--bajo' : 'hm-small pp-d',
+          segCls: d <= -3 ? 'pp-seg pp-seg--f pp-seg--bajo' : 'pp-seg pp-seg--f',
+          aria: r.text + ' ' + r.p + ' % favorable, ' + r.n + ' respuestas. Promedio del tema: ' + t.tema + ' %.'
+        };
+      });
+      return { id: t.id, name: t.name, rows, headRight: t.avg ? t.tema + ' % · promedio de sus preguntas' : t.tema + ' % favorable al tema' };
+    };
+    const cur = T.find((t) => t.id === sel) ?? T[0];
+    const groups = (all ? T : [cur]).map(build);
+    const low = cur.q.map(([text, p]) => ({ text, p })).sort((a, b) => a.p - b.p)[0];
+    const lead = all
+      ? 'Las 31 preguntas del cuestionario, agrupadas por tema y ordenadas dentro de cada uno.'
+      : 'En ' + cur.name + ', ' + cur.tema + ' % de las respuestas son favorables. La más baja es ' + low.p + ' %: «' + low.text + '»';
+    const topics = T.map((t) => ({
+      name: t.name, val: t.tema + ' %',
+      cls: !all && t.id === sel ? 'pp-t pp-t--sel' : 'pp-t',
+      pressed: !all && t.id === sel ? 'true' : 'false',
+      pick: () => this.setState({ sel: t.id, all: false })
+    }));
+    return {
+      theme, themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light',
+      lead, topics, groups, order,
+      allStr: all ? 'true' : 'false',
+      trackCls: all ? 'pp-track pp-track--on' : 'pp-track',
+      toggleAll: () => this.setState({ all: !all }),
+      setOrder: (e) => this.setState({ order: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

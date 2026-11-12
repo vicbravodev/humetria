@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vacaciones · Solicitudes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+.hm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:24px}
+.hm-kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hm-kpi-card--lead{border-color:var(--primary);grid-column:span 1}
+.hm-kpi-label{display:flex;align-items:center;gap:8px;color:var(--muted-foreground)}
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+.hm-tablewrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm-table{width:100%;border-collapse:collapse;font-size:16px;line-height:24px}
+.hm-table th{background:var(--muted);color:var(--muted-foreground);font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;text-align:left;padding:12px 16px;white-space:nowrap}
+.hm-table td{padding:12px 16px;border-top:1px solid var(--border);vertical-align:middle;height:64px}
+.hm-table .hm-num{text-align:right}
+.hm-table tr[aria-selected="true"] td{background:var(--accent)}
+.hm-person{display:flex;align-items:center;gap:12px;min-width:0}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+.hm-notice{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:var(--warning);color:var(--warning-foreground)}
+.hm-notice-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hm-notice a{font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-sec{display:flex;flex-direction:column;gap:4px}
+.hm-dec{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-dec-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-dec-who{flex:1 1 220px;min-width:0}
+.hm-dec-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--border)}
+.hm-dec-actions{display:flex;align-items:center;gap:8px}
+.hm-line{display:flex;align-items:flex-start;gap:8px}
+.hm-line .hm-i{margin-top:2px;color:var(--muted-foreground)}
+.hm-strip{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px}
+.hm-day{display:flex;flex-direction:column;align-items:center;gap:0;padding:8px 0;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--muted-foreground);font-size:13px;line-height:18px}
+.hm-day b{font-size:16px;line-height:24px;font-weight:500;color:var(--foreground)}
+.hm-day--fin{background:var(--muted)}
+.hm-day--fuera{background:var(--accent);border-color:var(--accent);color:var(--foreground);font-weight:600}
+.hm-day--hoy{border:2px solid var(--primary)}
+.hm-strip--scroll{grid-template-columns:repeat(var(--n),56px);width:max-content}
+.hm-scroll{overflow-x:auto;padding-bottom:4px}
+.hm-field{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--muted-foreground);flex:1 1 220px;min-width:0}
+.hm-field input{flex:1;min-width:0;border:0;background:none;font:inherit;color:var(--foreground);outline-offset:6px}
+.hm-field input::placeholder{color:var(--muted-foreground);opacity:1}
+.hm-select{min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);font:inherit;font-size:14px;line-height:20px;flex:none}
+.hm-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hm .hm-iconbtn--o{border:1px solid var(--input);background:var(--card);color:var(--foreground)}
+.hm .hm-tab[aria-pressed="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-sortline{display:flex;align-items:center;gap:8px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-num-step{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--accent);color:var(--primary);font-weight:600}
+.hm-step{display:flex;align-items:flex-start;gap:16px}
+.hm-cal{display:flex;flex-direction:column;min-width:760px}
+.hm-cal-row{display:grid;grid-template-columns:220px repeat(var(--n),minmax(0,1fr));align-items:center;min-height:56px;border-top:1px solid var(--border)}
+.hm-cal-row:first-child{border-top:0}
+.hm-cal-row--head{background:var(--muted);min-height:60px}
+.hm-cal-who{grid-column:1;grid-row:1;display:flex;align-items:center;gap:12px;padding:8px 16px;min-width:0}
+.hm-cal-d{grid-row:1;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;line-height:18px;color:var(--muted-foreground)}
+.hm-cal-d b{font-size:14px;line-height:20px;font-weight:500;color:var(--foreground)}
+.hm-cal-d--fin{background:var(--muted)}
+.hm-cal-row--head .hm-cal-d--fin{background:var(--border)}
+.hm-cal-d--hoy{border-left:2px solid var(--primary);border-right:2px solid var(--primary)}
+.hm-cal-d--fuera{background:var(--accent);color:var(--foreground);font-weight:600;font-size:14px}
+.hm-cal-bar{grid-row:1;height:24px;margin:0 1px;border-radius:6px;background:var(--primary)}
+.hm-cal-bar--pend{background:transparent;border:2px dashed var(--input)}
+.hm-legend{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;font-size:14px;line-height:20px}
+.hm-legend span{display:inline-flex;align-items:center;gap:8px}
+.hm-sw{display:inline-block;width:24px;height:12px;border-radius:4px;background:var(--primary)}
+.hm-sw--perm{background:var(--chart-4)}
+.hm-sw--pend{background:transparent;border:2px dashed var(--input)}
+.hm-ghost{display:block;height:12px;border-radius:9999px;background:var(--muted)}
+.hm-wk{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.hm-table td:nth-child(2),.hm-table td:nth-child(3){white-space:nowrap}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="vacaciones.solicitudes" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Ordena tu operación › Vacaciones › Solicitudes" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+<sc-if value="{{ esDatos }}" hint-placeholder-val="{{ true }}">
+<div class="hm-page">
+<header class="hm-head">
+  <div class="hm-head-text">
+    <div class="hm-head-title"><h1 class="hm-h1">Solicitudes</h1><span class="hm-pill hm-pill--atencion">4 por atender</span></div>
+    <p class="hm-small hm-muted">Lo que llegó a RH, lo que espera a un jefe y lo que ya se respondió.</p>
+  </div>
+  <div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="#registrar">Registrar a nombre de alguien</a></div>
+</header>
+<p class="hm-lead">4 solicitudes llegaron a RH porque su jefe no respondió o no tiene jefe.</p>
+<div class="hm-tabs" role="tablist" aria-label="Solicitudes por estado"><button type="button" class="hm-tab" role="tab" aria-selected="true">Por atender <span class="hm-count">4</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">En espera del jefe <span class="hm-count">7</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Aprobadas <span class="hm-count">8</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Disfrutadas <span class="hm-count">6</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Rechazadas <span class="hm-count">4</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Canceladas <span class="hm-count">1</span></button></div>
+<div class="hm-toolbar">
+  <label class="hm-field"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span class="hm-sr">Buscar persona</span><input type="search" placeholder="Buscar persona"></label>
+  <select class="hm-select" aria-label="Centro de trabajo"><option>Todos los centros</option></select>
+  <select class="hm-select" aria-label="Área"><option>Todas las áreas</option></select>
+</div>
+<p class="hm-sortline">Ordenado por fecha de inicio: lo más próximo arriba</p>
+<div class="hm-split">
+  <div class="hm-main" style="flex:1 1 0;min-width:0"><div class="hm-tablewrap"><table class="hm-table">
+<caption class="hm-sr">Solicitudes por atender, la de inicio más próximo arriba</caption>
+<thead><tr><th scope="col">Persona</th><th scope="col">Fechas</th><th scope="col" class="hm-num">Días</th><th scope="col">Por qué espera</th><th scope="col"><span class="hm-sr">Acciones</span></th></tr></thead>
+<tbody><tr aria-selected="true">
+<td><a class="hm-person" href="#decision"><span class="hm-avatar" aria-hidden="true">IC</span><span><span class="hm-strong" style="display:block">Iván Castañeda</span><span class="hm-small hm-muted">Vacaciones · Jefe: Dña Helena Guillen</span></span></a></td>
+<td>18 al 20 nov</td><td class="hm-num">3</td><td><span class="hm-pill hm-pill--atencion">Su jefe no respondió</span></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Iván Castañeda"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td></tr><tr>
+<td><a class="hm-person" href="#decision"><span class="hm-avatar" aria-hidden="true">GS</span><span><span class="hm-strong" style="display:block">Gonzalo Reyes Segundo</span><span class="hm-small hm-muted">Vacaciones · Sin jefe</span></span></a></td>
+<td>30 nov al 2 dic</td><td class="hm-num">3</td><td><span class="hm-pill hm-pill--atencion">Sin jefe activo</span></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Gonzalo Reyes Segundo"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td></tr><tr>
+<td><a class="hm-person" href="#decision"><span class="hm-avatar" aria-hidden="true">ÚA</span><span><span class="hm-strong" style="display:block">Úrsula Ayala</span><span class="hm-small hm-muted">Vacaciones · Jefe: Manuela Fuentes</span></span></a></td>
+<td>9 al 11 dic</td><td class="hm-num">3</td><td><span class="hm-pill hm-pill--atencion">Su jefe no respondió</span></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Úrsula Ayala"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td></tr><tr>
+<td><a class="hm-person" href="#decision"><span class="hm-avatar" aria-hidden="true">ES</span><span><span class="hm-strong" style="display:block">Esther Alaniz Segundo</span><span class="hm-small hm-muted">Vacaciones · Sin jefe</span></span></a></td>
+<td>21 al 24 dic</td><td class="hm-num">3</td><td><span class="hm-pill hm-pill--atencion">Sin jefe activo</span></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Esther Alaniz Segundo"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td></tr></tbody></table></div></div>
+  <aside class="hm-side" style="flex:none;width:380px;max-width:100%"><section class="hm-card" id="decision" aria-labelledby="dec-t" style="gap:20px">
+  <div class="hm-person"><span class="hm-avatar" aria-hidden="true" style="width:48px;height:48px;font-size:16px">IC</span><div><h2 class="hm-h3" id="dec-t">Iván Castañeda</h2><p class="hm-small hm-muted">Vacaciones · 18 al 20 de noviembre de 2026 · 3 días laborables</p></div></div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <p class="hm-line"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Le alcanza · del periodo 2026</span></p>
+    <p class="hm-line"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Su jefe, Dña Helena Guillen, no respondió en 3 días hábiles</span></p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px"><h3 class="hm-strong">Su equipo esos días</h3>
+    <ol class="hm-strip" style="--n:3" aria-label="Personas de su equipo fuera el 18, 19 y 20 de noviembre: ninguna"><li class="hm-day"><span>M</span><b>18</b><span>0</span></li><li class="hm-day"><span>J</span><b>19</b><span>0</span></li><li class="hm-day"><span>V</span><b>20</b><span>0</span></li></ol>
+    <p class="hm-small hm-muted">Nadie más de su equipo está fuera.</p></div>
+  <div class="hm-dec-foot" style="justify-content:flex-start"><a class="hm-btn hm-btn-primary" href="#siguiente">Aprobar</a><a class="hm-btn hm-btn-outline" href="#motivo">Rechazar</a></div>
+  <p class="hm-small hm-muted" id="siguiente">Al responder pasas a la siguiente: Gonzalo Reyes Segundo.</p>
+</section></aside>
+</div>
+</div>
+</sc-if><sc-if value="{{ esSinResultados }}" hint-placeholder-val="{{ true }}">
+<div class="hm-page">
+<header class="hm-head">
+  <div class="hm-head-text">
+    <div class="hm-head-title"><h1 class="hm-h1">Solicitudes</h1><span class="hm-pill hm-pill--atencion">4 por atender</span></div>
+    <p class="hm-small hm-muted">Lo que llegó a RH, lo que espera a un jefe y lo que ya se respondió.</p>
+  </div>
+  <div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="#registrar">Registrar a nombre de alguien</a></div>
+</header>
+<p class="hm-lead">Ninguna solicitud coincide con tu búsqueda.</p>
+<div class="hm-tabs" role="tablist" aria-label="Solicitudes por estado"><button type="button" class="hm-tab" role="tab" aria-selected="true">Por atender <span class="hm-count">4</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">En espera del jefe <span class="hm-count">7</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Aprobadas <span class="hm-count">8</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Disfrutadas <span class="hm-count">6</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Rechazadas <span class="hm-count">4</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Canceladas <span class="hm-count">1</span></button></div>
+<div class="hm-toolbar">
+  <label class="hm-field"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span class="hm-sr">Buscar persona</span><input type="search" placeholder="Buscar persona" value="nómina"></label>
+  <select class="hm-select" aria-label="Centro de trabajo"><option>Todos los centros</option></select>
+  <select class="hm-select" aria-label="Área"><option>Todas las áreas</option></select>
+</div>
+<div class="hm-empty">
+  <span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+  <h2 class="hm-h3">No encontramos solicitudes con esos filtros</h2>
+  <p>Revisa la ortografía o prueba con menos filtros. Los conteos de arriba no cambian.</p>
+  <a class="hm-btn hm-btn-primary" href="#quitar">Quitar filtros</a>
+</div>
+</div>
+</sc-if><sc-if value="{{ esAlDia }}" hint-placeholder-val="{{ true }}">
+<div class="hm-page">
+<header class="hm-head">
+  <div class="hm-head-text">
+    <div class="hm-head-title"><h1 class="hm-h1">Solicitudes</h1><span class="hm-pill hm-pill--activo">Al día</span></div>
+    <p class="hm-small hm-muted">Lo que llegó a RH, lo que espera a un jefe y lo que ya se respondió.</p>
+  </div>
+  <div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="#registrar">Registrar a nombre de alguien</a></div>
+</header>
+<p class="hm-lead">Estás al día: no hay solicitudes por atender.</p>
+<div class="hm-tabs" role="tablist" aria-label="Solicitudes por estado"><button type="button" class="hm-tab" role="tab" aria-selected="false">En espera del jefe <span class="hm-count">7</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Aprobadas <span class="hm-count">8</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Disfrutadas <span class="hm-count">6</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Rechazadas <span class="hm-count">4</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Canceladas <span class="hm-count">1</span></button><button type="button" class="hm-tab hm-tab--cero" role="tab" aria-selected="true">Por atender <span class="hm-count">0</span></button></div>
+<div class="hm-toolbar">
+  <label class="hm-field"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span class="hm-sr">Buscar persona</span><input type="search" placeholder="Buscar persona"></label>
+  <select class="hm-select" aria-label="Centro de trabajo"><option>Todos los centros</option></select>
+  <select class="hm-select" aria-label="Área"><option>Todas las áreas</option></select>
+</div>
+<div class="hm-empty">
+  <span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  <h2 class="hm-h3">No hay solicitudes por atender.</h2>
+  <p>Las que esperan a su jefe te llegan solo si pasan 3 días hábiles sin respuesta.</p>
+  <a class="hm-btn hm-btn-ghost" href="#espera">Ver las que esperan a su jefe (7)<svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+</div>
+</div>
+</sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["datos","sin-resultados","al-dia"],"default":"datos","section":"Estado"},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic{renderVals(){const theme=this.props.theme??'claro';const themeClass=theme==='oscuro'?'hm t-dark':'hm t-light';const v=this.props.variant??'datos';return{theme,themeClass,esDatos:v==='datos',esSinResultados:v==='sin-resultados',esAlDia:v==='al-dia'};}}
+</script>
+</body>
+</html>

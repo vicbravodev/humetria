@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Organigrama · Editar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border:1px solid var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;border-radius:8px;color:var(--muted-foreground);transition:background-color 150ms,color 150ms}
+.hm .hm-iconbtn:hover{background:var(--secondary);color:var(--foreground)}
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--plain::before{display:none}
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+.hm-notice{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:var(--warning);color:var(--warning-foreground)}
+.hm-notice-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+.hm-tree,.hm-tree ul{display:flex;flex-direction:column;gap:8px}
+.hm-tree ul{margin-left:26px;padding-left:24px;border-left:1px solid var(--input)}
+.hm-node{position:relative;display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 8px 8px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.hm-tree ul>li>.hm-node::before{content:"";position:absolute;left:-25px;top:50%;width:24px;border-top:1px solid var(--input)}
+.hm-node-text{display:flex;flex-direction:column;min-width:0;flex:1}
+.hm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-fix{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;padding:20px 24px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.hm-fix-person{display:flex;align-items:center;gap:12px;flex:1 1 220px;min-width:0}
+.hm-field{display:flex;flex-direction:column;gap:4px;flex:1 1 280px;min-width:0}
+.hm-field label{font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.hm-select{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;background:var(--card);border:1px solid var(--input);border-radius:8px;color:var(--muted-foreground)}
+.hm-select:focus-within{outline:2px solid var(--ring);outline-offset:2px}
+.hm-select input{flex:1;min-width:0;height:42px;border:0;outline:0;background:transparent;font:inherit;color:var(--foreground)}
+.hm-select input::placeholder{color:var(--muted-foreground);opacity:1}
+.hm-fix-actions{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.hm-list{display:flex;flex-direction:column;gap:16px}
+.hm-seg{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.hm-tabs{width:fit-content}
+.oe{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)}
+.oe-band{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-height:52px;padding:8px 16px;background:var(--accent);color:var(--accent-foreground);border-bottom:1px solid var(--border)}
+.oe-band strong{font-weight:600}
+.oe-row{display:flex;align-items:stretch}
+.oe-tray{flex:0 0 280px;display:flex;flex-direction:column;gap:12px;padding:16px;border-right:1px solid var(--border);background:var(--card)}
+.hm .oe-tray-card{display:flex;align-items:center;gap:8px;min-height:64px;padding:8px 12px 8px 4px;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:grab}
+.hm .oe-tray-card:hover{border-color:var(--input)}
+.hm .oe-tray-card--src{border:1px dashed var(--input);background:var(--muted);opacity:.55}
+.oe-grip{display:flex;align-items:center;justify-content:center;width:28px;height:44px;flex:none;color:var(--muted-foreground)}
+.oe-canvas{position:relative;flex:1 1 0;min-width:0;height:600px;overflow:hidden;background-color:var(--muted);background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:24px 24px;cursor:grab}
+.oe-stage{position:absolute;left:0;top:0;width:760px;height:600px}
+.oe-svg{position:absolute;left:0;top:0;width:760px;height:600px;overflow:visible}
+.hm .oc{position:absolute;display:flex;align-items:center;gap:10px;width:216px;height:72px;padding:0 12px;text-align:left;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:grab}
+.hm .oc{padding:0 12px}
+.hm .oc:hover{border-color:var(--input)}
+.hm .oc .hm-avatar{width:34px;height:34px}
+.hm .oc-t{display:flex;flex-direction:column;min-width:0;flex:1}
+.hm .oc-n{font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm .oc-r{font-size:12px;line-height:18px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm .oc.oc--sel{border:2px solid var(--primary);box-shadow:var(--shadow-float);padding:0 11px}
+.hm .oc.oc--sel{padding:0 11px}
+.hm .oc.oc--drop{border:2px dashed var(--primary);background:var(--accent);padding:0 11px}
+.hm .oc.oc--drop{padding:0 11px}
+.hm .oc.oc--ghost{border:1px solid var(--primary);box-shadow:var(--shadow-float);opacity:.9;cursor:grabbing;transform:rotate(1.5deg);z-index:3}
+.hm .oc.oc--root{border:1px dashed var(--input);background:var(--card);cursor:default;height:56px}
+.hm .oc--root .oc-t{align-items:flex-start}
+.hm .oc-bld{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:8px;background:var(--secondary);color:var(--muted-foreground)}
+.hm .op{position:absolute;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;transform:translateX(-50%);border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--card);color:var(--muted-foreground);border:1px solid var(--input)}
+.hm .op{padding:0 10px}
+.hm .op::after{content:"";position:absolute;inset:-9px -4px}
+.hm .op-tag{position:absolute;display:inline-flex;align-items:center;height:28px;padding:0 12px;transform:translateX(-50%);border-radius:8px;font-size:13px;line-height:18px;font-weight:600;white-space:nowrap;background:var(--primary);color:var(--primary-foreground);z-index:2}
+.oe-warnpill{position:absolute;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--warning);color:var(--warning-foreground)}
+.oe-ctl{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-float)}
+.oe-toast{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:12px;min-height:48px;padding:0 8px 0 16px;background:var(--foreground);color:var(--background);border-radius:10px;box-shadow:var(--shadow-float);font-size:14px;line-height:20px;z-index:4}
+.hm .oe-toast button{min-height:44px;padding:0 12px;border-radius:8px;font-weight:600;color:var(--background);text-decoration:underline;text-underline-offset:3px}
+.oe-legend{display:flex;flex-wrap:wrap;gap:8px 24px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.oe-alt{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:24px;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.oe-alt-text{flex:1 1 320px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.oe-alt-stage{flex:0 0 440px;max-width:100%;position:relative;height:350px;border-radius:12px;background-color:var(--muted);background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:24px 24px;border:1px solid var(--border)}
+.oe-pop{position:absolute;left:120px;top:100px;width:300px;display:flex;flex-direction:column;gap:8px;padding:16px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-float)}
+.oe-pop::before{content:"";position:absolute;left:40px;top:-7px;width:12px;height:12px;background:var(--popover);border-left:1px solid var(--border);border-top:1px solid var(--border);transform:rotate(45deg)}
+.hm-select--err{border:2px solid var(--warning-foreground);padding:0 11px}
+.oe-err{display:flex;gap:8px;align-items:flex-start;padding:8px 12px;border-radius:8px;background:var(--warning);color:var(--warning-foreground);font-size:14px;line-height:20px}
+.oe-err svg{margin-top:2px}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="organigrama.organigrama" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Ordena tu operación › Organigrama" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page" style="max-width:none">
+      <header class="hm-head">
+        <div class="hm-head-text">
+          <div class="hm-head-title"><h1 class="hm-h1">Organigrama</h1><span class="hm-pill hm-pill--activo">Editando</span></div>
+          <div class="hm-facts">
+            <span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>212 personas activas</span>
+            <span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>4 niveles</span>
+            <span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>209 con jefe directo</span>
+          </div>
+        </div>
+        <div class="hm-head-actions"><button type="button" class="hm-btn hm-btn-primary"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Listo</button></div>
+      </header>
+      <div class="hm-seg">
+        <div class="hm-tabs" role="tablist" aria-label="Vista del organigrama">
+          <button type="button" class="hm-tab" role="tab" aria-selected="true"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>Organigrama</button>
+          <button type="button" class="hm-tab" role="tab" aria-selected="false"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>Lista</button>
+        </div>
+      </div>
+
+      <section class="oe" aria-label="Organigrama en modo edición">
+        <div class="oe-band" role="status"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg><span><strong>Modo edición</strong> · Arrastra a una persona y suéltala sobre su jefe nuevo. Los cambios se guardan al soltar.</span></div>
+        <div class="oe-row">
+          <aside class="oe-tray" aria-labelledby="sinjefe">
+            <div style="display:flex;flex-direction:column;gap:4px"><h2 class="hm-h4" id="sinjefe" style="display:flex;align-items:center;gap:8px">Sin jefe <span class="hm-count" style="background:var(--warning);color:var(--warning-foreground)">2</span></h2><p class="hm-small hm-muted">Arrástralas al lienzo sobre su jefe.</p></div>
+            <ul style="display:flex;flex-direction:column;gap:8px">
+              <li class="oe-tray-card oe-tray-card--src" aria-label="Valeria Montes, se está arrastrando"><span class="oe-grip"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="hm-avatar" aria-hidden="true">VM</span><span style="display:flex;flex-direction:column;min-width:0"><span class="hm-strong" style="font-size:14px;line-height:20px;font-weight:600">Valeria Montes</span><span class="hm-small hm-muted" style="font-size:12px;line-height:18px">Analista · Operaciones</span></span></li>
+              <li><button type="button" class="oe-tray-card" style="width:100%;text-align:left" aria-label="Regina Ochoa, Auxiliar, Oficina. Arrastra para asignarle jefe"><span class="oe-grip"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="hm-avatar" aria-hidden="true">RO</span><span style="display:flex;flex-direction:column;min-width:0"><span class="hm-strong" style="font-size:14px;line-height:20px;font-weight:600">Regina Ochoa</span><span class="hm-small hm-muted" style="font-size:12px;line-height:18px">Auxiliar · Oficina</span></span></button></li>
+            </ul>
+            <p class="hm-small hm-muted" style="padding-top:12px;border-top:1px solid var(--border)">Solo aparecen quienes no tienen jefe y todavía no están en el árbol. Al soltarlas sobre alguien, salen de aquí.</p>
+          </aside>
+          <div class="oe-canvas">
+            <div class="oe-stage">
+              <svg class="oe-svg" viewBox="0 0 760 600" aria-hidden="true" fill="none" stroke="var(--input)" stroke-width="1.5" stroke-linejoin="round">
+                <path d="M380 68V94M128 94H632M128 94V120M380 94V120M632 94V120"/>
+                <path d="M128 224V250M128 250H600M128 250V300M364 250V300M600 250V300"/>
+                <path d="M364 372V400H440V430" stroke="var(--primary)" stroke-width="2" stroke-dasharray="5 5"/>
+              </svg>
+
+              <div class="oc oc--root" style="left:272px;top:12px" role="group" aria-label="Demo NOM-035, 212 personas"><span class="oc-bld"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg></span><span class="oc-t"><span class="oc-n">Demo NOM-035</span><span class="oc-r">212 personas</span></span></div>
+              <span class="oe-warnpill" style="left:494px;top:26px"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>3 personas sin jefe: normalmente hay una</span>
+
+              <button type="button" class="oc oc--sel" style="left:20px;top:120px" aria-label="Esther Alaniz Segundo, Almacenista, 3 directos, 78 en total. Seleccionada"><span class="hm-avatar" aria-hidden="true">ES</span><span class="oc-t"><span class="oc-n">Esther Alaniz Segundo</span><span class="oc-r">Almacenista · 3 directos</span></span></button>
+              <button type="button" class="oc" style="left:272px;top:120px" aria-label="Gonzalo Reyes Segundo, Analista, 3 directos, 66 en total"><span class="hm-avatar" aria-hidden="true">GS</span><span class="oc-t"><span class="oc-n">Gonzalo Reyes Segundo</span><span class="oc-r">Analista · 3 directos</span></span></button>
+              <button type="button" class="oc" style="left:524px;top:120px" aria-label="Yeray Pulido, Operador, 3 directos, 65 en total"><span class="hm-avatar" aria-hidden="true">YP</span><span class="oc-t"><span class="oc-n">Yeray Pulido</span><span class="oc-r">Operador · 3 directos</span></span></button>
+              <button type="button" class="op" style="left:128px;top:198px">3 directos <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+              <button type="button" class="op" style="left:380px;top:198px">+3 · 66 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <button type="button" class="op" style="left:632px;top:198px">+3 · 65 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+
+              <button type="button" class="oc" style="left:20px;top:300px" aria-label="Adriana Rivera Hijo, Supervisor, 4 directos, 30 en total"><span class="hm-avatar" aria-hidden="true">AH</span><span class="oc-t"><span class="oc-n">Adriana Rivera Hijo</span><span class="oc-r">Supervisor · 4 directos</span></span></button>
+              <button type="button" class="oc oc--drop" style="left:256px;top:300px" aria-label="Alonso Banda, Analista, 3 directos. Destino de soltar"><span class="hm-avatar" aria-hidden="true">AB</span><span class="oc-t"><span class="oc-n">Alonso Banda</span><span class="oc-r">Analista · 3 directos</span></span></button>
+              <button type="button" class="oc" style="left:492px;top:300px" aria-label="Ander Noriega, Analista, 3 directos, 21 en total"><span class="hm-avatar" aria-hidden="true">AN</span><span class="oc-t"><span class="oc-n">Ander Noriega</span><span class="oc-r">Analista · 3 directos</span></span></button>
+              <button type="button" class="op" style="left:128px;top:380px">+4 · 30 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <button type="button" class="op" style="left:600px;top:380px">+3 · 21 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <span class="op-tag" style="left:364px;top:286px" role="status">Soltar para que Alonso Banda sea su jefe</span>
+
+              <div class="oc oc--ghost" style="left:332px;top:430px" aria-hidden="true"><span class="hm-avatar">VM</span><span class="oc-t"><span class="oc-n">Valeria Montes</span><span class="oc-r">Analista · Operaciones</span></span></div>
+            </div>
+            <div class="oe-ctl" role="group" aria-label="Zoom">
+              <button type="button" class="hm-iconbtn" title="Acercar" aria-label="Acercar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+              <button type="button" class="hm-iconbtn" title="Alejar" aria-label="Alejar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button type="button" class="hm-iconbtn" title="Ajustar a la pantalla" aria-label="Ajustar a la pantalla"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+            </div>
+            <div class="oe-toast" role="status"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Tomás Beltrán ahora reporta a Ander Noriega ·</span><button type="button">Deshacer</button></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="oe-legend"><span>Arrastra el lienzo para moverlo · Rueda para acercar</span><span>Suelta una persona sobre su jefe nuevo</span><span>También puedes elegir la persona y usar "Cambiar jefe"</span></div>
+
+      <section class="oe-alt" aria-labelledby="alt">
+        <div class="oe-alt-text">
+          <h2 class="hm-h3" id="alt">Sin arrastrar: Cambiar jefe</h2>
+          <p class="hm-muted">Para teclado o pantalla táctil: elige a la persona en el árbol, abre "Cambiar jefe", busca a su jefe directo y pulsa Asignar. Igual que al arrastrar, el cambio se guarda al momento y puedes deshacerlo.</p>
+          <p class="hm-small hm-muted">Si el jefe elegido ya depende de esa persona, Humetría no lo permite y te dice por qué.</p>
+        </div>
+        <div class="oe-alt-stage">
+          <div style="position:absolute;left:16px;top:16px;width:216px;height:72px" class="oc oc--sel" role="group" aria-label="Esther Alaniz Segundo, seleccionada"><span class="hm-avatar" aria-hidden="true">ES</span><span class="oc-t"><span class="oc-n">Esther Alaniz Segundo</span><span class="oc-r">Almacenista · 3 directos</span></span></div>
+          <div class="oe-pop" role="dialog" aria-labelledby="pop-t" style="left:48px;top:102px;width:360px">
+            <h3 class="hm-strong" id="pop-t">Cambiar jefe de Esther Alaniz Segundo</h3>
+            <div class="hm-field" style="flex:none"><label for="pop-jefe">Jefe directo</label><div class="hm-select hm-select--err"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="pop-jefe" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-invalid="true" aria-describedby="pop-err" placeholder="Busca a su jefe directo" value="Ander Noriega"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+            <p class="oe-err" id="pop-err"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>No se puede: Ander Noriega reporta a esa persona.</span></p>
+            <div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" class="hm-btn hm-btn-ghost">Cancelar</button><button type="button" class="hm-btn hm-btn-outline" disabled>Asignar</button></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"$preview":{"width":1440,"height":1495}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    return {
+      theme,
+      themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,702 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-11T21:00:00Z"
+ },
+ "title": "Humetría · Rediseño de Organigrama, Vacaciones, Clima y Pulso",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "designSystems": [],
+ "boards": {
+  "people/organigrama/Organigrama-antes.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1231,
+   "title": "Organigrama · antes"
+  },
+  "people/organigrama/Organigrama.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1230,
+   "expand": "fill",
+   "title": "Organigrama · después",
+   "is_interactive": true
+  },
+  "people/organigrama/CalidadDeDatos-antes.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1231,
+   "title": "Calidad de datos · antes"
+  },
+  "people/organigrama/CalidadDeDatos.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 1450,
+   "expand": "fill",
+   "title": "Lista · después",
+   "is_interactive": true
+  },
+  "people/organigrama/Organigrama-movil-antes.dc.html": {
+   "x": 6080,
+   "y": 0,
+   "w": 375,
+   "h": 1254,
+   "title": "Organigrama móvil · antes"
+  },
+  "people/organigrama/Organigrama-movil.dc.html": {
+   "x": 6535,
+   "y": 0,
+   "w": 375,
+   "h": 1200,
+   "title": "Organigrama móvil · después"
+  },
+  "people/vacaciones/Resumen-antes.dc.html": {
+   "x": 0,
+   "y": 1970,
+   "w": 1440,
+   "h": 1451,
+   "title": "Resumen · antes"
+  },
+  "people/vacaciones/Resumen.dc.html": {
+   "x": 1520,
+   "y": 1970,
+   "w": 1440,
+   "h": 1660,
+   "expand": "fill",
+   "title": "Resumen · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/Solicitudes-antes.dc.html": {
+   "x": 3040,
+   "y": 1970,
+   "w": 1440,
+   "h": 1451,
+   "title": "Solicitudes · antes"
+  },
+  "people/vacaciones/Solicitudes.dc.html": {
+   "x": 4560,
+   "y": 1970,
+   "w": 1440,
+   "h": 1440,
+   "expand": "fill",
+   "title": "Solicitudes · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/Calendario-antes.dc.html": {
+   "x": 6080,
+   "y": 1970,
+   "w": 1440,
+   "h": 1673,
+   "title": "Calendario · antes"
+  },
+  "people/vacaciones/Calendario.dc.html": {
+   "x": 7600,
+   "y": 1970,
+   "w": 1440,
+   "h": 1440,
+   "expand": "fill",
+   "title": "Calendario · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/Saldos-antes.dc.html": {
+   "x": 9120,
+   "y": 1970,
+   "w": 1440,
+   "h": 2174,
+   "title": "Saldos · antes"
+  },
+  "people/vacaciones/Saldos.dc.html": {
+   "x": 10640,
+   "y": 1970,
+   "w": 1440,
+   "h": 1440,
+   "expand": "fill",
+   "title": "Saldos · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/Expediente-antes.dc.html": {
+   "x": 12160,
+   "y": 1970,
+   "w": 1440,
+   "h": 1451,
+   "title": "Expediente · antes"
+  },
+  "people/vacaciones/Expediente.dc.html": {
+   "x": 13680,
+   "y": 1970,
+   "w": 1440,
+   "h": 1440,
+   "expand": "fill",
+   "title": "Expediente · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/Politicas-antes.dc.html": {
+   "x": 15200,
+   "y": 1970,
+   "w": 1440,
+   "h": 1451,
+   "title": "Políticas · antes"
+  },
+  "people/vacaciones/Politicas.dc.html": {
+   "x": 16720,
+   "y": 1970,
+   "w": 1440,
+   "h": 1440,
+   "expand": "fill",
+   "title": "Políticas · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/PoliticaEditar-antes.dc.html": {
+   "x": 18240,
+   "y": 1970,
+   "w": 1440,
+   "h": 2317,
+   "title": "Editar política · antes"
+  },
+  "people/vacaciones/PoliticaEditar.dc.html": {
+   "x": 19760,
+   "y": 1970,
+   "w": 1440,
+   "h": 2050,
+   "expand": "fill",
+   "title": "Editar política · después",
+   "is_interactive": true
+  },
+  "people/vacaciones/Resumen-movil-antes.dc.html": {
+   "x": 21280,
+   "y": 1970,
+   "w": 375,
+   "h": 1534,
+   "title": "Resumen móvil · antes"
+  },
+  "people/vacaciones/Resumen-movil.dc.html": {
+   "x": 21735,
+   "y": 1970,
+   "w": 375,
+   "h": 2640,
+   "title": "Resumen móvil · después"
+  },
+  "people/vacaciones/Solicitudes-movil-antes.dc.html": {
+   "x": 22190,
+   "y": 1970,
+   "w": 375,
+   "h": 1467,
+   "title": "Solicitudes móvil · antes"
+  },
+  "people/vacaciones/Solicitudes-movil.dc.html": {
+   "x": 22645,
+   "y": 1970,
+   "w": 375,
+   "h": 1360,
+   "title": "Solicitudes móvil · después"
+  },
+  "people/vacaciones/Calendario-movil-antes.dc.html": {
+   "x": 23100,
+   "y": 1970,
+   "w": 375,
+   "h": 1891,
+   "title": "Calendario móvil · antes"
+  },
+  "people/vacaciones/Calendario-movil.dc.html": {
+   "x": 23555,
+   "y": 1970,
+   "w": 375,
+   "h": 940,
+   "title": "Calendario móvil · después"
+  },
+  "people/clima/Resultados-antes.dc.html": {
+   "x": 0,
+   "y": 4737,
+   "w": 1440,
+   "h": 2450,
+   "title": "Resultados · antes"
+  },
+  "people/clima/Resultados.dc.html": {
+   "x": 1520,
+   "y": 4737,
+   "w": 1440,
+   "h": 2460,
+   "expand": "fill",
+   "title": "Resultados · después",
+   "is_interactive": true
+  },
+  "people/clima/Inicio-antes.dc.html": {
+   "x": 3040,
+   "y": 4737,
+   "w": 1440,
+   "h": 1137,
+   "title": "Inicio · antes"
+  },
+  "people/clima/Inicio.dc.html": {
+   "x": 4560,
+   "y": 4737,
+   "w": 1440,
+   "h": 1130,
+   "expand": "fill",
+   "title": "Inicio · después",
+   "is_interactive": true
+  },
+  "people/clima/Avance-antes.dc.html": {
+   "x": 6080,
+   "y": 4737,
+   "w": 1440,
+   "h": 1137,
+   "title": "Avance · antes"
+  },
+  "people/clima/Avance.dc.html": {
+   "x": 7600,
+   "y": 4737,
+   "w": 1440,
+   "h": 1130,
+   "expand": "fill",
+   "title": "Avance · después",
+   "is_interactive": true
+  },
+  "people/clima/PorPregunta-antes.dc.html": {
+   "x": 9120,
+   "y": 4737,
+   "w": 1440,
+   "h": 4078,
+   "title": "Por pregunta · antes"
+  },
+  "people/clima/PorPregunta.dc.html": {
+   "x": 10640,
+   "y": 4737,
+   "w": 1440,
+   "h": 1800,
+   "expand": "fill",
+   "title": "Por pregunta · después",
+   "is_interactive": true
+  },
+  "people/clima/Comentarios-antes.dc.html": {
+   "x": 12160,
+   "y": 4737,
+   "w": 1440,
+   "h": 1285,
+   "title": "Comentarios · antes"
+  },
+  "people/clima/Comentarios.dc.html": {
+   "x": 13680,
+   "y": 4737,
+   "w": 1440,
+   "h": 1540,
+   "expand": "fill",
+   "title": "Comentarios · después",
+   "is_interactive": true
+  },
+  "people/clima/Compromisos-antes.dc.html": {
+   "x": 15200,
+   "y": 4737,
+   "w": 1440,
+   "h": 1697,
+   "title": "Compromisos · antes"
+  },
+  "people/clima/Compromisos.dc.html": {
+   "x": 16720,
+   "y": 4737,
+   "w": 1440,
+   "h": 1500,
+   "expand": "fill",
+   "title": "Compromisos · después",
+   "is_interactive": true
+  },
+  "people/clima/Jefe-antes.dc.html": {
+   "x": 18240,
+   "y": 4737,
+   "w": 1440,
+   "h": 1794,
+   "title": "Retroalimentación de un jefe · antes"
+  },
+  "people/clima/Jefe.dc.html": {
+   "x": 19760,
+   "y": 4737,
+   "w": 1440,
+   "h": 1700,
+   "expand": "fill",
+   "title": "Retroalimentación de un jefe · después",
+   "is_interactive": true
+  },
+  "people/clima/Resultados-movil-antes.dc.html": {
+   "x": 21280,
+   "y": 4737,
+   "w": 375,
+   "h": 3492,
+   "title": "Resultados móvil · antes"
+  },
+  "people/clima/Resultados-movil.dc.html": {
+   "x": 21735,
+   "y": 4737,
+   "w": 375,
+   "h": 4120,
+   "title": "Resultados móvil · después"
+  },
+  "people/pulso/Tendencia-antes.dc.html": {
+   "x": 0,
+   "y": 9265,
+   "w": 1440,
+   "h": 2786,
+   "title": "Tendencia · antes"
+  },
+  "people/pulso/Tendencia.dc.html": {
+   "x": 1520,
+   "y": 9265,
+   "w": 1440,
+   "h": 1690,
+   "expand": "fill",
+   "title": "Tendencia · después",
+   "is_interactive": true
+  },
+  "people/pulso/Inicio-antes.dc.html": {
+   "x": 3040,
+   "y": 9265,
+   "w": 1440,
+   "h": 1459,
+   "title": "Inicio · antes"
+  },
+  "people/pulso/Inicio.dc.html": {
+   "x": 4560,
+   "y": 9265,
+   "w": 1440,
+   "h": 1130,
+   "expand": "fill",
+   "title": "Inicio · después",
+   "is_interactive": true
+  },
+  "people/pulso/Resultados-antes.dc.html": {
+   "x": 6080,
+   "y": 9265,
+   "w": 1440,
+   "h": 2000,
+   "title": "Resultados · antes"
+  },
+  "people/pulso/Resultados.dc.html": {
+   "x": 7600,
+   "y": 9265,
+   "w": 1440,
+   "h": 1250,
+   "expand": "fill",
+   "title": "Resultados · después",
+   "is_interactive": true
+  },
+  "people/pulso/Tendencia-movil-antes.dc.html": {
+   "x": 9120,
+   "y": 9265,
+   "w": 375,
+   "h": 5206,
+   "title": "Tendencia móvil · antes"
+  },
+  "people/pulso/Tendencia-movil.dc.html": {
+   "x": 9575,
+   "y": 9265,
+   "w": 375,
+   "h": 2730,
+   "title": "Tendencia móvil · después"
+  },
+  "people/Sidebar.dc.html": {
+   "x": 0,
+   "y": 14921,
+   "w": 264,
+   "h": 1000,
+   "title": "Barra lateral · base"
+  },
+  "people/Topbar.dc.html": {
+   "x": 344,
+   "y": 14921,
+   "w": 1200,
+   "h": 64,
+   "title": "Barra superior · base"
+  },
+  "people/MobileTop.dc.html": {
+   "x": 1624,
+   "y": 14921,
+   "w": 375,
+   "h": 64,
+   "title": "Cabecera móvil · base"
+  },
+  "people/MobileTabs.dc.html": {
+   "x": 2079,
+   "y": 14921,
+   "w": 375,
+   "h": 72,
+   "title": "Pestañas móviles · base"
+  },
+  "people/organigrama/Sidebar.dc.html": {
+   "x": 2534,
+   "y": 14921,
+   "w": 264,
+   "h": 1000,
+   "title": "Barra lateral · organigrama"
+  },
+  "people/organigrama/Topbar.dc.html": {
+   "x": 2878,
+   "y": 14921,
+   "w": 1200,
+   "h": 64,
+   "title": "Barra superior · organigrama"
+  },
+  "people/organigrama/MobileTop.dc.html": {
+   "x": 4158,
+   "y": 14921,
+   "w": 375,
+   "h": 64,
+   "title": "Cabecera móvil · organigrama"
+  },
+  "people/organigrama/MobileTabs.dc.html": {
+   "x": 4613,
+   "y": 14921,
+   "w": 375,
+   "h": 72,
+   "title": "Pestañas móviles · organigrama"
+  },
+  "people/vacaciones/Sidebar.dc.html": {
+   "x": 5068,
+   "y": 14921,
+   "w": 264,
+   "h": 1000,
+   "title": "Barra lateral · vacaciones"
+  },
+  "people/vacaciones/Topbar.dc.html": {
+   "x": 5412,
+   "y": 14921,
+   "w": 1200,
+   "h": 64,
+   "title": "Barra superior · vacaciones"
+  },
+  "people/vacaciones/MobileTop.dc.html": {
+   "x": 6692,
+   "y": 14921,
+   "w": 375,
+   "h": 64,
+   "title": "Cabecera móvil · vacaciones"
+  },
+  "people/vacaciones/MobileTabs.dc.html": {
+   "x": 7147,
+   "y": 14921,
+   "w": 375,
+   "h": 72,
+   "title": "Pestañas móviles · vacaciones"
+  },
+  "people/clima/Sidebar.dc.html": {
+   "x": 7602,
+   "y": 14921,
+   "w": 264,
+   "h": 1000,
+   "title": "Barra lateral · clima"
+  },
+  "people/clima/Topbar.dc.html": {
+   "x": 7946,
+   "y": 14921,
+   "w": 1200,
+   "h": 64,
+   "title": "Barra superior · clima"
+  },
+  "people/clima/MobileTop.dc.html": {
+   "x": 9226,
+   "y": 14921,
+   "w": 375,
+   "h": 64,
+   "title": "Cabecera móvil · clima"
+  },
+  "people/clima/MobileTabs.dc.html": {
+   "x": 9681,
+   "y": 14921,
+   "w": 375,
+   "h": 72,
+   "title": "Pestañas móviles · clima"
+  },
+  "people/pulso/Sidebar.dc.html": {
+   "x": 10136,
+   "y": 14921,
+   "w": 264,
+   "h": 1000,
+   "title": "Barra lateral · pulso"
+  },
+  "people/pulso/Topbar.dc.html": {
+   "x": 10480,
+   "y": 14921,
+   "w": 1200,
+   "h": 64,
+   "title": "Barra superior · pulso"
+  },
+  "people/pulso/MobileTop.dc.html": {
+   "x": 11760,
+   "y": 14921,
+   "w": 375,
+   "h": 64,
+   "title": "Cabecera móvil · pulso"
+  },
+  "people/pulso/MobileTabs.dc.html": {
+   "x": 12215,
+   "y": 14921,
+   "w": 375,
+   "h": 72,
+   "title": "Pestañas móviles · pulso"
+  },
+  "people/organigrama/OrganigramaEditar.dc.html": {
+   "x": 6980,
+   "y": 0,
+   "w": 1440,
+   "h": 1495,
+   "expand": "fill",
+   "title": "Organigrama · edición",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "people/organigrama/Organigrama-antes.dc.html",
+  "people/organigrama/Organigrama.dc.html",
+  "people/organigrama/CalidadDeDatos-antes.dc.html",
+  "people/organigrama/CalidadDeDatos.dc.html",
+  "people/organigrama/Organigrama-movil-antes.dc.html",
+  "people/organigrama/Organigrama-movil.dc.html",
+  "people/organigrama/OrganigramaEditar.dc.html",
+  "people/vacaciones/Resumen-antes.dc.html",
+  "people/vacaciones/Resumen.dc.html",
+  "people/vacaciones/Solicitudes-antes.dc.html",
+  "people/vacaciones/Solicitudes.dc.html",
+  "people/vacaciones/Calendario-antes.dc.html",
+  "people/vacaciones/Calendario.dc.html",
+  "people/vacaciones/Saldos-antes.dc.html",
+  "people/vacaciones/Saldos.dc.html",
+  "people/vacaciones/Expediente-antes.dc.html",
+  "people/vacaciones/Expediente.dc.html",
+  "people/vacaciones/Politicas-antes.dc.html",
+  "people/vacaciones/Politicas.dc.html",
+  "people/vacaciones/PoliticaEditar-antes.dc.html",
+  "people/vacaciones/PoliticaEditar.dc.html",
+  "people/vacaciones/Resumen-movil-antes.dc.html",
+  "people/vacaciones/Resumen-movil.dc.html",
+  "people/vacaciones/Solicitudes-movil-antes.dc.html",
+  "people/vacaciones/Solicitudes-movil.dc.html",
+  "people/vacaciones/Calendario-movil-antes.dc.html",
+  "people/vacaciones/Calendario-movil.dc.html",
+  "people/clima/Resultados-antes.dc.html",
+  "people/clima/Resultados.dc.html",
+  "people/clima/Inicio-antes.dc.html",
+  "people/clima/Inicio.dc.html",
+  "people/clima/Avance-antes.dc.html",
+  "people/clima/Avance.dc.html",
+  "people/clima/PorPregunta-antes.dc.html",
+  "people/clima/PorPregunta.dc.html",
+  "people/clima/Comentarios-antes.dc.html",
+  "people/clima/Comentarios.dc.html",
+  "people/clima/Compromisos-antes.dc.html",
+  "people/clima/Compromisos.dc.html",
+  "people/clima/Jefe-antes.dc.html",
+  "people/clima/Jefe.dc.html",
+  "people/clima/Resultados-movil-antes.dc.html",
+  "people/clima/Resultados-movil.dc.html",
+  "people/pulso/Tendencia-antes.dc.html",
+  "people/pulso/Tendencia.dc.html",
+  "people/pulso/Inicio-antes.dc.html",
+  "people/pulso/Inicio.dc.html",
+  "people/pulso/Resultados-antes.dc.html",
+  "people/pulso/Resultados.dc.html",
+  "people/pulso/Tendencia-movil-antes.dc.html",
+  "people/pulso/Tendencia-movil.dc.html",
+  "people/Sidebar.dc.html",
+  "people/Topbar.dc.html",
+  "people/MobileTop.dc.html",
+  "people/MobileTabs.dc.html",
+  "people/organigrama/Sidebar.dc.html",
+  "people/organigrama/Topbar.dc.html",
+  "people/organigrama/MobileTop.dc.html",
+  "people/organigrama/MobileTabs.dc.html",
+  "people/vacaciones/Sidebar.dc.html",
+  "people/vacaciones/Topbar.dc.html",
+  "people/vacaciones/MobileTop.dc.html",
+  "people/vacaciones/MobileTabs.dc.html",
+  "people/clima/Sidebar.dc.html",
+  "people/clima/Topbar.dc.html",
+  "people/clima/MobileTop.dc.html",
+  "people/clima/MobileTabs.dc.html",
+  "people/pulso/Sidebar.dc.html",
+  "people/pulso/Topbar.dc.html",
+  "people/pulso/MobileTop.dc.html",
+  "people/pulso/MobileTabs.dc.html"
+ ],
+ "notes": {
+  "t-org": {
+   "x": 0,
+   "y": -330,
+   "text": "Organigrama · antes y después",
+   "kind": "title1",
+   "maxW": 3000
+  },
+  "s-org": {
+   "x": 0,
+   "y": -190,
+   "w": 900,
+   "color": "gray",
+   "fill": "gray",
+   "text": "Ilustrativo: los puestos y los nombres del segundo nivel del árbol (no están en los datos de ejemplo). Los conteos por nivel (3, 9, 36 y 164) y por raíz son reales."
+  },
+  "t-vac": {
+   "x": 0,
+   "y": 1640,
+   "text": "Vacaciones · antes y después",
+   "kind": "title1",
+   "maxW": 3000
+  },
+  "s-vac": {
+   "x": 0,
+   "y": 1780,
+   "w": 900,
+   "color": "gray",
+   "fill": "gray",
+   "text": "Ilustrativo: las personas de la variante «sin fecha de ingreso» y la fecha 15 feb 2021. Saldos no lleva barra de disponibles: el demo no trae los días otorgados por periodo."
+  },
+  "t-cli": {
+   "x": 0,
+   "y": 4407,
+   "text": "Clima · antes y después",
+   "kind": "title1",
+   "maxW": 3000
+  },
+  "s-cli": {
+   "x": 0,
+   "y": 4547,
+   "w": 900,
+   "color": "gray",
+   "fill": "gray",
+   "text": "Ilustrativo: las cifras por grupo del mapa (Planta, Sucursal y Toda la empresa) y el desglose por tramo en «Por pregunta». Reales: participación 79 %, compromiso 62 %, recomendación −27."
+  },
+  "t-pul": {
+   "x": 0,
+   "y": 8935,
+   "text": "Pulso · antes y después",
+   "kind": "title1",
+   "maxW": 3000
+  },
+  "s-pul": {
+   "x": 0,
+   "y": 9075,
+   "w": 900,
+   "color": "gray",
+   "fill": "gray",
+   "text": "Cifras de los pulsos de jul, ago y sep 2026 tomadas de los datos de ejemplo. Los temas con menos de 5 respuestas aparecen protegidos y no muestran sus preguntas."
+  },
+  "t-kit": {
+   "x": 0,
+   "y": 14591,
+   "text": "Piezas compartidas (barra lateral, barra superior y móviles)",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "s-kit": {
+   "x": 0,
+   "y": 14731,
+   "w": 900,
+   "color": "gray",
+   "fill": "gray",
+   "text": "Cada carpeta lleva su copia idéntica porque un componente solo importa a sus hermanos. Si cambias uno, cambia sus cinco copias."
+  }
+ }
+}

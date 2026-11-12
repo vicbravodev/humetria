@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vacaciones · Saldos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+```
+
+/* íconos */
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+/* botones: 44 px de alto */
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+/* tarjeta */
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+/* encabezado de página */
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+/* píldora de estado */
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+/* KPI */
+.hm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:24px}
+.hm-kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hm-kpi-card--lead{border-color:var(--primary);grid-column:span 1}
+.hm-kpi-label{display:flex;align-items:center;gap:8px;color:var(--muted-foreground)}
+/* pestañas con conteo */
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+/* tabla */
+.hm-tablewrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm-table{width:100%;border-collapse:collapse;font-size:16px;line-height:24px}
+.hm-table th{background:var(--muted);color:var(--muted-foreground);font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;text-align:left;padding:12px 16px;white-space:nowrap}
+.hm-table td{padding:12px 16px;border-top:1px solid var(--border);vertical-align:middle;height:64px}
+.hm-table .hm-num{text-align:right}
+.hm-table tr[aria-selected="true"] td{background:var(--accent)}
+.hm-person{display:flex;align-items:center;gap:12px;min-width:0}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+/* medidor de arco: la "h" del logo */
+.hm-arc{--p:0;position:relative;width:196px;height:141px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px}
+.hm-arc::before{content:"";position:absolute;inset:0;border-radius:98px 98px 0 0;padding:16px 16px 0;
+  background:conic-gradient(from 270deg at 50% 100%,var(--primary) calc(var(--p)*1.8deg),var(--track) 0 180deg,transparent 0);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hm-arc-value{position:relative;font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-arc-label{position:relative;font-size:14px;line-height:20px;color:var(--muted-foreground);text-align:center;max-width:150px}
+/* barra con referencia */
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+/* columnas desde cero (tendencia) */
+.hm-cols{position:relative;display:flex;align-items:flex-end;gap:16px;height:160px;border-bottom:1px solid var(--input)}
+.hm-col{--v:0;flex:1 1 0;min-width:0;height:calc(var(--v)*1%);background:var(--primary);border-radius:6px 6px 0 0}
+.hm-col--base{background:var(--chart-4)}
+.hm-cols-ref{--ref:0;position:absolute;left:0;right:0;bottom:calc(var(--ref)*1%);border-top:2px dashed var(--foreground)}
+.hm-cols-labels{display:flex;gap:16px}
+.hm-cols-labels>span{flex:1 1 0;text-align:center;font-size:14px;line-height:20px}
+/* celda del mapa por grupo */
+.hm-heat{display:grid;gap:4px}
+.hm-cell{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;font-weight:500;background:var(--muted);color:var(--foreground)}
+.hm-cell--2{background:var(--accent)}
+.hm-cell--3{background:var(--chart-3);color:var(--background)}
+.hm-cell--protegida{background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+/* aviso único */
+.hm-notice{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:var(--warning);color:var(--warning-foreground)}
+.hm-notice-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hm-notice a{font-weight:500;text-decoration:underline;text-underline-offset:3px}
+/* estado vacío */
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+/* barra de acciones masivas */
+.hm-bulk{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);background:var(--accent)}
+/* menú de fila abierto (solo se dibuja abierto en una fila por board) */
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+
+
+.hm.t-dark{color-scheme:dark}.hm.t-light{color-scheme:light}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hm-check{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px}
+.hm-check input{width:20px;height:20px;margin:0;accent-color:var(--primary)}
+.fm-box{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);transition:border-color 150ms}
+.fm-box input,.fm-box select{flex:1 1 0;min-width:0;min-height:42px;border:0;background:transparent;font:inherit;color:inherit;outline:none;padding:0}
+.fm-box input::placeholder{color:var(--muted-foreground)}
+.fm-box:focus-within{outline:2px solid var(--ring);outline-offset:2px}
+.fm-box--error{border-color:var(--destructive)}
+.fm-box .hm-i{color:var(--muted-foreground)}
+.fm-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fm-label{font-size:14px;line-height:20px;font-weight:500;display:flex;align-items:center;gap:8px}
+.fm-hint{font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px 24px}
+.hm-th-plain{text-transform:none;letter-spacing:0}
+
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.sd-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.sd-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.hm-table td .hm-person{min-height:44px}
+
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="vacaciones.saldos" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Ordena tu operación › Vacaciones › Saldos" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<header class="hm-head">
+  <div class="hm-head-text">
+    <div class="hm-head-title">
+      <h1 class="hm-h1">Saldos</h1>
+    </div>
+    <div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>212 personas</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>4,340 días por disfrutar</span></div>
+  </div>
+  <div class="hm-head-actions"></div>
+</header>
+<sc-if value="{{ esAcuse }}" hint-placeholder-val="{{ true }}">
+<p class="hm-lead">198 personas esperan su constancia anual. Otras 3 no tienen fecha de ingreso y no se les pueden otorgar días.</p>
+</sc-if>
+<sc-if value="{{ esSinFecha }}" hint-placeholder-val="{{ true }}">
+<p class="hm-lead">3 personas no tienen fecha de ingreso. Captúrala y el sistema les otorga sus días.</p>
+</sc-if>
+<div class="hm-tabs" role="tablist" aria-label="Saldos por situación"><button type="button" class="hm-tab" role="tab" aria-selected="{{ tabAcuse }}">Constancia sin acuse <span class="hm-count">198</span></button><button type="button" class="hm-tab" role="tab" aria-selected="{{ tabSin }}">Sin fecha de ingreso <span class="hm-count">3</span></button><button type="button" class="hm-tab" role="tab" aria-selected="false">Todos <span class="hm-count">212</span></button><button type="button" class="hm-tab hm-tab--cero" role="tab" aria-selected="false">Bajas por finiquitar <span class="hm-count">0</span></button></div>
+<sc-if value="{{ esAcuse }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div class="sd-toolbar">
+<label class="fm-box" style="flex:1 1 280px"><span class="sr">Buscar persona</span><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="search" placeholder="Buscar persona"></label>
+<label class="fm-box" style="flex:0 1 200px"><span class="sr">Centro de trabajo</span><select><option>Todos los centros</option><option>Planta</option><option>Sucursal</option><option>Oficina</option><option>Bodega</option><option>Taller</option></select></label>
+<label class="fm-box" style="flex:0 1 200px"><span class="sr">Área</span><select><option>Todas las áreas</option></select></label>
+<p class="hm-small hm-muted" style="margin-left:auto">Ordenado por nombre, de la A a la Z</p>
+</div>
+<div class="hm-tablewrap">
+<table class="hm-table">
+<caption class="sr">Días de vacaciones de cada persona, por orden alfabético</caption>
+<thead><tr><th scope="col" style="width:44px;padding-right:0"><span class="sr">Seleccionar</span></th><th scope="col">Persona</th><th scope="col" class="hm-num">Disponibles</th><th scope="col">Próximo periodo</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead>
+<tbody>
+<tr aria-selected="true">
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" checked aria-label="Seleccionar a Aaron Ruíz"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AR</span><span><span class="hm-strong" style="display:block">Aaron Ruíz</span><span class="hm-small hm-muted">Política: Personal de confianza</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">19</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 mar 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Aaron Ruíz"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr aria-selected="true">
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" checked aria-label="Seleccionar a Abril Jáquez"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AJ</span><span><span class="hm-strong" style="display:block">Abril Jáquez</span><span class="hm-small hm-muted">Política: Contrato colectivo</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">25</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 may 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Abril Jáquez"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr aria-selected="true">
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" checked aria-label="Seleccionar a Adam Candelaria Tercero"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AT</span><span><span class="hm-strong" style="display:block">Adam Candelaria Tercero</span><span class="hm-small hm-muted">Política: Contrato colectivo</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">23</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 sep 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Adam Candelaria Tercero"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Adam Concepción"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AC</span><span><span class="hm-strong" style="display:block">Adam Concepción</span><span class="hm-small hm-muted">Política: Personal de confianza</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">25</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 abr 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Adam Concepción"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Adriana Rivera Hijo"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AH</span><span><span class="hm-strong" style="display:block">Adriana Rivera Hijo</span><span class="hm-small hm-muted">Política: Contrato colectivo</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">25</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 jun 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Adriana Rivera Hijo"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Adrián Sauceda"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AS</span><span><span class="hm-strong" style="display:block">Adrián Sauceda</span><span class="hm-small hm-muted">Política: Contrato colectivo</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">15</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 jun 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Adrián Sauceda"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Ainara Cortés"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AC</span><span><span class="hm-strong" style="display:block">Ainara Cortés</span><span class="hm-small hm-muted">Política: Personal de confianza</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">25</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 jul 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Ainara Cortés"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Alba Gonzáles"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AG</span><span><span class="hm-strong" style="display:block">Alba Gonzáles</span><span class="hm-small hm-muted">Política: Personal de confianza</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">27</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 jun 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Alba Gonzáles"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Alberto Vaca"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AV</span><span><span class="hm-strong" style="display:block">Alberto Vaca</span><span class="hm-small hm-muted">Política: Personal de confianza</span></span></a></td>
+<td class="hm-num"><span class="hm-strong">19</span> <span class="hm-small hm-muted">días</span></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 dic 2026</span><span class="hm-pill hm-pill--atencion">Nuevo periodo en 20 días</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Alberto Vaca"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+<tr>
+<td style="width:44px;padding-right:0"><label class="hm-check"><input type="checkbox" aria-label="Seleccionar a Alicia Ayala"></label></td>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">AA</span><span><span class="hm-strong" style="display:block">Alicia Ayala</span><span class="hm-small hm-muted">Política: Contrato colectivo</span></span></a></td>
+<td class="hm-num"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span><span class="hm-strong">0</span> <span class="hm-small hm-muted">días</span></span><span class="hm-pill">Sin días</span></div></td>
+<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span>1 feb 2027</span></div></td>
+<td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Más acciones de Alicia Ayala"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td>
+</tr>
+</tbody>
+</table>
+<div class="hm-bulk" role="status"><span class="hm-strong">3 seleccionadas</span><button type="button" class="hm-btn hm-btn-primary"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Enviar constancia para acuse</button><button type="button" class="hm-btn hm-btn-ghost">Quitar selección</button></div>
+</div>
+<nav class="sd-pager" aria-label="Paginación"><span class="hm-small hm-muted">1–10 de 198 · Página 1 de 20</span><div class="hm-head-actions"><button type="button" class="hm-btn hm-btn-outline" disabled>Anteriores</button><a class="hm-btn hm-btn-outline" href="#">Siguientes</a></div></nav>
+</div>
+</sc-if>
+<sc-if value="{{ esSinFecha }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div class="hm-tablewrap">
+<table class="hm-table">
+<caption class="sr">Personas sin fecha de ingreso</caption>
+<thead><tr><th scope="col">Persona</th><th scope="col">Fecha de ingreso</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead>
+<tbody>
+<tr>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">GE</span><span><span class="hm-strong" style="display:block">Gabriel Esquibel</span><span class="hm-small hm-muted">Sin días otorgados</span></span></a></td>
+<td><label class="fm-box" style="max-width:220px"><span class="sr">Fecha de ingreso de Gabriel Esquibel</span><input type="date"></label></td>
+<td class="hm-num"></td>
+</tr>
+<tr>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">LM</span><span><span class="hm-strong" style="display:block">Lorena Marín</span><span class="hm-small hm-muted">Sin días otorgados</span></span></a></td>
+<td><label class="fm-box" style="max-width:220px"><span class="sr">Fecha de ingreso de Lorena Marín</span><input type="date"></label></td>
+<td class="hm-num"></td>
+</tr>
+<tr>
+<td><a class="hm-person" href="Expediente.dc.html"><span class="hm-avatar" aria-hidden="true">LL</span><span><span class="hm-strong" style="display:block">Lucas Lucas</span><span class="hm-small hm-muted">Sin días otorgados</span></span></a></td>
+<td><label class="fm-box" style="max-width:220px"><span class="sr">Fecha de ingreso de Lucas Lucas</span><input type="date" value="2021-02-15"></label></td>
+<td class="hm-num"><button type="button" class="hm-btn hm-btn-primary">Guardar fecha</button></td>
+</tr>
+</tbody>
+</table>
+</div>
+<nav class="sd-pager" aria-label="Paginación"><span class="hm-small hm-muted">1–3 de 3 · Página 1 de 1</span><div class="hm-head-actions"><button type="button" class="hm-btn hm-btn-outline" disabled>Anteriores</button><a class="hm-btn hm-btn-outline" href="#">Siguientes</a></div></nav>
+</div>
+</sc-if>
+    </div>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["acuse","sin-fecha"],"default":"acuse","section":"Estado"},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const v = this.props.variant ?? 'acuse';
+    return {
+      theme,
+      themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light',
+      esAcuse: v !== 'sin-fecha',
+      esSinFecha: v === 'sin-fecha',
+      tabAcuse: v !== 'sin-fecha' ? 'true' : 'false',
+      tabSin: v === 'sin-fecha' ? 'true' : 'false',
+    };
+  }
+}
+</script>
+</body>
+</html>
