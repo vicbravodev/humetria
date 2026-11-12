@@ -1,4 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import { CircleAlert } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import Notice from '@/components/humetria/notice';
@@ -28,7 +29,7 @@ export default function LeaveIndex({
     people: Paginated<LeaveSummaryRow>;
 }) {
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Resumen' }],
+        breadcrumbs: leaveTrail('Resumen'),
     });
 
     return (

@@ -1,4 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import { Users } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
@@ -41,7 +42,7 @@ export default function LeaveBalances({
     const selection = useIdSelection(people.data.map((person) => person.id));
 
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Saldos' }],
+        breadcrumbs: leaveTrail('Saldos'),
     });
 
     return (

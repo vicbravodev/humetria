@@ -1,4 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import { Inbox, Plus } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/humetria/empty-state';
@@ -47,7 +48,7 @@ export default function LeaveRequests({
     const [recording, setRecording] = useState(false);
 
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Solicitudes' }],
+        breadcrumbs: leaveTrail('Solicitudes'),
     });
 
     return (

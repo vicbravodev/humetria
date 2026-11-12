@@ -10,6 +10,7 @@ import RecordStatements from '@/components/leave/record-statements';
 import RecordSummary from '@/components/leave/record-summary';
 import TerminationCard from '@/components/leave/termination-card';
 import { Badge } from '@/components/ui/badge';
+import { leaveTrail } from '@/lib/leave/trail';
 import { dateSpan } from '@/lib/leave/format';
 import type {
     LeaveLedgerEntry,
@@ -46,11 +47,7 @@ export default function LeaveEmployee({
     termination: LeaveRecordTermination | null;
 }) {
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Vacaciones' },
-            { title: 'Saldos' },
-            { title: person.name },
-        ],
+        breadcrumbs: leaveTrail('Saldos', person.name),
     });
     const facts: PageFact[] = [
         { icon: Briefcase, text: person.jobTitle },

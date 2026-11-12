@@ -1,4 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
 import ReadOnlyNotice from '@/components/humetria/read-only-notice';
@@ -43,7 +44,7 @@ export default function LeaveSettings({
         show.url(tenantSlug, { query: { tab: next } });
 
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Configuración' }],
+        breadcrumbs: leaveTrail('Configuración'),
     });
 
     return (

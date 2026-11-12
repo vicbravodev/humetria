@@ -1,4 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import { CalendarDays } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
@@ -37,7 +38,7 @@ export default function LeaveCalendar({
     people: Paginated<LeaveCalendarPerson>;
 }) {
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Calendario' }],
+        breadcrumbs: leaveTrail('Calendario'),
     });
 
     return (

@@ -1,4 +1,5 @@
 import { Head, Link, setLayoutProps } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import { Plus } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
@@ -41,7 +42,7 @@ export default function LeavePolicies({
     const tenantSlug = useTenantSlug();
 
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Políticas' }],
+        breadcrumbs: leaveTrail('Políticas'),
     });
 
     return (

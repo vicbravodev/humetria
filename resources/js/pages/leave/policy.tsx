@@ -3,6 +3,7 @@ import PageHeader from '@/components/humetria/page-header';
 import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import PolicyForm from '@/components/leave/policy-form';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { leaveTrail } from '@/lib/leave/trail';
 import { index } from '@/routes/tenant/vacations/policies';
 import type { LeavePolicyData } from '@/types';
 
@@ -21,11 +22,10 @@ export default function LeavePolicy({
     const title = policy === null ? 'Nueva política' : policy.name;
 
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Vacaciones' },
+        breadcrumbs: leaveTrail(
             { title: 'Políticas', href: index(tenantSlug) },
-            { title },
-        ],
+            title,
+        ),
     });
 
     return (
