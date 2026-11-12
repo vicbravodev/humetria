@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
+import FirstStepsTour from '@/components/first-steps/first-steps-tour';
 import SaveError from '@/components/humetria/save-error';
 import SetupFrame from '@/components/setup-frame';
 import OnboardingCenter from '@/components/tenancy/onboarding-center';
@@ -27,6 +28,7 @@ export default function TenancyOnboarding({ company, centers }: Props) {
             }
         >
             <Head title="Primera vez" />
+            <FirstStepsTour />
             <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-7">
                 <header className="flex max-w-[760px] flex-col gap-2.5">
                     <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em] text-balance">
@@ -38,7 +40,10 @@ export default function TenancyOnboarding({ company, centers }: Props) {
                     </p>
                 </header>
                 <div className="grid items-start gap-8 min-[1100px]:grid-cols-[minmax(0,1fr)_400px]">
-                    <div className="flex min-w-0 flex-col gap-4">
+                    <div
+                        data-tour="applicability-questions"
+                        className="flex min-w-0 flex-col gap-4"
+                    >
                         {centers.data.map((center) => (
                             <OnboardingCenter
                                 key={center.id}

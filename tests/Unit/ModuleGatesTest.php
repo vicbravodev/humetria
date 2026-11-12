@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Enums\Module;
  */
 const MAY_READ_BLOCKED = [
     'app/Modules/Compensation/Http/Controllers/SharedReportController.php' => 'the CCT calculator is the union\'s and every company\'s: it is no module',
+    'app/Modules/FirstSteps/Support/CompanyFirstSteps.php' => 'the first steps guide every owner through the platform: they are no module, only a blocked company loses them',
 ];
 
 /** @return list<string> */

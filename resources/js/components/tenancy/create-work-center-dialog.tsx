@@ -52,7 +52,7 @@ export default function CreateWorkCenterDialog({
                             </span>
                         </button>
                     ) : (
-                        <Button>
+                        <Button data-tour="add-work-center">
                             <Plus aria-hidden />
                             Dar de alta centro
                         </Button>

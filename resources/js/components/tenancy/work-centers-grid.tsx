@@ -19,6 +19,7 @@ export default function WorkCentersGrid({
 }) {
     return (
         <section
+            data-tour="work-centers-list"
             aria-label={
                 view === 'active'
                     ? 'Centros de trabajo'

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Assistant\Support\ToolRegistry;
 use App\Modules\Assistant\Tools\GetCampaignProgress;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
+use App\Modules\Assistant\Tools\GetFirstSteps;
 use App\Modules\Assistant\Tools\GetRiskResults;
 use App\Modules\Assistant\Tools\ListPendingActions;
 use App\Modules\Assistant\Tools\SearchRegulations;
@@ -27,7 +28,7 @@ beforeEach(function (): void {
     $this->scope = assistantScopeIn($this->a);
 });
 
-it('gives the five tools of Humi for a scope', function (): void {
+it('gives the six tools of Humi for a scope', function (): void {
     $tools = resolve(ToolRegistry::class)->for($this->scope);
 
     expect(array_map(fn (Tool $tool): string => $tool::class, $tools))->toBe([
@@ -36,6 +37,7 @@ it('gives the five tools of Humi for a scope', function (): void {
         GetRiskResults::class,
         ListPendingActions::class,
         SearchRegulations::class,
+        GetFirstSteps::class,
     ]);
 });
 
@@ -74,13 +76,13 @@ it('does not offer a tool of a module the company does not have, and offers it a
 
     $offered = fn (): array => array_map(fn (Tool $tool): string => $tool::class, resolve(ToolRegistry::class)->for($this->scope));
 
-    // Regulations are not a company's module: Humi always has them.
-    expect($offered())->toBe([SearchRegulations::class]);
+    // Regulations and the first steps are not a company's module: Humi always has them.
+    expect($offered())->toBe([SearchRegulations::class, GetFirstSteps::class]);
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
 
     // A tool that reads two norms stays while the company has either; the one only of NOM-035 does not come back.
-    expect($offered())->toBe([GetComplianceOverview::class, ListPendingActions::class, SearchRegulations::class]);
+    expect($offered())->toBe([GetComplianceOverview::class, ListPendingActions::class, SearchRegulations::class, GetFirstSteps::class]);
 });
 
 it('tells only the norms the company has in the compliance overview and the pending actions', function (): void {

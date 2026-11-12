@@ -1,5 +1,6 @@
 import type { Auth } from '@/types/auth';
 import type { SalaryImportSummary } from '@/types/compensation';
+import type { FirstSteps } from '@/types/first-steps';
 import type { InCourse } from '@/types/navigation';
 import type { LeaveImportSummary } from '@/types/leave-policy';
 import type { EmployeeImportSummary } from '@/types/organization';
@@ -30,6 +31,8 @@ declare module '@inertiajs/core' {
             tenants: { data: TenantSummary[]; total: number };
             /** The company's campaigns in course and how close the soonest is to its last day; null outside a company. */
             inCourse: InCourse | null;
+            /** The owner's guided tour of the company; null for anyone else, outside a company, once finished or when switched off. */
+            firstSteps: FirstSteps | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

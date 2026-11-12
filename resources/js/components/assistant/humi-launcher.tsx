@@ -31,6 +31,7 @@ export default function HumiLauncher({
                 <button
                     ref={button}
                     type="button"
+                    data-tour="humi-launcher"
                     onClick={onOpen}
                     aria-label="Abrir a Humi"
                     aria-keyshortcuts="Control+J Meta+J"

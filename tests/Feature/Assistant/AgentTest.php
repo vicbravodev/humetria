@@ -49,7 +49,7 @@ it('is bounded: at most six steps, a limit of tokens and a timeout', function ()
 it('works with the tools of the registry, built for its scope', function (): void {
     $tools = collect(HumiAssistant::make(scope: $this->scope)->tools());
 
-    expect($tools)->toHaveCount(5)
+    expect($tools)->toHaveCount(6)
         ->and($tools->map(fn (Tool $tool): string => $tool::class))->toContain(GetRiskResults::class, SearchRegulations::class);
 });
 

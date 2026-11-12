@@ -38,6 +38,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "concurrently": "^10.0.3",
+        "driver.js": "1.10.2",
         "input-otp": "^1.4.2",
         "laravel-vite-plugin": "^3.0.0",
         "leaflet": "^1.9.4",

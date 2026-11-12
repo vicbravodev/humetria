@@ -22,6 +22,7 @@ final class ComplianceRoutes
             'tenant.telework.*',
             'tenant.seating.*',
             'tenant.assistant.*',
+            'tenant.first-steps.*',
             'tenant.work-centers.*',
             'tenant.complaints.*',
             'tenant.interventions.*',

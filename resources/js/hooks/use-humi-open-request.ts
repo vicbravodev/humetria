@@ -1,11 +1,21 @@
 import { useEffect } from 'react';
 import { OPEN_HUMI } from '@/lib/assistant/open-humi';
 
-/** Opens Humi when a page asks for it (`openHumi()`). */
-export function useHumiOpenRequest(open: () => void): void {
+/** Opens Humi when a page asks for it (`openHumi()`), with the draft it brings, if any. */
+export function useHumiOpenRequest(open: (draft: string | null) => void): void {
     useEffect(() => {
-        window.addEventListener(OPEN_HUMI, open);
+        const listen = (event: Event) => {
+            const draft =
+                event instanceof CustomEvent &&
+                typeof event.detail?.draft === 'string'
+                    ? event.detail.draft
+                    : null;
 
-        return () => window.removeEventListener(OPEN_HUMI, open);
+            open(draft);
+        };
+
+        window.addEventListener(OPEN_HUMI, listen);
+
+        return () => window.removeEventListener(OPEN_HUMI, listen);
     }, [open]);
 }

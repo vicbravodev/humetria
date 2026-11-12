@@ -14,6 +14,12 @@ describe('stepLabel', () => {
         );
     });
 
+    it('names the first steps', () => {
+        expect(stepLabel('GetFirstSteps', true)).toBe(
+            'Consulté tus primeros pasos',
+        );
+    });
+
     it('has a plain phrase for a tool it does not know', () => {
         expect(stepLabel('AlgoNuevo', false)).toBe(
             'Consultando la información',
