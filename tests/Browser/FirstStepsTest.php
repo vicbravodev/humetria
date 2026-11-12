@@ -61,6 +61,24 @@ it('leaves only the button after «Ahora no»', function (): void {
         ->assertScript(cspViolations(), '[]');
 });
 
+it('hides the steps and takes them back from the user menu', function (): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('Empezar')
+        ->click('Ocultar primeros pasos')
+        ->assertSee('Puedes retomarlos desde tu menú de usuario.')
+        ->assertMissing(FIRST_STEPS_BUTTON)
+        ->click('@sidebar-menu-button')
+        ->click('Primeros pasos')
+        ->assertSee('0 de 5 pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(firstStepsRow()?->hidden_at)->toBeNull();
+});
+
 it('does not open the welcome to a superadmin working as the owner', function (): void {
     $this->actingAs(superadmin());
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
