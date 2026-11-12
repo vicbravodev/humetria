@@ -148,7 +148,7 @@ it('shows a saved position with its result and its people', function (bool $dark
         ->assertSee('Quitar');
 })->with($looks);
 
-it('shows what a new position still misses instead of saving it', function (): void {
+it('shows what a new position still misses instead of moving on', function (): void {
     [$url, $center] = seatingCenter();
 
     visit("{$url}/seating/centers/{$center->id}/positions/create")
@@ -159,14 +159,10 @@ it('shows what a new position still misses instead of saving it', function (): v
         ->type('max_people_at_once', '2')
         ->press('@position-next')
         ->assertSee('Paso 2 de 5')
+        // «Siguiente» does not move on over the questions of Figura 1 nobody answered: it marks them.
         ->press('@position-next')
-        ->assertSee('Paso 3 de 5')
-        ->press('@position-next')
-        ->assertSee('Paso 4 de 5')
-        ->press('Guardar puesto')
-        // The step of the first field it misses opens again.
         ->assertSee('Paso 2 de 5')
-        ->assertSee('es obligatorio')
+        ->assertSee('Este dato es obligatorio.')
         ->assertNoJavaScriptErrors();
 });
 
@@ -335,6 +331,8 @@ it('shows a signed assessment as final, with its result and the suggestion', fun
 
     visitPage('seating/assessment', "{$url}/seating/assessments/{$signed->id}", $dark, $mobile)
         ->assertSee('7 de 21')
+        // The date is written as a day, never as the year-month-day the server stores.
+        ->assertScript('() => !/Firmada el \\d{4}-/.test(document.body.innerText)', true)
         ->assertSee('Sugerencia de Humetría')
         ->assertDontSee('Firmar evaluación')
         ->assertDontSee('Guardar borrador');
