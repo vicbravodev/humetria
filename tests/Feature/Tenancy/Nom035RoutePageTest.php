@@ -219,7 +219,7 @@ it('splits what an inspector would ask for into what the center can show and wha
             ->where('ready', fn ($rows): bool => collect($rows)->pluck('numeral')->all() === ['7.1 y 7.9', '5.5 y 5.8 c'])
             ->where('missing', fn ($rows): bool => collect($rows)->pluck('numeral')->all() === ['5.1', '7.8', '7.7'])
             ->missing('missing.0.stage')
-            ->where('dossierHref', route('tenant.disclosure.dossier', [$this->tenant, $this->center->id])));
+            ->where('dossierHref', route('tenant.nom035.dossier', [$this->tenant, $this->center->id])));
 });
 
 it('gives the viewer the inspection without the dossier, and answers 404 for a center of another company', function (): void {

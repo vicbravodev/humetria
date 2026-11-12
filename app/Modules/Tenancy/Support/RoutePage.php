@@ -43,7 +43,7 @@ final readonly class RoutePage
             'urgencies' => $urgencies,
             'until' => $facts->until,
             'inspectionHref' => route('tenant.nom035.inspection', [$tenantSlug, $center->id]),
-            'dossierHref' => Gate::allows('manage-disclosure') ? route('tenant.disclosure.dossier', [$tenantSlug, $center->id]) : null,
+            'dossierHref' => Gate::allows('manage-disclosure') ? route('tenant.nom035.dossier', [$tenantSlug, $center->id]) : null,
         ];
     }
 
@@ -63,8 +63,18 @@ final readonly class RoutePage
             'applicable' => count($applicable),
             'ready' => array_values(array_filter($applicable, fn (array $row): bool => $row['state'] === 'done')),
             'missing' => array_values(array_filter($applicable, fn (array $row): bool => $row['state'] !== 'done')),
-            'dossierHref' => Gate::allows('manage-disclosure') ? route('tenant.disclosure.dossier', [$tenantSlug, $center->id]) : null,
+            'dossierHref' => Gate::allows('manage-disclosure') ? route('tenant.nom035.dossier', [$tenantSlug, $center->id]) : null,
         ];
+    }
+
+    /**
+     * The requirements of the route of a center, one per stage, as its route and its inspection read them.
+     *
+     * @return list<array{numeral: string, title: string, detail: string|null, state: string, stage: int, href: string|null, action: string|null}>
+     */
+    public function rows(string $tenantSlug, WorkCenterSummary $center, bool $seesScreenings): array
+    {
+        return $this->read($tenantSlug, $center, $seesScreenings)[2];
     }
 
     /**

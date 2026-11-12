@@ -69,10 +69,23 @@ it('opens the NOM-035 dossier with only what the center can show', function (): 
     visit("/admin/acme/campaigns/centers/{$office->id}/inspection")
         ->click('Solo lo que tienes')
         ->click('Abrir expediente')
-        ->assertPathIs("/admin/acme/disclosure/dossier/{$office->id}")
+        ->assertPathIs("/admin/acme/campaigns/centers/{$office->id}/dossier")
         ->assertQueryStringHas('ready', '1')
         ->assertNoJavaScriptErrors();
 });
+
+// Launch plan, decision 2: the dossier of NOM-035 with the six rows of the inspection and their evidence.
+it('prints the NOM-035 dossier of a center, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    $office = evaluatedOffice();
+
+    visitPage('tenancy/nom035-dossier', "/admin/acme/campaigns/centers/{$office->id}/dossier", $dark, $mobile)
+        ->assertSee('Expediente NOM-035 para la inspección')
+        ->assertSee('Oficina')
+        ->assertSee('Política de prevención por escrito')
+        ->assertSee('Cerrada el 2 nov 2026: contestaron 0 de 0')
+        ->assertSee('Imprimir o guardar PDF')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
+})->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 
 // «Ver ruta» of NOM-035 in the panel lands on its centers (the evaluations): each one leads to its route.
 it('goes from the centers of NOM-035 to the route of one', function (): void {
