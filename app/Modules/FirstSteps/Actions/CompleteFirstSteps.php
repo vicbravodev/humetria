@@ -14,10 +14,10 @@ final readonly class CompleteFirstSteps
 {
     public function handle(string $tenantId, int $userId): void
     {
-        FirstStepsState::query()->updateOrCreate(
-            ['tenant_id' => $tenantId, 'user_id' => $userId],
-            ['completed_at' => now()],
-        );
+        // createOrFirst: two first writes at once must not trip the unique index.
+        $state = FirstStepsState::query()->createOrFirst(['tenant_id' => $tenantId, 'user_id' => $userId]);
+        $state->completed_at = now();
+        $state->save();
 
         Log::info('first_steps.completed', ['tenant_id' => $tenantId, 'user_id' => $userId]);
     }

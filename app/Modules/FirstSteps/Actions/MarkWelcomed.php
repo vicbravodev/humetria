@@ -16,7 +16,7 @@ final readonly class MarkWelcomed
     public function handle(string $tenantId, int $userId): void
     {
         $changed = DB::transaction(function () use ($tenantId, $userId): bool {
-            $state = FirstStepsState::query()->firstOrCreate(['tenant_id' => $tenantId, 'user_id' => $userId]);
+            $state = FirstStepsState::query()->createOrFirst(['tenant_id' => $tenantId, 'user_id' => $userId]);
             if ($state->welcomed_at !== null) {
                 return false;
             }

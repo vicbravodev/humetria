@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\FirstSteps\Actions\CompleteFirstSteps;
 use App\Modules\FirstSteps\Actions\HideFirstSteps;
 use App\Modules\FirstSteps\Actions\MarkWelcomed;
 use App\Modules\FirstSteps\Actions\ShowFirstSteps;
@@ -10,9 +11,10 @@ use App\Modules\FirstSteps\Policies\FirstStepsStatePolicy;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-mutates(MarkWelcomed::class, HideFirstSteps::class, ShowFirstSteps::class, FirstStepsStatePolicy::class);
+mutates(CompleteFirstSteps::class, MarkWelcomed::class, HideFirstSteps::class, ShowFirstSteps::class, FirstStepsStatePolicy::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -111,3 +113,36 @@ it('refuses the three posts while a superadmin works as the owner', function (st
 
     expect(stateOf($this->tenant, $this->owner->id))->toBeNull();
 })->with(['tenant.first-steps.welcome', 'tenant.first-steps.hide', 'tenant.first-steps.show']);
+
+/**
+ * Two first writes at once must not trip the unique (tenant_id, user_id) index. A faithful race cannot be staged here: the
+ * test connection lives in one transaction, so a racing row would be rolled back with the savepoint that loses. What is pinned
+ * is the form that survives it, insert first and read the winner after, never look first and insert later.
+ */
+it('inserts before it looks, so a concurrent first write finds the winner instead of failing', function (string $action): void {
+    workIn($this->tenant);
+    DB::enableQueryLog();
+
+    resolve($action)->handle($this->tenant->id, $this->owner->id);
+
+    $queries = collect(DB::getQueryLog())->pluck('query')->filter(fn (string $sql): bool => str_contains($sql, '"first_steps_states"'));
+    expect($queries->first())->toStartWith('insert into');
+})->with([MarkWelcomed::class, HideFirstSteps::class, ShowFirstSteps::class, CompleteFirstSteps::class]);
+
+it('applies the change to a row that is already there, once, keeping the first welcomed_at', function (): void {
+    workIn($this->tenant);
+    Log::spy();
+    $first = now()->subDay()->startOfSecond();
+    FirstStepsState::factory()->create(['tenant_id' => $this->tenant->id, 'user_id' => $this->owner->id, 'welcomed_at' => $first]);
+
+    resolve(MarkWelcomed::class)->handle($this->tenant->id, $this->owner->id);
+    resolve(HideFirstSteps::class)->handle($this->tenant->id, $this->owner->id);
+    resolve(CompleteFirstSteps::class)->handle($this->tenant->id, $this->owner->id);
+
+    $state = stateOf($this->tenant, $this->owner->id);
+    expect(FirstStepsState::query()->withoutGlobalScopes()->count())->toBe(1)
+        ->and($state?->welcomed_at?->equalTo($first))->toBeTrue()
+        ->and($state?->hidden_at)->not->toBeNull()
+        ->and($state?->completed_at)->not->toBeNull();
+    Log::shouldNotHaveReceived('info', ['first_steps.welcomed', Mockery::any()]);
+});
