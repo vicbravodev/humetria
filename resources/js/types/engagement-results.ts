@@ -81,8 +81,16 @@ export type EngagementParticipation = {
 };
 
 export type EngagementResults = {
-    survey: { id: string; name: string; status: 'draft' | 'active' | 'closed' };
+    survey: {
+        id: string;
+        name: string;
+        status: 'draft' | 'active' | 'closed';
+        /** The day it closed, in the calendar of the company; null while open. */
+        closedOn: string | null;
+    };
     available: boolean;
+    /** How many commitments the survey has, to offer to write them or to see them. */
+    commitments: number;
     cut: EngagementCut['value'] | null;
     cuts: EngagementCut[];
     participation: EngagementParticipation | null;
@@ -124,7 +132,7 @@ export type EngagementItemSection = {
 };
 
 export type EngagementItems = {
-    survey: EngagementResults['survey'];
+    survey: Pick<EngagementResults['survey'], 'id' | 'name' | 'status'>;
     available: boolean;
     sections: EngagementItemSection[];
 };

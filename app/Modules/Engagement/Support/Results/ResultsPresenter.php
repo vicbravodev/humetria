@@ -11,6 +11,7 @@ use App\Modules\Engagement\Enums\ItemBlock;
 use App\Modules\Engagement\Enums\ItemScale;
 use App\Modules\Engagement\Enums\Priority;
 use App\Modules\Engagement\Enums\TenureBand;
+use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Engagement\Support\Thresholds;
 use App\Modules\Organization\Contracts\Areas;
@@ -38,8 +39,9 @@ final readonly class ResultsPresenter
     {
         $survey = $results->survey();
         $base = [
-            'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
+            'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value, 'closedOn' => $survey->closed_at?->setTimezone(config()->string('app.display_timezone'))->toDateString()],
             'available' => $results->available(),
+            'commitments' => $results->available() ? Commitment::query()->where('survey_id', $survey->id)->count() : 0,
             'cut' => $cut?->value,
             'cuts' => array_map(fn (CutAttribute $attribute): array => ['value' => $attribute->value, 'label' => self::cutLabel($attribute)], CutAttribute::cases()),
         ];
