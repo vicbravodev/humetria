@@ -12,6 +12,10 @@ export type LeavePolicyCard = {
     fixedDays: number;
     /** How many targets (the company, a group, a grade) it is assigned to. */
     assigned: number;
+    /** How many active people follow it, by the most specific assignment. */
+    people: number;
+    /** The days it gives in years 1 to 6 of service (the sixth stands for 6 to 10), tiers, law and fixed days together. */
+    byYear: number[];
     archived: boolean;
 };
 
