@@ -1,66 +1,75 @@
 import Initials from '@/components/humetria/initials';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { dateSpan, statusTone, workingDaysOf } from '@/lib/leave/format';
-import { daysLine } from '@/lib/leave/queue';
+import { dateSpan, statusTone } from '@/lib/leave/format';
+import { reasonLine } from '@/lib/leave/overview';
+import { sinceLabel } from '@/lib/leave/queue';
+import { cn } from '@/lib/utils';
 import type { LeaveQueueRequest } from '@/types';
 
-/** A request of RH's queue: who, whose it was to answer, the dates, what the days were and its state; «Ver» opens its panel. */
+/**
+ * A request of RH's queue: who, which days, how many and since when it waits. The whole row selects it, to read and answer
+ * it in the decision panel; the one selected is tinted.
+ */
 export default function QueueRow({
     request,
-    onOpen,
+    selected,
+    onSelect,
 }: {
     request: LeaveQueueRequest;
-    onOpen: () => void;
+    selected: boolean;
+    onSelect: () => void;
 }) {
     return (
-        <TableRow>
-            <TableCell className="whitespace-normal max-md:w-full">
+        <TableRow
+            data-state={selected ? 'selected' : undefined}
+            onClick={onSelect}
+            className={cn('cursor-pointer', selected && 'bg-accent')}
+        >
+            <TableCell className="h-14 whitespace-normal max-md:w-full">
                 <div className="flex items-center gap-3">
                     <Initials name={request.name} />
                     <div className="min-w-36">
-                        <p className="font-medium">{request.name}</p>
+                        <button
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={onSelect}
+                            className="touch-hit text-left font-medium outline-none focus-visible:underline"
+                        >
+                            {request.name}
+                        </button>
                         <p className="text-caption text-muted-foreground">
-                            {request.type ?? 'Vacaciones'} ·{' '}
-                            {request.manager === null
-                                ? 'Sin jefe'
-                                : `Jefe: ${request.manager}`}
+                            {request.type ?? 'Vacaciones'}
+                            {request.status !== 'requested' && (
+                                <>
+                                    {' · '}
+                                    <Badge
+                                        variant={statusTone(request.status)}
+                                        className="align-middle"
+                                    >
+                                        {request.statusLabel}
+                                    </Badge>
+                                </>
+                            )}
                         </p>
+                        {request.reason !== null && (
+                            <p className="text-caption text-muted-foreground">
+                                {reasonLine(request.reason, request.manager)}
+                            </p>
+                        )}
                     </div>
                 </div>
             </TableCell>
             <TableCell className="whitespace-normal">
                 {dateSpan(request.startsOn, request.endsOn)}
-                <span className="block text-caption text-muted-foreground">
-                    {workingDaysOf(request.workingDays)}
-                </span>
+            </TableCell>
+            <TableCell className="text-right tabular-nums md:w-16">
+                {request.workingDays}
+                <span className="md:sr-only"> días laborables</span>
             </TableCell>
             <TableCell className="whitespace-normal text-muted-foreground">
-                {daysLine(request)}
-            </TableCell>
-            <TableCell className="whitespace-normal">
-                <div className="flex flex-col items-start gap-1">
-                    <Badge variant={statusTone(request.status)}>
-                        {request.statusLabel}
-                    </Badge>
-                    {request.reason !== null && (
-                        <span className="text-caption text-muted-foreground">
-                            {request.reason}
-                        </span>
-                    )}
-                </div>
-            </TableCell>
-            <TableCell className="text-right">
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onOpen}
-                    aria-label={`Ver la solicitud de ${request.name}`}
-                >
-                    Ver
-                </Button>
+                <span className="md:sr-only">Espera desde el </span>
+                {sinceLabel(request.requestedOn)}
             </TableCell>
         </TableRow>
     );

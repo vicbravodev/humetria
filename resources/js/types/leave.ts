@@ -151,6 +151,8 @@ export type LeaveQueueRequest = {
     manager: string | null;
     /** The name of the leave for whoever manages vacations, "Permiso" for a viewer; null for vacations. */
     type: string | null;
+    /** Y-m-d: the day it was asked, since when it waits. */
+    requestedOn: string;
     startsOn: string;
     endsOn: string;
     workingDays: number;

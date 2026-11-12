@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  * how many it holds, narrowed by name, work center and area (the tabs count what the filters leave). Whoever may only view
  * reads who asked and when, never the note, the reason of a rejection nor which leave it was (criterio C-22).
  *
- * @phpstan-type Row array{id: string, name: string, manager: string|null, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, shortBy: int, periods: list<int>, reason: string|null, recordedByHr: bool, note: string|null, rejectionReason: string|null, canDecide: bool, canCancel: bool, coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}
+ * @phpstan-type Row array{id: string, name: string, manager: string|null, type: string|null, requestedOn: string, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, shortBy: int, periods: list<int>, reason: string|null, recordedByHr: bool, note: string|null, rejectionReason: string|null, canDecide: bool, canCancel: bool, coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}
  */
 final readonly class RequestPages
 {
@@ -131,6 +131,7 @@ final readonly class RequestPages
             'name' => ($names[$request->employee_id] ?? null)->name ?? '',
             'manager' => ($names[$request->approver_employee_id ?? ''] ?? null)->name ?? null,
             'type' => $request->leave_type_id === null ? null : ($canManage ? $types->get($request->leave_type_id, 'Permiso') : 'Permiso'),
+            'requestedOn' => $request->requested_on->toDateString(),
             'startsOn' => $request->starts_on->toDateString(),
             'endsOn' => $request->ends_on->toDateString(),
             'workingDays' => $request->working_days,

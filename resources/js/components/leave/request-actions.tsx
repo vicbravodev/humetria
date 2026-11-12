@@ -3,14 +3,13 @@ import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import ApproveButton from '@/components/leave/approve-button';
 import RejectForm from '@/components/leave/reject-form';
 import { Button } from '@/components/ui/button';
-import { SheetFooter } from '@/components/ui/sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { cancel } from '@/routes/tenant/vacations/requests';
 import type { LeaveQueueRequest } from '@/types';
 
 /**
- * What RH can do with a request: answer one that waits (it may be before the manager does), or cancel one that holds its
- * dates, an enjoyed one included, which is how RH corrects. A viewer sees none of the buttons.
+ * What RH can do with a request: answer one that waits («Aprobar» is the primary), or cancel one that holds its dates, an
+ * enjoyed one included, which is how RH corrects. A viewer sees none of the buttons.
  */
 export default function RequestActions({
     request,
@@ -25,11 +24,36 @@ export default function RequestActions({
     }
 
     return (
-        <SheetFooter className="flex-row flex-wrap justify-end gap-2 border-t px-6 py-4">
+        <div className="flex flex-wrap gap-2 max-sm:[&>*]:flex-1">
+            {request.canDecide && (
+                <>
+                    <ApproveButton
+                        requestId={request.id}
+                        name={request.name}
+                        block
+                    />
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setRejecting(true)}
+                        className="max-sm:h-11"
+                    >
+                        Rechazar
+                    </Button>
+                    <RejectForm
+                        requestId={request.id}
+                        name={request.name}
+                        open={rejecting}
+                        onOpenChange={setRejecting}
+                    />
+                </>
+            )}
             {request.canCancel && (
                 <ConfirmDialog
                     trigger={
-                        <Button variant="outline">Cancelar solicitud</Button>
+                        <Button variant="outline" className="max-sm:h-11">
+                            Cancelar solicitud
+                        </Button>
                     }
                     title={`¿Cancelar la solicitud de ${request.name}?`}
                     description="Los días que haya usado regresan a su saldo. La solicitud queda en Canceladas."
@@ -42,24 +66,6 @@ export default function RequestActions({
                     preserveScroll
                 />
             )}
-            {request.canDecide && (
-                <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setRejecting(true)}
-                    >
-                        Rechazar
-                    </Button>
-                    <ApproveButton requestId={request.id} name={request.name} />
-                    <RejectForm
-                        requestId={request.id}
-                        name={request.name}
-                        open={rejecting}
-                        onOpenChange={setRejecting}
-                    />
-                </>
-            )}
-        </SheetFooter>
+        </div>
     );
 }

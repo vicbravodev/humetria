@@ -169,3 +169,9 @@ it('lists what waits by the date it starts, the closest first', function (): voi
 
     expect(array_column($props['requests']['data'], 'id'))->toBe([$sooner->id, $later->id]);
 });
+
+it('says since when each request waits, the day it was asked', function (): void {
+    $request = decisionPanelRequest($this->ana, 'escalated', ['requested_on' => '2026-11-03']);
+
+    expect(decisionPanelRows()[$request->id]['requestedOn'])->toBe('2026-11-03');
+});
