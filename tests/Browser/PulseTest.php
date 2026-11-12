@@ -182,7 +182,7 @@ it('shows RH the results of a pulse with the improvements seen and only the them
     $survey = closedPulseWithAnswers();
 
     visitPage('engagement/results', "{$url}/pulse/{$survey->id}/results", $dark, $mobile)
-        ->assertSee('Resultados de pulso')
+        ->assertSee('Grupos de 5 o más')
         ->assertSee('Mejoras vistas')
         ->assertSee('Claridad y alineación')
         ->assertDontSee('Compensación y prestaciones')
