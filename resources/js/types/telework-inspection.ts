@@ -3,7 +3,7 @@ export type InspectionItem = {
     numeral: string;
     title: string;
     detail: string | null;
-    state: 'done' | 'partial' | 'missing' | 'not_applicable';
+    state: 'done' | 'partial' | 'missing' | 'not_applicable' | 'pending';
     /** Null for whoever may not open it (the viewer). */
     href: string | null;
     action: string | null;

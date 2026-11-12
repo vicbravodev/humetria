@@ -32,6 +32,12 @@ describe('requirementCount', () => {
         );
     });
 
+    it('says nothing of a requirement with no records', () => {
+        expect(
+            requirementCount({ ...base, state: 'pending', count: 2 }),
+        ).toBeNull();
+    });
+
     it('says nothing when it is met or there is nothing behind it', () => {
         expect(
             requirementCount({ ...base, state: 'met', count: 0 }),
@@ -53,17 +59,26 @@ describe('requirementSince', () => {
 
 describe('summaryText', () => {
     it('says how many are met and what is left', () => {
-        expect(summaryText({ met: 9, warning: 1, missing: 3 })).toBe(
-            '9 de 13 cumplen · 1 con aviso · 3 por resolver',
-        );
-        expect(summaryText({ met: 10, warning: 2, missing: 1 })).toBe(
-            '10 de 13 cumplen · 2 con avisos · 1 por resolver',
-        );
+        expect(
+            summaryText({ met: 9, warning: 1, missing: 3, pending: 0 }),
+        ).toBe('9 de 13 cumplen · 1 con aviso · 3 por resolver');
+        expect(
+            summaryText({ met: 10, warning: 2, missing: 1, pending: 0 }),
+        ).toBe('10 de 13 cumplen · 2 con avisos · 1 por resolver');
+    });
+
+    it('does not count what has no records as met', () => {
+        expect(
+            summaryText({ met: 5, warning: 0, missing: 2, pending: 6 }),
+        ).toBe('5 de 13 cumplen · 2 por resolver · 6 sin registros');
+        expect(
+            summaryText({ met: 5, warning: 0, missing: 0, pending: 8 }),
+        ).toBe('5 de 13 cumplen · 8 sin registros');
     });
 
     it('says only how many are met when none is left', () => {
-        expect(summaryText({ met: 13, warning: 0, missing: 0 })).toBe(
-            '13 de 13 cumplen',
-        );
+        expect(
+            summaryText({ met: 13, warning: 0, missing: 0, pending: 0 }),
+        ).toBe('13 de 13 cumplen');
     });
 });

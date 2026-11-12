@@ -45,7 +45,11 @@ final class DossierLines
             default => [],
         };
 
-        return $lines !== [] ? $lines : [self::line($state === 'met' ? 'Sin pendientes' : 'Falta')];
+        return $lines !== [] ? $lines : [self::line(match ($state) {
+            'met' => 'Sin pendientes',
+            'pending' => 'Sin registros',
+            default => 'Falta',
+        })];
     }
 
     /**

@@ -63,6 +63,18 @@ it('shows a center with its declaration form', function (bool $dark, bool $mobil
         ->assertSee('Guardar declaración');
 })->with($looks);
 
+it('does not count as met what has no records: the board says «Sin registros»', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    SeatingProfile::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'sector' => 'commerce']);
+    StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
+
+    visitPage('seating/center', "{$url}/seating/centers/{$center->id}", $dark, $mobile)
+        ->assertSee('Sin registros')
+        ->assertDontSee('9 de 13 cumplen');
+    visitPage('seating/inspection', "{$url}/seating/centers/{$center->id}/inspection", $dark, $mobile)
+        ->assertSee('Aún no hay evaluaciones firmadas');
+})->with($looks);
+
 it('declares the sector of a center from the page', function (): void {
     [$url, $center] = seatingCenter();
 
