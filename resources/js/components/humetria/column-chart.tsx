@@ -22,9 +22,12 @@ export type ColumnChartColumn = {
 export default function ColumnChart({
     label,
     columns,
+    baseline,
 }: {
     label: string;
     columns: ColumnChartColumn[];
+    /** A dashed line across the columns (the first measurement, the company's average), as high as `percent`. */
+    baseline?: { percent: number; label: string };
 }) {
     return (
         <figure>
@@ -44,8 +47,18 @@ export default function ColumnChart({
                                     role="img"
                                     aria-label={column.tooltip}
                                     tabIndex={0}
-                                    className="block h-40 w-full max-w-28 border-b outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-48"
+                                    className="relative block h-40 w-full max-w-28 border-b outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-48"
                                 >
+                                    {baseline !== undefined && (
+                                        <span
+                                            aria-hidden
+                                            data-slot="column-baseline"
+                                            className="absolute inset-x-0 z-10 border-t-2 border-dashed border-foreground"
+                                            style={{
+                                                bottom: `${baseline.percent}%`,
+                                            }}
+                                        />
+                                    )}
                                     <svg
                                         aria-hidden
                                         viewBox="0 0 100 100"
@@ -72,6 +85,15 @@ export default function ColumnChart({
                     </li>
                 ))}
             </ol>
+            {baseline !== undefined && (
+                <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <span
+                        aria-hidden
+                        className="w-5 border-t-2 border-dashed border-foreground"
+                    />
+                    {baseline.label}
+                </p>
+            )}
         </figure>
     );
 }
