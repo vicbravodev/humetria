@@ -1,6 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { leaveTrail } from '@/lib/leave/trail';
-import { Users } from 'lucide-react';
+import { Hourglass, Users } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
@@ -8,6 +7,8 @@ import BalancesTable from '@/components/leave/balances-table';
 import BalancesToolbar from '@/components/leave/balances-toolbar';
 import SendLinksBar from '@/components/leave/send-links-bar';
 import { useIdSelection } from '@/hooks/use-id-selection';
+import { leaveTrail } from '@/lib/leave/trail';
+import { countOf } from '@/lib/plural';
 import type {
     LeaveBalanceFilters,
     LeaveBalanceRow,
@@ -25,42 +26,46 @@ const EMPTY: Record<LeaveBalanceTab, string> = {
 };
 
 /**
- * The days of everybody: their policy, what they can still ask for and when the next period starts, with a tab for each
- * thing RH has to chase. Days only, never an amount.
+ * The days of everybody: it opens on what asks for action (statements without acknowledgment, people with no start date),
+ * each person with their policy, a bar of the days they can ask for and when the next period starts. Days only, never an amount.
  */
 export default function LeaveBalances({
     tab,
     q,
+    today,
+    owedDays,
     counts,
     canManage,
     people,
 }: LeaveBalanceFilters & {
+    today: string;
+    owedDays: number;
     counts: Record<LeaveBalanceTab, number>;
     canManage: boolean;
     people: Paginated<LeaveBalanceRow>;
 }) {
     const selection = useIdSelection(people.data.map((person) => person.id));
 
-    setLayoutProps({
-        breadcrumbs: leaveTrail('Saldos'),
-    });
+    setLayoutProps({ breadcrumbs: leaveTrail('Saldos') });
 
     return (
         <>
             <Head title="Saldos de vacaciones" />
             <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Vacaciones"
                     title="Saldos"
-                    description="Los días que cada persona puede pedir, y lo que falta para que el sistema pueda otorgárselos."
+                    facts={[
+                        {
+                            icon: Users,
+                            text: countOf(counts.all, 'persona', 'personas'),
+                        },
+                        {
+                            icon: Hourglass,
+                            text: `${new Intl.NumberFormat('es-MX').format(owedDays)} días por disfrutar`,
+                        },
+                    ]}
                 />
                 <BalancesToolbar filters={{ q, tab }} counts={counts} />
-                {canManage && selection.chosen.length > 0 && (
-                    <SendLinksBar
-                        chosen={selection.chosen}
-                        onDone={selection.clear}
-                    />
-                )}
                 {people.data.length === 0 ? (
                     <EmptyState
                         icon={Users}
@@ -73,11 +78,20 @@ export default function LeaveBalances({
                             : 'Revisa cómo lo escribiste o busca con otra parte del nombre.'}
                     </EmptyState>
                 ) : (
-                    <BalancesTable
-                        people={people.data}
-                        selection={selection}
-                        canManage={canManage}
-                    />
+                    <div>
+                        <BalancesTable
+                            people={people.data}
+                            today={today}
+                            selection={selection}
+                            canManage={canManage}
+                        />
+                        {canManage && (
+                            <SendLinksBar
+                                chosen={selection.chosen}
+                                onDone={selection.clear}
+                            />
+                        )}
+                    </div>
                 )}
                 <Pagination page={people} label="Páginas de personas" />
             </div>

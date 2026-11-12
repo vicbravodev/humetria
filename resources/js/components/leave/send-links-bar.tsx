@@ -1,12 +1,15 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import BulkBar from '@/components/humetria/bulk-bar';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { countOf } from '@/lib/plural';
 import { links } from '@/routes/tenant/vacations/balances';
 
-/** Who is ticked and the one thing to do with them: email them the link to their own vacations. */
+/**
+ * Who is ticked and the one thing to do with them: email each the link to their own vacations, where they read and confirm
+ * their annual statement. It sticks to the bottom of the table only while someone is ticked.
+ */
 export default function SendLinksBar({
     chosen,
     onDone,
@@ -18,36 +21,25 @@ export default function SendLinksBar({
     const [sending, setSending] = useState(false);
 
     return (
-        <div
-            role="status"
-            className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-accent px-5 py-3"
-        >
-            <span className="font-medium">
-                {countOf(chosen.length, 'persona elegida', 'personas elegidas')}
-            </span>
-            <div className="flex flex-wrap gap-2">
-                <Button
-                    disabled={sending}
-                    onClick={() =>
-                        router.post(
-                            links.url(tenantSlug),
-                            { employees: chosen },
-                            {
-                                preserveScroll: true,
-                                onStart: () => setSending(true),
-                                onFinish: () => setSending(false),
-                                onSuccess: onDone,
-                            },
-                        )
-                    }
-                >
-                    {sending && <Spinner />}
-                    Enviar enlace
-                </Button>
-                <Button variant="outline" onClick={onDone}>
-                    Quitar selección
-                </Button>
-            </div>
-        </div>
+        <BulkBar count={chosen.length} onClear={onDone}>
+            <Button
+                disabled={sending}
+                onClick={() =>
+                    router.post(
+                        links.url(tenantSlug),
+                        { employees: chosen },
+                        {
+                            preserveScroll: true,
+                            onStart: () => setSending(true),
+                            onFinish: () => setSending(false),
+                            onSuccess: onDone,
+                        },
+                    )
+                }
+            >
+                {sending && <Spinner />}
+                Enviar constancia para acuse
+            </Button>
+        </BulkBar>
     );
 }
