@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Models\ResultPublication;
 use App\Modules\Interventions\Models\Program;
@@ -58,7 +61,7 @@ it('shows the six stages of the center, each with what it asks in plain words an
         ->where('rows.1', [
             'numeral' => '7.1 y 7.9',
             'title' => 'Evaluación de los factores de riesgo, vigente',
-            'detail' => null,
+            'detail' => 'Cerrada el 2 nov 2026: contestaron 0 de 0',
             'state' => 'done',
             'stage' => 2,
             'href' => route('tenant.campaigns.results', [$this->tenant, $this->closed->id]),
@@ -82,6 +85,28 @@ it('shows the six stages of the center, each with what it asks in plain words an
         ->where('urgencies', [])
         ->where('inspectionHref', route('tenant.nom035.inspection', [$this->tenant, $this->center->id])));
 });
+
+it('says with how many answers the evaluation closed, in the route and in the inspection', function (int $answered, int $invited): void {
+    foreach (range(1, $invited) as $index) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $this->closed->id])->id,
+            'instrument' => 'nom035.guide-ii',
+            ...($index <= $answered ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    $detail = "Cerrada el 2 nov 2026: contestaron {$answered} de {$invited}";
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.1.state', 'done')
+        ->where('rows.1.detail', $detail));
+    $this->get(route('tenant.nom035.inspection', [$this->tenant, $this->center->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('ready', fn ($rows): bool => collect($rows)->firstWhere('numeral', '7.1 y 7.9')['detail'] === $detail));
+})->with([
+    'half of them' => [10, 20],
+    'everyone' => [20, 20],
+]);
 
 it('puts first the people who wait to be channeled, only for whoever may see the Guía I', function (TenantRole $role, string $state, string $detail, int $urgencies): void {
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->closed->id, 'requires_clinical_assessment' => true]);

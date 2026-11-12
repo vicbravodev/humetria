@@ -16,6 +16,7 @@ final readonly class Nom035Facts
     /**
      * @param  'in_course'|'up_to_date'|'overdue'|'never'  $standing
      * @param  array{answered: int, target: int, daysLeft: int}|null  $running
+     * @param  array{closedOn: string|null, answered: int, target: int}|null  $closed  the latest evaluation closed within the cycle and who answered it (C-57)
      */
     public function __construct(
         public bool $policy,
@@ -28,5 +29,6 @@ final readonly class Nom035Facts
         public bool $shared,
         public ?string $program,
         public bool $reported,
+        public ?array $closed = null,
     ) {}
 }

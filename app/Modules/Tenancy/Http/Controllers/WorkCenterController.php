@@ -142,7 +142,7 @@ final class WorkCenterController extends Controller
      */
     private function evaluation(?EvaluationStanding $standing): ?array
     {
-        return $standing === null ? null : ['state' => $standing->state, 'day' => $standing->day];
+        return $standing === null ? null : ['state' => $standing->state, 'day' => $standing->day, 'answered' => $standing->answered, 'target' => $standing->target];
     }
 
     /**

@@ -67,7 +67,11 @@ export function evaluationStanding(
             variant: 'secondary',
             next: 'En preparación',
         },
-        due: { badge: 'Al día', variant: 'success', next: `Antes del ${day}` },
+        due: {
+            badge: dueBadge(evaluation),
+            variant: 'success',
+            next: `Antes del ${day}`,
+        },
         overdue: {
             badge: 'Evaluación vencida',
             variant: 'destructive',
@@ -76,4 +80,13 @@ export function evaluationStanding(
     };
 
     return standings[evaluation.state];
+}
+
+/** «Al día», and when not everyone answered the evaluation it closed with, how many did (C-57). */
+function dueBadge(evaluation: WorkCenterEvaluationStanding): string {
+    const { answered, target } = evaluation;
+
+    return answered !== null && target !== null && answered < target
+        ? `Al día · contestaron ${answered} de ${target}`
+        : 'Al día';
 }

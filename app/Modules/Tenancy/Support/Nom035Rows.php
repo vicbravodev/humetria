@@ -91,7 +91,10 @@ final readonly class Nom035Rows
         $title = 'Evaluación de los factores de riesgo, vigente';
 
         if ($facts->standing === 'up_to_date' && $evaluation !== null) {
-            return $this->row(2, '7.1 y 7.9', $title, null, 'manage-campaigns', route('tenant.campaigns.results', [$tenantSlug, $evaluation]), 'Ver resultados');
+            // Met, but never without saying with how many answers it closed (C-57).
+            $row = $this->row(2, '7.1 y 7.9', $title, null, 'manage-campaigns', route('tenant.campaigns.results', [$tenantSlug, $evaluation]), 'Ver resultados');
+
+            return $facts->closed === null ? $row : [...$row, 'detail' => "Cerrada el {$facts->closed['closedOn']}: contestaron {$facts->closed['answered']} de {$facts->closed['target']}"];
         }
 
         $detail = match (true) {

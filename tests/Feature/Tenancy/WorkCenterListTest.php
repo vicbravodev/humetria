@@ -207,7 +207,15 @@ it('says where each work center stands with its NOM-035 evaluations', function (
     Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['A En curso']->id, 'closed_at' => '2025-01-10 18:00:00']);
     Campaign::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['B Borrador']->id]);
     Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['C Al día']->id, 'closed_at' => '2024-02-01 18:00:00']);
-    Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['C Al día']->id, 'closed_at' => '2026-10-29 18:00:00']);
+    $answered = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['C Al día']->id, 'closed_at' => '2026-10-29 18:00:00']);
+    // Closed with 10 of the 20 invited having answered: «al día» says so (C-57).
+    foreach (range(1, 20) as $index) {
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create([
+            'participant_id' => App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $answered->id])->id,
+            'instrument' => 'nom035.guide-ii',
+            ...($index <= 10 ? ['status' => App\Modules\Campaigns\Enums\InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
     Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['D Vencida']->id, 'closed_at' => '2024-11-02 18:00:00']);
     Campaign::factory()->trauma()->create(['tenant_id' => $tenant->id, 'work_center_id' => $centers['E Sin evaluar']->id]);
 
@@ -215,10 +223,10 @@ it('says where each work center stands with its NOM-035 evaluations', function (
         ->get(route('tenant.work-centers.index', $tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->where('workCenters.data', fn ($rows): bool => collect($rows)->map(fn ($row): array => [$row['name'], $row['evaluation']])->all() === [
-                ['A En curso', ['state' => 'running', 'day' => '10 nov 2026']],
-                ['B Borrador', ['state' => 'draft', 'day' => null]],
-                ['C Al día', ['state' => 'due', 'day' => '29 oct 2028']],
-                ['D Vencida', ['state' => 'overdue', 'day' => '2 nov 2026']],
+                ['A En curso', ['state' => 'running', 'day' => '10 nov 2026', 'answered' => null, 'target' => null]],
+                ['B Borrador', ['state' => 'draft', 'day' => null, 'answered' => null, 'target' => null]],
+                ['C Al día', ['state' => 'due', 'day' => '29 oct 2028', 'answered' => 10, 'target' => 20]],
+                ['D Vencida', ['state' => 'overdue', 'day' => '2 nov 2026', 'answered' => null, 'target' => null]],
                 ['E Sin evaluar', null],
             ]));
 });
@@ -232,7 +240,7 @@ it('keeps saying the last evaluation is overdue while the next one is only a dra
 
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.work-centers.index', $tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('workCenters.data.0.evaluation', ['state' => 'overdue', 'day' => '2 nov 2026']));
+        ->assertInertia(fn (Assert $page) => $page->where('workCenters.data.0.evaluation', ['state' => 'overdue', 'day' => '2 nov 2026', 'answered' => null, 'target' => null]));
 });
 
 it('never reads the areas nor the evaluations of another company', function (): void {
