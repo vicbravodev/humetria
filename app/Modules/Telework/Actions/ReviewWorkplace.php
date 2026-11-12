@@ -8,12 +8,15 @@ use App\Actions\RecordAudit;
 use App\Modules\Telework\Enums\EvidenceKind;
 use App\Modules\Telework\Enums\ReviewDecision;
 use App\Modules\Telework\Enums\ReviewMethod;
+use App\Modules\Telework\Models\ChecklistAnswer;
 use App\Modules\Telework\Models\ChecklistApplication;
+use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Models\WorkplaceReview;
+use App\Modules\Telework\Support\AnswerRules;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +62,10 @@ final readonly class ReviewWorkplace
 
                 if ($method !== ReviewMethod::Checklist && $decision->validates()) {
                     $this->requireAnsweredList($workplace, $list);
+                }
+
+                if ($decision->validates() && $notes === '') {
+                    $this->requireNotesForUnfavorable($list);
                 }
 
                 $review = WorkplaceReview::query()->create([
@@ -133,6 +140,32 @@ final readonly class ReviewWorkplace
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * Validating a place whose list has unfavorable answers needs the Comisión's observation (criterio C-12: each result is
+     * recorded with its date, name and observations).
+     *
+     * @throws ValidationException
+     */
+    private function requireNotesForUnfavorable(?ChecklistApplication $list): void
+    {
+        if ($list === null) {
+            return;
+        }
+
+        $answers = ChecklistAnswer::query()->where('application_id', $list->id)->whereNotNull('answer')->get(['question_id', 'answer']);
+        $questions = ChecklistQuestion::query()->whereIn('id', $answers->pluck('question_id')->all())->get(['id', 'favorable'])->keyBy('id');
+        $count = 0;
+
+        foreach ($answers as $answer) {
+            $question = $questions->get($answer->question_id);
+            $count += $question !== null && $answer->answer !== null && AnswerRules::unfavorable($question->favorable, $answer->answer) ? 1 : 0;
+        }
+
+        if ($count > 0) {
+            throw ValidationException::withMessages(['notes' => "Escribe una observación: la lista tiene {$count} ".($count === 1 ? 'respuesta desfavorable.' : 'respuestas desfavorables.')]);
         }
     }
 
