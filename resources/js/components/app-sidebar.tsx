@@ -1,4 +1,12 @@
+import { useCallback } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import {
+    Briefcase,
+    Ear,
+    type LucideIcon,
+    ServerCog,
+    ShieldCheck,
+} from 'lucide-react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -11,13 +19,30 @@ import {
     SidebarHeader,
     SidebarMenu,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
+import { useCloseMenuOnVisit } from '@/hooks/use-close-menu-on-visit';
+import { useScrollEdges } from '@/hooks/use-scroll-edges';
+import type { NavSectionKey } from '@/lib/app-navigation';
 import { navSections } from '@/lib/nav-sections';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 
+/** The icon of each family of tools, beside its name. */
+const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
+    compliance: ShieldCheck,
+    listening: Ear,
+    operations: Briefcase,
+    platform: ServerCog,
+};
+
 export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
+    const nav = useScrollEdges<HTMLDivElement>();
+    const { setOpenMobile } = useSidebar();
+    useCloseMenuOnVisit(
+        useCallback(() => setOpenMobile(false), [setOpenMobile]),
+    );
     const sections = navSections({
         tenant,
         isStaff: auth.isStaff,
@@ -25,7 +50,11 @@ export function AppSidebar() {
     });
 
     return (
-        <Sidebar variant="inset" collapsible="icon">
+        <Sidebar
+            variant="inset"
+            collapsible="icon"
+            className="[view-transition-name:sidebar]"
+        >
             <SidebarHeader className="px-3 pt-4 pb-4">
                 <Link
                     href={
@@ -56,7 +85,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="gap-4 px-1">
+            {/* No scrollbar: the list fades where it continues. On a short screen the rows tighten so it fits more often. */}
+            <SidebarContent
+                ref={nav}
+                className="scroll-fade gap-4 px-1 [@media(min-width:768px)_and_(max-height:900px)]:gap-2 [@media(min-width:768px)_and_(max-height:900px)]:[&_[data-sidebar=menu-button]]:h-9"
+            >
                 {/* The company's own pages go without a heading; each family of tools under its name. */}
                 {sections.map((section) =>
                     section.key === 'main' ? (
@@ -65,6 +98,11 @@ export function AppSidebar() {
                         <NavMain
                             key={section.label}
                             label={section.label}
+                            icon={
+                                section.key === undefined
+                                    ? undefined
+                                    : familyIcons[section.key]
+                            }
                             items={section.items}
                         />
                     ),

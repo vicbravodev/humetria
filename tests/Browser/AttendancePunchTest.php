@@ -61,7 +61,7 @@ it('marks the entry inside the zone with the QR, and shows the day and the next 
     $page = phoneAtThePunchScreen($dark);
     standingAt($page, 19.4327, -99.1332);
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->assertSee('Evidencia fuerte: QR y ubicación')
         ->assertSee('Su día')
@@ -91,7 +91,7 @@ it('shows each test while the mark is checked, so the person sees it pass', func
     // The server answers slowly, as on a bad connection.
     $page->script('() => { const real = window.fetch; window.fetch = (url, init) => String(url).endsWith("/punch") ? new Promise((resolve) => setTimeout(() => resolve(real(url, init)), 2500)) : real(url, init); }');
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('Comprobando el código y la zona')
         ->assertSee('Verificando')
         ->assertSee('Leyendo su ubicación')
@@ -108,7 +108,7 @@ it('blocks the mark outside the zone and says what happened and what to do', fun
     $page = phoneAtThePunchScreen();
     standingAt($page, 19.4336, -99.1332);
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('Está fuera de la zona')
         ->assertSee('Acérquese a su centro de trabajo')
         ->assertSee('pida a Recursos Humanos una corrección')
@@ -130,7 +130,7 @@ it('blocks the mark outside the zone and says what happened and what to do', fun
 it('asks for the location when the person does not allow it', function (): void {
     $page = phoneAtThePunchScreen();
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('No tenemos su ubicación')
         ->assertSee('Permita la ubicación para este sitio')
         ->assertDontSee('Puede marcar sin ubicación')
@@ -159,7 +159,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Marcar entrada')
-        ->press('Marcar entrada')
+        ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')
         ->waitForText('Está trabajando')
@@ -178,12 +178,12 @@ it('shows Bob his own name and steps when he marks on the phone that remembers A
     $page = bobOnAnasPhone();
 
     // Bob taps the step offered to Ana: rejected, the screen now speaks to him and offers every step.
-    $page->press('Salir a comer')
+    $page->press('button:has-text("Salir a comer")')
         ->waitForText('Primero marque su entrada.')
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Bob")', true)
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->assertSee('Marcar entrada')
-        ->press('Marcar entrada')
+        ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->press('Listo')
@@ -204,7 +204,7 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
         ->waitForText('Marcar su jornada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->assertSee('¿Aún no vincula este teléfono?')
-        ->press('Marcar entrada')
+        ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')
         ->waitForText('Está trabajando')

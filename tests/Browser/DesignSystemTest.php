@@ -42,18 +42,18 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
 
     visitPage('dashboard', $panel, $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
         if ($mobile) {
-            // On mobile the sidebar is an off-canvas sheet: open it and let it finish sliding in.
-            $page->click('[data-sidebar="trigger"]')
+            // On mobile the sidebar is an off-canvas sheet, opened from «Más»: open it and let it finish sliding in.
+            $page->click('nav[aria-label="Menú principal"] button:has-text("Más")')
                 ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => document.querySelector(\'[data-mobile="true"][data-state="open"]\') !== null)');
         }
     })->assertVisible(VISIBLE_LOGO);
 })->with($looks);
 
-it('gives the mobile menu button a 44 px touch target', function (bool $dark): void {
+it('gives every tab of the phone\'s menu, «Más» included, a 44 px touch target', function (bool $dark): void {
     $panel = signInToPanel();
 
     visitPage('dashboard', $panel, $dark, true)
-        ->assertScript('() => { const box = document.querySelector(\'[data-sidebar="trigger"]\').getBoundingClientRect(); return box.width >= 44 && box.height >= 44; }');
+        ->assertScript('() => [...document.querySelectorAll(\'nav[aria-label="Menú principal"] :is(a, button)\')].every((tab) => { const box = tab.getBoundingClientRect(); return box.width >= 44 && box.height >= 44; })');
 })->with(['light' => false, 'dark' => true]);
 
 // On a phone only the page's own name shows: the arrows go with the places before it.
@@ -85,8 +85,9 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
-        // Group label (Plataforma, the only one left to a superadmin) as a caption: 13 px in capitals (sidebar con submenú); items of 44 px at 16 px with 20 px icons (a submenu's chevron is 16 px).
-        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "uppercase" && label.fontSize === "13px"; }')
+        // A family of tools (Plataforma, the only one left to a superadmin) folds, and is the parent of its tools: a 44 px row at
+        // 16 px in semibold, in sentence case; items of 44 px at 16 px with 20 px icons (a submenu's chevron is 16 px).
+        ->assertScript('() => { const family = document.querySelector(\'[data-sidebar="group-label"]\'); const label = getComputedStyle(family); return label.textTransform === "none" && label.fontSize === "16px" && label.fontWeight === "600" && family.getBoundingClientRect().height >= 44; }')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => button.getBoundingClientRect().height >= 44 && getComputedStyle(button).fontSize === "16px")')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] > svg:first-child\')].every((icon) => icon.getBoundingClientRect().width === 20)')
         // Active item: a card (card fill, 500) with its icon in sidebar-primary (pantallas: Panel).
@@ -128,7 +129,7 @@ it('opens an entry into its submenu as the sidebar design draws it', function (b
 
     visitPage('telework/index', '/admin/acme/telework', $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
         if ($mobile) {
-            $page->click('[data-sidebar="trigger"]')->assertScript(SETTLED);
+            $page->click('nav[aria-label="Menú principal"] button:has-text("Más")')->assertScript(SETTLED);
         }
     })->assertScript(SUBMENU);
 })->with($looks);
@@ -286,6 +287,7 @@ it('moves with the design system motion', function (): void {
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).transitionTimingFunction.includes("cubic-bezier(0.23, 1, 0.32, 1)")')
         // Moving to another page cross-fades it through the View Transitions API.
         ->assertScript('() => { window.transitions = 0; const start = document.startViewTransition.bind(document); document.startViewTransition = (update) => { window.transitions++; return start(update); }; return true; }')
+        ->click('Plataforma')
         ->click('Empresas')
         ->assertPathIs('/admin/companies')
         ->assertScript('() => window.transitions', 1);

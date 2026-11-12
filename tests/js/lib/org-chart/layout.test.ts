@@ -120,6 +120,11 @@ describe('layoutGraph, stacks', () => {
         expect(where('a1').y).toBe(where('a').y + 72 + RANK_GAP);
     });
 
+    it('starts a short column right under its manager, not halfway down a taller one beside it', () => {
+        expect(where('b1').y).toBe(where('b').y + 72 + RANK_GAP);
+        expect(where('b1').y).toBe(where('a1').y);
+    });
+
     it('reserves the whole column of each manager, so two stacks side by side do not overlap', () => {
         const [first, second] = [where('a1'), where('b1')].toSorted(
             (left, right) => left.x - right.x,

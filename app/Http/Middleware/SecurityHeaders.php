@@ -28,6 +28,15 @@ final class SecurityHeaders
     private const string SONNER_STYLES = "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='";
 
     /**
+     * The map of a zone (Asistencia, zone-picker-map.tsx) paints OpenStreetMap's raster tiles: images only, from this
+     * one origin, and only in the signed-in panel (`/admin`): the public pages and the phone's screens keep no outside
+     * origin. The whole panel gets it because Inertia moves between its pages without reloading, so the policy is the
+     * one of the page the person came in by. Address search goes through our own server (PlaceController), so
+     * connect-src stays 'self'.
+     */
+    private const string MAP_TILES = 'https://tile.openstreetmap.org';
+
+    /**
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
@@ -38,7 +47,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $headers = [
-            'Content-Security-Policy' => $this->policy($nonce, $devServer),
+            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request)),
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
@@ -74,7 +83,12 @@ final class SecurityHeaders
             && $response->exception !== null;
     }
 
-    private function policy(string $nonce, string $devServer): string
+    private function paintsMaps(Request $request): bool
+    {
+        return $request->user() !== null && $request->is('admin', 'admin/*');
+    }
+
+    private function policy(string $nonce, string $devServer, bool $maps): string
     {
         $socket = $devServer === '' ? '' : ' '.preg_replace('/^http/', 'ws', $devServer);
         $devServer = $devServer === '' ? '' : ' '.$devServer;
@@ -83,7 +97,7 @@ final class SecurityHeaders
             "default-src 'self'",
             "script-src 'self' 'nonce-{$nonce}'{$devServer}",
             "style-src 'self' 'nonce-{$nonce}' ".self::SONNER_STYLES.$devServer,
-            "img-src 'self' data:{$devServer}",
+            "img-src 'self' data:".($maps ? ' '.self::MAP_TILES : '').$devServer,
             "font-src 'self'{$devServer}",
             "connect-src 'self'{$devServer}{$socket}",
             "object-src 'none'",

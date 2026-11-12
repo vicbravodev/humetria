@@ -25,7 +25,8 @@ import { cn } from "@/lib/utils"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16.5rem"
+// Wide enough for a family of tools in semibold, with its icon, its count and its chevron ("Ordena tu operación").
+const SIDEBAR_WIDTH = "17.5rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "4.125rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -187,7 +188,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className={cn("bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden", className)}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

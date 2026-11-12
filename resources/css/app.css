@@ -251,6 +251,36 @@
 }
 
 /*
+ * A list that scrolls inside a fixed frame (the sidebar's navigation) without a native scrollbar: an edge fades only
+ * while there is more to scroll that way (`data-more-above`/`data-more-below`, set by hooks/use-scroll-edges.ts). Wheel,
+ * touch and keyboard still scroll it.
+ */
+@utility scroll-fade {
+    --fade-top: 0px;
+    --fade-bottom: 0px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--fade-top),
+        black calc(100% - var(--fade-bottom)),
+        transparent
+    );
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    &[data-more-above] {
+        --fade-top: 32px;
+    }
+
+    &[data-more-below] {
+        --fade-bottom: 40px;
+    }
+}
+
+/*
  * Page changes (lib/page-transition.ts): the sidebar stays put and only the panel's content cross-fades,
  * the new page rising 4 px. Fast exit, slightly longer entry.
  */
@@ -264,6 +294,28 @@
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
+    animation: none;
+}
+
+/*
+ * The frame around the content is made of layers of its own: the sidebar (on a phone, its sheet and veil) and the top bar
+ * (app-sidebar.tsx, app-sidebar-layout.tsx), the phone's menu bar and Humi (mobile-tab-bar.tsx, humi-launcher.tsx). The content's layer is
+ * painted above the page and is not clipped by its frame, so without them a tall or wide page would cover them while it
+ * cross-fades. They show their new, live state at once, so the bar's chip glides in place instead of blending two places.
+ */
+::view-transition-old(sidebar),
+::view-transition-old(sheet-overlay),
+::view-transition-old(top-bar),
+::view-transition-old(tab-bar),
+::view-transition-old(humi) {
+    display: none;
+}
+
+::view-transition-new(sidebar),
+::view-transition-new(sheet-overlay),
+::view-transition-new(top-bar),
+::view-transition-new(tab-bar),
+::view-transition-new(humi) {
     animation: none;
 }
 
@@ -302,6 +354,26 @@ html:has([data-smooth-scroll]) {
         --tw-enter-translate-y: 0 !important;
         --tw-exit-translate-x: 0 !important;
         --tw-exit-translate-y: 0 !important;
+    }
+}
+
+/*
+ * What unfolds in the sidebar (a family of tools, a tool's pages): it grows to its height and back with the strong ease-out,
+ * instead of popping in. With reduced motion it just appears.
+ */
+@utility unfold {
+    overflow: hidden;
+
+    &[data-state='open'] {
+        animation: 200ms var(--ease-out) collapsible-down;
+    }
+
+    &[data-state='closed'] {
+        animation: 150ms var(--ease-out) collapsible-up;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none !important;
     }
 }
 
@@ -648,4 +720,41 @@ html:has([data-smooth-scroll]) {
     .org-tree [data-slot='org-node'] {
         break-inside: avoid;
     }
+}
+
+/*
+ * The map of a zone (zone-picker-map.tsx): Leaflet's own controls in the design system's colors, and OpenStreetMap's
+ * light tiles turned dark in the dark theme (there is no dark style of them).
+ */
+.zone-picker-map.leaflet-container {
+    background-color: var(--color-muted);
+    font: inherit;
+}
+
+.zone-picker-map .leaflet-bar {
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+}
+
+.zone-picker-map .leaflet-bar a {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-color: var(--color-border);
+    background-color: var(--color-card);
+    color: var(--color-foreground);
+}
+
+.zone-picker-map .leaflet-bar a:hover {
+    background-color: var(--color-muted);
+}
+
+.zone-picker-map .leaflet-control-attribution {
+    background-color: color-mix(in oklab, var(--color-card) 85%, transparent);
+    color: var(--color-muted-foreground);
+}
+
+.dark .zone-picker-map .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9)
+        saturate(0.6);
 }

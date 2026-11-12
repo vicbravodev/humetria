@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import type { RouteFormDefinition } from '@/wayfinder';
 
 type Errors = Partial<Record<string, string>>;
@@ -26,6 +27,7 @@ export default function FormDialog({
     form,
     submit,
     tone = 'default',
+    wide = false,
     children,
 }: {
     open: boolean;
@@ -35,11 +37,18 @@ export default function FormDialog({
     form: RouteFormDefinition<'post'>;
     submit: string;
     tone?: 'default' | 'destructive';
+    /** For a form that needs room beside its fields (a map): wider from the tablet up. */
+    wide?: boolean;
     children: (errors: Errors) => ReactNode;
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
+            <DialogContent
+                className={cn(
+                    'max-h-[90svh] overflow-y-auto',
+                    wide ? 'sm:max-w-lg md:max-w-4xl' : 'sm:max-w-lg',
+                )}
+            >
                 <DialogTitle>{title}</DialogTitle>
                 <DialogDescription>{description}</DialogDescription>
                 <Form

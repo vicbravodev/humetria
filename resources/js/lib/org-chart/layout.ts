@@ -69,13 +69,16 @@ export function layoutGraph(
         }
     }
 
+    // dagre centers each node in its row, and a row is as tall as its tallest column: a short column would start halfway
+    // down a long one beside it. Each column starts right under its manager instead; dagre still reserved its width.
     columns.forEach((cards, manager) => {
-        const left = places.get(String(manager))?.x ?? 0;
-        const column = graph.node(`column:${manager}`);
-        let y = column.y - column.height / 2;
+        const head = places.get(String(manager)) ?? { x: 0, y: 0 };
+        const headHeight =
+            nodes.find(({ id }) => id === String(manager))?.height ?? 0;
+        let y = head.y + headHeight + RANK_GAP;
 
         for (const card of cards) {
-            places.set(card.id, { x: left + STACK_INDENT, y });
+            places.set(card.id, { x: head.x + STACK_INDENT, y });
             y += card.height + STACK_GAP;
         }
     });

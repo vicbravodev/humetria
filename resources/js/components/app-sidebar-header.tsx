@@ -28,12 +28,12 @@ export function AppSidebarHeader({
             data-slot="app-topbar"
             data-scrolled={scrolled}
             // Stays at the top while the page scrolls; a divider shows once content passes under it.
-            className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-transparent bg-background px-2 transition-[border-color] duration-200 ease-out data-[scrolled=true]:border-border md:rounded-t-xl md:px-4"
+            className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-transparent bg-background px-4 transition-[border-color] duration-200 ease-out data-[scrolled=true]:border-border md:rounded-t-xl md:px-4"
         >
             <div className="flex min-w-0 items-center gap-2">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <SidebarTrigger className="shrink-0 text-muted-foreground hover:text-foreground" />
+                        <SidebarTrigger className="shrink-0 text-muted-foreground hover:text-foreground max-md:hidden" />
                     </TooltipTrigger>
                     <TooltipContent side="bottom" hidden={isMobile}>
                         {hint}

@@ -9,6 +9,7 @@ import { useCorrectionFilters } from '@/hooks/use-correction-filters';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { correctionsQuery } from '@/lib/attendance/corrections';
 import { index } from '@/routes/tenant/attendance/corrections';
+import { cn } from '@/lib/utils';
 import type {
     CorrectionCounts,
     CorrectionDetail as Detail,
@@ -87,7 +88,14 @@ export default function Corrections({
                         className="w-full sm:max-w-[320px]"
                     />
                 </div>
-                <div className="grid items-start gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
+                {/* The list beside the request in view; with none to show, the empty queue takes the whole width. */}
+                <div
+                    className={cn(
+                        'grid items-start gap-5',
+                        requests.data.length > 0 &&
+                            'lg:grid-cols-[380px_minmax(0,1fr)]',
+                    )}
+                >
                     <CorrectionList
                         counts={counts}
                         requests={requests}

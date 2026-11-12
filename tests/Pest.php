@@ -41,6 +41,10 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature', 'Browser');
 
+// Each CI runner drives four browsers at once: an action that waits for a button or a page gets 15 s instead of Pest's 5 s,
+// which a busy runner ran out of now and then (a click, a calendar day). It waits longer, it asserts nothing less.
+pest()->browser()->timeout(15_000);
+
 /*
 |--------------------------------------------------------------------------
 | Functions

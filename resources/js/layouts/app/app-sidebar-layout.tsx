@@ -19,7 +19,7 @@ export default function AppSidebarLayout({
             <AppSidebar />
             <AppContent className="min-w-0 overflow-x-clip">
                 {/* One sticky block, so the top bar stays under the banner instead of sliding beneath it. */}
-                <div className="sticky top-0 z-20 md:overflow-clip md:rounded-t-xl print:hidden">
+                <div className="sticky top-0 z-20 [view-transition-name:top-bar] md:overflow-clip md:rounded-t-xl print:hidden">
                     <ImpersonationBanner />
                     <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 </div>
@@ -27,7 +27,7 @@ export default function AppSidebarLayout({
                 {/* The page's width: it fills the frame up to 1440 px and is centered beyond that (design-system.md, Layout). */}
                 <div
                     data-slot="page-body"
-                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-16 [view-transition-name:page] md:pb-0"
+                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-24 [view-transition-name:page] md:pb-0"
                 >
                     <CompanyReadOnlyNotice />
                     {children}

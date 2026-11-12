@@ -90,6 +90,7 @@ it('takes RH from the sidebar to the report, a center and its days, with the CSV
     [$url, $plant] = reportPanel();
 
     visit($url)
+        ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
         ->click('[data-sidebar="sidebar"] >> text=Reporte para la autoridad')
         ->waitForText('Elige un centro de trabajo')

@@ -94,12 +94,28 @@ it('drops the side column below the content under 1240 px', function (): void {
 });
 
 it('counts the evaluations in course in the sidebar and tells when the next one closes, until it folds', function (): void {
+    // NOM-035's count shows on its family while the family is folded.
     visitPage('dashboard', panelCompany())
-        ->assertSeeIn('[data-sidebar="menu-badge"]', '1')
+        ->assertSeeIn('[data-sidebar="group-badge"]', '1')
         ->assertSeeIn('[data-test="next-obligation"]', 'La próxima evaluación cierra en 11 días')
         ->click('[data-sidebar="trigger"]')
         ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-test="next-obligation"]\')).display', 'none');
+});
+
+it('scrolls the sidebar on a short screen without a scrollbar, fading the edge that has more', function (): void {
+    $page = visitPage('dashboard', panelCompany());
+    $nav = 'document.querySelector(\'[data-sidebar="content"]\')';
+    $state = "() => [getComputedStyle({$nav}).scrollbarWidth, {$nav}.hasAttribute('data-more-above'), {$nav}.hasAttribute('data-more-below')].join(' ')";
+
+    // Every family open, so the list is longer than the screen.
+    $page->click('Cumple la norma')->click('Escucha a tu gente')->click('Ordena tu operación');
+
+    resizeTo($page, 1440, 560)->assertScript("() => {$nav}.scrollHeight > {$nav}.clientHeight", true)
+        ->assertScript($state, 'none false true');
+    $page->assertScript("() => { {$nav}.scrollTop = {$nav}.scrollHeight; return new Promise((resolve) => requestAnimationFrame(() => resolve(true))); }", true)
+        ->assertScript($state, 'none true false');
+    resizeTo($page, 1440, 1400)->assertScript($state, 'none false false');
 });
 
 it('shows no next obligation without an evaluation in course', function (): void {
@@ -159,11 +175,22 @@ it('fills the width up to 1440 px and centers the page beyond it', function (boo
 it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', function (): void {
     $page = visit(panelCompany())->on()->mobile();
 
+    $chip = '() => document.querySelector(\'nav[aria-label="Menú principal"] [data-chip="current"]\')?.parentElement.textContent';
+
     $page->assertSeeIn('nav[aria-label="Menú principal"]', 'Panel')
         ->assertSeeIn('nav[aria-label="Menú principal"]', 'Quejas')
+        // «Más» opens the whole menu, so the top bar carries no second menu button.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).display', 'none')
+        // A bar of frosted glass over the page, with a chip under the tab of where the person is.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).backdropFilter.includes("blur")', true)
+        ->assertScript($chip, 'Panel')
+        // Moving to another page cross-fades only its content: the bar and Humi are their own layers, so the content never covers them.
+        ->assertScript('() => [getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).viewTransitionName, getComputedStyle(document.querySelector(\'button[aria-label="Abrir a Humi"]\')).viewTransitionName].join(" ")', 'tab-bar humi')
         ->click('Normas')
         ->click('[role="menu"] a[href$="/seating"]')
         ->assertPathIs('/admin/acme/seating')
+        // Ley Silla is one of the standards: the chip glides to Normas.
+        ->assertScript($chip, 'Normas')
         ->click('Más')
         ->assertSeeIn('[data-mobile="true"]', 'Centros de trabajo')
         ->assertNoJavaScriptErrors();
@@ -171,8 +198,56 @@ it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', f
 
 it('groups the sidebar by the families of tools the landing offers', function (): void {
     visit(panelCompany())
-        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Ordena tu operación')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.querySelector("span").textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Ordena tu operación')
+        // Every family's name reads whole, with its count beside it.
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"] span:first-of-type\')].every((name) => name.scrollWidth <= name.clientWidth)', true)
+        // Each family is told by its icon too, besides the chevron that folds it.
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.querySelectorAll("svg").length).join(" ")', '2 2 2')
+        ->click('Cumple la norma')
         ->assertSeeIn('[data-sidebar="sidebar"]', 'Ley Silla')
+        ->assertNoJavaScriptErrors();
+});
+
+it('folds every family of tools until it is opened, and opens on arriving the one of the page', function (): void {
+    $sidebar = 'document.querySelector(\'[data-sidebar="sidebar"]\')';
+    $page = visit(panelCompany())
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.getAttribute("aria-expanded")).join(" ")', 'false false false')
+        ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", false)
+        ->click('Cumple la norma')
+        // It unfolds, it does not pop: its tools grow in with the design system's ease-out.
+        ->assertScript('() => document.querySelector(\'[data-sidebar="group"] [data-slot="collapsible-content"][data-state="open"]\').getAnimations().some((animation) => animation.animationName === "collapsible-down")', true)
+        ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", true)
+        // The family is the parent: as big as its tools and bolder, and its tools hang indented under it.
+        ->assertScript('() => { const family = document.querySelector(\'[data-sidebar="group-label"][aria-expanded="true"]\'); const tool = family.closest(\'[data-sidebar="group"]\').querySelector(\'[data-sidebar="menu-button"]\'); const [f, t] = [getComputedStyle(family), getComputedStyle(tool)]; return parseFloat(f.fontSize) >= parseFloat(t.fontSize) && Number(f.fontWeight) > Number(t.fontWeight) && tool.getBoundingClientRect().left > family.getBoundingClientRect().left; }', true)
+        // Open, the count goes back to NOM-035 itself.
+        ->assertMissing('[data-sidebar="group-badge"]')
+        ->assertSeeIn('[data-sidebar="menu-badge"]', '1')
+        ->click('Cumple la norma')
+        ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", false);
+
+    $page->navigate('/admin/acme/seating')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.getAttribute("aria-expanded")).join(" ")', 'true false false')
+        ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the sidebar and the top bar above the content while a new page cross-fades in', function (): void {
+    // The content's layer is painted above the page during the cross-fade; the frame around it has layers of its own, so a
+    // tall or wide page never covers the sidebar or the top bar on its way out.
+    visit(panelCompany())
+        ->assertScript('() => [getComputedStyle(document.querySelector(\'[data-sidebar="sidebar"]\').parentElement).viewTransitionName, getComputedStyle(document.querySelector(\'[data-slot="app-topbar"]\').parentElement).viewTransitionName].join(" ")', 'sidebar top-bar');
+});
+
+it('closes the phone\'s whole menu on the way to the page picked in it, sliding out above the page that comes in', function (): void {
+    $sheet = 'document.querySelector(\'[data-mobile="true"]\')';
+
+    visit(panelCompany())->on()->mobile()
+        ->click('nav[aria-label="Menú principal"] button:has-text("Más")')
+        // The menu and its veil are layers of their own, so the page fading in never paints over them while they leave.
+        ->assertScript("() => [getComputedStyle({$sheet}).viewTransitionName, getComputedStyle(document.querySelector('[data-slot=\"sheet-overlay\"]')).viewTransitionName].join(' ')", 'sidebar sheet-overlay')
+        ->click('[data-mobile="true"] >> text=Centros de trabajo')
+        ->assertPathIs('/admin/acme/work-centers')
+        ->assertScript("() => new Promise((resolve) => setTimeout(() => resolve({$sheet} === null), 600))", true)
         ->assertNoJavaScriptErrors();
 });
 

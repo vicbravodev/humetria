@@ -1,5 +1,6 @@
 import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
 import { listeningNavItems } from '@/lib/tool-navigation';
+import { toUrl } from '@/lib/utils';
 import type { NavItem, NavTenant } from '@/types';
 
 export type MobileTab =
@@ -42,4 +43,34 @@ export function mobileTabs(
     }
 
     return [...tabs, { key: 'more', title: 'Más' }];
+}
+
+/**
+ * The tab of the page the person is on, so the bar always shows where they are: Panel on the panel itself, Normas on any of
+ * its standards (or a page below one), Quejas on its cases, and Más on anything else the whole menu holds.
+ */
+export function currentTab(
+    tabs: MobileTab[],
+    isCurrentUrl: (url: string) => boolean,
+    isCurrentOrParentUrl: (url: string) => boolean,
+): MobileTab['key'] {
+    const within = (item: NavItem): boolean =>
+        isCurrentOrParentUrl(toUrl(item.href)) ||
+        (item.children ?? []).some((child) =>
+            isCurrentOrParentUrl(toUrl(child.href)),
+        );
+    const current = tabs.find((tab) => {
+        switch (tab.key) {
+            case 'panel':
+                return isCurrentUrl(toUrl(tab.item.href));
+            case 'complaints':
+                return within(tab.item);
+            case 'compliance':
+                return tab.items.some(within);
+            default:
+                return false;
+        }
+    });
+
+    return current?.key ?? 'more';
 }

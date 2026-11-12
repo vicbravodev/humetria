@@ -433,6 +433,7 @@ return [
         'latitude' => 'latitud',
         'longitude' => 'longitud',
         'radius_m' => 'radio',
+        'address' => 'dirección',
         'neighborhood' => 'colonia',
         'no_standing_positions' => 'sin puestos en bipedestación',
         'has_teleworkers' => 'alguien teletrabaja',
