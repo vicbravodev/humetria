@@ -77,7 +77,7 @@ final class HandleInertiaRequests extends Middleware
             return null;
         }
 
-        return app(FirstSteps::class)->forUser($user->id)?->toArray();
+        return app(FirstSteps::class)->forUser($user->id, impersonated: app(Impersonation::class)->isActive())?->toArray();
     }
 
     private function seesNom035(): bool

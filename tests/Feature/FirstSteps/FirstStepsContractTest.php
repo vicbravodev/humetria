@@ -120,6 +120,28 @@ it('gives the finished steps once to an owner who was following them, then null'
         ->and(tourFor($this->tenant, $this->owner))->toBeNull();
 });
 
+it('writes nothing while impersonated, and gives what it would have given', function (): void {
+    finishEverything($this->tenant, $this->owner);
+    FirstStepsState::factory()->welcomed()->create(['tenant_id' => $this->tenant->id, 'user_id' => $this->owner->id]);
+    Log::spy();
+    workIn($this->tenant);
+
+    $tour = resolve(FirstSteps::class)->forUser($this->owner->id, impersonated: true);
+
+    expect($tour?->allDone())->toBeTrue()
+        ->and(FirstStepsState::query()->withoutGlobalScopes()->sole()->completed_at)->toBeNull();
+    Log::shouldNotHaveReceived('info', ['first_steps.completed', Mockery::any()]);
+});
+
+it('is null while impersonated when everything is done and the owner had hidden them, still writing nothing', function (): void {
+    finishEverything($this->tenant, $this->owner);
+    FirstStepsState::factory()->hidden()->create(['tenant_id' => $this->tenant->id, 'user_id' => $this->owner->id]);
+    workIn($this->tenant);
+
+    expect(resolve(FirstSteps::class)->forUser($this->owner->id, impersonated: true))->toBeNull()
+        ->and(FirstStepsState::query()->withoutGlobalScopes()->sole()->completed_at)->toBeNull();
+});
+
 it('is null at once when everything is done and the owner had hidden them', function (): void {
     finishEverything($this->tenant, $this->owner);
     FirstStepsState::factory()->hidden()->create(['tenant_id' => $this->tenant->id, 'user_id' => $this->owner->id]);

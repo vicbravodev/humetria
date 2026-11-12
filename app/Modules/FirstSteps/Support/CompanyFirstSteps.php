@@ -23,7 +23,7 @@ final readonly class CompanyFirstSteps implements FirstSteps
         private CompleteFirstSteps $complete,
     ) {}
 
-    public function forUser(int $userId): ?FirstStepsData
+    public function forUser(int $userId, bool $impersonated = false): ?FirstStepsData
     {
         if (config('first_steps.enabled') !== true) {
             return null;
@@ -51,7 +51,9 @@ final readonly class CompanyFirstSteps implements FirstSteps
             return $steps->withState($welcomed, $hidden);
         }
 
-        $this->complete->handle($this->tenant->id(), $userId);
+        if (! $impersonated) {
+            $this->complete->handle($this->tenant->id(), $userId);
+        }
 
         // Only who was following the steps sees them finished, once.
         return $welcomed && ! $hidden ? $steps->withState($welcomed, $hidden) : null;

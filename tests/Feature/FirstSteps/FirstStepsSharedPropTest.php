@@ -118,3 +118,18 @@ it('costs the same queries with one work center and with thirty', function (): v
 
     expect($one)->toBe(FIRST_STEPS_QUERIES)->and($thirty)->toBe(FIRST_STEPS_QUERIES);
 });
+
+it('does not write completed_at on a page a superadmin opens as the owner', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now());
+    TenantAiSettings::factory()->create(['tenant_id' => $this->tenant->id, 'enabled' => false]);
+    $center = WorkCenter::factory()->create(['tenant_id' => $this->tenant->id]);
+    Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+    memberOf($this->tenant, TenantRole::Hr);
+    FirstStepsState::factory()->welcomed()->create(['tenant_id' => $this->tenant->id, 'user_id' => $this->owner->id]);
+
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant));
+    $this->get(route('tenant.members.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('firstSteps.steps.0.done', true));
+
+    expect(FirstStepsState::query()->withoutGlobalScopes()->sole()->completed_at)->toBeNull();
+});
