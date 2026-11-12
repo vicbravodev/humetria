@@ -7,7 +7,7 @@ import { index, quality } from '@/routes/tenant/org-chart';
 import { cn } from '@/lib/utils';
 
 const LINK =
-    'relative inline-flex h-[38px] items-center gap-2 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+    'relative inline-flex h-[38px] items-center justify-center gap-2 max-sm:flex-1 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 /** Organigrama | Lista: the same people drawn as a chart, or as the table that is also the accessible view. */
 export default function OrgViewSwitch({
@@ -34,7 +34,7 @@ export default function OrgViewSwitch({
     return (
         <nav
             aria-label="Vista del organigrama"
-            className="inline-flex max-w-full gap-0.5 rounded-[10px] border bg-muted p-[3px] print:hidden"
+            className="inline-flex max-w-full gap-0.5 rounded-[10px] border bg-muted p-[3px] max-sm:w-full print:hidden"
         >
             {views.map(({ key, label, icon: Icon, href }) => (
                 <Link

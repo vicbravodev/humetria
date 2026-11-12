@@ -1,3 +1,4 @@
+import { ArrowUp } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import OrgMiniPerson from '@/components/organization/org-mini-person';
@@ -83,6 +84,19 @@ export default function OrgMobileChart({
                                 onSelect={go}
                             />
                         </section>
+                    )}
+                    {panel.manager !== null && (
+                        // The line that says the card below reports to the one above.
+                        <div
+                            aria-hidden
+                            className="-my-2 ml-6 flex flex-col items-center self-start"
+                        >
+                            <span className="h-3 border-l-2 border-primary" />
+                            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                <ArrowUp className="size-3.5" />
+                            </span>
+                            <span className="h-3 border-l-2 border-primary" />
+                        </div>
                     )}
                     <OrgMobilePerson node={panel.node} />
                     {panel.node.direct_reports > 0 && (

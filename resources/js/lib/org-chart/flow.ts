@@ -44,8 +44,8 @@ function flowNode(
     const place = {
         id: view.id,
         position: at,
-        initialWidth: view.width,
-        initialHeight: view.height,
+        // The size is known (the cards are fixed): a card handed over again is not measured again.
+        measured: { width: view.width, height: view.height },
         ...FLAGS,
     };
     const { data } = view;
@@ -124,4 +124,33 @@ export function toFlow(
             }),
         ),
     };
+}
+
+/**
+ * The cards while one is being dragged: the dragged one where the pointer has it and the one under it saying what a drop
+ * would do. Every other card is the very same object, so the canvas touches only those two on each move.
+ */
+export function applyDrag(
+    nodes: FlowNode[],
+    where: {
+        dragging: { id: string; x: number; y: number } | null;
+        drop: { id: string; tone: DropTone } | null;
+    },
+): FlowNode[] {
+    if (where.dragging === null && where.drop === null) {
+        return nodes;
+    }
+
+    return nodes.map((node) => {
+        if (where.dragging?.id === node.id) {
+            return {
+                ...node,
+                position: { x: where.dragging.x, y: where.dragging.y },
+            };
+        }
+
+        return where.drop?.id === node.id && node.type === 'person'
+            ? { ...node, data: { ...node.data, drop: where.drop.tone } }
+            : node;
+    });
 }

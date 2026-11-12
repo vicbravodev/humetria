@@ -39,7 +39,10 @@ export default function OrgMobileCrumbs({
                                     onClick={() => onGo(crumb.id)}
                                     className="relative inline-flex min-h-11 items-center text-primary before:absolute before:-inset-x-1 before:inset-y-0 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                 >
-                                    {crumb.label}
+                                    {crumb.label
+                                        .split(' ')
+                                        .slice(0, 2)
+                                        .join(' ')}
                                 </button>
                             )}
                         </li>

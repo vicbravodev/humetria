@@ -8,7 +8,7 @@ import { boundsOf } from '@/lib/org-chart/camera';
 import { ancestorsOf } from '@/lib/org-chart/chart-state';
 import type { ChartInit } from '@/lib/org-chart/chart-state';
 import { chartGraph } from '@/lib/org-chart/chart-view';
-import { toFlow } from '@/lib/org-chart/flow';
+import { applyDrag, toFlow } from '@/lib/org-chart/flow';
 import type { CameraRequest } from '@/lib/org-chart/flow';
 import { orgChartQuery } from '@/lib/org-chart/labels';
 import { layoutGraph } from '@/lib/org-chart/layout';
@@ -71,14 +71,19 @@ export function useOrgWorkspace({
         enabled: editor.editing,
         version: editor.version,
     });
+    const base = useMemo(
+        () => toFlow(graph, { positions, dragging: null, drop: null }),
+        [graph, positions],
+    );
     const flow = useMemo(
-        () =>
-            toFlow(graph, {
-                positions,
+        () => ({
+            nodes: applyDrag(base.nodes, {
                 dragging: drag.dragging,
                 drop: drag.over,
             }),
-        [graph, positions, drag.dragging, drag.over],
+            edges: base.edges,
+        }),
+        [base, drag.dragging, drag.over],
     );
 
     return {

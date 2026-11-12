@@ -37,6 +37,11 @@ function announce(
 
     toast.success(undoText(person.name, manager?.name ?? null), {
         action: { label: 'Deshacer', onClick: () => void back(before) },
+        // Sonner's own colors do not reach the contrast of the design system: its primary does.
+        actionButtonStyle: {
+            background: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+        },
     });
 }
 

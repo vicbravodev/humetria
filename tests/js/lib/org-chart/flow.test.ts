@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import type { ViewEdge, ViewNode } from '@/lib/org-chart/chart-view';
-import { toFlow } from '@/lib/org-chart/flow';
+import { applyDrag, toFlow } from '@/lib/org-chart/flow';
 import type { OrgNode } from '@/types';
 
 const person: OrgNode = {
@@ -187,5 +187,45 @@ describe('toFlow, columns', () => {
                 node.type === 'company' ? null : node.data.stacked,
             ),
         ).toEqual([null, false, false]);
+    });
+});
+
+describe('applyDrag', () => {
+    const base = toFlow(
+        { nodes, edges },
+        { positions, dragging: null, drop: null },
+    ).nodes;
+
+    it('is the same cards when nothing is being dragged', () => {
+        expect(applyDrag(base, { dragging: null, drop: null })).toBe(base);
+    });
+
+    it('moves only the card dragged and marks only the one under it', () => {
+        const moved = applyDrag(base, {
+            dragging: { id: 'a', x: 7, y: 8 },
+            drop: { id: 'a', tone: 'invalid' },
+        });
+        const other = applyDrag(base, {
+            dragging: { id: 'company', x: 1, y: 2 },
+            drop: { id: 'a', tone: 'valid' },
+        });
+
+        expect(moved[1]?.position).toEqual({ x: 7, y: 8 });
+        expect(moved[0]).toBe(base[0]);
+        expect(moved[2]).toBe(base[2]);
+        expect(other[0]?.position).toEqual({ x: 1, y: 2 });
+        expect(other[1]?.type === 'person' ? other[1].data.drop : null).toBe(
+            'valid',
+        );
+        expect(other[2]).toBe(base[2]);
+    });
+
+    it('does not mark as a place to drop a card that is not a person', () => {
+        const marked = applyDrag(base, {
+            dragging: null,
+            drop: { id: 'company', tone: 'valid' },
+        });
+
+        expect(marked[0]).toBe(base[0]);
     });
 });

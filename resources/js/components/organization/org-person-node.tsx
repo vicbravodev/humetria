@@ -2,6 +2,7 @@ import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Initials from '@/components/humetria/initials';
+import OrgPersonLines from '@/components/organization/org-person-lines';
 import { Spinner } from '@/components/ui/spinner';
 import { useOrgCanvasActions } from '@/hooks/use-org-canvas-actions';
 import { cardClasses, dropLabel } from '@/lib/org-chart/card-style';
@@ -47,21 +48,10 @@ export default function OrgPersonNode({ data }: NodeProps<PersonFlowNode>) {
                 className={cardClasses({ tone, attention, drop: data.drop })}
             >
                 <Initials name={node.name} className="size-9" />
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-sm leading-5 font-semibold">
-                        {node.name}
-                    </span>
-                    <span
-                        className={cn(
-                            'truncate text-xs leading-4',
-                            attention && tone !== 'selected'
-                                ? 'text-warning-foreground'
-                                : 'text-muted-foreground',
-                        )}
-                    >
-                        {node.job_title}
-                    </span>
-                </span>
+                <OrgPersonLines
+                    node={node}
+                    amber={attention && tone !== 'selected'}
+                />
             </button>
             {open !== undefined && (
                 <button

@@ -60,7 +60,7 @@ function acmeOrgChart(bool $lines = true): array
  * Drags a card of the canvas onto another with a mouse that moves in steps, as a hand does: the canvas follows the
  * pointer and a single jump is not a drag to it.
  */
-function orgDragCard(AwaitableWebpage $page, string $from, string $to): AwaitableWebpage
+function orgDragCard(mixed $page, string $from, string $to): mixed
 {
     $page->script(<<<JS
         () => new Promise((resolve) => {
@@ -434,6 +434,8 @@ it('drags a card onto a new manager, and refuses to make a loop: it says why, ca
     // Diana leads Sofía, who now leads Ana: Diana cannot report to Ana.
     orgDragCard($page, orgCard('Diana Torres'), orgCard('Ana López'))
         ->assertSeeIn('[data-slot="org-edit-message"]', 'No se puede: Ana López reporta a Diana Torres.')
+        // The toast of the first move is still fading in: axe reads colors as painted.
+        ->wait(1)
         ->assertNoAccessibilityIssues(1)
         ->assertNoJavaScriptErrors();
 
