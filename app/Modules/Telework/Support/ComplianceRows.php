@@ -516,7 +516,9 @@ final readonly class ComplianceRows
         $parts = [
             "Versión {$document->version}",
             ...($lacking === [] ? [] : [$this->lackingText($lacking)]),
-            trans_choice('{1} :good de :count persona confirmó que la leyó|[2,*] :good de :count personas confirmaron que la leyeron', max(1, $ack['expected']), ['good' => $ack['acknowledged']]),
+            $ack['expected'] === 0
+                ? 'Aún no hay a quién pedirle que confirme'
+                : trans_choice('{1} :good de :count persona confirmó que la leyó|[2,*] :good de :count personas confirmaron que la leyeron', $ack['expected'], ['good' => $ack['acknowledged']]),
         ];
 
         return new ComplianceRow('5.2', $label, $lacking === [] ? RowState::Done : RowState::Partial, implode('. ', $parts).'.');
