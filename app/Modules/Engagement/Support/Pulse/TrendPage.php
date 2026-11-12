@@ -47,14 +47,14 @@ final readonly class TrendPage
 
     /**
      * @param  list<Wave>  $waves
-     * @return array{hasWaves: bool, series: list<Series>, latestPulseId: string|null, nextPulseOn: string|null}
+     * @return array{hasWaves: bool, series: list<Series>, waves: list<array{surveyId: string, label: string}>, latestPulseId: string|null, nextPulseOn: string|null}
      */
     public function props(array $waves): array
     {
         // With fewer than two waves there is nothing to compare yet: the page says when the next pulse goes out.
         $next = count($waves) < 2 ? PulseSchedule::query()->first()?->next_run_on->toDateString() : null;
         $pulses = array_values(array_filter($waves, fn (Wave $wave): bool => $wave->kind === SurveyKind::Pulse));
-        $around = ['latestPulseId' => $pulses === [] ? null : $pulses[array_key_last($pulses)]->surveyId, 'nextPulseOn' => $next];
+        $around = ['waves' => array_map(fn (Wave $wave): array => ['surveyId' => $wave->surveyId, 'label' => $wave->label], $waves), 'latestPulseId' => $pulses === [] ? null : $pulses[array_key_last($pulses)]->surveyId, 'nextPulseOn' => $next];
 
         if ($waves === []) {
             return ['hasWaves' => false, 'series' => [], ...$around];

@@ -98,6 +98,9 @@ export type TrendPoint = {
     direction: TrendDirection;
 };
 
+/** A closed survey on the axis of the trend: its month, never its day. */
+export type TrendWave = { surveyId: string; label: string };
+
 /** A figure of the company across its closed surveys. */
 export type TrendSeries = {
     key: string;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    baselineOf,
     bandOf,
     changeLabel,
     changeSinceFirst,
@@ -9,6 +10,7 @@ import {
     signedColumnsOf,
     sortByChange,
     trendReading,
+    versusPreviousText,
 } from '@/lib/engagement/trend';
 import type { TrendPoint, TrendSeries } from '@/types';
 
@@ -103,6 +105,27 @@ describe('changeLabel', () => {
         expect(changeLabel({ points: 3, band: 'up', from: 'x' })).toBe(
             'Subió 3 pts',
         );
+    });
+});
+
+describe('versusPreviousText', () => {
+    it('says the points against the wave before, and when they are no change', () => {
+        expect(
+            versusPreviousText({ points: -1, band: 'same', from: 'ago 2026' }),
+        ).toBe('−1 pt contra ago 2026 (sin cambio).');
+        expect(
+            versusPreviousText({ points: 5, band: 'up', from: 'ago 2026' }),
+        ).toBe('+5 pts contra ago 2026.');
+        expect(versusPreviousText(null)).toBe('');
+    });
+});
+
+describe('baselineOf', () => {
+    it('draws the first measurement as the baseline once there is a second', () => {
+        expect(
+            baselineOf([point('jun 2026', 62), point('jul 2026', 69, 'up')]),
+        ).toEqual({ percent: 62, label: 'Línea base: jun 2026, 62 %' });
+        expect(baselineOf([point('jun 2026', 62)])).toBeUndefined();
     });
 });
 

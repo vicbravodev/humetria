@@ -62,6 +62,14 @@ it('draws the engagement index of two waves, one column each, with the arrow bet
         ->where('series.0.points.1.direction', 'down'));
 });
 
+it('lists the waves, oldest first, by their month only, so every chart shares one axis', function (): void {
+    $first = trendWaveSurvey($this->tenant, '2026-10-20 12:00:00');
+    $second = trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', count: 4);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('waves', [['surveyId' => $first->id, 'label' => 'oct 2026'], ['surveyId' => $second->id, 'label' => 'nov 2026']]));
+});
+
 it('lists the engagement, recommendation, improvements seen and the ten themes, in that order', function (): void {
     trendWaveSurvey($this->tenant, '2026-11-20 12:00:00');
 

@@ -81,6 +81,32 @@ export function changeLabel(of: TrendChange): string {
     }
 }
 
+/** "−1 pt contra ago 2026 (sin cambio).": the latest wave against the one before; nothing without an arrow. */
+export function versusPreviousText(of: TrendChange | null): string {
+    if (of === null) {
+        return '';
+    }
+
+    const size = Math.abs(of.points);
+    const same = of.band === 'same' ? ' (sin cambio)' : '';
+
+    return `${signedText(of.points)} ${size === 1 ? 'pt' : 'pts'} contra ${of.from}${same}.`;
+}
+
+/** The first measurement as the dashed baseline of a chart, once there is a second one to read against it. */
+export function baselineOf(
+    points: TrendPoint[],
+): { percent: number; label: string } | undefined {
+    const first = points[0];
+
+    return first === undefined || points.length < 2
+        ? undefined
+        : {
+              percent: first.value,
+              label: `Línea base: ${first.label}, ${first.value} %`,
+          };
+}
+
 /** "−27", "0", "+13": an index with its sign, with a real minus. */
 export function signedText(value: number): string {
     if (value === 0) {
