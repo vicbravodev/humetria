@@ -1,8 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import {
-    Ban,
     Bot,
-    CalendarCheck,
     Ellipsis,
     ImageIcon,
     LogIn,
@@ -11,28 +9,40 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import ActivateTenantDialog from '@/components/tenancy/activate-tenant-dialog';
-import DeactivateTenantDialog from '@/components/tenancy/deactivate-tenant-dialog';
 import EditTenantDialog from '@/components/tenancy/edit-tenant-dialog';
 import HumiSettingsDialog from '@/components/tenancy/humi-settings-dialog';
 import InviteOwnerDialog from '@/components/tenancy/invite-owner-dialog';
+import ReactivateTenantDialog from '@/components/tenancy/reactivate-tenant-dialog';
+import RestrictTenantDialog from '@/components/tenancy/restrict-tenant-dialog';
 import TenantLogoDialog from '@/components/tenancy/tenant-logo-dialog';
+import TenantRestrictionItems from '@/components/tenancy/tenant-restriction-items';
+import TenantTermItem from '@/components/tenancy/tenant-term-item';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { activationCopy, ownerAction } from '@/lib/tenant-status';
+import { type Restriction } from '@/lib/tenant-restriction';
+import { ownerAction } from '@/lib/tenant-status';
 import { impersonate } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
-type Action = 'activate' | 'invite' | 'edit' | 'logo' | 'humi' | 'deactivate';
+type Action =
+    | 'activate'
+    | 'reactivate'
+    | 'invite'
+    | 'edit'
+    | 'logo'
+    | 'humi'
+    | Restriction;
+
+const RESTRICTIONS: Restriction[] = ['read_only', 'suspended', 'archived'];
 
 /**
  * Everything the superadmin can do with a company, behind one "…" button so the row stays narrow.
- * Each item opens its dialog; deactivating sits apart, in the destructive color.
+ * Each item opens its dialog; the restrictions (read only, suspend, archive) sit apart.
  */
 export default function TenantRowActions({
     tenant,
@@ -64,10 +74,7 @@ export default function TenantRowActions({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-52">
-                    <DropdownMenuItem onSelect={() => setOpen('activate')}>
-                        <CalendarCheck />
-                        {activationCopy(tenant.status).action}
-                    </DropdownMenuItem>
+                    <TenantTermItem tenant={tenant} onChoose={setOpen} />
                     <DropdownMenuItem onSelect={() => setOpen('invite')}>
                         <UserPlus />
                         {ownerAction(tenant.owner)}
@@ -98,18 +105,10 @@ export default function TenantRowActions({
                         <Bot />
                         Asistente Humi
                     </DropdownMenuItem>
-                    {!tenant.blocked && (
-                        <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onSelect={() => setOpen('deactivate')}
-                            >
-                                <Ban />
-                                Desactivar
-                            </DropdownMenuItem>
-                        </>
-                    )}
+                    <TenantRestrictionItems
+                        tenant={tenant}
+                        onChoose={setOpen}
+                    />
                 </DropdownMenuContent>
             </DropdownMenu>
             <ActivateTenantDialog
@@ -125,7 +124,14 @@ export default function TenantRowActions({
                 open={open === 'humi'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? 'humi' : null)}
             />
-            <DeactivateTenantDialog {...dialog('deactivate')} />
+            <ReactivateTenantDialog {...dialog('reactivate')} />
+            {RESTRICTIONS.map((restriction) => (
+                <RestrictTenantDialog
+                    key={restriction}
+                    restriction={restriction}
+                    {...dialog(restriction)}
+                />
+            ))}
         </>
     );
 }

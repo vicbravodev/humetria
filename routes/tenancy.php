@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
+use App\Modules\Tenancy\Http\Controllers\CompanyModulesController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
@@ -16,6 +17,19 @@ Route::get('admin/companies', [TenantConsoleController::class, 'index'])
 Route::post('admin/companies', [TenantConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('companies.store');
+
+// One company in the console with its modules: the staff reads them, the superadmin changes them.
+Route::get('admin/companies/{tenant}', [CompanyModulesController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.show');
+
+Route::post('admin/companies/{tenant}/modules/grant', [CompanyModulesController::class, 'grant'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.modules.grant');
+
+Route::post('admin/companies/{tenant}/modules/revoke', [CompanyModulesController::class, 'revoke'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.modules.revoke');
 
 Route::put('admin/companies/{tenant}', [TenantConsoleController::class, 'update'])
     ->middleware(['auth', 'verified'])
@@ -33,9 +47,13 @@ Route::post('admin/companies/{tenant}/activate', [TenantConsoleController::class
     ->middleware(['auth', 'verified'])
     ->name('companies.activate');
 
-Route::post('admin/companies/{tenant}/deactivate', [TenantConsoleController::class, 'deactivate'])
+Route::post('admin/companies/{tenant}/restriction', [TenantConsoleController::class, 'restrict'])
     ->middleware(['auth', 'verified'])
-    ->name('companies.deactivate');
+    ->name('companies.restrict');
+
+Route::post('admin/companies/{tenant}/reactivate', [TenantConsoleController::class, 'reactivate'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.reactivate');
 
 Route::post('admin/companies/{tenant}/impersonate', ImpersonateOwnerController::class)
     ->middleware(['auth', 'verified'])

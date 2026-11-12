@@ -10,7 +10,9 @@ const VIEWS: { value: TenantView; label: string }[] = [
     { value: 'active', label: 'Activas' },
     { value: 'trial', label: 'En prueba' },
     { value: 'expired', label: 'Vencidas' },
-    { value: 'deactivated', label: 'Desactivadas' },
+    { value: 'read_only', label: 'Solo lectura' },
+    { value: 'suspended', label: 'Suspendidas' },
+    { value: 'archived', label: 'Archivadas' },
 ];
 
 /** Narrows the console's companies: text in their names or RFC, and one status at a time with how many each holds. */

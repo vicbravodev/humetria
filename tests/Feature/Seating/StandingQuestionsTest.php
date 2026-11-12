@@ -94,7 +94,7 @@ it('asks nothing once the person answered, no assessment waits, or they cannot b
         'no longer waiting' => $assessment->delete(),
         'no email' => $this->ana->forceFill(['email' => null])->save(),
         'left' => $this->ana->forceFill(['deactivated_at' => now()])->save(),
-        'blocked' => Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]),
+        'blocked' => Tenant::query()->whereKey($this->tenant->id)->update(suspension()),
     };
 
     sendQuestions();

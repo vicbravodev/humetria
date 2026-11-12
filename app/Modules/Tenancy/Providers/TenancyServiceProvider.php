@@ -6,13 +6,20 @@ namespace App\Modules\Tenancy\Providers;
 
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
+use App\Modules\Tenancy\Contracts\CompanyModules;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyDirectory;
+use App\Modules\Tenancy\Support\CompanyLimitCounters;
 use App\Modules\Tenancy\Support\CompanyMembers;
+use App\Modules\Tenancy\Support\CompanyModuleAccess;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
+use App\Modules\Tenancy\Support\ModuleStates;
 use App\Modules\Tenancy\Support\TenantContext;
+use App\Modules\Tenancy\Support\TenantRegistry;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Application;
@@ -32,12 +39,21 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->scoped(CompanyMembers::class);
         $this->app->scoped(Members::class, fn (Application $app): CompanyMembers => $app->make(CompanyMembers::class));
         $this->app->bind(Companies::class, CompanyDirectory::class);
+        $this->app->bind(CompanyRegistry::class, TenantRegistry::class);
+        // One instance per request, so the modules of a company are read once; whoever changes them drops the memo.
+        $this->app->scoped(ModuleStates::class);
+        $this->app->bind(CompanyModules::class, CompanyModuleAccess::class);
+        $this->app->bind(CompanyLimits::class, CompanyLimitCounters::class);
     }
 
     public function boot(): void
     {
         // Only the superadmin manages companies, through Gate::before; everyone else gets a 404 that reveals nothing.
         Gate::define('manage-tenants', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
+
+        // Looking at the console, and entering a company as its owner, is for the support role too (the superadmin passes
+        // through Gate::before): it changes nothing, so every change stays behind manage-tenants.
+        Gate::define('view-console', fn (User $user): AccessResponse => $user->isSupport() ? AccessResponse::allow() : AccessResponse::denyAsNotFound());
 
         // The invitation link is public. Viewing it has its own budget, so the page shown again after a mistyped
         // password does not spend the attempts.

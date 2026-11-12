@@ -13,10 +13,10 @@ export type MobileTab =
  */
 export function mobileTabs(
     tenant: NavTenant | null,
-    isSuperadmin: boolean,
+    isStaff: boolean,
     inCourse = 0,
 ): MobileTab[] {
-    const main = mainNavItems(tenant, isSuperadmin);
+    const main = mainNavItems(tenant, isStaff);
     const compliance = complianceNavItems(tenant, inCourse);
     const panel = main.find((item) => item.title === 'Panel');
     const complaints =

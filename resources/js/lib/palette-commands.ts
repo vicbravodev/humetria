@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { Appearance } from '@/hooks/use-appearance';
 import { type NavTenant, settingsEntryHref } from '@/lib/app-navigation';
+import { hasModule } from '@/lib/modules';
 import { navSections } from '@/lib/nav-sections';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
@@ -25,7 +26,7 @@ export type PaletteCommand = Command & {
 };
 
 type Options = {
-    isSuperadmin: boolean;
+    isStaff: boolean;
     tenant: NavTenant | null;
     sidebarExpanded: boolean;
     impersonating: boolean;
@@ -69,7 +70,9 @@ function companyActions(
     };
 
     return [
-        ...(tenant.can.manage_campaigns && tenant.type !== 'union'
+        ...(tenant.can.manage_campaigns &&
+        tenant.type !== 'union' &&
+        hasModule(tenant, 'nom035')
             ? [newEvaluation]
             : []),
         ...(tenant.can.manage_organization ? [importEmployees] : []),
@@ -78,13 +81,13 @@ function companyActions(
 
 /** What the ⌘K palette offers: what this person can start, the pages they can open, the theme and the sidebar. */
 export function paletteCommands({
-    isSuperadmin,
+    isStaff,
     tenant,
     sidebarExpanded,
     impersonating,
     actions,
 }: Options): PaletteCommand[] {
-    const pages = navSections({ tenant, isSuperadmin }).flatMap(
+    const pages = navSections({ tenant, isStaff }).flatMap(
         (section) => section.items,
     );
 

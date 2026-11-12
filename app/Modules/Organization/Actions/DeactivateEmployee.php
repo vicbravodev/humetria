@@ -7,13 +7,14 @@ namespace App\Modules\Organization\Actions;
 use App\Modules\Organization\Contracts\ReportingLines;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
 
 final readonly class DeactivateEmployee
 {
-    public function __construct(private SetManager $setManager, private ReportingLines $lines) {}
+    public function __construct(private SetManager $setManager, private ReportingLines $lines, private CompanyLimits $limits) {}
 
     /**
      * The person no longer works here. Nothing is deleted: evaluations that name them keep their history. What other
@@ -27,8 +28,14 @@ final readonly class DeactivateEmployee
     public function handle(Employee $employee, ?string $reassignTo = null): Employee
     {
         DB::transaction(function () use ($employee, $reassignTo): void {
+            $wasActive = $employee->deactivated_at === null;
             $this->reassign($employee, $reassignTo);
             $employee->update(['deactivated_at' => now()]);
+
+            // Their seat is free again for the plan; someone already out has none to give back.
+            if ($wasActive) {
+                $this->limits->release(CompanyLimits::SEATS, 1);
+            }
 
             Log::info('employee.deactivated', ['employee_id' => $employee->id]);
             event(new EmployeeDeactivated($employee->tenant_id, $employee->id));

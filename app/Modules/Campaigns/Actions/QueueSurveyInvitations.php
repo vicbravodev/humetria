@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Actions;
 
+use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Jobs\SendSurveyInvitations;
 use App\Modules\Campaigns\Models\Campaign;
@@ -21,6 +22,8 @@ final class QueueSurveyInvitations
 {
     public const int BLOCK = 50;
 
+    public function __construct(private MailQuota $mail) {}
+
     /**
      * @param  array<string, bool>  $participants  participant id => whether a channel reaches them (SurveyInvitation::routes())
      * @return int how many links were queued.
@@ -29,6 +32,9 @@ final class QueueSurveyInvitations
     {
         $reached = array_keys(array_filter($participants));
         $unreachable = array_keys(array_filter($participants, fn (bool $hasEmail): bool => ! $hasEmail));
+
+        // Held before anything is marked or queued: if they do not all fit, nothing goes out and the person is told how many are missing.
+        $this->mail->reserve(count($reached));
 
         // Who already holds a link keeps it: it works again as soon as they have a guide pending (someone who returned).
         if ($unreachable !== []) {

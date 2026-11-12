@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * runs, so it is sent at once and never queued: the plain token must not reach the queue). What was done is read in the
  * portal, never here.
  */
-final class NoticeAnswered extends Notification
+final class NoticeAnswered extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -35,5 +36,10 @@ final class NoticeAnswered extends Notification
             ->line("{$this->company->tradeName} leyó el aviso de accidente que envió y registró lo que se hizo. Puede verlo en su portal.")
             ->action('Ver mi aviso', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

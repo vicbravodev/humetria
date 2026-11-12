@@ -231,6 +231,15 @@ return [
     ],
 
     'attributes' => [
+        'plan' => 'plan',
+        'seats' => 'personas contratadas',
+        'negotiated_price' => 'precio negociado',
+        'negotiated_valid_until' => 'vigencia del precio negociado',
+        'tax_regime' => 'régimen fiscal',
+        'cfdi_use' => 'uso de CFDI',
+        'contact_name' => 'nombre del contacto',
+        'contact_email' => 'correo del contacto',
+        'contact_phone' => 'teléfono del contacto',
         'mode' => 'modalidad',
         'next_mode' => 'modalidad del siguiente pulso',
         'day_of_month' => 'día del mes',
@@ -376,6 +385,7 @@ return [
         'code' => 'código',
         'message_id' => 'mensaje',
         'reason' => 'motivo',
+        'restriction' => 'estado',
         'employees' => 'personas',
         'days' => 'días',
         'tranche' => 'tramo',

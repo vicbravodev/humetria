@@ -27,7 +27,7 @@ it('tells a person without companies to contact the administrator, and lets them
 it('lists the companies of a person with several, the blocked one with its status', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
     // C2 of the rediseño v2: one card with a row per company, as the panel lists its centers.
@@ -36,7 +36,7 @@ it('lists the companies of a person with several, the blocked one with its statu
         ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Acme Industrial')
         ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Sin iniciar')
         ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Beta Foods')
-        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Desactivada')
+        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Suspendida')
         ->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="companies"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
 })->with($looks);
 
@@ -142,7 +142,7 @@ it('folds the plain-text switcher without losing the name or overflowing', funct
 
 it('tells a person with one suspended company so, with no way to switch', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visitPage('tenancy/blocked', '/admin/acme', $dark, $mobile)
@@ -156,7 +156,7 @@ it('tells a person with one suspended company so, with no way to switch', functi
 
 it('offers a person with several companies to move to another', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
@@ -168,7 +168,7 @@ it('offers a person with several companies to move to another', function (bool $
 
 it('does not let Escape close the blocked modal', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visit('/admin/acme')
@@ -182,7 +182,7 @@ it('does not let Escape close the blocked modal', function (): void {
 
 it('takes a person with several companies from the blocked one to the list', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
@@ -193,7 +193,7 @@ it('takes a person with several companies from the blocked one to the list', fun
 
 it('lets an impersonating superadmin close the block modal and use the panel', function (bool $dark, bool $mobile): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn (AwaitableWebpage $page) => $page
@@ -210,7 +210,7 @@ it('lets an impersonating superadmin close the block modal and use the panel', f
 
 it('offers an impersonating superadmin the way out of the impersonation, not the owner\'s sign-out', function (): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
@@ -225,7 +225,7 @@ it('offers an impersonating superadmin the way out of the impersonation, not the
 
 it('lets the closed block modal stay closed while moving through the panel', function (): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create())->create();
 
     visit('/admin/companies')
@@ -234,4 +234,20 @@ it('lets the closed block modal stay closed while moving through the panel', fun
         ->click('[data-sidebar="menu-button"][data-active="true"]')
         ->assertPathIs('/admin/acme')
         ->assertMissing('[data-test="tenant-blocked-dialog"]');
+});
+
+it('tells the members of a read-only company why nothing can be changed and whom to ask, in the frame of every page', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->readOnly()->create(['slug' => 'solo-lectura']);
+    $this->actingAs(ownerOf($tenant));
+
+    visitPage('dashboard', '/admin/solo-lectura', $dark, $mobile)
+        ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Tu empresa está en solo lectura')
+        ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Contacta al administrador de Humetría');
+})->with($looks);
+
+it('shows no read-only notice in a company that works', function (): void {
+    $this->actingAs(ownerOf(Tenant::factory()->create(['slug' => 'activa'])));
+
+    visitPage('dashboard', '/admin/activa')
+        ->assertScript('() => document.querySelector(\'[data-slot="company-read-only-notice"]\') === null', true);
 });

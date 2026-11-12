@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import NextStepCard from '@/components/humetria/next-step-card';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -20,9 +20,10 @@ export default function DashboardNextStep({
     setsUp: boolean;
 }) {
     const tenantSlug = useTenantSlug();
-    const step = nextStep(centers);
+    const modules = usePage().props.tenant?.modules;
+    const step = nextStep(centers, modules);
     const norm = NORMS.find((each) => each.key === step?.norm);
-    const unanswered = unansweredCenters(centers);
+    const unanswered = unansweredCenters(centers, modules);
 
     if (setsUp && unanswered > 0) {
         return (

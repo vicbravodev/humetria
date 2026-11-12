@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Leave\Support\RequestSummary;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * Tells a manager, as "usted", that someone of their team asked for vacations or for a leave and that it is theirs to
  * answer, from their own portal. It never says which leave (criterio C-22) nor the person's note.
  */
-final class RequestToDecide extends Notification
+final class RequestToDecide extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -41,5 +42,10 @@ final class RequestToDecide extends Notification
         }
 
         return $mail->action('Revisar solicitud', $this->url)->line('Le toca a usted responder. Este enlace es solo suyo: no lo comparta.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

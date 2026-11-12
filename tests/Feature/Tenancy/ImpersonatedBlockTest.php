@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(BlockSuspendedTenant::class);
 
-it('gives an impersonating superadmin the real page of an expired company, told it is blocked, but lets them change nothing', function (): void {
+it('gives an impersonating superadmin the real page of a suspended company, told it is blocked, but lets them change nothing', function (): void {
     $effects = 0;
     Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class])
         ->post('admin/{tenant:slug}/_probe', function () use (&$effects): string {
@@ -20,7 +20,7 @@ it('gives an impersonating superadmin the real page of an expired company, told 
         })->name('tenant.impersonated-probe');
     Route::getRoutes()->refreshNameLookups();
     $superadmin = superadmin();
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create();
+    $tenant = Tenant::factory()->suspended()->create();
     ownerOf($tenant);
 
     $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
@@ -38,7 +38,7 @@ it('gives an impersonating superadmin the real page of an expired company, told 
 });
 
 it('never tells a member of a blocked company they are impersonated', function (): void {
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.dashboard', $tenant))

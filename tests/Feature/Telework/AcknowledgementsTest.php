@@ -216,7 +216,7 @@ it('sends nothing when nothing is pending, the person left or the company is blo
     $ana->forceFill(['deactivated_at' => now()])->save();
     app()->call($job->handle(...));
     $ana->forceFill(['deactivated_at' => null])->save();
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
     app()->call($job->handle(...));
 
     Notification::assertNothingSent();
@@ -545,4 +545,22 @@ it('keeps «Tiene pendientes en su portal» when the portal asks for more than c
 
     expect($mail->subject)->toBe('Tiene pendientes en su portal')
         ->and($mail->actionText)->toBe('Abrir mi portal');
+});
+
+it('holds the mail before it keeps the requests: what does not fit keeps none and says how many are missing', function (): void {
+    Queue::fake();
+    staffer($this->center);
+    staffer($this->center);
+    $path = tempnam(sys_get_temp_dir(), 'doc');
+    file_put_contents($path, "%PDF-1.4\n%%EOF\n");
+    withMailQuota($this->tenant, 1);
+
+    expect(fn () => resolve(PublishDocument::class)->handle(DocumentKind::Policy, $path, [$this->center->id], [], $this->hr->id))->not->toThrow(Throwable::class);
+    $document = TeleworkDocument::query()->sole();
+
+    expect(fn () => resolve(RequestAcknowledgements::class)->handle([$document->id]))
+        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+
+    expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(0);
+    Queue::assertNotPushed(SendPortalReminder::class);
 });

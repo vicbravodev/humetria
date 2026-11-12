@@ -1,15 +1,15 @@
 import {
     complianceNavItems,
     mainNavItems,
-    superadminNavItems,
     type NavSection,
 } from '@/lib/app-navigation';
+import { superadminNavItems } from '@/lib/staff-navigation';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import type { NavTenant } from '@/types';
 
 type Options = {
     tenant: NavTenant | null;
-    isSuperadmin: boolean;
+    isStaff: boolean;
     /** Evaluations in course, counted on NOM-035. */
     inCourse?: number;
     /** What the company's own pages are called in the trail: the company's name. */
@@ -23,12 +23,12 @@ type Options = {
  */
 export function navSections({
     tenant,
-    isSuperadmin,
+    isStaff,
     inCourse = 0,
     home = 'Humetría',
 }: Options): NavSection[] {
     const sections: NavSection[] = [
-        { key: 'main', label: home, items: mainNavItems(tenant, isSuperadmin) },
+        { key: 'main', label: home, items: mainNavItems(tenant, isStaff) },
         {
             key: 'compliance',
             label: 'Cumple la norma',
@@ -47,7 +47,7 @@ export function navSections({
         {
             key: 'platform',
             label: 'Plataforma',
-            items: isSuperadmin ? superadminNavItems : [],
+            items: isStaff ? superadminNavItems : [],
         },
     ];
 

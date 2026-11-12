@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * Gives a person, as "usted", the link of «Mis vacaciones» in their own portal. No days and no amounts: those are read
  * behind the link.
  */
-final class VacationsPortalLink extends Notification
+final class VacationsPortalLink extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -34,5 +35,10 @@ final class VacationsPortalLink extends Notification
             ->line('Su empresa lleva sus vacaciones en Humetría. En su enlace personal puede ver los días que tiene, pedirlos y seguir sus solicitudes.')
             ->action('Ver mis vacaciones', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

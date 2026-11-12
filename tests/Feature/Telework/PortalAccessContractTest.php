@@ -41,7 +41,7 @@ it('answers null, without saying why, for a made-up token, a replaced link and a
 });
 
 it('answers null for a company that may not be used', function (): void {
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
 
     expect(resolve(PortalAccess::class)->open($this->token))->toBeNull();
 });

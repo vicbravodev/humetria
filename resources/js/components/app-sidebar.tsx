@@ -20,7 +20,7 @@ export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
     const sections = navSections({
         tenant,
-        isSuperadmin: auth.isSuperadmin,
+        isStaff: auth.isStaff,
         inCourse: inCourse?.count ?? 0,
     });
 
@@ -39,7 +39,7 @@ export function AppSidebar() {
                     <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                         <Logo className="h-7" />
                         {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
-                        {auth.isSuperadmin && tenant === null && (
+                        {auth.isStaff && tenant === null && (
                             <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-caption font-medium text-warning-foreground">
                                 Consola
                             </span>

@@ -64,7 +64,7 @@ final readonly class LaunchScheduledPulses
     private function launchFor(PulseSchedule $schedule): int
     {
         $company = $this->companies->enter($schedule->tenant_id);
-        $reason = $company->blocked ? 'company_blocked' : $this->reasonToWait();
+        $reason = $company->stopped('pulse') ? 'company_blocked' : $this->reasonToWait();
         $survey = $reason === null ? $this->launchOrDiscard($schedule) : null;
 
         if ($survey === null) {

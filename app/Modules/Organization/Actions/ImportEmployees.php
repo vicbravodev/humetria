@@ -12,23 +12,26 @@ use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\EmployeeAttributes;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final readonly class ImportEmployees
 {
-    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade, private SetManager $setManager) {}
+    public function __construct(private CurrentTenant $currentTenant, private FindOrCreateArea $findOrCreateArea, private FindOrCreateJobGrade $findOrCreateJobGrade, private SetManager $setManager, private CompanyLimits $limits) {}
 
     /**
-     * Writes a valid plan in one transaction: every row or none. The managers go last, once everybody the file names
-     * is there.
+     * Writes a valid plan in one transaction: every row or none, and none when the new people do not fit in the seats the plan has left.
+     * The managers go last, once everybody the file names is there.
      *
      * @return array{created: int, updated: int}
      */
     public function handle(EmployeeImportPlan $plan): array
     {
         return DB::transaction(function () use ($plan): array {
+            $this->limits->reserve(CompanyLimits::SEATS, $plan->created(), 'file');
+
             /** One lookup per area name and per category and level, not per row. */
             $areas = [];
             $grades = [];

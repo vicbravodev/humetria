@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
@@ -53,6 +54,8 @@ it('lists each company with its status for the superadmin', function (): void {
                 'status' => 'trial',
                 'status_label' => 'En prueba',
                 'status_date' => 'Prueba hasta 3 nov 2026',
+                'restriction_reason' => null,
+                'uses_attendance' => false,
                 'active_until' => null,
                 'blocked' => false,
                 'owner' => null,
@@ -77,7 +80,8 @@ it('describes the date of every status', function (Closure $company, string $sta
     'trial ended' => [fn () => Tenant::factory()->inTrial(CarbonImmutable::parse('2026-10-01 18:00', 'UTC')), 'trial_ended', 'Prueba terminó el 15 oct 2026', null, true],
     'active' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-31', 'America/Mexico_City')->endOfDay()), 'active', 'Activa hasta 31 dic 2026', '2026-12-31', false],
     'expired' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-09-30', 'America/Mexico_City')->endOfDay()), 'expired', 'Venció el 30 sep 2026', '2026-09-30', true],
-    'deactivated' => [fn () => Tenant::factory()->deactivated(), 'deactivated', 'Desactivada el 27 oct 2026', null, true],
+    'read only' => [fn () => Tenant::factory()->readOnly(), 'read_only', 'Solo lectura desde el 27 oct 2026', null, true],
+    'suspended' => [fn () => Tenant::factory()->suspended(), 'suspended', 'Suspendida el 27 oct 2026', null, true],
 ]);
 
 it('shows the newest companies first', function (): void {
@@ -118,12 +122,12 @@ it('renders the empty console when there are no companies yet', function (): voi
             ->where('tenants.total', 0));
 });
 
-it('reads the page in eight queries: the superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page, the owners and the open invitations', function (): void {
+it('reads the page in nine queries: the superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page, the owners, the open invitations and which companies use Attendance', function (): void {
     Tenant::factory()->count(30)->create();
     // A fresh instance, as a real request gets: its roles are not loaded yet.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(8);
+    $this->expectsDatabaseQueryCount(9);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -165,8 +169,8 @@ it('lists companies with a fixed number of queries', function (): void {
     $superadmin = superadmin()->fresh();
 
     // The superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page,
-    // the owners, their users and the open invitations.
-    $this->expectsDatabaseQueryCount(9);
+    // the owners, their users, the open invitations and which of them use Attendance.
+    $this->expectsDatabaseQueryCount(10);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -190,7 +194,9 @@ it('shows one status at a time, counts each within the search, and keeps both in
     Tenant::factory()->inTrial(now()->subDays(3))->create(['trade_name' => 'Prueba']);
     Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Vencida']);
     Tenant::factory()->inTrial(now()->subDays(Tenant::TRIAL_DAYS))->create(['trade_name' => 'Prueba terminada']);
-    Tenant::factory()->activeUntil(now()->addMonth())->deactivated()->create(['trade_name' => 'Desactivada']);
+    Tenant::factory()->activeUntil(now()->addMonth())->suspended()->create(['trade_name' => 'Suspendida']);
+    Tenant::factory()->activeUntil(now()->addMonth())->readOnly()->create(['trade_name' => 'Solo lectura']);
+    Tenant::factory()->activeUntil(now()->addMonth())->archived()->create(['trade_name' => 'Archivada']);
     Tenant::factory()->create(['trade_name' => 'Sin iniciar']);
 
     $view = fn (string $status): array => collect($this->actingAs(superadmin())
@@ -200,15 +206,50 @@ it('shows one status at a time, counts each within the search, and keeps both in
     expect($view('active'))->toBe(['Activa'])
         ->and($view('trial'))->toBe(['Prueba'])
         ->and($view('expired'))->toBe(['Prueba terminada', 'Vencida'])
-        ->and($view('deactivated'))->toBe(['Desactivada'])
-        ->and($view('anything'))->toHaveCount(6);
+        ->and($view('suspended'))->toBe(['Suspendida'])
+        ->and($view('read_only'))->toBe(['Solo lectura'])
+        ->and($view('archived'))->toBe(['Archivada'])
+        ->and($view('anything'))->toHaveCount(7)
+        ->and($view('all'))->not->toContain('Archivada');
 
     $this->actingAs(superadmin())
         ->get(route('companies.index', ['status' => 'trial', 'q' => 'prueba']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters', ['q' => 'prueba', 'status' => 'trial'])
-            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'deactivated' => 0])
+            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'read_only' => 0, 'suspended' => 0, 'archived' => 0])
             ->where('tenants.first_page_url', fn (string $url): bool => str_contains($url, 'status=trial') && str_contains($url, 'q=prueba')));
+});
+
+it('tells which companies of the page record working time with Attendance, with one question for the whole page', function (): void {
+    $uses = Tenant::factory()->create(['trade_name' => 'Con jornada']);
+    Tenant::factory()->create(['trade_name' => 'Sin jornada']);
+    AttendancePolicy::factory()->create(['tenant_id' => $uses->id]);
+
+    $rows = $this->actingAs(superadmin())->get(route('companies.index'))->inertiaProps('tenants.data');
+
+    expect(collect($rows)->pluck('uses_attendance', 'trade_name')->all())->toEqual(['Con jornada' => true, 'Sin jornada' => false]);
+});
+
+it('tells why a company was restricted, and nothing for one that was not', function (): void {
+    Tenant::factory()->suspended('Falta de pago de octubre')->create(['trade_name' => 'Restringida']);
+    Tenant::factory()->create(['trade_name' => 'Libre']);
+
+    $rows = $this->actingAs(superadmin())->get(route('companies.index'))->inertiaProps('tenants.data');
+
+    expect(collect($rows)->pluck('restriction_reason', 'trade_name')->all())->toEqual(['Restringida' => 'Falta de pago de octubre', 'Libre' => null]);
+});
+
+it('shows an archived company only in its own view, with its date', function (): void {
+    $this->travelTo('2026-10-27 18:00 UTC');
+    Tenant::factory()->archived()->create();
+
+    $this->actingAs(superadmin())->get(route('companies.index'))
+        ->assertInertia(fn (Assert $page) => $page->has('tenants.data', 0)->where('counts.all', 0)->where('counts.archived', 1));
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['status' => 'archived']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('tenants.data.0.status', 'archived')
+            ->where('tenants.data.0.status_date', 'Archivada el 27 oct 2026'));
 });
 
 it('counts the trials that end within the next seven days', function (): void {

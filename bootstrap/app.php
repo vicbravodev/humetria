@@ -10,6 +10,8 @@ use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
+use App\Modules\Billing\Exceptions\MailQuotaExceeded;
+use App\Modules\Billing\Exceptions\StorageQuotaExceeded;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -73,6 +75,18 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
 
             return false;
+        });
+
+        // A file or a bulk send that does not fit in what the plan includes: a form is sent back to its page with the reason as a toast (any form,
+        // whatever its fields are called); a client that asks for JSON gets a 422 with the same words.
+        $exceptions->render(function (StorageQuotaExceeded|MailQuotaExceeded $exception, Request $request): RedirectResponse|Response {
+            if ($request->expectsJson() && ! $request->hasHeader(Header::INERTIA)) {
+                return response()->json(['message' => $exception->getMessage()], 422);
+            }
+
+            Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
+
+            return back();
         });
 
         // Inertia would show the bare 429 of a submit in a modal: send it back with a toast. A visit (GET) gets

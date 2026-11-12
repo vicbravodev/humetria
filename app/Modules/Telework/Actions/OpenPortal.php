@@ -37,7 +37,7 @@ final readonly class OpenPortal
         $company = $this->companies->enter($link->tenant_id);
         $person = $this->roster->find($link->employee_id);
 
-        if ($company->blocked || $person === null || ! $person->active) {
+        if ($company->stopped('nom037') || $person === null || ! $person->active) {
             throw new PortalUnavailable;
         }
 

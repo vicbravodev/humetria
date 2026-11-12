@@ -1,39 +1,19 @@
-import {
-    Building2,
-    ClipboardCheck,
-    Factory,
-    House,
-    Laptop,
-    Armchair,
-    Inbox,
-    UserCog,
-    Users,
-} from 'lucide-react';
+import { Factory, House, UserCog, Users } from 'lucide-react';
 import { dashboard } from '@/routes';
-import { index as companies } from '@/routes/companies';
-import { index as demoRequests } from '@/routes/demo-requests';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
-import { index as campaigns } from '@/routes/tenant/campaigns';
-import { index as disclosure } from '@/routes/tenant/disclosure';
 import { index as employees } from '@/routes/tenant/employees';
-import { index as programs } from '@/routes/tenant/interventions';
 import { index as members } from '@/routes/tenant/members';
-import { index as seatingIndex } from '@/routes/tenant/seating';
-import { index as teleworkIndex } from '@/routes/tenant/telework';
-import { index as teleworkDocuments } from '@/routes/tenant/telework/documents';
-import { index as teleworkNotices } from '@/routes/tenant/telework/notices';
-import { edit as teleworkSettings } from '@/routes/tenant/telework/settings';
-import { index as teleworkTrainings } from '@/routes/tenant/telework/trainings';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import { complaintCasesItems } from '@/lib/complaints-navigation';
-import { attendance } from '@/lib/attendance-navigation';
+import { hasModule } from '@/lib/modules';
 import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, InCourse, NavItem, NavTenant } from '@/types';
 
 export type { NavTenant } from '@/types';
+export { complianceNavItems } from '@/lib/compliance-navigation';
 
 /** A union has no compliance tools (the server answers 404 to them); everything else is a company's. */
 const isUnion = (tenant: NavTenant): boolean => tenant.type === 'union';
@@ -73,10 +53,10 @@ const companyItems = (tenant: NavTenant): NavItem[] => [
  */
 export const mainNavItems = (
     tenant: NavTenant | null,
-    isSuperadmin: boolean,
+    isStaff: boolean,
 ): NavItem[] => {
     if (tenant === null) {
-        return isSuperadmin
+        return isStaff
             ? []
             : [{ title: 'Panel', href: dashboard(), icon: House }];
     }
@@ -85,91 +65,13 @@ export const mainNavItems = (
         return [];
     }
 
-    return tenant.role === 'complaints'
-        ? complaintCasesItems(tenant)
-        : companyItems(tenant);
-};
-
-/** NOM-037's own pages, under its entry: only those the role may open (the server answers 403 to the rest anyway). */
-const telework = (tenant: NavTenant): NavItem => ({
-    title: 'NOM-037',
-    href: teleworkIndex(tenant.slug),
-    icon: Laptop,
-    children: [
-        { title: 'Centros', href: teleworkIndex(tenant.slug) },
-        { title: 'Documentos', href: teleworkDocuments(tenant.slug) },
-        ...(tenant.can.manage_telework
-            ? [{ title: 'Capacitación', href: teleworkTrainings(tenant.slug) }]
-            : []),
-        ...(tenant.can.review_workplaces
-            ? [{ title: 'Avisos', href: teleworkNotices(tenant.slug) }]
-            : []),
-        ...(tenant.can.manage_telework
-            ? [
-                  {
-                      title: 'Configuración',
-                      href: teleworkSettings(tenant.slug),
-                  },
-              ]
-            : []),
-    ],
-});
-
-/** Ley Silla's entry: one link, the centers; its tabs live on each center's page. */
-const seating = (tenant: NavTenant): NavItem => ({
-    title: 'Ley Silla',
-    href: seatingIndex(tenant.slug),
-    icon: Armchair,
-});
-
-/**
- * NOM-035's entry: the evaluations, the Programas de intervención (num. 8.3 to 8.5) and the policy and its disclosure (5.1,
- * 5.7), for whoever may read each; with only the evaluations it stays a plain link.
- */
-const nom035 = (tenant: NavTenant, inCourse: number): NavItem => {
-    const children: NavItem[] = [
-        { title: 'Evaluaciones', href: campaigns(tenant.slug) },
-        ...(tenant.can.view_interventions
-            ? [{ title: 'Programas', href: programs(tenant.slug) }]
-            : []),
-        ...(tenant.can.view_disclosure
-            ? [
-                  {
-                      title: 'Política y difusión',
-                      href: disclosure(tenant.slug),
-                  },
-              ]
-            : []),
-    ];
-
-    return {
-        title: 'NOM-035',
-        href: campaigns(tenant.slug),
-        icon: ClipboardCheck,
-        badge: inCourse,
-        ...(children.length > 1 ? { children } : {}),
-    };
-};
-
-/**
- * "Cumple la norma": the official standards of the current company, for every role (who may change them is the page's
- * to say). The committee sees only NOM-037 and Ley Silla; the outside handler of complaints has its cases in the main
- * section instead.
- */
-export const complianceNavItems = (
-    tenant: NavTenant | null,
-    inCourse = 0,
-): NavItem[] => {
-    if (tenant === null || isUnion(tenant) || tenant.role === 'complaints') {
-        return [];
+    if (tenant.role === 'complaints') {
+        return hasModule(tenant, 'complaints')
+            ? complaintCasesItems(tenant)
+            : [];
     }
 
-    return [
-        ...(tenant.role === 'committee' ? [] : [nom035(tenant, inCourse)]),
-        telework(tenant),
-        ...(tenant.can.view_seating ? [seating(tenant)] : []),
-        ...(tenant.can.view_attendance ? [attendance(tenant)] : []),
-    ];
+    return companyItems(tenant);
 };
 
 /**
@@ -188,12 +90,6 @@ export const nextObligation = (
 
     return { lead: 'La próxima evaluación cierra', when };
 };
-
-// Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
-export const superadminNavItems: NavItem[] = [
-    { title: 'Empresas', href: companies(), icon: Building2 },
-    { title: 'Solicitudes de demo', href: demoRequests(), icon: Inbox },
-];
 
 const appearanceItem: NavItem = {
     title: 'Apariencia',

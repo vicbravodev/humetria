@@ -36,12 +36,12 @@ it('shows the company panel to its owner with the company as a shared prop', fun
 });
 
 it('flags a blocked company in the shared prop', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('tenant.status', 'deactivated')
+            ->where('tenant.status', 'suspended')
             ->where('tenant.blocked', true));
 });
 

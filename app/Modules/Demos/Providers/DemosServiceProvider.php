@@ -18,7 +18,8 @@ final class DemosServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Only the superadmin reads demo requests, through Gate::before; everyone else gets a 404 that reveals nothing.
-        Gate::define('view-demo-requests', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
+        // Read only: support sees the requests too; the superadmin passes through Gate::before.
+        Gate::define('view-demo-requests', fn (User $user): AccessResponse => $user->isSupport() ? AccessResponse::allow() : AccessResponse::denyAsNotFound());
 
         // The demo form is public: cap each address so nobody can flood the table.
         RateLimiter::for('demo-requests', function (Request $request): array {

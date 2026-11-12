@@ -260,7 +260,7 @@ it('grants nothing in a company that does not use vacations', function (): void 
 });
 
 it('grants nothing in a company that may not be used', function (): void {
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     LeaveSetting::factory()->create(['tenant_id' => $blocked->id]);
     $person = hired($blocked, '2024-03-15');
 

@@ -144,7 +144,7 @@ it('skips the cycle and moves on when the company cannot take it', function (str
     'a climate survey in course' => ['climate_active', fn (Tenant $tenant) => Survey::factory()->active()->create(['tenant_id' => $tenant->id])],
     'a pulse in course' => ['pulse_open', fn (Tenant $tenant) => Survey::factory()->pulse()->active()->create(['tenant_id' => $tenant->id])],
     'a pulse draft' => ['pulse_open', fn (Tenant $tenant) => Survey::factory()->pulse()->create(['tenant_id' => $tenant->id])],
-    'a suspended company' => ['company_blocked', fn (Tenant $tenant) => DB::table('tenants')->where('id', $tenant->id)->update(['deactivated_at' => now()])],
+    'a suspended company' => ['company_blocked', fn (Tenant $tenant) => DB::table('tenants')->where('id', $tenant->id)->update(['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => now()])],
 ]);
 
 it('leaves no survey and no draft in a company of four people', function (): void {

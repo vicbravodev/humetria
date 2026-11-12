@@ -258,3 +258,24 @@ it('launches in the same number of queries for any number of people', function (
         ->and(Participant::query()->withoutGlobalScopes()->count())->toBe(140)
         ->and(ParticipantInstrument::query()->withoutGlobalScopes()->count())->toBe(280);
 });
+
+it('holds the mail of the launch before anything is sent: what does not fit launches nothing and says how many are missing', function (): void {
+    staffOf($this->tenant, $this->plant, 20);
+    $campaign = draftFor($this->tenant, $this->plant, $this->hr);
+    withMailQuota($this->tenant, 19);
+
+    launch($this->tenant, $campaign, $this->hr)->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA);
+
+    expect($campaign->refresh()->status)->not->toBe(CampaignStatus::Active);
+    Notification::assertNothingSent();
+});
+
+it('launches when the mail fits the quota exactly', function (): void {
+    staffOf($this->tenant, $this->plant, 20);
+    $campaign = draftFor($this->tenant, $this->plant, $this->hr);
+    withMailQuota($this->tenant, 20);
+
+    launch($this->tenant, $campaign, $this->hr)->assertSessionHasNoErrors();
+
+    expect($campaign->refresh()->status)->toBe(CampaignStatus::Active);
+});

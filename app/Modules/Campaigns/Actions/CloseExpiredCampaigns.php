@@ -13,7 +13,8 @@ use Throwable;
 
 /**
  * Closes, in every company, the evaluations whose last day is over in the display time zone. Links already stop
- * working at that moment; this records it. Run every hour.
+ * working at that moment; this records it. Run every hour. It runs for every company, restricted or not (read only,
+ * suspended, archived, expired): closing only records what already happened, so it does not wait for a reactivation.
  */
 final readonly class CloseExpiredCampaigns
 {

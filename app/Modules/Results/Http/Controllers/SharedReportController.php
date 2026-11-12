@@ -28,7 +28,7 @@ final class SharedReportController extends Controller
         // Read past the company scope: until the link is known, no company is.
         $share = ReportShare::query()->withoutGlobalScopes()->open()->where('token_hash', ReportShare::hashToken($token))->first();
         $company = $share === null ? null : $companies->enter($share->tenant_id);
-        $campaign = $share === null || $company === null || $company->blocked ? null : $campaigns->find($share->campaign_id);
+        $campaign = $share === null || $company === null || $company->stopped('nom035') ? null : $campaigns->find($share->campaign_id);
         $guide = $campaign === null ? null : ReportBuilder::guideOf($campaign);
 
         if ($share === null || $company === null || $campaign === null || $guide === null) {

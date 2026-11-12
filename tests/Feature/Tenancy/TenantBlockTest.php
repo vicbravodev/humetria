@@ -14,9 +14,15 @@ use Inertia\Testing\AssertableInertia as Assert;
 mutates(BlockSuspendedTenant::class);
 
 $blocked = [
+    'suspended' => fn (): Tenant => Tenant::factory()->suspended()->create(),
+    'archived' => fn (): Tenant => Tenant::factory()->archived()->create(),
+];
+
+// What a company falls to when its trial or term ends, or when a person says so: people read, nothing is changed.
+$readOnly = [
     'trial ended' => fn (): Tenant => Tenant::factory()->inTrial(now()->subDays(15))->create(),
     'expired' => fn (): Tenant => Tenant::factory()->activeUntil(now()->subDay())->create(),
-    'deactivated' => fn (): Tenant => Tenant::factory()->deactivated()->create(),
+    'read only' => fn (): Tenant => Tenant::factory()->readOnly()->create(),
 ];
 
 $open = [
@@ -54,7 +60,7 @@ it('puts the blocked page, with no props of its own, where the panel would be', 
 })->with($blocked);
 
 it('carries nothing but the shared props to the blocked page', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $props = $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.dashboard', $tenant))
@@ -64,7 +70,7 @@ it('carries nothing but the shared props to the blocked page', function (): void
 });
 
 it('answers HEAD with the blocked page too', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->call('HEAD', route('tenant.dashboard', $tenant, absolute: false))
@@ -83,6 +89,37 @@ it('rejects with 423 any change to a blocked company, leaving no effect and a lo
     Log::shouldHaveReceived('warning')->with('tenant.blocked_request_rejected', ['tenant_id' => $tenant->id])->once();
 })->with($blocked);
 
+it('lets the members of a read-only company read its pages, told that it is read only and not blocked', function (Closure $make): void {
+    $tenant = $make();
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.dashboard', $tenant))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('tenant.blocked', false)
+            ->where('tenant.read_only', true));
+})->with($readOnly);
+
+it('rejects with 423 any change to a read-only company, leaving no effect and a log', function (Closure $make): void {
+    $tenant = $make();
+    Log::spy();
+
+    $this->actingAs(ownerOf($tenant))
+        ->post(route('tenant.block-probe', $tenant))
+        ->assertStatus(423);
+
+    expect($this->effects)->toBe(0);
+    Log::shouldHaveReceived('warning')->with('tenant.read_only_request_rejected', ['tenant_id' => $tenant->id])->once();
+})->with($readOnly);
+
+it('does not say a company is read only while it works as usual', function (Closure $make): void {
+    $tenant = $make();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.read_only', false)->where('tenant.blocked', false));
+})->with($open);
+
 it('lets a company that is not blocked work as usual', function (Closure $make): void {
     $tenant = $make();
     $user = ownerOf($tenant);
@@ -95,7 +132,7 @@ it('lets a company that is not blocked work as usual', function (Closure $make):
 })->with($open);
 
 it('lets an impersonated session see a blocked company, never change it', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
     $user = ownerOf($tenant);
 
     $this->actingAs($user)
@@ -106,7 +143,7 @@ it('lets an impersonated session see a blocked company, never change it', functi
 });
 
 it('still hides a blocked company from someone who is not a member', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf(Tenant::factory()->create()))
         ->get(route('tenant.dashboard', $tenant))
@@ -114,7 +151,7 @@ it('still hides a blocked company from someone who is not a member', function ()
 });
 
 it('keeps the other companies of the person reachable', function (): void {
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     $open = Tenant::factory()->create();
     $user = ownerOf($blocked);
     TenantMembership::factory()->for($open)->for($user)->create();

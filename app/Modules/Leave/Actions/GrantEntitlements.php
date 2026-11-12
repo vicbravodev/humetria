@@ -75,7 +75,7 @@ final readonly class GrantEntitlements
 
     private function grantIn(string $tenantId): int
     {
-        if ($this->companies->enter($tenantId)->blocked) {
+        if ($this->companies->enter($tenantId)->stopped('vacations')) {
             return 0;
         }
 

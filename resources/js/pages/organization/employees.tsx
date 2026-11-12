@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { Upload } from 'lucide-react';
+import PlanLimitNotice from '@/components/humetria/plan-limit-notice';
 import Pagination from '@/components/humetria/pagination';
 import CreateEmployeeSheet from '@/components/organization/create-employee-sheet';
 import EmployeesEmpty from '@/components/organization/employees-empty';
@@ -27,11 +28,13 @@ import type {
     EmployeeFilters,
     EmployeeRow,
     Paginated,
+    PlanLimit,
 } from '@/types';
 
 export default function Employees({
     employees,
     counts,
+    plan_limit: planLimit,
     filters,
     genders,
     staff_groups,
@@ -39,6 +42,7 @@ export default function Employees({
 }: {
     employees: Paginated<EmployeeRow>;
     counts: EmployeeCounts;
+    plan_limit: PlanLimit | null;
     filters: EmployeeFilters;
     genders: ChoiceOption[];
     staff_groups: ChoiceOption[];
@@ -87,6 +91,10 @@ export default function Employees({
                     </Button>
                     <CreateEmployeeSheet choices={choices} />
                 </PageHeader>
+                <PlanLimitNotice
+                    limit={planLimit}
+                    noun={{ singular: 'persona', plural: 'personas' }}
+                />
                 {!union && counts.without_email > 0 && (
                     <EmployeesNotice
                         filters={filters}

@@ -14,6 +14,8 @@ use App\Modules\Tenancy\Actions\CreateWorkCenter;
 use App\Modules\Tenancy\Actions\ListWorkCenters;
 use App\Modules\Tenancy\Actions\RestoreWorkCenter;
 use App\Modules\Tenancy\Actions\UpdateWorkCenter;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Http\Requests\WorkCenterRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -37,6 +39,8 @@ final class WorkCenterController extends Controller
         private readonly Headcount $headcount,
         private readonly Nom035Guides $guides,
         private readonly EvaluationSchedule $schedule,
+        private readonly CompanyLimits $limits,
+        private readonly CurrentTenant $currentTenant,
     ) {}
 
     public function index(Request $request, ListWorkCenters $listWorkCenters): Response
@@ -52,6 +56,8 @@ final class WorkCenterController extends Controller
 
         return Inertia::render('tenancy/work-centers', [
             'view' => $showArchived ? 'archived' : 'active',
+            // What the plan covers and how much of it the company uses; null for a company without a plan.
+            'plan_limit' => $this->limits->limit($this->currentTenant->id(), CompanyLimits::CENTERS)?->toArray(),
             'counts' => ['active' => WorkCenter::query()->count() - $archived, 'archived' => $archived],
             'workCenters' => $workCenters->through(fn (WorkCenter $workCenter): array => [
                 ...$this->row($workCenter, $headcount[$workCenter->id] ?? 0),

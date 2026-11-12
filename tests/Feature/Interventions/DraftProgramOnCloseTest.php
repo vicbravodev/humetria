@@ -71,7 +71,7 @@ it('drafts nothing for a campaign of only the Guía I', function (): void {
 
 it('drafts nothing for a blocked company', function (): void {
     $campaign = closedEvaluationWith($this->tenant, nom035Answers('nom035.guide-ii', 'always'));
-    $this->tenant->update(['deactivated_at' => now()]);
+    $this->tenant->update(suspension());
 
     resolve(DraftProgramOnClose::class)->handle(new CampaignClosed($this->tenant->id, $campaign->id));
 

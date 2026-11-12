@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * The owner's email when an evaluation closes: participation, the questionnaires at each risk level (only when the
  * group reaches the minimum) and what follows.
  */
-final class ClosingSummary extends Notification implements ShouldQueue
+final class ClosingSummary extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -82,5 +83,10 @@ final class ClosingSummary extends Notification implements ShouldQueue
                 'report' => $this->levels !== null,
                 'programUrl' => $this->programUrl,
             ]);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

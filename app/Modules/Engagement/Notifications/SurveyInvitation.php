@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Tenancy\Data\CompanySummary;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notification;
  * The email that carries a person's survey link, from their company and written as the survey speaks («usted»): the
  * invitation and, with the same link, each reminder. The plain token lives only here and in the link.
  */
-final class SurveyInvitation extends Notification
+final class SurveyInvitation extends Notification implements MailBag
 {
     public function __construct(
         private readonly bool $reminder,
@@ -56,5 +57,10 @@ final class SurveyInvitation extends Notification
                 'title' => $title,
                 'lastDay' => $lastDay,
             ]);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

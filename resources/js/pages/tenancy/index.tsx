@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import PageHeader from '@/components/humetria/page-header';
 import CreateTenantDialog from '@/components/tenancy/create-tenant-dialog';
@@ -21,6 +21,8 @@ export default function Tenants({
     counts: Record<TenantView, number>;
     trialsEndingSoon: number;
 }) {
+    const { auth } = usePage().props;
+
     return (
         <>
             <Head title="Empresas" />
@@ -29,7 +31,8 @@ export default function Tenants({
                     title="Empresas"
                     description={companiesSummary(counts.all, trialsEndingSoon)}
                 >
-                    <CreateTenantDialog />
+                    {/* Support sees the console and enters companies; only the superadmin changes them. */}
+                    {auth.isSuperadmin && <CreateTenantDialog />}
                 </PageHeader>
                 {counts.all > 0 && (
                     <TenantsToolbar filters={filters} counts={counts} />

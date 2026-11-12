@@ -43,20 +43,20 @@ it('starts the trial on the first acceptance of a company that has not started',
     Log::shouldHaveReceived('info', ['tenant.trial_started', ['tenant_id' => $tenant->id]])->once();
 });
 
-it('leaves the dates alone when the company is active, deactivated, in trial or past its trial', function (Tenant $tenant): void {
-    $before = $tenant->only(['trial_started_at', 'active_until', 'deactivated_at']);
+it('leaves the dates alone when the company is active, suspended, in trial or past its trial', function (Tenant $tenant): void {
+    $before = $tenant->only(['trial_started_at', 'active_until', 'restriction']);
     Log::spy();
 
     acceptFor($tenant);
 
-    expect($tenant->fresh()?->only(['trial_started_at', 'active_until', 'deactivated_at']))->toEqual($before)
+    expect($tenant->fresh()?->only(['trial_started_at', 'active_until', 'restriction']))->toEqual($before)
         ->and(AuditEntry::query()->where('event', 'tenant.trial_started')->exists())->toBeFalse()
         ->and(TenantMembership::query()->count())->toBe(1);
 
     Log::shouldNotHaveReceived('info', ['tenant.trial_started', Mockery::any()]);
 })->with([
     'active' => [fn () => Tenant::factory()->activeUntil(now()->addMonth())->create()],
-    'deactivated' => [fn () => Tenant::factory()->inTrial(now()->subDays(3))->deactivated()->create()],
+    'suspended' => [fn () => Tenant::factory()->inTrial(now()->subDays(3))->suspended()->create()],
     'in trial' => [fn () => Tenant::factory()->inTrial(now()->subDays(3))->create()],
     'past its trial' => [fn () => Tenant::factory()->inTrial(now()->subDays(20))->create()],
 ]);

@@ -48,7 +48,7 @@ final readonly class SendDisclosureDigests
                 Context::scope(function () use ($tenantId, &$sent): void {
                     $company = $this->companies->enter($tenantId);
 
-                    if (! $company->blocked) {
+                    if (! $company->stopped('nom035')) {
                         $sent += $this->company($company);
                     }
                 }, ['user_id' => null]);

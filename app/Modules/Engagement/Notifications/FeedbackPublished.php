@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * to read it (the link is made as the job runs, so the plain token never reaches the queue). It says nothing of what
  * anyone answered.
  */
-final class FeedbackPublished extends Notification
+final class FeedbackPublished extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -35,5 +36,10 @@ final class FeedbackPublished extends Notification
             ->line("{$this->company->tradeName} compartió lo que escuchó en la encuesta de clima y lo que hará al respecto: qué dijeron los equipos, quién responde y para cuándo.")
             ->action('Ver lo que haremos', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

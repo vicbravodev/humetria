@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import DashboardRouteNorm from '@/components/tenancy/dashboard-route-norm';
 import { normsInUse } from '@/lib/dashboard';
@@ -9,13 +10,15 @@ export default function DashboardRoutes({
 }: {
     centers: Paginated<CenterRoutes>;
 }) {
+    const modules = usePage().props.tenant?.modules;
+
     return (
         <section aria-labelledby="routes" className="flex flex-col gap-3">
             <h2 id="routes" className="text-xl leading-7 font-semibold">
                 Dónde vas
             </h2>
             <div className="@container overflow-hidden card">
-                {normsInUse(centers.data).map(({ norm, rows }) => (
+                {normsInUse(centers.data, modules).map(({ norm, rows }) => (
                     <DashboardRouteNorm
                         key={norm.key}
                         norm={norm}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Data\CompanyLogo;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
@@ -14,7 +15,7 @@ use InvalidArgumentException;
 
 final readonly class CompanyDirectory implements Companies
 {
-    public function __construct(private TenantContext $tenantContext) {}
+    public function __construct(private TenantContext $tenantContext, private CompanyModules $modules, private ModuleStates $states) {}
 
     public function enter(string $tenantId): CompanySummary
     {
@@ -25,8 +26,10 @@ final readonly class CompanyDirectory implements Companies
         }
 
         $this->tenantContext->set($tenant);
+        // Entering is where a job or a portal asks what the company has: it reads it as it is now.
+        $this->states->prime($tenant);
 
-        return self::summary($tenant);
+        return $this->summary($tenant);
     }
 
     public function enterBySlug(string $slug): ?CompanySummary
@@ -38,13 +41,17 @@ final readonly class CompanyDirectory implements Companies
         }
 
         $this->tenantContext->set($tenant);
+        $this->states->prime($tenant);
 
-        return self::summary($tenant);
+        return $this->summary($tenant);
     }
 
     public function current(): CompanySummary
     {
-        return self::summary(Tenant::query()->findOrFail($this->tenantContext->id()));
+        $tenant = Tenant::query()->findOrFail($this->tenantContext->id());
+        $this->states->prime($tenant);
+
+        return $this->summary($tenant);
     }
 
     public function contact(): ?string
@@ -52,7 +59,7 @@ final readonly class CompanyDirectory implements Companies
         return Tenant::query()->findOrFail($this->tenantContext->id())->ownerMembership()->with('user:id,email')->first()?->user?->email;
     }
 
-    private static function summary(Tenant $tenant): CompanySummary
+    private function summary(Tenant $tenant): CompanySummary
     {
         $logo = $tenant->logo_path === null ? null : new CompanyLogo(
             Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
@@ -60,6 +67,6 @@ final readonly class CompanyDirectory implements Companies
             (int) $tenant->logo_height,
         );
 
-        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type);
+        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type, $tenant->status()->isReadOnly(), $this->modules->restrictedTo($tenant->id));
     }
 }

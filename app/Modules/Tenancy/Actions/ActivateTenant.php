@@ -20,7 +20,7 @@ final readonly class ActivateTenant
     public function handle(Tenant $tenant, CarbonImmutable $until): Tenant
     {
         return DB::transaction(function () use ($tenant, $until): Tenant {
-            $tenant->update(['active_until' => $until, 'deactivated_at' => null]);
+            $tenant->update(['active_until' => $until, 'restriction' => null, 'restriction_reason' => null, 'restricted_at' => null]);
 
             $context = ['active_until' => $until->toIso8601String()];
 

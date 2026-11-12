@@ -6,6 +6,11 @@ use App\Models\User;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\AssistantScopeFactory;
+use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\Profile;
+use App\Modules\Billing\Models\AccountCompany;
+use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -55,6 +60,26 @@ function superadmin(): User
     $user->assignRole(User::SUPERADMIN);
 
     return $user;
+}
+
+function support(): User
+{
+    $user = User::factory()->create();
+    // The platform role belongs to no company: assigned outside any team.
+    setPermissionsTeamId(null);
+    $user->assignRole(User::SUPPORT);
+
+    return $user;
+}
+
+/**
+ * The columns that suspend a company, for tests that write them straight to the table.
+ *
+ * @return array<string, mixed>
+ */
+function suspension(): array
+{
+    return ['restriction' => 'suspended', 'restriction_reason' => 'Suspendida', 'restricted_at' => now()];
 }
 
 function signInAsSuperadmin(): void
@@ -613,6 +638,82 @@ function enrollmentUrl(string $employeeId, ?int $userId = null): string
     });
 
     return is_string($url) ? $url : throw new LogicException('No enrollment email.');
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function subscriptionInput(array $overrides = []): array
+{
+    return [
+        'plan' => 'cumplimiento',
+        'profile' => 'direct',
+        'seats' => 100,
+        'centers' => 2,
+        'status' => 'active',
+        'starts_on' => '2026-12-01',
+        'negotiated_price' => '',
+        'negotiated_valid_until' => '',
+        ...$overrides,
+    ];
+}
+
+/**
+ * A company paid by a new account of that kind ('direct' or 'consultant').
+ *
+ * @return array{0: Tenant, 1: BillingAccount}
+ */
+function paidCompany(string $kind = 'direct'): array
+{
+    $account = $kind === 'consultant' ? BillingAccount::factory()->consultant()->create() : BillingAccount::factory()->create();
+    $tenant = Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
+
+    return [$tenant, $account];
+}
+
+/**
+ * A company that the account pays, with a plan.
+ *
+ * @param  array<string, mixed>  $attributes  of the Subscription; defaults to a paying channel Cumplimiento of 100 people and 2 centers
+ */
+function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenant = null): Tenant
+{
+    $tenant ??= Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 100, 'centers' => 2, ...$attributes]);
+
+    return $tenant;
+}
+
+/**
+ * Puts the company on a plan whose campaign email quota for the month is exactly `$quota` (the floor, with nothing per seat).
+ */
+function withMailQuota(Tenant $tenant, int $quota): void
+{
+    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    [, $account] = paidCompany();
+    planFor($account, [], $tenant);
+}
+
+function statementMonth(): Carbon\CarbonImmutable
+{
+    return Carbon\CarbonImmutable::parse('2026-12-01');
+}
+
+/**
+ * A direct company with a plan from a month before; 100 people and 2 centers of Cumplimiento unless said otherwise.
+ *
+ * @param  array<string, mixed>  $plan
+ * @return array{0: Tenant, 1: Subscription}
+ */
+function statementCompany(array $plan = []): array
+{
+    [$tenant] = paidCompany();
+    $subscription = Subscription::factory()->create(['tenant_id' => $tenant->id, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01', ...$plan]);
+
+    return [$tenant, $subscription];
 }
 
 /**

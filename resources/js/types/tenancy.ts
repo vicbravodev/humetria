@@ -27,9 +27,15 @@ export type TenantRow = {
         | 'active'
         | 'trial_ended'
         | 'expired'
-        | 'deactivated';
+        | 'read_only'
+        | 'suspended'
+        | 'archived';
     status_label: string;
     status_date: string | null;
+    /** Why a person restricted it (read only, suspended, archived); null otherwise. */
+    restriction_reason: string | null;
+    /** Whether it records working time with Attendance: restricting it stops that. */
+    uses_attendance: boolean;
     /** Last paid day as Y-m-d in Mexico City time; null when never activated. */
     active_until: string | null;
     blocked: boolean;
@@ -66,7 +72,14 @@ export type InvitationPage = { token: string; passwordRules: string } & (
 );
 
 /** The views of the console's companies. */
-export type TenantView = 'all' | 'active' | 'trial' | 'expired' | 'deactivated';
+export type TenantView =
+    | 'all'
+    | 'active'
+    | 'trial'
+    | 'expired'
+    | 'read_only'
+    | 'suspended'
+    | 'archived';
 
 export type TenantFilters = { q: string; status: TenantView };
 
@@ -75,8 +88,12 @@ export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 /** The company a request is working in, shared on every page under /admin/{slug}. */
 export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
+        /** Its people read and export but change nothing: an ended trial or term, or a person's decision. */
+        read_only: boolean;
         /** Whether the account is a company or a union; fixed when it was created. */
         type: 'company' | 'union';
+        /** The modules the company has (attendance, nom035, nom037, seating, complaints…); the others are hidden. */
+        modules: string[];
         trial_days_left: number | null;
         role: TenantRole;
         role_label: string;
@@ -117,7 +134,9 @@ export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &
-    Pick<TenantRow, 'status' | 'status_label' | 'blocked'>;
+    Pick<TenantRow, 'status' | 'status_label' | 'blocked'> & {
+        read_only: boolean;
+    };
 
 /** One work center as its company's list shows it. */
 export type WorkCenterRow = {
@@ -189,3 +208,83 @@ export type RoleMatrix = {
     columns: string[];
     rows: { label: string; cells: string[] }[];
 };
+
+/** Where a module of a company comes from: its plan, what it had before the plan, a person's grant, or a person's revocation. */
+export type ModuleSource = 'plan' | 'legacy' | 'grant' | 'revoke';
+
+/** A module of a company as its console page lists it. */
+/** What a company has used of one limit of its plan, as its own pages show it; null when it has no plan. */
+export type PlanLimit = {
+    used: number;
+    amount: number;
+    remaining: number;
+    over: boolean;
+};
+
+/** What a company has used of one limit of its plan (people or work centers), as the console shows it. */
+export type LimitRow = {
+    resource: 'seats' | 'centers';
+    label: string;
+    used: number;
+    amount: number;
+    remaining: number;
+    /** It already had more than the limit when it was set: it keeps them and cannot add. */
+    over: boolean;
+};
+
+/** Humi's tokens of the current month for a company, in the console. */
+export type UsageSummary = {
+    period_label: string;
+    used: number;
+    /** Held for answers still being written. */
+    reserved: number;
+    /** The plan's quota plus what a person added this month. */
+    quota: number;
+    granted: number;
+    remaining: number;
+};
+
+/** A meter that only measures (campaign email, files): this month's figure against the plan's quota. */
+export type OtherUsage = {
+    meter: string;
+    label: string;
+    unit: string;
+    used: number;
+    quota: number;
+    remaining: number;
+};
+
+/** A month of Humi's use. */
+export type UsageMonth = {
+    period: string;
+    label: string;
+    used: number;
+    /** The quota the month had when last asked; null when nobody asked. */
+    quota: number | null;
+};
+
+export type ModuleRow = {
+    key: string;
+    label: string;
+    enabled: boolean;
+    source: ModuleSource | null;
+    source_label: string | null;
+    reason: string | null;
+    /** The day it stops being on, written for display; null when it does not end. */
+    ends_on: string | null;
+    /** False for the tools the catalog names but nobody has built yet. */
+    exists_in_code: boolean;
+};
+
+/** The company a console page is about. */
+export type CompanyDetail = Pick<
+    TenantRow,
+    | 'id'
+    | 'legal_name'
+    | 'trade_name'
+    | 'rfc'
+    | 'slug'
+    | 'status'
+    | 'status_label'
+    | 'restriction_reason'
+>;

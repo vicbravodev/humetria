@@ -47,7 +47,7 @@ final readonly class ScheduleSeatingChecks
 
     private function check(string $tenantId): int
     {
-        if ($this->companies->enter($tenantId)->blocked) {
+        if ($this->companies->enter($tenantId)->stopped('seating')) {
             return 0;
         }
 

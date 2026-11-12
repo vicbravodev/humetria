@@ -19,7 +19,7 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
             : navTrail(
                   navSections({
                       tenant,
-                      isSuperadmin: auth.isSuperadmin,
+                      isStaff: auth.isStaff,
                       home: tenant?.trade_name ?? 'Humetría',
                   }),
                   currentUrl,

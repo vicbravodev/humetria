@@ -45,7 +45,11 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     /** Platform role (Humetría staff): passes every ability, see AppServiceProvider. */
     public const string SUPERADMIN = 'superadmin';
 
-    private ?bool $superadmin = null;
+    /** Platform role (Humetría staff): sees the console and works as an owner, and changes nothing about a company. */
+    public const string SUPPORT = 'support';
+
+    /** @var list<string>|null */
+    private ?array $platformRoles = null;
 
     /**
      * Whether the user holds the platform's superadmin role. That Spatie role belongs to no company, so it is read
@@ -53,13 +57,50 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
      */
     public function isSuperadmin(): bool
     {
-        return $this->superadmin ??= DB::table('model_has_roles')
+        return in_array(self::SUPERADMIN, $this->platformRoles(), true);
+    }
+
+    /** Whether the user holds the platform's support role, read with the superadmin's in the same query. */
+    public function isSupport(): bool
+    {
+        return in_array(self::SUPPORT, $this->platformRoles(), true);
+    }
+
+    /** Humetría's own people: the console and impersonation are for them, each with what their role allows. */
+    public function isStaff(): bool
+    {
+        return $this->platformRoles() !== [];
+    }
+
+    /**
+     * The platform roles the user holds, in one query for both.
+     *
+     * @return list<string>
+     */
+    private function platformRoles(): array
+    {
+        if ($this->platformRoles !== null) {
+            return $this->platformRoles;
+        }
+
+        $held = DB::table('model_has_roles')
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->where('roles.name', self::SUPERADMIN)
+            ->whereIn('roles.name', [self::SUPERADMIN, self::SUPPORT])
             ->whereNull('model_has_roles.tenant_id')
             ->where('model_has_roles.model_type', $this->getMorphClass())
             ->where('model_has_roles.model_id', $this->id)
-            ->exists();
+            ->select('roles.name')
+            ->get();
+
+        $this->platformRoles = [];
+
+        foreach ($held as $role) {
+            if (is_string($role->name)) {
+                $this->platformRoles[] = $role->name;
+            }
+        }
+
+        return $this->platformRoles;
     }
 
     /**

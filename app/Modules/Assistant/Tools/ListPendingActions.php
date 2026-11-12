@@ -14,6 +14,7 @@ use App\Modules\Campaigns\Contracts\EvaluationSchedule;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Telework\Contracts\TeleworkStanding;
 use App\Modules\Telework\Data\TeleworkRow;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -37,6 +38,7 @@ final readonly class ListPendingActions implements Tool
         private CampaignRecords $campaigns,
         private EvaluationSchedule $schedule,
         private TeleworkStanding $telework,
+        private CompanyModules $modules,
         private PanelLinks $links,
         private ScopeGuard $guard,
     ) {}
@@ -83,11 +85,16 @@ final readonly class ListPendingActions implements Tool
         $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived));
 
         if ($centers === []) {
-            return [['priority' => 0, 'kind' => 'register_work_center', 'title' => 'Registrar tu primer centro de trabajo', 'detail' => 'NOM-035 y NOM-037 se aplican por centro de trabajo.', 'due' => null, 'link' => $this->links->workCenters()]];
+            return [['priority' => 0, 'kind' => 'register_work_center', 'title' => 'Registrar tu primer centro de trabajo', 'detail' => 'Las normas se aplican por centro de trabajo.', 'due' => null, 'link' => $this->links->workCenters()]];
         }
 
         $names = array_column(array_map(fn (WorkCenterSummary $center): array => ['id' => $center->id, 'name' => $center->name], $centers), 'name', 'id');
-        $items = [...$this->evaluations($names), ...$this->campaignItems($names), ...$this->teleworkGaps($names)];
+        $nom035 = $this->modules->enabled($this->scope->tenantId, 'nom035');
+        $items = [
+            ...($nom035 ? $this->evaluations($names) : []),
+            ...($nom035 ? $this->campaignItems($names) : []),
+            ...($this->modules->enabled($this->scope->tenantId, 'nom037') ? $this->teleworkGaps($names) : []),
+        ];
         // Stable: items of the same urgency stay in the order they were found.
         usort($items, fn (array $left, array $right): int => $left['priority'] <=> $right['priority']);
 

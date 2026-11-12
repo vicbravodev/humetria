@@ -66,8 +66,8 @@ final class SendInvitations implements ShouldQueue
         $companies = resolve(Companies::class);
         $company = $companies->current();
 
-        // A blocked company sends nothing; who was waiting is marked failed, so a reminder reaches them once it is back.
-        if ($company->blocked) {
+        // A blocked company, or one without this survey's module, sends nothing; who was waiting is marked failed, so a reminder reaches them once it is back.
+        if ($company->stopped($survey->kind->value)) {
             $this->failed(null);
 
             return;

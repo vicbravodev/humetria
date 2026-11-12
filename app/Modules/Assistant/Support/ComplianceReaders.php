@@ -11,8 +11,14 @@ final readonly class ComplianceReaders
 {
     /**
      * @param  list<ComplianceReader>  $readers
+     * @param  array<class-string<ComplianceReader>, string>  $modules  the module of the company each reader reports on; one not listed is told to every company.
      */
-    public function __construct(private array $readers) {}
+    public function __construct(private array $readers, private array $modules = []) {}
+
+    public function moduleOf(ComplianceReader $reader): ?string
+    {
+        return $this->modules[$reader::class] ?? null;
+    }
 
     /**
      * @return list<ComplianceReader>

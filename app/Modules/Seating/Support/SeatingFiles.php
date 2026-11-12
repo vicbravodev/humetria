@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Seating\Support;
 
+use App\Modules\Billing\Contracts\StorageGuard;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -15,9 +16,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final readonly class SeatingFiles
 {
+    public function __construct(private StorageGuard $storage) {}
+
+    /** @throws RuntimeException when the plan's storage cannot hold a new file this size. */
     public function put(string $path, string $contents): void
     {
+        $this->storage->admit($path, strlen($contents));
+
         if (! $this->disk()->put($path, $contents)) {
+            $this->storage->release($path, strlen($contents));
+
             throw new RuntimeException('The file could not be stored.');
         }
     }

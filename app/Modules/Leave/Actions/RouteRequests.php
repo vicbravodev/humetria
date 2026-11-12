@@ -41,7 +41,7 @@ final readonly class RouteRequests
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($company, &$done): void {
-                    if (! $this->companies->enter($company->tenant_id)->blocked) {
+                    if (! $this->companies->enter($company->tenant_id)->stopped('vacations')) {
                         $done['taken'] += $this->markTaken();
                         $moved = $this->reroute();
                         $done['reassigned'] += $moved['reassigned'];

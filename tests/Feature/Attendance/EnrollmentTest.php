@@ -180,7 +180,7 @@ it('answers the same 404 for every link that does not work, whatever the reason'
     }],
     'this link under another company' => [fn ($test): array => [Tenant::factory()->create()->slug, $test->token]],
     'a suspended company' => [function ($test): array {
-        $test->tenant->update(['deactivated_at' => now()]);
+        $test->tenant->update(suspension());
 
         return ['acme', $test->token];
     }],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Organization\Data\RosterEntry;
@@ -17,7 +18,7 @@ use Illuminate\Notifications\Notification;
  * The email that carries a person's survey link, from their company and written as the survey speaks ("usted"). The
  * plain token lives only here and in the link.
  */
-final class SurveyInvitation extends Notification
+final class SurveyInvitation extends Notification implements MailBag
 {
     public function __construct(
         private readonly SurveyEmail $email,
@@ -83,5 +84,10 @@ final class SurveyInvitation extends Notification
     private static function daysLeft(int $days): string
     {
         return $days <= 1 ? 'Hoy es su último día' : "Le quedan {$days} días";
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

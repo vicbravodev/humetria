@@ -163,7 +163,7 @@ it('measures a sampled Guía III against the sample', function (): void {
 it('leaves out drafts, closed evaluations, blocked companies and companies with no owner', function (): void {
     peopleIn(Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]), 'Ventas', 0, 5);
     peopleIn(Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]), 'Ventas', 0, 5);
-    $blocked = Tenant::factory()->create(['deactivated_at' => now()]);
+    $blocked = Tenant::factory()->suspended()->create();
     ownerOf($blocked);
     peopleIn(evaluationOf($blocked, WorkCenter::factory()->for($blocked)->create()), 'Ventas', 0, 5);
     $ownerless = Tenant::factory()->create();

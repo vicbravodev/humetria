@@ -4,9 +4,24 @@ declare(strict_types=1);
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
+use App\Modules\Billing\Models\AccountCompany;
+use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\CompanyTransfer;
+use App\Modules\Billing\Models\Payment;
+use App\Modules\Billing\Models\PaymentAllocation;
+use App\Modules\Billing\Models\Statement;
+use App\Modules\Billing\Models\StatementLine;
+use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Models\SubscriptionCharge;
+use App\Modules\Billing\Models\UsageCounter;
+use App\Modules\Billing\Models\UsageEvent;
+use App\Modules\Billing\Models\UsageGrant;
+use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\TenantModule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -20,6 +35,23 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     TenantInvitation::class => 'accepted from outside the company',
     // The audit trail is the superadmin's too, across companies, and some entries have no company.
     AuditEntry::class => 'read across companies by the superadmin',
+    // What each company pays and who pays it is read across all of them, by the staff's console, never from inside a company.
+    AccountCompany::class => 'read across companies by the billing console',
+    Subscription::class => 'read across companies by the billing console',
+    SubscriptionCharge::class => 'read across companies by the billing console',
+    // The statement of a company is read with the rest of what its account owes, across all the companies it pays.
+    Statement::class => 'read across companies by the billing console',
+    // What a company has of each module is read from inside it (menu, routes) and from the console across companies.
+    TenantModule::class => 'read across companies by the console and by the module gate',
+    // The counters of people and centers are read across companies by the console and the nightly reconciliation.
+    // The ledger of metered use is read across companies by the console and the expiry of holds, and by key from the caller's company.
+    UsageCounter::class => 'read across companies by the console and the expiry of holds',
+    UsageReservation::class => 'read across companies by the expiry of holds',
+    UsageEvent::class => 'read across companies by the console',
+    UsageGrant::class => 'read across companies by the console',
+    TenantLimit::class => 'read across companies by the console and the reconciliation',
+    // Who paid a company before and why it moved is read across companies, from both accounts' pages.
+    CompanyTransfer::class => 'read across companies by the billing console',
 ];
 
 /**
@@ -29,6 +61,12 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
 const PLATFORM_MODELS = [
     // Maintained by Humetria from official sources (UMA, IMSS, ISN...); an account only reads them through the calculator.
     FiscalParameter::class => 'fiscal and legal values shared by every company',
+    // The payer of one or many companies (a consultant's clients): commercial data of Humetría, read by the staff's console.
+    BillingAccount::class => 'who pays for the companies, across all of them',
+    // Lines belong to a statement and payments to an account: neither belongs to a single company.
+    StatementLine::class => 'a line of a statement; the statement carries the company',
+    Payment::class => 'money an account paid, for all the companies it pays',
+    PaymentAllocation::class => 'the part of a payment that settles a statement',
 ];
 
 /** @return list<class-string<Model>> */

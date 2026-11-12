@@ -92,7 +92,7 @@ it('sends nothing when there is nothing waiting or nobody to tell', function (Cl
     }],
     'the company may not be used' => [function ($test): void {
         Acknowledgment::factory()->create(['tenant_id' => $test->tenant->id, 'document_id' => $test->policy->id, 'employee_id' => $test->ana->id]);
-        Tenant::query()->whereKey($test->tenant->id)->update(['deactivated_at' => now()]);
+        Tenant::query()->whereKey($test->tenant->id)->update(suspension());
     }],
     'the version asked is no longer in force' => [function ($test): void {
         Acknowledgment::factory()->create(['tenant_id' => $test->tenant->id, 'document_id' => $test->policy->id, 'employee_id' => $test->ana->id]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Tenancy;
 
+use App\Modules\Tenancy\Enums\TenantRestriction;
 use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonInterface;
@@ -49,8 +50,23 @@ final class TenantFactory extends Factory
         return $this->state(['active_until' => $until]);
     }
 
-    public function deactivated(): self
+    public function readOnly(string $reason = 'Solo lectura'): self
     {
-        return $this->state(['deactivated_at' => now()]);
+        return $this->restricted(TenantRestriction::ReadOnly, $reason);
+    }
+
+    public function suspended(string $reason = 'Suspendida'): self
+    {
+        return $this->restricted(TenantRestriction::Suspended, $reason);
+    }
+
+    public function archived(string $reason = 'Archivada'): self
+    {
+        return $this->restricted(TenantRestriction::Archived, $reason);
+    }
+
+    private function restricted(TenantRestriction $restriction, string $reason): self
+    {
+        return $this->state(['restriction' => $restriction, 'restriction_reason' => $reason, 'restricted_at' => now()]);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /** Tells who manages the channel that it hit its daily cap: a count, never a word of a complaint. */
-final class DailyCapReached extends Notification implements ShouldQueue
+final class DailyCapReached extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -36,5 +37,10 @@ final class DailyCapReached extends Notification implements ShouldQueue
             ->line("El canal de quejas de {$this->company->tradeName} recibió hoy {$this->cap} quejas, su tope diario, y no recibirá más hasta mañana.")
             ->line('Puede ser un uso normal o un intento de saturarlo. Revisa el canal y a quién llega cada queja.')
             ->action('Abrir el canal', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

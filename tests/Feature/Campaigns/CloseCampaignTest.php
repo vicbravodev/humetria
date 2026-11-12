@@ -112,6 +112,19 @@ it('closes the evaluations of every company whose last day ended in Mexico City'
         ->toEqual(['tenant_id' => $this->tenant->id, 'actor_id' => null, 'metadata' => ['completed' => ['nom035.guide-ii' => 1], 'pending' => [], 'automatic' => true]]);
 });
 
+it('closes the evaluations of a restricted company too: the record of a link that already stopped working does not wait for a reactivation', function (Closure $restrict): void {
+    $restrict($this->tenant);
+    $this->campaign->update(['closes_on' => '2026-11-09']);
+
+    expect(resolve(CloseExpiredCampaigns::class)->handle())->toBe(1)
+        ->and($this->campaign->refresh()->status)->toBe(CampaignStatus::Closed);
+})->with([
+    'read only' => [fn (Tenant $tenant) => $tenant->forceFill(['restriction' => 'read_only', 'restriction_reason' => 'Prueba', 'restricted_at' => now()])->save()],
+    'suspended' => [fn (Tenant $tenant) => $tenant->forceFill(suspension())->save()],
+    'archived' => [fn (Tenant $tenant) => $tenant->forceFill(['restriction' => 'archived', 'restriction_reason' => 'Prueba', 'restricted_at' => now()])->save()],
+    'expired' => [fn (Tenant $tenant) => $tenant->forceFill(['active_until' => now()->subDay()])->save()],
+]);
+
 it('runs the closing of expired evaluations every hour', function (): void {
     $events = collect(resolve(Schedule::class)->events())->filter(fn ($event): bool => str_contains((string) $event->command, 'campaigns:close-expired'));
 

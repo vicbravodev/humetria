@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
-use App\Modules\Tenancy\Actions\DeactivateTenant;
 use App\Modules\Tenancy\Actions\ListTenants;
+use App\Modules\Tenancy\Actions\ReactivateTenant;
+use App\Modules\Tenancy\Actions\RestrictTenant;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantView;
 use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
+use App\Modules\Tenancy\Http\Requests\ReactivateTenantRequest;
+use App\Modules\Tenancy\Http\Requests\RestrictTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -27,20 +31,23 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
-    public function index(Request $request, ListTenants $listTenants): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance): Response
     {
-        Gate::authorize('manage-tenants');
+        Gate::authorize('view-console');
 
         $search = trim($request->string('q')->toString());
         $view = TenantView::tryFrom($request->string('status')->toString()) ?? TenantView::All;
         $summary = $listTenants->summary($search);
+        $tenants = $listTenants->handle($search, $view);
+        // One question for the whole page, so the warning before restricting a company costs nothing per row.
+        $usingAttendance = $attendance->among(array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all()));
 
         return Inertia::render('tenancy/index', [
             'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
-            'tenants' => $listTenants->handle($search, $view)->through(function (Tenant $tenant): array {
+            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance): array {
                 $status = $tenant->status();
 
                 return [
@@ -53,6 +60,8 @@ final class TenantConsoleController extends Controller
                     'status' => $status->value,
                     'status_label' => $status->label(),
                     'status_date' => $this->statusDate($tenant, $status),
+                    'restriction_reason' => $tenant->restriction_reason,
+                    'uses_attendance' => in_array($tenant->id, $usingAttendance, true),
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
                     'owner' => $this->owner($tenant),
@@ -90,14 +99,25 @@ final class TenantConsoleController extends Controller
         return redirect()->route('companies.index');
     }
 
-    public function deactivate(Tenant $tenant, DeactivateTenant $deactivateTenant): RedirectResponse
+    public function restrict(RestrictTenantRequest $request, Tenant $tenant, RestrictTenant $restrictTenant): RedirectResponse
     {
-        Gate::authorize('manage-tenants');
-        abort_if($tenant->status()->isBlocked(), 409);
+        $restriction = $request->restriction();
+        abort_if($tenant->restriction === $restriction, 409);
 
-        $deactivateTenant->handle($tenant);
+        $restrictTenant->handle($tenant, $restriction, $request->reason());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa desactivada.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => $restriction->confirmation()]);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function reactivate(ReactivateTenantRequest $request, Tenant $tenant, ReactivateTenant $reactivateTenant): RedirectResponse
+    {
+        abort_if($tenant->restriction === null, 409);
+
+        $reactivateTenant->handle($tenant, $request->reason());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa reactivada.']);
 
         return redirect()->route('companies.index');
     }
@@ -110,7 +130,9 @@ final class TenantConsoleController extends Controller
             TenantStatus::TrialEnded => 'Prueba terminó el '.$this->day($tenant->trialEndsAt()),
             TenantStatus::Active => 'Activa hasta '.$this->day($tenant->active_until),
             TenantStatus::Expired => 'Venció el '.$this->day($tenant->active_until),
-            TenantStatus::Deactivated => 'Desactivada el '.$this->day($tenant->deactivated_at),
+            TenantStatus::ReadOnly => 'Solo lectura desde el '.$this->day($tenant->restricted_at),
+            TenantStatus::Suspended => 'Suspendida el '.$this->day($tenant->restricted_at),
+            TenantStatus::Archived => 'Archivada el '.$this->day($tenant->restricted_at),
         };
     }
 

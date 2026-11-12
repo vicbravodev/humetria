@@ -148,7 +148,7 @@ it('marks the person without an email and counts them', function (): void {
 
 it('sends no link while the company is blocked, and marks who was waiting as failed so a reminder reaches them later', function (): void {
     [, $jobs] = launchedSurvey($this->tenant, $this->plant, $this->area, $this->user, 20);
-    $this->tenant->update(['deactivated_at' => now()]);
+    $this->tenant->update(['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => now()]);
 
     $jobs[0]->handle();
 

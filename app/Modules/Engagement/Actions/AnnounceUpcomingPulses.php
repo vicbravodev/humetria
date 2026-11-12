@@ -58,7 +58,7 @@ final readonly class AnnounceUpcomingPulses
     {
         $company = $this->companies->enter($schedule->tenant_id);
 
-        if ($company->blocked) {
+        if ($company->stopped('pulse')) {
             return 0;
         }
 

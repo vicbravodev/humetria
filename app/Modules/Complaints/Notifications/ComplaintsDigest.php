@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * The email to a handler with what is new in their cases: counts, never a word of a case, a reference or a name. It goes in
  * the hourly sweep and not one per complaint: an email at the instant of a submission would tell its exact hour.
  */
-final class ComplaintsDigest extends Notification implements ShouldQueue
+final class ComplaintsDigest extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -54,5 +55,10 @@ final class ComplaintsDigest extends Notification implements ShouldQueue
         }
 
         return $mail->line('Por privacidad, este correo no incluye lo que dicen.')->action('Ver mis casos', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

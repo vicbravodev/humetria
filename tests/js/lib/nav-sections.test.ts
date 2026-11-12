@@ -30,7 +30,7 @@ describe('navSections', () => {
             shape(
                 navSections({
                     tenant: acme(),
-                    isSuperadmin: false,
+                    isStaff: false,
                     home: 'Acme',
                 }),
             ),
@@ -50,7 +50,7 @@ describe('navSections', () => {
 
     it('marks the company pages as the section without a heading', () => {
         expect(
-            navSections({ tenant: acme(), isSuperadmin: false }).map(
+            navSections({ tenant: acme(), isStaff: false }).map(
                 (section) => section.key,
             ),
         ).toEqual(['main', 'compliance', 'listening', 'operations']);
@@ -61,7 +61,7 @@ describe('navSections', () => {
             shape(
                 navSections({
                     tenant: acme('viewer', false),
-                    isSuperadmin: false,
+                    isStaff: false,
                 }),
             ),
         ).toEqual([
@@ -75,21 +75,21 @@ describe('navSections', () => {
             shape(
                 navSections({
                     tenant: acme('committee', false),
-                    isSuperadmin: false,
+                    isStaff: false,
                 }),
             ),
         ).toEqual([['Cumple la norma', ['NOM-037', 'Ley Silla']]]);
         expect(
             navSections({
                 tenant: outsideHandler,
-                isSuperadmin: false,
+                isStaff: false,
             }).map((section) => section.key),
         ).toEqual(['main']);
         expect(
             shape(
                 navSections({
                     tenant: acme('owner', true, 'union'),
-                    isSuperadmin: false,
+                    isStaff: false,
                 }),
             ),
         ).toEqual([
@@ -101,7 +101,7 @@ describe('navSections', () => {
     it('adds the platform for the superadmin, and counts the evaluations in course on NOM-035', () => {
         const sections = navSections({
             tenant: acme(),
-            isSuperadmin: true,
+            isStaff: true,
             inCourse: 2,
         });
 

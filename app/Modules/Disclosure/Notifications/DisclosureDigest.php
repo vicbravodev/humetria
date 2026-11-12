@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * The Monday email about the policy and its disclosure, to the owner: what waits, in lines that appear only when they are not
  * zero, in the panel voice ("tú"). Counts only: never a center, a title or a text the company wrote.
  */
-final class DisclosureDigest extends Notification implements ShouldQueue
+final class DisclosureDigest extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -67,5 +68,10 @@ final class DisclosureDigest extends Notification implements ShouldQueue
         }
 
         return $mail;
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

@@ -77,7 +77,7 @@ it('says nothing on any other day, when a newer evaluation exists, or to a compa
     'a day after' => [fn ($test) => $test->travel(1)->days()],
     'a newer one drafted' => [fn ($test) => Campaign::factory()->create(['tenant_id' => $test->tenant->id, 'work_center_id' => $test->plant->id])],
     'a newer one closed' => [fn ($test) => closedAt($test->plant, '2026-06-01 18:00:00')],
-    'blocked' => [fn ($test) => Tenant::query()->whereKey($test->tenant->id)->update(['deactivated_at' => now()])],
+    'blocked' => [fn ($test) => Tenant::query()->whereKey($test->tenant->id)->update(suspension())],
     'no owner' => [fn ($test) => App\Modules\Tenancy\Models\TenantMembership::query()->delete()],
     'archived center' => [fn ($test) => $test->plant->forceFill(['archived_at' => now()])->save()],
 ]);

@@ -64,7 +64,7 @@ it('sends the panel of a union to Compensación', function (): void {
 });
 
 it('blocks Compensación of a suspended account like the other tools', function (): void {
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->get(route('tenant.compensation.index', $tenant))

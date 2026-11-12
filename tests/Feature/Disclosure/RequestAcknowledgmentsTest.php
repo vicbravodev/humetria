@@ -199,3 +199,22 @@ it('logs how many were asked, with ids only', function (): void {
 
     Log::shouldHaveReceived('info')->with('disclosure.acknowledgment_requested', ['document_id' => $policy->id, 'employees' => 2])->once();
 });
+
+it('holds the mail before it keeps the requests: what does not fit keeps none and says how many are missing', function (): void {
+    staffOf($this->tenant, $this->north, 3);
+    $policy = policyReaching([$this->north]);
+    withMailQuota($this->tenant, 2);
+
+    expect(fn () => resolve(RequestAcknowledgments::class)->handle($policy->id))
+        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+
+    expect(askedFor($policy))->toBe([]);
+});
+
+it('keeps the requests when they fit the quota exactly', function (): void {
+    staffOf($this->tenant, $this->north, 3);
+    $policy = policyReaching([$this->north]);
+    withMailQuota($this->tenant, 3);
+
+    expect(resolve(RequestAcknowledgments::class)->handle($policy->id))->toBe(3);
+});

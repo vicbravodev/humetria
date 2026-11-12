@@ -92,7 +92,7 @@ it('tells again when the date moved after the heads-up', function (): void {
 });
 
 it('stays quiet in a suspended company', function (): void {
-    Illuminate\Support\Facades\DB::table('tenants')->where('id', $this->tenant->id)->update(['deactivated_at' => now()]);
+    Illuminate\Support\Facades\DB::table('tenants')->where('id', $this->tenant->id)->update(['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => now()]);
 
     expect(pulseAnnounceRun())->toBe(0);
 });

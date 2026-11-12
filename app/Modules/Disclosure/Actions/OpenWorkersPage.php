@@ -34,7 +34,7 @@ final readonly class OpenWorkersPage
 
         $company = $this->companies->enter($link->tenant_id);
 
-        if ($company->blocked) {
+        if ($company->stopped('nom035')) {
             throw new PageUnavailable;
         }
 

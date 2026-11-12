@@ -29,7 +29,7 @@ final class SendNoticeAnswer implements ShouldQueue, ShouldQueueAfterCommit
     {
         $company = $companies->enter($this->tenantId);
         $teleworker = Teleworker::query()->find($this->teleworkerId, ['id', 'employee_id']);
-        $person = $company->blocked || $teleworker === null ? null : $roster->find($teleworker->employee_id);
+        $person = $company->stopped('nom037') || $teleworker === null ? null : $roster->find($teleworker->employee_id);
 
         if ($person !== null && $person->active && $person->email !== null) {
             Notification::route('mail', $person->email)->notify(new NoticeAnswered(route('portal.notices.show', $issue->handle($person->id)), $person->name, $company));

@@ -19,7 +19,9 @@ const variants: [
     ['not_started', 'outline'],
     ['trial_ended', 'destructive'],
     ['expired', 'destructive'],
-    ['deactivated', 'destructive'],
+    ['read_only', 'secondary'],
+    ['suspended', 'destructive'],
+    ['archived', 'outline'],
 ];
 
 describe('tenantStatusVariant', () => {
@@ -27,6 +29,12 @@ describe('tenantStatusVariant', () => {
         expect(tenantStatusVariant(status)).toBe(variant);
     });
 });
+
+const restricted: TenantRow['status'][] = [
+    'read_only',
+    'suspended',
+    'archived',
+];
 
 const activations: {
     status: TenantRow['status'];
@@ -64,12 +72,12 @@ const activations: {
         title: 'Reactivar empresa',
         submit: 'Reactivar',
     },
-    {
-        status: 'deactivated',
+    ...restricted.map((status) => ({
+        status,
         action: 'Reactivar',
         title: 'Reactivar empresa',
         submit: 'Reactivar',
-    },
+    })),
 ];
 
 describe('activationCopy', () => {
