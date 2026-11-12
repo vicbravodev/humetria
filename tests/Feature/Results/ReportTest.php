@@ -3,8 +3,11 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Results\Actions\SaveReportDetails;
@@ -73,7 +76,7 @@ it('builds the 7.7 report of a closed evaluation, with what the platform knows a
             ->where('report.itemCount', 72)
             ->where('report.period', '2 nov 2026 al 19 nov 2026')
             ->where('report.participation', ['invited' => 0, 'answered' => 0])
-            ->where('report.method', 'Cuestionario de la Guía de referencia III de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del 2 nov 2026 al 19 nov 2026 a una muestra representativa de 67 de 80 trabajadores (III.1), seleccionada al azar y en proporción por género, y la Guía de referencia I a todas las personas. Cada cuestionario se calificó por sí solo, por categoría, dominio y calificación final (III.3), sin promedios. Los resultados de grupos con menos de 5 cuestionarios no se muestran, para proteger el anonimato de las respuestas.')
+            ->where('report.method', 'Cuestionario de la Guía de referencia III de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del 2 nov 2026 al 19 nov 2026, más la Guía de referencia I a todas las personas. Se invitó a una muestra representativa de 67 de 80 personas (III.1), seleccionada al azar y en proporción por género; contestaron 0. Cada cuestionario se calificó por sí solo, por categoría, dominio y calificación final (III.3), sin promedios. Los resultados de grupos con menos de 5 cuestionarios no se muestran, para proteger el anonimato de las respuestas.')
             ->where('report.objective', 'Identificar y analizar los factores de riesgo psicosocial y evaluar el entorno organizacional del centro de trabajo, conforme a la NOM-035-STPS-2018.')
             ->where('report.activities', 'Manufactura de autopartes')
             ->where('report.conclusions', null)
@@ -106,7 +109,22 @@ it('says the evaluation was for everyone, with Guía II', function (): void {
         ->assertInertia(fn (Assert $page) => $page
             ->where('report.guide', 'Guía II')
             ->where('report.objective', 'Identificar y analizar los factores de riesgo psicosocial del centro de trabajo, conforme a la NOM-035-STPS-2018.')
-            ->where('report.method', 'Cuestionario de la Guía de referencia II de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del 2 nov 2026 al 19 nov 2026 a todos los trabajadores del centro (30), y la Guía de referencia I a todas las personas. Cada cuestionario se calificó por sí solo, por categoría, dominio y calificación final (II.3), sin promedios. Los resultados de grupos con menos de 5 cuestionarios no se muestran, para proteger el anonimato de las respuestas.'));
+            ->where('report.method', 'Cuestionario de la Guía de referencia II de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del 2 nov 2026 al 19 nov 2026, más la Guía de referencia I a todas las personas. Se invitó a las 30 personas del centro; contestaron 0. Cada cuestionario se calificó por sí solo, por categoría, dominio y calificación final (II.3), sin promedios. Los resultados de grupos con menos de 5 cuestionarios no se muestran, para proteger el anonimato de las respuestas.'));
+});
+
+it('says in the method how many of those invited answered', function (): void {
+    $everyone = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'workers' => 20, 'launched_at' => '2026-11-02 16:00:00', 'closed_at' => '2026-11-19 18:00:00']);
+    foreach (range(1, 20) as $index) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $everyone->id])->id,
+            'instrument' => 'nom035.guide-ii',
+            ...($index <= 10 ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.report', [$this->tenant, $everyone->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('report.method', fn (string $method): bool => str_contains($method, 'Se invitó a las 20 personas del centro; contestaron 10.') && ! str_contains($method, 'todos los trabajadores')));
 });
 
 it('saves what HR fills in, and shows it in the report', function (): void {
