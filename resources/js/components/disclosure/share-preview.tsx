@@ -54,6 +54,13 @@ export default function SharePreview({
                             <p>{themes}</p>
                         </div>
                     )}
+                    <p className="text-sm font-medium text-primary">
+                        Ver todas las cifras
+                        <span className="block font-normal text-muted-foreground">
+                            Cuántos cuestionarios quedan en cada nivel de
+                            riesgo, de todo el centro.
+                        </span>
+                    </p>
                     {withMeasures && props.measures.length > 0 && (
                         <div className="flex flex-col gap-1.5">
                             <p className="font-semibold">

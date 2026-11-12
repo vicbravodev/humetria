@@ -106,6 +106,7 @@ it('shows the summary each person will read before sharing the results, in both 
     visitPage('disclosure/share-results', "/admin/acme/disclosure/results/{$closed->id}/share", $dark, $mobile)
         ->assertSee('Comparte los resultados con tu equipo')
         ->assertSeeIn('[aria-labelledby="share-preview"]', 'Resultados de la evaluación de riesgo psicosocial')
+        ->assertSeeIn('[aria-labelledby="share-preview"]', 'Ver todas las cifras')
         ->assertSee('Publicar para Oficina')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);

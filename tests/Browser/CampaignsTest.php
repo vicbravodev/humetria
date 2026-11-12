@@ -176,6 +176,7 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->assertSee('Último día para contestar')
         ->assertSee('Así le llega a cada persona')
+        ->assertSeeIn('[aria-label="Así le llega a cada persona"]', 'sí lleva su nombre')
         ->click('Lanzar e invitar a 20 personas')
         ->assertSee('Se enviarán 20 correos hoy.')
         ->assertSee('Solo recibe la evaluación quien está en Empleados')
@@ -562,6 +563,7 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
 
     visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver canalización'))
         ->assertSee('Canaliza a quien lo necesite')
+        ->assertSee('Solo la ven quienes administran la empresa y Recursos Humanos.')
         ->assertSee('0 de 1 canalizada')
         ->assertSee('Ana López');
 })->with($looks);
