@@ -139,6 +139,6 @@ it('says a theme was asked in part without any count of answers nor how many are
     $this->actingAs($this->hr);
 
     $this->get(route('tenant.pulse.results', [$this->tenant, $pulse]))->assertInertia(fn (Assert $page) => $page
-        ->has('drivers.0', fn (Assert $driver) => $driver->hasAll(['key', 'label', 'descriptive', 'partial', 'favorable', 'delta'])
+        ->has('drivers.0', fn (Assert $driver) => $driver->hasAll(['key', 'label', 'descriptive', 'partial', 'favorable', 'score', 'delta'])
             ->has('items', 1, fn (Assert $item) => $item->hasAll(['key', 'text', 'favorable']))));
 });

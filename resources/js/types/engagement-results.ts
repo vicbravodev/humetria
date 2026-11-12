@@ -15,6 +15,8 @@ export type EngagementDriver = {
     /** The survey asked only some of its questions (a pulse asks the anchor): read question by question too. */
     partial: boolean;
     favorable: number | null;
+    /** Its figure on the map by group: the score or the simple average of its questions; null when one is hidden. */
+    score: number | null;
     delta: Delta | null;
     items: EngagementItem[];
 };
@@ -50,6 +52,8 @@ export type EngagementGroupDriver = {
     label: string;
     descriptive: boolean;
     favorable: number | null;
+    /** Its figure on the map: the score or the simple average of its questions; null when one is hidden. */
+    score: number | null;
     vsCompany: number | null;
 };
 

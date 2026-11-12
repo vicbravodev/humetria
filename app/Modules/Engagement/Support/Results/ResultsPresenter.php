@@ -129,6 +129,21 @@ final readonly class ResultsPresenter
         ];
     }
 
+    /**
+     * The figure of a theme on the map by group: its score or, when it has none of its own (two questions reported one
+     * by one, or a survey that asked only some), the simple average of its questions; none when any of them is hidden.
+     */
+    private static function mapScore(DriverResult $driver): ?int
+    {
+        if ($driver->favorable !== null) {
+            return $driver->favorable;
+        }
+
+        $favorable = array_map(fn (ItemResult $item): ?int => $item->favorable, $driver->items);
+
+        return $favorable === [] || in_array(null, $favorable, true) ? null : (int) round(array_sum($favorable) / count($favorable));
+    }
+
     public static function cutLabel(CutAttribute $cut): string
     {
         return match ($cut) {
@@ -182,6 +197,7 @@ final readonly class ResultsPresenter
                 // which is not a hidden one: it is read question by question, each under its own minimum.
                 'partial' => count($driver->items) < count(ItemBank::ofDriver($driver->driver)),
                 'favorable' => $driver->favorable,
+                'score' => self::mapScore($driver),
                 'delta' => $earlier === null ? null : $this->delta($this->score($driver), $this->score($earlier), $same),
                 'items' => array_map($this->item(...), $driver->items),
             ];
@@ -259,6 +275,7 @@ final readonly class ResultsPresenter
                 'label' => $driver->driver->label(),
                 'descriptive' => $driver->descriptive,
                 'favorable' => $driver->favorable,
+                'score' => self::mapScore($driver),
                 'vsCompany' => $driver->favorable === null || $overall->favorable === null ? null : $driver->favorable - $overall->favorable,
             ], $group->drivers, $company->drivers),
             ...$this->highlights($group->highlights),
