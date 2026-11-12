@@ -56,7 +56,7 @@ export default function ActionLine({
                     {action.status.label}
                 </Badge>
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell className="sticky right-0 bg-card text-right">
                 <ActionMenu
                     action={action}
                     campaignId={campaignId}

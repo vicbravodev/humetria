@@ -7,6 +7,7 @@ import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import { useActionForm } from '@/hooks/use-action-form';
 import { actionDefaults } from '@/lib/action-form';
+import { inheritedResponsible } from '@/lib/interventions';
 import type {
     ActionCatalog,
     AreaOption,
@@ -29,6 +30,8 @@ export default function ActionFormFields({
         catalog: ActionCatalog;
         areas: AreaOption[];
         members: ProgramMember[];
+        /** The Programa's responsible: what an empty one falls to. */
+        responsible: string | null;
     };
     errors: Errors;
 }) {
@@ -89,6 +92,7 @@ export default function ActionFormFields({
                 userId={start.userId}
                 name={start.name}
                 errors={errors}
+                inherited={inheritedResponsible(tools.responsible)}
             />
         </div>
     );
