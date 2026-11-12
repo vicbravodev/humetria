@@ -149,10 +149,20 @@ describe('emptyQueue', () => {
             title: 'No hay solicitudes por atender.',
             text: 'Las que su jefe no responda a tiempo llegarán aquí.',
         });
-        expect(emptyQueue('waiting').title).toBe('Ninguna solicitud espera a un jefe.');
-        expect(emptyQueue('approved').title).toBe('Aún no hay solicitudes aprobadas.');
-        expect(emptyQueue('rejected').title).toBe('Aún no hay solicitudes rechazadas.');
-        expect(emptyQueue('cancelled').title).toBe('Aún no hay solicitudes canceladas.');
-        expect(emptyQueue('taken').title).toBe('Aún no hay solicitudes disfrutadas.');
+        expect(emptyQueue('waiting').title).toBe(
+            'Ninguna solicitud espera a un jefe.',
+        );
+        expect(emptyQueue('approved').title).toBe(
+            'Aún no hay solicitudes aprobadas.',
+        );
+        expect(emptyQueue('rejected').title).toBe(
+            'Aún no hay solicitudes rechazadas.',
+        );
+        expect(emptyQueue('cancelled').title).toBe(
+            'Aún no hay solicitudes canceladas.',
+        );
+        expect(emptyQueue('taken').title).toBe(
+            'Aún no hay solicitudes disfrutadas.',
+        );
     });
 });
