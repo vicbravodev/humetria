@@ -7,6 +7,7 @@ namespace App\Modules\Organization\Support;
 use App\Modules\Organization\Contracts\ReportingLines;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -59,6 +60,35 @@ final readonly class CompanyReportingLines implements ReportingLines
             ->orderBy('id')
             ->pluck('id')
             ->all(), is_string(...)));
+    }
+
+    public function peersOf(array $employeeIds): array
+    {
+        $ids = array_values(array_filter($employeeIds, Str::isUuid(...)));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = DB::table('employees as person')
+            ->join('employees as peer', fn (JoinClause $join) => $join->on('peer.manager_id', '=', 'person.manager_id')->on('peer.tenant_id', '=', 'person.tenant_id'))
+            ->where('person.tenant_id', $this->tenant->id())
+            ->whereIn('person.id', $ids)
+            ->whereColumn('peer.id', '<>', 'person.id')
+            ->whereNull('peer.deactivated_at')
+            ->orderBy('peer.name')
+            ->orderBy('peer.id')
+            ->get(['person.id as person_id', 'peer.id as peer_id']);
+
+        $peers = [];
+
+        foreach ($rows as $row) {
+            if (is_string($row->person_id) && is_string($row->peer_id)) {
+                $peers[$row->person_id][] = $row->peer_id;
+            }
+        }
+
+        return $peers;
     }
 
     public function subtreeIds(string $employeeId): array
