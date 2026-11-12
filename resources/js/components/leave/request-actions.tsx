@@ -51,7 +51,10 @@ export default function RequestActions({
             {request.canCancel && (
                 <ConfirmDialog
                     trigger={
-                        <Button variant="outline" className="max-sm:h-11">
+                        <Button
+                            variant={request.canDecide ? 'ghost' : 'outline'}
+                            className="max-sm:h-11"
+                        >
                             Cancelar solicitud
                         </Button>
                     }

@@ -36,7 +36,7 @@ it('shows RH who is out, what waits and the windows about to close', function (b
         ->assertSee('Resumen')
         ->assertSee('1 persona fuera hoy')
         ->assertSeeIn('section[aria-labelledby="leave-summary"]', 'Esperan tu respuesta')
-        ->assertSeeIn('section[aria-labelledby="leave-summary"]', '1 esperan a su jefe')
+        ->assertSeeIn('section[aria-labelledby="leave-summary"]', '1 espera a su jefe')
         ->assertSeeIn('section[aria-labelledby="leave-ahead"]', 'Los próximos 14 días')
         ->assertSeeIn('section[aria-labelledby="leave-summary"]', 'Días por disfrutar')
         ->assertSeeIn('section[aria-labelledby="leave-summary"]', 'Siguen en el saldo: oponer la prescripción es decisión de la empresa.')
@@ -78,7 +78,6 @@ it('says so when nothing waits for RH and nobody is out', function (): void {
     visitPage('leave/index', "{$url}/vacations")
         ->assertSee('Estás al día. Nadie espera respuesta.')
         ->assertSee('Nadie está fuera hoy ni esta semana')
-        ->assertSeeIn('section[aria-labelledby="leave-detail"]', 'Nadie está fuera hoy.')
         ->assertNoJavaScriptErrors();
 });
 

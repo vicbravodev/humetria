@@ -92,11 +92,13 @@ export default function LeaveIndex({
                                 windowsClosing={summary.windowsClosing}
                             />
                         </div>
-                        <SummaryDetails
-                            view={view}
-                            counts={counts}
-                            people={people}
-                        />
+                        {Object.values(counts).some((count) => count > 0) && (
+                            <SummaryDetails
+                                view={view}
+                                counts={counts}
+                                people={people}
+                            />
+                        )}
                     </>
                 )}
             </div>

@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { CalendarClock, Hourglass, Inbox } from 'lucide-react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { countOf } from '@/lib/plural';
+import { countOf, plural } from '@/lib/plural';
 import { index as balances } from '@/routes/tenant/vacations/balances';
 import { index as requests } from '@/routes/tenant/vacations/requests';
 import type { LeaveSummary } from '@/types';
@@ -38,7 +38,9 @@ export default function SummaryKpis({ summary }: { summary: LeaveSummary }) {
                                 })}
                                 className="touch-hit underline-offset-4 hover:underline"
                             >
-                                {summary.pending} esperan a su jefe
+                                {summary.pending}{' '}
+                                {plural(summary.pending, 'espera', 'esperan')} a
+                                su jefe
                             </Link>
                         ) : (
                             'Ninguna espera a un jefe'
