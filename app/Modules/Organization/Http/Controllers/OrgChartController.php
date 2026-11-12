@@ -11,6 +11,7 @@ use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\OrgIndicators;
 use App\Modules\Organization\Support\OrgTree;
+use App\Modules\Organization\Support\ReportingGaps;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -27,7 +28,7 @@ use Inertia\Response;
  */
 final class OrgChartController extends Controller
 {
-    public function index(Request $request, OrgTree $tree, WorkCenters $workCenters, OrgIndicators $indicators): Response
+    public function index(Request $request, OrgTree $tree, WorkCenters $workCenters, OrgIndicators $indicators, ReportingGaps $gaps): Response
     {
         Gate::authorize('view-org-chart');
 
@@ -60,6 +61,8 @@ final class OrgChartController extends Controller
             'total_people' => $counts->total ?? 0,
             'with_manager' => $counts->with_manager ?? 0,
             'indicators' => $indicators->handle(),
+            // People with no manager who lead nobody: the chart does not draw them, the tray and the list hold them.
+            'without_manager' => $gaps->counts()['without_manager'],
             'can_manage' => Gate::allows('manage-org-chart'),
         ]);
     }

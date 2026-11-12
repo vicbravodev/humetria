@@ -11,9 +11,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(OrgChartController::class);
 
-// 8 of every page of the panel and 10 of the chart without a focus: the counts, the indicators (2), the roots (3) and
-// their first level (2), each with the work centers and who is away today.
-const PLAIN_ORG_CHART_QUERIES = 18;
+// 8 of every page of the panel and 11 of the chart without a focus: the counts, the indicators (2), the roots (3) and
+// their first level (2), each with the work centers and who is away today, and the people with no place in the chart (1).
+const PLAIN_ORG_CHART_QUERIES = 19;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
@@ -77,3 +77,13 @@ it('reads the first level of any number of roots with the same queries', functio
 
     $this->get(route('tenant.org-chart.index', $this->tenant))->assertOk();
 })->with([1, 40]);
+
+it('says how many people have no manager and lead nobody: the ones the chart does not draw', function (): void {
+    $dir = Employee::factory()->create([...$this->place, 'name' => 'Dir']);
+    Employee::factory()->reportingTo($dir)->create($this->place);
+    Employee::factory()->count(2)->create($this->place);
+    Employee::factory()->deactivated()->create($this->place);
+
+    $this->actingAs($this->viewer)->get(route('tenant.org-chart.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('without_manager', 2));
+});
