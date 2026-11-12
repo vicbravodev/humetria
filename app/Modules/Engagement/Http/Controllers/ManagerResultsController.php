@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\Results\CutGroups;
 use App\Modules\Engagement\Support\Results\ManagerFeedback;
 use App\Modules\Engagement\Support\Results\SurveyResults;
 use App\Modules\Engagement\Support\Thresholds;
@@ -35,14 +36,8 @@ final class ManagerResultsController extends Controller
         $survey = $this->survey($survey, $kind);
         $results = SurveyResults::for($survey);
         $groups = $results->available() ? $results->managerGroups() : null;
-        $people = $this->roster->findMany(array_keys($groups->visible ?? []));
-        $names = [];
-        foreach ($people as $id => $person) {
-            $names[$id] = $person->name;
-        }
-        asort($names);
         $rows = [];
-        foreach ($names as $id => $name) {
+        foreach ($this->shownNames($groups) as $id => $name) {
             $rows[] = ['id' => $id, 'name' => $name];
         }
         $page = LengthAwarePaginator::resolveCurrentPage();
@@ -68,6 +63,10 @@ final class ManagerResultsController extends Controller
         $this->audit->handle('engagement.manager_results_viewed', $survey, ['manager_id' => $manager]);
 
         $comments = $this->comments($survey, $manager);
+        $names = $this->shownNames(SurveyResults::for($survey)->managerGroups());
+        $ids = array_keys($names);
+        $at = (int) array_search($manager, $ids, true);
+        $neighbor = fn (int $position): ?array => isset($ids[$position]) ? ['id' => $ids[$position], 'name' => $names[$ids[$position]]] : null;
 
         return Inertia::render('engagement/manager', [
             'kind' => $kind->value,
@@ -80,6 +79,8 @@ final class ManagerResultsController extends Controller
                 'line' => $feedback->line,
                 'summary' => $feedback->summaryStatus === null ? null : ['status' => $feedback->summaryStatus->value, 'themes' => $feedback->themes],
             ],
+            // The managers before and after by name, among the shown ones only: a way through them, never a ranking.
+            'neighbors' => ['previous' => $neighbor($at - 1), 'next' => $neighbor($at + 1)],
             'commentsState' => $comments['state'],
             'comments' => $comments['page'],
         ]);
@@ -104,6 +105,22 @@ final class ManagerResultsController extends Controller
         }
 
         return ['state' => 'shown', 'page' => $query->paginate(self::PER_PAGE, ['body'])->withQueryString()->through(fn (Comment $comment): array => ['body' => $comment->body])];
+    }
+
+    /**
+     * The managers whose group is shown, by name.
+     *
+     * @return array<string, string>
+     */
+    private function shownNames(?CutGroups $groups): array
+    {
+        $names = [];
+        foreach ($this->roster->findMany(array_keys($groups->visible ?? [])) as $id => $person) {
+            $names[$id] = $person->name;
+        }
+        asort($names);
+
+        return $names;
     }
 
     private function survey(string $id, SurveyKind $kind): Survey
