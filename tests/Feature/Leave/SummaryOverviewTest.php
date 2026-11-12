@@ -116,3 +116,11 @@ it('is not the first time once the company has a policy of its own', function ()
 
     expect(overviewProps()['firstTime'])->toBeFalse();
 });
+
+it('says how many active people the company has, and leaves out those who left', function (): void {
+    Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id]);
+    Employee::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    // The boss of the file plus the new one.
+    expect(overviewProps()['summary']['people'])->toBe(2);
+});

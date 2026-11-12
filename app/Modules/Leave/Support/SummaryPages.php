@@ -11,6 +11,7 @@ use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeavePolicy;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveStatement;
+use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,7 +28,7 @@ final readonly class SummaryPages
     /** The views of the detail, the first is the default. */
     public const array VIEWS = ['out', 'windows', 'prescribable'];
 
-    public function __construct(private Roster $roster, private GrantEntitlements $grants, private RequestPages $requests) {}
+    public function __construct(private Roster $roster, private GrantEntitlements $grants, private RequestPages $requests, private Headcount $headcount) {}
 
     /** The overview shows this many of the requests that wait for RH; the rest are one click away. */
     public const int TO_ANSWER = 4;
@@ -36,7 +37,7 @@ final readonly class SummaryPages
     public const int AHEAD_DAYS = 14;
 
     /**
-     * @return array{view: string, summary: array{outToday: int, outThisWeek: int, pending: int, escalated: int, windowsClosing: int, prescribableDays: int, liabilityDays: int, periods: int, missingStartDate: int, statementsUnacknowledged: int}, firstTime: bool, toAnswer: list<array<string, mixed>>, next14: list<array{date: string, away: int}>, counts: array{out: int, windows: int, prescribable: int}, people: LengthAwarePaginator<int, array{id: string, name: string, label: string, days: int, startsOn: string, endsOn: string}>}
+     * @return array{view: string, summary: array{outToday: int, outThisWeek: int, pending: int, escalated: int, windowsClosing: int, prescribableDays: int, liabilityDays: int, people: int, periods: int, missingStartDate: int, statementsUnacknowledged: int}, firstTime: bool, toAnswer: list<array<string, mixed>>, next14: list<array{date: string, away: int}>, counts: array{out: int, windows: int, prescribable: int}, people: LengthAwarePaginator<int, array{id: string, name: string, label: string, days: int, startsOn: string, endsOn: string}>}
      */
     public function index(string $requested): array
     {
@@ -59,6 +60,7 @@ final readonly class SummaryPages
                 // They stay in the balance: opposing the prescription is the company's decision (criterio C-11).
                 'prescribableDays' => (int) LeaveEntry::query()->whereIn('leave_entitlement_id', LeaveEntitlement::query()->where('prescribes_on', '<', $today->toDateString())->select('id'))->sum('days'),
                 'liabilityDays' => (int) LeaveEntry::query()->whereNotNull('leave_entitlement_id')->sum('days'),
+                'people' => array_sum($this->headcount->byWorkCenter()),
                 'periods' => self::withDays()->count(),
                 'missingStartDate' => count($this->grants->missingStartDate()),
                 'statementsUnacknowledged' => LeaveStatement::query()->whereNull('acknowledged_at')->count(),
