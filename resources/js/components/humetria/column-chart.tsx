@@ -13,6 +13,8 @@ export type ColumnChartColumn = {
     tooltip: string;
     /** Its height against the tallest, 0 to 100. */
     percent: number;
+    /** A short mark across this column (the law for that year), as high as `referencePercent`. */
+    referencePercent?: number | undefined;
 };
 
 /**
@@ -56,6 +58,16 @@ export default function ColumnChart({
                                             className="absolute inset-x-0 z-10 border-t-2 border-dashed border-foreground"
                                             style={{
                                                 bottom: `${baseline.percent}%`,
+                                            }}
+                                        />
+                                    )}
+                                    {column.referencePercent !== undefined && (
+                                        <span
+                                            aria-hidden
+                                            data-slot="column-reference"
+                                            className="absolute inset-x-0 z-10 border-t-2 border-foreground"
+                                            style={{
+                                                bottom: `${column.referencePercent}%`,
                                             }}
                                         />
                                     )}
