@@ -57,19 +57,3 @@ export function isStandalone(name: string): boolean {
         STANDALONE_PREFIXES.some((prefix) => name.startsWith(prefix))
     );
 }
-
-/** The component name the server rendered the first page with, parsed from Inertia's embedded page; '' if absent. */
-export function initialPageName(raw: string | null | undefined): string {
-    if (!raw) {
-        return '';
-    }
-
-    const page: unknown = JSON.parse(raw);
-
-    return typeof page === 'object' &&
-        page !== null &&
-        'component' in page &&
-        typeof page.component === 'string'
-        ? page.component
-        : '';
-}
