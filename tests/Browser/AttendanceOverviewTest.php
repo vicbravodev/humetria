@@ -124,6 +124,7 @@ it('takes RH from the sidebar to the overview and to the corrections', function 
     $url = overviewPanel();
 
     visit($url)
+        ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
         ->click('[data-sidebar="sidebar"] >> text=Resumen')
         ->waitForText('Persona por persona')

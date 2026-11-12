@@ -336,6 +336,26 @@ html:has([data-smooth-scroll]) {
 }
 
 /*
+ * What unfolds in the sidebar (a family of tools, a tool's pages): it grows to its height and back with the strong ease-out,
+ * instead of popping in. With reduced motion it just appears.
+ */
+@utility unfold {
+    overflow: hidden;
+
+    &[data-state='open'] {
+        animation: 200ms var(--ease-out) collapsible-down;
+    }
+
+    &[data-state='closed'] {
+        animation: 150ms var(--ease-out) collapsible-up;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none !important;
+    }
+}
+
+/*
  * Calendar (components/ui/calendar.tsx): moving to the next month slides the weeks in from the right and the old
  * ones out to the left (the other way going back), 12 px and fading. With reduced motion they only fade.
  */

@@ -85,8 +85,9 @@ it('frames the app as Sidebar.md and PanelRH ask, not as the starter kit', funct
         ->assertScript('() => document.querySelector(\'[data-sidebar="trigger"]\').offsetParent !== null')
         ->assertDontSee('Repositorio')
         ->assertDontSee('Documentación')
-        // Group label (Plataforma, the only one left to a superadmin) as a caption: 13 px in capitals (sidebar con submenú); items of 44 px at 16 px with 20 px icons (a submenu's chevron is 16 px).
-        ->assertScript('() => { const label = getComputedStyle(document.querySelector(\'[data-sidebar="group-label"]\')); return label.textTransform === "uppercase" && label.fontSize === "13px"; }')
+        // A family of tools (Plataforma, the only one left to a superadmin) folds, and is the parent of its tools: a 44 px row at
+        // 16 px in semibold, in sentence case; items of 44 px at 16 px with 20 px icons (a submenu's chevron is 16 px).
+        ->assertScript('() => { const family = document.querySelector(\'[data-sidebar="group-label"]\'); const label = getComputedStyle(family); return label.textTransform === "none" && label.fontSize === "16px" && label.fontWeight === "600" && family.getBoundingClientRect().height >= 44; }')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"]\')].every((button) => button.getBoundingClientRect().height >= 44 && getComputedStyle(button).fontSize === "16px")')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"] > svg:first-child\')].every((icon) => icon.getBoundingClientRect().width === 20)')
         // Active item: a card (card fill, 500) with its icon in sidebar-primary (pantallas: Panel).
@@ -286,6 +287,7 @@ it('moves with the design system motion', function (): void {
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-sidebar="trigger"]\')).transitionTimingFunction.includes("cubic-bezier(0.23, 1, 0.32, 1)")')
         // Moving to another page cross-fades it through the View Transitions API.
         ->assertScript('() => { window.transitions = 0; const start = document.startViewTransition.bind(document); document.startViewTransition = (update) => { window.transitions++; return start(update); }; return true; }')
+        ->click('Plataforma')
         ->click('Empresas')
         ->assertPathIs('/admin/companies')
         ->assertScript('() => window.transitions', 1);

@@ -331,6 +331,7 @@ it('reaches the org chart and its list from the sidebar', function (): void {
     acmeOrgChart();
 
     visit('/admin/acme')
+        ->click('Ordena tu operación')
         ->click('[data-sidebar="sidebar"] >> text=Organigrama')
         ->click('[data-sidebar="sidebar"] >> text=Lista')
         ->assertPathIs('/admin/acme/org-chart/quality')

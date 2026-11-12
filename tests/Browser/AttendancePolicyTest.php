@@ -83,6 +83,7 @@ it('takes RH from the sidebar to the devices, the schedules and the policy, ligh
     $url = signInToPanel();
 
     visit($url)
+        ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
         ->click('[data-sidebar="sidebar"] >> text=Dispositivos')
         ->waitForText('Envíale su enlace de alta')

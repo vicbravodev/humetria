@@ -1,4 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
+import {
+    Briefcase,
+    Ear,
+    type LucideIcon,
+    ServerCog,
+    ShieldCheck,
+} from 'lucide-react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,9 +20,18 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useScrollEdges } from '@/hooks/use-scroll-edges';
+import type { NavSectionKey } from '@/lib/app-navigation';
 import { navSections } from '@/lib/nav-sections';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
+
+/** The icon of each family of tools, beside its name. */
+const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
+    compliance: ShieldCheck,
+    listening: Ear,
+    operations: Briefcase,
+    platform: ServerCog,
+};
 
 export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
@@ -71,6 +87,11 @@ export function AppSidebar() {
                         <NavMain
                             key={section.label}
                             label={section.label}
+                            icon={
+                                section.key === undefined
+                                    ? undefined
+                                    : familyIcons[section.key]
+                            }
                             items={section.items}
                         />
                     ),
