@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Organization\Actions\ExportOrgChart;
 use App\Modules\Organization\Actions\SetManager;
 use App\Modules\Organization\Enums\ReportingIssue;
 use App\Modules\Organization\Http\Requests\ManagerRequest;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * «Lista» of the org chart: everybody, or only what a load usually leaves wrong in the reporting line (nobody above, a
@@ -71,6 +73,22 @@ final class OrgChartQualityController extends Controller
             ]),
             'can_manage' => Gate::allows('manage-org-chart'),
         ]);
+    }
+
+    /**
+     * The list as a CSV: every active person with their manager and the size of their team. For whoever may see the chart.
+     *
+     * @param  mixed  $tenant  The company, already resolved by Tenancy from the URL; only routed through.
+     */
+    public function export(mixed $tenant, ExportOrgChart $export): StreamedResponse
+    {
+        Gate::authorize('view-org-chart');
+
+        $file = $export->handle();
+
+        return response()->streamDownload(function () use ($file): void {
+            echo $file['content'];
+        }, 'organigrama.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
