@@ -44,6 +44,33 @@ export function pendingText(count: number): string {
         : `${count === 1 ? 'Falta' : 'Faltan'} ${count} por contestar.`;
 }
 
+/**
+ * The sentence over a survey in progress: "Va 44 %. Todavía faltan 118 personas y quedan 14 días." Only counts:
+ * never who.
+ */
+export function progressReading(
+    { rate, pending }: { rate: number | null; pending: number },
+    daysLeft: number | null,
+): string | null {
+    if (rate === null) {
+        return null;
+    }
+
+    if (pending === 0) {
+        return `Va ${rate} %. Ya contestaron todas las personas.`;
+    }
+
+    const missing = `Todavía ${pending === 1 ? 'falta' : 'faltan'} ${countOf(pending, 'persona', 'personas')}`;
+    const days =
+        daysLeft === null
+            ? ''
+            : daysLeft === 1
+              ? ' y es el último día'
+              : ` y quedan ${countOf(daysLeft, 'día', 'días')}`;
+
+    return `Va ${rate} %. ${missing}${days}.`;
+}
+
 /** What the home of Clima or Pulso leads with. */
 export type HomeState = 'current' | 'scheduled' | 'history' | 'first-time';
 

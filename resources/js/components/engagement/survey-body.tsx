@@ -50,6 +50,9 @@ export default function SurveyBody({
     return survey.status === 'closed' ? (
         <ClosedFollowUp participation={participation} resultsUrl={resultsUrl} />
     ) : (
-        <ActiveFollowUp participation={participation} />
+        <ActiveFollowUp
+            participation={participation}
+            daysLeft={survey.daysLeft}
+        />
     );
 }
