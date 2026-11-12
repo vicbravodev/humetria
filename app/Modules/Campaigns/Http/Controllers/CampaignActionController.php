@@ -24,6 +24,7 @@ use App\Modules\Campaigns\Support\CampaignPeople;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 /**
@@ -122,11 +123,14 @@ final class CampaignActionController extends Controller
         return back();
     }
 
-    public function close(mixed $tenant, string $campaign, CloseCampaign $closeCampaign): RedirectResponse
+    public function close(Request $request, mixed $tenant, string $campaign, CloseCampaign $closeCampaign): RedirectResponse
     {
         Gate::authorize('manage-campaigns');
         $active = CampaignController::find($campaign, CampaignStatus::Active);
-        $closeCampaign->handle($active);
+        $shortfall = $closeCampaign->shortfall($active);
+        $left = $shortfall['main'] > 0 || $shortfall['screening'] > 0;
+        $request->validate(['acknowledged_shortfall' => [Rule::when($left, 'accepted', 'nullable')]], ['acknowledged_shortfall.accepted' => 'Confirma que quieres cerrar con personas sin contestar.']);
+        $closeCampaign->handle($active, acknowledgedShortfall: $left);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Evaluación cerrada. Los enlaces ya no funcionan.']);
 
         return redirect()->route('tenant.campaigns.show', [$tenant, $active->id]);

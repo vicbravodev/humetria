@@ -195,10 +195,11 @@ final readonly class CampaignPages
 
     /**
      * The guide that measures the campaign (Guía II or III in an evaluation, Guía I otherwise): answered against
-     * the sample when there is one, against everyone invited to it when not.
+     * the sample when there is one, against everyone invited to it when not. `screeningPending` counts the people
+     * whose Guía I is still open, apart from the measuring guide.
      *
      * @param  array<string, array<string, int>>  $tally
-     * @return array{completed: int, target: int, againstSample: bool}|null
+     * @return array{completed: int, target: int, againstSample: bool, screeningPending: int}|null
      */
     public function progress(Campaign $campaign, array $tally): ?array
     {
@@ -215,6 +216,7 @@ final readonly class CampaignPages
             'completed' => $completed,
             'target' => $sampleSize ?? $completed + ($counts[InstrumentStatus::Pending->value] ?? 0),
             'againstSample' => $sampleSize !== null,
+            'screeningPending' => $main === 'nom035.guide-i' ? 0 : ($tally['nom035.guide-i'][InstrumentStatus::Pending->value] ?? 0),
         ];
     }
 

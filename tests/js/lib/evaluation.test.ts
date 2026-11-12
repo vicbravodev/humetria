@@ -92,10 +92,20 @@ describe('laggingArea', () => {
 describe('arcCaption', () => {
     it('says what the figure counts against', () => {
         expect(
-            arcCaption({ completed: 18, target: 60, againstSample: false }),
+            arcCaption({
+                completed: 18,
+                target: 60,
+                againstSample: false,
+                screeningPending: 0,
+            }),
         ).toBe('de 60 contestaron');
         expect(
-            arcCaption({ completed: 18, target: 53, againstSample: true }),
+            arcCaption({
+                completed: 18,
+                target: 53,
+                againstSample: true,
+                screeningPending: 0,
+            }),
         ).toBe('de 53 de la muestra');
     });
 });
@@ -182,6 +192,7 @@ describe('headerFacts and historyItems', () => {
                         completed: 29,
                         target: 30,
                         againstSample: false,
+                        screeningPending: 0,
                     },
                 }),
             ),
