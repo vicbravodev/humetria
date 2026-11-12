@@ -57,6 +57,26 @@ it('shows RH the week by state, its people and the centers', function (bool $dar
     'dark, phone' => [true, true],
 ]);
 
+it('sets the puesta en marcha and what needs RH beside the week, leaving no hole under either', function (): void {
+    $page = visitPage('attendance/index', overviewPanel().'/attendance');
+    $layout = <<<'JS'
+        () => {
+            const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+            const setup = box('[aria-labelledby="puesta-en-marcha"]');
+            const attention = box('[aria-labelledby="atencion"]');
+            const week = box('[aria-labelledby="semanas"]');
+
+            return setup.right <= week.left && Math.round(setup.top) === Math.round(week.top)
+                ? 'beside' : (week.top >= attention.bottom ? 'below' : 'other');
+        }
+        JS;
+    // The hours split in ordinary and extra reads on one line, as on board A1.
+    $hoursLegend = '() => new Set([...document.querySelectorAll(\'[aria-labelledby="semanas"] ul\')].at(-1).querySelectorAll("li").values().map((item) => Math.round(item.getBoundingClientRect().top))).size';
+
+    resizeTo($page, 1440)->assertScript($layout, 'beside')->assertScript($hoursLegend, 1);
+    resizeTo($page, 1100)->assertScript($layout, 'below');
+});
+
 /** A script that says whether the row of a person in the people list reads a text. */
 function overviewRowHas(string $name, string $text): string
 {

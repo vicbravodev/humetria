@@ -15,9 +15,12 @@ export type BarPart = {
 export default function WeekPanelBar({
     label,
     parts,
+    inline = false,
 }: {
     label: string;
     parts: BarPart[];
+    /** The legend on one line, each part read as «96 h ordinarias» (board A1, the hours). */
+    inline?: boolean;
 }) {
     const whole = parts.reduce((sum, part) => sum + part.value, 0);
 
@@ -38,7 +41,13 @@ export default function WeekPanelBar({
                     />
                 ))}
             </div>
-            <ul className="flex flex-col gap-2">
+            <ul
+                className={
+                    inline
+                        ? 'flex flex-wrap justify-between gap-x-4 gap-y-2'
+                        : 'flex flex-col gap-2'
+                }
+            >
                 {parts.map((part) => (
                     <li
                         key={part.name}
@@ -48,10 +57,21 @@ export default function WeekPanelBar({
                             aria-hidden
                             className={`size-2.5 rounded-[3px] ${part.tone}`}
                         />
-                        <span className="flex-1">{part.name}</span>
-                        <span className="font-semibold tabular-nums">
-                            {part.shown}
-                        </span>
+                        {inline ? (
+                            <span>
+                                <span className="font-semibold tabular-nums">
+                                    {part.shown}
+                                </span>{' '}
+                                {part.name.toLowerCase()}
+                            </span>
+                        ) : (
+                            <>
+                                <span className="flex-1">{part.name}</span>
+                                <span className="font-semibold tabular-nums">
+                                    {part.shown}
+                                </span>
+                            </>
+                        )}
                     </li>
                 ))}
             </ul>
