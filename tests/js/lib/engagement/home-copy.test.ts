@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { homeCopy } from '@/lib/engagement/panel';
+import { homeCopy, resultsCaption } from '@/lib/engagement/panel';
+
+describe('resultsCaption', () => {
+    it('says whose results these are: the climate survey or the pulse', () => {
+        expect(resultsCaption('climate')).toBe('Resultados de clima');
+        expect(resultsCaption('pulse')).toBe('Resultados del pulso');
+    });
+});
 
 describe('homeCopy', () => {
     it('names the climate survey and offers the first one when there is no history', () => {

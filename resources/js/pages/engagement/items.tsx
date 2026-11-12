@@ -6,7 +6,9 @@ import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { EngagementItems } from '@/types';
+import { resultsCaption } from '@/lib/engagement/panel';
 import {
+    useEngagementKind,
     useEngagementRoutes,
     useEngagementTrail,
     useSurveyCrumb,
@@ -30,7 +32,7 @@ export default function Items({
             <Head title={`Resultados por pregunta · ${survey.name}`} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Resultados de clima"
+                    caption={resultsCaption(useEngagementKind())}
                     title="Resultados por pregunta"
                     description="Cada pregunta con sus respuestas favorables y cómo se reparten. Las preguntas con menos de 5 respuestas no muestran cifras."
                 >

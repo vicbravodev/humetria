@@ -7,7 +7,9 @@ import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { ManagerResults, ManagerRow, Paginated } from '@/types';
+import { resultsCaption } from '@/lib/engagement/panel';
 import {
+    useEngagementKind,
     useEngagementTrail,
     useSurveyCrumb,
 } from '@/hooks/use-engagement-routes';
@@ -31,7 +33,7 @@ export default function Managers({
             <Head title={`Por jefe · ${survey.name}`} />
             <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Resultados de clima"
+                    caption={resultsCaption(useEngagementKind())}
                     title="Retroalimentación por jefe"
                     description="Cada jefe ve solo lo que contestó su grupo, sin las respuestas de nadie. Aquí no hay ranking: la lista va por nombre."
                 />

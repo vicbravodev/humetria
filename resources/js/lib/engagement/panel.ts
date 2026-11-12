@@ -44,6 +44,11 @@ export function pendingText(count: number): string {
         : `${count === 1 ? 'Falta' : 'Faltan'} ${count} por contestar.`;
 }
 
+/** Whose results a page shows: the caption over its title. */
+export function resultsCaption(kind: 'climate' | 'pulse'): string {
+    return kind === 'pulse' ? 'Resultados del pulso' : 'Resultados de clima';
+}
+
 type HomeCopy = {
     title: string;
     description: string;
