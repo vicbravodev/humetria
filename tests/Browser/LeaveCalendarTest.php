@@ -36,18 +36,52 @@ function leaveCalendarPanel(): array
     return ['url' => "{$url}/vacations/calendar", 'tenant' => $tenant];
 }
 
-it('shows who is away each day of the month', function (bool $dark, bool $mobile): void {
-    visitPage('leave/calendar', leaveCalendarPanel()['url'], $dark, $mobile)
+it('shows who is away each day of the month, as a grid on a desktop and by week on a phone', function (bool $dark, bool $mobile): void {
+    $page = visitPage('leave/calendar', leaveCalendarPanel()['url'], $dark, $mobile)
         ->assertSee('Calendario del equipo')
         ->assertSee('noviembre de 2026')
-        ->assertSee('Ana Solís')
-        ->assertSee('Fuera cada día')
-        ->assertSee('Por responder')
+        ->assertSee('Con ausencias')
+        ->assertSee('Las 2')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
-        ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
-        ->assertScript('document.querySelector("[aria-label=\"Ana Solís: Vacaciones, 9 al 13 de noviembre de 2026\"]") !== null', true);
+        ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
+
+    if ($mobile) {
+        $page->assertDontSee('Ana Solís')
+            ->click('button[aria-label="Semana siguiente"]')
+            ->assertSee('Ana Solís')
+            ->assertSee('9–13')
+            ->assertNoJavaScriptErrors();
+
+        return;
+    }
+
+    $page->assertSee('Ana Solís')
+        ->assertSee('Fuera cada día')
+        ->assertSee('Por responder')
+        ->assertSee('2 personas con ausencias en noviembre')
+        ->assertScript('document.querySelector("[aria-label=\"Ana Solís: Vacaciones, 9 al 13 de noviembre de 2026\"]") !== null', true)
+        ->assertScript('document.querySelector("[role=region][aria-label=\"Calendario del equipo\"]").scrollWidth <= document.querySelector("[role=region][aria-label=\"Calendario del equipo\"]").clientWidth', true);
 })->with($looks);
+
+it('shows everybody with a click and comes back', function (): void {
+    visitPage('leave/calendar', leaveCalendarPanel()['url'])
+        ->click('nav[aria-label="A quién mostrar"] a:has-text("Las 2")')
+        ->assertSee('Caro Luz')
+        ->click('nav[aria-label="A quién mostrar"] a:has-text("Con ausencias")')
+        ->assertSee('Ana Solís')
+        ->assertNoJavaScriptErrors();
+});
+
+it('says so, with a way on, when a month has no absences', function (): void {
+    $url = leaveCalendarPanel()['url'];
+
+    visitPage('leave/calendar', "{$url}?month=2026-12")
+        ->assertSee('Nadie tiene ausencias en diciembre')
+        ->assertSee('Ir a solicitudes')
+        ->assertSee('Hoy')
+        ->assertNoJavaScriptErrors();
+});
 
 it('moves to the next and to the previous month', function (): void {
     visitPage('leave/calendar', leaveCalendarPanel()['url'])
