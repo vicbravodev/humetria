@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Hourglass, Users } from 'lucide-react';
+import ResultsNav from '@/components/engagement/results/results-nav';
 import ManagerTable from '@/components/engagement/results/manager-table';
 import EmptyState from '@/components/humetria/empty-state';
 import Notice from '@/components/humetria/notice';
@@ -37,6 +38,9 @@ export default function Managers({
                     title="Retroalimentación por jefe"
                     description="Cada jefe ve solo lo que contestó su grupo, sin las respuestas de nadie. Aquí no hay ranking: la lista va por nombre."
                 />
+                {available && (
+                    <ResultsNav surveyId={survey.id} active="managers" />
+                )}
                 {hasHidden && (
                     <Notice>
                         <strong>Algunos jefes no aparecen.</strong> Su grupo
