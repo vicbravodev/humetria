@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Providers;
 
 use App\Modules\Attendance\Contracts\AttendanceUsage;
+use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
+use App\Modules\Attendance\Support\NominatimPlaceSearch;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -24,6 +26,7 @@ final class AttendanceServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
+        $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
     }
 
     public function boot(): void
